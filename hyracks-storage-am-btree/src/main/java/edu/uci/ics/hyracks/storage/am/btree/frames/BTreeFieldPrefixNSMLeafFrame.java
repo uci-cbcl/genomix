@@ -521,7 +521,7 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
 
                     int bytesWritten = 0;
                     if (lastPrefixSlotNum != prefixSlotNum) {
-                        bytesWritten = tupleWriter.writeTuple(framePrefixTuple, right, freeSpace);
+                        bytesWritten = tupleWriter.writeTuple(framePrefixTuple, right.array(), freeSpace);
                         int newPrefixSlot = rf.slotManager
                                 .encodeSlotFields(framePrefixTuple.getFieldCount(), freeSpace);
                         int prefixSlotOff = rf.slotManager.getPrefixSlotOff(prefixSlotNum);
