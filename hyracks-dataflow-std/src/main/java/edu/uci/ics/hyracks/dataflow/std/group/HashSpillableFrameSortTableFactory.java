@@ -15,7 +15,6 @@
 package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -40,8 +39,6 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
 
     private static final long serialVersionUID = 1L;
     private final ITuplePartitionComputerFactory tpcf;
-
-    private static final Logger LOGGER = Logger.getLogger(HashSpillableFrameSortTableFactory.class.getName());
 
     public HashSpillableFrameSortTableFactory(ITuplePartitionComputerFactory tpcf) {
         this.tpcf = tpcf;
@@ -127,13 +124,9 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
 
             private ByteBuffer stateFrame;
 
-            private long insertTimeCounter = 0;
-
             @Override
             public void sortFrames() {
-                long sortTimer = System.currentTimeMillis();
                 frameSorter.sortFrames();
-                LOGGER.warning("[CT]HybridImproved - Sort " + (System.currentTimeMillis() - sortTimer));
             }
 
             @Override
@@ -145,7 +138,6 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
 
             @Override
             public boolean insert(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                long insertTimer = System.currentTimeMillis();
                 if (stateFrame == null) {
                     // initialize the frame for aggregation result
                     stateFrame = ctx.allocateFrame();
@@ -182,7 +174,6 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
                     if (!stateAppender.append(stateTupleBuilder.getFieldEndOffsets(),
                             stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {
                         if (!nextAvailableFrame()) {
-                            insertTimeCounter += System.currentTimeMillis() - insertTimer;
                             return false;
                         }
                         if (!stateAppender.append(stateTupleBuilder.getFieldEndOffsets(),
@@ -200,7 +191,6 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
                             aggregateState);
 
                 }
-                insertTimeCounter += System.currentTimeMillis() - insertTimer;
                 return true;
             }
 
@@ -219,7 +209,6 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
             public void close() {
                 table.close();
                 aggregateState.close();
-                LOGGER.warning("[T]HybridImproved AggregateActivity - HashInsert    " + insertTimeCounter);
             }
 
             /**
