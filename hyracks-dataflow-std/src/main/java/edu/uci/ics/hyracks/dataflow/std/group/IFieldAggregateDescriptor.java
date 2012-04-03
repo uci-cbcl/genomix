@@ -116,5 +116,7 @@ public interface IFieldAggregateDescriptor {
      * Close the field aggregator
      */
     public void close();
+    
+    public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
 
 }

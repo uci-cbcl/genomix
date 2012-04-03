@@ -167,6 +167,14 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
                 return new AggregateState(new Integer[] { 0, 0 });
             }
 
+            @Override
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) {
+                if (useObjectState) {
+                    return 0;
+                } else {
+                    return 8;
+                }
+            }
         };
     }
 

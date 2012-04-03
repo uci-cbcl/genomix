@@ -194,6 +194,15 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                 return new AggregateState();
             }
 
+            @Override
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) {
+                if (hasBinaryState) {
+                    return 4;
+                } else {
+                    return 0;
+                }
+            }
+
         };
     }
 }

@@ -167,6 +167,14 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                     state.state = new Integer[] { sum, count };
                 }
             }
+
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) {
+                if (useObjectState) {
+                    return 0;
+                } else {
+                    return 8;
+                }
+            }
         };
     }
 

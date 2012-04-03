@@ -151,6 +151,15 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
                     state.state = sum;
                 }
             }
+
+            @Override
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) {
+                if (useObjectState) {
+                    return 0;
+                } else {
+                    return 4;
+                }
+            }
         };
     }
 

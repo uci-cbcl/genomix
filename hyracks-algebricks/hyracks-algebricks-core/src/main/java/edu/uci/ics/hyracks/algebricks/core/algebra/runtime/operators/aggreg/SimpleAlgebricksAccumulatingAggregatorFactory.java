@@ -28,6 +28,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
 public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
@@ -160,6 +161,23 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
                         throw new HyracksDataException(e);
                     }
                 }
+            }
+
+            @Override
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                return 0;
+            }
+
+            @Override
+            public int getFieldCount() {
+                return aggFactories.length;
+            }
+
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+                    AggregateState state) throws HyracksDataException {
+                // TODO Auto-generated method stub
+                
             }
 
         };

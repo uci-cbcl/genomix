@@ -109,5 +109,12 @@ public interface IAggregatorDescriptor {
             int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException;
 
     public void close();
+    
+    public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
+    
+    public int getFieldCount();
+    
+    public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+            AggregateState state) throws HyracksDataException;
 
 }

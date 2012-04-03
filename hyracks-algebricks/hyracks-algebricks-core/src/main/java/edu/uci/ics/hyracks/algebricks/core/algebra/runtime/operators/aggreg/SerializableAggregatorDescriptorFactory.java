@@ -15,6 +15,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
 public class SerializableAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
@@ -28,7 +29,9 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, final int[] keyFieldsInPartialResults)
             throws HyracksDataException {
+
         final int[] keys = keyFields;
+        final ArrayTupleBuilder initLengthCalBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
 
         /**
          * one IAggregatorDescriptor instance per Gby operator
@@ -177,6 +180,60 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
                         aggs[i].finish(buf, start, stateFieldLength[i], tupleBuilder.getDataOutput());
                         start += stateFieldLength[i];
                         tupleBuilder.addFieldEndOffset();
+                    } catch (AlgebricksException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+            }
+
+            @Override
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                initLengthCalBuilder.reset();
+                ftr.reset(accessor, tIndex);
+                for (int i = 0; i < aggs.length; i++) {
+                    try {
+                        int begin = initLengthCalBuilder.getSize();
+                        if (aggs[i] == null) {
+                            aggs[i] = aggFactories[i].createAggregateFunction();
+                        }
+                        aggs[i].init(initLengthCalBuilder.getDataOutput());
+                        initLengthCalBuilder.addFieldEndOffset();
+                        stateFieldLength[i] = initLengthCalBuilder.getSize() - begin;
+                    } catch (AlgebricksException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+
+                // doing initial aggregate
+                ftr.reset(accessor, tIndex);
+                for (int i = 0; i < aggs.length; i++) {
+                    try {
+                        byte[] data = initLengthCalBuilder.getByteArray();
+                        int prevFieldPos = i + keys.length - 1;
+                        int start = prevFieldPos >= 0 ? initLengthCalBuilder.getFieldEndOffsets()[prevFieldPos] : 0;
+                        aggs[i].step(ftr, data, start, stateFieldLength[i]);
+                    } catch (AlgebricksException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+                return initLengthCalBuilder.getFieldEndOffsets().length * 4 + initLengthCalBuilder.getSize();
+            }
+
+            @Override
+            public int getFieldCount() {
+                return aggs.length;
+            }
+
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+                    AggregateState state) throws HyracksDataException {
+                ftr.reset(accessor, tIndex);
+                int stateTupleStart = stateAccessor.getTupleStartOffset();
+                for (int i = 0; i < aggs.length; i++) {
+                    try {
+                        byte[] data = stateAccessor.getBuffer().array();
+                        int start = stateAccessor.getFieldStartOffset(i + keys.length) + stateTupleStart;
+                        aggs[i].step(ftr, data, start, stateFieldLength[i]);
                     } catch (AlgebricksException e) {
                         throw new HyracksDataException(e);
                     }

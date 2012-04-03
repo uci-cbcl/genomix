@@ -32,6 +32,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
 public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
@@ -169,6 +170,28 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDesc
                 }
             }
 
+            @Override
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) {
+                // TODO Auto-generated method stub
+                return 0;
+            }
+
+            @Override
+            public int getFieldCount() {
+                // TODO Auto-generated method stub
+                return 0;
+            }
+
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+                    AggregateState state) throws HyracksDataException {
+                // it only works if the output of the aggregator fits in one
+                // frame
+                for (int i = 0; i < pipelines.length; i++) {
+                    pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
+                }
+            }
+
         };
     }
 
@@ -193,10 +216,7 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDesc
     }
 
     /**
-     * 
-     * 
      * We suppose for now, that each subplan only produces one tuple.
-     * 
      */
     private static class AggregatorOutput implements IFrameWriter {
 
@@ -231,10 +251,8 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDesc
         }
 
         /**
-         * 
          * Since each pipeline only produces one tuple, this method is only
          * called by the close method of the pipelines.
-         * 
          */
         @Override
         public void nextFrame(ByteBuffer buffer) throws HyracksDataException {

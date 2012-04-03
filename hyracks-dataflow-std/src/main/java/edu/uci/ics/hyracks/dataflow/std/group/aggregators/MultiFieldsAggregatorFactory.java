@@ -27,6 +27,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
 /**
  *
@@ -202,6 +203,43 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
                         aggregators[i].aggregate(accessor, tIndex, null, 0, ((AggregateState[]) state.state)[i]);
                     }
                 }
+            }
+
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+                    AggregateState state) throws HyracksDataException {
+                if (stateAccessor != null) {
+                    int stateTupleOffset = stateAccessor.getTupleStartOffset();
+                    int fieldIndex = 0;
+                    for (int i = 0; i < aggregators.length; i++) {
+                        if (aggregators[i].needsBinaryState()) {
+                            int stateFieldOffset = stateAccessor.getFieldStartOffset(keys.length + fieldIndex);
+                            aggregators[i].aggregate(accessor, tIndex, stateAccessor.getBuffer().array(),
+                                    stateTupleOffset + stateAccessor.getFieldSlotsLength() + stateFieldOffset,
+                                    ((AggregateState[]) state.state)[i]);
+                            fieldIndex++;
+                        } else {
+                            aggregators[i].aggregate(accessor, tIndex, null, 0, ((AggregateState[]) state.state)[i]);
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < aggregators.length; i++) {
+                        aggregators[i].aggregate(accessor, tIndex, null, 0, ((AggregateState[]) state.state)[i]);
+                    }
+                }
+            }
+
+            @Override
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                int initLength = 0;
+                for (int i = 0; i < aggregators.length; i++)
+                    initLength += aggregators[i].getInitSize(accessor, tIndex);
+                return initLength;
+            }
+
+            @Override
+            public int getFieldCount() {
+                return aggregators.length;
             }
         };
     }
