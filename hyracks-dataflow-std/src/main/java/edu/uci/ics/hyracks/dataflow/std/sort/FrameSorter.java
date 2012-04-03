@@ -32,21 +32,21 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class FrameSorter {
     private final IHyracksCommonContext ctx;
-    private final int[] sortFields;
+    protected final int[] sortFields;
     private final INormalizedKeyComputer nkc;
     private final IBinaryComparator[] comparators;
-    private final List<ByteBuffer> buffers;
+    protected final List<ByteBuffer> buffers;
 
-    private final FrameTupleAccessor fta1;
+    protected final FrameTupleAccessor fta1;
     private final FrameTupleAccessor fta2;
 
-    private final FrameTupleAppender appender;
+    protected final FrameTupleAppender appender;
 
-    private final ByteBuffer outFrame;
+    protected final ByteBuffer outFrame;
 
-    private int dataFrameCount;
-    private int[] tPointers;
-    private int tupleCount;
+    protected int dataFrameCount;
+    protected int[] tPointers;
+    protected int tupleCount;
 
     public FrameSorter(IHyracksCommonContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,

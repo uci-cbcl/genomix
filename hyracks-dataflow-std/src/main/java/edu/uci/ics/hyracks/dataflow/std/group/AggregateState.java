@@ -17,7 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.group;
 import java.io.Serializable;
 
 /**
- *
+ * Object-state for aggregation
  */
 public class AggregateState implements Serializable {
 
@@ -34,7 +34,15 @@ public class AggregateState implements Serializable {
     }
 
     public void reset() {
-        state = null;
+        if (state != null && state.getClass().isArray()) {
+            for (Object s : (Object[]) (state)) {
+                if (s instanceof AggregateState) {
+                    ((AggregateState) s).reset();
+                }
+            }
+        } else {
+            state = null;
+        }
     }
 
     public void close() {

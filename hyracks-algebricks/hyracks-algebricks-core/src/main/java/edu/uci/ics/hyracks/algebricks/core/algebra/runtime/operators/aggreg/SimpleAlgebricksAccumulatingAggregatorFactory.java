@@ -138,6 +138,30 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
 
             }
 
+            @Override
+            public void outputPartialResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart,
+                    int tupleLength, int fieldCount, int fieldSlotLength, AggregateState state)
+                    throws HyracksDataException {
+                throw new IllegalStateException("this method should not be called");
+            }
+
+            @Override
+            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
+                    int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException {
+                Pair<ArrayBackedValueStorage[], IAggregateFunction[]> aggState = (Pair<ArrayBackedValueStorage[], IAggregateFunction[]>) state.state;
+                ArrayBackedValueStorage[] aggOutput = aggState.first;
+                IAggregateFunction[] agg = aggState.second;
+                for (int i = 0; i < agg.length; i++) {
+                    try {
+                        agg[i].finish();
+                        tupleBuilder.addField(aggOutput[i].getBytes(), aggOutput[i].getStartIndex(),
+                                aggOutput[i].getLength());
+                    } catch (AlgebricksException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+            }
+
         };
     }
 }

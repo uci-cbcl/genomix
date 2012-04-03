@@ -26,6 +26,6 @@ public interface ISpillableTableFactory extends Serializable {
     ISpillableTable buildSpillableTable(IHyracksTaskContext ctx, int[] keyFields,
             IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory normalizedKeyComputerFactory,
             IAggregatorDescriptorFactory aggregateFactory, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int framesLimit) throws HyracksDataException;
+            RecordDescriptor outRecordDescriptor, int tableSize, int framesLimit) throws HyracksDataException;
 
 }

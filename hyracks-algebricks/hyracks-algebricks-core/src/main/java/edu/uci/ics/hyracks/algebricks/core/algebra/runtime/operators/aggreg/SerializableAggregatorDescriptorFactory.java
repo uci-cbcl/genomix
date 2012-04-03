@@ -11,6 +11,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
@@ -139,6 +140,47 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
             @Override
             public void close() {
                 reset();
+            }
+
+            @Override
+            public void outputPartialResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart,
+                    int tupleLength, int fieldCount, int fieldSlotLength, AggregateState state)
+                    throws HyracksDataException {
+                int fieldOffset = tupleStart + fieldSlotLength * fieldCount;
+                for (int i = 0; i < keys.length; i++) {
+                    fieldOffset += IntegerSerializerDeserializer.getInt(buf, tupleStart + i * fieldSlotLength);
+                }
+                int refOffset = tupleStart + fieldSlotLength + fieldOffset;
+                int start = refOffset;
+                for (int i = 0; i < aggs.length; i++) {
+                    try {
+                        aggs[i].finishPartial(buf, start, stateFieldLength[i], tupleBuilder.getDataOutput());
+                        start += stateFieldLength[i];
+                        tupleBuilder.addFieldEndOffset();
+                    } catch (AlgebricksException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
+            }
+
+            @Override
+            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
+                    int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException {
+                int fieldOffset = tupleStart + fieldSlotLength * fieldCount;
+                for (int i = 0; i < keys.length; i++) {
+                    fieldOffset += IntegerSerializerDeserializer.getInt(buf, tupleStart + i * fieldSlotLength);
+                }
+                int refOffset = tupleStart + fieldSlotLength + fieldOffset;
+                int start = refOffset;
+                for (int i = 0; i < aggs.length; i++) {
+                    try {
+                        aggs[i].finish(buf, start, stateFieldLength[i], tupleBuilder.getDataOutput());
+                        start += stateFieldLength[i];
+                        tupleBuilder.addFieldEndOffset();
+                    } catch (AlgebricksException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
             }
 
         };

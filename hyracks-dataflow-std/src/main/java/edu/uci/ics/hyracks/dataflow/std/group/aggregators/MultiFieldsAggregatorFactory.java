@@ -21,6 +21,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
@@ -94,6 +95,23 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
             }
 
             @Override
+            public void outputPartialResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart,
+                    int tupleLength, int fieldCount, int fieldSlotLength, AggregateState state)
+                    throws HyracksDataException {
+                DataOutput dos = tupleBuilder.getDataOutput();
+
+                for (int i = 0; i < aggregators.length; i++) {
+                    int fieldOffset = tupleStart + fieldSlotLength * fieldCount;
+                    if (i + keyFields.length > 0) {
+                        fieldOffset += IntegerSerializerDeserializer.getInt(buf, tupleStart
+                                + (i + keyFields.length - 1) * fieldSlotLength);
+                    }
+                    aggregators[i].outputPartialResult(dos, buf, fieldOffset, ((AggregateState[]) state.state)[i]);
+                    tupleBuilder.addFieldEndOffset();
+                }
+            }
+
+            @Override
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 DataOutput dos = tupleBuilder.getDataOutput();
@@ -105,6 +123,26 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
                         aggregators[i].outputFinalResult(dos, accessor.getBuffer().array(),
                                 tupleOffset + accessor.getFieldSlotsLength() + fieldOffset,
                                 ((AggregateState[]) state.state)[i]);
+                    } else {
+                        aggregators[i].outputFinalResult(dos, null, 0, ((AggregateState[]) state.state)[i]);
+                    }
+                    tupleBuilder.addFieldEndOffset();
+                }
+            }
+
+            @Override
+            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
+                    int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException {
+                DataOutput dos = tupleBuilder.getDataOutput();
+
+                for (int i = 0; i < aggregators.length; i++) {
+                    if (aggregators[i].needsBinaryState()) {
+                        int fieldOffset = tupleStart + fieldSlotLength * fieldCount;
+                        if (i + keyFields.length > 0) {
+                            fieldOffset += IntegerSerializerDeserializer.getInt(buf, tupleStart
+                                    + (i + keyFields.length - 1) * fieldSlotLength);
+                        }
+                        aggregators[i].outputFinalResult(dos, buf, fieldOffset, ((AggregateState[]) state.state)[i]);
                     } else {
                         aggregators[i].outputFinalResult(dos, null, 0, ((AggregateState[]) state.state)[i]);
                     }

@@ -259,6 +259,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 spec,
                 keyFields,
                 frameLimits,
+                tableSize,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                         .of(UTF8StringPointable.FACTORY) },
                 new UTF8StringNormalizedKeyComputerFactory(),
@@ -277,8 +278,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                         new FieldHashPartitionComputerFactory(
                                 keyFields,
                                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                        .of(UTF8StringPointable.FACTORY) }),
-                        tableSize), true);
+                                        .of(UTF8StringPointable.FACTORY) })), true);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -444,6 +444,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 spec,
                 keyFields,
                 frameLimits,
+                tableSize,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                         .of(UTF8StringPointable.FACTORY) },
                 new UTF8StringNormalizedKeyComputerFactory(),
@@ -462,8 +463,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                         new FieldHashPartitionComputerFactory(
                                 keyFields,
                                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                        .of(UTF8StringPointable.FACTORY) }),
-                        tableSize), true);
+                                        .of(UTF8StringPointable.FACTORY) })), true);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -624,6 +624,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 spec,
                 keyFields,
                 frameLimits,
+                tableSize,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
                         .of(UTF8StringPointable.FACTORY) },
                 new UTF8StringNormalizedKeyComputerFactory(),
@@ -642,8 +643,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                         new FieldHashPartitionComputerFactory(
                                 keyFields,
                                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                        .of(UTF8StringPointable.FACTORY) }),
-                        tableSize), true);
+                                        .of(UTF8StringPointable.FACTORY) })), true);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -815,6 +815,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 spec,
                 keyFields,
                 frameLimits,
+                tableSize,
                 new IBinaryComparatorFactory[] {
                         PointableBinaryComparatorFactory
                                 .of(UTF8StringPointable.FACTORY),
@@ -837,8 +838,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                                         PointableBinaryHashFunctionFactory
                                                 .of(UTF8StringPointable.FACTORY),
                                         PointableBinaryHashFunctionFactory
-                                                .of(UTF8StringPointable.FACTORY) }),
-                        tableSize), true);
+                                                .of(UTF8StringPointable.FACTORY) })), true);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -1016,6 +1016,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 spec,
                 keyFields,
                 frameLimits,
+                tableSize,
                 new IBinaryComparatorFactory[] {
                         PointableBinaryComparatorFactory
                                 .of(UTF8StringPointable.FACTORY),
@@ -1040,8 +1041,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                                         PointableBinaryHashFunctionFactory
                                                 .of(UTF8StringPointable.FACTORY),
                                         PointableBinaryHashFunctionFactory
-                                                .of(UTF8StringPointable.FACTORY) }),
-                        tableSize), true);
+                                                .of(UTF8StringPointable.FACTORY) })), true);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);
@@ -1214,6 +1214,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                 spec,
                 keyFields,
                 frameLimits,
+                tableSize,
                 new IBinaryComparatorFactory[] {
                         PointableBinaryComparatorFactory
                                 .of(UTF8StringPointable.FACTORY),
@@ -1238,8 +1239,7 @@ public class AggregationTest extends AbstractIntegrationTest {
                                         PointableBinaryHashFunctionFactory
                                                 .of(UTF8StringPointable.FACTORY),
                                         PointableBinaryHashFunctionFactory
-                                                .of(UTF8StringPointable.FACTORY) }),
-                        tableSize), true);
+                                                .of(UTF8StringPointable.FACTORY) })), true);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper,
                 NC2_ID, NC1_ID);

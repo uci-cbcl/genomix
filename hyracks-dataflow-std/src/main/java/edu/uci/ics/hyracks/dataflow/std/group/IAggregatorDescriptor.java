@@ -86,6 +86,9 @@ public interface IAggregatorDescriptor {
      */
     public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
             AggregateState state) throws HyracksDataException;
+    
+    public void outputPartialResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
+            int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException;
 
     /**
      * Output the final aggregation result.
@@ -101,6 +104,9 @@ public interface IAggregatorDescriptor {
      */
     public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
             AggregateState state) throws HyracksDataException;
+    
+    public void outputFinalResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
+            int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException;
 
     public void close();
 

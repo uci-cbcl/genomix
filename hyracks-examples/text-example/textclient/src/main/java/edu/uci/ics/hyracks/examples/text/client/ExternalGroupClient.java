@@ -54,6 +54,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.FrameFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.HashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableTableFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
@@ -201,8 +202,8 @@ public class ExternalGroupClient {
 
         switch (alg) {
             case 0: // new external hash graph
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor(spec, keys,
-                        framesLimit, new IBinaryComparatorFactory[] {
+                grouper = new ExternalGroupOperatorDescriptor(spec, keys, framesLimit, htSize,
+                        new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
@@ -212,7 +213,7 @@ public class ExternalGroupClient {
                                         false) }), outDesc, new HashSpillableTableFactory(
                                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                                 // PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY),
-                                PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) }), htSize), false);
+                                PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) })), false);
 
                 createPartitionConstraint(spec, grouper, outSplits);
 
@@ -274,8 +275,8 @@ public class ExternalGroupClient {
                 spec.connect(scanConn2, fileScanner, 0, grouper, 0);
                 break;
             default:
-                grouper = new edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor(spec, keys,
-                        framesLimit, new IBinaryComparatorFactory[] {
+                grouper = new ExternalGroupOperatorDescriptor(spec, keys, framesLimit, htSize,
+                        new IBinaryComparatorFactory[] {
                         // PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                         new IntegerNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
@@ -285,7 +286,7 @@ public class ExternalGroupClient {
                                         false) }), outDesc, new HashSpillableTableFactory(
                                 new FieldHashPartitionComputerFactory(keys, new IBinaryHashFunctionFactory[] {
                                 // PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY),
-                                PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) }), htSize), false);
+                                PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) })), false);
 
                 createPartitionConstraint(spec, grouper, outSplits);
 

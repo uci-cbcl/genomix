@@ -234,8 +234,8 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         INormalizedKeyComputerFactory normalizedKeyFactory = JobGenHelper.variablesToAscNormalizedKeyComputerFactory(
                 gbyCols, aggOpInputEnv, context);
         ExternalGroupOperatorDescriptor gbyOpDesc = new ExternalGroupOperatorDescriptor(spec, keyAndDecFields,
-                frameLimit, comparatorFactories, normalizedKeyFactory, aggregatorFactory, mergeFactory,
-                recordDescriptor, new HashSpillableTableFactory(tpcf, tableSize), false);
+                frameLimit, tableSize, comparatorFactories, normalizedKeyFactory, aggregatorFactory, mergeFactory,
+                recordDescriptor, new HashSpillableTableFactory(tpcf), false);
 
         contributeOpDesc(builder, gby, gbyOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();

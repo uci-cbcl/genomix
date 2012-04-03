@@ -140,6 +140,35 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDesc
 
             }
 
+            @Override
+            public void outputPartialResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart,
+                    int tupleLength, int fieldCount, int fieldSlotLength, AggregateState state)
+                    throws HyracksDataException {
+                throw new IllegalStateException("this method should not be called");
+            }
+
+            @Override
+            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
+                    int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException {
+                for (int i = 0; i < pipelines.length; i++) {
+                    outputWriter.setInputIdx(i);
+                    pipelines[i].close();
+                }
+                // outputWriter.writeTuple(appender);
+                tupleBuilder.reset();
+                ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
+                byte[] data = tb.getByteArray();
+                int[] fieldEnds = tb.getFieldEndOffsets();
+                int start = 0;
+                int offset = 0;
+                for (int i = 0; i < fieldEnds.length; i++) {
+                    if (i > 0)
+                        start = fieldEnds[i - 1];
+                    offset = fieldEnds[i] - start;
+                    tupleBuilder.addField(data, start, offset);
+                }
+            }
+
         };
     }
 

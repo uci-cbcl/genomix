@@ -74,7 +74,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
     private final ISpillableTableFactory spillableTableFactory;
     private final boolean isOutputSorted;
 
-    public ExternalGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
+    private final int tableSize;
+
+    public ExternalGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit, int tableSize,
             IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory firstNormalizerFactory,
             IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
             RecordDescriptor recordDescriptor, ISpillableTableFactory spillableTableFactory, boolean isOutputSorted) {
@@ -94,6 +96,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         this.firstNormalizerFactory = firstNormalizerFactory;
         this.spillableTableFactory = spillableTableFactory;
         this.isOutputSorted = isOutputSorted;
+        this.tableSize = tableSize;
 
         /**
          * Set the record descriptor. Note that since this operator is a unary
@@ -170,6 +173,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     state.gTable = spillableTableFactory.buildSpillableTable(ctx, keyFields, comparatorFactories,
                             firstNormalizerFactory, aggregatorFactory,
                             recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0), recordDescriptors[0],
+                            ExternalGroupOperatorDescriptor.this.tableSize,
                             ExternalGroupOperatorDescriptor.this.framesLimit);
                     state.gTable.reset();
                 }
@@ -315,8 +319,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                 if (isOutputSorted)
                                     gTable.sortFrames();
                                 gTable.flushFrames(writer, false);
+                                gTable.close();
+                                gTable = null;
                             }
-                            gTable = null;
                             aggState = null;
                             System.gc();
                         } else {
@@ -428,9 +433,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                  */
 
                                 tupleBuilder.reset();
-                                
-                                for(int k = 0; k < storedKeys.length; k++){
-                                	tupleBuilder.addField(fta, tupleIndex, storedKeys[k]);
+
+                                for (int k = 0; k < storedKeys.length; k++) {
+                                    tupleBuilder.addField(fta, tupleIndex, storedKeys[k]);
                                 }
 
                                 aggregator.init(tupleBuilder, fta, tupleIndex, aggregateState);
@@ -572,12 +577,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          */
                         currentRunFrames[runIndex] = 0;
                         for (int j = 0; j < runFrameLimit; j++) {
-                            int frameIndex = currentFrameIndexInRun[runIndex]
-                                    + j;
-                            if (runCursors[runIndex].nextFrame(inFrames
-                                    .get(frameIndex))) {
-                                tupleAccessors[frameIndex].reset(inFrames
-                                        .get(frameIndex));
+                            int frameIndex = currentFrameIndexInRun[runIndex] + j;
+                            if (runCursors[runIndex].nextFrame(inFrames.get(frameIndex))) {
+                                tupleAccessors[frameIndex].reset(inFrames.get(frameIndex));
                                 existNext = true;
                                 currentRunFrames[runIndex]++;
                             } else {

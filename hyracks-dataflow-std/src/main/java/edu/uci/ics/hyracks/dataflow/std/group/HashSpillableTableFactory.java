@@ -46,11 +46,9 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
     private static final long serialVersionUID = 1L;
     private final ITuplePartitionComputerFactory tpcf;
-    private final int tableSize;
 
-    public HashSpillableTableFactory(ITuplePartitionComputerFactory tpcf, int tableSize) {
+    public HashSpillableTableFactory(ITuplePartitionComputerFactory tpcf) {
         this.tpcf = tpcf;
-        this.tableSize = tableSize;
     }
 
     /*
@@ -70,7 +68,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
     public ISpillableTable buildSpillableTable(final IHyracksTaskContext ctx, final int[] keyFields,
             IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
             IAggregatorDescriptorFactory aggregateFactory, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, final int framesLimit) throws HyracksDataException {
+            RecordDescriptor outRecordDescriptor, final int tableSize, final int framesLimit)
+            throws HyracksDataException {
         final int[] storedKeys = new int[keyFields.length];
         @SuppressWarnings("rawtypes")
         ISerializerDeserializer[] storedKeySerDeser = new ISerializerDeserializer[keyFields.length];
@@ -225,7 +224,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                     for (int k = 0; k < keyFields.length; k++) {
                         stateTupleBuilder.addField(accessor, tIndex, keyFields[k]);
                     }
-                    
+
                     aggregator.init(stateTupleBuilder, accessor, tIndex, aggregateState);
                     if (!stateAppender.appendSkipEmptyField(stateTupleBuilder.getFieldEndOffsets(),
                             stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {
@@ -248,11 +247,6 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                 }
                 return true;
-            }
-
-            @Override
-            public List<ByteBuffer> getFrames() {
-                return frames;
             }
 
             @Override
@@ -501,6 +495,11 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 for (int i = 0; i < n; i++, a++, b++) {
                     swap(x, a, b);
                 }
+            }
+
+            @Override
+            public void finishup(boolean isSorted) {
+                // do nothing
             }
 
         };
