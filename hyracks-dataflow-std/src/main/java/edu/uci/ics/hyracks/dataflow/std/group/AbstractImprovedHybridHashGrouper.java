@@ -42,6 +42,8 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
 
     private final static int INT_SIZE = 4;
 
+    private final static int HASH_HEADER_COUNT_CHECKER = Integer.MAX_VALUE / (INT_SIZE * 2);
+
     private RunFileWriter[] spilledPartitionWriters;
 
     private final IHyracksTaskContext ctx;
@@ -173,7 +175,8 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
 
         int hashtableHeaderCount = getHeaderPageCount(hashtableSize, ctx.getFrameSize());
         if (hashtableHeaderCount > framesLimit) {
-            throw new HyracksDataException("Not enough frames to initialize the hash table");
+            throw new HyracksDataException("Not enough frames to initialize the hash table: " + hashtableHeaderCount
+                    + " required, but only " + framesLimit + " available.");
         }
 
         this.numOfPartitions = getNumOfPartitions(targetNumOfPartitions, hashtableHeaderCount, ctx.getFrameSize());
@@ -233,8 +236,8 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
         inputAccessor.reset(buffer);
         int tupleCount = inputAccessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
-            int pid = aggregatePartitionComputer.partition(inputAccessor, i, numOfPartitions);
             int hid = aggregatePartitionComputer.partition(inputAccessor, i, hashtableSize);
+            int pid = hid % numOfPartitions;
             insert(inputAccessor, i, pid, hid);
         }
     }
@@ -275,32 +278,32 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
         // - find the header record
         int headerFrameIndex = hid * 2 * INT_SIZE / frameSize;
         int headerFrameOffset = hid * 2 * INT_SIZE % frameSize;
-        int entryFrameIndex = -1, entryFrameOffset = -1;
+
         int pointerFrameIndex = hashtableHeaders[headerFrameIndex], pointerFrameOffset = headerFrameOffset;
-        if (headerFrameIndex >= 0) {
-            entryFrameIndex = frames[pointerFrameIndex].getInt(headerFrameOffset);
-            entryFrameOffset = frames[pointerFrameIndex].getInt(headerFrameOffset + INT_SIZE);
 
-            do {
-                if (entryFrameIndex < 0) {
-                    break;
-                }
-                int actualFrameIndex = getHashtablePartitionFrame(pid, entryFrameIndex);
-                ByteBuffer bufferContainsNextEntry = frames[actualFrameIndex];
+        int entryFrameIndex = frames[pointerFrameIndex].getInt(headerFrameOffset);
+        int entryFrameOffset = frames[pointerFrameIndex].getInt(headerFrameOffset + INT_SIZE);
 
-                hashtableEntryAccessor.reset(bufferContainsNextEntry, entryFrameOffset);
-                int c = compare(recKeys, accessor, tupleIndex, storedKeys, hashtableEntryAccessor);
-                if (c == 0) {
-                    break;
-                }
-                // move to the next entry along the linked list
-                pointerFrameIndex = actualFrameIndex;
-                pointerFrameOffset = entryFrameOffset + hashtableEntryAccessor.getTupleLength();
+        do {
+            if (entryFrameIndex < 0) {
+                break;
+            }
+            int actualFrameIndex = getHashtablePartitionFrame(pid, entryFrameIndex);
+            ByteBuffer bufferContainsNextEntry = frames[actualFrameIndex];
 
-                entryFrameIndex = bufferContainsNextEntry.getInt(pointerFrameOffset);
-                entryFrameOffset = bufferContainsNextEntry.getInt(pointerFrameOffset + INT_SIZE);
-            } while (true);
-        }
+            hashtableEntryAccessor.reset(bufferContainsNextEntry, entryFrameOffset);
+            int c = compare(recKeys, accessor, tupleIndex, storedKeys, hashtableEntryAccessor);
+            if (c == 0) {
+                break;
+            }
+            // move to the next entry along the linked list
+            pointerFrameIndex = actualFrameIndex;
+            pointerFrameOffset = entryFrameOffset + hashtableEntryAccessor.getTupleLength();
+
+            entryFrameIndex = bufferContainsNextEntry.getInt(pointerFrameOffset);
+            entryFrameOffset = bufferContainsNextEntry.getInt(pointerFrameOffset + INT_SIZE);
+        } while (true);
+
         if (entryFrameIndex >= 0) {
             // Found the entry; do aggregation
             grouper.aggregate(accessor, tupleIndex, hashtableEntryAccessor, groupState);
@@ -337,9 +340,7 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
                     }
                 }
 
-                int currentPartFrame = partitionCurrentFrame[pid];
                 partitionCurrentFrame[pid] = newPartitionFrameIndex;
-                framesNext[newPartitionFrameIndex] = currentPartFrame;
                 framesOffset[newPartitionFrameIndex] = 0;
                 partitionSizeInFrame[pid]++;
 
@@ -371,8 +372,7 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
             frames[partitionCurrentFrame[pid]].putInt(linkedListRefOffset + INT_SIZE, -1);
 
             // update the frame offset
-            framesOffset[partitionCurrentFrame[pid]] += internalTupleBuilderForInsert.getFieldEndOffsets().length
-                    * INT_SIZE + internalTupleBuilderForInsert.getSize() + 2 * INT_SIZE;
+            framesOffset[partitionCurrentFrame[pid]] = linkedListRefOffset + INT_SIZE * 2;
 
             partitionSizeInTuple[pid]++;
         }
@@ -469,6 +469,9 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
                     spilledPartitionWriters[i] = null;
                     // flush the in-memory hash table into the output
                     flushResidentPartition(i, finalWriter, merger, mergeState, false);
+
+                    // set the spilled flag to be empty
+                    partitionStatus.clear(i);
                 }
             }
         }
@@ -606,9 +609,7 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
     /**
      * Get the number of header pages for the built-in hashtable.
      * <p/>
-     * The number of header pages for the hashtable is calculated by dividing the total memory usage of all hashtable
-     * keys over the frame size. Each hashtable key takes two integer-length fields, indicating the frame index and the
-     * tuple index of the first entry with this hash key value.
+     * The number of header pages for the hashtable is calculated by dividing the total memory usage of all hashtable keys over the frame size. Each hashtable key takes two integer-length fields, indicating the frame index and the tuple index of the first entry with this hash key value.
      * <p/>
      * 
      * @param hashtableSize
@@ -617,17 +618,18 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
      */
     private int getHeaderPageCount(int hashtableSize, int frameSize) {
         int hashtableHeaderPageResidual = (hashtableSize % frameSize) * (INT_SIZE * 2) % frameSize == 0 ? 0 : 1;
-        return hashtableSize / frameSize * (INT_SIZE * 2) + hashtableHeaderPageResidual;
+        if (hashtableSize <= HASH_HEADER_COUNT_CHECKER)
+            return hashtableSize * (INT_SIZE * 2) / frameSize + hashtableHeaderPageResidual;
+        else
+            return hashtableSize / frameSize * (INT_SIZE * 2) + hashtableHeaderPageResidual;
     }
 
     /**
      * Get the number of partitions.
      * <p/>
-     * The number of partition is decided by the target number of partitions, and also the size of the hashtable. The
-     * goal is to contain the whole hash table header, and for each partition at least one page can be assigned.
+     * The number of partition is decided by the target number of partitions, and also the size of the hashtable. The goal is to contain the whole hash table header, and for each partition at least one page can be assigned.
      * <p/>
-     * In case that the target number of partitions is too large, or the available frame size is too small, the number
-     * of partition will be adjusted to be the available frames except for the headers and other reversed frames.
+     * In case that the target number of partitions is too large, or the available frame size is too small, the number of partition will be adjusted to be the available frames except for the headers and other reversed frames.
      * <p/>
      * 
      * @param targetNumOfPartitions
@@ -670,11 +672,9 @@ public abstract class AbstractImprovedHybridHashGrouper implements IFrameAllocat
     /**
      * Allocate a free frame.
      * <p/>
-     * If {@link #nextFreeFrameIndex} points to an unallocated frame slot, the frame is initialized and returned. Then
-     * the next frame of the free frame replaces the first free page {@link #nextFreeFrameIndex}.
+     * If {@link #nextFreeFrameIndex} points to an unallocated frame slot, the frame is initialized and returned. Then the next frame of the free frame replaces the first free page {@link #nextFreeFrameIndex}.
      * <p/>
-     * When there is no more free frame available, {@link #nextFreeFrameIndex} will point to
-     * {@link #NO_MORE_FREE_BUFFER}.
+     * When there is no more free frame available, {@link #nextFreeFrameIndex} will point to {@link #NO_MORE_FREE_BUFFER}.
      * <p/>
      * 
      * @return

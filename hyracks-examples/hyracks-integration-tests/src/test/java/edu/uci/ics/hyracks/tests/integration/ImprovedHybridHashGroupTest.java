@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamily;
+import edu.uci.ics.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -119,7 +119,7 @@ public class ImprovedHybridHashGroupTest extends AbstractIntegrationTest {
 
         ImprovedHybridHashGroupOperatorDescriptor grouper = new ImprovedHybridHashGroupOperatorDescriptor(spec,
                 frameLimits, inputSize, factor, hashtableSize, keyFields,
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new ImprovedHybridHashGroupFactory(), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
@@ -162,7 +162,7 @@ public class ImprovedHybridHashGroupTest extends AbstractIntegrationTest {
 
         ImprovedHybridHashGroupOperatorDescriptor grouper = new ImprovedHybridHashGroupOperatorDescriptor(spec,
                 frameLimits, inputSize, factor, hashtableSize, keyFields,
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new ImprovedHybridHashGroupFactory(), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
@@ -208,7 +208,7 @@ public class ImprovedHybridHashGroupTest extends AbstractIntegrationTest {
 
         ImprovedHybridHashGroupOperatorDescriptor grouper = new ImprovedHybridHashGroupOperatorDescriptor(spec,
                 frameLimits, inputSize, factor, hashtableSize, keyFields,
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new ImprovedHybridHashGroupFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
@@ -254,7 +254,7 @@ public class ImprovedHybridHashGroupTest extends AbstractIntegrationTest {
 
         ImprovedHybridHashGroupOperatorDescriptor grouper = new ImprovedHybridHashGroupOperatorDescriptor(spec,
                 frameLimits, inputSize, factor, hashtableSize, keyFields,
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new ImprovedHybridHashGroupFactory(), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
@@ -299,7 +299,8 @@ public class ImprovedHybridHashGroupTest extends AbstractIntegrationTest {
 
         ImprovedHybridHashGroupOperatorDescriptor grouper = new ImprovedHybridHashGroupOperatorDescriptor(spec,
                 frameLimits * 2, 3 * inputSize, factor, hashtableSize * 3, keyFields, new IBinaryHashFunctionFamily[] {
-                        UTF8StringBinaryHashFunctionFamily.INSTANCE, UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new ImprovedHybridHashGroupFactory(), new MultiFieldsAggregatorFactory(
@@ -345,7 +346,8 @@ public class ImprovedHybridHashGroupTest extends AbstractIntegrationTest {
 
         ImprovedHybridHashGroupOperatorDescriptor grouper = new ImprovedHybridHashGroupOperatorDescriptor(spec,
                 frameLimits * 2, 3 * inputSize, factor, 3 * hashtableSize, keyFields, new IBinaryHashFunctionFamily[] {
-                        UTF8StringBinaryHashFunctionFamily.INSTANCE, UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new ImprovedHybridHashGroupFactory(),
@@ -392,7 +394,8 @@ public class ImprovedHybridHashGroupTest extends AbstractIntegrationTest {
 
         ImprovedHybridHashGroupOperatorDescriptor grouper = new ImprovedHybridHashGroupOperatorDescriptor(spec,
                 frameLimits * 2, 3 * inputSize, factor, 3 * hashtableSize, keyFields, new IBinaryHashFunctionFamily[] {
-                        UTF8StringBinaryHashFunctionFamily.INSTANCE, UTF8StringBinaryHashFunctionFamily.INSTANCE },
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new ImprovedHybridHashGroupFactory(), new MultiFieldsAggregatorFactory(
