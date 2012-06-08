@@ -7,9 +7,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
-/**
- *
- */
 public class UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper implements IBinaryHashFunctionFamily {
     public static final IBinaryHashFunctionFamily INSTANCE = new UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper();
 
@@ -37,6 +34,9 @@ public class UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper implements I
                     char ch = UTF8StringPointable.charAt(bytes, sStart + c);
                     h = coefficient % r * h + ch;
                     c += UTF8StringPointable.charSize(bytes, sStart + c);
+                }
+                if (h == Integer.MIN_VALUE) {
+                    h += 1;
                 }
                 return h;
             }
