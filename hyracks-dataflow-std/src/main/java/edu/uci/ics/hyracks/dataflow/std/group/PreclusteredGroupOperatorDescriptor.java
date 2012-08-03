@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -35,6 +36,8 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
     private final IAggregatorDescriptorFactory aggregatorFactory;
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger LOGGER = Logger.getLogger(PreclusteredGroupOperatorDescriptor.class.getSimpleName());
 
     public PreclusteredGroupOperatorDescriptor(JobSpecification spec, int[] groupFields,
             IBinaryComparatorFactory[] comparatorFactories, IAggregatorDescriptorFactory aggregatorFactory,
@@ -65,8 +68,15 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             private PreclusteredGroupWriter pgw;
 
+            // FIXME
+            private long timer;
+
             @Override
             public void open() throws HyracksDataException {
+                // FIXME
+                timer = System.currentTimeMillis();
+                LOGGER.warning("Precluster-Open\t" + ctx.getIOManager().toString());
+
                 pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc,
                         recordDescriptors[0], writer);
                 pgw.open();
@@ -85,6 +95,10 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             @Override
             public void close() throws HyracksDataException {
                 pgw.close();
+
+                // FIXME
+                timer = System.currentTimeMillis() - timer;
+                LOGGER.warning("Precluster-Close\t" + timer + "\t" + ctx.getIOManager().toString());
             }
         };
     }

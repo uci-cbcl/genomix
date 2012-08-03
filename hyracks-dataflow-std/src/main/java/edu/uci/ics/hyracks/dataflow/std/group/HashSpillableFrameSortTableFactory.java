@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -39,6 +40,9 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
 
     private static final long serialVersionUID = 1L;
     private final ITuplePartitionComputerFactory tpcf;
+
+    // FIXME To be removed when releasing
+    private static final Logger LOGGER = Logger.getLogger(HashSpillableFrameSortTableFactory.class.getSimpleName());
 
     public HashSpillableFrameSortTableFactory(ITuplePartitionComputerFactory tpcf) {
         this.tpcf = tpcf;
@@ -124,25 +128,47 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
 
             private ByteBuffer stateFrame;
 
+            // FIXME To be removed when releasing
+            private long sortTimer = 0, insertedRecords = 0, hashedRecords = 0, flushTimer = 0;
+
             @Override
             public void sortFrames() {
+                // FIXME To be removed when releasing
+                long beforeSort = System.currentTimeMillis();
+
                 frameSorter.sortFrames();
+
+                // FIXME To be removed when releasing
+                sortTimer += System.currentTimeMillis() - beforeSort;
             }
 
             @Override
             public void reset() {
+                // FIXME To be removed when releasing
+                LOGGER.warning("HashSpillableFrameSortTable-Reset\t" + sortTimer + "\t" + insertedRecords + "\t"
+                        + hashedRecords + "\t" + flushTimer);
+                sortTimer = 0;
+                insertedRecords = 0;
+                hashedRecords = 0;
+                flushTimer = 0;
+
                 table.reset();
                 frameSorter.reset();
                 aggregator.reset();
+
+                if (stateFrame == null) {
+                    stateFrame = ctx.allocateFrame();
+                    stateAppender.reset(stateFrame, true);
+                } else {
+                    if (stateAppender.getTupleCount() > 0) {
+                        frameSorter.insertFrame(stateFrame);
+                        stateAppender.reset(stateFrame, true);
+                    }
+                }
             }
 
             @Override
             public boolean insert(FrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                if (stateFrame == null) {
-                    // initialize the frame for aggregation result
-                    stateFrame = ctx.allocateFrame();
-                    stateAppender.reset(stateFrame, true);
-                }
                 int entry = tpc.partition(accessor, tIndex, tableSize);
                 boolean foundGroup = false;
                 int offset = 0;
@@ -171,8 +197,8 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
                     }
 
                     aggregator.init(stateTupleBuilder, accessor, tIndex, aggregateState);
-                    if (!stateAppender.append(stateTupleBuilder.getFieldEndOffsets(),
-                            stateTupleBuilder.getByteArray(), 0, stateTupleBuilder.getSize())) {
+                    if (!stateAppender.append(stateTupleBuilder.getFieldEndOffsets(), stateTupleBuilder.getByteArray(),
+                            0, stateTupleBuilder.getSize())) {
                         if (!nextAvailableFrame()) {
                             return false;
                         }
@@ -185,12 +211,19 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
                     storedTuplePointer.frameIndex = frameSorter.getFrameCount();
                     storedTuplePointer.tupleIndex = stateAppender.getTupleCount() - 1;
                     table.insert(entry, storedTuplePointer);
+
+                    // FIXME To be removed when releasing
+                    hashedRecords++;
+
                 } else {
 
                     aggregator.aggregate(accessor, tIndex, storedKeysAccessor, storedTuplePointer.tupleIndex,
                             aggregateState);
 
                 }
+                // FIXME To be removed when releasing
+                insertedRecords++;
+
                 return true;
             }
 
@@ -201,12 +234,22 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
 
             @Override
             public void flushFrames(IFrameWriter writer, boolean isPartial) throws HyracksDataException {
+                // FIXME To be removed when releasing
+                long beforeFlush = System.currentTimeMillis();
+
                 writer.open();
                 frameSorter.flushFrames(writer, isPartial);
+
+                // FIXME
+                flushTimer += System.currentTimeMillis() - beforeFlush;
             }
 
             @Override
             public void close() {
+                // FIXME To be removed when releasing
+                LOGGER.warning("HashSpillableFrameSortTable-Close\t" + sortTimer + "\t" + insertedRecords + "\t"
+                        + hashedRecords + "\t" + flushTimer);
+
                 table.close();
                 aggregateState.close();
             }
@@ -221,7 +264,9 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
              */
             private boolean nextAvailableFrame() {
                 // Return false if the number of frames is equal to the limit.
-                if (frameSorter.getFrameCount() >= framesLimit) {
+                if (frameSorter.getFrameCount() + table.getFrameCount() >= framesLimit) {
+                    LOGGER.warning("HashSpillableFrameSortTableFactory-NextAvailableFrame\t"
+                            + frameSorter.getFrameCount() + "\t" + table.getFrameCount());
                     return false;
                 }
                 // Otherwise, dump the frame to the frame sorter, and reset the frame
@@ -235,10 +280,18 @@ public class HashSpillableFrameSortTableFactory implements ISpillableTableFactor
                 if (stateFrame.getInt(stateFrame.capacity() - 4) > 0) {
                     frameSorter.insertFrame(stateFrame);
                     if (isSorted) {
+                        // FIXME To be removed when releasing
+                        long beforeSort = System.currentTimeMillis();
+
                         frameSorter.sortFrames();
+
+                        // FIXME To be removed when releasing
+                        sortTimer += System.currentTimeMillis() - beforeSort;
                     }
                     stateAppender.reset(stateFrame, true);
                 }
+                LOGGER.warning("HashSpillableFrameSortTableFactory-NextAvailableFrame\t" + frameSorter.getFrameCount()
+                        + "\t" + table.getFrameCount());
             }
         };
     }

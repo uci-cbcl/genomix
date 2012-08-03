@@ -33,16 +33,28 @@ public class AggregateState implements Serializable {
         state = obj;
     }
 
+    /**
+     * Recursively reset the object states. Nested AggregateState objects
+     * will triggered for reset, and other object states will be reset
+     * to null.
+     */
     public void reset() {
         if (state != null && state.getClass().isArray()) {
-            for (Object s : (Object[]) (state)) {
+            boolean isRecursiveState = true;
+            for (int i = 0; i < ((Object[]) state).length; i++) {
+                Object s = ((Object[]) state)[i];
                 if (s instanceof AggregateState) {
                     ((AggregateState) s).reset();
+                } else {
+                    isRecursiveState = false;
+                    break;
                 }
             }
-        } else {
-            state = null;
+            if (isRecursiveState) {
+                return;
+            }
         }
+        state = null;
     }
 
     public void close() {

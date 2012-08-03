@@ -27,11 +27,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
-import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
-/**
- *
- */
 public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
@@ -58,7 +54,7 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
      */
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, final int[] keyFields, final int[] keyFieldsInPartialResults)
+            final RecordDescriptor outRecordDescriptor, final int[] keyFields, final int[] keyFieldsInPartialResults)
             throws HyracksDataException {
 
         final IFieldAggregateDescriptor[] aggregators = new IFieldAggregateDescriptor[aggregatorFactories.length];
@@ -206,16 +202,29 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
             }
 
             @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+                int initLength = 0;
+                for (int i = 0; i < aggregators.length; i++)
+                    initLength += aggregators[i].getInitSize(accessor, tIndex);
+                return initLength;
+            }
+
+            @Override
+            public int getFieldCount() {
+                return aggregators.length;
+            }
+
+            @Override
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset, int length,
                     AggregateState state) throws HyracksDataException {
-                if (stateAccessor != null) {
-                    int stateTupleOffset = stateAccessor.getTupleStartOffset();
+                if (data != null) {
                     int fieldIndex = 0;
                     for (int i = 0; i < aggregators.length; i++) {
                         if (aggregators[i].needsBinaryState()) {
-                            int stateFieldOffset = stateAccessor.getFieldStartOffset(keys.length + fieldIndex);
-                            aggregators[i].aggregate(accessor, tIndex, stateAccessor.getBuffer().array(),
-                                    stateTupleOffset + stateAccessor.getFieldSlotsLength() + stateFieldOffset,
+                            int stateFieldOffset = (keys.length + fieldIndex == 0) ? 0 : getInt(data, offset
+                                    + (keys.length + fieldIndex - 1) * 4);
+                            aggregators[i].aggregate(accessor, tIndex, data,
+                                    offset + outRecordDescriptor.getFieldCount() * 4 + stateFieldOffset,
                                     ((AggregateState[]) state.state)[i]);
                             fieldIndex++;
                         } else {
@@ -229,17 +238,9 @@ public class MultiFieldsAggregatorFactory implements IAggregatorDescriptorFactor
                 }
             }
 
-            @Override
-            public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
-                int initLength = 0;
-                for (int i = 0; i < aggregators.length; i++)
-                    initLength += aggregators[i].getInitSize(accessor, tIndex);
-                return initLength;
-            }
-
-            @Override
-            public int getFieldCount() {
-                return aggregators.length;
+            private int getInt(byte[] data, int offset) {
+                return ((data[offset] & 0xff) << 24) | ((data[offset + 1] & 0xff) << 16)
+                        | ((data[offset + 2] & 0xff) << 8) | (data[offset + 3] & 0xff);
             }
         };
     }

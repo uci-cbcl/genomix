@@ -79,6 +79,7 @@ public class BSTMemMgr implements IMemoryManager {
         }
 
         int sl = BSTNodeUtil.getLength(parentRes[1], frames, convertBuffer);
+
         int acLen = BSTNodeUtil.getActualLength(length);
         if (shouldSplit(sl, acLen)) {
             int[] s = split(parentRes[1], parentRes[0], acLen);
@@ -702,6 +703,9 @@ public class BSTMemMgr implements IMemoryManager {
         if (!isNodeNull(rfix, roff)) {
             s += debugPrintSubTree(new Slot(rfix, roff)) + "\n";
         }
+        if (!isNodeNull(nfix, noff)) {
+            s += debugPrintSubTree(new Slot(nfix, noff)) + "\n";
+        }
 
         return s;
     }
@@ -714,5 +718,25 @@ public class BSTMemMgr implements IMemoryManager {
         int al = BSTNodeUtil.getActualLength(l);
         boolean f = BSTNodeUtil.isFree(fix, off, frames);
         return fix + ", " + off + " (free: " + f + ") (Len: " + l + ") (actual len: " + al + ") ";
+    }
+
+    @Override
+    public boolean writeTuple(int frameIndex, int frameOffset, int[] fieldOffsets, byte[] data, int offset, int len) {
+        int offToCopy = frameOffset + BSTNodeUtil.HEADER_SIZE;
+        for (int i = 0; i < fieldOffsets.length; i++) {
+            frames[frameIndex].putInt(offToCopy + i * 4, fieldOffsets[i]);
+        }
+        System.arraycopy(data, offset, frames[frameIndex].array(), offToCopy + fieldOffsets.length * 4, len);
+        return true;
+    }
+
+    @Override
+    public int getTupleStartOffset(int frameIndex, int frameOffset) {
+        return frameOffset + BSTNodeUtil.HEADER_SIZE;
+    }
+
+    @Override
+    public int getSlotStartOffset(int frameIndex, int frameOffset) {
+        return frameOffset - BSTNodeUtil.HEADER_SIZE;
     }
 }

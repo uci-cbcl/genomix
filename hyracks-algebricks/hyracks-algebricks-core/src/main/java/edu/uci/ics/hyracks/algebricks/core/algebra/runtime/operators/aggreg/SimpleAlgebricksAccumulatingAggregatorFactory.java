@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
-import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
 public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
@@ -174,10 +173,10 @@ public class SimpleAlgebricksAccumulatingAggregatorFactory implements IAggregato
             }
 
             @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset, int length,
                     AggregateState state) throws HyracksDataException {
                 // TODO Auto-generated method stub
-                
+
             }
 
         };

@@ -22,6 +22,8 @@ public final class FileReference implements Serializable {
 
     private final File file;
 
+    private int deviceID = -1, fileID = -1;
+
     public FileReference(IODeviceHandle dev, String devRelPath) {
         file = new File(dev.getPath(), devRelPath);
     }
@@ -54,5 +56,21 @@ public final class FileReference implements Serializable {
 
     public void delete() {
         file.delete();
+    }
+
+    public void setDeviceID(int devID) {
+        deviceID = devID;
+    }
+
+    public int getDeviceID() {
+        return deviceID;
+    }
+
+    public void setFileID(int fid) {
+        fileID = fid;
+    }
+
+    public int getFileID() {
+        return fileID;
     }
 }

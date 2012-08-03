@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -61,6 +62,13 @@ public class ExternalSortRunMerger {
     private int currentSize; // Used in External sort, with replacement
                              // selection and limit on output size
 
+    private boolean isLoadBuffered;
+
+    // FIXME
+    long mergeTimer = 0, flushTimerInNS = 0;
+    int mergeRunCount = 0;
+    private static Logger LOGGER = Logger.getLogger(ExternalSortRunMerger.class.getSimpleName());
+
     // Constructor for external sort, no replacement selection
     public ExternalSortRunMerger(IHyracksTaskContext ctx, FrameSorter frameSorter, List<IFrameReader> runs,
             int[] sortFields, IBinaryComparator[] comparators, RecordDescriptor recordDesc, int framesLimit,
@@ -74,6 +82,23 @@ public class ExternalSortRunMerger {
         this.framesLimit = framesLimit;
         this.writer = writer;
         this.outputLimit = -1;
+        this.isLoadBuffered = false;
+    }
+
+    // Constructor for external sort, no replacement selection, with load buffer switch
+    public ExternalSortRunMerger(IHyracksTaskContext ctx, FrameSorter frameSorter, List<IFrameReader> runs,
+            int[] sortFields, IBinaryComparator[] comparators, RecordDescriptor recordDesc, int framesLimit,
+            IFrameWriter writer, boolean isLoadBuffered) {
+        this.ctx = ctx;
+        this.frameSorter = frameSorter;
+        this.runs = new LinkedList<IFrameReader>(runs);
+        this.sortFields = sortFields;
+        this.comparators = comparators;
+        this.recordDesc = recordDesc;
+        this.framesLimit = framesLimit;
+        this.writer = writer;
+        this.outputLimit = -1;
+        this.isLoadBuffered = isLoadBuffered;
     }
 
     // Constructor for external sort with replacement selection
@@ -92,7 +117,10 @@ public class ExternalSortRunMerger {
     }
 
     public void process() throws HyracksDataException {
+
         writer.open();
+        // FIXME
+        int mergeLevels = 0;
         try {
             if (runs.size() <= 0) {
                 if (frameSorter != null && frameSorter.getFrameCount() > 0) {
@@ -114,12 +142,41 @@ public class ExternalSortRunMerger {
                 for (int i = 0; i < framesLimit - 1; ++i) {
                     inFrames.add(ctx.allocateFrame());
                 }
-                while (runs.size() > 0) {
-                    try {
-                        doPass(runs);
-                    } catch (Exception e) {
-                        throw new HyracksDataException(e);
+                int maxMergeWidth = framesLimit - 1;
+
+                while (runs.size() > maxMergeWidth) {
+                    int generationSeparator = 0;
+                    // FIXME
+                    int mergeRounds = 0;
+                    while (generationSeparator < runs.size() && runs.size() > maxMergeWidth) {
+                        int mergeWidth = Math.min(Math.min(runs.size() - generationSeparator, maxMergeWidth),
+                                runs.size() - maxMergeWidth + 1);
+                        LOGGER.warning(ExternalSortRunMerger.class.getSimpleName() + "-process\t" + mergeLevels + "\t"
+                                + mergeRounds + "\t" + runs.size() + "\t" + mergeWidth);
+                        FileReference newRun = null;
+                        IFrameWriter mergeResultWriter = this.writer;
+                        newRun = ctx.createManagedWorkspaceFile(ExternalSortRunMerger.class.getSimpleName());
+                        mergeResultWriter = new RunFileWriter(newRun, ctx.getIOManager());
+                        mergeResultWriter.open();
+                        IFrameReader[] runCursors = new RunFileReader[mergeWidth];
+                        for (int i = 0; i < mergeWidth; i++) {
+                            runCursors[i] = runs.get(generationSeparator + i);
+                        }
+                        merge(mergeResultWriter, runCursors);
+                        runs.subList(generationSeparator, generationSeparator + mergeWidth).clear();
+                        runs.add(generationSeparator++, ((RunFileWriter) mergeResultWriter).createReader());
+                        mergeRounds++;
                     }
+                    mergeLevels++;
+                    mergeRunCount += mergeRounds;
+
+                }
+                if (!runs.isEmpty()) {
+                    IFrameReader[] runCursors = new RunFileReader[runs.size()];
+                    for (int i = 0; i < runCursors.length; i++) {
+                        runCursors[i] = runs.get(i);
+                    }
+                    merge(writer, runCursors);
                 }
             }
         } catch (Exception e) {
@@ -127,47 +184,38 @@ public class ExternalSortRunMerger {
             throw new HyracksDataException(e);
         } finally {
             writer.close();
+
+            // FIXME
+            LOGGER.warning("PhaseB\t" + mergeTimer + "\t" + flushTimerInNS + "\t"
+                    + mergeLevels + "\t" + mergeRunCount);
         }
     }
 
     // creates a new run from runs that can fit in memory.
-    private void doPass(List<IFrameReader> runs) throws HyracksDataException {
-        FileReference newRun = null;
-        IFrameWriter writer = this.writer;
-        boolean finalPass = false;
-        if (runs.size() + 1 <= framesLimit) { // + 1 outFrame
-            finalPass = true;
-            for (int i = inFrames.size() - 1; i >= runs.size(); i--) {
-                inFrames.remove(i);
-            }
-        } else {
-            newRun = ctx.createManagedWorkspaceFile(ExternalSortRunMerger.class.getSimpleName());
-            writer = new RunFileWriter(newRun, ctx.getIOManager());
-            writer.open();
-        }
+    private void merge(IFrameWriter mergeResultWriter, IFrameReader[] runCursors) throws HyracksDataException {
+        // FIXME
+        long timer = System.currentTimeMillis();
+
+        IFrameReader merger;
+        if (isLoadBuffered)
+            merger = new RunMergingFrameReaderWithLoadBuffering(ctx, runCursors, framesLimit, sortFields, comparators,
+                    recordDesc);
+        else
+            merger = new RunMergingFrameReader(ctx, runCursors, inFrames, sortFields, comparators, recordDesc);
+        merger.open();
         try {
-            IFrameReader[] runCursors = new RunFileReader[inFrames.size()];
-            for (int i = 0; i < inFrames.size(); i++) {
-                runCursors[i] = runs.get(i);
-            }
-            RunMergingFrameReader merger = new RunMergingFrameReader(ctx, runCursors, inFrames, sortFields,
-                    comparators, recordDesc);
-            merger.open();
-            try {
-                while (merger.nextFrame(outFrame)) {
-                    FrameUtils.flushFrame(outFrame, writer);
-                }
-            } finally {
-                merger.close();
-            }
-            runs.subList(0, inFrames.size()).clear();
-            if (!finalPass) {
-                runs.add(0, ((RunFileWriter) writer).createReader());
+            // FIXME remove when deploying
+            long flushTimer;
+            while (merger.nextFrame(outFrame)) {
+                flushTimer = System.nanoTime();
+                FrameUtils.flushFrame(outFrame, mergeResultWriter);
+                flushTimerInNS += System.nanoTime() - flushTimer;
             }
         } finally {
-            if (!finalPass) {
-                writer.close();
-            }
+            merger.close();
+
+            // FIXME
+            mergeTimer += System.currentTimeMillis() - timer;
         }
     }
 

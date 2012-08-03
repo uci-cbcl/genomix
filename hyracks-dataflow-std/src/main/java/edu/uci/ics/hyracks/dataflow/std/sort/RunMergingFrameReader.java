@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -41,6 +42,10 @@ public class RunMergingFrameReader implements IFrameReader {
     private int[] tupleIndexes;
     private FrameTupleAccessor[] tupleAccessors;
 
+    // FIXME
+    private static final Logger LOGGER = Logger.getLogger(RunMergingFrameReader.class.getSimpleName());
+    long comparisonCounter = 0, readTimer = 0;
+
     public RunMergingFrameReader(IHyracksTaskContext ctx, IFrameReader[] runCursors, List<ByteBuffer> inFrames,
             int[] sortFields, IBinaryComparator[] comparators, RecordDescriptor recordDesc) {
         this.ctx = ctx;
@@ -54,15 +59,19 @@ public class RunMergingFrameReader implements IFrameReader {
 
     @Override
     public void open() throws HyracksDataException {
-        tupleAccessors = new FrameTupleAccessor[inFrames.size()];
+        tupleAccessors = new FrameTupleAccessor[runCursors.length];
         Comparator<ReferenceEntry> comparator = createEntryComparator(comparators);
-        topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(), recordDesc, inFrames.size(), comparator);
-        tupleIndexes = new int[inFrames.size()];
-        for (int i = 0; i < inFrames.size(); i++) {
+        topTuples = new ReferencedPriorityQueue(ctx.getFrameSize(), recordDesc, runCursors.length, comparator);
+        tupleIndexes = new int[runCursors.length];
+        for (int i = 0; i < runCursors.length; i++) {
             tupleIndexes[i] = 0;
             int runIndex = topTuples.peek().getRunid();
             runCursors[runIndex].open();
-            if (runCursors[runIndex].nextFrame(inFrames.get(runIndex))) {
+            // FIXME
+            long timer = System.nanoTime();
+            boolean hasFrame = runCursors[runIndex].nextFrame(inFrames.get(runIndex));
+            readTimer += System.nanoTime() - timer;
+            if (hasFrame) {
                 tupleAccessors[runIndex] = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
                 tupleAccessors[runIndex].reset(inFrames.get(runIndex));
                 setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
@@ -88,6 +97,7 @@ public class RunMergingFrameReader implements IFrameReader {
 
             ++tupleIndexes[runIndex];
             setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
+
         }
 
         if (outFrameAppender.getTupleCount() > 0) {
@@ -98,9 +108,10 @@ public class RunMergingFrameReader implements IFrameReader {
 
     @Override
     public void close() throws HyracksDataException {
-        for (int i = 0; i < inFrames.size(); ++i) {
+        for (int i = 0; i < runCursors.length; ++i) {
             closeRun(i, runCursors, tupleAccessors);
         }
+        LOGGER.warning("RunMergingFrameReader\t" + readTimer + "\t" + comparisonCounter);
     }
 
     private void setNextTopTuple(int runIndex, int[] tupleIndexes, IFrameReader[] runCursors,
@@ -119,8 +130,11 @@ public class RunMergingFrameReader implements IFrameReader {
         if (tupleAccessors[runIndex] == null || runCursors[runIndex] == null) {
             return false;
         } else if (tupleIndexes[runIndex] >= tupleAccessors[runIndex].getTupleCount()) {
-            ByteBuffer buf = tupleAccessors[runIndex].getBuffer(); // same-as-inFrames.get(runIndex)
-            if (runCursors[runIndex].nextFrame(buf)) {
+            // FIXME
+            long timer = System.nanoTime();
+            boolean hasFrame = runCursors[runIndex].nextFrame(inFrames.get(runIndex));
+            readTimer += System.nanoTime() - timer;
+            if (hasFrame) {
                 tupleIndexes[runIndex] = 0;
                 return hasNextTuple(runIndex, tupleIndexes, runCursors, tupleAccessors);
             } else {
@@ -138,11 +152,14 @@ public class RunMergingFrameReader implements IFrameReader {
             runCursors[index] = null;
             tupleAccessors[index] = null;
         }
+
     }
 
     private Comparator<ReferenceEntry> createEntryComparator(final IBinaryComparator[] comparators) {
         return new Comparator<ReferenceEntry>() {
             public int compare(ReferenceEntry tp1, ReferenceEntry tp2) {
+                // FIXME
+                comparisonCounter++;
                 FrameTupleAccessor fta1 = (FrameTupleAccessor) tp1.getAccessor();
                 FrameTupleAccessor fta2 = (FrameTupleAccessor) tp2.getAccessor();
                 int j1 = tp1.getTupleIndex();

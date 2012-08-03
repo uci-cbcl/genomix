@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
@@ -48,6 +49,10 @@ public class FrameSorter {
     protected int[] tPointers;
     protected int tupleCount;
 
+    // FIXME
+    private static final Logger LOGGER = Logger.getLogger(FrameSorter.class.getSimpleName());
+    private long comparisonCounter = 0, swapCounter = 0;
+
     public FrameSorter(IHyracksCommonContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
@@ -68,8 +73,16 @@ public class FrameSorter {
     }
 
     public void reset() {
+        // FIXME
+        LOGGER.warning("FrameSorter-Reset\t" + tupleCount + "\t" + comparisonCounter + "\t" + swapCounter);
+
         dataFrameCount = 0;
         tupleCount = 0;
+
+        // FIXME
+        comparisonCounter = 0;
+        swapCounter = 0;
+
     }
 
     public int getFrameCount() {
@@ -198,6 +211,7 @@ public class FrameSorter {
             x[a * 4 + i] = x[b * 4 + i];
             x[b * 4 + i] = t;
         }
+        swapCounter++;
     }
 
     private void vecswap(int x[], int a, int b, int n) {
@@ -207,6 +221,8 @@ public class FrameSorter {
     }
 
     private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v) {
+        // FIXME
+        comparisonCounter++;
         int i1 = tPointers[tp1 * 4];
         int j1 = tPointers[tp1 * 4 + 1];
         int v1 = tPointers[tp1 * 4 + 3];

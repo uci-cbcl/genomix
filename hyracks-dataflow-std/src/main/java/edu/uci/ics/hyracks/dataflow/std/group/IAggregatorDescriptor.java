@@ -86,7 +86,7 @@ public interface IAggregatorDescriptor {
      */
     public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
             AggregateState state) throws HyracksDataException;
-    
+
     public void outputPartialResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
             int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException;
 
@@ -104,17 +104,28 @@ public interface IAggregatorDescriptor {
      */
     public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
             AggregateState state) throws HyracksDataException;
-    
+
     public void outputFinalResult(ArrayTupleBuilder tupleBuilder, byte[] buf, int tupleStart, int tupleLength,
             int fieldCount, int fieldSlotLength, AggregateState state) throws HyracksDataException;
 
     public void close();
-    
+
     public int getInitSize(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException;
-    
+
     public int getFieldCount();
-    
-    public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+
+    /**
+     * Aggregate a tuple specified by its offset and position in a byte array. 
+     * 
+     * @param accessor
+     * @param tIndex
+     * @param data
+     * @param offset
+     * @param length
+     * @param state
+     * @throws HyracksDataException
+     */
+    public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset, int length,
             AggregateState state) throws HyracksDataException;
 
 }

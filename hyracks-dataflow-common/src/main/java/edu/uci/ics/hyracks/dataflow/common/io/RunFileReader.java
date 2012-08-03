@@ -42,8 +42,12 @@ public class RunFileReader implements IFrameReader {
     public void close() throws HyracksDataException {
         ioManager.close(handle);
     }
-    
+
     public long getFileSize() {
         return size;
+    }
+
+    public void deallocateFile() {
+        file.delete();
     }
 }

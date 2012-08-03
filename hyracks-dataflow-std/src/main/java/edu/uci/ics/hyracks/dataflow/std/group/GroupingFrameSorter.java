@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
@@ -33,6 +34,9 @@ public class GroupingFrameSorter extends FrameSorter {
     private final AggregateState aggregateState;
 
     private final RecordDescriptor partialOutRecordDescriptor, finalOutRecordDescriptor;
+
+    // FIXME
+    private static final Logger LOGGER = Logger.getLogger(GroupingFrameSorter.class.getSimpleName());
 
     public GroupingFrameSorter(IHyracksCommonContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
@@ -59,6 +63,10 @@ public class GroupingFrameSorter extends FrameSorter {
     }
 
     public void flushFrames(IFrameWriter writer, boolean isPartial) throws HyracksDataException {
+        // FIXME
+        long flushTimer = System.currentTimeMillis();
+        int ioFrameCounter = 0;
+
         ArrayTupleBuilder outTupleBuilder;
         if (isPartial) {
             outTupleBuilder = new ArrayTupleBuilder(partialOutRecordDescriptor.getFieldCount());
@@ -142,6 +150,8 @@ public class GroupingFrameSorter extends FrameSorter {
                 if (!appender.appendSkipEmptyField(outTupleBuilder.getFieldEndOffsets(),
                         outTupleBuilder.getByteArray(), 0, outTupleBuilder.getSize())) {
                     FrameUtils.flushFrame(outFrame, writer);
+                    // FIXME
+                    ioFrameCounter++;
                     appender.reset(outFrame, true);
                     if (!appender.appendSkipEmptyField(outTupleBuilder.getFieldEndOffsets(),
                             outTupleBuilder.getByteArray(), 0, outTupleBuilder.getSize())) {
@@ -152,9 +162,15 @@ public class GroupingFrameSorter extends FrameSorter {
         }
         if (appender.getTupleCount() > 0) {
             FrameUtils.flushFrame(outFrame, writer);
+            // FIXME
+            ioFrameCounter++;
             appender.reset(outFrame, true);
         }
         aggregator.close();
+
+        // FIXME
+        flushTimer = System.currentTimeMillis() - flushTimer;
+        LOGGER.warning("GroupingFrameSorter-Flush\t" + tupleCount + "\t" + flushTimer + "\t" + ioFrameCounter);
     }
 
 }

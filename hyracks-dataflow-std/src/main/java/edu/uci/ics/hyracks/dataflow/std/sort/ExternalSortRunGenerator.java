@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -33,6 +34,11 @@ public class ExternalSortRunGenerator implements IFrameWriter {
     private final FrameSorter frameSorter;
     private final List<IFrameReader> runs;
     private final int maxSortFrames;
+
+    // FIXME
+    long insertTimer = 0, sortTimer = 0, flushTimer = 0;
+    int runFileCount = 0;
+    Logger LOGGER = Logger.getLogger(ExternalSortRunGenerator.class.getSimpleName());
 
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
@@ -54,28 +60,45 @@ public class ExternalSortRunGenerator implements IFrameWriter {
         if (frameSorter.getFrameCount() >= maxSortFrames) {
             flushFramesToRun();
         }
+        // FIXME
+        long timer = System.currentTimeMillis();
         frameSorter.insertFrame(buffer);
+        insertTimer += System.currentTimeMillis() - timer;
     }
 
     @Override
     public void close() throws HyracksDataException {
         if (frameSorter.getFrameCount() > 0) {
             if (runs.size() <= 0) {
+                // FIXME
+                long timer = System.currentTimeMillis();
                 frameSorter.sortFrames();
+                sortTimer += System.currentTimeMillis() - timer;
             } else {
                 flushFramesToRun();
             }
         }
+        // FIXME
+        LOGGER.warning("PhaseA\t" + insertTimer + "\t" + sortTimer + "\t" + flushTimer + "\t"
+                + runFileCount);
     }
 
     private void flushFramesToRun() throws HyracksDataException {
+
+        // FIXME
+        long timer = System.currentTimeMillis();
         frameSorter.sortFrames();
+        sortTimer += System.currentTimeMillis() - timer;
+
         FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
                 ExternalSortRunGenerator.class.getSimpleName());
         RunFileWriter writer = new RunFileWriter(file, ctx.getIOManager());
         writer.open();
         try {
+            timer = System.currentTimeMillis();
             frameSorter.flushFrames(writer);
+            flushTimer += System.currentTimeMillis() - timer;
+            runFileCount++;
         } finally {
             writer.close();
         }

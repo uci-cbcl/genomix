@@ -115,7 +115,8 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
                 sum += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
-                count += 1;
+                count += IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart + 4);
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);
                     sum += buf.getInt(offset);

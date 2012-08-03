@@ -19,6 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -51,14 +52,24 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final int framesLimit;
 
+    private final boolean isLoadBuffered;
+
+    private static final Logger LOGGER = Logger.getLogger(ExternalSortOperatorDescriptor.class.getSimpleName());
+
     public ExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
-        this(spec, framesLimit, sortFields, null, comparatorFactories, recordDescriptor);
+        this(spec, framesLimit, sortFields, null, comparatorFactories, recordDescriptor, false);
     }
 
     public ExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
+        this(spec, framesLimit, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor, false);
+    }
+
+    public ExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
+            INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
+            RecordDescriptor recordDescriptor, boolean isLoadBuffered) {
         super(spec, 1, 1);
         this.framesLimit = framesLimit;
         this.sortFields = sortFields;
@@ -68,6 +79,12 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             throw new IllegalStateException();// minimum of 2 fames (1 in,1 out)
         }
         recordDescriptors[0] = recordDescriptor;
+        this.isLoadBuffered = isLoadBuffered;
+    }
+
+    public ExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
+            IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor, boolean isLoadBuffered) {
+        this(spec, framesLimit, sortFields, null, comparatorFactories, recordDescriptor, isLoadBuffered);
     }
 
     @Override
@@ -119,8 +136,14 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private ExternalSortRunGenerator runGen;
 
+                // FIXME
+                private long timer;
+
                 @Override
                 public void open() throws HyracksDataException {
+                    // FIXME
+                    timer = System.currentTimeMillis();
+
                     runGen = new ExternalSortRunGenerator(ctx, sortFields, firstKeyNormalizerFactory,
                             comparatorFactories, recordDescriptors[0], framesLimit);
                     runGen.open();
@@ -133,12 +156,16 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void close() throws HyracksDataException {
+                    timer = System.currentTimeMillis() - timer;
+
                     SortTaskState state = new SortTaskState(ctx.getJobletContext().getJobId(), new TaskId(
                             getActivityId(), partition));
                     runGen.close();
                     state.runs = runGen.getRuns();
                     state.frameSorter = runGen.getFrameSorter();
                     ctx.setTaskState(state);
+
+                    LOGGER.warning("Phase1\t" + timer + "\t" + ctx.getIOManager().toString() + "\t" + state.runs.size());
                 }
 
                 @Override
@@ -163,6 +190,9 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
             IOperatorNodePushable op = new AbstractUnaryOutputSourceOperatorNodePushable() {
                 @Override
                 public void initialize() throws HyracksDataException {
+                    // FIXME
+                    long timer = System.currentTimeMillis();
+
                     SortTaskState state = (SortTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
                             SORT_ACTIVITY_ID), partition));
                     List<IFrameReader> runs = state.runs;
@@ -173,8 +203,13 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     }
                     int necessaryFrames = Math.min(runs.size() + 2, framesLimit);
                     ExternalSortRunMerger merger = new ExternalSortRunMerger(ctx, frameSorter, runs, sortFields,
-                            comparators, recordDescriptors[0], necessaryFrames, writer);
+                            comparators, recordDescriptors[0], isLoadBuffered ? framesLimit : necessaryFrames, writer,
+                            isLoadBuffered);
                     merger.process();
+
+                    // FIXME
+                    timer = System.currentTimeMillis() - timer;
+                    LOGGER.warning("Phase2\t" + timer + "\t" + ctx.getIOManager().toString());
                 }
             };
             return op;

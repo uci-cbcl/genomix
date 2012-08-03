@@ -15,7 +15,9 @@
 package edu.uci.ics.hyracks.dataflow.std.group;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -41,6 +43,10 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private final ArrayTupleBuilder tupleBuilder;
 
     private boolean first;
+
+    // FIXME remove before deploying
+    private static final Logger LOGGER = Logger.getLogger(PreclusteredGroupWriter.class.getSimpleName());
+    long aggTimer = 0, flushTimerInNS = 0;
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
             IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
@@ -70,6 +76,9 @@ public class PreclusteredGroupWriter implements IFrameWriter {
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        // FIXME remove before deploying
+        long timer = System.currentTimeMillis();
+
         inFrameAccessor.reset(buffer);
         int nTuples = inFrameAccessor.getTupleCount();
         for (int i = 0; i < nTuples; ++i) {
@@ -93,10 +102,12 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             }
         }
         FrameUtils.copy(buffer, copyFrame);
+        aggTimer += System.currentTimeMillis() - timer;
     }
 
     private void switchGroupIfRequired(FrameTupleAccessor prevTupleAccessor, int prevTupleIndex,
             FrameTupleAccessor currTupleAccessor, int currTupleIndex) throws HyracksDataException {
+
         if (!sameGroup(prevTupleAccessor, prevTupleIndex, currTupleAccessor, currTupleIndex)) {
             writeOutput(prevTupleAccessor, prevTupleIndex);
 
@@ -106,12 +117,14 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             }
             aggregator.init(tupleBuilder, currTupleAccessor, currTupleIndex, aggregateState);
         } else {
-            aggregator.aggregate(currTupleAccessor, currTupleIndex, null, 0, aggregateState);
+            aggregator.aggregate(currTupleAccessor, currTupleIndex, (IFrameTupleAccessor) null, 0, aggregateState);
         }
     }
 
     private void writeOutput(final FrameTupleAccessor lastTupleAccessor, int lastTupleIndex)
             throws HyracksDataException {
+        // FIXME remove before deploying
+        long timer = System.nanoTime();
 
         tupleBuilder.reset();
         for (int j = 0; j < groupFields.length; j++) {
@@ -122,12 +135,15 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         if (!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                 tupleBuilder.getSize())) {
             FrameUtils.flushFrame(outFrame, writer);
+
             appender.reset(outFrame, true);
             if (!appender.appendSkipEmptyField(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                     tupleBuilder.getSize())) {
                 throw new HyracksDataException("The output cannot be fit into a frame.");
             }
         }
+
+        flushTimerInNS += System.nanoTime() - timer;
 
     }
 
@@ -155,10 +171,13 @@ public class PreclusteredGroupWriter implements IFrameWriter {
         if (!first) {
             writeOutput(copyFrameAccessor, copyFrameAccessor.getTupleCount() - 1);
             if (appender.getTupleCount() > 0) {
+                long timer = System.nanoTime();
                 FrameUtils.flushFrame(outFrame, writer);
+                flushTimerInNS += System.nanoTime() - timer;
             }
         }
         aggregateState.close();
         writer.close();
+        LOGGER.warning("PhaseD" + "\t" + aggTimer + "\t" + flushTimerInNS);
     }
 }

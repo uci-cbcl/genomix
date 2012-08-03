@@ -15,7 +15,6 @@ import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDes
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
-import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
 public class SerializableAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
@@ -225,19 +224,10 @@ public class SerializableAggregatorDescriptorFactory implements IAggregatorDescr
             }
 
             @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset, int length,
                     AggregateState state) throws HyracksDataException {
-                ftr.reset(accessor, tIndex);
-                int stateTupleStart = stateAccessor.getTupleStartOffset();
-                for (int i = 0; i < aggs.length; i++) {
-                    try {
-                        byte[] data = stateAccessor.getBuffer().array();
-                        int start = stateAccessor.getFieldStartOffset(i + keys.length) + stateTupleStart;
-                        aggs[i].step(ftr, data, start, stateFieldLength[i]);
-                    } catch (AlgebricksException e) {
-                        throw new HyracksDataException(e);
-                    }
-                }
+                // TODO Auto-generated method stub
+                
             }
 
         };

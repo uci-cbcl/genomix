@@ -57,6 +57,7 @@ import edu.uci.ics.hyracks.control.common.work.FutureValue;
 import edu.uci.ics.hyracks.control.common.work.WorkQueue;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 import edu.uci.ics.hyracks.control.nc.io.IOManager;
+import edu.uci.ics.hyracks.control.nc.io.IOManagerWithIODebugger;
 import edu.uci.ics.hyracks.control.nc.net.NetworkManager;
 import edu.uci.ics.hyracks.control.nc.partitions.PartitionManager;
 import edu.uci.ics.hyracks.control.nc.runtime.RootHyracksContext;
@@ -127,7 +128,10 @@ public class NodeControllerService extends AbstractRemoteService {
         NodeControllerIPCI ipci = new NodeControllerIPCI();
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.clusterNetIPAddress, 0), ipci,
                 new CCNCFunctions.SerializerDeserializer());
-        this.ctx = new RootHyracksContext(ncConfig.frameSize, new IOManager(getDevices(ncConfig.ioDevices), executor));
+        // FIXME
+        //this.ctx = new RootHyracksContext(ncConfig.frameSize, new IOManager(getDevices(ncConfig.ioDevices), executor));
+        this.ctx = new RootHyracksContext(ncConfig.frameSize, new IOManagerWithIODebugger(
+                getDevices(ncConfig.ioDevices), executor));
         if (id == null) {
             throw new Exception("id not set");
         }
@@ -218,6 +222,8 @@ public class NodeControllerService extends AbstractRemoteService {
         heartbeatTask.cancel();
         netManager.stop();
         queue.stop();
+        // FIXME
+        LOGGER.log(Level.WARNING, "nc" + this.getId() + "\t" + this.ctx.getIOManager().toString());
         LOGGER.log(Level.INFO, "Stopped NodeControllerService");
     }
 

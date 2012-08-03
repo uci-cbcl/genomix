@@ -56,6 +56,36 @@ public interface IMemoryManager {
     boolean writeTuple(int frameIx, int offset, FrameTupleAccessor src, int tIndex);
 
     /**
+     * Write a tuple as a binary array.
+     * 
+     * @param frameIndex
+     * @param frameOffset
+     * @param data
+     * @param offset
+     * @param len
+     * @return
+     */
+    boolean writeTuple(int frameIndex, int frameOffset, int[] fieldOffsets, byte[] data, int offset, int len);
+
+    /**
+     * Get the actual start offset of a tuple (index headers should be offset)
+     * 
+     * @param frameIndex
+     * @param frameOffset
+     * @return
+     */
+    int getTupleStartOffset(int frameIndex, int frameOffset);
+
+    /**
+     * Get the actual start offset of the slot where the given tuple is stored in.
+     * 
+     * @param frameIndex
+     * @param frameOffset
+     * @return
+     */
+    int getSlotStartOffset(int frameIndex, int frameOffset);
+
+    /**
      * Reads the specified tuple (denoted by frameIx and offset) and appends it
      * to the passed FrameTupleAppender
      * 

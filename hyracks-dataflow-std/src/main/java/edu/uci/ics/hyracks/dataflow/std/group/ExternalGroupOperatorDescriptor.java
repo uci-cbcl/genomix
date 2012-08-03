@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -53,9 +54,6 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNo
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;
 
-/**
- *
- */
 public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor {
 
     private static final int AGGREGATE_ACTIVITY_ID = 0;
@@ -75,6 +73,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
     private final boolean isOutputSorted;
 
     private final int tableSize;
+
+    // FIXME
+    private final static Logger LOGGER = Logger.getLogger(ExternalGroupOperatorDescriptor.class.getSimpleName());
 
     public ExternalGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit, int tableSize,
             IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory firstNormalizerFactory,
@@ -165,8 +166,15 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private AggregateActivityState state;
 
+                // FIXME To be removed when releasing
+                private long aggregateTimer = 0, aggregateRunSize = 0;
+                private int aggregateRunCount = 0;
+                int ioFramesCount = 0;
+
                 @Override
                 public void open() throws HyracksDataException {
+                    // FIXME To be removed when releasing
+                    aggregateTimer = System.currentTimeMillis() - aggregateTimer;
                     state = new AggregateActivityState(ctx.getJobletContext().getJobId(), new TaskId(getActivityId(),
                             partition));
                     state.runs = new LinkedList<RunFileReader>();
@@ -203,6 +211,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
                 @Override
                 public void close() throws HyracksDataException {
+                    state.gTable.finishup(isOutputSorted);
                     if (state.gTable.getFrameCount() >= 0) {
                         if (state.runs.size() > 0) {
                             /**
@@ -214,6 +223,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         }
                     }
                     ctx.setTaskState(state);
+                    // FIXME To be removed when releasing
+                    aggregateTimer = System.currentTimeMillis() - aggregateTimer;
+                    LOGGER.warning("ExternalGroupOperator-Aggregate-Close\t" + aggregateTimer + "\t"
+                            + aggregateRunCount + "\t" + aggregateRunSize + "\t" + ioFramesCount);
                 }
 
                 private void flushFramesToRun() throws HyracksDataException {
@@ -227,8 +240,15 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     RunFileWriter writer = new RunFileWriter(runFile, ctx.getIOManager());
                     writer.open();
                     try {
+                        // FIXME
+                        ioFramesCount += state.gTable.getFrameCount();
+
                         state.gTable.sortFrames();
                         state.gTable.flushFrames(writer, true);
+
+                        // FIXME
+                        aggregateRunSize += writer.getFileSize();
+                        aggregateRunCount++;
                     } catch (Exception ex) {
                         throw new HyracksDataException(ex);
                     } finally {
@@ -304,13 +324,21 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 private int[] currentFrameIndexInRun;
                 private int[] currentRunFrames;
 
+                // FIXME To be removed when releasing
+                private long mergeTimer = 0, mergeRunSize = 0;
+                private int mergeRunCount = 0, ioFramesCount = 0;
+
                 private final FrameTupleAccessor outFrameAccessor = new FrameTupleAccessor(ctx.getFrameSize(),
                         recordDescriptors[0]);
 
                 public void initialize() throws HyracksDataException {
+                    // FIXME To be removed when releasing
+                    mergeTimer = System.currentTimeMillis() - mergeTimer;
+
                     aggState = (AggregateActivityState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
                             AGGREGATE_ACTIVITY_ID), partition));
                     runs = aggState.runs;
+                    LOGGER.warning("ExternalGroupOperator-Merge-Open\t" + runs.size() + "\t" + framesLimit);
                     writer.open();
                     try {
                         if (runs.size() <= 0) {
@@ -347,6 +375,10 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     } finally {
                         aggregateState.close();
                         writer.close();
+                        // FIXME To be removed when releasing
+                        mergeTimer = System.currentTimeMillis() - mergeTimer;
+                        LOGGER.warning("ExternalGroupOperator-Merge-Close\t" + mergeTimer + "\t" + mergeRunCount + "\t"
+                                + mergeRunSize + "\t" + ioFramesCount);
                     }
                 }
 
@@ -369,6 +401,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                                 ExternalGroupOperatorDescriptor.class.getSimpleName());
                         writer = new RunFileWriter(newRun, ctx.getIOManager());
                         writer.open();
+
+                        // FIXME
+                        mergeRunCount++;
                     }
                     try {
                         currentFrameIndexInRun = new int[runNumber];
@@ -479,6 +514,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                          */
                         if (!finalPass) {
                             runs.add(0, ((RunFileWriter) writer).createReader());
+                            // FIXME
+                            mergeRunSize += ((RunFileWriter) writer).getFileSize();
                         }
                     } finally {
                         if (!finalPass) {
@@ -524,6 +561,9 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                         if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
                                 finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
                             FrameUtils.flushFrame(writerFrame, writer);
+                            // FIXME
+                            LOGGER.warning("ExternalGroupOperator-Merge-Flush\t"
+                                    + writerFrame.getInt(writerFrame.capacity() - 4));
                             writerAppender.reset(writerFrame, true);
                             if (!writerAppender.appendSkipEmptyField(finalTupleBuilder.getFieldEndOffsets(),
                                     finalTupleBuilder.getByteArray(), 0, finalTupleBuilder.getSize())) {
@@ -535,6 +575,11 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                     if (writerAppender.getTupleCount() > 0) {
                         FrameUtils.flushFrame(writerFrame, writer);
                         writerAppender.reset(writerFrame, true);
+                    }
+
+                    // FIXME
+                    if (!isFinal) {
+                        ioFramesCount++;
                     }
 
                     outAppender.reset(outFrame, true);

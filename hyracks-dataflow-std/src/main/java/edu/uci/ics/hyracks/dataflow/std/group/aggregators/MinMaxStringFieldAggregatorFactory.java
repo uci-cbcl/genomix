@@ -30,9 +30,6 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 
-/**
- *
- */
 public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescriptorFactory {
 
     private static final long serialVersionUID = 1L;

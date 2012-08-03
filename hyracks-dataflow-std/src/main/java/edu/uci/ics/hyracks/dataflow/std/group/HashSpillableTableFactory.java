@@ -118,6 +118,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             keyFieldsInPartialResults[i] = i;
         }
 
+        // Initialize aggregators and aggregate states
         final IAggregatorDescriptor aggregator = aggregateFactory.createAggregator(ctx, inRecordDescriptor,
                 outRecordDescriptor, keyFields, keyFieldsInPartialResults);
 
@@ -130,6 +131,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             stateTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length + 1);
         }
 
+        // Tuple builder for output
         final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
 
         return new ISpillableTable() {

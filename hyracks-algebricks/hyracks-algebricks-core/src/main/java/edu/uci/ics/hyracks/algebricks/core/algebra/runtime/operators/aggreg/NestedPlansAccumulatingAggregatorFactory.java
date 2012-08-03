@@ -32,7 +32,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
-import edu.uci.ics.hyracks.dataflow.std.group.TupleInFrameAccessor;
 
 public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDescriptorFactory {
 
@@ -183,13 +182,10 @@ public class NestedPlansAccumulatingAggregatorFactory implements IAggregatorDesc
             }
 
             @Override
-            public void aggregate(IFrameTupleAccessor accessor, int tIndex, TupleInFrameAccessor stateAccessor,
+            public void aggregate(IFrameTupleAccessor accessor, int tIndex, byte[] data, int offset, int length,
                     AggregateState state) throws HyracksDataException {
-                // it only works if the output of the aggregator fits in one
-                // frame
-                for (int i = 0; i < pipelines.length; i++) {
-                    pipelines[i].writeTuple(accessor.getBuffer(), tIndex);
-                }
+                // TODO Auto-generated method stub
+                
             }
 
         };
