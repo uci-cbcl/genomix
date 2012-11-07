@@ -7,6 +7,9 @@ import java.util.Comparator;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
+/**
+ * TODO need to be merged with the ReferencedPriorityQueue in the util package
+ */
 public class ReferencedPriorityQueue {
     private final int frameSize;
     private final RecordDescriptor recordDescriptor;
@@ -16,6 +19,9 @@ public class ReferencedPriorityQueue {
     private int nItems;
 
     private final Comparator<ReferenceEntryWithBucketID> comparator;
+
+    // FIXME remove when deploying
+    private long swapCount = 0;
 
     public ReferencedPriorityQueue(int frameSize, RecordDescriptor recordDescriptor, int initSize,
             Comparator<ReferenceEntryWithBucketID> comparator) {
@@ -100,6 +106,8 @@ public class ReferencedPriorityQueue {
                 ReferenceEntryWithBucketID tmp = entries[slot];
                 entries[slot] = curr;
                 curr = tmp;// winner to pass up
+                // FIXME remove when deploying
+                swapCount++;
             }// else curr wins
             slot >>= 1;
         }
@@ -126,5 +134,9 @@ public class ReferencedPriorityQueue {
 
     public int size() {
         return nItems;
+    }
+
+    public long getSwapCount() {
+        return swapCount;
     }
 }

@@ -12,13 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.struct;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -32,6 +31,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.ReferenceEntryWithBucketID;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.ReferencedPriorityQueue;
 
 public class GroupRunMergingFrameReader implements IFrameReader {
 
@@ -67,12 +68,8 @@ public class GroupRunMergingFrameReader implements IFrameReader {
     private IFrameTupleAccessor groupResultCacheAccessor;
     private FrameTupleAppender groupResultCacheAppender;
 
-    private int recordsProcessed = 0, recordsInserted = 0;
-
     // FIXME
-    private static final Logger LOGGER = Logger.getLogger(GroupRunMergingFrameReader.class.getSimpleName());
     long queueCompCounter = 0, mergeCompCounter = 0;
-    long frameReadTimerInNS = 0, tempTimer;
 
     public GroupRunMergingFrameReader(IHyracksTaskContext ctx, IFrameReader[] runCursors, int framesLimit,
             int tableSize, int[] keyFields, ITuplePartitionComputer tpc, IBinaryComparator[] comparators,
@@ -133,10 +130,8 @@ public class GroupRunMergingFrameReader implements IFrameReader {
             tupleIndexes[runIndex] = 0;
             runCursors[runIndex].open();
             for (int j = 0; j < framesBuffered; j++) {
-                // FIXME
-                tempTimer = System.nanoTime();
+
                 if (runCursors[runIndex].nextFrame(inFrames.get(runIndex * framesBuffered + j))) {
-                    frameReadTimerInNS += System.nanoTime() - tempTimer;
 
                     bufferedFramesForRuns[runIndex]++;
                     if (j == 0) {
@@ -224,13 +219,9 @@ public class GroupRunMergingFrameReader implements IFrameReader {
 
                 groupResultCacheAccessor.reset(groupResultCacheBuffer);
 
-                recordsProcessed++;
-
             } else {
                 grouper.aggregate(fta, tupleIndex, groupResultCacheAccessor, 0, groupState);
             }
-
-            recordsInserted++;
 
             ++tupleIndexes[runIndex];
             setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
@@ -276,8 +267,12 @@ public class GroupRunMergingFrameReader implements IFrameReader {
         for (int i = 0; i < runCursors.length; ++i) {
             closeRun(i, runCursors, tupleAccessors);
         }
-        LOGGER.warning("PhaseC\t" + mergeCompCounter + "\t" + queueCompCounter + "\t" + recordsProcessed + "\t"
-                + recordsInserted + "\t" + frameReadTimerInNS);
+
+        ctx.getCounterContext().getCounter("optional.merge.comps", true).update(mergeCompCounter);
+
+        ctx.getCounterContext().getCounter("must.merge.comps", true).update(queueCompCounter);
+
+        ctx.getCounterContext().getCounter("must.merge.swaps", true).update(topTuples.getSwapCount());
     }
 
     private void setNextTopTuple(int runIndex, int[] tupleIndexes, IFrameReader[] runCursors,
@@ -302,10 +297,7 @@ public class GroupRunMergingFrameReader implements IFrameReader {
             } else {
                 bufferedFramesForRuns[runIndex] = 0;
                 for (int j = 0; j < framesBuffered; j++) {
-                    // FIXME
-                    tempTimer = System.nanoTime();
                     if (runCursors[runIndex].nextFrame(inFrames.get(runIndex * framesBuffered + j))) {
-                        frameReadTimerInNS += System.nanoTime() - tempTimer;
                         bufferedFramesForRuns[runIndex]++;
                     } else {
                         break;

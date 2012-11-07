@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.struct;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort.el;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,6 +36,9 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAccessorForGroupHashtable;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAppenderForGroupHashtable;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.ISerializableGroupHashTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
 public class HybridHashSortELGroupHashTable implements ISerializableGroupHashTable {
@@ -157,8 +160,9 @@ public class HybridHashSortELGroupHashTable implements ISerializableGroupHashTab
         this.matchPointer = new TuplePointer();
 
         // initialize the hash table
-        int residual = tableSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
-        this.headers = new ByteBuffer[tableSize * INT_SIZE * 2 / frameSize + residual];
+        int residual = (tableSize % frameSize) * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
+        this.headers = new ByteBuffer[(tableSize / frameSize * 2 * INT_SIZE)
+                + ((tableSize % frameSize) * 2 * INT_SIZE / frameSize) + residual];
 
         // set the output buffer frame
         this.outputBuffer = ctx.allocateFrame();
@@ -208,8 +212,8 @@ public class HybridHashSortELGroupHashTable implements ISerializableGroupHashTab
     }
 
     public static int getMinimumFramesLimit(int tableSize, int frameSize) {
-        int residual = tableSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
-        return tableSize * INT_SIZE * 2 / frameSize + residual + 2;
+        int residual = (tableSize % frameSize) * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
+        return tableSize / frameSize * INT_SIZE * 2 + tableSize % frameSize * INT_SIZE * 2 / frameSize + residual + 2;
     }
 
     /*
@@ -450,7 +454,7 @@ public class HybridHashSortELGroupHashTable implements ISerializableGroupHashTab
      * @return
      */
     private int getHeaderFrameIndex(int entry) {
-        int frameIndex = entry * 2 * INT_SIZE / frameSize;
+        int frameIndex = entry / frameSize * 2 * INT_SIZE + entry % frameSize * 2 * INT_SIZE / frameSize;
         return frameIndex;
     }
 
@@ -461,7 +465,7 @@ public class HybridHashSortELGroupHashTable implements ISerializableGroupHashTab
      * @return
      */
     private int getHeaderTupleIndex(int entry) {
-        int offset = entry * 2 * INT_SIZE % frameSize;
+        int offset = entry % frameSize * 2 * INT_SIZE % frameSize;
         return offset;
     }
 

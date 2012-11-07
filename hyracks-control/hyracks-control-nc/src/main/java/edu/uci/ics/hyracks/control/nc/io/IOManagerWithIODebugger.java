@@ -190,10 +190,34 @@ public class IOManagerWithIODebugger extends IOManager {
     }
 
     public String getIOStat() {
-        return readIOSeq + "\t" + readIORand + "\t" + readIOSeqCrossDev + "\t" + readIORandCrossDev + "\t" + writeIOSeq
-                + "\t" + writeIORand + "\t" + writeIOSeqCrossDev + "\t" + writeIORandCrossDev + "\nSimplifiedIO\t"
-                + readIOSeq + "\t" + (readIORand + readIORandCrossDev + readIOSeqCrossDev) + "\t" + writeIOSeq + "\t"
-                + (writeIORand + writeIORandCrossDev + writeIOSeqCrossDev);
+        return
+        //                readIOSeq
+        //                + "\t"
+        //                + readIORand
+        //                + "\t"
+        //                + readIOSeqCrossDev
+        //                + "\t"
+        //                + readIORandCrossDev
+        //                + "\t"
+        //                + writeIOSeq
+        //                + "\t"
+        //                + writeIORand
+        //                + "\t"
+        //                + writeIOSeqCrossDev
+        //                + "\t"
+        //                + writeIORandCrossDev
+        //                + "\nSimplifiedIO\t"
+        //                + readIOSeq
+        //                + "\t"
+        //                + (readIORand + readIORandCrossDev + readIOSeqCrossDev)
+        //                + "\t"
+        //                + writeIOSeq
+        //                + "\t"
+        //                + (writeIORand + writeIORandCrossDev + writeIOSeqCrossDev)
+        //                + "\n" +
+        // "TotalIO\t" + 
+        String.valueOf(readIOSeq + writeIOSeq + readIORand + readIORandCrossDev + readIOSeqCrossDev + writeIORand
+                + writeIORandCrossDev + writeIOSeqCrossDev);
     }
 
     public String toString() {

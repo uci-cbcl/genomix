@@ -23,7 +23,8 @@ public class UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper implements I
 
     private static final long serialVersionUID = 1L;
 
-    static final int[] primeCoefficents = { 31, 337, 53, 877, 71, 757, 11, 599, 89, 947 };
+    static final int[] primeCoefficents = { 1073741741, 536870869, 1073741783, 536870951, 1073741789, 31, 947, 337, 53,
+            877, 71, 757, 11, 599, 89 };
 
     private UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper() {
     }

@@ -41,6 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerOffsetFamily;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
@@ -61,7 +62,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.aggregators.IntSumFieldAggregatorF
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MinMaxStringFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MultiFieldsAggregatorFactory;
 
-public class HybridHashSortELGroupAggregationTest extends AbstractIntegrationTest {
+public class HybridHashSortELGroupAggregationTestBackup extends AbstractIntegrationTest {
     final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC2_ID,
             new FileReference(new File("data/tpch0.001/lineitem.tbl"))) });
     //new FileReference(new File("/Volumes/Home/Datasets/tpch/tpch0.1/lineitem.tbl"))) });
@@ -116,11 +117,26 @@ public class HybridHashSortELGroupAggregationTest extends AbstractIntegrationTes
 
         int[] keyFields = new int[] { 0 };
 
-        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(spec, keyFields,
-                framesLimit, tableSize, sortThreshold, 1.0,
+        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(
+                spec,
+                keyFields,
+                framesLimit,
+                tableSize,
+                sortThreshold,
+                1.0,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        1), new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
                                 new IntSumFieldAggregatorFactory(3, false),
                                 new FloatSumFieldAggregatorFactory(5, false) }), new MultiFieldsAggregatorFactory(
@@ -162,11 +178,25 @@ public class HybridHashSortELGroupAggregationTest extends AbstractIntegrationTes
 
         int[] keyFields = new int[] { 0 };
 
-        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(spec, keyFields,
-                framesLimit, tableSize, sortThreshold,
+        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(
+                spec,
+                keyFields,
+                framesLimit,
+                tableSize,
+                sortThreshold,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        1), new UTF8StringNormalizedKeyComputerFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, false), new CountFieldAggregatorFactory(false),
                         new AvgFieldGroupAggregatorFactory(1, false) }), new MultiFieldsAggregatorFactory(
@@ -208,11 +238,25 @@ public class HybridHashSortELGroupAggregationTest extends AbstractIntegrationTes
 
         int[] keyFields = new int[] { 0 };
 
-        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(spec, keyFields,
-                framesLimit, tableSize, sortThreshold,
+        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(
+                spec,
+                keyFields,
+                framesLimit,
+                tableSize,
+                sortThreshold,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        1), new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
                                 new MinMaxStringFieldAggregatorFactory(15, true, true) }),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
@@ -253,13 +297,26 @@ public class HybridHashSortELGroupAggregationTest extends AbstractIntegrationTes
 
         int[] keyFields = new int[] { 8, 0 };
 
-        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(spec, keyFields,
-                framesLimit, tableSize, sortThreshold, new IBinaryComparatorFactory[] {
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(
+                spec,
+                keyFields,
+                framesLimit,
+                tableSize,
+                sortThreshold,
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
-                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0),
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        1), new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
                                 new IntSumFieldAggregatorFactory(3, false) }), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(2, false),
@@ -299,13 +356,26 @@ public class HybridHashSortELGroupAggregationTest extends AbstractIntegrationTes
                 FloatSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 8, 0 };
+        int[] storedKeyFields = new int[] { 0, 1 };
 
-        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(spec, keyFields,
-                framesLimit, tableSize, sortThreshold, new IBinaryComparatorFactory[] {
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(
+                spec,
+                keyFields,
+                framesLimit,
+                tableSize,
+                sortThreshold,
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
-                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0), new FieldHashPartitionComputerOffsetFamily(storedKeyFields,
+                        new IBinaryHashFunctionFamily[] {
+                                UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                                UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0),
+                new FieldHashPartitionComputerOffsetFamily(storedKeyFields, new IBinaryHashFunctionFamily[] {
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 1),
                 new UTF8StringNormalizedKeyComputerFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, false), new CountFieldAggregatorFactory(false),
@@ -347,13 +417,26 @@ public class HybridHashSortELGroupAggregationTest extends AbstractIntegrationTes
                 IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 8, 0 };
+        int[] storedKeyFields = new int[] { 0, 1 };
 
-        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(spec, keyFields,
-                framesLimit, tableSize, sortThreshold, new IBinaryComparatorFactory[] {
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+        HybridHashSortELGroupOperatorDescriptor grouper = new HybridHashSortELGroupOperatorDescriptor(
+                spec,
+                keyFields,
+                framesLimit,
+                tableSize,
+                sortThreshold,
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
-                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                new FieldHashPartitionComputerOffsetFamily(
+                        keyFields,
+                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
+                        0), new FieldHashPartitionComputerOffsetFamily(storedKeyFields,
+                        new IBinaryHashFunctionFamily[] {
+                                UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                                UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0),
+                new FieldHashPartitionComputerOffsetFamily(storedKeyFields, new IBinaryHashFunctionFamily[] {
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 1),
                 new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
                                 new MinMaxStringFieldAggregatorFactory(15, true, true) }),

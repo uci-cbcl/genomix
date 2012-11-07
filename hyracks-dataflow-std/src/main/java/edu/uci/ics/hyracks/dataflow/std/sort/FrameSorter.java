@@ -17,10 +17,9 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
@@ -32,7 +31,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 
 public class FrameSorter {
-    private final IHyracksCommonContext ctx;
+    private final IHyracksTaskContext ctx;
     protected final int[] sortFields;
     private final INormalizedKeyComputer nkc;
     private final IBinaryComparator[] comparators;
@@ -50,10 +49,9 @@ public class FrameSorter {
     protected int tupleCount;
 
     // FIXME
-    private static final Logger LOGGER = Logger.getLogger(FrameSorter.class.getSimpleName());
     private long comparisonCounter = 0, swapCounter = 0;
 
-    public FrameSorter(IHyracksCommonContext ctx, int[] sortFields,
+    public FrameSorter(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
         this.ctx = ctx;
@@ -73,13 +71,14 @@ public class FrameSorter {
     }
 
     public void reset() {
-        // FIXME
-        LOGGER.warning("FrameSorter-Reset\t" + tupleCount + "\t" + comparisonCounter + "\t" + swapCounter);
 
         dataFrameCount = 0;
         tupleCount = 0;
 
         // FIXME
+        ctx.getCounterContext().getCounter("must.sort.comps", true).update(comparisonCounter);
+        ctx.getCounterContext().getCounter("must.sort.swaps", true).update(swapCounter);
+
         comparisonCounter = 0;
         swapCounter = 0;
 
@@ -257,5 +256,12 @@ public class FrameSorter {
 
     public void close() {
         this.buffers.clear();
+
+        // FIXME
+        ctx.getCounterContext().getCounter("must.sort.comps", true).update(comparisonCounter);
+        ctx.getCounterContext().getCounter("must.sort.swap", true).update(swapCounter);
+
+        comparisonCounter = 0;
+        swapCounter = 0;
     }
 }

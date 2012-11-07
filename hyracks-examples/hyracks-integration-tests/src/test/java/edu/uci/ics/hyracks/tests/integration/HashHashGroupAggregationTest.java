@@ -23,12 +23,14 @@ import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper;
 import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.FloatSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -50,7 +52,6 @@ import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
-import edu.uci.ics.hyracks.dataflow.std.group.SRHybridHashSortGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.AvgFieldGroupAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.AvgFieldMergeAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.CountFieldAggregatorFactory;
@@ -58,11 +59,19 @@ import edu.uci.ics.hyracks.dataflow.std.group.aggregators.FloatSumFieldAggregato
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.IntSumFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MinMaxStringFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MultiFieldsAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.prepart.HashHashGroupOpeartorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.prepart.HashHashPrePartitionHashTableFactory;
 
-public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTest {
+public class HashHashGroupAggregationTest extends AbstractIntegrationTest {
     final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC2_ID,
             new FileReference(new File("data/tpch0.001/lineitem.tbl"))) });
-    //new FileReference(new File("/Volumes/Home/Datasets/tpch/tpch0.1/lineitem.tbl"))) });
+    //        new FileReference(new File("/Volumes/Home/Datasets/tpch/tpch0.1/lineitem.tbl"))) });
+
+    final int inputSize = 300;
+
+    final int framesLimit = 60;
+
+    final int tableSize = 40960;
 
     final RecordDescriptor desc = new RecordDescriptor(new ISerializerDeserializer[] {
             UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
@@ -95,7 +104,6 @@ public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTes
 
     @Test
     public void singleKeySumHybridHashSortTest() throws Exception {
-
         JobSpecification spec = new JobSpecification();
 
         FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
@@ -106,22 +114,18 @@ public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTes
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
+        int estimatedRecSize = 10 + 4 + 4 + 4 + 4 * 4 + 4;
 
         int[] keyFields = new int[] { 0 };
-        int framesLimit = 4;
-        int tableSize = 2000;
 
-        SRHybridHashSortGroupOperatorDescriptor grouper = new SRHybridHashSortGroupOperatorDescriptor(
-                spec,
-                keyFields,
-                framesLimit,
-                tableSize,
+        HashHashGroupOpeartorDescriptor grouper = new HashHashGroupOpeartorDescriptor(spec, keyFields, framesLimit,
+                inputSize, estimatedRecSize, tableSize,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new IntSumFieldAggregatorFactory(3, false),
-                                new FloatSumFieldAggregatorFactory(5, false) }), new MultiFieldsAggregatorFactory(
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0,
+                HashHashPrePartitionHashTableFactory.INSTANCE, new UTF8StringNormalizedKeyComputerFactory(),
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
+                        new FloatSumFieldAggregatorFactory(5, false) }), new MultiFieldsAggregatorFactory(
                         new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
                                 new IntSumFieldAggregatorFactory(2, false),
                                 new FloatSumFieldAggregatorFactory(3, false) }), outputRec);
@@ -157,19 +161,15 @@ public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTes
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
+        int estimatedRecSize = 10 + 4 + 4 + 4 + 4 * 4 + 4;
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 4;
-        int tableSize = 2000;
 
-        SRHybridHashSortGroupOperatorDescriptor grouper = new SRHybridHashSortGroupOperatorDescriptor(
-                spec,
-                keyFields,
-                frameLimits,
-                tableSize,
+        HashHashGroupOpeartorDescriptor grouper = new HashHashGroupOpeartorDescriptor(spec, keyFields, framesLimit,
+                inputSize, estimatedRecSize, tableSize,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(),
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0,
+                HashHashPrePartitionHashTableFactory.INSTANCE, new UTF8StringNormalizedKeyComputerFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, false), new CountFieldAggregatorFactory(false),
                         new AvgFieldGroupAggregatorFactory(1, false) }), new MultiFieldsAggregatorFactory(
@@ -208,24 +208,20 @@ public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTes
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 UTF8StringSerializerDeserializer.INSTANCE });
+        int estimatedRecSize = 10 + 4 + 44 + 4 * 3 + 4;
 
         int[] keyFields = new int[] { 0 };
-        int frameLimits = 4;
-        int tableSize = 2000;
 
-        SRHybridHashSortGroupOperatorDescriptor grouper = new SRHybridHashSortGroupOperatorDescriptor(
-                spec,
-                keyFields,
-                frameLimits,
-                tableSize,
+        HashHashGroupOpeartorDescriptor grouper = new HashHashGroupOpeartorDescriptor(spec, keyFields, framesLimit,
+                inputSize, estimatedRecSize, tableSize,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(15, true, true) }),
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0,
+                HashHashPrePartitionHashTableFactory.INSTANCE, new UTF8StringNormalizedKeyComputerFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, false),
-                        new MinMaxStringFieldAggregatorFactory(2, true, true) }), outputRec);
+                        new MinMaxStringFieldAggregatorFactory(15, true, true) }), new MultiFieldsAggregatorFactory(
+                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                new MinMaxStringFieldAggregatorFactory(2, true, true) }), outputRec);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -258,22 +254,23 @@ public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTes
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+        int estimatedRecSize = 10 + 10 + 4 + 4 + 4 * 4 + 4;
 
         int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
-        int tableSize = 2000;
+        int[] storedKeyFields = new int[] { 0, 1 };
 
-        SRHybridHashSortGroupOperatorDescriptor grouper = new SRHybridHashSortGroupOperatorDescriptor(spec, keyFields,
-                frameLimits, tableSize, new IBinaryComparatorFactory[] {
+        HashHashGroupOpeartorDescriptor grouper = new HashHashGroupOpeartorDescriptor(spec, keyFields, framesLimit,
+                inputSize, estimatedRecSize, tableSize, new IBinaryComparatorFactory[] {
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new IntSumFieldAggregatorFactory(3, false) }), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(2, false),
-                                new IntSumFieldAggregatorFactory(3, false) }), outputRec);
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0,
+                HashHashPrePartitionHashTableFactory.INSTANCE, new UTF8StringNormalizedKeyComputerFactory(),
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false) }),
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(2, false), new IntSumFieldAggregatorFactory(3, false) }),
+                outputRec);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -307,18 +304,18 @@ public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTes
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
                 FloatSerializerDeserializer.INSTANCE });
+        int estimatedRecSize = 10 + 10 + 4 + 4 + 4 + 4 * 5 + 4;
 
         int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
-        int tableSize = 2000;
+        int[] storedKeyFields = new int[] { 0, 1 };
 
-        SRHybridHashSortGroupOperatorDescriptor grouper = new SRHybridHashSortGroupOperatorDescriptor(spec, keyFields,
-                frameLimits, tableSize, new IBinaryComparatorFactory[] {
+        HashHashGroupOpeartorDescriptor grouper = new HashHashGroupOpeartorDescriptor(spec, keyFields, framesLimit,
+                inputSize, estimatedRecSize, tableSize, new IBinaryComparatorFactory[] {
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(),
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0,
+                HashHashPrePartitionHashTableFactory.INSTANCE, new UTF8StringNormalizedKeyComputerFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
                         new IntSumFieldAggregatorFactory(1, false), new CountFieldAggregatorFactory(false),
                         new AvgFieldGroupAggregatorFactory(1, false) }), new MultiFieldsAggregatorFactory(
@@ -357,23 +354,24 @@ public class SRHybridHashSortGroupAggregationTest extends AbstractIntegrationTes
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
                 IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+        int estimatedRecSize = 10 + 10 + 4 + 44 + 4 * 4 + 4;
 
         int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
-        int tableSize = 2000;
+        int[] storedKeyFields = new int[] { 0, 1 };
 
-        SRHybridHashSortGroupOperatorDescriptor grouper = new SRHybridHashSortGroupOperatorDescriptor(spec, keyFields,
-                frameLimits, tableSize, new IBinaryComparatorFactory[] {
+        HashHashGroupOpeartorDescriptor grouper = new HashHashGroupOpeartorDescriptor(spec, keyFields, framesLimit,
+                inputSize, estimatedRecSize, tableSize, new IBinaryComparatorFactory[] {
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(15, true, true) }),
-                new MultiFieldsAggregatorFactory(new int[] { 0, 1 }, new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(2, false),
-                        new MinMaxStringFieldAggregatorFactory(3, true, true) }), outputRec);
+                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }, 0,
+                HashHashPrePartitionHashTableFactory.INSTANCE, new UTF8StringNormalizedKeyComputerFactory(),
+                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                        new IntSumFieldAggregatorFactory(1, false),
+                        new MinMaxStringFieldAggregatorFactory(15, true, true) }), new MultiFieldsAggregatorFactory(
+                        new int[] { 0, 1 }, new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(2, false),
+                                new MinMaxStringFieldAggregatorFactory(3, true, true) }), outputRec);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 

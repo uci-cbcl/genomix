@@ -74,7 +74,7 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
             @Override
             public void open() throws HyracksDataException {
                 // FIXME
-                timer = System.currentTimeMillis();
+                timer = System.nanoTime();
                 LOGGER.warning("Precluster-Open\t" + ctx.getIOManager().toString());
 
                 pgw = new PreclusteredGroupWriter(ctx, groupFields, comparators, aggregator, inRecordDesc,
@@ -97,8 +97,18 @@ public class PreclusteredGroupOperatorDescriptor extends AbstractSingleActivityO
                 pgw.close();
 
                 // FIXME
-                timer = System.currentTimeMillis() - timer;
+                timer = System.nanoTime() - timer;
                 LOGGER.warning("Precluster-Close\t" + timer + "\t" + ctx.getIOManager().toString());
+
+                ctx.getCounterContext()
+                        .getCounter(
+                                "optional." + PreclusteredGroupOperatorDescriptor.class.getSimpleName() + ".close.time",
+                                true).set(timer);
+
+                ctx.getCounterContext().getCounter("must.hash.slots.count", true).set(0);
+                ctx.getCounterContext().getCounter("must.hash.succ.comps", true).set(0);
+                ctx.getCounterContext().getCounter("must.hash.unsucc.comps", true).set(0);
+                ctx.getCounterContext().getCounter("must.hash.slot.init", true).set(0);
             }
         };
     }

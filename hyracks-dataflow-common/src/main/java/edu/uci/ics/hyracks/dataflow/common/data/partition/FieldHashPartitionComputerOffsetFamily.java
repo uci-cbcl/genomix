@@ -1,10 +1,10 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
  * 
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,21 +20,24 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFamily;
 
-public class FieldHashPartitionComputerFamily implements ITuplePartitionComputerFamily {
+public class FieldHashPartitionComputerOffsetFamily implements ITuplePartitionComputerFamily {
     private static final long serialVersionUID = 1L;
     private final int[] hashFields;
     private final IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories;
+    private final int offset;
 
-    public FieldHashPartitionComputerFamily(int[] hashFields, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories) {
+    public FieldHashPartitionComputerOffsetFamily(int[] hashFields,
+            IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories, int offset) {
         this.hashFields = hashFields;
         this.hashFunctionGeneratorFactories = hashFunctionGeneratorFactories;
+        this.offset = offset;
     }
 
     @Override
     public ITuplePartitionComputer createPartitioner(int seed) {
         final IBinaryHashFunction[] hashFunctions = new IBinaryHashFunction[hashFunctionGeneratorFactories.length];
         for (int i = 0; i < hashFunctionGeneratorFactories.length; ++i) {
-            hashFunctions[i] = hashFunctionGeneratorFactories[i].createBinaryHashFunction(seed);
+            hashFunctions[i] = hashFunctionGeneratorFactories[i].createBinaryHashFunction(offset + seed);
         }
         return new ITuplePartitionComputer() {
             @Override
@@ -63,7 +66,7 @@ public class FieldHashPartitionComputerFamily implements ITuplePartitionComputer
     public ITuplePartitionComputer createPartitioner() {
         final IBinaryHashFunction[] hashFunctions = new IBinaryHashFunction[hashFunctionGeneratorFactories.length];
         for (int i = 0; i < hashFunctionGeneratorFactories.length; ++i) {
-            hashFunctions[i] = hashFunctionGeneratorFactories[i].createBinaryHashFunction(0);
+            hashFunctions[i] = hashFunctionGeneratorFactories[i].createBinaryHashFunction(offset);
         }
         return new ITuplePartitionComputer() {
             @Override

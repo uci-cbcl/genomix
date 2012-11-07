@@ -37,7 +37,6 @@ public class ExternalSortRunGenerator implements IFrameWriter {
 
     // FIXME
     long insertTimer = 0, sortTimer = 0, flushTimer = 0;
-    int runFileCount = 0;
     Logger LOGGER = Logger.getLogger(ExternalSortRunGenerator.class.getSimpleName());
 
     public ExternalSortRunGenerator(IHyracksTaskContext ctx, int[] sortFields,
@@ -61,9 +60,9 @@ public class ExternalSortRunGenerator implements IFrameWriter {
             flushFramesToRun();
         }
         // FIXME
-        long timer = System.currentTimeMillis();
+        long timer = System.nanoTime();
         frameSorter.insertFrame(buffer);
-        insertTimer += System.currentTimeMillis() - timer;
+        insertTimer += System.nanoTime() - timer;
     }
 
     @Override
@@ -71,34 +70,43 @@ public class ExternalSortRunGenerator implements IFrameWriter {
         if (frameSorter.getFrameCount() > 0) {
             if (runs.size() <= 0) {
                 // FIXME
-                long timer = System.currentTimeMillis();
+                long timer = System.nanoTime();
                 frameSorter.sortFrames();
-                sortTimer += System.currentTimeMillis() - timer;
+                sortTimer += System.nanoTime() - timer;
             } else {
                 flushFramesToRun();
             }
         }
-        // FIXME
-        LOGGER.warning("PhaseA\t" + insertTimer + "\t" + sortTimer + "\t" + flushTimer + "\t"
-                + runFileCount);
+        //frameSorter.close();
+
+        ctx.getCounterContext()
+                .getCounter("optional." + ExternalSortRunGenerator.class.getSimpleName() + ".close.insert.time", true)
+                .set(insertTimer);
+
+        ctx.getCounterContext()
+                .getCounter("optional." + ExternalSortRunGenerator.class.getSimpleName() + ".close.sort.time", true)
+                .set(sortTimer);
+
+        ctx.getCounterContext()
+                .getCounter("optional." + ExternalSortRunGenerator.class.getSimpleName() + ".close.flush.time", true)
+                .set(flushTimer);
     }
 
     private void flushFramesToRun() throws HyracksDataException {
 
         // FIXME
-        long timer = System.currentTimeMillis();
+        long timer = System.nanoTime();
         frameSorter.sortFrames();
-        sortTimer += System.currentTimeMillis() - timer;
+        sortTimer += System.nanoTime() - timer;
 
         FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
                 ExternalSortRunGenerator.class.getSimpleName());
         RunFileWriter writer = new RunFileWriter(file, ctx.getIOManager());
         writer.open();
         try {
-            timer = System.currentTimeMillis();
+            timer = System.nanoTime();
             frameSorter.flushFrames(writer);
-            flushTimer += System.currentTimeMillis() - timer;
-            runFileCount++;
+            flushTimer += System.nanoTime() - timer;
         } finally {
             writer.close();
         }

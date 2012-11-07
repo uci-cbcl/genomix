@@ -23,22 +23,19 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFamily;
+import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFamily;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
-import edu.uci.ics.hyracks.dataflow.std.group.struct.HybridHashSortELGroupHashTable;
-import edu.uci.ics.hyracks.dataflow.std.group.struct.HybridHashSortGroupHashTableWithSortThreshold;
+import edu.uci.ics.hyracks.dataflow.std.group.hashsort.el.HybridHashSortELGroupHashTable;
+import edu.uci.ics.hyracks.dataflow.std.group.hashsort.el.HybridHashSortGroupHashTableWithSortThreshold;
 
 public class HybridHashSortELGroupOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
@@ -53,7 +50,13 @@ public class HybridHashSortELGroupOperatorDescriptor extends AbstractSingleActiv
 
     private final int framesLimit;
 
-    private final IBinaryHashFunctionFamily[] hashFunctionFamilies;
+    /**
+     * Partition computer factories. aggTpcf and mergeTpcf must use the same hash function (but may be on different
+     * keys in case of rearrangement of the keys) for correct merging, while mergeTpcf and mergeInMemTpcf should be
+     * different for better hash performance
+     */
+    private final ITuplePartitionComputerFactory aggTpcf, mergeTpcf, mergeInMemTpcf;
+
     private final IBinaryComparatorFactory[] comparatorFactories;
 
     private final int tableSize;
@@ -66,27 +69,100 @@ public class HybridHashSortELGroupOperatorDescriptor extends AbstractSingleActiv
 
     private static final Logger LOGGER = Logger.getLogger(HybridHashSortELGrouperBucketMerge.class.getSimpleName());
 
+    /**
+     * @param spec
+     * @param keyFields
+     * @param framesLimit
+     * @param tableSize
+     * @param sortThreshold
+     * @param partitionFactor
+     * @param comparatorFactories
+     * @param aggTpcf
+     *            Partition compute factory for aggregation phase. This must use the same hash function as
+     *            {@link #mergeTpcf} for
+     *            correctness.
+     * @param mergeTpcf
+     *            Partition compute factory for merge phase to decide which partition a record belongs. Only records
+     *            from the same partition will be merged.
+     * @param mergeInMemTpcf
+     *            Partition compute factory for the in-memory hash table in the merge phase. This should use a different
+     *            hash function from {@link #aggTpcf} and {@link #mergeTpcf} for better hash performance.
+     * @param firstNormalizerFactory
+     * @param aggregatorFactory
+     * @param mergerFactory
+     * @param recordDescriptor
+     */
     public HybridHashSortELGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
             int tableSize, int sortThreshold, double partitionFactor, IBinaryComparatorFactory[] comparatorFactories,
-            IBinaryHashFunctionFamily[] hashFunctionFamilies, INormalizedKeyComputerFactory firstNormalizerFactory,
+            ITuplePartitionComputerFactory aggTpcf, ITuplePartitionComputerFactory mergeTpcf,
+            ITuplePartitionComputerFactory mergeInMemTpcf, INormalizedKeyComputerFactory firstNormalizerFactory,
             IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
             RecordDescriptor recordDescriptor) {
-        this(spec, keyFields, framesLimit, tableSize, sortThreshold, partitionFactor, comparatorFactories,
-                hashFunctionFamilies, firstNormalizerFactory, aggregatorFactory, mergerFactory, recordDescriptor, false);
+        this(spec, keyFields, framesLimit, tableSize, sortThreshold, partitionFactor, comparatorFactories, aggTpcf,
+                mergeTpcf, mergeInMemTpcf, firstNormalizerFactory, aggregatorFactory, mergerFactory, recordDescriptor,
+                false);
     }
 
+    /**
+     * @param spec
+     * @param keyFields
+     * @param framesLimit
+     * @param tableSize
+     * @param sortThreshold
+     * @param comparatorFactories
+     * @param aggTpcf
+     *            Partition compute factory for aggregation phase. This must use the same hash function as
+     *            {@link #mergeTpcf} for
+     *            correctness.
+     * @param mergeTpcf
+     *            Partition compute factory for merge phase to decide which partition a record belongs. Only records
+     *            from the same partition will be merged.
+     * @param mergeInMemTpcf
+     *            Partition compute factory for the in-memory hash table in the merge phase. This should use a different
+     *            hash function from {@link #aggTpcf} and {@link #mergeTpcf} for better hash performance.
+     * @param firstNormalizerFactory
+     * @param aggregatorFactory
+     * @param mergerFactory
+     * @param recordDescriptor
+     */
     public HybridHashSortELGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
             int tableSize, int sortThreshold, IBinaryComparatorFactory[] comparatorFactories,
-            IBinaryHashFunctionFamily[] hashFunctionFamilies, INormalizedKeyComputerFactory firstNormalizerFactory,
+            ITuplePartitionComputerFactory aggTpcf, ITuplePartitionComputerFactory mergeTpcf,
+            ITuplePartitionComputerFactory mergeInMemTpcf, INormalizedKeyComputerFactory firstNormalizerFactory,
             IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
             RecordDescriptor recordDescriptor) {
-        this(spec, keyFields, framesLimit, tableSize, sortThreshold, 1.0, comparatorFactories, hashFunctionFamilies,
-                firstNormalizerFactory, aggregatorFactory, mergerFactory, recordDescriptor, false);
+        this(spec, keyFields, framesLimit, tableSize, sortThreshold, 1.0, comparatorFactories, aggTpcf, mergeTpcf,
+                mergeInMemTpcf, firstNormalizerFactory, aggregatorFactory, mergerFactory, recordDescriptor, false);
     }
 
+    /**
+     * @param spec
+     * @param keyFields
+     * @param framesLimit
+     * @param tableSize
+     * @param sortThreshold
+     * @param partitionFactor
+     * @param comparatorFactories
+     * @param aggTpcf
+     *            Partition compute factory for aggregation phase. This must use the same hash function as
+     *            {@link #mergeTpcf} for
+     *            correctness.
+     * @param mergeTpcf
+     *            Partition compute factory for merge phase to decide which partition a record belongs. Only records
+     *            from the same partition will be merged.
+     * @param mergeInMemTpcf
+     *            Partition compute factory for the in-memory hash table in the merge phase. This should use a different
+     *            hash function from {@link #aggTpcf} and {@link #mergeTpcf} for better hash performance.
+     * @param firstNormalizerFactory
+     * @param aggregatorFactory
+     * @param mergerFactory
+     * @param recordDescriptor
+     * @param allowMultiEntriesMerging
+     */
     public HybridHashSortELGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
             int tableSize, int sortThreshold, double partitionFactor, IBinaryComparatorFactory[] comparatorFactories,
-            IBinaryHashFunctionFamily[] hashFunctionFamilies, INormalizedKeyComputerFactory firstNormalizerFactory,
+            ITuplePartitionComputerFactory aggTpcf, ITuplePartitionComputerFactory mergeTpcf,
+            ITuplePartitionComputerFactory mergeInMemTpcf, INormalizedKeyComputerFactory firstNormalizerFactory,
             IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
             RecordDescriptor recordDescriptor, boolean allowMultiEntriesMerging) {
         super(spec, 1, 1);
@@ -102,7 +178,9 @@ public class HybridHashSortELGroupOperatorDescriptor extends AbstractSingleActiv
         this.comparatorFactories = comparatorFactories;
         this.firstNormalizerFactory = firstNormalizerFactory;
 
-        this.hashFunctionFamilies = hashFunctionFamilies;
+        this.aggTpcf = aggTpcf;
+        this.mergeTpcf = mergeTpcf;
+        this.mergeInMemTpcf = mergeInMemTpcf;
 
         this.tableSize = tableSize;
         this.sortThreshold = sortThreshold;
@@ -145,11 +223,6 @@ public class HybridHashSortELGroupOperatorDescriptor extends AbstractSingleActiv
 
         final RecordDescriptor outRecDesc = recordDescriptors[0];
 
-        final ITuplePartitionComputerFamily tpcf = new FieldHashPartitionComputerFamily(storedKeyFields,
-                hashFunctionFamilies);
-
-        final ITuplePartitionComputer aggTpc = tpcf.createPartitioner(0);
-
         final INormalizedKeyComputer firstNormalizerComputer = firstNormalizerFactory.createNormalizedKeyComputer();
 
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
@@ -185,7 +258,8 @@ public class HybridHashSortELGroupOperatorDescriptor extends AbstractSingleActiv
                 //                        outRecDesc, writer);
 
                 hashtable = new HybridHashSortGroupHashTableWithSortThreshold(ctx, framesLimit, tableSize, keyFields,
-                        comparators, aggTpc, firstNormalizerComputer, aggregator, inRecDesc, outRecDesc, sortThreshold);
+                        comparators, aggTpcf.createPartitioner(), firstNormalizerComputer, aggregator, inRecDesc,
+                        outRecDesc, sortThreshold);
 
                 accessor = new FrameTupleAccessor(ctx.getFrameSize(), inRecDesc);
             }
@@ -245,9 +319,9 @@ public class HybridHashSortELGroupOperatorDescriptor extends AbstractSingleActiv
                     }
 
                     HybridHashSortELRunMerger mergeProcessor = new HybridHashSortELRunMerger(ctx, runCursors,
-                            framesLimit, tableSize, sortThreshold, maxRecLength, storedKeyFields, aggTpc,
-                            tpcf.createPartitioner(1), comparators, firstNormalizerComputer, merger, outRecDesc,
-                            writer, false, allowMultiEntriesMerging);
+                            framesLimit, tableSize, sortThreshold, maxRecLength, storedKeyFields,
+                            mergeTpcf.createPartitioner(), mergeInMemTpcf.createPartitioner(), comparators,
+                            firstNormalizerComputer, merger, outRecDesc, writer, false, allowMultiEntriesMerging);
                     mergeProcessor.process();
                 }
                 writer.close();

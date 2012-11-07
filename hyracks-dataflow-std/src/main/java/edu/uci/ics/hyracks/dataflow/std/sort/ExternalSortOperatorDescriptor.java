@@ -19,7 +19,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -53,8 +52,6 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
     private final int framesLimit;
 
     private final boolean isLoadBuffered;
-
-    private static final Logger LOGGER = Logger.getLogger(ExternalSortOperatorDescriptor.class.getSimpleName());
 
     public ExternalSortOperatorDescriptor(JobSpecification spec, int framesLimit, int[] sortFields,
             IBinaryComparatorFactory[] comparatorFactories, RecordDescriptor recordDescriptor) {
@@ -142,11 +139,15 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void open() throws HyracksDataException {
                     // FIXME
-                    timer = System.currentTimeMillis();
+                    timer = System.nanoTime();
 
                     runGen = new ExternalSortRunGenerator(ctx, sortFields, firstKeyNormalizerFactory,
                             comparatorFactories, recordDescriptors[0], framesLimit);
                     runGen.open();
+
+                    ctx.getCounterContext().getCounter("must.algo", true).set(1);
+
+                    ctx.getCounterContext().getCounter("must.mem", true).set(framesLimit);
                 }
 
                 @Override
@@ -156,7 +157,7 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void close() throws HyracksDataException {
-                    timer = System.currentTimeMillis() - timer;
+                    timer = System.nanoTime() - timer;
 
                     SortTaskState state = new SortTaskState(ctx.getJobletContext().getJobId(), new TaskId(
                             getActivityId(), partition));
@@ -165,7 +166,12 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     state.frameSorter = runGen.getFrameSorter();
                     ctx.setTaskState(state);
 
-                    LOGGER.warning("Phase1\t" + timer + "\t" + ctx.getIOManager().toString() + "\t" + state.runs.size());
+                    ctx.getCounterContext().getCounter("optional.sort.time", true).set(timer);
+
+                    ctx.getCounterContext().getCounter("optional.sort.runs.count", true).set(state.runs.size());
+
+                    ctx.getCounterContext().getCounter("optional.sort.io", true)
+                            .set(Long.valueOf(ctx.getIOManager().toString()));
                 }
 
                 @Override
@@ -191,11 +197,15 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                 @Override
                 public void initialize() throws HyracksDataException {
                     // FIXME
-                    long timer = System.currentTimeMillis();
+                    long timer = System.nanoTime();
+
+                    ctx.getCounterContext().getCounter("must.merge.comps", true).set(0);
+                    ctx.getCounterContext().getCounter("must.merge.swaps", true).set(0);
 
                     SortTaskState state = (SortTaskState) ctx.getTaskState(new TaskId(new ActivityId(getOperatorId(),
                             SORT_ACTIVITY_ID), partition));
                     List<IFrameReader> runs = state.runs;
+
                     FrameSorter frameSorter = state.frameSorter;
                     IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
                     for (int i = 0; i < comparatorFactories.length; ++i) {
@@ -208,8 +218,12 @@ public class ExternalSortOperatorDescriptor extends AbstractOperatorDescriptor {
                     merger.process();
 
                     // FIXME
-                    timer = System.currentTimeMillis() - timer;
-                    LOGGER.warning("Phase2\t" + timer + "\t" + ctx.getIOManager().toString());
+                    timer = System.nanoTime() - timer;
+
+                    ctx.getCounterContext().getCounter("optional.merge.time", true).set(timer);
+
+                    ctx.getCounterContext().getCounter("must.io", true)
+                            .set(Long.valueOf(ctx.getIOManager().toString()));
                 }
             };
             return op;

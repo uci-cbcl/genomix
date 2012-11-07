@@ -33,7 +33,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
-import edu.uci.ics.hyracks.dataflow.std.group.struct.InMemHybridHashSortELMergeHashTable;
+import edu.uci.ics.hyracks.dataflow.std.group.hashsort.el.InMemHybridHashSortELMergeHashTable;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceMinHeap;
 
 public class HybridHashSortELGrouperBucketMerge {

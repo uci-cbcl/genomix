@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.struct;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort.el;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
@@ -20,6 +20,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.hashsort.HybridHashSortGroupHashTable;
+import edu.uci.ics.hyracks.dataflow.std.group.hashsort.HybridHashSortGroupOperatorDescriptor;
 
 public class HybridHashSortGroupHashTableWithSortThreshold extends HybridHashSortGroupHashTable {
 
@@ -42,8 +44,8 @@ public class HybridHashSortGroupHashTableWithSortThreshold extends HybridHashSor
             tPointers = new int[INIT_REF_COUNT * PTR_SIZE];
         int ptr = 0;
 
-        int headerFrameIndex = entryID * 2 * INT_SIZE / frameSize;
-        int headerFrameOffset = entryID * 2 * INT_SIZE % frameSize;
+        int headerFrameIndex = entryID / frameSize * 2 * INT_SIZE + entryID % frameSize * 2 * INT_SIZE / frameSize;
+        int headerFrameOffset = entryID % frameSize * 2 * INT_SIZE % frameSize;
 
         if (headers[headerFrameIndex] == null) {
             return 0;
@@ -91,8 +93,12 @@ public class HybridHashSortGroupHashTableWithSortThreshold extends HybridHashSor
         // sort records
         if (ptr > sortThreshold) {
             long timer = System.nanoTime();
-            sort(sortThreshold, ptr - sortThreshold);
-            actualSortTimerInNS += System.nanoTime() - timer;
+            sort(0, ptr - sortThreshold);
+            ctx.getCounterContext()
+                    .getCounter(
+                            HybridHashSortGroupOperatorDescriptor.class.getSimpleName() + "."
+                                    + HybridHashSortGroupHashTableWithSortThreshold.class.getSimpleName()
+                                    + ".sort.time", true).update(System.nanoTime() - timer);
         }
 
         return ptr;

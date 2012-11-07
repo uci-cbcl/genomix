@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.struct;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort.el;
 
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
@@ -32,6 +32,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAccessorForAdjustableFrame;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAccessorForGroupHashtable;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAppenderForGroupHashtable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
 public class InMemHybridHashSortELMergeHashTable {
@@ -141,8 +144,9 @@ public class InMemHybridHashSortELMergeHashTable {
         this.firstNormalizer = firstNormalizerComputer;
 
         // initialize the hash table
-        int residual = tableSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
-        this.headers = new ByteBuffer[tableSize * INT_SIZE * 2 / frameSize + residual];
+        int residual = tableSize % frameSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
+        this.headers = new ByteBuffer[tableSize / frameSize * INT_SIZE * 2 + tableSize % frameSize * INT_SIZE * 2
+                / frameSize + residual];
 
         this.outputBuffer = ctx.allocateFrame();
 
@@ -187,7 +191,7 @@ public class InMemHybridHashSortELMergeHashTable {
      * @return
      */
     private int getHeaderFrameIndex(int entry) {
-        int frameIndex = entry * 2 * INT_SIZE / frameSize;
+        int frameIndex = entry / frameSize * 2 * INT_SIZE + entry % frameSize * 2 * INT_SIZE / frameSize;
         return frameIndex;
     }
 
@@ -198,7 +202,7 @@ public class InMemHybridHashSortELMergeHashTable {
      * @return
      */
     private int getHeaderTupleIndex(int entry) {
-        int offset = entry * 2 * INT_SIZE % frameSize;
+        int offset = entry % frameSize * 2 * INT_SIZE % frameSize;
         return offset;
     }
 

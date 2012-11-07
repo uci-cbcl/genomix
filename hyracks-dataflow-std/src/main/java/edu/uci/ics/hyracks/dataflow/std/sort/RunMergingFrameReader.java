@@ -17,7 +17,6 @@ package edu.uci.ics.hyracks.dataflow.std.sort;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -43,8 +42,7 @@ public class RunMergingFrameReader implements IFrameReader {
     private FrameTupleAccessor[] tupleAccessors;
 
     // FIXME
-    private static final Logger LOGGER = Logger.getLogger(RunMergingFrameReader.class.getSimpleName());
-    long comparisonCounter = 0, readTimer = 0;
+    long comparisonCounter = 0;
 
     public RunMergingFrameReader(IHyracksTaskContext ctx, IFrameReader[] runCursors, List<ByteBuffer> inFrames,
             int[] sortFields, IBinaryComparator[] comparators, RecordDescriptor recordDesc) {
@@ -68,10 +66,7 @@ public class RunMergingFrameReader implements IFrameReader {
             int runIndex = topTuples.peek().getRunid();
             runCursors[runIndex].open();
             // FIXME
-            long timer = System.nanoTime();
-            boolean hasFrame = runCursors[runIndex].nextFrame(inFrames.get(runIndex));
-            readTimer += System.nanoTime() - timer;
-            if (hasFrame) {
+            if (runCursors[runIndex].nextFrame(inFrames.get(runIndex))) {
                 tupleAccessors[runIndex] = new FrameTupleAccessor(ctx.getFrameSize(), recordDesc);
                 tupleAccessors[runIndex].reset(inFrames.get(runIndex));
                 setNextTopTuple(runIndex, tupleIndexes, runCursors, tupleAccessors, topTuples);
@@ -111,7 +106,9 @@ public class RunMergingFrameReader implements IFrameReader {
         for (int i = 0; i < runCursors.length; ++i) {
             closeRun(i, runCursors, tupleAccessors);
         }
-        LOGGER.warning("RunMergingFrameReader\t" + readTimer + "\t" + comparisonCounter);
+
+        ctx.getCounterContext().getCounter("must.merge.comps", true).update(comparisonCounter);
+        ctx.getCounterContext().getCounter("must.merge.swaps", true).update(topTuples.getSwapCount());
     }
 
     private void setNextTopTuple(int runIndex, int[] tupleIndexes, IFrameReader[] runCursors,
@@ -130,11 +127,7 @@ public class RunMergingFrameReader implements IFrameReader {
         if (tupleAccessors[runIndex] == null || runCursors[runIndex] == null) {
             return false;
         } else if (tupleIndexes[runIndex] >= tupleAccessors[runIndex].getTupleCount()) {
-            // FIXME
-            long timer = System.nanoTime();
-            boolean hasFrame = runCursors[runIndex].nextFrame(inFrames.get(runIndex));
-            readTimer += System.nanoTime() - timer;
-            if (hasFrame) {
+            if (runCursors[runIndex].nextFrame(inFrames.get(runIndex))) {
                 tupleIndexes[runIndex] = 0;
                 return hasNextTuple(runIndex, tupleIndexes, runCursors, tupleAccessors);
             } else {

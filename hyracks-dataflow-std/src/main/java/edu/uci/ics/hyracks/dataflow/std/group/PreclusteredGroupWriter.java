@@ -42,15 +42,18 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     private final FrameTupleAppender appender;
     private final ArrayTupleBuilder tupleBuilder;
 
+    private final IHyracksTaskContext ctx;
+
     private boolean first;
 
     // FIXME remove before deploying
     private static final Logger LOGGER = Logger.getLogger(PreclusteredGroupWriter.class.getSimpleName());
-    long aggTimer = 0, flushTimerInNS = 0;
+    long aggTimer = 0, flushTimer = 0, mergeComps = 0;
 
     public PreclusteredGroupWriter(IHyracksTaskContext ctx, int[] groupFields, IBinaryComparator[] comparators,
             IAggregatorDescriptor aggregator, RecordDescriptor inRecordDesc, RecordDescriptor outRecordDesc,
             IFrameWriter writer) {
+        this.ctx = ctx;
         this.groupFields = groupFields;
         this.comparators = comparators;
         this.aggregator = aggregator;
@@ -77,7 +80,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         // FIXME remove before deploying
-        long timer = System.currentTimeMillis();
+        long timer = System.nanoTime();
 
         inFrameAccessor.reset(buffer);
         int nTuples = inFrameAccessor.getTupleCount();
@@ -102,7 +105,7 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             }
         }
         FrameUtils.copy(buffer, copyFrame);
-        aggTimer += System.currentTimeMillis() - timer;
+        aggTimer += System.nanoTime() - timer;
     }
 
     private void switchGroupIfRequired(FrameTupleAccessor prevTupleAccessor, int prevTupleIndex,
@@ -143,11 +146,12 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             }
         }
 
-        flushTimerInNS += System.nanoTime() - timer;
+        flushTimer += System.nanoTime() - timer;
 
     }
 
     private boolean sameGroup(FrameTupleAccessor a1, int t1Idx, FrameTupleAccessor a2, int t2Idx) {
+        mergeComps++;
         for (int i = 0; i < comparators.length; ++i) {
             int fIdx = groupFields[i];
             int s1 = a1.getTupleStartOffset(t1Idx) + a1.getFieldSlotsLength() + a1.getFieldStartOffset(t1Idx, fIdx);
@@ -173,11 +177,23 @@ public class PreclusteredGroupWriter implements IFrameWriter {
             if (appender.getTupleCount() > 0) {
                 long timer = System.nanoTime();
                 FrameUtils.flushFrame(outFrame, writer);
-                flushTimerInNS += System.nanoTime() - timer;
+                flushTimer += System.nanoTime() - timer;
             }
         }
         aggregateState.close();
         writer.close();
-        LOGGER.warning("PhaseD" + "\t" + aggTimer + "\t" + flushTimerInNS);
+        LOGGER.warning("PreclusteredGroupWriter\t" + aggTimer + "\t" + flushTimer + "\t" + mergeComps);
+
+        ctx.getCounterContext()
+                .getCounter("optional." + PreclusteredGroupWriter.class.getSimpleName() + ".aggregate.time", true)
+                .set(aggTimer);
+
+        ctx.getCounterContext()
+                .getCounter("optional." + PreclusteredGroupWriter.class.getSimpleName() + ".flush.time", true)
+                .set(flushTimer);
+
+        ctx.getCounterContext()
+                .getCounter("optional." + PreclusteredGroupWriter.class.getSimpleName() + ".merge.comps.", true)
+                .set(mergeComps);
     }
 }

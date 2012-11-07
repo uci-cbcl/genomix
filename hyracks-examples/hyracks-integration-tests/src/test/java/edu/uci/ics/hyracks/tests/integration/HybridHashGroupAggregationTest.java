@@ -41,6 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
+import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFamily;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
@@ -51,7 +52,6 @@ import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
 import edu.uci.ics.hyracks.dataflow.std.file.IFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.ITupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.PlainFileWriterOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.group.HybridHashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.AvgFieldGroupAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.AvgFieldMergeAggregatorFactory;
@@ -60,15 +60,16 @@ import edu.uci.ics.hyracks.dataflow.std.group.aggregators.FloatSumFieldAggregato
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.IntSumFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MinMaxStringFieldAggregatorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.aggregators.MultiFieldsAggregatorFactory;
+import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.dynamicpartitionalloc.HybridHashDynamicPartitionAllocGroupOperatorDescriptor;
 
 public class HybridHashGroupAggregationTest extends AbstractIntegrationTest {
     final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] { new FileSplit(NC2_ID,
             new FileReference(new File("data/tpch0.001/lineitem.tbl"))) });
-    //new FileReference(new File("/Volumes/Home/Datasets/tpch/tpch0.1/lineitem.tbl"))) });
+    //        new FileReference(new File("/Volumes/Home/Datasets/tpch/tpch0.1/lineitem.tbl"))) });
 
-    final int inputSize = 2266;
+    final int inputSize = 3;
 
-    final double fudgeFactor = 1.2;
+    final int[] testAlgorithms = new int[] { 4 };
 
     final RecordDescriptor desc = new RecordDescriptor(new ISerializerDeserializer[] {
             UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
@@ -101,292 +102,357 @@ public class HybridHashGroupAggregationTest extends AbstractIntegrationTest {
 
     @Test
     public void singleKeySumHybridHashSortTest() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        for (int i : testAlgorithms) {
+            JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+            FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider,
+                    tupleParserFactory, desc);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
+            RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                    IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
+            int estimatedRecSize = 10 + 4 + 4 + 4 + 4 * 4 + 4;
 
-        int[] keyFields = new int[] { 0 };
-        int framesLimit = 24;
-        int tableSize = framesLimit * 1000;
+            int[] keyFields = new int[] { 0 };
+            int framesLimit = 6;
+            int tableSize = 4096;
 
-        HybridHashGroupOperatorDescriptor grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields, framesLimit,
-                inputSize, tableSize, fudgeFactor,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new IntSumFieldAggregatorFactory(3, false),
-                                new FloatSumFieldAggregatorFactory(5, false) }), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new IntSumFieldAggregatorFactory(2, false),
-                                new FloatSumFieldAggregatorFactory(3, false) }), outputRec, false);
+            HybridHashDynamicPartitionAllocGroupOperatorDescriptor grouper = new HybridHashDynamicPartitionAllocGroupOperatorDescriptor(
+                    spec,
+                    keyFields,
+                    framesLimit,
+                    inputSize,
+                    tableSize,
+                    estimatedRecSize,
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new FieldHashPartitionComputerFamily(
+                            keyFields,
+                            new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new FieldHashPartitionComputerFamily(
+                            keyFields,
+                            new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new IntSumFieldAggregatorFactory(3, false),
+                                    new FloatSumFieldAggregatorFactory(5, false) }), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new IntSumFieldAggregatorFactory(2, false),
+                                    new FloatSumFieldAggregatorFactory(3, false) }), outputRec, i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
-        spec.connect(conn1, csvScanner, 0, grouper, 0);
+            IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
+                    new FieldHashPartitionComputerFactory(keyFields,
+                            new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                    .of(UTF8StringPointable.FACTORY) }));
+            spec.connect(conn1, csvScanner, 0, grouper, 0);
 
-        AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "singleKeySumHybridHashSortTest");
+            AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "singleKeySumHybridHashSortTest_" + i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
-        spec.connect(conn2, grouper, 0, printer, 0);
+            IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
+            spec.connect(conn2, grouper, 0, printer, 0);
 
-        spec.addRoot(printer);
-        runTest(spec);
+            spec.addRoot(printer);
+            runTest(spec);
+        }
     }
 
     @Test
     public void singleKeyAvgHybridHashSortTest() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        for (int i : testAlgorithms) {
+            JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+            FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider,
+                    tupleParserFactory, desc);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
+            RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                    IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
+            int estimatedRecSize = 10 + 4 + 4 + 4 + 4 * 4 + 4;
 
-        int[] keyFields = new int[] { 0 };
-        int frameLimits = 4;
-        int tableSize = frameLimits * 1000;
+            int[] keyFields = new int[] { 0 };
+            int framesLimit = 6;
+            int tableSize = 4096;
 
-        HybridHashGroupOperatorDescriptor grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields, frameLimits,
-                inputSize, tableSize, fudgeFactor,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new CountFieldAggregatorFactory(false),
-                        new AvgFieldGroupAggregatorFactory(1, false) }), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new IntSumFieldAggregatorFactory(2, false),
-                                new AvgFieldMergeAggregatorFactory(3, false) }), outputRec, false);
+            HybridHashDynamicPartitionAllocGroupOperatorDescriptor grouper = new HybridHashDynamicPartitionAllocGroupOperatorDescriptor(
+                    spec,
+                    keyFields,
+                    framesLimit,
+                    inputSize,
+                    tableSize,
+                    estimatedRecSize,
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new FieldHashPartitionComputerFamily(
+                            keyFields,
+                            new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new FieldHashPartitionComputerFamily(
+                            keyFields,
+                            new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new CountFieldAggregatorFactory(false),
+                                    new AvgFieldGroupAggregatorFactory(1, false) }), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new IntSumFieldAggregatorFactory(2, false),
+                                    new AvgFieldMergeAggregatorFactory(3, false) }), outputRec, i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
-        spec.connect(conn1, csvScanner, 0, grouper, 0);
+            IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
+                    new FieldHashPartitionComputerFactory(keyFields,
+                            new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                    .of(UTF8StringPointable.FACTORY) }));
+            spec.connect(conn1, csvScanner, 0, grouper, 0);
 
-        AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "singleKeyAvgHybridHashSortTest");
+            AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "singleKeyAvgHybridHashSortTest_" + i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
-        spec.connect(conn2, grouper, 0, printer, 0);
+            IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
+            spec.connect(conn2, grouper, 0, printer, 0);
 
-        spec.addRoot(printer);
-        runTest(spec);
+            spec.addRoot(printer);
+            runTest(spec);
+        }
     }
 
     @Test
     public void singleKeyMinMaxStringHybridHashSortTest() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        for (int i : testAlgorithms) {
+            JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+            FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider,
+                    tupleParserFactory, desc);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE });
+            RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                    UTF8StringSerializerDeserializer.INSTANCE });
+            int estimatedRecSize = 10 + 4 + 44 + 4 * 3 + 4;
 
-        int[] keyFields = new int[] { 0 };
-        int frameLimits = 4;
-        int tableSize = 8;
+            int[] keyFields = new int[] { 0 };
+            int framesLimit = 6;
+            int tableSize = 4096;
 
-        HybridHashGroupOperatorDescriptor grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields, frameLimits,
-                inputSize, tableSize, fudgeFactor,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(15, true, true) }),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false),
-                        new MinMaxStringFieldAggregatorFactory(2, true, true) }), outputRec, false);
+            HybridHashDynamicPartitionAllocGroupOperatorDescriptor grouper = new HybridHashDynamicPartitionAllocGroupOperatorDescriptor(
+                    spec,
+                    keyFields,
+                    framesLimit,
+                    inputSize,
+                    tableSize,
+                    estimatedRecSize,
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new FieldHashPartitionComputerFamily(
+                            keyFields,
+                            new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new FieldHashPartitionComputerFamily(
+                            keyFields,
+                            new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new MinMaxStringFieldAggregatorFactory(15, true, true) }),
+                    new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                            new IntSumFieldAggregatorFactory(1, false),
+                            new MinMaxStringFieldAggregatorFactory(2, true, true) }), outputRec, i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
-        spec.connect(conn1, csvScanner, 0, grouper, 0);
+            IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
+                    new FieldHashPartitionComputerFactory(keyFields,
+                            new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                    .of(UTF8StringPointable.FACTORY) }));
+            spec.connect(conn1, csvScanner, 0, grouper, 0);
 
-        AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "singleKeyMinMaxStringHybridHashSortTest");
+            AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec,
+                    "singleKeyMinMaxStringHybridHashSortTest_" + i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
-        spec.connect(conn2, grouper, 0, printer, 0);
+            IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
+            spec.connect(conn2, grouper, 0, printer, 0);
 
-        spec.addRoot(printer);
-        runTest(spec);
+            spec.addRoot(printer);
+            runTest(spec);
+        }
     }
 
     @Test
     public void multiKeySumHybridHashSortTest() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        for (int i : testAlgorithms) {
+            JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+            FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider,
+                    tupleParserFactory, desc);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+            RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                    IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
+            int estimatedRecSize = 10 + 10 + 4 + 4 + 4 * 4 + 4;
 
-        int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
-        int tableSize = 8;
+            int[] keyFields = new int[] { 8, 0 };
+            int[] storedKeyFields = new int[] { 0, 1 };
+            int framesLimit = 6;
+            int tableSize = 4096;
 
-        HybridHashGroupOperatorDescriptor grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields, frameLimits,
-                inputSize, tableSize, fudgeFactor, new IBinaryComparatorFactory[] {
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
-                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new IntSumFieldAggregatorFactory(3, false) }), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(2, false),
-                                new IntSumFieldAggregatorFactory(3, false) }), outputRec, false);
+            HybridHashDynamicPartitionAllocGroupOperatorDescriptor grouper = new HybridHashDynamicPartitionAllocGroupOperatorDescriptor(
+                    spec, keyFields, framesLimit, inputSize, tableSize, estimatedRecSize,
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new FieldHashPartitionComputerFamily(keyFields, new IBinaryHashFunctionFamily[] {
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new FieldHashPartitionComputerFamily(storedKeyFields, new IBinaryHashFunctionFamily[] {
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new IntSumFieldAggregatorFactory(3, false) }), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(2, false),
+                                    new IntSumFieldAggregatorFactory(3, false) }), outputRec, i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
-        spec.connect(conn1, csvScanner, 0, grouper, 0);
+            IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
+                    new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
+                            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
+            spec.connect(conn1, csvScanner, 0, grouper, 0);
 
-        AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "multiKeySumHybridHashSortTest");
+            AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "multiKeySumHybridHashSortTest_" + i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
-        spec.connect(conn2, grouper, 0, printer, 0);
+            IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
+            spec.connect(conn2, grouper, 0, printer, 0);
 
-        spec.addRoot(printer);
-        runTest(spec);
+            spec.addRoot(printer);
+            runTest(spec);
+        }
     }
 
     @Test
     public void multiKeyAvgHybridHashSortTest() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        for (int i : testAlgorithms) {
+            JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+            FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider,
+                    tupleParserFactory, desc);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                FloatSerializerDeserializer.INSTANCE });
+            RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                    IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                    FloatSerializerDeserializer.INSTANCE });
+            int estimatedRecSize = 10 + 10 + 4 + 4 + 4 + 4 * 5 + 4;
 
-        int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
-        int tableSize = 8;
+            int[] keyFields = new int[] { 8, 0 };
+            int[] storedKeyFields = new int[] { 0, 1 };
+            int framesLimit = 6;
+            int tableSize = 4096;
 
-        HybridHashGroupOperatorDescriptor grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields, frameLimits,
-                inputSize, tableSize, fudgeFactor, new IBinaryComparatorFactory[] {
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
-                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new CountFieldAggregatorFactory(false),
-                        new AvgFieldGroupAggregatorFactory(1, false) }), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(2, false),
-                                new IntSumFieldAggregatorFactory(3, false),
-                                new AvgFieldMergeAggregatorFactory(4, false) }), outputRec, false);
+            HybridHashDynamicPartitionAllocGroupOperatorDescriptor grouper = new HybridHashDynamicPartitionAllocGroupOperatorDescriptor(
+                    spec, keyFields, framesLimit, inputSize, tableSize, estimatedRecSize,
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new FieldHashPartitionComputerFamily(keyFields, new IBinaryHashFunctionFamily[] {
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new FieldHashPartitionComputerFamily(storedKeyFields, new IBinaryHashFunctionFamily[] {
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new CountFieldAggregatorFactory(false),
+                                    new AvgFieldGroupAggregatorFactory(1, false) }), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(2, false),
+                                    new IntSumFieldAggregatorFactory(3, false),
+                                    new AvgFieldMergeAggregatorFactory(4, false) }), outputRec, i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
-        spec.connect(conn1, csvScanner, 0, grouper, 0);
+            IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
+                    new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
+                            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
+            spec.connect(conn1, csvScanner, 0, grouper, 0);
 
-        AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "multiKeyAvgHybridHashSortTest");
+            AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "multiKeyAvgHybridHashSortTest_" + i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
-        spec.connect(conn2, grouper, 0, printer, 0);
+            IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
+            spec.connect(conn2, grouper, 0, printer, 0);
 
-        spec.addRoot(printer);
-        runTest(spec);
+            spec.addRoot(printer);
+            runTest(spec);
+        }
     }
 
     @Test
     public void multiKeyMinMaxStringHybridHashSortTest() throws Exception {
-        JobSpecification spec = new JobSpecification();
+        for (int i : testAlgorithms) {
+            JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+            FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider,
+                    tupleParserFactory, desc);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+            RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+                    UTF8StringSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
+                    IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE });
+            int estimatedRecSize = 10 + 10 + 4 + 44 + 4 * 4 + 4;
 
-        int[] keyFields = new int[] { 8, 0 };
-        int frameLimits = 4;
-        int tableSize = 8;
+            int[] keyFields = new int[] { 8, 0 };
+            int[] storedKeyFields = new int[] { 0, 1 };
+            int framesLimit = 6;
+            int tableSize = 4096;
 
-        HybridHashGroupOperatorDescriptor grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields, frameLimits,
-                inputSize, tableSize, fudgeFactor, new IBinaryComparatorFactory[] {
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
-                        UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(15, true, true) }),
-                new MultiFieldsAggregatorFactory(new int[] { 0, 1 }, new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(2, false),
-                        new MinMaxStringFieldAggregatorFactory(3, true, true) }), outputRec, false);
+            HybridHashDynamicPartitionAllocGroupOperatorDescriptor grouper = new HybridHashDynamicPartitionAllocGroupOperatorDescriptor(
+                    spec, keyFields, framesLimit, inputSize, tableSize, estimatedRecSize,
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                    new FieldHashPartitionComputerFamily(keyFields, new IBinaryHashFunctionFamily[] {
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new FieldHashPartitionComputerFamily(storedKeyFields, new IBinaryHashFunctionFamily[] {
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE,
+                            UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper.INSTANCE }),
+                    new UTF8StringNormalizedKeyComputerFactory(), new MultiFieldsAggregatorFactory(
+                            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                    new MinMaxStringFieldAggregatorFactory(15, true, true) }),
+                    new MultiFieldsAggregatorFactory(new int[] { 0, 1 }, new IFieldAggregateDescriptorFactory[] {
+                            new IntSumFieldAggregatorFactory(2, false),
+                            new MinMaxStringFieldAggregatorFactory(3, true, true) }), outputRec, i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
-        spec.connect(conn1, csvScanner, 0, grouper, 0);
+            IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
+                    new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
+                            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
+            spec.connect(conn1, csvScanner, 0, grouper, 0);
 
-        AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec, "multiKeyMinMaxStringHybridHashSortTest");
+            AbstractSingleActivityOperatorDescriptor printer = getPrinter(spec,
+                    "multiKeyMinMaxStringHybridHashSortTest_" + i);
 
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID, NC1_ID);
 
-        IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
-        spec.connect(conn2, grouper, 0, printer, 0);
+            IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
+            spec.connect(conn2, grouper, 0, printer, 0);
 
-        spec.addRoot(printer);
-        runTest(spec);
+            spec.addRoot(printer);
+            runTest(spec);
+        }
     }
 }

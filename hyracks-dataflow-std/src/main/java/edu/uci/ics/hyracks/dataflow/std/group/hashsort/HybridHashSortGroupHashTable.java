@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.struct;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -36,6 +36,9 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAccessorForGroupHashtable;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAppenderForGroupHashtable;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.ISerializableGroupHashTable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
 public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable {
@@ -49,7 +52,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
     protected final ByteBuffer[] headers;
     protected final ByteBuffer[] contents;
 
-    private final IHyracksTaskContext ctx;
+    protected final IHyracksTaskContext ctx;
 
     private int currentLargestFrameIndex;
     private int totalTupleCount;
@@ -91,13 +94,11 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
     private final boolean sortInMemFlush;
 
-    private static final Logger LOGGER = Logger.getLogger(HybridHashSortELGroupHashTable.class.getSimpleName());
-    int spilledGroups = 0, insertGroups = 0, insertedRecords = 0;
-    long hashComparisonCount = 0, sortComparisonCount = 0, swapCount = 0, insertTimer = 0, findMatchTimerInNS = 0,
-            sortTimer = 0, actualSortTimerInNS = 0, flushHashtableToOutputTimer = 0, flushTimer = 0,
-            frameFlushTimerInNS = 0;
-
     int usedEntries = 0;
+
+    // for profiling
+    private long insertTimer = 0, hashSuccComps = 0, hashUnsuccComps = 0, hashSlotInit = 0, sortComps = 0,
+            sortSwaps = 0;
 
     public HybridHashSortGroupHashTable(IHyracksTaskContext ctx, int frameLimits, int tableSize, int[] keys,
             IBinaryComparator[] comparators, ITuplePartitionComputer tpc,
@@ -130,8 +131,9 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
         this.firstNormalizer = firstNormalizerComputer;
 
         // initialize the hash table
-        int residual = tableSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
-        this.headers = new ByteBuffer[tableSize * INT_SIZE * 2 / frameSize + residual];
+        int residual = ((tableSize % frameSize) * INT_SIZE * 2) % frameSize == 0 ? 0 : 1;
+        this.headers = new ByteBuffer[tableSize / frameSize * INT_SIZE * 2 + tableSize % frameSize * 2 * INT_SIZE
+                / frameSize + residual];
 
         this.outputBuffer = ctx.allocateFrame();
 
@@ -153,6 +155,17 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
         this.sortInMemFlush = sortInMemFlush;
 
+        // FIXME
+        ctx.getCounterContext().getCounter("must.sort.comps", true).update(sortComps);
+
+        ctx.getCounterContext().getCounter("must.sort.swaps", true).update(sortSwaps);
+
+        ctx.getCounterContext().getCounter("must.hash.succ.comps", true).update(hashSuccComps);
+
+        ctx.getCounterContext().getCounter("must.hash.unsucc.comps", true).update(hashUnsuccComps);
+
+        ctx.getCounterContext().getCounter("must.hash.slot.init", true).update(hashSlotInit);
+
     }
 
     /**
@@ -173,7 +186,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
      * @return
      */
     private int getHeaderFrameIndex(int entry) {
-        int frameIndex = entry * 2 * INT_SIZE / frameSize;
+        int frameIndex = entry / frameSize * 2 * INT_SIZE + entry % frameSize * 2 * INT_SIZE / frameSize;
         return frameIndex;
     }
 
@@ -184,7 +197,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
      * @return
      */
     private int getHeaderTupleIndex(int entry) {
-        int offset = entry * 2 * INT_SIZE % frameSize;
+        int offset = entry % frameSize * 2 * INT_SIZE % frameSize;
         return offset;
     }
 
@@ -198,7 +211,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
     @Override
     public void insert(FrameTupleAccessor accessor, int tupleIndex) throws HyracksDataException {
         // FIXME
-        long timer = System.currentTimeMillis();
+        long timer = System.nanoTime();
 
         int entry = tpc.partition(accessor, tupleIndex, tableSize);
         if (findMatch(entry, accessor, tupleIndex)) {
@@ -290,13 +303,11 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
                 contents[matchPointer.frameIndex].putInt(refOffset + INT_SIZE, insertTupleIndex);
             }
 
-            insertGroups++;
             totalTupleCount++;
         }
-        insertedRecords++;
 
         // FIXME
-        insertTimer += System.currentTimeMillis() - timer;
+        insertTimer += System.nanoTime() - timer;
     }
 
     /**
@@ -306,8 +317,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
         // FIXME print hash table statistics
         printHashtableStatistics();
-        long methodTimer = System.currentTimeMillis();
-        long frameFlushTimer;
+        long methodTimer = System.nanoTime();
 
         if (sortInMemFlush) {
             flushEntries(outputWriter);
@@ -336,10 +346,8 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
                     if (!outputAppender.append(outputTupleBuilder.getFieldEndOffsets(),
                             outputTupleBuilder.getByteArray(), 0, outputTupleBuilder.getSize())) {
-                        // FIXME
-                        frameFlushTimer = System.nanoTime();
+
                         FrameUtils.flushFrame(outputBuffer, outputWriter);
-                        frameFlushTimerInNS += System.nanoTime() - frameFlushTimer;
 
                         outputAppender.reset(outputBuffer, true);
                         if (!outputAppender.append(outputTupleBuilder.getFieldEndOffsets(),
@@ -351,10 +359,8 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
             }
 
             if (outputAppender.getTupleCount() > 0) {
-                // FIXME
-                frameFlushTimer = System.nanoTime();
+
                 FrameUtils.flushFrame(outputBuffer, outputWriter);
-                frameFlushTimerInNS += System.nanoTime() - frameFlushTimer;
 
                 outputAppender.reset(outputBuffer, true);
             }
@@ -364,7 +370,10 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
         usedEntries = 0;
 
         // FIXME
-        flushHashtableToOutputTimer += System.currentTimeMillis() - methodTimer;
+        ctx.getCounterContext()
+                .getCounter(
+                        "optional." + HybridHashSortGroupHashTable.class.getSimpleName() + ".directTableFlush.time",
+                        true).update(System.nanoTime() - methodTimer);
     }
 
     /**
@@ -374,10 +383,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
      */
     private void flush() throws HyracksDataException {
 
-        // FIXME print hash table statistics
-        printHashtableStatistics();
-
-        long methodTimer = System.currentTimeMillis();
+        long methodTimer = System.nanoTime();
 
         FileReference runFile;
         try {
@@ -393,18 +399,16 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
         runReaders.add(runWriter.createReader());
         reset();
 
-        flushTimer += System.currentTimeMillis() - methodTimer;
+        ctx.getCounterContext()
+                .getCounter("optional." + HybridHashSortGroupHashTable.class.getSimpleName() + ".flush.time", true)
+                .update(System.nanoTime() - methodTimer);
     }
 
     private void flushEntries(IFrameWriter writer) throws HyracksDataException {
-        // FIXME for debug purpose
-        long frameFlushTimer;
 
         outputAppender.reset(outputBuffer, true);
         for (int i = 0; i < tableSize; i++) {
-            long timer = System.currentTimeMillis();
             int tupleInEntry = sortEntry(i);
-            sortTimer += System.currentTimeMillis() - timer;
 
             for (int ptr = 0; ptr < tupleInEntry; ptr++) {
                 int frameIndex = tPointers[ptr * PTR_SIZE];
@@ -428,10 +432,8 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
                 if (!outputAppender.append(outputTupleBuilder.getFieldEndOffsets(), outputTupleBuilder.getByteArray(),
                         0, outputTupleBuilder.getSize())) {
-                    // FIXME
-                    frameFlushTimer = System.nanoTime();
+
                     FrameUtils.flushFrame(outputBuffer, writer);
-                    frameFlushTimerInNS += System.nanoTime() - frameFlushTimer;
 
                     outputAppender.reset(outputBuffer, true);
                     if (!outputAppender.append(outputTupleBuilder.getFieldEndOffsets(),
@@ -439,7 +441,6 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
                         throw new HyracksDataException("Failed to flush an aggregation result.");
                     }
                 }
-                spilledGroups++;
                 totalTupleCount--;
             }
 
@@ -449,10 +450,8 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
         }
 
         if (outputAppender.getTupleCount() > 0) {
-            // FIXME
-            frameFlushTimer = System.nanoTime();
+
             FrameUtils.flushFrame(outputBuffer, writer);
-            frameFlushTimerInNS += System.nanoTime() - frameFlushTimer;
 
             outputAppender.reset(outputBuffer, true);
         }
@@ -464,8 +463,8 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
             tPointers = new int[INIT_REF_COUNT * PTR_SIZE];
         int ptr = 0;
 
-        int headerFrameIndex = entryID * 2 * INT_SIZE / frameSize;
-        int headerFrameOffset = entryID * 2 * INT_SIZE % frameSize;
+        int headerFrameIndex = entryID / frameSize * 2 * INT_SIZE + (entryID % frameSize) * 2 * INT_SIZE / frameSize;
+        int headerFrameOffset = (entryID % frameSize) * 2 * INT_SIZE % frameSize;
 
         if (headers[headerFrameIndex] == null) {
             return 0;
@@ -508,7 +507,9 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
         if (ptr > 1) {
             long timer = System.nanoTime();
             sort(0, ptr);
-            actualSortTimerInNS += System.nanoTime() - timer;
+            ctx.getCounterContext()
+                    .getCounter("optional." + HybridHashSortGroupHashTable.class.getSimpleName() + ".sort.time", true)
+                    .update(System.nanoTime() - timer);
         }
 
         return ptr;
@@ -585,7 +586,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
     }
 
     private void swap(int a, int b) {
-        swapCount++;
+        sortSwaps++;
         for (int i = 0; i < PTR_SIZE; i++) {
             int t = tPointers[a * PTR_SIZE + i];
             tPointers[a * PTR_SIZE + i] = tPointers[b * PTR_SIZE + i];
@@ -600,8 +601,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
     }
 
     private boolean findMatch(int entry, FrameTupleAccessor accessor, int tupleIndex) {
-        // FIXME
-        long methodTimer = System.nanoTime();
+        int comps = 0;
 
         // reset the match pointer
         matchPointer.frameIndex = -1;
@@ -612,8 +612,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
         int headerFrameOffset = getHeaderTupleIndex(entry);
 
         if (headers[headerFrameIndex] == null) {
-            // FIXME
-            findMatchTimerInNS += System.nanoTime() - methodTimer;
+            hashSlotInit++;
             return false;
         }
 
@@ -625,9 +624,9 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
             matchPointer.frameIndex = entryFrameIndex;
             matchPointer.tupleIndex = entryTupleIndex;
             hashtableRecordAccessor.reset(contents[entryFrameIndex]);
+            comps++;
             if (compare(accessor, tupleIndex, hashtableRecordAccessor, entryTupleIndex) == 0) {
-                // FIXME
-                findMatchTimerInNS += System.nanoTime() - methodTimer;
+                hashSuccComps += comps;
                 return true;
             }
             // Move to the next record in this entry following the linked list
@@ -637,8 +636,10 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
             entryTupleIndex = contents[prevFrameIndex].getInt(refOffset + INT_SIZE);
         }
 
-        // FIXME
-        findMatchTimerInNS += System.nanoTime() - methodTimer;
+        if (comps == 0) {
+            hashSlotInit++;
+        }
+        hashUnsuccComps += comps;
         return false;
     }
 
@@ -654,7 +655,6 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
     private int compare(FrameTupleAccessor accessor, int tupleIndex, FrameTupleAccessorForGroupHashtable hashAccessor,
             int hashTupleIndex) {
-        hashComparisonCount++;
         int tStart0 = accessor.getTupleStartOffset(tupleIndex);
         int fStartOffset0 = accessor.getFieldSlotsLength() + tStart0;
 
@@ -681,7 +681,7 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
     private int compare(FrameTupleAccessorForGroupHashtable accessor1, int tupleIndex1,
             FrameTupleAccessorForGroupHashtable accessor2, int tupleIndex2) {
-        sortComparisonCount++;
+        sortComps++;
         int tStart1 = accessor1.getTupleStartOffset(tupleIndex1);
         int fStartOffset1 = accessor1.getFieldSlotsLength() + tStart1;
 
@@ -721,8 +721,28 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
 
         usedEntries = 0;
         totalTupleCount = 0;
-        insertedRecords = 0;
         currentLargestFrameIndex = -1;
+
+        ctx.getCounterContext().getCounter("must.sort.comps", true).update(sortComps);
+
+        ctx.getCounterContext().getCounter("must.sort.swaps", true).update(sortSwaps);
+
+        ctx.getCounterContext().getCounter("must.hash.succ.comps", true).update(hashSuccComps);
+
+        ctx.getCounterContext().getCounter("must.hash.unsucc.comps", true).update(hashUnsuccComps);
+
+        ctx.getCounterContext().getCounter("must.hash.slot.init", true).update(hashSlotInit);
+
+        ctx.getCounterContext()
+                .getCounter("optional." + HybridHashSortGroupHashTable.class.getSimpleName() + ".insert.time", true)
+                .update(insertTimer);
+
+        sortComps = 0;
+        sortSwaps = 0;
+        hashSuccComps = 0;
+        hashUnsuccComps = 0;
+        hashSlotInit = 0;
+        insertTimer = 0;
     }
 
     @Override
@@ -746,11 +766,28 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
             contents[i] = null;
         }
         outputBuffer = null;
-        LOGGER.warning("HybridHashSortGroupHashTable-Close\t" + insertGroups + "\t" + spilledGroups + "\t"
-                + headers.length + "\t" + hashComparisonCount + "\t" + sortComparisonCount + "\t" + swapCount + "\t"
-                + runReaders.size() + "\t" + insertTimer + "\t" + findMatchTimerInNS + "\t" + sortTimer + "\t"
-                + actualSortTimerInNS + "\t" + flushHashtableToOutputTimer + "\t" + flushTimer + "\t"
-                + frameFlushTimerInNS);
+        tPointers = null;
+
+        ctx.getCounterContext().getCounter("must.sort.comps", true).update(sortComps);
+
+        ctx.getCounterContext().getCounter("must.sort.swaps", true).update(sortSwaps);
+
+        ctx.getCounterContext().getCounter("must.hash.succ.comps", true).update(hashSuccComps);
+
+        ctx.getCounterContext().getCounter("must.hash.unsucc.comps", true).update(hashUnsuccComps);
+
+        ctx.getCounterContext().getCounter("must.hash.slot.init", true).update(hashSlotInit);
+
+        ctx.getCounterContext()
+                .getCounter("optional." + HybridHashSortGroupHashTable.class.getSimpleName() + ".insert.time", true)
+                .update(insertTimer);
+
+        sortComps = 0;
+        sortSwaps = 0;
+        hashSuccComps = 0;
+        hashUnsuccComps = 0;
+        hashSlotInit = 0;
+        insertTimer = 0;
     }
 
     @Override
@@ -764,20 +801,21 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
     }
 
     private void printHashtableStatistics() {
-        LOGGER.warning("HybridHashGroupHashTable-HashtableStatistics\t" + tableSize + "\t" + usedEntries + "\t"
-                + totalTupleCount + "\t" + insertedRecords);
-        if (usedEntries != 0 && totalTupleCount / usedEntries >= 2) {
-            // print the hash table distribution
-            long startTimers = System.currentTimeMillis();
-            StringBuilder sbder = new StringBuilder();
-            for (int i = 0; i < tableSize; i++) {
-                int cnt = getEntryLength(i);
-                if (cnt > 0)
-                    sbder.append(i).append(" ").append(cnt).append("\n");
-            }
-            LOGGER.warning("HashtableHistogram\t" + (System.currentTimeMillis() - startTimers) + "\n"
-                    + sbder.toString());
-        }
+        //        LOGGER.warning("HybridHashGroupHashTable-HashtableStatistics\t" + tableSize + "\t" + usedEntries + "\t"
+        //                + totalTupleCount + "\t" + insertedRecords + "\t" + hashInitCount + "\t" + hashSuccComparisonCount
+        //                + "\t" + hashUnsuccComparisonCount);
+        // LOGGER.warning(getHistogram());
+        //        if (usedEntries != 0 && totalTupleCount / usedEntries >= 2) {
+        //            // print the hash table distribution
+        //            long startTimers = System.nanoTime();
+        //            StringBuilder sbder = new StringBuilder();
+        //            for (int i = 0; i < tableSize; i++) {
+        //                int cnt = getEntryLength(i);
+        //                if (cnt > 0)
+        //                    sbder.append(i).append(" ").append(cnt).append("\n");
+        //            }
+        //            LOGGER.warning("HashtableHistogram\t" + (System.nanoTime() - startTimers) + "\n" + sbder.toString());
+        //        }
     }
 
     private int getEntryLength(int entry) {
@@ -807,6 +845,26 @@ public class HybridHashSortGroupHashTable implements ISerializableGroupHashTable
         }
 
         return cnt;
+    }
+
+    private String getHistogram() {
+
+        //        int len;
+        //        int[] histogram = new int[20];
+        //        for (int i = 0; i < tableSize; i++) {
+        //            len = getEntryLength(i);
+        //            while (len >= histogram.length) {
+        //                int[] newHistogram = new int[histogram.length * 2];
+        //                System.arraycopy(histogram, 0, newHistogram, 0, histogram.length);
+        //                histogram = newHistogram;
+        //            }
+        //            histogram[len]++;
+        //        }
+        StringBuilder sbder = new StringBuilder();
+        //        for (int i = 0; i < histogram.length; i++) {
+        //            sbder.append(histogram[i]).append(" ");
+        //        }
+        return sbder.toString();
     }
 
 }

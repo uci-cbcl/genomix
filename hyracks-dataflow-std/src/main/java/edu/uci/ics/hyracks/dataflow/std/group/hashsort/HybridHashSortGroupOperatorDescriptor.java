@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
@@ -37,14 +36,13 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractTaskState;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import edu.uci.ics.hyracks.dataflow.std.group.struct.HybridHashSortGroupHashTable;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.struct.ISerializableGroupHashTable;
 
 public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescriptor {
@@ -60,8 +58,9 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
     private final IAggregatorDescriptorFactory aggregatorFactory;
     private final IAggregatorDescriptorFactory mergerFactory;
 
+    private final ITuplePartitionComputerFactory aggTpcf, mergeTpcf;
+
     private final int framesLimit;
-    private final IBinaryHashFunctionFactory[] hashFunctionFactories;
     private final IBinaryComparatorFactory[] comparatorFactories;
 
     private final int tableSize;
@@ -71,25 +70,25 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
     private final static Logger LOGGER = Logger.getLogger(HybridHashSortGroupOperatorDescriptor.class.getSimpleName());
 
     public HybridHashSortGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
-            int tableSize, IBinaryComparatorFactory[] comparatorFactories,
-            IBinaryHashFunctionFactory[] hashFunctionFactories, IAggregatorDescriptorFactory aggregatorFactory,
+            int tableSize, IBinaryComparatorFactory[] comparatorFactories, ITuplePartitionComputerFactory aggTpcf,
+            ITuplePartitionComputerFactory mergeTpcf, IAggregatorDescriptorFactory aggregatorFactory,
             IAggregatorDescriptorFactory mergerFactory, RecordDescriptor recordDescriptor) {
-        this(spec, keyFields, framesLimit, tableSize, comparatorFactories, hashFunctionFactories, null,
+        this(spec, keyFields, framesLimit, tableSize, comparatorFactories, aggTpcf, mergeTpcf, null, aggregatorFactory,
+                mergerFactory, recordDescriptor, false, false);
+    }
+
+    public HybridHashSortGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
+            int tableSize, IBinaryComparatorFactory[] comparatorFactories, ITuplePartitionComputerFactory aggTpcf,
+            ITuplePartitionComputerFactory mergeTpcf, INormalizedKeyComputerFactory firstNormalizerFactory,
+            IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
+            RecordDescriptor recordDescriptor) {
+        this(spec, keyFields, framesLimit, tableSize, comparatorFactories, aggTpcf, mergeTpcf, firstNormalizerFactory,
                 aggregatorFactory, mergerFactory, recordDescriptor, false, false);
     }
 
     public HybridHashSortGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
-            int tableSize, IBinaryComparatorFactory[] comparatorFactories,
-            IBinaryHashFunctionFactory[] hashFunctionFactories, INormalizedKeyComputerFactory firstNormalizerFactory,
-            IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
-            RecordDescriptor recordDescriptor) {
-        this(spec, keyFields, framesLimit, tableSize, comparatorFactories, hashFunctionFactories,
-                firstNormalizerFactory, aggregatorFactory, mergerFactory, recordDescriptor, false, false);
-    }
-
-    public HybridHashSortGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
-            int tableSize, IBinaryComparatorFactory[] comparatorFactories,
-            IBinaryHashFunctionFactory[] hashFunctionFactories, INormalizedKeyComputerFactory firstNormalizerFactory,
+            int tableSize, IBinaryComparatorFactory[] comparatorFactories, ITuplePartitionComputerFactory aggTpcf,
+            ITuplePartitionComputerFactory mergeTpcf, INormalizedKeyComputerFactory firstNormalizerFactory,
             IAggregatorDescriptorFactory aggregatorFactory, IAggregatorDescriptorFactory mergerFactory,
             RecordDescriptor recordDescriptor, boolean isLoadOpt, boolean isInMemResSorted) {
         super(spec, 1, 1);
@@ -111,7 +110,8 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
         this.keyFields = keyFields;
         this.comparatorFactories = comparatorFactories;
         this.firstNormalizerFactory = firstNormalizerFactory;
-        this.hashFunctionFactories = hashFunctionFactories;
+        this.aggTpcf = aggTpcf;
+        this.mergeTpcf = mergeTpcf;
         this.tableSize = tableSize;
 
         /**
@@ -190,17 +190,23 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
                 @Override
                 public void open() throws HyracksDataException {
                     // FIXME
-                    timer = System.currentTimeMillis();
+                    timer = System.nanoTime();
 
                     RecordDescriptor inRecDesc = recordDescProvider.getInputRecordDescriptor(getOperatorId(), 0);
-                    ITuplePartitionComputerFactory aggregateTpcf = new FieldHashPartitionComputerFactory(keyFields,
-                            hashFunctionFactories);
+
                     IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
                     for (int i = 0; i < comparatorFactories.length; i++) {
                         comparators[i] = comparatorFactories[i].createBinaryComparator();
                     }
+
+                    ctx.getCounterContext().getCounter("must.algo", true).set(5);
+
+                    ctx.getCounterContext().getCounter("must.mem", true).set(framesLimit);
+
+                    ctx.getCounterContext().getCounter("must.hash.slots.count", true).set(tableSize);
+
                     serializableGroupHashtable = new HybridHashSortGroupHashTable(ctx, framesLimit, tableSize,
-                            keyFields, comparators, aggregateTpcf.createPartitioner(),
+                            keyFields, comparators, aggTpcf.createPartitioner(),
                             firstNormalizerFactory.createNormalizedKeyComputer(), aggregatorFactory.createAggregator(
                                     ctx, inRecDesc, recordDescriptors[0], keyFields, storedKeyFields), inRecDesc,
                             recordDescriptors[0], isInMemResultSorted);
@@ -231,9 +237,12 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
                     ctx.setTaskState(state);
 
                     // FIXME
-                    timer = System.currentTimeMillis() - timer;
-                    LOGGER.warning("Phase1\t" + timer + "\t" + ctx.getIOManager().toString() + "\t"
-                            + serializableGroupHashtable.getRunFileReaders().size());
+                    timer = System.nanoTime() - timer;
+
+                    ctx.getCounterContext().getCounter("optional.AggregateActivity.close.time", true).set(timer);
+
+                    ctx.getCounterContext().getCounter("optional.AggregateActivity.close.io", true)
+                            .set(Long.valueOf(ctx.getIOManager().toString()));
                 }
             };
         }
@@ -257,12 +266,18 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
                 public void initialize() throws HyracksDataException {
 
                     // FIXME
-                    long timer = System.currentTimeMillis();
+                    long timer = System.nanoTime();
+
+                    ctx.getCounterContext().getCounter("must.merge.comps", true).set(0);
+                    ctx.getCounterContext().getCounter("must.merge.swaps", true).set(0);
 
                     AggregateActivityState aggState = (AggregateActivityState) ctx.getTaskState(new TaskId(
                             new ActivityId(getOperatorId(), AGGREGATE_ACTIVITY_ID), partition));
 
                     LinkedList<RunFileReader> runs = aggState.gTable.getRunFileReaders();
+
+                    ctx.getCounterContext().getCounter("optional.MergeActivity.initialize.runs.count", true)
+                            .set(runs.size());
 
                     writer.open();
                     if (runs.size() <= 0) {
@@ -270,8 +285,7 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
                         aggState.gTable.close();
                     } else {
                         aggState.gTable.close();
-                        ITuplePartitionComputerFactory mergeTpcf = new FieldHashPartitionComputerFactory(
-                                storedKeyFields, hashFunctionFactories);
+
                         IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
                         for (int i = 0; i < comparatorFactories.length; i++) {
                             comparators[i] = comparatorFactories[i].createBinaryComparator();
@@ -289,8 +303,12 @@ public class HybridHashSortGroupOperatorDescriptor extends AbstractOperatorDescr
                     writer.close();
 
                     // FIXME
-                    timer = System.currentTimeMillis() - timer;
-                    LOGGER.warning("Phase2\t" + timer + "\t" + ctx.getIOManager().toString());
+                    timer = System.nanoTime() - timer;
+
+                    ctx.getCounterContext().getCounter("optional.MergeActivity.time", true).set(timer);
+
+                    ctx.getCounterContext().getCounter("must.io", true)
+                            .set(Long.valueOf(ctx.getIOManager().toString()));
                 }
 
             };

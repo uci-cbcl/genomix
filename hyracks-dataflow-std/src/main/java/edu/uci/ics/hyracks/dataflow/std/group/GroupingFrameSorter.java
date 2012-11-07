@@ -18,7 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
-import edu.uci.ics.hyracks.api.context.IHyracksCommonContext;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -38,7 +38,7 @@ public class GroupingFrameSorter extends FrameSorter {
     // FIXME
     private static final Logger LOGGER = Logger.getLogger(GroupingFrameSorter.class.getSimpleName());
 
-    public GroupingFrameSorter(IHyracksCommonContext ctx, int[] sortFields,
+    public GroupingFrameSorter(IHyracksTaskContext ctx, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor partialOutRecordDescriptor, RecordDescriptor finalOutRecordDescriptor,
             IAggregatorDescriptor aggregator, AggregateState aggregateState) {

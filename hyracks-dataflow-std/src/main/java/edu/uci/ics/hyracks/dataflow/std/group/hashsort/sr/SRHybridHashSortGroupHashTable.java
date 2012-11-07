@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.struct;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort.sr;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -37,6 +37,8 @@ import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.HashArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.ISerializableGroupHashTable;
 import edu.uci.ics.hyracks.dataflow.std.sort.BSTMemMgr;
 import edu.uci.ics.hyracks.dataflow.std.sort.IMemoryManager;
 import edu.uci.ics.hyracks.dataflow.std.sort.Slot;
@@ -131,8 +133,9 @@ public class SRHybridHashSortGroupHashTable implements ISerializableGroupHashTab
         this.firstNormalizer = firstNormalizerComputer;
 
         // initialize the hash table
-        int residual = tableSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
-        this.headers = new ByteBuffer[tableSize * INT_SIZE * 2 / frameSize + residual];
+        int residual = tableSize % frameSize * INT_SIZE * 2 % frameSize == 0 ? 0 : 1;
+        this.headers = new ByteBuffer[tableSize / frameSize * INT_SIZE * 2 + tableSize % frameSize * INT_SIZE * 2
+                / frameSize + residual];
 
         this.outputBuffer = ctx.allocateFrame();
 
@@ -162,7 +165,7 @@ public class SRHybridHashSortGroupHashTable implements ISerializableGroupHashTab
      * @return
      */
     private int getHeaderFrameIndex(int entry) {
-        int frameIndex = entry * 2 * INT_SIZE / frameSize;
+        int frameIndex = entry / frameSize * 2 * INT_SIZE + entry % frameSize * 2 * INT_SIZE / frameSize;
         return frameIndex;
     }
 
@@ -173,7 +176,7 @@ public class SRHybridHashSortGroupHashTable implements ISerializableGroupHashTab
      * @return
      */
     private int getHeaderTupleIndex(int entry) {
-        int offset = entry * 2 * INT_SIZE % frameSize;
+        int offset = entry % frameSize * 2 * INT_SIZE % frameSize;
         return offset;
     }
 
@@ -403,8 +406,8 @@ public class SRHybridHashSortGroupHashTable implements ISerializableGroupHashTab
 
             // reset headers
 
-            int headerFrameIndex = entryIndexToFlush * 2 * INT_SIZE / frameSize;
-            int headerFrameOffset = entryIndexToFlush * 2 * INT_SIZE % frameSize;
+            int headerFrameIndex = getHeaderFrameIndex(entryIndexToFlush);
+            int headerFrameOffset = getHeaderTupleIndex(entryIndexToFlush);
 
             if (headers[headerFrameIndex] != null) {
                 headers[headerFrameIndex].putInt(headerFrameOffset, -1);
@@ -461,8 +464,8 @@ public class SRHybridHashSortGroupHashTable implements ISerializableGroupHashTab
             tPointers = new int[INIT_REF_COUNT * PTR_SIZE];
         int ptr = 0;
 
-        int headerFrameIndex = entryID * 2 * INT_SIZE / frameSize;
-        int headerFrameOffset = entryID * 2 * INT_SIZE % frameSize;
+        int headerFrameIndex = getHeaderFrameIndex(entryID);
+        int headerFrameOffset = getHeaderTupleIndex(entryID);
 
         if (headers[headerFrameIndex] == null) {
             return 0;
@@ -622,8 +625,8 @@ public class SRHybridHashSortGroupHashTable implements ISerializableGroupHashTab
         // flush the content of hash table to the output
         for (int entryID = 0; entryID < tableSize; entryID++) {
 
-            int headerFrameIndex = entryID * 2 * INT_SIZE / frameSize;
-            int headerFrameOffset = entryID * 2 * INT_SIZE % frameSize;
+            int headerFrameIndex = getHeaderFrameIndex(entryID);
+            int headerFrameOffset = getHeaderTupleIndex(entryID);
 
             if (headers[headerFrameIndex] == null) {
                 continue;

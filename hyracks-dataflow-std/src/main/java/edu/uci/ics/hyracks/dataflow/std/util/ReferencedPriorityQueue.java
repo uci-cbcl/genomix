@@ -31,6 +31,9 @@ public class ReferencedPriorityQueue {
 
     private final Comparator<ReferenceEntry> comparator;
 
+    // FIXME remove when deploying
+    private long swapCount = 0;
+
     public ReferencedPriorityQueue(int frameSize, RecordDescriptor recordDescriptor, int initSize,
             Comparator<ReferenceEntry> comparator) {
         this.frameSize = frameSize;
@@ -113,6 +116,8 @@ public class ReferencedPriorityQueue {
                 ReferenceEntry tmp = entries[slot];
                 entries[slot] = curr;
                 curr = tmp;// winner to pass up
+                // FIXME remove when deploying
+                swapCount++;
             }// else curr wins
             slot >>= 1;
         }
@@ -139,5 +144,9 @@ public class ReferencedPriorityQueue {
 
     public int size() {
         return nItems;
+    }
+
+    public long getSwapCount() {
+        return swapCount;
     }
 }

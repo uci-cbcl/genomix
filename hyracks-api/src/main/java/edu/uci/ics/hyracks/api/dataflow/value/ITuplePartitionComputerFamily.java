@@ -14,8 +14,6 @@
  */
 package edu.uci.ics.hyracks.api.dataflow.value;
 
-import java.io.Serializable;
-
-public interface ITuplePartitionComputerFamily extends Serializable {
+public interface ITuplePartitionComputerFamily extends ITuplePartitionComputerFactory {
     public ITuplePartitionComputer createPartitioner(int seed);
 }

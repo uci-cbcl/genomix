@@ -43,8 +43,13 @@ public class FloatSumFieldAggregatorFactory implements IFieldAggregateDescriptor
         this.useObjectState = useObjState;
     }
 
-    /* (non-Javadoc)
-     * @see edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory#createAggregator(edu.uci.ics.hyracks.api.context.IHyracksTaskContext, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * edu.uci.ics.hyracks.dataflow.std.group.IFieldAggregateDescriptorFactory#createAggregator(edu.uci.ics.hyracks.
+     * api.context.IHyracksTaskContext, edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor,
+     * edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor)
      */
     @Override
     public IFieldAggregateDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
@@ -121,7 +126,7 @@ public class FloatSumFieldAggregatorFactory implements IFieldAggregateDescriptor
 
             @Override
             public AggregateState createState() {
-                return new AggregateState(new Float(0.0));
+                return new AggregateState(new Float(0));
             }
 
             @Override

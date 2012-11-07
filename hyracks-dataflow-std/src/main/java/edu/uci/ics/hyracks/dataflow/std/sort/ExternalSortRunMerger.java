@@ -65,7 +65,7 @@ public class ExternalSortRunMerger {
     private boolean isLoadBuffered;
 
     // FIXME
-    long mergeTimer = 0, flushTimerInNS = 0;
+    long mergeTimer = 0, flushTimer = 0;
     int mergeRunCount = 0;
     private static Logger LOGGER = Logger.getLogger(ExternalSortRunMerger.class.getSimpleName());
 
@@ -73,16 +73,7 @@ public class ExternalSortRunMerger {
     public ExternalSortRunMerger(IHyracksTaskContext ctx, FrameSorter frameSorter, List<IFrameReader> runs,
             int[] sortFields, IBinaryComparator[] comparators, RecordDescriptor recordDesc, int framesLimit,
             IFrameWriter writer) {
-        this.ctx = ctx;
-        this.frameSorter = frameSorter;
-        this.runs = new LinkedList<IFrameReader>(runs);
-        this.sortFields = sortFields;
-        this.comparators = comparators;
-        this.recordDesc = recordDesc;
-        this.framesLimit = framesLimit;
-        this.writer = writer;
-        this.outputLimit = -1;
-        this.isLoadBuffered = false;
+        this(ctx, frameSorter, runs, sortFields, comparators, recordDesc, framesLimit, writer, false);
     }
 
     // Constructor for external sort, no replacement selection, with load buffer switch
@@ -99,6 +90,9 @@ public class ExternalSortRunMerger {
         this.writer = writer;
         this.outputLimit = -1;
         this.isLoadBuffered = isLoadBuffered;
+        // FIXME
+        if (this.isLoadBuffered)
+            LOGGER.warning("ExternalSortRunMerger: load buffering enabled.");
     }
 
     // Constructor for external sort with replacement selection
@@ -185,16 +179,20 @@ public class ExternalSortRunMerger {
         } finally {
             writer.close();
 
-            // FIXME
-            LOGGER.warning("PhaseB\t" + mergeTimer + "\t" + flushTimerInNS + "\t"
-                    + mergeLevels + "\t" + mergeRunCount);
+            ctx.getCounterContext().getCounter("optional.merge.levels", true).set(mergeLevels);
+
+            ctx.getCounterContext().getCounter("optional.process.merge.runs.count", true).set(mergeRunCount);
+
+            ctx.getCounterContext().getCounter("optional.merge.time", true).set(mergeTimer);
+
+            ctx.getCounterContext().getCounter("optional.merge.flush.time", true).set(flushTimer);
         }
     }
 
     // creates a new run from runs that can fit in memory.
     private void merge(IFrameWriter mergeResultWriter, IFrameReader[] runCursors) throws HyracksDataException {
         // FIXME
-        long timer = System.currentTimeMillis();
+        long timer = System.nanoTime();
 
         IFrameReader merger;
         if (isLoadBuffered)
@@ -205,17 +203,17 @@ public class ExternalSortRunMerger {
         merger.open();
         try {
             // FIXME remove when deploying
-            long flushTimer;
+            long fTimer;
             while (merger.nextFrame(outFrame)) {
-                flushTimer = System.nanoTime();
+                fTimer = System.nanoTime();
                 FrameUtils.flushFrame(outFrame, mergeResultWriter);
-                flushTimerInNS += System.nanoTime() - flushTimer;
+                flushTimer += System.nanoTime() - fTimer;
             }
         } finally {
             merger.close();
 
             // FIXME
-            mergeTimer += System.currentTimeMillis() - timer;
+            mergeTimer += System.nanoTime() - timer;
         }
     }
 

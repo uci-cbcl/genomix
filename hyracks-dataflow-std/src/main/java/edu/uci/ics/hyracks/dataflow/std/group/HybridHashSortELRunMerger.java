@@ -34,7 +34,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.std.group.struct.InMemHybridHashSortELGroupHash;
+import edu.uci.ics.hyracks.dataflow.std.group.hashsort.el.InMemHybridHashSortELGroupHash;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceEntry;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferenceMinHeap;
 import edu.uci.ics.hyracks.dataflow.std.util.ReferencedPriorityQueue;

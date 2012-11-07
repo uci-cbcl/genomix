@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort;
 
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
@@ -31,7 +31,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
-import edu.uci.ics.hyracks.dataflow.std.group.struct.GroupRunMergingFrameReader;
+import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 
 public class HybridHashSortRunMerger {
 
@@ -48,11 +48,6 @@ public class HybridHashSortRunMerger {
     private ByteBuffer outFrame;
     private FrameTupleAppender outFrameAppender;
     private final boolean isLoadBuffered;
-
-    // FIXME
-    long mergeTimer = 0, frameFlushTimerInNS = 0;
-    int mergeRunCount = 0;
-    private static Logger LOGGER = Logger.getLogger(HybridHashSortRunMerger.class.getSimpleName());
 
     public HybridHashSortRunMerger(IHyracksTaskContext ctx, LinkedList<RunFileReader> runs, int[] keyFields,
             IBinaryComparator[] comparators, RecordDescriptor recordDesc, ITuplePartitionComputer tpc,
@@ -74,7 +69,7 @@ public class HybridHashSortRunMerger {
 
         writer.open();
         // FIXME
-        int mergeLevels = 0;
+        int mergeLevels = 0, mergeRunCount = 0;
         try {
 
             outFrame = ctx.allocateFrame();
@@ -89,8 +84,6 @@ public class HybridHashSortRunMerger {
                 while (generationSeparator < runs.size() && runs.size() > maxMergeWidth) {
                     int mergeWidth = Math.min(Math.min(runs.size() - generationSeparator, maxMergeWidth), runs.size()
                             - maxMergeWidth + 1);
-                    LOGGER.warning(HybridHashSortRunMerger.class.getSimpleName() + "-process\t" + mergeLevels + "\t"
-                            + mergeRounds + "\t" + runs.size() + "\t" + mergeWidth);
                     FileReference newRun = null;
                     IFrameWriter mergeResultWriter = this.writer;
                     newRun = ctx.createManagedWorkspaceFile(HybridHashSortRunMerger.class.getSimpleName());
@@ -119,29 +112,34 @@ public class HybridHashSortRunMerger {
             writer.fail();
             throw new HyracksDataException(e);
         } finally {
-            LOGGER.warning("PhaseB\t" + mergeTimer + "\t" + frameFlushTimerInNS + "\t" + mergeRunCount);
+
+            ctx.getCounterContext()
+                    .getCounter("optional." + HybridHashSortRunMerger.class.getSimpleName() + ".merge.runs.count", true)
+                    .set(mergeRunCount);
+
+            ctx.getCounterContext()
+                    .getCounter("optional." + HybridHashSortRunMerger.class.getSimpleName() + ".merge.levels", true)
+                    .set(mergeLevels);
         }
     }
 
     private void merge(IFrameWriter mergeResultWriter, IFrameReader[] runCursors, boolean isFinal)
             throws HyracksDataException {
         // FIXME
-        long methodTimer = System.currentTimeMillis();
-        long frameFlushTimer;
+        long methodTimer = System.nanoTime();
 
         IFrameReader merger = new GroupRunMergingFrameReader(ctx, runCursors, framesLimit, tableSize, keyFields, tpc,
                 comparators, grouper, recordDesc, isFinal, isLoadBuffered);
         merger.open();
         try {
             while (merger.nextFrame(outFrame)) {
-                // FIXME
-                frameFlushTimer = System.nanoTime();
                 FrameUtils.flushFrame(outFrame, mergeResultWriter);
-                frameFlushTimerInNS += System.nanoTime() - frameFlushTimer;
             }
         } finally {
             merger.close();
         }
-        mergeTimer += System.currentTimeMillis() - methodTimer;
+        ctx.getCounterContext()
+                .getCounter("optional." + HybridHashSortRunMerger.class.getSimpleName() + ".merge.time", true)
+                .update(System.nanoTime() - methodTimer);
     }
 }

@@ -141,4 +141,12 @@ public class FrameTupleAccessorForGroupHashtable implements IFrameTupleAccessor 
         return buffer.getInt(FrameHelper.getTupleCountOffset(frameSize) - 4 * (tupleIndex + 1));
     }
 
+    public int getHashReferenceNextFrameIndex(int tupleIndex) {
+        return buffer.getInt(getTupleHashReferenceOffset(tupleIndex));
+    }
+
+    public int getHashReferenceNextTupleIndex(int tupleIndex) {
+        return buffer.getInt(getTupleHashReferenceOffset(tupleIndex) + INT_SIZE);
+    }
+
 }

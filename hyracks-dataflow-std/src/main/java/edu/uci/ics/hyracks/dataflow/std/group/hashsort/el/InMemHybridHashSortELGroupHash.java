@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.hyracks.dataflow.std.group.struct;
+package edu.uci.ics.hyracks.dataflow.std.group.hashsort.el;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -32,6 +32,8 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAccessorForGroupHashtable;
+import edu.uci.ics.hyracks.dataflow.std.group.struct.FrameTupleAppenderForGroupHashtable;
 import edu.uci.ics.hyracks.dataflow.std.structures.TuplePointer;
 
 public class InMemHybridHashSortELGroupHash implements IFrameReader {
@@ -190,9 +192,10 @@ public class InMemHybridHashSortELGroupHash implements IFrameReader {
     }
 
     private static int getMinimunHeaderSize(int tableSize, int frameSize) {
-        int rtn = tableSize * HASH_REF_LENGTH;
-        rtn = rtn / frameSize + (rtn % frameSize == 0 ? 0 : 1);
-        return rtn;
+
+        int residual = tableSize % frameSize * HASH_REF_LENGTH % frameSize == 0 ? 0 : 1;
+
+        return tableSize / frameSize * HASH_REF_LENGTH + tableSize % frameSize * HASH_REF_LENGTH / frameSize + residual;
     }
 
     private static int getMinimumContentSize(int sortThreshold, int runCount, int expectedRecordLength, int frameSize) {
@@ -498,7 +501,7 @@ public class InMemHybridHashSortELGroupHash implements IFrameReader {
      * @return
      */
     private int getHeaderFrameIndex(int entry) {
-        int frameIndex = entry * HASH_REF_LENGTH / frameSize;
+        int frameIndex = entry / frameSize * HASH_REF_LENGTH + entry % frameSize * HASH_REF_LENGTH / frameSize;
         return frameIndex;
     }
 
@@ -509,7 +512,7 @@ public class InMemHybridHashSortELGroupHash implements IFrameReader {
      * @return
      */
     private int getHeaderFrameOffset(int entry) {
-        int offset = entry * HASH_REF_LENGTH % frameSize;
+        int offset = entry % frameSize * HASH_REF_LENGTH % frameSize;
         return offset;
     }
 
