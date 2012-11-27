@@ -16,17 +16,16 @@ package edu.uci.ics.hyracks.data.std.accessors;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
-import edu.uci.ics.hyracks.data.std.primitive.UTF8StringPointable;
 
-public class UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper implements IBinaryHashFunctionFamily {
-    public static final IBinaryHashFunctionFamily INSTANCE = new UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper();
+public class ByteBasedBinaryHashFunctionFamily implements IBinaryHashFunctionFamily {
+    public static final IBinaryHashFunctionFamily INSTANCE = new ByteBasedBinaryHashFunctionFamily();
 
     private static final long serialVersionUID = 1L;
 
     static final int[] primeCoefficents = { 1073741741, 31, 536870869, 947, 1073741783, 337, 536870951, 53, 877, 71,
             757, 11, 599, 89 };
 
-    private UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper() {
+    private ByteBasedBinaryHashFunctionFamily() {
     }
 
     @Override
@@ -38,15 +37,11 @@ public class UTF8StringBinaryHashFunctionFamilyForHybridHashGrouper implements I
             @Override
             public int hash(byte[] bytes, int offset, int length) {
                 int h = 0;
-                int utflen = UTF8StringPointable.getUTFLen(bytes, offset);
-                int sStart = offset + 2;
-                int c = 0;
 
-                while (c < utflen) {
-                    char ch = UTF8StringPointable.charAt(bytes, sStart + c);
-                    h = coefficient * h + ch;
-                    c += UTF8StringPointable.charSize(bytes, sStart + c);
+                for (int i = offset; i < offset + length; i++) {
+                    h = coefficient * h + bytes[i];
                 }
+
                 if (h == Integer.MIN_VALUE) {
                     h += 1;
                 }
