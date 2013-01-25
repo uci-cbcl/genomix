@@ -10,7 +10,7 @@ if [ "$PID" == "" ]; then
 fi
 
 echo $PID
-kill -9 $PID
+[ "$PID" != "" ] && kill -9 $PID
 
 #Clean up I/O working dir
 io_dirs=$(echo $IO_DIRS | tr "," "\n")
