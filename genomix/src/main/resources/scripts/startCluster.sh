@@ -6,12 +6,14 @@ bin/startAllNCs.sh
 # do we need to specify the version somewhere?
 hyrackcmd=`ls ${HYRACKS_HOME}/hyracks-cli/target/hyracks-cli-*-binary-assembly/bin/hyrackscli`
 # find zip file
-appzip=`ls ../genomix-*-binary-assembly.zip`
+appzip=`ls $PWD/../genomix-*-binary-assembly.zip`
 
 [ -f $hyrackcmd ] || { echo "Hyracks commandline is missing"; exit -1;}
 [ -f $appzip ] || { echo "Genomix binary-assembly.zip is missing"; exit -1;}
 
 CCHOST_NAME=`cat conf/master`
 
-echo "connect to \"${CCHOST_NAME}:${CC_CLIENTPORT}\"; create application text \"$appzip\";" | $hyrackcmd 
+IPADDR=`bin/getip.sh`
+echo "connect to \"${IPADDR}:${CC_CLIENTPORT}\"; create application genomix \"$appzip\";" | $hyrackcmd 
+echo ""
 
