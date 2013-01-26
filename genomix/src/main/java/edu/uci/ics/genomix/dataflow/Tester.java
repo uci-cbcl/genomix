@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.genomix.data.normalizers.Integer64NormalizedKeyComputerFactory;
 import edu.uci.ics.genomix.data.partition.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
+import edu.uci.ics.genomix.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
 import edu.uci.ics.genomix.dataflow.aggregators.DistributedMergeLmerAggregateFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -241,7 +242,6 @@ public class Tester {
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
                     new Integer64NormalizedKeyComputerFactory(), new MergeKmerAggregateFactory(),
                     // new IntSumFieldAggregatorFactory(1, false) }),
-
                     new DistributedMergeLmerAggregateFactory(),
                     // new IntSumFieldAggregatorFactory(1, false) }),
                     outputRec, new HashSpillableTableFactory(
@@ -251,36 +251,36 @@ public class Tester {
             conn_partition = new  MToNPartitioningMergingConnectorDescriptor(spec, new KmerHashPartitioncomputerFactory(), 
                   keyFields, new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY)} );
             cross_grouper = new PreclusteredGroupOperatorDescriptor(spec, keyFields, 
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },  new DistributedMergeLmerAggregateFactory(), 
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },  
+                    new DistributedMergeLmerAggregateFactory(), 
                     outputRec);
         }
         else{
-            long inputSizeInRawRecords = 32768;
-            long inputSizeInUniqueKeys = 32768;
+            long inputSizeInRawRecords = 154000000;
+            long inputSizeInUniqueKeys = 38500000;
             int recordSizeInBytes = 9;
             int hashfuncStartLevel = 1;
             single_grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields,
                     frameLimits, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }, 
+                    new IBinaryHashFunctionFamily[] {new MurmurHash3BinaryHashFunctionFamily()}, 
                     hashfuncStartLevel, 
                     new Integer64NormalizedKeyComputerFactory(),
+                    new MergeKmerAggregateFactory(),
                     new DistributedMergeLmerAggregateFactory(),
-                    new DistributedMergeLmerAggregateFactory(),
-                    outputRec);
+                    outputRec, true);
             conn_partition = new MToNPartitioningConnectorDescriptor(spec,
                     new KmerHashPartitioncomputerFactory());
             recordSizeInBytes = 13;
             cross_grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields,
                     frameLimits, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }, 
+                    new IBinaryHashFunctionFamily[] {new MurmurHash3BinaryHashFunctionFamily()}, 
                     hashfuncStartLevel, 
                     new Integer64NormalizedKeyComputerFactory(),
                     new DistributedMergeLmerAggregateFactory(),
                     new DistributedMergeLmerAggregateFactory(),
-                    outputRec);
-            
+                    outputRec, true);            
         }
         
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, single_grouper, NC1_ID);

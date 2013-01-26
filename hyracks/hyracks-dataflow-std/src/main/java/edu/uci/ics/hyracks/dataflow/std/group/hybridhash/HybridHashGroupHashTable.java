@@ -263,7 +263,7 @@ public class HybridHashGroupHashTable implements IFrameWriter {
 
     private void insert(FrameTupleAccessor accessor, int tupleIndex) throws HyracksDataException {
 
-        if (isPartitionOnly) {
+    	if (isPartitionOnly) {
             // for partition only
             int pid = partitionComputer.partition(accessor, tupleIndex, tableSize) % numOfPartitions;
             insertSpilledPartition(accessor, tupleIndex, pid);
