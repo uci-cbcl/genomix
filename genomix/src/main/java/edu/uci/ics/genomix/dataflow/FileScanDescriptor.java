@@ -73,7 +73,7 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
                     String s = "G:" + File.separator + "data"
                     		+ File.separator + "filename.txt";*/
 
-                    String s = "g:\\data\\filename" + String.valueOf(temp) + ".txt";
+                    String s = "/Users/yingyib/data/filename" + String.valueOf(temp) + ".txt";
 
                     filenames = new FileInputStream(s);
                     // filenames = new FileInputStream("filename.txt");
