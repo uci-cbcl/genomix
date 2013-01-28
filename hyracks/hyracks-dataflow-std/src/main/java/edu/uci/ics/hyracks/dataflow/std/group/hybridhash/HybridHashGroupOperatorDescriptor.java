@@ -97,6 +97,10 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
     private final boolean doInputAdjustment;
 
     private final static double FUDGE_FACTOR_ESTIMATION = 1.2;
+    
+    
+      
+    private int open_times ; 
 
     public HybridHashGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
             long inputSizeInRawRecords, long inputSizeInUniqueKeys, int recordSizeInBytes, int tableSize,
@@ -107,6 +111,7 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
         this(spec, keyFields, framesLimit, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
                 comparatorFactories, hashFamilies, hashFuncStartLevel, firstNormalizerFactory, aggregatorFactory,
                 mergerFactory, outRecDesc, true);
+        open_times = 0;
     }
 
     public HybridHashGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
@@ -148,6 +153,8 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
         recordDescriptors[0] = outRecDesc;
 
         this.doInputAdjustment = doInputAdjustment;
+        
+        open_times = 0;
     }
 
     @Override
@@ -233,6 +240,9 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
 
                 writer.open();
                 topProcessor.open();
+                
+                open_times += 1;
+                System.err.println(open_times);
             }
 
             @Override
