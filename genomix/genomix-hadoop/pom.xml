@@ -2,10 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>hadoop</groupId>
-	<artifactId>hadoop</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>genomix</name>
+	<artifactId>genomix-hadoop</artifactId>
+	<name>genomix-hadoop</name>
+
+	<parent>
+		<groupId>edu.uci.ics.hyracks</groupId>
+		<artifactId>genomix</artifactId>
+		<version>0.2.3-SNAPSHOT</version>
+	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -85,7 +89,6 @@
 							<includes>
 								<include>teststore*</include>
 								<include>edu*</include>
-								<include>actual*</include>
 								<include>build*</include>
 								<include>log*</include>
 								<include>ClusterController*</include>
