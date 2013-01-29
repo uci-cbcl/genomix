@@ -2,10 +2,10 @@ package edu.uci.ics.utils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader; 
+import java.io.FileReader;
 
 public class TestUtils {
-	public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
+    public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         String lineExpected, lineActual;
@@ -51,8 +51,10 @@ public class TestUtils {
         }
         return true;
     }
+
     public static void main(String[] args) throws Exception {
-    	TestUtils TUtils = new TestUtils();
-    	TUtils.compareWithResult(new File("/Users/hadoop/Documents/workspace/Test/part-00000"), new File("/Users/hadoop/Documents/workspace/Test/test.txt"));
+        TestUtils TUtils = new TestUtils();
+        TUtils.compareWithResult(new File("/Users/hadoop/Documents/workspace/Test/part-00000"), new File(
+                "/Users/hadoop/Documents/workspace/Test/test.txt"));
     }
 }

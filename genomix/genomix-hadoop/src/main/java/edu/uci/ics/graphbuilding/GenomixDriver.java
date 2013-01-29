@@ -18,8 +18,8 @@ import org.kohsuke.args4j.Option;
 
 @SuppressWarnings("deprecation")
 public class GenomixDriver {
-	private static class Options {
-       @Option(name = "-inputpath", usage = "the input path", required = true)
+    private static class Options {
+        @Option(name = "-inputpath", usage = "the input path", required = true)
         public String inputPath;
 
         @Option(name = "-outputpath", usage = "the output path", required = true)
@@ -28,39 +28,41 @@ public class GenomixDriver {
         @Option(name = "-num-reducers", usage = "the number of reducers", required = true)
         public int numReducers;
     }
-	public void run(String inputPath, String outputPath, int numReducers, String defaultConfPath) throws IOException {
-		
-		JobConf conf = new JobConf(GenomixDriver.class);
+
+    public void run(String inputPath, String outputPath, int numReducers, String defaultConfPath) throws IOException {
+
+        JobConf conf = new JobConf(GenomixDriver.class);
         if (defaultConfPath != null) {
             conf.addResource(new Path(defaultConfPath));
         }
 
-		conf.setJobName("Genomix Graph Building");
-		conf.setMapperClass(GenomixMapper.class);
-		conf.setReducerClass(GenomixReducer.class);
-		conf.setCombinerClass(GenomixCombiner.class);	
-		
-		conf.setMapOutputKeyClass(LongWritable.class);
-		conf.setMapOutputValueClass(IntWritable.class);
-		
-		conf.setInputFormat(TextInputFormat.class);
-		conf.setOutputFormat(TextOutputFormat.class);
-		conf.setOutputKeyClass(LongWritable.class);
-		conf.setOutputValueClass(ValueWritable.class);
-		FileInputFormat.setInputPaths(conf, new Path(inputPath));
+        conf.setJobName("Genomix Graph Building");
+        conf.setMapperClass(GenomixMapper.class);
+        conf.setReducerClass(GenomixReducer.class);
+        conf.setCombinerClass(GenomixCombiner.class);
+
+        conf.setMapOutputKeyClass(LongWritable.class);
+        conf.setMapOutputValueClass(IntWritable.class);
+
+        conf.setInputFormat(TextInputFormat.class);
+        conf.setOutputFormat(TextOutputFormat.class);
+        conf.setOutputKeyClass(LongWritable.class);
+        conf.setOutputValueClass(ValueWritable.class);
+        FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         conf.setNumReduceTasks(numReducers);
 
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(outputPath), true);
-        JobClient.runJob(conf);		
-	}
-	public static void main(String[] args) throws Exception {
-		Options options = new Options();
+        JobClient.runJob(conf);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         GenomixDriver driver = new GenomixDriver();
         driver.run(options.inputPath, options.outputPath, options.numReducers, null);
     }
-	
+
 }

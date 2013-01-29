@@ -16,9 +16,9 @@ import org.junit.Test;
 
 import edu.uci.ics.utils.TestUtils;
 
-public class GraphBuildingTest{
-	
-	private static final String ACTUAL_RESULT_DIR = "actual";
+public class GraphBuildingTest {
+
+    private static final String ACTUAL_RESULT_DIR = "actual";
     private JobConf conf = new JobConf();
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String DATA_PATH = "data/webmap/text.txt";
@@ -26,14 +26,14 @@ public class GraphBuildingTest{
     private static final String RESULT_PATH = "/result2";
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + RESULT_PATH + "/part-00000";
     private static final String EXPECTED_PATH = "expected/result2";
-    
-	private MiniDFSCluster dfsCluster;
+
+    private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
     private FileSystem dfs;
-    
+
     @Test
-    public void test() throws Exception{
-    	FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
+    public void test() throws Exception {
+        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
 
@@ -46,6 +46,7 @@ public class GraphBuildingTest{
         cleanupHadoop();
 
     }
+
     private void startHadoop() throws IOException {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
