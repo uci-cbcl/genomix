@@ -1,5 +1,18 @@
 package edu.uci.ics.graphbuilding;
-
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,7 +28,9 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
 import edu.uci.ics.utils.TestUtils;
-
+/**
+ * This class test the correctness of graphbuilding program
+ */
 public class GraphBuildingTest {
 
     private static final String ACTUAL_RESULT_DIR = "actual";
@@ -39,7 +54,7 @@ public class GraphBuildingTest {
 
         // run graph transformation tests
         GenomixDriver tldriver = new GenomixDriver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, 2, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, 2, 3, HADOOP_CONF_PATH);
         dumpResult();
         TestUtils.compareWithResult(new File(DUMPED_RESULT), new File(EXPECTED_PATH));
 

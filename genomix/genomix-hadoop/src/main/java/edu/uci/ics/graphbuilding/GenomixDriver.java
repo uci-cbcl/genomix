@@ -1,5 +1,19 @@
 package edu.uci.ics.graphbuilding;
 
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -7,6 +21,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -16,6 +31,9 @@ import org.apache.hadoop.mapred.TextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+/**
+ * This class implement driver which start the mapreduce program for graphbuilding
+ */
 @SuppressWarnings("deprecation")
 public class GenomixDriver {
     private static class Options {
@@ -27,11 +45,17 @@ public class GenomixDriver {
 
         @Option(name = "-num-reducers", usage = "the number of reducers", required = true)
         public int numReducers;
+
+        @Option(name = "-kmer-size", usage = "the size of kmer", required = true)
+        public int sizeKmer;
     }
 
-    public void run(String inputPath, String outputPath, int numReducers, String defaultConfPath) throws IOException {
+    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, String defaultConfPath)
+            throws IOException {
 
         JobConf conf = new JobConf(GenomixDriver.class);
+        conf.setInt("sizeKmer", sizeKmer);
+
         if (defaultConfPath != null) {
             conf.addResource(new Path(defaultConfPath));
         }
@@ -41,12 +65,12 @@ public class GenomixDriver {
         conf.setReducerClass(GenomixReducer.class);
         conf.setCombinerClass(GenomixCombiner.class);
 
-        conf.setMapOutputKeyClass(LongWritable.class);
-        conf.setMapOutputValueClass(IntWritable.class);
+        conf.setMapOutputKeyClass(VLongWritable.class);
+        conf.setMapOutputValueClass(ValueWritable.class);
 
         conf.setInputFormat(TextInputFormat.class);
         conf.setOutputFormat(TextOutputFormat.class);
-        conf.setOutputKeyClass(LongWritable.class);
+        conf.setOutputKeyClass(VLongWritable.class);
         conf.setOutputValueClass(ValueWritable.class);
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
@@ -62,7 +86,7 @@ public class GenomixDriver {
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         GenomixDriver driver = new GenomixDriver();
-        driver.run(options.inputPath, options.outputPath, options.numReducers, null);
+        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, null);
     }
 
 }
