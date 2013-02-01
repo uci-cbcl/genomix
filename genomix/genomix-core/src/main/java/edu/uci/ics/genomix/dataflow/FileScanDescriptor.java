@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.dataflow;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,11 +25,13 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
 
     private static final long serialVersionUID = 1L;
     private int k;
+    private String filename;
 
-    public FileScanDescriptor(IOperatorDescriptorRegistry spec, int k) {
+    public FileScanDescriptor(IOperatorDescriptorRegistry spec, int k, String filename) {
         super(spec, 0, 1);
         // TODO Auto-generated constructor stub
         this.k = k;
+        this.filename = filename;
         //recordDescriptors[0] = news RecordDescriptor(
         //		new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
         recordDescriptors[0] = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -61,28 +64,15 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
                 outputAppender = new FrameTupleAppender(ctx.getFrameSize());
                 outputAppender.reset(outputBuffer, true);
                 try {// one try with multiple catch?
-                     //FileReference file = ctx.getJobletContext().createManagedWorkspaceFile(
-                     //        FileScanDescriptor.class.getSimpleName());
-                     //writer = new RunFileWriter(file, ctx.getIOManager());
                     writer.open();
-                    // read the file
-                    InputStream filenames;
-                    /*File roots = new File("G:\\data");
-                    for (File file : roots.listFiles())
-                    	System.out.println(file);
-                    String s = "G:" + File.separator + "data"
-                    		+ File.separator + "filename.txt";*/
+                    String s = filename + String.valueOf(temp);
+                    
+                    File tf = new File(s);
+                    
+                    File[] fa = tf.listFiles();
 
-                    String s = "g:\\data\\filename" + String.valueOf(temp) + ".txt";
-
-                    filenames = new FileInputStream(s);
-                    // filenames = new FileInputStream("filename.txt");
-
-                    String line;
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(filenames));
-                    line = reader.readLine();
-                    while (line != null) {
-                        BufferedReader readsfile = new BufferedReader(new InputStreamReader(new FileInputStream(line)));
+                    for(int i = 0 ; i < fa.length ; i++){
+                        BufferedReader readsfile = new BufferedReader(new InputStreamReader(new FileInputStream(fa[i])));
                         String read = readsfile.readLine();
                         while (read != null) {
                             read = readsfile.readLine();
@@ -94,11 +84,7 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
 
                             read = readsfile.readLine();
                         }
-                        line = reader.readLine();
-                        readsfile.close();
                     }
-                    reader.close();
-                    filenames.close();
                     if (outputAppender.getTupleCount() > 0) {
                         FrameUtils.flushFrame(outputBuffer, writer);
                     }

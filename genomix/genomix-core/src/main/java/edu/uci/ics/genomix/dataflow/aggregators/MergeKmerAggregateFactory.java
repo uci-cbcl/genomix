@@ -17,6 +17,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
+    private static final int max =  255;
 
     public MergeKmerAggregateFactory() {
     }
@@ -48,17 +49,17 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 byte bitmap = 0;
-                int count = 0;
+                byte count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, 1);
                 bitmap |= ByteSerializerDeserializer.getByte(accessor.getBuffer().array(),
                         tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
-                count += 1;
+               	count += 1;
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 try {
                     fieldOutput.writeByte(bitmap);
                     tupleBuilder.addFieldEndOffset();
-                    fieldOutput.writeInt(count);
+                    fieldOutput.writeByte(count);
                     tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when initializing the aggregator.");
@@ -71,7 +72,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 // TODO Auto-generated method stub
                 byte bitmap = 0;
-                int count = 0;
+                byte count = 0;
 
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, 1);
@@ -88,9 +89,15 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
                 ByteBuffer buf = ByteBuffer.wrap(data);
                 bitmap |= buf.getChar(stateoffset);
-                count += buf.getInt(stateoffset + 1);
+                buf.position(stateoffset+1);
+                count +=  buf.get();
+                
+                if( count > max){
+                	count = (byte)max;
+                }
+                
                 buf.put(stateoffset, bitmap);
-                buf.putInt(stateoffset + 1, count);
+                buf.put(stateoffset + 1, count);
             }
 
             @Override
@@ -98,7 +105,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                     AggregateState state) throws HyracksDataException {
                 // TODO Auto-generated method stub
                 byte bitmap;
-                int count;
+                byte count;
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 byte[] data = accessor.getBuffer().array();
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -107,11 +114,11 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 int offset = fieldOffset + accessor.getFieldSlotsLength() + tupleOffset;
                 bitmap = ByteSerializerDeserializer.getByte(data, offset);
 
-                count = IntegerSerializerDeserializer.getInt(data, offset + 1);
+                count = ByteSerializerDeserializer.getByte(data, offset + 1);
                 try {
                     fieldOutput.writeByte(bitmap);
                     tupleBuilder.addFieldEndOffset();
-                    fieldOutput.writeInt(count);
+                    fieldOutput.writeByte(count);
                     tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
@@ -124,7 +131,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                     AggregateState state) throws HyracksDataException {
                 // TODO Auto-generated method stub
                 byte bitmap;
-                int count;
+                byte count;
 
                 byte[] data = accessor.getBuffer().array();
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -132,13 +139,13 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 int offset = tupleOffset + accessor.getFieldSlotsLength() + fieldOffset;
 
                 bitmap = ByteSerializerDeserializer.getByte(data, offset);
-                count = IntegerSerializerDeserializer.getInt(data, offset + 1);
+                count = ByteSerializerDeserializer.getByte(data, offset + 1);
 
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 try {
                     fieldOutput.writeByte(bitmap);
                     tupleBuilder.addFieldEndOffset();
-                    fieldOutput.writeInt(count);
+                    fieldOutput.writeByte(count);
                     tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");

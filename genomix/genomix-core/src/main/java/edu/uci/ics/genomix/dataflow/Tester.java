@@ -60,7 +60,6 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.HybridHashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.misc.PrinterOperatorDescriptor;
 
 public class Tester {
 
@@ -113,7 +112,7 @@ public class Tester {
         long end = System.currentTimeMillis();
         System.err.println(start + " " + end + " " + (end - start));
         
-    /*    FileOutputStream filenames;
+    /*   
 
         String s = "g:\\data\\results.txt" ;
 
@@ -190,13 +189,13 @@ public class Tester {
 
         spec.setFrameSize(32768);
 
-        FileScanDescriptor scan = new FileScanDescriptor(spec, k);
+        FileScanDescriptor scan = new FileScanDescriptor(spec, k, filename);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID);
 
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
                 Integer64SerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE });
+                ByteSerializerDeserializer.INSTANCE });
 
         int[] keyFields = new int[] { 0 };
         int frameLimits = 4096;
@@ -264,8 +263,8 @@ public class Tester {
             single_grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields,
                     frameLimits, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    //new IBinaryHashFunctionFamily[] {new LongBinaryHashFunctionFamily()},
-                    new IBinaryHashFunctionFamily[] {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
+                    new IBinaryHashFunctionFamily[] {new LongBinaryHashFunctionFamily()},
+                    //new IBinaryHashFunctionFamily[] {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
                     hashfuncStartLevel, 
                     new Integer64NormalizedKeyComputerFactory(),
                     new MergeKmerAggregateFactory(),
@@ -277,8 +276,8 @@ public class Tester {
             cross_grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields,
                     frameLimits, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
                     new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    //new IBinaryHashFunctionFamily[] {new LongBinaryHashFunctionFamily()},
-                    new IBinaryHashFunctionFamily[] {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
+                    new IBinaryHashFunctionFamily[] {new LongBinaryHashFunctionFamily()},
+                    //new IBinaryHashFunctionFamily[] {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
                     hashfuncStartLevel, 
                     new Integer64NormalizedKeyComputerFactory(),
                     new DistributedMergeLmerAggregateFactory(),
@@ -296,7 +295,8 @@ public class Tester {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         spec.connect(conn_partition, single_grouper, 0, cross_grouper, 0);
 
-        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
+        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec, "G:\\data\\result");
+        //PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
