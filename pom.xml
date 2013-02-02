@@ -67,6 +67,7 @@
     <module>hyracks</module>
     <module>algebricks</module>
     <module>pregelix</module>
+    <module>hivesterix</module>
     <module>genomix</module>
   </modules>
 </project>
