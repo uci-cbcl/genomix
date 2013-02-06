@@ -1,21 +1,15 @@
 package edu.uci.ics.genomix.dataflow;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.data.normalizers.Integer64NormalizedKeyComputerFactory;
+import edu.uci.ics.genomix.data.normalizers.VLongNormalizedKeyComputerFactory;
 import edu.uci.ics.genomix.data.partition.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.data.std.accessors.LongBinaryHashFunctionFamily;
-import edu.uci.ics.genomix.data.std.accessors.MurmurHash3BinaryHashFunctionFamily;
+import edu.uci.ics.genomix.data.std.accessors.VLongBinaryHashFunctionFamily;
+import edu.uci.ics.genomix.data.std.primitive.VLongPointable;
 import edu.uci.ics.genomix.dataflow.aggregators.DistributedMergeLmerAggregateFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
@@ -28,15 +22,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
-import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
-import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
@@ -45,18 +35,12 @@ import edu.uci.ics.hyracks.control.common.controllers.NCConfig;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamily;
-import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
-import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableTableFactory;
-import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.HybridHashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
@@ -140,6 +124,7 @@ public class Tester {
         ccConfig.ccRoot = ccRoot.getAbsolutePath();
         cc = new ClusterControllerService(ccConfig);
         cc.start();
+        ccConfig.defaultMaxJobAttempts = 0;
 
         NCConfig ncConfig1 = new NCConfig();
         ncConfig1.ccHost = "localhost";
@@ -187,31 +172,31 @@ public class Tester {
     private static JobSpecification createJob(String filename, int k, int page_num, int type) throws HyracksDataException {
         JobSpecification spec = new JobSpecification();
 
-        spec.setFrameSize(32768);
+        //spec.setFrameSize(32768);
+        spec.setFrameSize(64);
 
         FileScanDescriptor scan = new FileScanDescriptor(spec, k, filename);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                Integer64SerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE,
-                ByteSerializerDeserializer.INSTANCE });
+        RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {null, ByteSerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE});
+                //Integer64SerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE,
+                //ByteSerializerDeserializer.INSTANCE });
 
-        int[] keyFields = new int[] { 0 };
+       int[] keyFields = new int[] { 0 };
         int frameLimits = 4096;
         int tableSize = 10485767;
 
         AbstractOperatorDescriptor single_grouper;
         IConnectorDescriptor conn_partition;
         AbstractOperatorDescriptor cross_grouper;
-        
 
         
         if(0 == type){//external group by
             single_grouper = new ExternalGroupOperatorDescriptor(spec, keyFields,
                     frameLimits,
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    new Integer64NormalizedKeyComputerFactory(), new MergeKmerAggregateFactory(),
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(VLongPointable.FACTORY) },
+                    new VLongNormalizedKeyComputerFactory(), new MergeKmerAggregateFactory(),
                     // new IntSumFieldAggregatorFactory(1, false) }),
 
                     new DistributedMergeLmerAggregateFactory(),
@@ -219,14 +204,14 @@ public class Tester {
                     outputRec, new HashSpillableTableFactory(
                             new FieldHashPartitionComputerFactory(keyFields,
                                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                            .of(LongPointable.FACTORY) }), tableSize), true);
+                                            .of(VLongPointable.FACTORY) }), tableSize), true);
         
             conn_partition = new MToNPartitioningConnectorDescriptor(spec,
                     new KmerHashPartitioncomputerFactory());
             cross_grouper = new ExternalGroupOperatorDescriptor(spec, keyFields,
                     frameLimits,
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    new Integer64NormalizedKeyComputerFactory(), new DistributedMergeLmerAggregateFactory(),
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(VLongPointable.FACTORY) },
+                    new VLongNormalizedKeyComputerFactory(), new DistributedMergeLmerAggregateFactory(),
                     // new IntSumFieldAggregatorFactory(1, false) }),
 
                     new DistributedMergeLmerAggregateFactory(),
@@ -234,39 +219,39 @@ public class Tester {
                     outputRec, new HashSpillableTableFactory(
                             new FieldHashPartitionComputerFactory(keyFields,
                                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                            .of(LongPointable.FACTORY) }), tableSize), true);
+                                            .of(VLongPointable.FACTORY) }), tableSize), true);
         }
         else if( 1 == type){
             single_grouper = new ExternalGroupOperatorDescriptor(spec, keyFields,
                     frameLimits,
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    new Integer64NormalizedKeyComputerFactory(), new MergeKmerAggregateFactory(),
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(VLongPointable.FACTORY) },
+                    new VLongNormalizedKeyComputerFactory(), new MergeKmerAggregateFactory(),
                     // new IntSumFieldAggregatorFactory(1, false) }),
                     new DistributedMergeLmerAggregateFactory(),
                     // new IntSumFieldAggregatorFactory(1, false) }),
                     outputRec, new HashSpillableTableFactory(
                             new FieldHashPartitionComputerFactory(keyFields,
                                     new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                            .of(LongPointable.FACTORY) }), tableSize), true);
+                                            .of(VLongPointable.FACTORY) }), tableSize), true);
             conn_partition = new  MToNPartitioningMergingConnectorDescriptor(spec, new KmerHashPartitioncomputerFactory(), 
-                  keyFields, new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY)} );
+                  keyFields, new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(VLongPointable.FACTORY)} );
             cross_grouper = new PreclusteredGroupOperatorDescriptor(spec, keyFields, 
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },  
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(VLongPointable.FACTORY) },  
                     new DistributedMergeLmerAggregateFactory(), 
                     outputRec);
         }
         else{
             long inputSizeInRawRecords = 154000000;
             long inputSizeInUniqueKeys = 38500000;
-            int recordSizeInBytes = 9;
+            int recordSizeInBytes = 4;
             int hashfuncStartLevel = 1;
             single_grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields,
                     frameLimits, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    new IBinaryHashFunctionFamily[] {new LongBinaryHashFunctionFamily()},
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(VLongPointable.FACTORY) },
+                    new IBinaryHashFunctionFamily[] {new VLongBinaryHashFunctionFamily()},
                     //new IBinaryHashFunctionFamily[] {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
                     hashfuncStartLevel, 
-                    new Integer64NormalizedKeyComputerFactory(),
+                    new VLongNormalizedKeyComputerFactory(),
                     new MergeKmerAggregateFactory(),
                     new DistributedMergeLmerAggregateFactory(),
                     outputRec, true);
@@ -275,11 +260,11 @@ public class Tester {
             recordSizeInBytes = 13;
             cross_grouper = new HybridHashGroupOperatorDescriptor(spec, keyFields,
                     frameLimits, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
-                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(LongPointable.FACTORY) },
-                    new IBinaryHashFunctionFamily[] {new LongBinaryHashFunctionFamily()},
+                    new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(VLongPointable.FACTORY) },
+                    new IBinaryHashFunctionFamily[] {new VLongBinaryHashFunctionFamily()},
                     //new IBinaryHashFunctionFamily[] {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
                     hashfuncStartLevel, 
-                    new Integer64NormalizedKeyComputerFactory(),
+                    new VLongNormalizedKeyComputerFactory(),
                     new DistributedMergeLmerAggregateFactory(),
                     new DistributedMergeLmerAggregateFactory(),
                     outputRec, true);            
@@ -290,18 +275,20 @@ public class Tester {
         
         IConnectorDescriptor readfileConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(readfileConn, scan, 0, single_grouper, 0);
+        
 
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper,NC1_ID);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         spec.connect(conn_partition, single_grouper, 0, cross_grouper, 0);
 
-        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec, "G:\\data\\result");
-        //PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
+        //PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec, "G:\\data\\result");
+        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(printConn, cross_grouper, 0, printer, 0);
+        //spec.connect(readfileConn, scan, 0, printer, 0);
 
         spec.addRoot(printer);
 

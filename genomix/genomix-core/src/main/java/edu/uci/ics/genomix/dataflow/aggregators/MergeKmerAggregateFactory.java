@@ -52,9 +52,12 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 byte count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, 1);
-                bitmap |= ByteSerializerDeserializer.getByte(accessor.getBuffer().array(),
-                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                                
+                bitmap |= accessor.getBuffer().get(tupleOffset + accessor.getFieldSlotsLength() 
+                                                       + fieldStart);
+                
                	count += 1;
+               	
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 try {
                     fieldOutput.writeByte(bitmap);
@@ -76,14 +79,16 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, 1);
-                int offset = tupleOffset + accessor.getFieldSlotsLength() + fieldStart;
-
-                bitmap |= ByteSerializerDeserializer.getByte(accessor.getBuffer().array(), offset);
-                count += 1;
+                        
+                bitmap |= accessor.getBuffer().get(tupleOffset + accessor.getFieldSlotsLength() 
+                                                       + fieldStart);
 
                 int statetupleOffset = stateAccessor.getTupleStartOffset(stateTupleIndex);
                 int statefieldStart = stateAccessor.getFieldStartOffset(stateTupleIndex, 1);
                 int stateoffset = statetupleOffset + stateAccessor.getFieldSlotsLength() + statefieldStart;
+                
+                
+                count += 1;
 
                 byte[] data = stateAccessor.getBuffer().array();
 
@@ -113,7 +118,6 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
                 int offset = fieldOffset + accessor.getFieldSlotsLength() + tupleOffset;
                 bitmap = ByteSerializerDeserializer.getByte(data, offset);
-
                 count = ByteSerializerDeserializer.getByte(data, offset + 1);
                 try {
                     fieldOutput.writeByte(bitmap);

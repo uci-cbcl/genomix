@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.dataflow;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 
@@ -17,7 +16,6 @@ import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
@@ -25,6 +23,7 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
 
     private static final long serialVersionUID = 1L;
     private int k;
+    private int byteNum;
     private String filename;
 
     public FileScanDescriptor(IOperatorDescriptorRegistry spec, int k, String filename) {
@@ -32,10 +31,12 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
         // TODO Auto-generated constructor stub
         this.k = k;
         this.filename = filename;
+        
+        byteNum = (byte)Math.ceil((double)k/4.0);
         //recordDescriptors[0] = news RecordDescriptor(
         //		new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
         recordDescriptors[0] = new RecordDescriptor(new ISerializerDeserializer[] {
-                Integer64SerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE });
+                null, null});
     }
 
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
@@ -48,16 +49,10 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
             private ArrayTupleBuilder tupleBuilder;
             private ByteBuffer outputBuffer;
             private FrameTupleAppender outputAppender;
-            private long window;
 
-            @Override
+            @SuppressWarnings("resource")
+			@Override
             public void initialize() {
-
-                window = 0;
-                for (int i = 0; i < k; i++) {
-                    window <<= 2;
-                    window |= 3;
-                }
 
                 tupleBuilder = new ArrayTupleBuilder(2);
                 outputBuffer = ctx.allocateFrame();
@@ -98,9 +93,16 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
                 }
             }
 
-            private long CompressKmer(byte[] array, int start) {
+            private byte[] CompressKmer(byte[] array, int start) {
                 // a: 00; c: 01; G: 10; T: 11
-                long l = 0;
+            	
+            	byte[] bytes = new byte[byteNum+1];
+            	bytes[0] = (byte) k;
+            	
+            	byte l = 0;
+            	int count = 0;
+            	int bcount = 0;
+            	
                 for (int i = start; i < start + k; i++) {
                     l <<= 2;
                     switch (array[i]) {
@@ -121,8 +123,15 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
                             l |= 3;
                             break;
                     }
+                    count += 2;
+                    if(count%8==0){
+                    	bcount += 1;
+                    	bytes[bcount] = l;
+                    	count = 0;
+                    }
                 }
-                return l;
+                bytes[bcount + 1] = l;
+                return bytes;
             }
 
             private byte GetBitmap(byte t) {
@@ -170,21 +179,48 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
                 }
                 return r;
             }
+            
+            void MoveKmer(byte[] bytes, byte c){            	
+            	byte filter0 = (byte) 0xC0;
+            	byte filter1 = (byte) 0xFC;
+            	byte filter2 = 0;
+            	
+            	int r = byteNum*8 - 2*k;
+            	r = 8 - r;
+            	for(int i = 0 ; i < r ; i++){
+            		filter2 <<= 1;
+            		filter2 |= 1;
+            	}
+
+                int i = byteNum;
+                bytes[i] <<= 2;
+                bytes[i] &= filter2;
+                i -= 1;
+            	while(i > 0){
+            		byte f = (byte) (bytes[i] & filter0);
+            		f >>= 6;
+                	bytes[i+1] |= f;
+            		bytes[i] <<= 2;
+            		bytes[i] &= filter1;
+            	}
+            	bytes[i+1] |= ConvertSymbol(c);
+            }
 
             private void SplitReads(byte[] array) {
                 try {
-                    long l = 0;
-
-                    byte pre = 0, next = 0;
+                	byte[] bytes=null;
+                	
+                	byte pre = 0, next = 0;
                     byte r;
 
                     for (int i = 0; i < array.length - k + 1; i++) {
                         if (0 == i) {
-                            l = CompressKmer(array, i);
+                            bytes = CompressKmer(array, i);
                         } else {
-                            l <<= 2;
+                        	MoveKmer(bytes, array[i + k - 1]);
+                            /*l <<= 2;
                             l &= window;
-                            l |= ConvertSymbol(array[i + k - 1]);
+                            l |= ConvertSymbol(array[i + k - 1]);*/
                             pre = GetBitmap(array[i - 1]);
                         }
                         if (i + k != array.length) {
@@ -203,8 +239,14 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
 
                         tupleBuilder.reset();
 
-                        tupleBuilder.addField(Integer64SerializerDeserializer.INSTANCE, l);
+                        //tupleBuilder.addField(Integer64SerializerDeserializer.INSTANCE, l);
+                        tupleBuilder.addField(bytes, 0, byteNum + 1);
                         tupleBuilder.addField(ByteSerializerDeserializer.INSTANCE, r);
+                        
+                        
+                        //int[] a = tupleBuilder.getFieldEndOffsets();
+                        //int b = tupleBuilder.getSize();
+                        //byte[] c = tupleBuilder.getByteArray();
 
                         if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                                 tupleBuilder.getSize())) {
