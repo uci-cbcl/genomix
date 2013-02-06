@@ -1,4 +1,4 @@
-package edu.uci.ics.hyracks.hdfs.dataflow;
+package edu.uci.ics.hyracks.hdfs2.dataflow;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -6,20 +6,19 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.Serializable;
 
-import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.Job;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
-@SuppressWarnings("deprecation")
-class ConfFactory implements Serializable {
+public class ConfFactory implements Serializable {
     private static final long serialVersionUID = 1L;
     private byte[] confBytes;
 
-    public ConfFactory(JobConf conf) throws HyracksDataException {
+    public ConfFactory(Job conf) throws HyracksDataException {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(bos);
-            conf.write(dos);
+            conf.getConfiguration().write(dos);
             confBytes = bos.toByteArray();
             dos.close();
         } catch (Exception e) {
@@ -27,11 +26,11 @@ class ConfFactory implements Serializable {
         }
     }
 
-    public JobConf getConf() throws HyracksDataException {
+    public Job getConf() throws HyracksDataException {
         try {
-            JobConf conf = new JobConf();
+            Job conf = new Job();
             DataInputStream dis = new DataInputStream(new ByteArrayInputStream(confBytes));
-            conf.readFields(dis);
+            conf.getConfiguration().readFields(dis);
             dis.close();
             return conf;
         } catch (Exception e) {

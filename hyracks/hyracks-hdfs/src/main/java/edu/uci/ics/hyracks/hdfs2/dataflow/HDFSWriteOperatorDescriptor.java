@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs.dataflow;
+package edu.uci.ics.hyracks.hdfs2.dataflow;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -21,8 +21,10 @@ import java.nio.ByteBuffer;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -39,10 +41,9 @@ import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 
 /**
- * The HDFS file write operator using the Hadoop old API.
+ * The HDFS file write operator using the Hadoop new API.
  * To use this operator, a user need to provide an ITupleWriterFactory.
  */
-@SuppressWarnings("deprecation")
 public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -60,7 +61,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
      *            the ITupleWriterFactory implementation object
      * @throws HyracksException
      */
-    public HDFSWriteOperatorDescriptor(JobSpecification spec, JobConf conf, ITupleWriterFactory tupleWriterFactory)
+    public HDFSWriteOperatorDescriptor(JobSpecification spec, Job conf, ITupleWriterFactory tupleWriterFactory)
             throws HyracksException {
         super(spec, 1, 0);
         this.confFactory = new ConfFactory(conf);
@@ -71,12 +72,13 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
-        final JobConf conf = confFactory.getConf();
-        final String outputDirPath = FileOutputFormat.getOutputPath(conf).toString();
+        final Job conf = confFactory.getConf();
+        final String outputPath = FileOutputFormat.getOutputPath(new JobContext(conf.getConfiguration(), new JobID()))
+                .toString();
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
 
-            private String fileName = outputDirPath + File.separator + "part-" + partition;
+            private String fileName = outputPath + File.separator + "part-" + partition;
             private FSDataOutputStream dos;
             private RecordDescriptor inputRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);;
             private FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRd);
@@ -87,7 +89,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
             public void open() throws HyracksDataException {
                 tupleWriter = tupleWriterFactory.getTupleWriter();
                 try {
-                    FileSystem dfs = FileSystem.get(conf);
+                    FileSystem dfs = FileSystem.get(conf.getConfiguration());
                     dos = dfs.create(new Path(fileName), true);
                 } catch (Exception e) {
                     throw new HyracksDataException(e);

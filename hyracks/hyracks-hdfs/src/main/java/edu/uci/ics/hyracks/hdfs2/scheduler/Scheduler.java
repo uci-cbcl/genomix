@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.hdfs.scheduler;
+package edu.uci.ics.hyracks.hdfs2.scheduler;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -34,9 +33,8 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 /**
  * The scheduler conduct data-local scheduling for data reading on HDFS.
- * This class works for Hadoop old API.
+ * This class works for Hadoop new API.
  */
-@SuppressWarnings("deprecation")
 public class Scheduler {
 
     /** a list of NCs */
@@ -73,23 +71,23 @@ public class Scheduler {
      * 
      * @throws HyracksDataException
      */
-    public String[] getLocationConstraints(InputSplit[] splits) throws HyracksException {
+    public String[] getLocationConstraints(List<InputSplit> splits) throws HyracksException {
         int[] capacity = new int[NCs.length];
         Arrays.fill(capacity, 0);
-        String[] locations = new String[splits.length];
-        int slots = splits.length % capacity.length == 0 ? (splits.length / capacity.length) : (splits.length
+        String[] locations = new String[splits.size()];
+        int slots = splits.size() % capacity.length == 0 ? (splits.size() / capacity.length) : (splits.size()
                 / capacity.length + 1);
 
         try {
             Random random = new Random(System.currentTimeMillis());
-            boolean scheduled[] = new boolean[splits.length];
+            boolean scheduled[] = new boolean[splits.size()];
             Arrays.fill(scheduled, false);
 
-            for (int i = 0; i < splits.length; i++) {
+            for (int i = 0; i < splits.size(); i++) {
                 /**
                  * get the location of all the splits
                  */
-                String[] loc = splits[i].getLocations();
+                String[] loc = splits.get(i).getLocations();
                 if (loc.length > 0) {
                     for (int j = 0; j < loc.length; j++) {
                         /**
@@ -146,7 +144,7 @@ public class Scheduler {
             /**
              * schedule no-local file reads
              */
-            for (int i = 0; i < splits.length; i++) {
+            for (int i = 0; i < splits.size(); i++) {
                 // if there is no data-local NC choice, choose a random one
                 if (!scheduled[i]) {
                     locations[i] = NCs[currentAvailableNC];
@@ -165,7 +163,7 @@ public class Scheduler {
                 }
             }
             return locations;
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new HyracksException(e);
         }
     }
