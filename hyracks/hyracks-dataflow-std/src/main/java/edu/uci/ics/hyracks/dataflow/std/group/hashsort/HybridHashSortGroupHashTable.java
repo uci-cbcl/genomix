@@ -279,7 +279,6 @@ public class HybridHashSortGroupHashTable {
      */
     public void flushHashtableToOutput(IFrameWriter outputWriter) throws HyracksDataException {
 
-        // FIXME: remove this 
         outputAppender.reset(outputBuffer, true);
         for (int i = 0; i < contents.length; i++) {
             if (contents[i] == null) {

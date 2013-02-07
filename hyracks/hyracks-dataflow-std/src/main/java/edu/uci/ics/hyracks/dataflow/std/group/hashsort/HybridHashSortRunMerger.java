@@ -66,8 +66,7 @@ public class HybridHashSortRunMerger {
     }
 
     public void process() throws HyracksDataException {
-
-        writer.open();
+        
         // FIXME
         int mergeLevels = 0, mergeRunCount = 0;
         try {

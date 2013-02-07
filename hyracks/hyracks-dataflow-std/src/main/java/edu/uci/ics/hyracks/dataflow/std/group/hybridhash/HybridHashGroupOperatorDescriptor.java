@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.dataflow.std.group.hybridhash;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -97,10 +98,6 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
     private final boolean doInputAdjustment;
 
     private final static double FUDGE_FACTOR_ESTIMATION = 1.2;
-    
-    
-      
-    private int open_times ; 
 
     public HybridHashGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
             long inputSizeInRawRecords, long inputSizeInUniqueKeys, int recordSizeInBytes, int tableSize,
@@ -111,7 +108,6 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
         this(spec, keyFields, framesLimit, inputSizeInRawRecords, inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
                 comparatorFactories, hashFamilies, hashFuncStartLevel, firstNormalizerFactory, aggregatorFactory,
                 mergerFactory, outRecDesc, true);
-        open_times = 0;
     }
 
     public HybridHashGroupOperatorDescriptor(JobSpecification spec, int[] keyFields, int framesLimit,
@@ -153,8 +149,6 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
         recordDescriptors[0] = outRecDesc;
 
         this.doInputAdjustment = doInputAdjustment;
-        
-        open_times = 0;
     }
 
     @Override
@@ -177,7 +171,8 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
 
             HybridHashGroupHashTable topProcessor;
 
-            int observedInputSizeInFrames;
+            int observedInputSizeInRawTuples;
+            int observedInputSizeInFrames, maxRecursiveLevels;
 
             int userProvidedInputSizeInFrames;
 
@@ -240,13 +235,11 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
 
                 writer.open();
                 topProcessor.open();
-                
-                open_times += 1;
-                System.err.println(open_times);
             }
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                observedInputSizeInRawTuples += buffer.getInt(buffer.capacity() - 4);
                 observedInputSizeInFrames++;
                 topProcessor.nextFrame(buffer);
             }
@@ -259,65 +252,24 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
 
             @Override
             public void close() throws HyracksDataException {
-                topProcessor.finishup();
+                // estimate the maximum recursive levels
+                maxRecursiveLevels = (int) Math.max(
+                        Math.ceil(Math.log(observedInputSizeInFrames * fudgeFactor) / Math.log(framesLimit)) + 1, 1);
 
-                List<IFrameReader> runs = topProcessor.getSpilledRuns();
-                List<Integer> runsSizeInFrames = topProcessor.getSpilledRunsSizeInPages();
-
-                // get statistics from the hash table
-                int hashedKeys = topProcessor.getHashedUniqueKeys();
-                int hashedRawRecords = topProcessor.getHashedRawRecords();
-
-                // Get the raw record size of each partition (in records but not in pages)
-                List<Integer> partitionRawRecordsCount = topProcessor.getSpilledRunsSizeInTuples();
-
-                topProcessor.close();
-
-                // get a new estimation on the number of keys in the input data set: if the previous level is pure-partition, 
-                // then use the size inputed in the previous level; otherwise, compute the key ratio in the data set based on
-                // the processed keys.
-                int newKeySizeInPages = (doInputAdjustment && hashedRawRecords > 0) ? (int) Math
-                        .ceil((double) hashedKeys / hashedRawRecords * observedInputSizeInFrames) : (int) Math
-                        .ceil(userProvidedInputSizeInFrames);
-
-                IFrameReader runReader;
-                int runSizeInFrames;
-                int partitionRawRecords;
-
-                while (!runs.isEmpty()) {
-
-                    runReader = runs.remove(0);
-                    runSizeInFrames = runsSizeInFrames.remove(0);
-                    partitionRawRecords = partitionRawRecordsCount.remove(0);
-
-                    // compute the estimated key size in frames for the run file
-                    int runKeySize;
-
-                    if (doInputAdjustment && hashedRawRecords > 0)
-                        runKeySize = (int) Math.ceil((double) newKeySizeInPages * runSizeInFrames
-                                / observedInputSizeInFrames);
-                    else
-                        runKeySize = (int) Math.ceil((double) userProvidedInputSizeInFrames * partitionRawRecords
-                                / inputSizeInRawRecords);
-
-                    if (topLevelFallbackCheck && runKeySize > HYBRID_FALLBACK_THRESHOLD * newKeySizeInPages) {
-                        fallBack(runReader, runSizeInFrames, runKeySize, 1);
-                    } else {
-                        processRunFiles(runReader, runKeySize, 1);
-                    }
-                }
+                finishAndRecursion(topProcessor, observedInputSizeInRawTuples, inputSizeInUniqueKeys, 0,
+                        topLevelFallbackCheck);
 
                 writer.close();
 
             }
 
-            private void processRunFiles(IFrameReader runReader, int uniqueKeysOfRunFileInFrames, int runLevel)
+            private void processRunFiles(IFrameReader runReader, int inputCardinality, int runLevel)
                     throws HyracksDataException {
 
                 boolean checkFallback = true;
 
-                int numOfPartitions = getNumberOfPartitions(tableSize, framesLimit, uniqueKeysOfRunFileInFrames,
-                        fudgeFactor);
+                int numOfPartitions = getNumberOfPartitions(tableSize, framesLimit, inputCardinality
+                        * userProvidedRecordSizeInBytes / frameSize, fudgeFactor);
 
                 HybridHashGroupHashTable processor = new HybridHashGroupHashTable(ctx, framesLimit, tableSize,
                         numOfPartitions, keyFields, runLevel, comparators, tpcf, aggregatorFactory.createAggregator(
@@ -328,70 +280,82 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
 
                 runReader.open();
 
-                int inputRunRawSizeInFrames = 0, inputRunRawSizeInTuples = 0;
+                int inputRunRawSizeInTuples = 0;
 
                 if (readAheadBuf == null) {
                     readAheadBuf = ctx.allocateFrame();
                 }
                 while (runReader.nextFrame(readAheadBuf)) {
-                    inputRunRawSizeInFrames++;
                     inputRunRawSizeInTuples += readAheadBuf.getInt(readAheadBuf.capacity() - 4);
                     processor.nextFrame(readAheadBuf);
                 }
 
                 runReader.close();
 
-                processor.finishup();
+                finishAndRecursion(processor, inputRunRawSizeInTuples, inputCardinality, runLevel, checkFallback);
+            }
 
-                List<IFrameReader> runs = processor.getSpilledRuns();
-                List<Integer> runSizes = processor.getSpilledRunsSizeInPages();
-                List<Integer> partitionRawRecords = processor.getSpilledRunsSizeInTuples();
+            /**
+             * Finish the hash table processing and start recursive processing on run files.
+             * 
+             * @param ht
+             * @param inputRawRecordCount
+             * @param inputCardinality
+             * @param level
+             * @param checkFallback
+             * @throws HyracksDataException
+             */
+            private void finishAndRecursion(HybridHashGroupHashTable ht, long inputRawRecordCount,
+                    long inputCardinality, int level, boolean checkFallback) throws HyracksDataException {
 
-                int directFlushKeysInTuples = processor.getHashedUniqueKeys();
-                int directFlushRawRecordsInTuples = processor.getHashedRawRecords();
+                ht.finishup();
 
-                processor.close();
+                List<IFrameReader> generatedRunReaders = ht.getSpilledRuns();
+                List<Integer> partitionRawRecords = ht.getSpilledRunsSizeInRawTuples();
 
-                int newKeySizeInPages = (doInputAdjustment && directFlushRawRecordsInTuples > 0) ? (int) Math
-                        .ceil((double) directFlushKeysInTuples / directFlushRawRecordsInTuples
-                                * inputRunRawSizeInFrames) : uniqueKeysOfRunFileInFrames;
+                int directFlushKeysInTuples = ht.getHashedUniqueKeys();
+                int directFlushRawRecordsInTuples = ht.getHashedRawRecords();
+
+                ht.close();
+                ht = null;
+
+                ctx.getCounterContext().getCounter("optional.levels." + level + ".estiInputKeyCardinality", true)
+                        .update(inputCardinality);
+
+                // do adjustment
+                if (doInputAdjustment && directFlushRawRecordsInTuples > 0) {
+                    inputCardinality = (int) Math.ceil((double) directFlushKeysInTuples / directFlushRawRecordsInTuples
+                            * inputRawRecordCount);
+                }
+
+                ctx.getCounterContext()
+                        .getCounter("optional.levels." + level + ".estiInputKeyCardinalityAdjusted", true)
+                        .update(inputCardinality);
 
                 IFrameReader recurRunReader;
-                int runSizeInPages, subPartitionRawRecords;
+                int subPartitionRawRecords;
 
-                while (!runs.isEmpty()) {
-                    recurRunReader = runs.remove(0);
-                    runSizeInPages = runSizes.remove(0);
+                while (!generatedRunReaders.isEmpty()) {
+                    recurRunReader = generatedRunReaders.remove(0);
                     subPartitionRawRecords = partitionRawRecords.remove(0);
 
-                    int newRunKeySize;
+                    int runKeyCardinality = (int) Math.ceil((double) inputCardinality * subPartitionRawRecords
+                            / inputRawRecordCount);
 
-                    if (doInputAdjustment && directFlushRawRecordsInTuples > 0) {
-                        // do adjustment
-                        newRunKeySize = (int) Math.ceil((double) newKeySizeInPages * runSizeInPages
-                                / inputRunRawSizeInFrames);
+                    if ((checkFallback && runKeyCardinality > HYBRID_FALLBACK_THRESHOLD * inputCardinality)
+                            || level > maxRecursiveLevels) {
+                        Logger.getLogger(HybridHashGroupOperatorDescriptor.class.getSimpleName()).warning(
+                                "Hybrid-hash falls back to hash-sort algorithm! (" + level + ":" + maxRecursiveLevels
+                                        + ")");
+                        fallback(recurRunReader, level);
                     } else {
-                        // no adjustment
-                        newRunKeySize = (int) Math.ceil((double) subPartitionRawRecords * uniqueKeysOfRunFileInFrames
-                                / inputRunRawSizeInTuples);
-                    }
-
-                    if (checkFallback && newRunKeySize > HYBRID_FALLBACK_THRESHOLD * newKeySizeInPages) {
-                        fallBack(recurRunReader, runSizeInPages, newRunKeySize, runLevel);
-                    } else {
-                        processRunFiles(recurRunReader, newRunKeySize, runLevel + 1);
+                        processRunFiles(recurRunReader, runKeyCardinality, level + 1);
                     }
 
                 }
             }
 
-            private void fallBack(IFrameReader recurRunReader, int runSizeInPages, int runKeySizeInPages, int runLevel)
-                    throws HyracksDataException {
-                fallbackHashSortAlgorithm(recurRunReader, runLevel + 1);
-            }
-
-            private void fallbackHashSortAlgorithm(IFrameReader recurRunReader, int runLevel)
-                    throws HyracksDataException {
+            private void fallback(IFrameReader recurRunReader, int runLevel) throws HyracksDataException {
                 // fall back
                 FrameTupleAccessor runFrameTupleAccessor = new FrameTupleAccessor(frameSize, inRecDesc);
                 HybridHashSortGroupHashTable hhsTable = new HybridHashSortGroupHashTable(ctx, framesLimit, tableSize,
