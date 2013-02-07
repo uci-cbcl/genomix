@@ -6,6 +6,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
 public class GenomixJob extends Job {
+	
+	public static final String JOB_NAME = "genomix";
 
 	/** Kmers length */
 	public static final String KMER_LENGTH = "genomix.kmer";
@@ -26,12 +28,12 @@ public class GenomixJob extends Job {
 	public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
 	public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
 
-	public GenomixJob(String jobname) throws IOException {
-		super(new Configuration(), jobname);
+	public GenomixJob() throws IOException {
+		super(new Configuration(), JOB_NAME);
 	}
 
-	public GenomixJob(Configuration conf, String jobName) throws IOException {
-		super(conf, jobName);
+	public GenomixJob(Configuration conf) throws IOException {
+		super(conf, JOB_NAME);
 	}
 
 	/**

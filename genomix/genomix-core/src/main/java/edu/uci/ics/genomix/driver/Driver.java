@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.driver;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.EnumSet;
 import java.util.Map;
@@ -7,7 +8,10 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.GenericOptionsParser;
+import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.job.GenomixJob;
 import edu.uci.ics.genomix.job.JobGen;
@@ -29,7 +33,9 @@ public class Driver {
         CONTIGS_GENERATION,
     }
    
-   	private static final String applicationName = "genomix";
+   	private static final String IS_PROFILING = "genomix.driver.profiling";
+   	private static final String CPARTITION_PER_MACHINE = "genomix.driver.duplicate.num";
+   	private static final String applicationName = GenomixJob.JOB_NAME;
    	private static final Log LOG = LogFactory.getLog(Driver.class);
     private JobGen jobGen;
     private boolean profiling;
@@ -107,5 +113,21 @@ public class Driver {
         JobId jobId = hcc.startJob(applicationName, job,
                 profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
         hcc.waitForCompletion(jobId);
+    }
+    
+    public static void main(String [] args) throws Exception{
+    	GenomixJob job = new GenomixJob();
+    	String[] otherArgs = new GenericOptionsParser(job.getConfiguration(), args).getRemainingArgs();
+    	if ( otherArgs.length < 2){
+    		System.err.println("Need <serverIP> <port>");
+    		System.exit(-1);
+    	}
+    	String ipAddress = otherArgs[0];
+    	int port = Integer.parseInt(otherArgs[1]);
+    	int numOfDuplicate = job.getConfiguration().getInt(CPARTITION_PER_MACHINE, 2);
+    	boolean bProfiling = job.getConfiguration().getBoolean(IS_PROFILING, true);
+    	
+    	Driver driver = new Driver(ipAddress, port, numOfDuplicate);
+    	driver.runJob(job, Plan.BUILD_DEBRUJIN_GRAPH, bProfiling);
     }
 }
