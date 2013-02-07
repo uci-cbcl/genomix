@@ -184,8 +184,8 @@ public class Tester {
                 //ByteSerializerDeserializer.INSTANCE });
 
        int[] keyFields = new int[] { 0 };
-        int frameLimits = 4096;
-        int tableSize = 10485767;
+        int frameLimits = 4096;		// hyracks oriented
+        int tableSize = 10485767;	// hyracks oriented
 
         AbstractOperatorDescriptor single_grouper;
         IConnectorDescriptor conn_partition;

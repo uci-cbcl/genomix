@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 
+import org.apache.hadoop.fs.Path;
+
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -13,6 +15,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
+import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -23,14 +26,14 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
 
     private static final long serialVersionUID = 1L;
     private int k;
+    private Path [] filesplit = null ;
+    private String pathSurfix ;
     private int byteNum;
-    private String filename;
 
-    public FileScanDescriptor(IOperatorDescriptorRegistry spec, int k, String filename) {
+    public FileScanDescriptor(IOperatorDescriptorRegistry spec, int k, String path) {
         super(spec, 0, 1);
-        // TODO Auto-generated constructor stub
         this.k = k;
-        this.filename = filename;
+        this.pathSurfix = path;
         
         byteNum = (byte)Math.ceil((double)k/4.0);
         //recordDescriptors[0] = news RecordDescriptor(
@@ -39,7 +42,19 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
                 null, null});
     }
 
-    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+    public FileScanDescriptor(JobSpecification jobSpec, int kmers,
+			Path[] inputPaths) {
+    	super(jobSpec, 0, 1);
+        this.k = k;
+        this.filesplit = inputPaths;
+        this.pathSurfix = inputPaths[0].toString();
+        //recordDescriptors[0] = news RecordDescriptor(
+        //		new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
+        recordDescriptors[0] = new RecordDescriptor(new ISerializerDeserializer[] {
+                null, ByteSerializerDeserializer.INSTANCE });
+	}
+
+	public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) {
 
         final int temp = partition;
@@ -60,7 +75,7 @@ public class FileScanDescriptor extends AbstractSingleActivityOperatorDescriptor
                 outputAppender.reset(outputBuffer, true);
                 try {// one try with multiple catch?
                     writer.open();
-                    String s = filename + String.valueOf(temp);
+                    String s = pathSurfix + String.valueOf(temp);
                     
                     File tf = new File(s);
                     
