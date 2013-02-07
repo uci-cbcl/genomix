@@ -173,7 +173,7 @@ public class Tester {
         JobSpecification spec = new JobSpecification();
 
         //spec.setFrameSize(32768);
-        spec.setFrameSize(64);
+        spec.setFrameSize(32768);
 
         FileScanDescriptor scan = new FileScanDescriptor(spec, k, filename);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
@@ -185,7 +185,8 @@ public class Tester {
 
        int[] keyFields = new int[] { 0 };
         int frameLimits = 4096;		// hyracks oriented
-        int tableSize = 10485767;	// hyracks oriented
+        //int tableSize = 10485767;	// hyracks oriented
+        int tableSize = 2351137;	// hyracks oriented
 
         AbstractOperatorDescriptor single_grouper;
         IConnectorDescriptor conn_partition;
