@@ -1,4 +1,5 @@
 package edu.uci.ics.graphbuilding;
+
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +29,7 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
 import edu.uci.ics.utils.TestUtils;
+
 /**
  * This class test the correctness of graphbuilding program
  */

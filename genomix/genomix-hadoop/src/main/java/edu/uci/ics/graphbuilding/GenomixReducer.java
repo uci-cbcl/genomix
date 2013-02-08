@@ -1,4 +1,5 @@
 package edu.uci.ics.graphbuilding;
+
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +17,7 @@ package edu.uci.ics.graphbuilding;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.VLongWritable;
@@ -23,29 +25,31 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+
 /**
  * This class implement reducer operator of mapreduce model
  */
 public class GenomixReducer extends MapReduceBase implements
-Reducer<VLongWritable, ValueWritable, VLongWritable, ValueWritable> {
-ValueWritable valWriter = new ValueWritable();
-@Override
-public void reduce(VLongWritable key, Iterator<ValueWritable> values,
-    OutputCollector<VLongWritable, ValueWritable> output, Reporter reporter) throws IOException {
-byte groupByAdjList = 0;
-int count = 0;
-byte bytCount = 0;
-while (values.hasNext()) {
-    //Merge By the all adjacent Nodes;
-    ValueWritable geneValue = values.next();
-    groupByAdjList = (byte) (groupByAdjList | geneValue.getFirst());
-    count = count + (int)geneValue.getSecond();
-}
-if(count >= 128)
-    bytCount = (byte)128;
-else
-    bytCount = (byte)count;
-valWriter.set(groupByAdjList, bytCount);
-output.collect(key, valWriter);
-}
+        Reducer<BytesWritable, ValueWritable, BytesWritable, ValueWritable> {
+    ValueWritable valWriter = new ValueWritable();
+
+    @Override
+    public void reduce(BytesWritable key, Iterator<ValueWritable> values,
+            OutputCollector<BytesWritable, ValueWritable> output, Reporter reporter) throws IOException {
+        byte groupByAdjList = 0;
+        int count = 0;
+        byte bytCount = 0;
+        while (values.hasNext()) {
+            //Merge By the all adjacent Nodes;
+            ValueWritable geneValue = values.next();
+            groupByAdjList = (byte) (groupByAdjList | geneValue.getFirst());
+            count = count + (int) geneValue.getSecond();
+        }
+        if (count >= 127)
+            bytCount = (byte) 127;
+        else
+            bytCount = (byte) count;
+        valWriter.set(groupByAdjList, bytCount);
+        output.collect(key, valWriter);
+    }
 }

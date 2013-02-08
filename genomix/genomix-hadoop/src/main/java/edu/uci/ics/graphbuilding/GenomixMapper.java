@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -32,15 +33,51 @@ import org.apache.hadoop.mapred.Reporter;
 /**
  * This class implement mapper operator of mapreduce model
  */
-public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable, Text, VLongWritable, ValueWritable> {
+public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable, Text, BytesWritable, ValueWritable> {
+
+    public class CurrenByte {
+        public byte curByte;
+        public byte preMarker;
+    }
 
     public static int KMER_SIZE;
     public ValueWritable outputAdjList = new ValueWritable();
-    public VLongWritable outputKmer = new VLongWritable();
+    public BytesWritable outputKmer = new BytesWritable();
 
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
+    }
+
+    public CurrenByte shift(byte curByte, byte newKmer) {
+        CurrenByte currentByte = new CurrenByte();
+        byte preMarker = (byte) 0xC0;
+        preMarker = (byte) (preMarker & curByte);
+        curByte = (byte) (curByte << 2);
+        curByte = (byte) (curByte | newKmer);
+        preMarker = (byte) ((preMarker & 0xff) >> 6);
+        currentByte.curByte = curByte;
+        currentByte.preMarker = preMarker;
+        return currentByte;
+    }
+
+    public CurrenByte lastByteShift(byte curByte, byte newKmer, int kmerSize) {
+        CurrenByte currentByte = new CurrenByte();
+        int restBits = (kmerSize * 2) % 8;
+        if (restBits == 0)
+            restBits = 8;
+        byte preMarker = (byte) 0x03;
+        preMarker = (byte) (preMarker << restBits - 2);
+        preMarker = (byte) (preMarker & curByte);
+        preMarker = (byte) ((preMarker & 0xff) >> restBits - 2);
+        byte reset = 3;
+        reset = (byte) ~(reset << restBits - 2);
+        curByte = (byte) (curByte & reset);
+        curByte = (byte) (curByte << 2);
+        curByte = (byte) (curByte | newKmer);
+        currentByte.curByte = curByte;
+        currentByte.preMarker = preMarker;
+        return currentByte;
     }
 
     /*succeed node
@@ -54,7 +91,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
       C 01000000 64
       T 10000000 128*/
     @Override
-    public void map(LongWritable key, Text value, OutputCollector<VLongWritable, ValueWritable> output,
+    public void map(LongWritable key, Text value, OutputCollector<BytesWritable, ValueWritable> output,
             Reporter reporter) throws IOException {
         /* A 00
            G 01
@@ -66,70 +103,134 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         boolean isValid = geneMatcher.matches();
         int i = 0;
         if (isValid == true) {
-            long kmerValue = 0;
-            long PreMarker = -1;
+            byte[] kmerValue = new byte[KMER_SIZE * 2 / 8 + 1];
+            for (int k = 0; k < kmerValue.length; k++)
+                kmerValue[i] = 0x00;
+            CurrenByte currentByte = new CurrenByte();
+            byte preMarker = (byte) -1;
             byte count = 0;
-            //Get the next kmer by shiftint one letter every time
+            //Get the next kmer by shifting one letter every time
             for (i = 0; i < geneLine.length(); i++) {
                 byte kmerAdjList = 0;
+                byte initial;
                 if (i >= KMER_SIZE) {
-                    outputKmer.set(kmerValue);
-                    switch ((int) PreMarker) {
+                    outputKmer.set(kmerValue, 0, KMER_SIZE * 2 / 8 + 1);
+                    switch ((int) preMarker) {
                         case -1:
                             kmerAdjList = (byte) (kmerAdjList + 0);
                             break;
                         case 0:
                             kmerAdjList = (byte) (kmerAdjList + 16);
                             break;
-                        case 16:
+                        case 1:
                             kmerAdjList = (byte) (kmerAdjList + 32);
                             break;
-                        case 32:
+                        case 2:
                             kmerAdjList = (byte) (kmerAdjList + 64);
                             break;
-                        case 48:
+                        case 3:
                             kmerAdjList = (byte) (kmerAdjList + 128);
                             break;
                     }
-                    //Update the premarker
-                    PreMarker = 3;
-                    PreMarker = PreMarker << (KMER_SIZE - 1) * 2;
-                    PreMarker = PreMarker & kmerValue;
-                    //Reset the top two bits
-                    long reset = 3;
-                    kmerValue = kmerValue << 2;
-                    reset = ~(reset << KMER_SIZE * 2);
-                    kmerValue = kmerValue & reset;
                 }
                 switch (geneLine.charAt(i)) {
                     case 'A':
                         kmerAdjList = (byte) (kmerAdjList + 1);
-                        kmerValue = kmerValue + 0;
+
+                        initial = (byte) 0x00;
+                        if (kmerValue.length == 1) {
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], initial, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
+                        } else {
+                            currentByte = shift(kmerValue[0], initial);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[0] = currentByte.curByte;
+                            for (int j = 1; j < kmerValue.length - 1; j++) {
+                                currentByte = shift(kmerValue[j], preMarker);
+                                preMarker = currentByte.preMarker;
+                                kmerValue[j] = currentByte.curByte;
+                            }
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], preMarker, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
+                        }
+
                         break;
                     case 'G':
                         kmerAdjList = (byte) (kmerAdjList + 2);
-                        kmerValue = kmerValue + 1;
+
+                        initial = (byte) 0x01;
+                        if (kmerValue.length == 1) {
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], initial, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
+                        } else {
+                            currentByte = shift(kmerValue[0], initial);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[0] = currentByte.curByte;
+                            for (int j = 1; j < kmerValue.length - 1; j++) {
+                                currentByte = shift(kmerValue[j], preMarker);
+                                preMarker = currentByte.preMarker;
+                                kmerValue[j] = currentByte.curByte;
+                            }
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], preMarker, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
+                        }
                         break;
                     case 'C':
                         kmerAdjList = (byte) (kmerAdjList + 4);
-                        kmerValue = kmerValue + 2;
+
+                        initial = (byte) 0x02;
+                        if (kmerValue.length == 1) {
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], initial, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
+                        } else {
+                            currentByte = shift(kmerValue[0], initial);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[0] = currentByte.curByte;
+                            for (int j = 1; j < kmerValue.length - 1; j++) {
+                                currentByte = shift(kmerValue[j], preMarker);
+                                preMarker = currentByte.preMarker;
+                                kmerValue[j] = currentByte.curByte;
+                            }
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], preMarker, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
+                        }
                         break;
                     case 'T':
                         kmerAdjList = (byte) (kmerAdjList + 8);
-                        kmerValue = kmerValue + 3;
+                        initial = (byte) 0x03;
+                        if (kmerValue.length == 1) {
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], initial, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
+                        } else {
+                            currentByte = shift(kmerValue[0], initial);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[0] = currentByte.curByte;
+                            for (int j = 1; j < kmerValue.length - 1; j++) {
+                                currentByte = shift(kmerValue[j], preMarker);
+                                preMarker = currentByte.preMarker;
+                                kmerValue[j] = currentByte.curByte;
+                            }
+                        }
                         break;
                 }
                 if (i >= KMER_SIZE) {
                     outputAdjList.set(kmerAdjList, count);
                     output.collect(outputKmer, outputAdjList);
                 }
-                if (i < KMER_SIZE - 1)
-                    kmerValue = (kmerValue << 2);
+                if (i < KMER_SIZE)
+                    preMarker = (byte) -1;
             }
             // arrive the last letter of this gene line
             if (i == geneLine.length()) {
                 byte kmerAdjList = 0;
-                switch ((int) PreMarker) {
+                switch ((int) preMarker) {
                     case 0:
                         kmerAdjList = (byte) (kmerAdjList + 16);
                         break;
@@ -144,7 +245,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                         break;
                 }
                 outputAdjList.set(kmerAdjList, count);
-                outputKmer.set(kmerValue);
+                outputKmer.set(kmerValue, 0, KMER_SIZE * 2 / 8 + 1);
                 output.collect(outputKmer, outputAdjList);
             }
         }

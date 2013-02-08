@@ -18,6 +18,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -65,12 +66,12 @@ public class GenomixDriver {
         conf.setReducerClass(GenomixReducer.class);
         conf.setCombinerClass(GenomixCombiner.class);
 
-        conf.setMapOutputKeyClass(VLongWritable.class);
+        conf.setMapOutputKeyClass(BytesWritable.class);
         conf.setMapOutputValueClass(ValueWritable.class);
 
         conf.setInputFormat(TextInputFormat.class);
         conf.setOutputFormat(TextOutputFormat.class);
-        conf.setOutputKeyClass(VLongWritable.class);
+        conf.setOutputKeyClass(BytesWritable.class);
         conf.setOutputValueClass(ValueWritable.class);
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));

@@ -17,6 +17,7 @@ package edu.uci.ics.graphbuilding;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.VLongWritable;
@@ -29,12 +30,12 @@ import org.apache.hadoop.mapred.Reporter;
  * This class implement the combiner operator of Mapreduce model
  */
 public class GenomixCombiner extends MapReduceBase implements
-        Reducer<VLongWritable, ValueWritable, VLongWritable, ValueWritable> {
+        Reducer<BytesWritable, ValueWritable, BytesWritable, ValueWritable> {
     public ValueWritable vaWriter = new ValueWritable();
 
     @Override
-    public void reduce(VLongWritable key, Iterator<ValueWritable> values,
-            OutputCollector<VLongWritable, ValueWritable> output, Reporter reporter) throws IOException {
+    public void reduce(BytesWritable key, Iterator<ValueWritable> values,
+            OutputCollector<BytesWritable, ValueWritable> output, Reporter reporter) throws IOException {
         byte groupByAdjList = 0;
         int count = 0;
         byte bytCount = 0;
@@ -43,8 +44,8 @@ public class GenomixCombiner extends MapReduceBase implements
             groupByAdjList = (byte) (groupByAdjList | values.next().getFirst());
             count = count + 1;
         }
-        if (count >= 128)
-            bytCount = (byte) 128;
+        if (count >= 127)
+            bytCount = (byte) 127;
         else
             bytCount = (byte) count;
         vaWriter.set(groupByAdjList, bytCount);

@@ -1,4 +1,5 @@
 package edu.uci.ics.graphbuilding;
+
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +19,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
+
 /**
  * This class override the writablecomparable class which contain int varable
  */
@@ -50,15 +52,18 @@ public class ValueWritable implements WritableComparable<ValueWritable> {
         out.writeByte(first);
         out.writeByte(second);
     }
+
     @Override
     public void readFields(DataInput in) throws IOException {
         first = in.readByte();
         second = in.readByte();
     }
+
     @Override
     public int hashCode() {
         return (int) first + (int) second;
     }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ValueWritable) {
@@ -67,10 +72,12 @@ public class ValueWritable implements WritableComparable<ValueWritable> {
         }
         return false;
     }
+
     @Override
     public String toString() {
         return Integer.toString(first) + "\t" + Integer.toString(second);
     }
+
     @Override
     public int compareTo(ValueWritable tp) {
         int cmp;
