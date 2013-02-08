@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
 public class GenomixJob extends Job {
-	
+
 	public static final String JOB_NAME = "genomix";
 
 	/** Kmers length */
@@ -19,7 +19,6 @@ public class GenomixJob extends Job {
 	public static final String TABLE_SIZE = "genomix.tablesize";
 	/** Groupby types ? */
 	public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
-	
 
 	/** Configurations used by hybrid groupby function in graph build phrase */
 	public static final String GROUPBY_HYBRID_INPUTSIZE = "genomix.graph.groupby.hybrid.inputsize";

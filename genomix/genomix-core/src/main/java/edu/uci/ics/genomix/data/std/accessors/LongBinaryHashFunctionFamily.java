@@ -5,8 +5,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.data.std.api.IHashable;
 import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
 
-public class LongBinaryHashFunctionFamily implements
-		IBinaryHashFunctionFamily {
+public class LongBinaryHashFunctionFamily implements IBinaryHashFunctionFamily {
 	private static final long serialVersionUID = 1L;
 
 	@Override

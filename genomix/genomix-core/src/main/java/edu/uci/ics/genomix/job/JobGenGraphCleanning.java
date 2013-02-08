@@ -17,7 +17,7 @@ public class JobGenGraphCleanning extends JobGen {
 	@Override
 	protected void initJobConfiguration() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

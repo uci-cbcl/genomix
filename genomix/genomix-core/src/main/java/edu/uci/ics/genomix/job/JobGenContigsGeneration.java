@@ -17,7 +17,7 @@ public class JobGenContigsGeneration extends JobGen {
 	@Override
 	protected void initJobConfiguration() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

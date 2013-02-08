@@ -3,6 +3,8 @@ package edu.uci.ics.genomix.job;
 import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
@@ -11,8 +13,9 @@ import edu.uci.ics.genomix.data.partition.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.data.std.accessors.LongBinaryHashFunctionFamily;
 import edu.uci.ics.genomix.dataflow.ConnectorPolicyAssignmentPolicy;
-import edu.uci.ics.genomix.dataflow.FileScanDescriptor;
+import edu.uci.ics.genomix.dataflow.KMerWriterFactory;
 import edu.uci.ics.genomix.dataflow.PrinterOperatorDescriptor;
+import edu.uci.ics.genomix.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.DistributedMergeLmerAggregateFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -24,11 +27,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
@@ -39,6 +42,9 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.HybridHashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 public class JobGenBrujinGraph extends JobGen {
 	public enum GroupbyType {
@@ -46,8 +52,9 @@ public class JobGenBrujinGraph extends JobGen {
 	}
 
 	private final Map<String, NodeControllerInfo> ncMap;
-	private String [] ncNodeNames;
-	
+	private Scheduler scheduler;
+	private String[] ncNodeNames;
+
 	private int kmers;
 	private int frameLimits;
 	private int tableSize;
@@ -60,20 +67,24 @@ public class JobGenBrujinGraph extends JobGen {
 	private AbstractOperatorDescriptor crossGrouper;
 	private RecordDescriptor outputRec;
 
-	public JobGenBrujinGraph(GenomixJob job,
-			final Map<String, NodeControllerInfo> ncMap, int numPartitionPerMachine) {
+	public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler,
+			final Map<String, NodeControllerInfo> ncMap,
+			int numPartitionPerMachine) {
 		super(job);
 		this.ncMap = ncMap;
-		String [] nodes = new String[ncMap.size()];
+		this.scheduler = scheduler;
+		String[] nodes = new String[ncMap.size()];
 		ncMap.keySet().toArray(nodes);
 		ncNodeNames = new String[nodes.length * numPartitionPerMachine];
-		for (int i = 0; i < numPartitionPerMachine; i++){
-			System.arraycopy(nodes, 0, ncNodeNames, i*nodes.length, nodes.length);
+		for (int i = 0; i < numPartitionPerMachine; i++) {
+			System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length,
+					nodes.length);
 		}
 	}
 
 	private ExternalGroupOperatorDescriptor newExternalGroupby(
-			JobSpecification jobSpec, int[] keyFields, IAggregatorDescriptorFactory aggeragater) {
+			JobSpecification jobSpec, int[] keyFields,
+			IAggregatorDescriptorFactory aggeragater) {
 		return new ExternalGroupOperatorDescriptor(
 				jobSpec,
 				keyFields,
@@ -120,19 +131,18 @@ public class JobGenBrujinGraph extends JobGen {
 			throws HyracksDataException {
 		int[] keyFields = new int[] { 0 }; // the id of grouped key
 
-		outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-				Integer64SerializerDeserializer.INSTANCE,
-				ByteSerializerDeserializer.INSTANCE,
-				ByteSerializerDeserializer.INSTANCE });
 		switch (groupbyType) {
 		case EXTERNAL:
-			singleGrouper = newExternalGroupby(jobSpec, keyFields, new MergeKmerAggregateFactory());
+			singleGrouper = newExternalGroupby(jobSpec, keyFields,
+					new MergeKmerAggregateFactory());
 			connPartition = new MToNPartitioningConnectorDescriptor(jobSpec,
 					new KmerHashPartitioncomputerFactory());
-			crossGrouper = newExternalGroupby(jobSpec, keyFields,new DistributedMergeLmerAggregateFactory());
+			crossGrouper = newExternalGroupby(jobSpec, keyFields,
+					new DistributedMergeLmerAggregateFactory());
 			break;
 		case PRECLUSTER:
-			singleGrouper = newExternalGroupby(jobSpec, keyFields,new MergeKmerAggregateFactory());
+			singleGrouper = newExternalGroupby(jobSpec, keyFields,
+					new MergeKmerAggregateFactory());
 			connPartition = new MToNPartitioningMergingConnectorDescriptor(
 					jobSpec,
 					new KmerHashPartitioncomputerFactory(),
@@ -172,34 +182,58 @@ public class JobGenBrujinGraph extends JobGen {
 		}
 	}
 
+	public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec)
+			throws HyracksDataException {
+		try {
+			outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+					null, ByteSerializerDeserializer.INSTANCE,
+					ByteSerializerDeserializer.INSTANCE });
+
+			InputSplit[] splits = ((JobConf) conf).getInputFormat().getSplits(
+					(JobConf) conf, ncNodeNames.length);
+
+			String[] readSchedule = scheduler.getLocationConstraints(splits);
+			return new HDFSReadOperatorDescriptor(jobSpec, outputRec,
+					(JobConf) conf, splits, readSchedule,
+					new ReadsKeyValueParserFactory(kmers));
+		} catch (Exception e) {
+			throw new HyracksDataException(e);
+		}
+	}
+
 	@Override
-	public JobSpecification generateJob() throws HyracksDataException {
-		
+	public JobSpecification generateJob() throws HyracksException {
+
 		JobSpecification jobSpec = new JobSpecification();
-		//File input
-		FileScanDescriptor scan = new FileScanDescriptor(jobSpec, kmers, inputPaths);		
-		
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, scan,ncNodeNames);
-		
+		// File input
+		HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
+
+		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
+				readOperator, ncNodeNames);
+
 		generateDescriptorbyType(jobSpec);
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				singleGrouper, ncNodeNames);
 
 		IConnectorDescriptor readfileConn = new OneToOneConnectorDescriptor(
 				jobSpec);
-		jobSpec.connect(readfileConn, scan, 0, singleGrouper, 0);
+		jobSpec.connect(readfileConn, readOperator, 0, singleGrouper, 0);
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				crossGrouper, ncNodeNames);
 		jobSpec.connect(connPartition, singleGrouper, 0, crossGrouper, 0);
 
-		//Output
-		PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(jobSpec,
-				outputPath.getName());
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, printer,
-				ncNodeNames);
+		// Output
+		PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(
+				jobSpec, outputPath.getName());
+		HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(
+				jobSpec, (JobConf) conf, new KMerWriterFactory());
 
-		IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(jobSpec);
+		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
+				printer, ncNodeNames);
+
+		IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(
+				jobSpec);
 		jobSpec.connect(printConn, crossGrouper, 0, printer, 0);
 		jobSpec.addRoot(printer);
 

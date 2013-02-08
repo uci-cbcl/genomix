@@ -6,30 +6,32 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 
-public class KmerHashPartitioncomputerFactory implements ITuplePartitionComputerFactory {
+public class KmerHashPartitioncomputerFactory implements
+		ITuplePartitionComputerFactory {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public KmerHashPartitioncomputerFactory() {
-    }
+	public KmerHashPartitioncomputerFactory() {
+	}
 
-    @Override
-    public ITuplePartitionComputer createPartitioner() {
-        return new ITuplePartitionComputer() {
-            @Override
-            public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) {
-                if (nParts == 1) {
-                    return 0;
-                }
-                int startOffset = accessor.getTupleStartOffset(tIndex);
-                int fieldOffset = accessor.getFieldStartOffset(tIndex, 0);
-                int slotLength = accessor.getFieldSlotsLength();
+	@Override
+	public ITuplePartitionComputer createPartitioner() {
+		return new ITuplePartitionComputer() {
+			@Override
+			public int partition(IFrameTupleAccessor accessor, int tIndex,
+					int nParts) {
+				if (nParts == 1) {
+					return 0;
+				}
+				int startOffset = accessor.getTupleStartOffset(tIndex);
+				int fieldOffset = accessor.getFieldStartOffset(tIndex, 0);
+				int slotLength = accessor.getFieldSlotsLength();
 
-                ByteBuffer buf = accessor.getBuffer();
-                buf.position(startOffset + fieldOffset + slotLength);
-                long l = accessor.getBuffer().getLong();
-                return (int) (l % nParts);
-            }
-        };
-    }
+				ByteBuffer buf = accessor.getBuffer();
+				buf.position(startOffset + fieldOffset + slotLength);
+				long l = accessor.getBuffer().getLong();
+				return (int) (l % nParts);
+			}
+		};
+	}
 }
