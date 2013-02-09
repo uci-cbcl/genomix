@@ -6,6 +6,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.uci.ics.genomix.job.GenomixJob;
@@ -43,7 +46,7 @@ public class Driver {
 			throws HyracksException {
 		try {
 			hcc = new HyracksConnection(ipAddress, port);
-			scheduler = new Scheduler(ipAddress, port);
+			scheduler = new Scheduler(hcc.getNodeControllerInfos());
 		} catch (Exception e) {
 			throw new HyracksException(e);
 		}
@@ -124,8 +127,8 @@ public class Driver {
 		GenomixJob job = new GenomixJob();
 		String[] otherArgs = new GenericOptionsParser(job.getConfiguration(),
 				args).getRemainingArgs();
-		if (otherArgs.length < 2) {
-			System.err.println("Need <serverIP> <port>");
+		if (otherArgs.length < 4) {
+			System.err.println("Need <serverIP> <port> <input> <output>");
 			System.exit(-1);
 		}
 		String ipAddress = otherArgs[0];
@@ -134,7 +137,8 @@ public class Driver {
 				CPARTITION_PER_MACHINE, 2);
 		boolean bProfiling = job.getConfiguration().getBoolean(IS_PROFILING,
 				true);
-
+		FileInputFormat.setInputPaths(job, otherArgs[2]);
+		FileOutputFormat.setOutputPath(job, new Path(otherArgs[3]));
 		Driver driver = new Driver(ipAddress, port, numOfDuplicate);
 		driver.runJob(job, Plan.BUILD_DEBRUJIN_GRAPH, bProfiling);
 	}

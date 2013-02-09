@@ -224,18 +224,16 @@ public class JobGenBrujinGraph extends JobGen {
 		jobSpec.connect(connPartition, singleGrouper, 0, crossGrouper, 0);
 
 		// Output
-		PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(
-				jobSpec, outputPath.getName());
 		HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(
 				jobSpec, (JobConf) conf, new KMerWriterFactory());
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				printer, ncNodeNames);
+				writeOperator, ncNodeNames);
 
 		IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(
 				jobSpec);
-		jobSpec.connect(printConn, crossGrouper, 0, printer, 0);
-		jobSpec.addRoot(printer);
+		jobSpec.connect(printConn, crossGrouper, 0, writeOperator, 0);
+		jobSpec.addRoot(writeOperator);
 
 		if (groupbyType == GroupbyType.PRECLUSTER) {
 			jobSpec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());

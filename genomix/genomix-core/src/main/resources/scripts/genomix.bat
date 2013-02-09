@@ -77,7 +77,7 @@ goto endInit
 @REM Reaching here means variables are defined and arguments have been captured
 :endInit
 
-%JAVACMD% %JAVA_OPTS%  -classpath %CLASSPATH_PREFIX%;%CLASSPATH% -Dapp.name="genomix" -Dapp.repo="%REPO%" -Dapp.home="%BASEDIR%" -Dbasedir="%BASEDIR%" edu.uci.ics.genomix.Driver %CMD_LINE_ARGS%
+%JAVACMD% %JAVA_OPTS%  -classpath %CLASSPATH_PREFIX%;%CLASSPATH% -Dapp.name="genomix" -Dapp.repo="%REPO%" -Dapp.home="%BASEDIR%" -Dbasedir="%BASEDIR%" edu.uci.ics.genomix.driver.Driver %CMD_LINE_ARGS%
 if ERRORLEVEL 1 goto error
 goto end
 
