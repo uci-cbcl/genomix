@@ -34,7 +34,7 @@
 						<configuration>
 							<programs>
 								<program>
-									<mainClass>edu.uci.ics.genomix.Driver</mainClass>
+									<mainClass>edu.uci.ics.genomix.driver.Driver</mainClass>
 									<name>genomix</name>
 								</program>
 							</programs>
@@ -68,6 +68,13 @@
 							<goal>attached</goal>
 						</goals>
 					</execution>
+                    <execution>
+                        <id>make-my-jar-with-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
 				</executions>
 			</plugin>
 			<plugin>

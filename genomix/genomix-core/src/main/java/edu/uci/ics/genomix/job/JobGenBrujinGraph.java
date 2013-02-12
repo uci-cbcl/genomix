@@ -185,10 +185,6 @@ public class JobGenBrujinGraph extends JobGen {
 	public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec)
 			throws HyracksDataException {
 		try {
-			outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-					null, ByteSerializerDeserializer.INSTANCE,
-					ByteSerializerDeserializer.INSTANCE });
-
 			InputSplit[] splits = ((JobConf) conf).getInputFormat().getSplits(
 					(JobConf) conf, ncNodeNames.length);
 
@@ -205,6 +201,9 @@ public class JobGenBrujinGraph extends JobGen {
 	public JobSpecification generateJob() throws HyracksException {
 
 		JobSpecification jobSpec = new JobSpecification();
+		outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+				null, ByteSerializerDeserializer.INSTANCE,
+				ByteSerializerDeserializer.INSTANCE });
 		// File input
 		HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
 
