@@ -103,7 +103,12 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         boolean isValid = geneMatcher.matches();
         int i = 0;
         if (isValid == true) {
-            byte[] kmerValue = new byte[KMER_SIZE * 2 / 8 + 1];
+            int size = 0;
+            if (KMER_SIZE * 2 % 8 == 0)
+                size = KMER_SIZE * 2 / 8;
+            else
+                size = KMER_SIZE * 2 / 8 + 1;
+            byte[] kmerValue = new byte[size];
             for (int k = 0; k < kmerValue.length; k++)
                 kmerValue[i] = 0x00;
             CurrenByte currentByte = new CurrenByte();
@@ -114,7 +119,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 byte kmerAdjList = 0;
                 byte initial;
                 if (i >= KMER_SIZE) {
-                    outputKmer.set(kmerValue, 0, KMER_SIZE * 2 / 8 + 1);
+                    outputKmer.set(kmerValue, 0, size);
                     switch ((int) preMarker) {
                         case -1:
                             kmerAdjList = (byte) (kmerAdjList + 0);
@@ -136,7 +141,6 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 switch (geneLine.charAt(i)) {
                     case 'A':
                         kmerAdjList = (byte) (kmerAdjList + 1);
-
                         initial = (byte) 0x00;
                         if (kmerValue.length == 1) {
                             currentByte = lastByteShift(kmerValue[kmerValue.length - 1], initial, KMER_SIZE);
@@ -159,7 +163,6 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                         break;
                     case 'G':
                         kmerAdjList = (byte) (kmerAdjList + 2);
-
                         initial = (byte) 0x01;
                         if (kmerValue.length == 1) {
                             currentByte = lastByteShift(kmerValue[kmerValue.length - 1], initial, KMER_SIZE);
@@ -181,7 +184,6 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                         break;
                     case 'C':
                         kmerAdjList = (byte) (kmerAdjList + 4);
-
                         initial = (byte) 0x02;
                         if (kmerValue.length == 1) {
                             currentByte = lastByteShift(kmerValue[kmerValue.length - 1], initial, KMER_SIZE);
@@ -217,6 +219,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                                 preMarker = currentByte.preMarker;
                                 kmerValue[j] = currentByte.curByte;
                             }
+                            currentByte = lastByteShift(kmerValue[kmerValue.length - 1], preMarker, KMER_SIZE);
+                            preMarker = currentByte.preMarker;
+                            kmerValue[kmerValue.length - 1] = currentByte.curByte;
                         }
                         break;
                 }
@@ -231,21 +236,24 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             if (i == geneLine.length()) {
                 byte kmerAdjList = 0;
                 switch ((int) preMarker) {
+                    case -1:
+                        kmerAdjList = (byte) (kmerAdjList + 0);
+                        break;
                     case 0:
                         kmerAdjList = (byte) (kmerAdjList + 16);
                         break;
-                    case 16:
+                    case 1:
                         kmerAdjList = (byte) (kmerAdjList + 32);
                         break;
-                    case 32:
+                    case 2:
                         kmerAdjList = (byte) (kmerAdjList + 64);
                         break;
-                    case 48:
+                    case 3:
                         kmerAdjList = (byte) (kmerAdjList + 128);
                         break;
                 }
                 outputAdjList.set(kmerAdjList, count);
-                outputKmer.set(kmerValue, 0, KMER_SIZE * 2 / 8 + 1);
+                outputKmer.set(kmerValue, 0, size);
                 output.collect(outputKmer, outputAdjList);
             }
         }

@@ -56,7 +56,7 @@ public class GraphBuildingTest {
 
         // run graph transformation tests
         GenomixDriver tldriver = new GenomixDriver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, 2, 3, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, 2, 5, HADOOP_CONF_PATH);
         dumpResult();
         TestUtils.compareWithResult(new File(DUMPED_RESULT), new File(EXPECTED_PATH));
 

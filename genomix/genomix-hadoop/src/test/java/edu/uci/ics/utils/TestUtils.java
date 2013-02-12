@@ -1,4 +1,5 @@
 package edu.uci.ics.utils;
+
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +17,7 @@ package edu.uci.ics.utils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+
 /**
  * This class offer the service for graphbuildingtest.class
  */
@@ -50,7 +52,7 @@ public class TestUtils {
 
     private static boolean equalStrings(String s1, String s2) {
         String[] rowsOne = s1.split("\t");
-        String[] rowsTwo = s2.split(" ");
+        String[] rowsTwo = s2.split("\t");
 
         if (rowsOne.length != rowsTwo.length)
             return false;
