@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.uci.ics.pregelix</groupId>
+  <artifactId>genomix-pregelix</artifactId>
+  <version>0.2.2</version>
+  <packaging>jar</packaging>
+  <name>genomix-pregelix</name>
+
+  <properties>
+    <jvm.extraargs/>
+  </properties>
+
+  <profiles>
+    <profile>
+      <id>macosx</id>
+      <activation>
+        <os>
+          <name>mac os x</name>
+        </os>
+        <jdk>1.7</jdk>
+      </activation>
+      <properties>
+        <jvm.extraargs>-Djava.nio.channels.spi.SelectorProvider=sun.nio.ch.KQueueSelectorProvider</jvm.extraargs>
+      </properties>
+    </profile>
+  </profiles>
+
+  <build>
+        <plugins>
+            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-compiler-plugin</artifactId>
+                                <version>2.0.2</version>
+                                <configuration>
+                                        <source>1.6</source>
+                                        <target>1.6</target>
+                                </configuration>
+                        </plugin>
+                        <plugin>
+                                <artifactId>maven-assembly-plugin</artifactId>
+                                <configuration>
+                                        <descriptorRefs>
+                                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                                        </descriptorRefs>
+                                </configuration>
+                                <executions>
+                                        <execution>
+                                                <id>make-my-jar-with-dependencies</id>
+                                                <phase>package</phase>
+                                                <goals>
+                                                        <goal>single</goal>
+                                                </goals>
+                                        </execution>
+                                </executions>
+                        </plugin>
+                        <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-surefire-plugin</artifactId>
+                                <version>2.7.2</version>
+                                <configuration>
+                                        <forkMode>pertest</forkMode>
+                                        <argLine>-enableassertions -Xmx2047m -Dfile.encoding=UTF-8
+                                                -Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
+                                        <includes>
+                                                <include>**/*TestSuite.java</include>
+                                                <include>**/*Test.java</include>
+                                        </includes>
+                                </configuration>
+                        </plugin>
+                        <plugin>
+                                <artifactId>maven-clean-plugin</artifactId>
+                                <configuration>
+                                        <filesets>
+                                                <fileset>
+                                                        <directory>.</directory>
+                                                        <includes>
+                                                                <include>teststore*</include>
+                                                                <include>edu*</include>
+                                                                <include>actual*</include>
+                                                                <include>build*</include>
+                                                                <include>expect*</include>
+                                                                <include>ClusterController*</include>
+                                                                <include>edu.uci.*</include>
+                                                        </includes>
+                                                </fileset>
+                                        </filesets>
+                                </configuration>
+                        </plugin>
+                </plugins>
+        </build>
+
+        <dependencies>
+                <dependency>
+                        <groupId>edu.uci.ics.hyracks</groupId>
+                        <artifactId>pregelix-core</artifactId>
+                        <version>0.2.2</version>
+                        <type>jar</type>
+                        <scope>compile</scope>
+                </dependency>
+                <dependency>
+                        <groupId>edu.uci.ics.hyracks</groupId>
+                        <artifactId>pregelix-example</artifactId>
+                        <version>0.2.2</version>
+                        <type>jar</type>
+                        <scope>compile</scope>
+                </dependency>
+                <dependency>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                        <version>4.8.1</version>
+                        <scope>test</scope>
+                </dependency>
+        </dependencies>
+
+  <scm>
+    <connection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/pregelix</connection>
+    <developerConnection>scm:svn:https://hyracks.googlecode.com/svn/trunk/fullstack/pregelix</developerConnection>
+    <url>http://code.google.com/p/hyracks/source/browse/#svn/trunk/fullstack/pregelix</url>
+  </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>hyracks-releases</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>hyracks-snapshots</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/repositories/hyracks-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-changelog-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <repositories>
+    <repository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+    </repository>
+    <repository>
+      <id>jboss-public</id>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>hyracks-public</id>
+      <url>http://obelix.ics.uci.edu/nexus/content/groups/hyracks-public/</url>
+      <releases>
+        <updatePolicy>always</updatePolicy>
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
+</project>
+
+
