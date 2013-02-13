@@ -89,7 +89,6 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
         final InputSplit[] inputSplits = splitsFactory.getSplits();
-        final JobConf conf = confFactory.getConf();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
             private String nodeName = ctx.getJobletContext().getApplicationContext().getNodeId();
@@ -100,6 +99,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
                     Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+                    JobConf conf = confFactory.getConf();
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
                     InputFormat inputFormat = conf.getInputFormat();

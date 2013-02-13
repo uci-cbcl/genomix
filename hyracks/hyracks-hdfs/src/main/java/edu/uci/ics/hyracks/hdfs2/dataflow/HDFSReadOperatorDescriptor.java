@@ -97,7 +97,6 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
-        final Job conf = confFactory.getConf();
         final List<FileSplit> inputSplits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
@@ -109,6 +108,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                 ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
                     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                    Job conf = confFactory.getConf();
                     IKeyValueParser parser = tupleParserFactory.createKeyValueParser(ctx);
                     writer.open();
                     InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(),
