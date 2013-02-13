@@ -71,6 +71,10 @@ public class FileScanDescriptor extends
 			private ArrayTupleBuilder tupleBuilder;
 			private ByteBuffer outputBuffer;
 			private FrameTupleAppender outputAppender;
+			
+			private byte filter0;
+			private byte filter1;
+			private byte filter2;
 
 			@SuppressWarnings("resource")
 			@Override
@@ -80,6 +84,19 @@ public class FileScanDescriptor extends
 				outputBuffer = ctx.allocateFrame();
 				outputAppender = new FrameTupleAppender(ctx.getFrameSize());
 				outputAppender.reset(outputBuffer, true);
+				
+				filter0 = (byte) 0xC0;
+				filter1 = (byte) 0xFC;
+				filter2 = 0;
+
+				int r = byteNum * 8 - 2 * k;
+				r = 8 - r;
+				for (int i = 0; i < r; i++) {
+					filter2 <<= 1;
+					filter2 |= 1;
+				}
+				
+				
 				try {// one try with multiple catch?
 					writer.open();
 					String s = pathSurfix + String.valueOf(temp);
@@ -93,7 +110,7 @@ public class FileScanDescriptor extends
 								new InputStreamReader(
 										new FileInputStream(fa[i])));
 						String read = readsfile.readLine();
-						int count  = 0;
+						//int count  = 0;
 						while (read != null) {
 							read = readsfile.readLine();
 							//if(count % 4 == 1)
@@ -104,8 +121,8 @@ public class FileScanDescriptor extends
 							read = readsfile.readLine();
 
 							read = readsfile.readLine();
-							count += 1;
-							System.err.println(count);
+							//count += 1;
+							//System.err.println(count);
 						}
 					}
 					if (outputAppender.getTupleCount() > 0) {
@@ -131,7 +148,7 @@ public class FileScanDescriptor extends
 				int count = 0;
 				int bcount = 0;
 
-				for (int i = start; i < start + k; i++) {
+				for (int i = start; i < start+k ; i++) {
 					l <<= 2;
 					switch (array[i]) {
 					case 'A':
@@ -152,13 +169,14 @@ public class FileScanDescriptor extends
 						break;
 					}
 					count += 2;
-					if (count % 8 == 0) {
+					if (count % 8 == 0 && byteNum != bcount + 1) {
 						bcount += 1;
-						bytes[bcount] = l;
+						bytes[byteNum-bcount] = l;
 						count = 0;
+						l = 0;
 					}
 				}
-				bytes[bcount + 1] = l;
+				bytes[1] = l;
 				return bytes;
 			}
 
@@ -209,30 +227,20 @@ public class FileScanDescriptor extends
 			}
 
 			void MoveKmer(byte[] bytes, byte c) {
-				byte filter0 = (byte) 0xC0;
-				byte filter1 = (byte) 0xFC;
-				byte filter2 = 0;
-
-				int r = byteNum * 8 - 2 * k;
-				r = 8 - r;
-				for (int i = 0; i < r; i++) {
-					filter2 <<= 1;
-					filter2 |= 1;
-				}
-
 				int i = byteNum;
 				bytes[i] <<= 2;
 				bytes[i] &= filter2;
 				i -= 1;
-				while (i >= 0) {
+				while (i > 0) {
 					byte f = (byte) (bytes[i] & filter0);
 					f >>= 6;
+					f &= 3;
 					bytes[i + 1] |= f;
 					bytes[i] <<= 2;
 					bytes[i] &= filter1;
 					i -= 1;
 				}
-				bytes[0] |= ConvertSymbol(c);
+				bytes[1] |= ConvertSymbol(c);
 			}
 
 			private void SplitReads(byte[] array) {

@@ -282,7 +282,7 @@ public class Tester {
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         spec.connect(conn_partition, single_grouper, 0, cross_grouper, 0);
 
-        //PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec, "G:\\data\\result");
+        //PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
         PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec, "G:\\data\\result");
         //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);

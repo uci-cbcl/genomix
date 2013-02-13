@@ -23,10 +23,23 @@ public class ReadsKeyValueParserFactory implements
 
 	private int k;
 	private int byteNum;
+	private byte filter0;
+	private byte filter1;
+	private byte filter2;
 
 	public ReadsKeyValueParserFactory(int k) {
 		this.k = k;
 		byteNum = (byte) Math.ceil((double) k / 4.0);
+		filter0 = (byte) 0xC0;
+		filter1 = (byte) 0xFC;
+		filter2 = 0;
+
+		int r = byteNum * 8 - 2 * k;
+		r = 8 - r;
+		for (int i = 0; i < r; i++) {
+			filter2 <<= 1;
+			filter2 |= 1;
+		}
 	}
 
 	@Override
@@ -69,7 +82,7 @@ public class ReadsKeyValueParserFactory implements
 				int count = 0;
 				int bcount = 0;
 
-				for (int i = start; i < start + k; i++) {
+				for (int i = start; i < start+k ; i++) {
 					l <<= 2;
 					switch (array[i]) {
 					case 'A':
@@ -90,13 +103,14 @@ public class ReadsKeyValueParserFactory implements
 						break;
 					}
 					count += 2;
-					if (count % 8 == 0) {
+					if (count % 8 == 0 && byteNum != bcount + 1) {
 						bcount += 1;
-						bytes[bcount] = l;
+						bytes[byteNum-bcount] = l;
 						count = 0;
+						l = 0;
 					}
 				}
-				bytes[bcount + 1] = l;
+				bytes[1] = l;
 				return bytes;
 			}
 
@@ -147,17 +161,6 @@ public class ReadsKeyValueParserFactory implements
 			}
 
 			void MoveKmer(byte[] bytes, byte c) {
-				byte filter0 = (byte) 0xC0;
-				byte filter1 = (byte) 0xFC;
-				byte filter2 = 0;
-
-				int r = byteNum * 8 - 2 * k;
-				r = 8 - r;
-				for (int i = 0; i < r; i++) {
-					filter2 <<= 1;
-					filter2 |= 1;
-				}
-
 				int i = byteNum;
 				bytes[i] <<= 2;
 				bytes[i] &= filter2;
@@ -165,12 +168,15 @@ public class ReadsKeyValueParserFactory implements
 				while (i > 0) {
 					byte f = (byte) (bytes[i] & filter0);
 					f >>= 6;
+					f &= 3;
 					bytes[i + 1] |= f;
 					bytes[i] <<= 2;
 					bytes[i] &= filter1;
+					i -= 1;
 				}
-				bytes[i + 1] |= ConvertSymbol(c);
+				bytes[1] |= ConvertSymbol(c);
 			}
+
 
 			private void SplitReads(byte[] array, IFrameWriter writer) {
 				try {

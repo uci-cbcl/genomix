@@ -118,9 +118,9 @@ public class PrinterOperatorDescriptor extends
 							PrintBytes(j);
 						}
 						if (true == writeFile) {
-							twriter.write("\n");
+							twriter.write("\r\n");
 						} else {
-							System.err.println();
+							System.err.println("");
 						}
 					}
 				} catch (IOException e) {
