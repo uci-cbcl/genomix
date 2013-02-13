@@ -93,15 +93,19 @@ public class FileScanDescriptor extends
 								new InputStreamReader(
 										new FileInputStream(fa[i])));
 						String read = readsfile.readLine();
+						int count  = 0;
 						while (read != null) {
 							read = readsfile.readLine();
+							//if(count % 4 == 1)
 							SplitReads(read.getBytes());
 							// read.getBytes();
+							read = readsfile.readLine();
+							
+							read = readsfile.readLine();
 
 							read = readsfile.readLine();
-							read = readsfile.readLine();
-
-							read = readsfile.readLine();
+							count += 1;
+							System.err.println(count);
 						}
 					}
 					if (outputAppender.getTupleCount() > 0) {
@@ -220,14 +224,15 @@ public class FileScanDescriptor extends
 				bytes[i] <<= 2;
 				bytes[i] &= filter2;
 				i -= 1;
-				while (i > 0) {
+				while (i >= 0) {
 					byte f = (byte) (bytes[i] & filter0);
 					f >>= 6;
 					bytes[i + 1] |= f;
 					bytes[i] <<= 2;
 					bytes[i] &= filter1;
+					i -= 1;
 				}
-				bytes[i + 1] |= ConvertSymbol(c);
+				bytes[0] |= ConvertSymbol(c);
 			}
 
 			private void SplitReads(byte[] array) {

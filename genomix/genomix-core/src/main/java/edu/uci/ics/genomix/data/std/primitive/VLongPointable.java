@@ -64,6 +64,7 @@ public final class VLongPointable extends AbstractPointable implements
 			if (bytes[i] != 0) {
 				break;
 			}
+			i += 1;
 		}
 		return bytes;
 	}
@@ -78,30 +79,41 @@ public final class VLongPointable extends AbstractPointable implements
 	public int compareTo(byte[] bytes, int start, int length) {
 
 		int be = this.start;
-		int n = (this.bytes[be] < bytes[start]) ? this.bytes[be] : bytes[start];
+		
+		if(this.bytes[be] != bytes[start]){
+			return (this.bytes[be] < bytes[start]) ? -1 : 1;
+		}
+		
+		int n = this.bytes[be];
 		int l = (int) Math.ceil(n / 4);
 		for (int i = 0; i <= l; i++) {
-			if (this.bytes[i] < bytes[i]) {
+			if (this.bytes[be + i] < bytes[start + i]) {
 				return -1;
-			} else if (this.bytes[i] > bytes[i]) {
+			} else if (this.bytes[be + i] > bytes[start + i]) {
 				return 1;
 			}
 
 		}
-
-		return (this.bytes[be] < bytes[start]) ? -1
-				: ((this.bytes[be] > bytes[start]) ? 1 : 0);
+		return 0;
 	}
 
 	@Override
 	public int hash() {// BKDRHash
-		int seed = 131; // 31 131 1313 13131 131313 etc..
+		int hash = 1;
+		for (int i = start + 1; i <= start + length; i++)
+			hash = (31 * hash) + (int)bytes[i];
+		if(hash < 0){
+			hash = -hash;
+		}
+		//System.err.println(hash);
+		return hash;
+/*		int seed = 131; // 31 131 1313 13131 131313 etc..
 		int hash = 0;
 		int l = (int) Math.ceil((double) bytes[start] / 4.0);
 		for (int i = start + 1; i <= start + l; i++) {
 			hash = hash * seed + bytes[i];
 		}
-		return (hash & 0x7FFFFFFF);
+		return (hash & 0x7FFFFFFF);*/
 	}
 
 	@Override

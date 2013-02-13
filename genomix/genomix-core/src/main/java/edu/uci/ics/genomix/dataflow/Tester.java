@@ -136,7 +136,7 @@ public class Tester {
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
-        NCConfig ncConfig2 = new NCConfig();
+  /*      NCConfig ncConfig2 = new NCConfig();
         ncConfig2.ccHost = "localhost";
         ncConfig2.ccPort = 39001;
         ncConfig2.clusterNetIPAddress = "127.0.0.1";
@@ -161,7 +161,7 @@ public class Tester {
         ncConfig4.dataIPAddress = "127.0.0.1";
         ncConfig4.nodeId = NC4_ID;
         nc4 = new NodeControllerService(ncConfig4);
-        nc4.start();
+        nc4.start();*/
 
         hcc = new HyracksConnection(ccConfig.clientNetIpAddress, ccConfig.clientNetPort);
         hcc.createApplication("test", null);
@@ -174,11 +174,11 @@ public class Tester {
         JobSpecification spec = new JobSpecification();
 
         //spec.setFrameSize(32768);
-        spec.setFrameSize(64);
+        spec.setFrameSize(32768);
 
         FileScanDescriptor scan = new FileScanDescriptor(spec, k, filename);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
-        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID);
+        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scan, NC1_ID);
 
         RecordDescriptor outputRec = new RecordDescriptor(new ISerializerDeserializer[] {null, ByteSerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE});
                 //Integer64SerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE,
@@ -271,21 +271,21 @@ public class Tester {
                     outputRec, true);            
         }
         
-        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, single_grouper, NC1_ID);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, single_grouper, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, single_grouper, NC1_ID);
+        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, single_grouper, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         
         IConnectorDescriptor readfileConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(readfileConn, scan, 0, single_grouper, 0);
         
 
-        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper,NC1_ID);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper,NC1_ID);
+        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, cross_grouper, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
         spec.connect(conn_partition, single_grouper, 0, cross_grouper, 0);
 
         //PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec, "G:\\data\\result");
-        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
-        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
+        PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec, "G:\\data\\result");
+        //PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID, NC2_ID,NC3_ID,NC4_ID);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(printConn, cross_grouper, 0, printer, 0);
