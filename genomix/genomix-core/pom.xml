@@ -247,7 +247,7 @@
         </dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>pregelix-api</artifactId>
+			<artifactId>pregelix-core</artifactId>
 			<version>0.2.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
