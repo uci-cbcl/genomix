@@ -4,6 +4,11 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 
+/**
+ * Aggregation sort: speed up 
+ * from hyracks
+ *
+ */
 public class Integer64NormalizedKeyComputerFactory implements
 		INormalizedKeyComputerFactory {
 	private static final long serialVersionUID = 8735044913496854551L;

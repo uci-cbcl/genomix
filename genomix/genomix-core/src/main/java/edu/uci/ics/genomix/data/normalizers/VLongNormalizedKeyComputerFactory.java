@@ -27,6 +27,9 @@ public class VLongNormalizedKeyComputerFactory implements
 				return r;
 			}
 
+			/**
+			 * one kmer
+			 */
 			@Override
 			public int normalize(byte[] bytes, int start, int length) {
 				long value = getLong(bytes, start);

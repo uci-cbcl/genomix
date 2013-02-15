@@ -2,19 +2,21 @@ package edu.uci.ics.genomix.job;
 
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import edu.uci.ics.genomix.data.normalizers.Integer64NormalizedKeyComputerFactory;
+import edu.uci.ics.genomix.data.normalizers.VLongNormalizedKeyComputerFactory;
 import edu.uci.ics.genomix.data.partition.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
-import edu.uci.ics.genomix.data.std.accessors.LongBinaryHashFunctionFamily;
+import edu.uci.ics.genomix.data.std.accessors.VLongBinaryHashFunctionFamily;
+import edu.uci.ics.genomix.data.std.primitive.VLongPointable;
 import edu.uci.ics.genomix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.dataflow.KMerWriterFactory;
-import edu.uci.ics.genomix.dataflow.PrinterOperatorDescriptor;
 import edu.uci.ics.genomix.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.DistributedMergeLmerAggregateFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.MergeKmerAggregateFactory;
@@ -51,6 +53,7 @@ public class JobGenBrujinGraph extends JobGen {
 		EXTERNAL, PRECLUSTER, HYBRIDHASH,
 	}
 
+	private static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
 	private final Map<String, NodeControllerInfo> ncMap;
 	private Scheduler scheduler;
 	private String[] ncNodeNames;
@@ -80,6 +83,7 @@ public class JobGenBrujinGraph extends JobGen {
 			System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length,
 					nodes.length);
 		}
+		LOG.info("nc nodes:" + ncNodeNames.length + ncNodeNames.toString());
 	}
 
 	private ExternalGroupOperatorDescriptor newExternalGroupby(
@@ -90,8 +94,8 @@ public class JobGenBrujinGraph extends JobGen {
 				keyFields,
 				frameLimits,
 				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-						.of(LongPointable.FACTORY) },
-				new Integer64NormalizedKeyComputerFactory(),
+						.of(VLongPointable.FACTORY) },
+				new VLongNormalizedKeyComputerFactory(),
 				aggeragater,
 				new DistributedMergeLmerAggregateFactory(),
 				outputRec,
@@ -99,7 +103,7 @@ public class JobGenBrujinGraph extends JobGen {
 						new FieldHashPartitionComputerFactory(
 								keyFields,
 								new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-										.of(LongPointable.FACTORY) }),
+										.of(VLongPointable.FACTORY) }),
 						tableSize), true);
 	}
 
@@ -118,11 +122,11 @@ public class JobGenBrujinGraph extends JobGen {
 				tableSize,
 				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
 						.of(LongPointable.FACTORY) },
-				new IBinaryHashFunctionFamily[] { new LongBinaryHashFunctionFamily() },
+				new IBinaryHashFunctionFamily[] { new VLongBinaryHashFunctionFamily() },
 				// new IBinaryHashFunctionFamily[]
 				// {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
 				hashfuncStartLevel,
-				new Integer64NormalizedKeyComputerFactory(),
+				new VLongNormalizedKeyComputerFactory(),
 				new MergeKmerAggregateFactory(),
 				new DistributedMergeLmerAggregateFactory(), outputRec, true);
 	}
@@ -148,7 +152,7 @@ public class JobGenBrujinGraph extends JobGen {
 					new KmerHashPartitioncomputerFactory(),
 					keyFields,
 					new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-							.of(LongPointable.FACTORY) });
+							.of(VLongPointable.FACTORY) });
 			crossGrouper = new PreclusteredGroupOperatorDescriptor(
 					jobSpec,
 					keyFields,

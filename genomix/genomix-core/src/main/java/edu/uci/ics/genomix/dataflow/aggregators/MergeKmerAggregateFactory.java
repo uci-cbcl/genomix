@@ -14,6 +14,10 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
+/**
+ * count
+ *
+ */
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 	private static final long serialVersionUID = 1L;
 	private static final int max = 255;

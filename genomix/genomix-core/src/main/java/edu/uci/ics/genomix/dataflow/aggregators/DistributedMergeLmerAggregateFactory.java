@@ -14,6 +14,10 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
+/**
+ * sum
+ *
+ */
 public class DistributedMergeLmerAggregateFactory implements
 		IAggregatorDescriptorFactory {
 	private static final long serialVersionUID = 1L;
@@ -46,6 +50,9 @@ public class DistributedMergeLmerAggregateFactory implements
 				});
 			}
 
+			/**
+			 * met a new kmer
+			 */
 			@Override
 			public void init(ArrayTupleBuilder tupleBuilder,
 					IFrameTupleAccessor accessor, int tIndex,

@@ -7,6 +7,10 @@ import edu.uci.ics.hyracks.api.dataflow.connectors.PipeliningConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.connectors.SendSideMaterializedPipeliningConnectorPolicy;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
 
+/**
+ * used by precluster groupby
+ *
+ */
 public class ConnectorPolicyAssignmentPolicy implements
 		IConnectorPolicyAssignmentPolicy {
 	private static final long serialVersionUID = 1L;

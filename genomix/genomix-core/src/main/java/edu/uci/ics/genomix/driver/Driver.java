@@ -79,6 +79,7 @@ public class Driver {
 		try {
 			Map<String, NodeControllerInfo> ncMap = hcc
 					.getNodeControllerInfos();
+			LOG.info("ncmap:" + ncMap.size() + " " + ncMap.keySet().toString());
 			switch (planChoice) {
 			case BUILD_DEBRUJIN_GRAPH:
 			default:
