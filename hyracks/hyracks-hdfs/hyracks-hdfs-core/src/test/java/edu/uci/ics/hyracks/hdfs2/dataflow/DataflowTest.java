@@ -32,8 +32,6 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -53,6 +51,7 @@ import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComp
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.MiniDFSClusterFactory;
 import edu.uci.ics.hyracks.hdfs.lib.RawBinaryComparatorFactory;
 import edu.uci.ics.hyracks.hdfs.lib.RawBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.hdfs.lib.TextKeyValueParserFactory;
@@ -78,6 +77,7 @@ public class DataflowTest extends TestCase {
     private static final String HYRACKS_APP_NAME = "DataflowTest";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
+    private MiniDFSClusterFactory dfsClusterFactory = new MiniDFSClusterFactory();
 
     private Job conf;
     private int numberOfNC = 2;
@@ -113,7 +113,7 @@ public class DataflowTest extends TestCase {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
         System.setProperty("hadoop.log.dir", "logs");
-        dfsCluster = new MiniDFSCluster(conf.getConfiguration(), numberOfNC, true, null);
+        dfsCluster = dfsClusterFactory.getMiniDFSCluster(conf.getConfiguration(), numberOfNC);
         FileSystem dfs = FileSystem.get(conf.getConfiguration());
         Path src = new Path(DATA_PATH);
         Path dest = new Path(HDFS_INPUT_PATH);
@@ -141,7 +141,7 @@ public class DataflowTest extends TestCase {
 
         Scheduler scheduler = new Scheduler(HyracksUtils.CC_HOST, HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
         InputFormat inputFormat = ReflectionUtils.newInstance(conf.getInputFormatClass(), conf.getConfiguration());
-        List<InputSplit> splits = inputFormat.getSplits(new JobContext(conf.getConfiguration(), new JobID()));
+        List<InputSplit> splits = inputFormat.getSplits(conf);
 
         String[] readSchedule = scheduler.getLocationConstraints(splits);
         JobSpecification jobSpec = new JobSpecification();

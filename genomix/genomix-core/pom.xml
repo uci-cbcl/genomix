@@ -235,12 +235,12 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-hdfs</artifactId>
+			<artifactId>hyracks-hdfs-core</artifactId>
 			<version>0.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
             <groupId>edu.uci.ics.hyracks</groupId>
-            <artifactId>hyracks-hdfs</artifactId>
+            <artifactId>hyracks-hdfs-core</artifactId>
             <version>0.2.3-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
