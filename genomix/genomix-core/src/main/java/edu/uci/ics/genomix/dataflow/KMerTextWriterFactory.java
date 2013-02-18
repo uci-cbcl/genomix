@@ -26,7 +26,7 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 						byte[] data = tuple.getFieldData(0);
 						int start = tuple.getFieldStart(0);
 						int len = tuple.getFieldLength(0);
-						output.write(data, start, len);
+						output.write(new String(data,start,len).getBytes());
 						output.writeChar(' ');
 					}
 					output.writeByte(newLine);

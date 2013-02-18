@@ -20,7 +20,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 
 	private static final long serialVersionUID = 1L;
 	private Configuration conf;
-	KMerSequenceWriterFactory(Configuration conf){
+	public KMerSequenceWriterFactory(Configuration conf){
 		this.conf = conf;
 	}
 	

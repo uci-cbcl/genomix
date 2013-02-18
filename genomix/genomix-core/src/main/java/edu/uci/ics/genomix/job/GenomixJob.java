@@ -17,8 +17,10 @@ public class GenomixJob extends Job {
 	public static final String FRAME_LIMIT = "genomix.framelimit";
 	/** Table Size, hyracks need */
 	public static final String TABLE_SIZE = "genomix.tablesize";
-	/** Groupby types ? */
+	/** Groupby types */
 	public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
+	/** Graph outputformat */
+	public static final String OUTPUT_FORMAT = "genomix.graph.output";
 
 	/** Configurations used by hybrid groupby function in graph build phrase */
 	public static final String GROUPBY_HYBRID_INPUTSIZE = "genomix.graph.groupby.hybrid.inputsize";

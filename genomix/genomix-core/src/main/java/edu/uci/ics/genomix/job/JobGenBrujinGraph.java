@@ -13,6 +13,8 @@ import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.data.std.accessors.VLongBinaryHashFunctionFamily;
 import edu.uci.ics.genomix.data.std.primitive.VLongPointable;
 import edu.uci.ics.genomix.dataflow.ConnectorPolicyAssignmentPolicy;
+import edu.uci.ics.genomix.dataflow.KMerSequenceWriterFactory;
+import edu.uci.ics.genomix.dataflow.KMerTextWriterFactory;
 import edu.uci.ics.genomix.dataflow.KMerWriterFactory;
 import edu.uci.ics.genomix.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.DistributedMergeLmerAggregateFactory;
@@ -41,6 +43,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.HybridHashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
+import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
@@ -48,6 +51,9 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 public class JobGenBrujinGraph extends JobGen {
 	public enum GroupbyType {
 		EXTERNAL, PRECLUSTER, HYBRIDHASH,
+	}
+	public enum OutputFormat{
+		TEXT,BINARY,
 	}
 
 	private static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
@@ -59,6 +65,7 @@ public class JobGenBrujinGraph extends JobGen {
 	private int frameLimits;
 	private int tableSize;
 	private GroupbyType groupbyType;
+	private OutputFormat outputFormat;
 
 	private AbstractOperatorDescriptor singleGrouper;
 	private IConnectorDescriptor connPartition;
@@ -220,8 +227,17 @@ public class JobGenBrujinGraph extends JobGen {
 		jobSpec.connect(connPartition, singleGrouper, 0, crossGrouper, 0);
 
 		// Output
+		ITupleWriterFactory writer = null;
+		switch (outputFormat){
+		case TEXT:
+			writer = new KMerTextWriterFactory();
+			break;
+		case BINARY: default:
+			writer = new KMerSequenceWriterFactory(conf);
+			break;
+		}
 		HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(
-				jobSpec, (JobConf) conf, new KMerWriterFactory());
+				jobSpec, (JobConf) conf, writer);
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				writeOperator, ncNodeNames);
@@ -250,6 +266,15 @@ public class JobGenBrujinGraph extends JobGen {
 			groupbyType = GroupbyType.PRECLUSTER;
 		} else {
 			groupbyType = GroupbyType.HYBRIDHASH;
+		}
+		
+		String output = conf.get(GenomixJob.OUTPUT_FORMAT, "binary");
+		if (output.equalsIgnoreCase("binary")){
+			outputFormat = OutputFormat.BINARY;
+		} else if ( output.equalsIgnoreCase("text")){
+			outputFormat = OutputFormat.TEXT;
+		} else {
+			outputFormat = OutputFormat.TEXT;
 		}
 	}
 
