@@ -29,8 +29,6 @@ public class KmerHashPartitioncomputerFactory implements
 				int slotLength = accessor.getFieldSlotsLength();
 
 				ByteBuffer buf = accessor.getBuffer();
-//				buf.position(startOffset + fieldOffset + slotLength);
-//				long l = accessor.getBuffer().getLong();
 				long l = BufferSerDeUtils.getLong(buf.array(), startOffset + fieldOffset + slotLength);
 				return (int) (l % nParts);
 			}

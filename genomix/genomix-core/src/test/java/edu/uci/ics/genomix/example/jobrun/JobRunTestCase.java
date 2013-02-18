@@ -18,8 +18,13 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import edu.uci.ics.genomix.driver.Driver;
+import edu.uci.ics.genomix.driver.Driver.Plan;
+import edu.uci.ics.genomix.job.GenomixJob;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
@@ -44,14 +49,16 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
 import edu.uci.ics.hyracks.hdfs.utils.TestUtils;
 
-public class JobRunTestCase extends TestCase {
+public class JobRunTestCase {
 	private static final String ACTUAL_RESULT_DIR = "actual";
-	private static final String EXPECTED_RESULT_PATH = "src/test/resources/expected";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-	private static final String DATA_PATH = "src/test/resources/data/customer.tbl";
-	private static final String HDFS_INPUT_PATH = "/customer/";
-	private static final String HDFS_OUTPUT_PATH = "/customer_result/";
+	private static final String DATA_PATH = "src/test/resources/data/webmap/text.txt";
+	private static final String HDFS_INPUT_PATH = "/webmap";
+	private static final String HDFS_OUTPUT_PATH = "/webmap_result/";
+
+    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/part-00000";
+    private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
 
 	private static final String HYRACKS_APP_NAME = "genomix";
 	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
@@ -62,10 +69,10 @@ public class JobRunTestCase extends TestCase {
 	private int numberOfNC = 2;
 	private int numPartitionPerMachine = 2;
 
-	private Driver myDriver;
+	private Driver driver;
 
-	@Override
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		cleanupStores();
 		HyracksUtils.init();
 		HyracksUtils.createApp(HYRACKS_APP_NAME);
@@ -73,7 +80,10 @@ public class JobRunTestCase extends TestCase {
 		FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
 		startHDFS();
 
-		myDriver = new Driver(HyracksUtils.CC_HOST,
+		FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
+		FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
+
+		driver = new Driver(HyracksUtils.CC_HOST,
 				HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT,
 				numPartitionPerMachine);
 	}
@@ -108,82 +118,40 @@ public class JobRunTestCase extends TestCase {
 		confOutput.flush();
 		confOutput.close();
 	}
-
-	@Override
-	protected void runTest() throws Throwable {
-		TestExternalGroupby();
-		TestPreClusterGroupby();
-		TestHybridGroupby();
+	
+	private void cleanUpReEntry() throws IOException{
+		FileSystem lfs = FileSystem.getLocal(new Configuration());
+		if (lfs.exists(new Path(DUMPED_RESULT))){
+			lfs.delete(new Path(DUMPED_RESULT), true);
+		}
+		FileSystem dfs = FileSystem.get(conf);
+		if (dfs.exists(new Path(HDFS_OUTPUT_PATH))){
+			dfs.delete(new Path(HDFS_OUTPUT_PATH), true);
+		}
 	}
 
-	public void runHdfsJob() throws Throwable {
-
-		FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
-		FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
-		conf.setInputFormat(TextInputFormat.class);
-
-		Scheduler scheduler = new Scheduler(HyracksUtils.CC_HOST,
-				HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
-		InputSplit[] splits = conf.getInputFormat().getSplits(conf,
-				numberOfNC * 4);
-
-		String[] readSchedule = scheduler.getLocationConstraints(splits);
-		JobSpecification jobSpec = new JobSpecification();
-		RecordDescriptor recordDesc = new RecordDescriptor(
-				new ISerializerDeserializer[] { UTF8StringSerializerDeserializer.INSTANCE });
-
-		String[] locations = new String[] { HyracksUtils.NC1_ID,
-				HyracksUtils.NC1_ID, HyracksUtils.NC2_ID, HyracksUtils.NC2_ID };
-		HDFSReadOperatorDescriptor readOperator = new HDFSReadOperatorDescriptor(
-				jobSpec, recordDesc, conf, splits, readSchedule,
-				new TextKeyValueParserFactory());
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				readOperator, locations);
-
-		ExternalSortOperatorDescriptor sortOperator = new ExternalSortOperatorDescriptor(
-				jobSpec,
-				10,
-				new int[] { 0 },
-				new IBinaryComparatorFactory[] { RawBinaryComparatorFactory.INSTANCE },
-				recordDesc);
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				sortOperator, locations);
-
-		HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(
-				jobSpec, conf, new TextTupleWriterFactory());
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				writeOperator, HyracksUtils.NC1_ID);
-
-		jobSpec.connect(new OneToOneConnectorDescriptor(jobSpec), readOperator,
-				0, sortOperator, 0);
-		jobSpec.connect(
-				new MToNPartitioningMergingConnectorDescriptor(
-						jobSpec,
-						new FieldHashPartitionComputerFactory(
-								new int[] { 0 },
-								new IBinaryHashFunctionFactory[] { RawBinaryHashFunctionFactory.INSTANCE }),
-						new int[] { 0 },
-						new IBinaryComparatorFactory[] { RawBinaryComparatorFactory.INSTANCE }),
-				sortOperator, 0, writeOperator, 0);
-		jobSpec.addRoot(writeOperator);
-
-		IHyracksClientConnection client = new HyracksConnection(
-				HyracksUtils.CC_HOST, HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
-		JobId jobId = client.startJob(HYRACKS_APP_NAME, jobSpec);
-		client.waitForCompletion(jobId);
-
+	@Test
+	public void TestExternalGroupby() throws Exception {
+		cleanUpReEntry();
+		conf.set(GenomixJob.GROUPBY_TYPE, "external");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
-	void TestExternalGroupby() throws Exception {
+	@Test
+	public void TestPreClusterGroupby() throws Exception {
+		cleanUpReEntry();
+		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+		Assert.assertEquals(true, checkResults());
 	}
 
-	void TestPreClusterGroupby() throws Exception {
-		// TODO
-	}
-
-	void TestHybridGroupby() throws Exception {
-		// TODO
+	@Test
+	public void TestHybridGroupby() throws Exception {
+		cleanUpReEntry();
+		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+		Assert.assertEquals(true, checkResults());
 	}
 
 	private boolean checkResults() throws Exception {
@@ -192,15 +160,13 @@ public class JobRunTestCase extends TestCase {
 		Path actual = new Path(ACTUAL_RESULT_DIR);
 		dfs.copyToLocalFile(result, actual);
 
-		TestUtils.compareWithResult(new File(EXPECTED_RESULT_PATH
-				+ File.separator + "part-0"), new File(ACTUAL_RESULT_DIR
-				+ File.separator + "customer_result" + File.separator
-				+ "part-0"));
+		TestUtils.compareWithResult(new File(EXPECTED_PATH
+				), new File(DUMPED_RESULT));
 		return true;
 	}
 
-	@Override
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 		HyracksUtils.destroyApp(HYRACKS_APP_NAME);
 		HyracksUtils.deinit();
 		cleanupHDFS();

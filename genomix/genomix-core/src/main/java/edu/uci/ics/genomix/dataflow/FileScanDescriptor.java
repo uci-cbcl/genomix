@@ -48,7 +48,7 @@ public class FileScanDescriptor extends
 	public FileScanDescriptor(JobSpecification jobSpec, int kmers,
 			Path[] inputPaths) {
 		super(jobSpec, 0, 1);
-		this.k = k;
+		this.k = kmers;
 		this.filesplit = inputPaths;
 		this.pathSurfix = inputPaths[0].toString();
 		// recordDescriptors[0] = news RecordDescriptor(

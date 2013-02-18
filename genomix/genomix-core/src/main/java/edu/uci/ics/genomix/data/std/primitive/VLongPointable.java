@@ -10,7 +10,6 @@ import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
 
 public final class VLongPointable extends AbstractPointable implements
 		IHashable, IComparable, INumeric {
-	static private int max = 65535;
 	public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
 		private static final long serialVersionUID = 1L;
 

@@ -4,11 +4,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.genomix.data.normalizers.VLongNormalizedKeyComputerFactory;
 import edu.uci.ics.genomix.data.partition.KmerHashPartitioncomputerFactory;
@@ -61,8 +58,6 @@ public class JobGenBrujinGraph extends JobGen {
 	private int kmers;
 	private int frameLimits;
 	private int tableSize;
-	private Path[] inputPaths;
-	private Path outputPath;
 	private GroupbyType groupbyType;
 
 	private AbstractOperatorDescriptor singleGrouper;
@@ -123,8 +118,6 @@ public class JobGenBrujinGraph extends JobGen {
 				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
 						.of(LongPointable.FACTORY) },
 				new IBinaryHashFunctionFamily[] { new VLongBinaryHashFunctionFamily() },
-				// new IBinaryHashFunctionFamily[]
-				// {MurmurHash3BinaryHashFunctionFamily.INSTANCE},
 				hashfuncStartLevel,
 				new VLongNormalizedKeyComputerFactory(),
 				new MergeKmerAggregateFactory(),
@@ -249,8 +242,6 @@ public class JobGenBrujinGraph extends JobGen {
 		kmers = conf.getInt(GenomixJob.KMER_LENGTH, 25);
 		frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, 4096);
 		tableSize = conf.getInt(GenomixJob.TABLE_SIZE, 10485767);
-		inputPaths = FileInputFormat.getInputPaths(genomixJob);
-		outputPath = FileOutputFormat.getOutputPath(genomixJob);
 
 		String type = conf.get(GenomixJob.GROUPBY_TYPE, "hybrid");
 		if (type.equalsIgnoreCase("external")) {

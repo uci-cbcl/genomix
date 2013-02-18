@@ -20,11 +20,11 @@ public class KMerWriterFactory implements ITupleWriterFactory {
 					throws HyracksDataException {
 				try {
 					for (int i = 0; i < 3; i++) {
-						byte[] data = tuple.getFieldData(0);
-						int start = tuple.getFieldStart(0);
-						int len = tuple.getFieldLength(0);
+						byte[] data = tuple.getFieldData(i);
+						int start = tuple.getFieldStart(i);
+						int len = tuple.getFieldLength(i);
 						output.write(data, start, len);
-						output.writeChars(" ");
+						output.writeChar(' ');
 					}
 					output.writeByte(newLine);
 				} catch (Exception e) {

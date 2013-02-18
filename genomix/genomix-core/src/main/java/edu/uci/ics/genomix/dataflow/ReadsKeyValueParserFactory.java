@@ -214,7 +214,7 @@ public class ReadsKeyValueParserFactory implements
 
 						// tupleBuilder.addField(Integer64SerializerDeserializer.INSTANCE,
 						// l);
-						tupleBuilder.addField(bytes, 0, byteNum + 1);
+						tupleBuilder.addField(bytes, 0, byteNum + 1); // ? why +1 
 						tupleBuilder.addField(
 								ByteSerializerDeserializer.INSTANCE, r);
 
