@@ -123,7 +123,7 @@ public class JobGenBrujinGraph extends JobGen {
 				recordSizeInBytes,
 				tableSize,
 				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-						.of(LongPointable.FACTORY) },
+						.of(VLongPointable.FACTORY) },
 				new IBinaryHashFunctionFamily[] { new VLongBinaryHashFunctionFamily() },
 				hashfuncStartLevel,
 				new VLongNormalizedKeyComputerFactory(),
@@ -157,7 +157,7 @@ public class JobGenBrujinGraph extends JobGen {
 					jobSpec,
 					keyFields,
 					new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-							.of(LongPointable.FACTORY) },
+							.of(VLongPointable.FACTORY) },
 					new DistributedMergeLmerAggregateFactory(), outputRec);
 			break;
 		case HYBRIDHASH:

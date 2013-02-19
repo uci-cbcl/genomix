@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 public class DistributedMergeLmerAggregateFactory implements
 		IAggregatorDescriptorFactory {
 	private static final long serialVersionUID = 1L;
-	private static final int max = 255;
+	private static final int max = 127;
 
 	public DistributedMergeLmerAggregateFactory() {
 	}

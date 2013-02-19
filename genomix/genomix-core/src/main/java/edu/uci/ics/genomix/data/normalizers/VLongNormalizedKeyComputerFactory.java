@@ -21,7 +21,7 @@ public class VLongNormalizedKeyComputerFactory implements
 				long r = 0;
 				for (int i = 0; i < n; i++) {
 					r <<= 8;
-					r += (long) (bytes[offset + 1] & 0xff);
+					r += (long) (bytes[offset + i + 1] & 0xff);
 				}
 
 				return r;

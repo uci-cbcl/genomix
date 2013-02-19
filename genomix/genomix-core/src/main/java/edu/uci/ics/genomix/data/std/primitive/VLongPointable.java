@@ -85,13 +85,12 @@ public final class VLongPointable extends AbstractPointable implements
 		
 		int n = this.bytes[be];
 		int l = (int) Math.ceil(n / 4);
-		for (int i = 0; i <= l; i++) {
+		for (int i = l; i > 0; i--) {
 			if (this.bytes[be + i] < bytes[start + i]) {
 				return -1;
 			} else if (this.bytes[be + i] > bytes[start + i]) {
 				return 1;
 			}
-
 		}
 		return 0;
 	}

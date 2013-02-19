@@ -20,7 +20,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
  */
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 	private static final long serialVersionUID = 1L;
-	private static final int max = 255;
+	private static final int max = 127;
 
 	public MergeKmerAggregateFactory() {
 	}
@@ -100,6 +100,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 						+ stateAccessor.getFieldSlotsLength() + statefieldStart;
 
 				count += 1;
+				if(count > max){
+					count = max;
+				}
 
 				byte[] data = stateAccessor.getBuffer().array();
 
