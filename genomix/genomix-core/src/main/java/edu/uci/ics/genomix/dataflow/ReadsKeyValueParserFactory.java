@@ -26,6 +26,7 @@ public class ReadsKeyValueParserFactory implements
 	private byte filter0;
 	private byte filter1;
 	private byte filter2;
+	private byte filter3;
 
 	public ReadsKeyValueParserFactory(int k) {
 		this.k = k;
@@ -39,6 +40,9 @@ public class ReadsKeyValueParserFactory implements
 		for (int i = 0; i < r; i++) {
 			filter2 <<= 1;
 			filter2 |= 1;
+		}
+		for(int i = 0; i < r-1 ; i++){
+			filter3 <<= 1;
 		}
 	}
 
@@ -104,8 +108,8 @@ public class ReadsKeyValueParserFactory implements
 					}
 					count += 2;
 					if (count % 8 == 0 && byteNum != bcount + 1) {
-						bcount += 1;
 						bytes[byteNum-bcount] = l;
+						bcount += 1;
 						count = 0;
 						l = 0;
 					}
@@ -163,9 +167,9 @@ public class ReadsKeyValueParserFactory implements
 			void MoveKmer(byte[] bytes, byte c) {
 				int i = byteNum;
 				bytes[i] <<= 2;
-				bytes[i] &= filter2;
+				bytes[i] &= filter1;
 				i -= 1;
-				while (i > 0) {
+				while (i > 1) {
 					byte f = (byte) (bytes[i] & filter0);
 					f >>= 6;
 					f &= 3;
@@ -174,6 +178,9 @@ public class ReadsKeyValueParserFactory implements
 					bytes[i] &= filter1;
 					i -= 1;
 				}
+				bytes[2] |= (byte) (bytes[1]&filter3);
+				bytes[1] <<=2;
+				bytes[1] &= filter2;
 				bytes[1] |= ConvertSymbol(c);
 			}
 

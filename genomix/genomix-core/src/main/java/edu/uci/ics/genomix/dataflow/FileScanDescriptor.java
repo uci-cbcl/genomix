@@ -37,7 +37,7 @@ public class FileScanDescriptor extends
 		this.k = k;
 		this.pathSurfix = path;
 
-		byteNum = (byte) Math.ceil((double) k / 4.0);
+		byteNum = (int) Math.ceil((double) k / 4.0);
 		// recordDescriptors[0] = news RecordDescriptor(
 		// new ISerializerDeserializer[] {
 		// UTF8StringSerializerDeserializer.INSTANCE });
@@ -75,6 +75,7 @@ public class FileScanDescriptor extends
 			private byte filter0;
 			private byte filter1;
 			private byte filter2;
+			private byte filter3;
 
 			@SuppressWarnings("resource")
 			@Override
@@ -88,12 +89,16 @@ public class FileScanDescriptor extends
 				filter0 = (byte) 0xC0;
 				filter1 = (byte) 0xFC;
 				filter2 = 0;
+				filter3 = 3;
 
 				int r = byteNum * 8 - 2 * k;
 				r = 8 - r;
 				for (int i = 0; i < r; i++) {
 					filter2 <<= 1;
 					filter2 |= 1;
+				}
+				for(int i = 0; i < r-1 ; i++){
+					filter3 <<= 1;
 				}
 				
 				
@@ -170,8 +175,8 @@ public class FileScanDescriptor extends
 					}
 					count += 2;
 					if (count % 8 == 0 && byteNum != bcount + 1) {
-						bcount += 1;
 						bytes[byteNum-bcount] = l;
+						bcount += 1;
 						count = 0;
 						l = 0;
 					}
@@ -229,9 +234,9 @@ public class FileScanDescriptor extends
 			void MoveKmer(byte[] bytes, byte c) {
 				int i = byteNum;
 				bytes[i] <<= 2;
-				bytes[i] &= filter2;
+				bytes[i] &= filter1;
 				i -= 1;
-				while (i > 0) {
+				while (i > 1) {
 					byte f = (byte) (bytes[i] & filter0);
 					f >>= 6;
 					f &= 3;
@@ -240,6 +245,9 @@ public class FileScanDescriptor extends
 					bytes[i] &= filter1;
 					i -= 1;
 				}
+				bytes[2] |= (byte) (bytes[1]&filter3);
+				bytes[1] <<=2;
+				bytes[1] &= filter2;
 				bytes[1] |= ConvertSymbol(c);
 			}
 
