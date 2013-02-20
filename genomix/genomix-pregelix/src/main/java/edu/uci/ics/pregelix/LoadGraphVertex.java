@@ -102,8 +102,19 @@ public class LoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWri
 	public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(LoadGraphVertex.class.getSimpleName());
         job.setVertexClass(LoadGraphVertex.class);
-        job.setVertexInputFormatClass(TextLoadGraphInputFormat.class);
-        job.setVertexOutputFormatClass(SimpleLoadGraphVertexOutputFormat.class);
+        /**
+         * TextInput and TextOutput
+         * job.setVertexInputFormatClass(TextLoadGraphInputFormat.class);
+         * job.setVertexOutputFormatClass(SimpleLoadGraphVertexOutputFormat.class); 
+         */
+        
+        /**
+         * BinaryInput and BinaryOutput
+         */
+        job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
+        job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class); 
+        job.setOutputKeyClass(BytesWritable.class);
+        job.setOutputValueClass(ByteWritable.class);
         Client.run(args, job);
 	}
 }
