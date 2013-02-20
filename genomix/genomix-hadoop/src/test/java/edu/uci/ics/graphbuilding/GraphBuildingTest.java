@@ -14,18 +14,28 @@ package edu.uci.ics.graphbuilding;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
+import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
 
 import edu.uci.ics.utils.TestUtils;
@@ -43,6 +53,7 @@ public class GraphBuildingTest {
     private static final String RESULT_PATH = "/result2";
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + RESULT_PATH + "/part-00000";
     private static final String EXPECTED_PATH = "expected/result2";
+    private static final String TEST_SOURCE_DIR = "testactual/source.txt";
 
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -56,9 +67,23 @@ public class GraphBuildingTest {
 
         // run graph transformation tests
         GenomixDriver tldriver = new GenomixDriver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, 2, 5, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, 2, 12, HADOOP_CONF_PATH);
+
+        SequenceFile.Reader reader = null;
+        Path path = new Path(RESULT_PATH + "/part-00000");
+        reader = new SequenceFile.Reader(dfs, path, conf);
+        ValueBytesWritable key = (ValueBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+        ValueWritable value = (ValueWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+        File filePathTo = new File(TEST_SOURCE_DIR);
+        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+        while (reader.next(key, value)) {
+            bw.write(key + "\t" + value.toString());
+            bw.newLine();
+        }
+        bw.close();
+        
         dumpResult();
-        TestUtils.compareWithResult(new File(DUMPED_RESULT), new File(EXPECTED_PATH));
+        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
 
         cleanupHadoop();
 

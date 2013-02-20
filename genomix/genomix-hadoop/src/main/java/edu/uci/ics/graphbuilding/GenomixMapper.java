@@ -33,7 +33,8 @@ import org.apache.hadoop.mapred.Reporter;
 /**
  * This class implement mapper operator of mapreduce model
  */
-public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable, Text, BytesWritable, ValueWritable> {
+public class GenomixMapper extends MapReduceBase implements
+        Mapper<LongWritable, Text, ValueBytesWritable, ValueWritable> {
 
     public class CurrenByte {
         public byte curByte;
@@ -42,7 +43,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 
     public static int KMER_SIZE;
     public ValueWritable outputAdjList = new ValueWritable();
-    public BytesWritable outputKmer = new BytesWritable();
+    public ValueBytesWritable outputKmer = new ValueBytesWritable();
 
     @Override
     public void configure(JobConf job) {
@@ -91,7 +92,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
       C 01000000 64
       T 10000000 128*/
     @Override
-    public void map(LongWritable key, Text value, OutputCollector<BytesWritable, ValueWritable> output,
+    public void map(LongWritable key, Text value, OutputCollector<ValueBytesWritable, ValueWritable> output,
             Reporter reporter) throws IOException {
         /* A 00
            G 01
@@ -119,7 +120,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 byte kmerAdjList = 0;
                 byte initial;
                 if (i >= KMER_SIZE) {
-                    outputKmer.set(kmerValue, 0, size);
+                    outputKmer.set(kmerValue, (byte) 0, (byte) size);
                     switch ((int) preMarker) {
                         case -1:
                             kmerAdjList = (byte) (kmerAdjList + 0);
@@ -253,7 +254,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                         break;
                 }
                 outputAdjList.set(kmerAdjList, count);
-                outputKmer.set(kmerValue, 0, size);
+                outputKmer.set(kmerValue, (byte) 0, (byte) size);
                 output.collect(outputKmer, outputAdjList);
             }
         }

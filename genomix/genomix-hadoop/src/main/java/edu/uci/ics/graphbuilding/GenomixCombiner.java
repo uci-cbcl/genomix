@@ -30,12 +30,12 @@ import org.apache.hadoop.mapred.Reporter;
  * This class implement the combiner operator of Mapreduce model
  */
 public class GenomixCombiner extends MapReduceBase implements
-        Reducer<BytesWritable, ValueWritable, BytesWritable, ValueWritable> {
+        Reducer<ValueBytesWritable, ValueWritable, ValueBytesWritable, ValueWritable> {
     public ValueWritable vaWriter = new ValueWritable();
 
     @Override
-    public void reduce(BytesWritable key, Iterator<ValueWritable> values,
-            OutputCollector<BytesWritable, ValueWritable> output, Reporter reporter) throws IOException {
+    public void reduce(ValueBytesWritable key, Iterator<ValueWritable> values,
+            OutputCollector<ValueBytesWritable, ValueWritable> output, Reporter reporter) throws IOException {
         byte groupByAdjList = 0;
         int count = 0;
         byte bytCount = 0;
