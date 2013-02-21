@@ -81,7 +81,7 @@ public class GraphBuildingTest {
             bw.newLine();
         }
         bw.close();
-        
+
         dumpResult();
         TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
 

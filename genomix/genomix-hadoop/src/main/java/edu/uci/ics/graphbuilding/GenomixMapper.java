@@ -1,5 +1,3 @@
-package edu.uci.ics.graphbuilding;
-
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +12,16 @@ package edu.uci.ics.graphbuilding;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package edu.uci.ics.graphbuilding;
+
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.IntWritable;
+//import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -33,6 +31,7 @@ import org.apache.hadoop.mapred.Reporter;
 /**
  * This class implement mapper operator of mapreduce model
  */
+@SuppressWarnings("deprecation")
 public class GenomixMapper extends MapReduceBase implements
         Mapper<LongWritable, Text, ValueBytesWritable, ValueWritable> {
 

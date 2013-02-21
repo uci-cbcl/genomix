@@ -1,5 +1,3 @@
-package edu.uci.ics.graphbuilding;
-
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,9 @@ package edu.uci.ics.graphbuilding;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package edu.uci.ics.graphbuilding;
+
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -73,16 +74,11 @@ public class GenomixDriver {
         conf.setMapOutputValueClass(ValueWritable.class);
 
         conf.setInputFormat(TextInputFormat.class);
-//        conf.setOutputFormat(TextOutputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
         conf.setOutputKeyClass(ValueBytesWritable.class);
         conf.setOutputValueClass(ValueWritable.class);
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
-//        SequenceFileOutputFormat.setOutputPath(conf,new Path(outputPath));
-//        SequenceFileOutputFormat.setCompressOutput(conf, true);
-//        SequenceFileOutputFormat.setOutputCompressorClass(conf, GzipCodec.class);
-//        SequenceFileOutputFormat.setOutputCompressionType(conf, CompressionType.BLOCK);
         conf.setNumReduceTasks(numReducers);
 
         FileSystem dfs = FileSystem.get(conf);
