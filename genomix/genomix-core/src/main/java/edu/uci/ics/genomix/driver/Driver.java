@@ -129,7 +129,6 @@ public class Driver {
 
 	public static void main(String[] args) throws Exception {
 		GenomixJob jobConf = new GenomixJob();
-		Job job = new Job(jobConf);
 		String[] otherArgs = new GenericOptionsParser(jobConf, args)
 				.getRemainingArgs();
 		if (otherArgs.length < 4) {
@@ -140,8 +139,17 @@ public class Driver {
 		int port = Integer.parseInt(otherArgs[1]);
 		int numOfDuplicate = jobConf.getInt(CPARTITION_PER_MACHINE, 2);
 		boolean bProfiling = jobConf.getBoolean(IS_PROFILING, true);
-		FileInputFormat.setInputPaths(job, otherArgs[2]);
-		FileOutputFormat.setOutputPath(job, new Path(otherArgs[3]));
+		// FileInputFormat.setInputPaths(job, otherArgs[2]);
+		{
+			Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[2]);
+			jobConf.set("mapred.input.dir", path.toString());
+
+			Path outputDir = new Path(jobConf.getWorkingDirectory(),
+					otherArgs[3]);
+			jobConf.set("mapred.output.dir", outputDir.toString());
+		}
+		// FileInputFormat.addInputPath(jobConf, new Path(otherArgs[2]));
+		// FileOutputFormat.setOutputPath(job, new Path(otherArgs[3]));
 		Driver driver = new Driver(ipAddress, port, numOfDuplicate);
 		driver.runJob(jobConf, Plan.BUILD_DEBRUJIN_GRAPH, bProfiling);
 	}
