@@ -3,8 +3,6 @@ package edu.uci.ics.genomix.dataflow;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.Text;
-
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -28,13 +26,16 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 		public void write(DataOutput output, ITupleReference tuple)
 				throws HyracksDataException {
 			try {
-				Text.writeString(output, Kmer.recoverKmerFrom(KMER,
+				output.writeChars(Kmer.recoverKmerFrom(KMER,
 						tuple.getFieldData(0), tuple.getFieldStart(0),
 						tuple.getFieldLength(0)));
-				Text.writeString(output, "\t");
-				Text.writeString(output, Kmer.recoverAdjacent(tuple
+				output.writeChar('\t');
+				output.writeChars(Kmer.recoverAdjacent(tuple
 						.getFieldData(1)[tuple.getFieldStart(1)]));
-				Text.writeString(output, "\n");
+				output.writeChar('\t');
+				output.writeInt((int)tuple
+						.getFieldData(2)[tuple.getFieldStart(2)]);
+				output.writeChar('\n');
 			} catch (IOException e) {
 				throw new HyracksDataException(e);
 			}

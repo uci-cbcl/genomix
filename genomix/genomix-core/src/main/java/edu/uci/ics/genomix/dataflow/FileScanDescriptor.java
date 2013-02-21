@@ -10,6 +10,8 @@ import org.apache.hadoop.fs.Path;
 
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Kmer.GENE_CODE;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -73,8 +75,6 @@ public class FileScanDescriptor extends
 			private ByteBuffer outputBuffer;
 			private FrameTupleAppender outputAppender;
 
-			private byte[] filter = new byte[4];
-
 			@SuppressWarnings("resource")
 			@Override
 			public void initialize() {
@@ -83,8 +83,6 @@ public class FileScanDescriptor extends
 				outputBuffer = ctx.allocateFrame();
 				outputAppender = new FrameTupleAppender(ctx.getFrameSize());
 				outputAppender.reset(outputBuffer, true);
-
-				Kmer.initializeFilter(k, filter);
 
 				try {// one try with multiple catch?
 					writer.open();
@@ -103,7 +101,7 @@ public class FileScanDescriptor extends
 						while (read != null) {
 							read = readsfile.readLine();
 							// if(count % 4 == 1)
-							SplitReads(read.getBytes());
+							SplitReads(read.getBytes(),writer);
 							// read.getBytes();
 							read = readsfile.readLine();
 
@@ -127,63 +125,47 @@ public class FileScanDescriptor extends
 				}
 			}
 
-			private void SplitReads(byte[] array) {
+			private void SplitReads(byte[] array, IFrameWriter writer) {
+				/** first kmer */
+				byte[] kmer = Kmer.CompressKmer(k, array, 0);
+				byte pre = 0;
+				byte next = GENE_CODE.getAdjBit(array[k]);
+				InsertToFrame(kmer, pre, next, writer);
+
+				/** middle kmer */
+				for (int i = k; i < array.length - 1; i++) {
+					pre = Kmer.MoveKmer(k, kmer, array[i]);
+					next = GENE_CODE.getAdjBit(array[i + 1]);
+					InsertToFrame(kmer, pre, next, writer);
+
+				}
+				/** last kmer */
+				pre = Kmer.MoveKmer(k, kmer, array[array.length - 1]);
+				next = 0;
+				InsertToFrame(kmer, pre, next, writer);
+			}
+
+			private void InsertToFrame(byte[] kmer, byte pre, byte next,
+					IFrameWriter writer) {
 				try {
-					byte[] bytes = null;
+					byte adj = GENE_CODE.mergePreNextAdj(pre, next);
+					tupleBuilder.reset();
+					tupleBuilder.addField(kmer, 0, byteNum + 1);
+					tupleBuilder.addField(ByteSerializerDeserializer.INSTANCE,
+							adj);
 
-					byte pre = 0, next = 0;
-					byte r;
-
-					for (int i = 0; i < array.length - k + 1; i++) {
-						if (0 == i) {
-							bytes = Kmer.CompressKmer(k, array, i);
-						} else {
-							Kmer.MoveKmer(k, bytes, array[i + k - 1], filter);
-							/*
-							 * l <<= 2; l &= window; l |= ConvertSymbol(array[i
-							 * + k - 1]);
-							 */
-							pre = Kmer.GENE_CODE.getAdjBit(array[i - 1]);
-						}
-						if (i + k != array.length) {
-							next = Kmer.GENE_CODE.getAdjBit(array[i + k]);
-						}
-
-						r = 0;
-						r |= pre;
-						r <<= 4;
-						r |= next;
-
-						/*
-						 * System.out.print(l); System.out.print(' ');
-						 * System.out.print(r); System.out.println();
-						 */
-
-						tupleBuilder.reset();
-
-						// tupleBuilder.addField(Integer64SerializerDeserializer.INSTANCE,
-						// l);
-						tupleBuilder.addField(bytes, 0, byteNum + 1);
-						tupleBuilder.addField(
-								ByteSerializerDeserializer.INSTANCE, r);
-
-						// int[] a = tupleBuilder.getFieldEndOffsets();
-						// int b = tupleBuilder.getSize();
-						// byte[] c = tupleBuilder.getByteArray();
-
+					if (!outputAppender.append(
+							tupleBuilder.getFieldEndOffsets(),
+							tupleBuilder.getByteArray(), 0,
+							tupleBuilder.getSize())) {
+						FrameUtils.flushFrame(outputBuffer, writer);
+						outputAppender.reset(outputBuffer, true);
 						if (!outputAppender.append(
 								tupleBuilder.getFieldEndOffsets(),
 								tupleBuilder.getByteArray(), 0,
 								tupleBuilder.getSize())) {
-							FrameUtils.flushFrame(outputBuffer, writer);
-							outputAppender.reset(outputBuffer, true);
-							if (!outputAppender.append(
-									tupleBuilder.getFieldEndOffsets(),
-									tupleBuilder.getByteArray(), 0,
-									tupleBuilder.getSize())) {
-								throw new IllegalStateException(
-										"Failed to copy an record into a frame: the record size is too large.");
-							}
+							throw new IllegalStateException(
+									"Failed to copy an record into a frame: the record size is too large.");
 						}
 					}
 				} catch (Exception e) {

@@ -17,6 +17,7 @@ import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
+@SuppressWarnings("deprecation")
 public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 
 	private static final long serialVersionUID = 1L;

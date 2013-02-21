@@ -120,7 +120,7 @@ public class JobRunTestCase {
 	public void TestExternalGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
