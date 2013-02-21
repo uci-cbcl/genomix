@@ -19,6 +19,8 @@ import edu.uci.ics.genomix.dataflow.KMerWriterFactory;
 import edu.uci.ics.genomix.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.DistributedMergeLmerAggregateFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.MergeKmerAggregateFactory;
+import edu.uci.ics.genomix.job.GenomixJob;
+import edu.uci.ics.genomix.job.JobGen;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -56,6 +58,7 @@ public class JobGenBrujinGraph extends JobGen {
 		TEXT,BINARY,
 	}
 
+	JobConf job;
 	private static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
 	private final Map<String, NodeControllerInfo> ncMap;
 	private Scheduler scheduler;
@@ -189,12 +192,13 @@ public class JobGenBrujinGraph extends JobGen {
 	public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec)
 			throws HyracksDataException {
 		try {
-			InputSplit[] splits = ((JobConf) conf).getInputFormat().getSplits(
-					(JobConf) conf, ncNodeNames.length);
+			
+			InputSplit[] splits = job.getInputFormat().getSplits(
+					job, ncNodeNames.length);
 
 			String[] readSchedule = scheduler.getLocationConstraints(splits);
 			return new HDFSReadOperatorDescriptor(jobSpec, outputRec,
-					(JobConf) conf, splits, readSchedule,
+					job, splits, readSchedule,
 					new ReadsKeyValueParserFactory(kmers));
 		} catch (Exception e) {
 			throw new HyracksDataException(e);
@@ -230,21 +234,23 @@ public class JobGenBrujinGraph extends JobGen {
 		ITupleWriterFactory writer = null;
 		switch (outputFormat){
 		case TEXT:
-			writer = new KMerTextWriterFactory();
+			writer = new KMerTextWriterFactory(kmers);
 			break;
 		case BINARY: default:
-			writer = new KMerSequenceWriterFactory(conf);
+			writer = new KMerSequenceWriterFactory(job);
 			break;
 		}
 		HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(
-				jobSpec, (JobConf) conf, writer);
+				jobSpec, job, writer);
 
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				writeOperator, ncNodeNames);
 
 		IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(
 				jobSpec);
-		jobSpec.connect(printConn, crossGrouper, 0, writeOperator, 0);
+//		jobSpec.connect(printConn, crossGrouper, 0, writeOperator, 0);
+		jobSpec.connect(printConn, readOperator, 0, writeOperator, 0);
+//		jobSpec.addRoot(readOperator);
 		jobSpec.addRoot(writeOperator);
 
 		if (groupbyType == GroupbyType.PRECLUSTER) {
@@ -255,6 +261,7 @@ public class JobGenBrujinGraph extends JobGen {
 
 	@Override
 	protected void initJobConfiguration() {
+		
 		kmers = conf.getInt(GenomixJob.KMER_LENGTH, 25);
 		frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, 4096);
 		tableSize = conf.getInt(GenomixJob.TABLE_SIZE, 10485767);
@@ -276,6 +283,7 @@ public class JobGenBrujinGraph extends JobGen {
 		} else {
 			outputFormat = OutputFormat.TEXT;
 		}
+		job = new JobConf(conf);
 	}
 
 }

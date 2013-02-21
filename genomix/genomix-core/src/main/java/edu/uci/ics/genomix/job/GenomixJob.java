@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
-public class GenomixJob extends Job {
+public class GenomixJob extends Configuration {
 
 	public static final String JOB_NAME = "genomix";
 
@@ -30,11 +30,11 @@ public class GenomixJob extends Job {
 	public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
 
 	public GenomixJob() throws IOException {
-		super(new Configuration(), JOB_NAME);
+		super(new Configuration());
 	}
 
 	public GenomixJob(Configuration conf) throws IOException {
-		super(conf, JOB_NAME);
+		super(conf);
 	}
 
 	/**
@@ -44,19 +44,19 @@ public class GenomixJob extends Job {
 	 *            desired frame size
 	 */
 	final public void setKmerLength(int kmerlength) {
-		getConfiguration().setInt(KMER_LENGTH, kmerlength);
+		setInt(KMER_LENGTH, kmerlength);
 	}
 
 	final public void setFrameSize(int frameSize) {
-		getConfiguration().setInt(FRAME_SIZE, frameSize);
+		setInt(FRAME_SIZE, frameSize);
 	}
 
 	final public void setFrameLimit(int frameLimit) {
-		getConfiguration().setInt(FRAME_LIMIT, frameLimit);
+		setInt(FRAME_LIMIT, frameLimit);
 	}
 
 	final public void setTableSize(int tableSize) {
-		getConfiguration().setInt(TABLE_SIZE, tableSize);
+		setInt(TABLE_SIZE, tableSize);
 	}
 
 }

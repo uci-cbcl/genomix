@@ -10,6 +10,7 @@ import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 public class KMerWriterFactory implements ITupleWriterFactory {
 	private static final long serialVersionUID = 1L;
 
+
 	@Override
 	public ITupleWriter getTupleWriter() {
 		return new ITupleWriter() {

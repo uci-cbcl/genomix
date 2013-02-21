@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import org.apache.hadoop.fs.Path;
 
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -72,10 +73,7 @@ public class FileScanDescriptor extends
 			private ByteBuffer outputBuffer;
 			private FrameTupleAppender outputAppender;
 			
-			private byte filter0;
-			private byte filter1;
-			private byte filter2;
-			private byte filter3;
+			private byte []filter = new byte[4];
 
 			@SuppressWarnings("resource")
 			@Override
@@ -86,21 +84,7 @@ public class FileScanDescriptor extends
 				outputAppender = new FrameTupleAppender(ctx.getFrameSize());
 				outputAppender.reset(outputBuffer, true);
 				
-				filter0 = (byte) 0xC0;
-				filter1 = (byte) 0xFC;
-				filter2 = 0;
-				filter3 = 3;
-
-				int r = byteNum * 8 - 2 * k;
-				r = 8 - r;
-				for (int i = 0; i < r; i++) {
-					filter2 <<= 1;
-					filter2 |= 1;
-				}
-				for(int i = 0; i < r-1 ; i++){
-					filter3 <<= 1;
-				}
-				
+				Kmer.initializeFilter(k, filter);
 				
 				try {// one try with multiple catch?
 					writer.open();
@@ -143,113 +127,6 @@ public class FileScanDescriptor extends
 				}
 			}
 
-			private byte[] CompressKmer(byte[] array, int start) {
-				// a: 00; c: 01; G: 10; T: 11
-
-				byte[] bytes = new byte[byteNum + 1];
-				bytes[0] = (byte) k;
-
-				byte l = 0;
-				int count = 0;
-				int bcount = 0;
-
-				for (int i = start; i < start+k ; i++) {
-					l <<= 2;
-					switch (array[i]) {
-					case 'A':
-					case 'a':
-						l |= 0;
-						break;
-					case 'C':
-					case 'c':
-						l |= 1;
-						break;
-					case 'G':
-					case 'g':
-						l |= 2;
-						break;
-					case 'T':
-					case 't':
-						l |= 3;
-						break;
-					}
-					count += 2;
-					if (count % 8 == 0 && byteNum != bcount + 1) {
-						bytes[byteNum-bcount] = l;
-						bcount += 1;
-						count = 0;
-						l = 0;
-					}
-				}
-				bytes[1] = l;
-				return bytes;
-			}
-
-			private byte GetBitmap(byte t) {
-				byte r = 0;
-				switch (t) {
-				case 'A':
-				case 'a':
-					r = 1;
-					break;
-				case 'C':
-				case 'c':
-					r = 2;
-					break;
-				case 'G':
-				case 'g':
-					r = 4;
-					break;
-				case 'T':
-				case 't':
-					r = 8;
-					break;
-				}
-				return r;
-			}
-
-			private byte ConvertSymbol(byte t) {
-				byte r = 0;
-				switch (t) {
-				case 'A':
-				case 'a':
-					r = 0;
-					break;
-				case 'C':
-				case 'c':
-					r = 1;
-					break;
-				case 'G':
-				case 'g':
-					r = 2;
-					break;
-				case 'T':
-				case 't':
-					r = 3;
-					break;
-				}
-				return r;
-			}
-
-			void MoveKmer(byte[] bytes, byte c) {
-				int i = byteNum;
-				bytes[i] <<= 2;
-				bytes[i] &= filter1;
-				i -= 1;
-				while (i > 1) {
-					byte f = (byte) (bytes[i] & filter0);
-					f >>= 6;
-					f &= 3;
-					bytes[i + 1] |= f;
-					bytes[i] <<= 2;
-					bytes[i] &= filter1;
-					i -= 1;
-				}
-				bytes[2] |= (byte) (bytes[1]&filter3);
-				bytes[1] <<=2;
-				bytes[1] &= filter2;
-				bytes[1] |= ConvertSymbol(c);
-			}
 
 			private void SplitReads(byte[] array) {
 				try {
@@ -260,17 +137,17 @@ public class FileScanDescriptor extends
 
 					for (int i = 0; i < array.length - k + 1; i++) {
 						if (0 == i) {
-							bytes = CompressKmer(array, i);
+							bytes = Kmer.CompressKmer(k, array, i);
 						} else {
-							MoveKmer(bytes, array[i + k - 1]);
+							Kmer.MoveKmer(k, bytes, array[i+k-1], filter);
 							/*
 							 * l <<= 2; l &= window; l |= ConvertSymbol(array[i
 							 * + k - 1]);
 							 */
-							pre = GetBitmap(array[i - 1]);
+							pre = Kmer.GENE_CODE.getAdjBit(array[i - 1]);
 						}
 						if (i + k != array.length) {
-							next = GetBitmap(array[i + k]);
+							next = Kmer.GENE_CODE.getAdjBit(array[i + k]);
 						}
 
 						r = 0;

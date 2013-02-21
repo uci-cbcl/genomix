@@ -15,7 +15,7 @@ public abstract class JobGen {
 			System.nanoTime()).toString();
 
 	public JobGen(GenomixJob job) {
-		this.conf = job.getConfiguration();
+		this.conf = job;
 		this.genomixJob = job;
 		this.initJobConfiguration();
 	}

@@ -7,6 +7,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -62,13 +64,13 @@ public class Driver {
 		/** add hadoop configurations */
 		URL hadoopCore = job.getClass().getClassLoader()
 				.getResource("core-site.xml");
-		job.getConfiguration().addResource(hadoopCore);
+		job.addResource(hadoopCore);
 		URL hadoopMapRed = job.getClass().getClassLoader()
 				.getResource("mapred-site.xml");
-		job.getConfiguration().addResource(hadoopMapRed);
+		job.addResource(hadoopMapRed);
 		URL hadoopHdfs = job.getClass().getClassLoader()
 				.getResource("hdfs-site.xml");
-		job.getConfiguration().addResource(hadoopHdfs);
+		job.addResource(hadoopHdfs);
 
 		LOG.info("job started");
 		long start = System.currentTimeMillis();
@@ -110,6 +112,7 @@ public class Driver {
 			JobSpecification createJob = jobGen.generateJob();
 			execute(createJob);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw e;
 		}
 	}
@@ -126,7 +129,7 @@ public class Driver {
 
 	public static void main(String[] args) throws Exception {
 		GenomixJob job = new GenomixJob();
-		String[] otherArgs = new GenericOptionsParser(job.getConfiguration(),
+		String[] otherArgs = new GenericOptionsParser(job,
 				args).getRemainingArgs();
 		if (otherArgs.length < 4) {
 			System.err.println("Need <serverIP> <port> <input> <output>");
@@ -134,12 +137,12 @@ public class Driver {
 		}
 		String ipAddress = otherArgs[0];
 		int port = Integer.parseInt(otherArgs[1]);
-		int numOfDuplicate = job.getConfiguration().getInt(
+		int numOfDuplicate = job.getInt(
 				CPARTITION_PER_MACHINE, 2);
-		boolean bProfiling = job.getConfiguration().getBoolean(IS_PROFILING,
+		boolean bProfiling = job.getBoolean(IS_PROFILING,
 				true);
-		FileInputFormat.setInputPaths(job, otherArgs[2]);
-		FileOutputFormat.setOutputPath(job, new Path(otherArgs[3]));
+		FileInputFormat.setInputPaths(new Job(job), otherArgs[2]);
+		FileOutputFormat.setOutputPath(new Job(job), new Path(otherArgs[3]));
 		Driver driver = new Driver(ipAddress, port, numOfDuplicate);
 		driver.runJob(job, Plan.BUILD_DEBRUJIN_GRAPH, bProfiling);
 	}

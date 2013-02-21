@@ -11,6 +11,8 @@ import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -48,6 +50,7 @@ import edu.uci.ics.hyracks.hdfs.lib.TextTupleWriterFactory;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
 import edu.uci.ics.hyracks.hdfs.utils.TestUtils;
+import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 
 public class JobRunTestCase {
 	private static final String ACTUAL_RESULT_DIR = "actual";
@@ -57,7 +60,7 @@ public class JobRunTestCase {
 	private static final String HDFS_INPUT_PATH = "/webmap";
 	private static final String HDFS_OUTPUT_PATH = "/webmap_result/";
 
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/part-00000";
+    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
     private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
 
 	private static final String HYRACKS_APP_NAME = "genomix";
@@ -83,6 +86,7 @@ public class JobRunTestCase {
 		FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
 		FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
+		conf.setInt(GenomixJob.KMER_LENGTH, 5);
 		driver = new Driver(HyracksUtils.CC_HOST,
 				HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT,
 				numPartitionPerMachine);
@@ -134,11 +138,12 @@ public class JobRunTestCase {
 	public void TestExternalGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
-	@Test
+	//@Test
 	public void TestPreClusterGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
@@ -146,20 +151,17 @@ public class JobRunTestCase {
 		Assert.assertEquals(true, checkResults());
 	}
 
-	@Test
+	//@Test
 	public void TestHybridGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
 	private boolean checkResults() throws Exception {
-		FileSystem dfs = FileSystem.get(conf);
-		Path result = new Path(HDFS_OUTPUT_PATH);
-		Path actual = new Path(ACTUAL_RESULT_DIR);
-		dfs.copyToLocalFile(result, actual);
-
+		FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH), FileSystem.getLocal(new Configuration()), new Path(DUMPED_RESULT), false, conf, null);
 		TestUtils.compareWithResult(new File(EXPECTED_PATH
 				), new File(DUMPED_RESULT));
 		return true;
