@@ -1,25 +1,26 @@
 package edu.uci.ics.genomix.example.jobrun;
 
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,30 +28,9 @@ import org.junit.Test;
 import edu.uci.ics.genomix.driver.Driver;
 import edu.uci.ics.genomix.driver.Driver.Plan;
 import edu.uci.ics.genomix.job.GenomixJob;
-import edu.uci.ics.hyracks.api.client.HyracksConnection;
-import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
-import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
-import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
-import edu.uci.ics.hyracks.api.job.JobId;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
-import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
-import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
-import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
-import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
-import edu.uci.ics.hyracks.hdfs.lib.RawBinaryComparatorFactory;
-import edu.uci.ics.hyracks.hdfs.lib.RawBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.hdfs.lib.TextKeyValueParserFactory;
-import edu.uci.ics.hyracks.hdfs.lib.TextTupleWriterFactory;
-import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
+import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
 import edu.uci.ics.hyracks.hdfs.utils.TestUtils;
-import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 
 public class JobRunTestCase {
 	private static final String ACTUAL_RESULT_DIR = "actual";
@@ -60,8 +40,10 @@ public class JobRunTestCase {
 	private static final String HDFS_INPUT_PATH = "/webmap";
 	private static final String HDFS_OUTPUT_PATH = "/webmap_result/";
 
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
-    private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
+	private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR
+			+ HDFS_OUTPUT_PATH + "/merged.txt";
+	private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
+	private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
 
 	private static final String HYRACKS_APP_NAME = "genomix";
 	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
@@ -122,14 +104,14 @@ public class JobRunTestCase {
 		confOutput.flush();
 		confOutput.close();
 	}
-	
-	private void cleanUpReEntry() throws IOException{
+
+	private void cleanUpReEntry() throws IOException {
 		FileSystem lfs = FileSystem.getLocal(new Configuration());
-		if (lfs.exists(new Path(DUMPED_RESULT))){
+		if (lfs.exists(new Path(DUMPED_RESULT))) {
 			lfs.delete(new Path(DUMPED_RESULT), true);
 		}
 		FileSystem dfs = FileSystem.get(conf);
-		if (dfs.exists(new Path(HDFS_OUTPUT_PATH))){
+		if (dfs.exists(new Path(HDFS_OUTPUT_PATH))) {
 			dfs.delete(new Path(HDFS_OUTPUT_PATH), true);
 		}
 	}
@@ -138,12 +120,12 @@ public class JobRunTestCase {
 	public void TestExternalGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
-	//@Test
+	// @Test
 	public void TestPreClusterGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
@@ -151,19 +133,36 @@ public class JobRunTestCase {
 		Assert.assertEquals(true, checkResults());
 	}
 
-	//@Test
+	// @Test
 	public void TestHybridGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
 	private boolean checkResults() throws Exception {
-		FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH), FileSystem.getLocal(new Configuration()), new Path(DUMPED_RESULT), false, conf, null);
-		TestUtils.compareWithResult(new File(EXPECTED_PATH
-				), new File(DUMPED_RESULT));
+		FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH),
+				FileSystem.getLocal(new Configuration()), new Path(
+						DUMPED_RESULT), false, conf, null);
+		
+        SequenceFile.Reader reader = null;
+        Path path = new Path(DUMPED_RESULT);
+        FileSystem dfs = FileSystem.get(conf);
+        reader = new SequenceFile.Reader(dfs, path, conf);
+        BytesWritable key = (BytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+        KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+        File filePathTo = new File(CONVERT_RESULT);
+        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+        while (reader.next(key, value)) {
+            bw.write(key + "\t" + value.toString());
+            bw.newLine();
+        }
+        bw.close();
+        
+		TestUtils.compareWithResult(new File(EXPECTED_PATH), new File(
+				DUMPED_RESULT));
 		return true;
 	}
 

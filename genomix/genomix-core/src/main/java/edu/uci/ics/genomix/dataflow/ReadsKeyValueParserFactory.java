@@ -29,19 +29,7 @@ public class ReadsKeyValueParserFactory implements
 	public ReadsKeyValueParserFactory(int k) {
 		this.k = k;
 		byteNum = (byte) Math.ceil((double) k / 4.0);
-		filter[0] = (byte) 0xC0;
-		filter[1] = (byte) 0xFC;
-		filter[2] = 0;
-
-		int r = byteNum * 8 - 2 * k;
-		r = 8 - r;
-		for (int i = 0; i < r; i++) {
-			filter[2] <<= 1;
-			filter[2] |= 1;
-		}
-		for(int i = 0; i < r-1 ; i++){
-			filter[3] <<= 1;
-		}
+		Kmer.initializeFilter(k, filter);
 	}
 
 	@Override
@@ -83,13 +71,9 @@ public class ReadsKeyValueParserFactory implements
 
 					for (int i = 0; i < array.length - k + 1; i++) {
 						if (0 == i) {
-							bytes = Kmer.CompressKmer(k,array, i);
+							bytes = Kmer.CompressKmer(k, array, i);
 						} else {
-							Kmer.MoveKmer(k,bytes, array[i + k - 1], filter);
-							/*
-							 * l <<= 2; l &= window; l |= ConvertSymbol(array[i
-							 * + k - 1]);
-							 */
+							Kmer.MoveKmer(k, bytes, array[i + k - 1], filter);
 							pre = Kmer.GENE_CODE.getAdjBit(array[i - 1]);
 						}
 						if (i + k != array.length) {
@@ -102,16 +86,9 @@ public class ReadsKeyValueParserFactory implements
 						r |= next;
 
 						tupleBuilder.reset();
-
-						// tupleBuilder.addField(Integer64SerializerDeserializer.INSTANCE,
-						// l);
-						tupleBuilder.addField(bytes, 0, byteNum + 1); 
+						tupleBuilder.addField(bytes, 0, byteNum + 1);
 						tupleBuilder.addField(
 								ByteSerializerDeserializer.INSTANCE, r);
-
-						// int[] a = tupleBuilder.getFieldEndOffsets();
-						// int b = tupleBuilder.getSize();
-						// byte[] c = tupleBuilder.getByteArray();
 
 						if (!outputAppender.append(
 								tupleBuilder.getFieldEndOffsets(),

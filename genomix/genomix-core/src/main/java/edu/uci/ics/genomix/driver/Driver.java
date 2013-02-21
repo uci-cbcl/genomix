@@ -7,7 +7,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -129,18 +128,16 @@ public class Driver {
 
 	public static void main(String[] args) throws Exception {
 		GenomixJob job = new GenomixJob();
-		String[] otherArgs = new GenericOptionsParser(job,
-				args).getRemainingArgs();
+		String[] otherArgs = new GenericOptionsParser(job, args)
+				.getRemainingArgs();
 		if (otherArgs.length < 4) {
 			System.err.println("Need <serverIP> <port> <input> <output>");
 			System.exit(-1);
 		}
 		String ipAddress = otherArgs[0];
 		int port = Integer.parseInt(otherArgs[1]);
-		int numOfDuplicate = job.getInt(
-				CPARTITION_PER_MACHINE, 2);
-		boolean bProfiling = job.getBoolean(IS_PROFILING,
-				true);
+		int numOfDuplicate = job.getInt(CPARTITION_PER_MACHINE, 2);
+		boolean bProfiling = job.getBoolean(IS_PROFILING, true);
 		FileInputFormat.setInputPaths(new Job(job), otherArgs[2]);
 		FileOutputFormat.setOutputPath(new Job(job), new Path(otherArgs[3]));
 		Driver driver = new Driver(ipAddress, port, numOfDuplicate);

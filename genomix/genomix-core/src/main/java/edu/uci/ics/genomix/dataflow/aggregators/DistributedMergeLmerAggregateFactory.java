@@ -16,7 +16,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 /**
  * sum
- *
+ * 
  */
 public class DistributedMergeLmerAggregateFactory implements
 		IAggregatorDescriptorFactory {

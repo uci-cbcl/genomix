@@ -16,7 +16,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 /**
  * count
- *
+ * 
  */
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 	private static final long serialVersionUID = 1L;
@@ -100,7 +100,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 						+ stateAccessor.getFieldSlotsLength() + statefieldStart;
 
 				count += 1;
-				if(count > max){
+				if (count > max) {
 					count = max;
 				}
 

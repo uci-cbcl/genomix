@@ -15,12 +15,9 @@ import edu.uci.ics.genomix.data.std.primitive.VLongPointable;
 import edu.uci.ics.genomix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.dataflow.KMerSequenceWriterFactory;
 import edu.uci.ics.genomix.dataflow.KMerTextWriterFactory;
-import edu.uci.ics.genomix.dataflow.KMerWriterFactory;
 import edu.uci.ics.genomix.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.DistributedMergeLmerAggregateFactory;
 import edu.uci.ics.genomix.dataflow.aggregators.MergeKmerAggregateFactory;
-import edu.uci.ics.genomix.job.GenomixJob;
-import edu.uci.ics.genomix.job.JobGen;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -34,7 +31,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.data.std.primitive.LongPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
@@ -54,8 +50,9 @@ public class JobGenBrujinGraph extends JobGen {
 	public enum GroupbyType {
 		EXTERNAL, PRECLUSTER, HYBRIDHASH,
 	}
-	public enum OutputFormat{
-		TEXT,BINARY,
+
+	public enum OutputFormat {
+		TEXT, BINARY,
 	}
 
 	JobConf job;
@@ -73,7 +70,8 @@ public class JobGenBrujinGraph extends JobGen {
 	private AbstractOperatorDescriptor singleGrouper;
 	private IConnectorDescriptor connPartition;
 	private AbstractOperatorDescriptor crossGrouper;
-	private RecordDescriptor outputRec;
+	private RecordDescriptor readOutputRec;
+	private RecordDescriptor combineOutputRec;
 
 	public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler,
 			final Map<String, NodeControllerInfo> ncMap,
@@ -103,7 +101,7 @@ public class JobGenBrujinGraph extends JobGen {
 				new VLongNormalizedKeyComputerFactory(),
 				aggeragater,
 				new DistributedMergeLmerAggregateFactory(),
-				outputRec,
+				combineOutputRec,
 				new HashSpillableTableFactory(
 						new FieldHashPartitionComputerFactory(
 								keyFields,
@@ -128,10 +126,10 @@ public class JobGenBrujinGraph extends JobGen {
 				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
 						.of(VLongPointable.FACTORY) },
 				new IBinaryHashFunctionFamily[] { new VLongBinaryHashFunctionFamily() },
-				hashfuncStartLevel,
-				new VLongNormalizedKeyComputerFactory(),
+				hashfuncStartLevel, new VLongNormalizedKeyComputerFactory(),
 				new MergeKmerAggregateFactory(),
-				new DistributedMergeLmerAggregateFactory(), outputRec, true);
+				new DistributedMergeLmerAggregateFactory(), combineOutputRec,
+				true);
 	}
 
 	private void generateDescriptorbyType(JobSpecification jobSpec)
@@ -161,7 +159,8 @@ public class JobGenBrujinGraph extends JobGen {
 					keyFields,
 					new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
 							.of(VLongPointable.FACTORY) },
-					new DistributedMergeLmerAggregateFactory(), outputRec);
+					new DistributedMergeLmerAggregateFactory(),
+					combineOutputRec);
 			break;
 		case HYBRIDHASH:
 		default:
@@ -192,14 +191,13 @@ public class JobGenBrujinGraph extends JobGen {
 	public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec)
 			throws HyracksDataException {
 		try {
-			
-			InputSplit[] splits = job.getInputFormat().getSplits(
-					job, ncNodeNames.length);
+
+			InputSplit[] splits = job.getInputFormat().getSplits(job,
+					ncNodeNames.length);
 
 			String[] readSchedule = scheduler.getLocationConstraints(splits);
-			return new HDFSReadOperatorDescriptor(jobSpec, outputRec,
-					job, splits, readSchedule,
-					new ReadsKeyValueParserFactory(kmers));
+			return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, job,
+					splits, readSchedule, new ReadsKeyValueParserFactory(kmers));
 		} catch (Exception e) {
 			throw new HyracksDataException(e);
 		}
@@ -209,9 +207,12 @@ public class JobGenBrujinGraph extends JobGen {
 	public JobSpecification generateJob() throws HyracksException {
 
 		JobSpecification jobSpec = new JobSpecification();
-		outputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+		readOutputRec = new RecordDescriptor(new ISerializerDeserializer[] {
+				null, ByteSerializerDeserializer.INSTANCE });
+		combineOutputRec = new RecordDescriptor(new ISerializerDeserializer[] {
 				null, ByteSerializerDeserializer.INSTANCE,
 				ByteSerializerDeserializer.INSTANCE });
+
 		// File input
 		HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
 
@@ -232,11 +233,12 @@ public class JobGenBrujinGraph extends JobGen {
 
 		// Output
 		ITupleWriterFactory writer = null;
-		switch (outputFormat){
+		switch (outputFormat) {
 		case TEXT:
 			writer = new KMerTextWriterFactory(kmers);
 			break;
-		case BINARY: default:
+		case BINARY:
+		default:
 			writer = new KMerSequenceWriterFactory(job);
 			break;
 		}
@@ -248,9 +250,7 @@ public class JobGenBrujinGraph extends JobGen {
 
 		IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(
 				jobSpec);
-//		jobSpec.connect(printConn, crossGrouper, 0, writeOperator, 0);
-		jobSpec.connect(printConn, readOperator, 0, writeOperator, 0);
-//		jobSpec.addRoot(readOperator);
+		jobSpec.connect(printConn, crossGrouper, 0, writeOperator, 0);
 		jobSpec.addRoot(writeOperator);
 
 		if (groupbyType == GroupbyType.PRECLUSTER) {
@@ -261,7 +261,7 @@ public class JobGenBrujinGraph extends JobGen {
 
 	@Override
 	protected void initJobConfiguration() {
-		
+
 		kmers = conf.getInt(GenomixJob.KMER_LENGTH, 25);
 		frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, 4096);
 		tableSize = conf.getInt(GenomixJob.TABLE_SIZE, 10485767);
@@ -274,11 +274,11 @@ public class JobGenBrujinGraph extends JobGen {
 		} else {
 			groupbyType = GroupbyType.HYBRIDHASH;
 		}
-		
+
 		String output = conf.get(GenomixJob.OUTPUT_FORMAT, "binary");
-		if (output.equalsIgnoreCase("binary")){
+		if (output.equalsIgnoreCase("binary")) {
 			outputFormat = OutputFormat.BINARY;
-		} else if ( output.equalsIgnoreCase("text")){
+		} else if (output.equalsIgnoreCase("text")) {
 			outputFormat = OutputFormat.TEXT;
 		} else {
 			outputFormat = OutputFormat.TEXT;

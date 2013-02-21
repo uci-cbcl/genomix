@@ -9,7 +9,7 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnec
 
 /**
  * used by precluster groupby
- *
+ * 
  */
 public class ConnectorPolicyAssignmentPolicy implements
 		IConnectorPolicyAssignmentPolicy {

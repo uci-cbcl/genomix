@@ -72,8 +72,8 @@ public class FileScanDescriptor extends
 			private ArrayTupleBuilder tupleBuilder;
 			private ByteBuffer outputBuffer;
 			private FrameTupleAppender outputAppender;
-			
-			private byte []filter = new byte[4];
+
+			private byte[] filter = new byte[4];
 
 			@SuppressWarnings("resource")
 			@Override
@@ -83,9 +83,9 @@ public class FileScanDescriptor extends
 				outputBuffer = ctx.allocateFrame();
 				outputAppender = new FrameTupleAppender(ctx.getFrameSize());
 				outputAppender.reset(outputBuffer, true);
-				
+
 				Kmer.initializeFilter(k, filter);
-				
+
 				try {// one try with multiple catch?
 					writer.open();
 					String s = pathSurfix + String.valueOf(temp);
@@ -99,19 +99,19 @@ public class FileScanDescriptor extends
 								new InputStreamReader(
 										new FileInputStream(fa[i])));
 						String read = readsfile.readLine();
-						//int count  = 0;
+						// int count = 0;
 						while (read != null) {
 							read = readsfile.readLine();
-							//if(count % 4 == 1)
+							// if(count % 4 == 1)
 							SplitReads(read.getBytes());
 							// read.getBytes();
 							read = readsfile.readLine();
-							
+
 							read = readsfile.readLine();
 
 							read = readsfile.readLine();
-							//count += 1;
-							//System.err.println(count);
+							// count += 1;
+							// System.err.println(count);
 						}
 					}
 					if (outputAppender.getTupleCount() > 0) {
@@ -127,7 +127,6 @@ public class FileScanDescriptor extends
 				}
 			}
 
-
 			private void SplitReads(byte[] array) {
 				try {
 					byte[] bytes = null;
@@ -139,7 +138,7 @@ public class FileScanDescriptor extends
 						if (0 == i) {
 							bytes = Kmer.CompressKmer(k, array, i);
 						} else {
-							Kmer.MoveKmer(k, bytes, array[i+k-1], filter);
+							Kmer.MoveKmer(k, bytes, array[i + k - 1], filter);
 							/*
 							 * l <<= 2; l &= window; l |= ConvertSymbol(array[i
 							 * + k - 1]);
