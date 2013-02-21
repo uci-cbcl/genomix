@@ -18,8 +18,6 @@ package edu.uci.ics.graphbuilding;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-//import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
@@ -33,7 +31,7 @@ import org.apache.hadoop.mapred.Reporter;
  */
 @SuppressWarnings("deprecation")
 public class GenomixMapper extends MapReduceBase implements
-        Mapper<LongWritable, Text, ValueBytesWritable, ValueWritable> {
+        Mapper<LongWritable, Text, KmerBytesWritable, AdjacentWritable> {
 
     public class CurrenByte {
         public byte curByte;
@@ -41,8 +39,8 @@ public class GenomixMapper extends MapReduceBase implements
     }
 
     public static int KMER_SIZE;
-    public ValueWritable outputAdjList = new ValueWritable();
-    public ValueBytesWritable outputKmer = new ValueBytesWritable();
+    public AdjacentWritable outputAdjList = new AdjacentWritable();
+    public KmerBytesWritable outputKmer = new KmerBytesWritable();
 
     @Override
     public void configure(JobConf job) {
@@ -91,7 +89,7 @@ public class GenomixMapper extends MapReduceBase implements
       C 01000000 64
       T 10000000 128*/
     @Override
-    public void map(LongWritable key, Text value, OutputCollector<ValueBytesWritable, ValueWritable> output,
+    public void map(LongWritable key, Text value, OutputCollector<KmerBytesWritable, AdjacentWritable> output,
             Reporter reporter) throws IOException {
         /* A 00
            G 01

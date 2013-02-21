@@ -16,11 +16,6 @@ package edu.uci.ics.graphbuilding;
 
 import java.io.IOException;
 import java.util.Iterator;
-
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
@@ -29,19 +24,20 @@ import org.apache.hadoop.mapred.Reporter;
 /**
  * This class implement reducer operator of mapreduce model
  */
+@SuppressWarnings("deprecation")
 public class GenomixReducer extends MapReduceBase implements
-        Reducer<ValueBytesWritable, ValueWritable, ValueBytesWritable, ValueWritable> {
-    ValueWritable valWriter = new ValueWritable();
+        Reducer<KmerBytesWritable, AdjacentWritable, KmerBytesWritable, AdjacentWritable> {
+    AdjacentWritable valWriter = new AdjacentWritable();
 
     @Override
-    public void reduce(ValueBytesWritable key, Iterator<ValueWritable> values,
-            OutputCollector<ValueBytesWritable, ValueWritable> output, Reporter reporter) throws IOException {
+    public void reduce(KmerBytesWritable key, Iterator<AdjacentWritable> values,
+            OutputCollector<KmerBytesWritable, AdjacentWritable> output, Reporter reporter) throws IOException {
         byte groupByAdjList = 0;
         int count = 0;
         byte bytCount = 0;
         while (values.hasNext()) {
             //Merge By the all adjacent Nodes;
-            ValueWritable geneValue = values.next();
+            AdjacentWritable geneValue = values.next();
             groupByAdjList = (byte) (groupByAdjList | geneValue.getFirst());
             count = count + (int) geneValue.getSecond();
         }

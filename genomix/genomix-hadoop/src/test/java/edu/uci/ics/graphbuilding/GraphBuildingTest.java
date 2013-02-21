@@ -46,12 +46,12 @@ import edu.uci.ics.utils.TestUtils;
 public class GraphBuildingTest {
 
     private static final String ACTUAL_RESULT_DIR = "actual";
+    @SuppressWarnings("deprecation")
     private JobConf conf = new JobConf();
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String DATA_PATH = "data/webmap/text.txt";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result2";
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + RESULT_PATH + "/part-00000";
     private static final String EXPECTED_PATH = "expected/result2";
     private static final String TEST_SOURCE_DIR = "testactual/source.txt";
 
@@ -59,6 +59,7 @@ public class GraphBuildingTest {
     private MiniMRCluster mrCluster;
     private FileSystem dfs;
 
+    @SuppressWarnings("resource")
     @Test
     public void test() throws Exception {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
@@ -72,8 +73,8 @@ public class GraphBuildingTest {
         SequenceFile.Reader reader = null;
         Path path = new Path(RESULT_PATH + "/part-00000");
         reader = new SequenceFile.Reader(dfs, path, conf);
-        ValueBytesWritable key = (ValueBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-        ValueWritable value = (ValueWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+        KmerBytesWritable key = (KmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+        AdjacentWritable value = (AdjacentWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
         File filePathTo = new File(TEST_SOURCE_DIR);
         BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
         while (reader.next(key, value)) {

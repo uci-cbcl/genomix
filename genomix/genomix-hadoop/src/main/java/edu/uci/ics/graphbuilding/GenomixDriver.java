@@ -16,23 +16,14 @@
 package edu.uci.ics.graphbuilding;
 
 import java.io.IOException;
-
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VLongWritable;
-import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.hadoop.mapred.TextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
@@ -70,13 +61,13 @@ public class GenomixDriver {
         conf.setReducerClass(GenomixReducer.class);
         conf.setCombinerClass(GenomixCombiner.class);
 
-        conf.setMapOutputKeyClass(ValueBytesWritable.class);
-        conf.setMapOutputValueClass(ValueWritable.class);
+        conf.setMapOutputKeyClass(KmerBytesWritable.class);
+        conf.setMapOutputValueClass(AdjacentWritable.class);
 
         conf.setInputFormat(TextInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
-        conf.setOutputKeyClass(ValueBytesWritable.class);
-        conf.setOutputValueClass(ValueWritable.class);
+        conf.setOutputKeyClass(KmerBytesWritable.class);
+        conf.setOutputValueClass(AdjacentWritable.class);
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         conf.setNumReduceTasks(numReducers);
