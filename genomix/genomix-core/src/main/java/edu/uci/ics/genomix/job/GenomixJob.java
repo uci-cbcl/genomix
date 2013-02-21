@@ -3,8 +3,9 @@ package edu.uci.ics.genomix.job;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.JobConf;
 
-public class GenomixJob extends Configuration {
+public class GenomixJob extends JobConf {
 
 	public static final String JOB_NAME = "genomix";
 
