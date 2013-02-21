@@ -17,6 +17,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -28,6 +29,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.driver.Driver;
 import edu.uci.ics.genomix.driver.Driver.Plan;
 import edu.uci.ics.genomix.job.GenomixJob;
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
 import edu.uci.ics.hyracks.hdfs.utils.TestUtils;
@@ -38,7 +40,8 @@ public class JobRunTestCase {
 
 	private static final String DATA_PATH = "src/test/resources/data/webmap/text.txt";
 	private static final String HDFS_INPUT_PATH = "/webmap";
-	private static final String HDFS_OUTPUT_PATH = "/webmap_result/";
+	private static final String HDFS_OUTPUT_PATH = "/webmap_result";
+	private static final String HDFS_OUTPUT_FILE = HDFS_OUTPUT_PATH + "/part-0";
 
 	private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR
 			+ HDFS_OUTPUT_PATH + "/merged.txt";
@@ -125,19 +128,20 @@ public class JobRunTestCase {
 		Assert.assertEquals(true, checkResults());
 	}
 
-	// @Test
+//	@Test
 	public void TestPreClusterGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
-	// @Test
+//	@Test
 	public void TestHybridGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
@@ -146,23 +150,27 @@ public class JobRunTestCase {
 		FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH),
 				FileSystem.getLocal(new Configuration()), new Path(
 						DUMPED_RESULT), false, conf, null);
-		
-        SequenceFile.Reader reader = null;
-        Path path = new Path(DUMPED_RESULT);
-        FileSystem dfs = FileSystem.get(conf);
-        reader = new SequenceFile.Reader(dfs, path, conf);
-        BytesWritable key = (BytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-        KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-        File filePathTo = new File(CONVERT_RESULT);
-        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
-        while (reader.next(key, value)) {
-            bw.write(key + "\t" + value.toString());
-            bw.newLine();
-        }
-        bw.close();
+		File dumped = new File( DUMPED_RESULT);
+		String format = conf.get(GenomixJob.OUTPUT_FORMAT); 
+		if( !"text".equalsIgnoreCase(format)){
+	        SequenceFile.Reader reader = null;
+	        Path path = new Path(HDFS_OUTPUT_FILE);
+	        FileSystem dfs = FileSystem.get(conf);
+	        reader = new SequenceFile.Reader(dfs, path, conf);
+	        BytesWritable key = (BytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+	        KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+	        File filePathTo = new File(CONVERT_RESULT);
+	        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+	        int k = conf.getInt(GenomixJob.KMER_LENGTH, 25);
+	        while (reader.next(key, value)) {
+	            bw.write(Kmer.recoverKmerFrom(k, key.getBytes(), 0, key.getLength()) + "\t" + value.toString());
+	            bw.newLine();
+	        }
+	        bw.close();
+	        dumped = new File(CONVERT_RESULT);
+		}
         
-		TestUtils.compareWithResult(new File(EXPECTED_PATH), new File(
-				DUMPED_RESULT));
+		TestUtils.compareWithResult(new File(EXPECTED_PATH), dumped);
 		return true;
 	}
 

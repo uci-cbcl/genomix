@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.type;
 
-
 public class Kmer {
 
 	public final static byte[] GENE_SYMBOL = { 'A', 'C', 'G', 'T' };
@@ -8,7 +7,8 @@ public class Kmer {
 	public final static class GENE_CODE {
 
 		/**
-		 * make sure this 4 ids equal to the sequence id of char in {@GENE_SYMBOL}
+		 * make sure this 4 ids equal to the sequence id of char in
+		 * {@GENE_SYMBOL}
 		 */
 		public static final byte A = 0;
 		public static final byte C = 1;
@@ -67,24 +67,24 @@ public class Kmer {
 			}
 			return r;
 		}
-		
-		public static byte mergePreNextAdj(byte pre, byte next){
+
+		public static byte mergePreNextAdj(byte pre, byte next) {
 			return (byte) (pre << 4 | next & 0x0f);
 		}
-		
+
 		public static String getSymbolFromBitMap(byte code) {
 			int left = (code >> 4) & 0x0F;
 			int right = code & 0x0F;
 			String str = new String();
-			for(int i = A; i <= T ; i++){
-				if ( (left & (1<<i)) != 0){
-					str += GENE_SYMBOL[i];
+			for (int i = A; i <= T; i++) {
+				if ((left & (1 << i)) != 0) {
+					str += (char)GENE_SYMBOL[i];
 				}
 			}
 			str += '|';
-			for(int i = A; i <= T ; i++){
-				if ( (right & (1<<i)) != 0){
-					str += GENE_SYMBOL[i];
+			for (int i = A; i <= T; i++) {
+				if ((right & (1 << i)) != 0) {
+					str += (char)GENE_SYMBOL[i];
 				}
 			}
 			return str;
@@ -94,94 +94,106 @@ public class Kmer {
 	public static String recoverKmerFrom(int k, byte[] keyData, int keyStart,
 			int keyLength) {
 		String strKmer = new String();
-		int byteId = keyStart + keyLength-1;
+		int byteId = keyStart + keyLength - 1;
 		byte currentbyte = keyData[byteId];
-		for(int geneCount = 0; geneCount < k ; geneCount++){
-			if (geneCount % 4 == 0 && geneCount > 0){
+		for (int geneCount = 0; geneCount < k; geneCount++) {
+			if (geneCount % 4 == 0 && geneCount > 0) {
 				currentbyte = keyData[--byteId];
 			}
-			strKmer += (char)GENE_SYMBOL[(currentbyte >> ((geneCount%4)*2)) & 0x03];
+			strKmer += (char) GENE_SYMBOL[(currentbyte >> ((geneCount % 4) * 2)) & 0x03];
 		}
 		return strKmer;
 	}
 
-	public static String recoverAdjacent(byte number) {
-		int incoming = (number & 0xF0) >> 4;
-		int outgoing = number & 0x0F;
-		return String.valueOf(incoming) + '|' + String.valueOf(outgoing);
-	}
-
 	/**
-	 * Compress Kmer into bytes array
-	 * AATAG will compress as [0 0 0 G][A T A A]
-	 * @param kmer 
-	 * @param input array
-	 * @param start position
+	 * Compress Kmer into bytes array AATAG will compress as [0 0 0 G][A T A A]
+	 * 
+	 * @param kmer
+	 * @param input
+	 *            array
+	 * @param start
+	 *            position
 	 * @return initialed kmer array
 	 */
 	public static byte[] CompressKmer(int k, byte[] array, int start) {
 		final int byteNum = (byte) Math.ceil((double) k / 4.0);
-		byte[] bytes = new byte[byteNum ];
+		byte[] bytes = new byte[byteNum];
 
 		byte l = 0;
 		int bytecount = 0;
-		int bcount = byteNum-1;
-		for (int i = start; i<start +k; i++){
+		int bcount = byteNum - 1;
+		for (int i = start; i < start + k; i++) {
 			byte code = GENE_CODE.getCodeFromSymbol(array[i]);
 			l |= (byte) (code << bytecount);
-			bytecount +=2;
-			if (bytecount == 8){
+			bytecount += 2;
+			if (bytecount == 8) {
 				bytes[bcount--] = l;
 				l = 0;
-				bytecount= 0;
+				bytecount = 0;
 			}
 		}
-		if (bcount >= 0){
-			bytes[0]=l;
+		if (bcount >= 0) {
+			bytes[0] = l;
 		}
 		return bytes;
 	}
 
 	/**
 	 * Shift Kmer to accept new input
+	 * 
 	 * @param kmer
-	 * @param bytes Kmer Array
-	 * @param c Input new gene character
+	 * @param bytes
+	 *            Kmer Array
+	 * @param c
+	 *            Input new gene character
 	 * @return the shiftout gene, in gene code format
 	 */
 	public static byte MoveKmer(int k, byte[] kmer, byte c) {
 		int byteNum = (byte) Math.ceil((double) k / 4.0);
-		byte output = (byte) (kmer[byteNum-1] & 0x03);
-		for(int i = byteNum-1; i >0; i--){
-			byte in = (byte) (kmer[i-1] & 0x03);
-			kmer[i] = (byte) ((kmer[i] >>> 2) | (in << 6));
+		byte output = (byte) (kmer[byteNum - 1] & 0x03);
+		for (int i = byteNum - 1; i > 0; i--) {
+			byte in = (byte) (kmer[i - 1] & 0x03);
+			kmer[i] = (byte) (((kmer[i] >>> 2) & 0x3f) | (in << 6));
 		}
-		
-		int pos = ((k-1) % 4) *2;
+
+		int pos = ((k - 1) % 4) * 2;
 		byte code = (byte) (GENE_CODE.getCodeFromSymbol(c) << pos);
 		kmer[0] = (byte) ((kmer[0] >>> 2) | code);
-		return output;
+		return (byte) (1 << output);
 	}
 
-	public static void main(String [] argv){
-		byte[] array = {'A','A','T','A','G','C','A','G'};
+	public static void main(String[] argv) {
+		byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
 		int k = 5;
 		byte[] kmer = CompressKmer(k, array, 0);
-		for (byte b : kmer){
-			System.out.print((int)b);
-			System.out.print(' ');
-		}
-		System.out.println();
-		System.out.println(recoverKmerFrom(k,kmer,0,kmer.length));
-		
-		byte out = MoveKmer(k, kmer, array[k]);
-		
-		System.out.println((int)out);
-		for (byte b : kmer){
+		for (byte b : kmer) {
 			System.out.print(Integer.toBinaryString(b));
 			System.out.print(' ');
 		}
 		System.out.println();
-		System.out.println(recoverKmerFrom(k,kmer,0,kmer.length));
+		System.out.println(recoverKmerFrom(k, kmer, 0, kmer.length));
+
+		for (int i = k; i < array.length-1; i++) {
+			byte out = MoveKmer(k, kmer, array[i]);
+
+			System.out.println((int) out);
+			for (byte b : kmer) {
+				System.out.print(Integer.toBinaryString(b));
+				System.out.print(' ');
+			}
+			System.out.println();
+			System.out.println(recoverKmerFrom(k, kmer, 0, kmer.length));
+		}
+
+		byte out = MoveKmer(k, kmer, array[array.length - 1]);
+
+		System.out.println((int) out);
+		for (byte b : kmer) {
+			System.out.print(Integer.toBinaryString(b));
+			System.out.print(' ');
+		}
+		System.out.println();
+		System.out.println(recoverKmerFrom(k, kmer, 0, kmer.length));
+
 	}
 }

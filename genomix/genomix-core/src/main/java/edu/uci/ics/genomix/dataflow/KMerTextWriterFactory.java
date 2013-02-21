@@ -26,16 +26,16 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 		public void write(DataOutput output, ITupleReference tuple)
 				throws HyracksDataException {
 			try {
-				output.writeChars(Kmer.recoverKmerFrom(KMER,
+				output.write(Kmer.recoverKmerFrom(KMER,
 						tuple.getFieldData(0), tuple.getFieldStart(0),
-						tuple.getFieldLength(0)));
-				output.writeChar('\t');
-				output.writeChars(Kmer.recoverAdjacent(tuple
-						.getFieldData(1)[tuple.getFieldStart(1)]));
-				output.writeChar('\t');
-				output.writeInt((int)tuple
-						.getFieldData(2)[tuple.getFieldStart(2)]);
-				output.writeChar('\n');
+						tuple.getFieldLength(0)).getBytes());
+				output.writeByte('\t');
+				output.write(Kmer.GENE_CODE.getSymbolFromBitMap(tuple
+						.getFieldData(1)[tuple.getFieldStart(1)]).getBytes());
+				output.writeByte('\t');
+				output.write(String.valueOf((int)tuple
+						.getFieldData(2)[tuple.getFieldStart(2)]).getBytes());
+				output.writeByte('\n');
 			} catch (IOException e) {
 				throw new HyracksDataException(e);
 			}

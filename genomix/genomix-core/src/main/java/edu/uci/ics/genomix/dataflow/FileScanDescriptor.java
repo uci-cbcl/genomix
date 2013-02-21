@@ -150,7 +150,7 @@ public class FileScanDescriptor extends
 				try {
 					byte adj = GENE_CODE.mergePreNextAdj(pre, next);
 					tupleBuilder.reset();
-					tupleBuilder.addField(kmer, 0, byteNum + 1);
+					tupleBuilder.addField(kmer, 0, byteNum);
 					tupleBuilder.addField(ByteSerializerDeserializer.INSTANCE,
 							adj);
 
