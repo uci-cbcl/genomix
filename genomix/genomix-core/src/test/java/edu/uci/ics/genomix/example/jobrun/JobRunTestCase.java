@@ -128,7 +128,7 @@ public class JobRunTestCase {
 		Assert.assertEquals(true, checkResults());
 	}
 
-//	@Test
+	@Test
 	public void TestPreClusterGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
@@ -137,7 +137,7 @@ public class JobRunTestCase {
 		Assert.assertEquals(true, checkResults());
 	}
 
-//	@Test
+	@Test
 	public void TestHybridGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
@@ -170,7 +170,7 @@ public class JobRunTestCase {
 	        dumped = new File(CONVERT_RESULT);
 		}
         
-		TestUtils.compareWithResult(new File(EXPECTED_PATH), dumped);
+		TestUtils.compareWithSortedResult(new File(EXPECTED_PATH), dumped);
 		return true;
 	}
 

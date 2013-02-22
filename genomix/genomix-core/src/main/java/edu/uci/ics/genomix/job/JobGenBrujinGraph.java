@@ -57,12 +57,12 @@ public class JobGenBrujinGraph extends JobGen {
 
 	JobConf job;
 	private static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
-	private final Map<String, NodeControllerInfo> ncMap;
 	private Scheduler scheduler;
 	private String[] ncNodeNames;
 
 	private int kmers;
 	private int frameLimits;
+	private int frameSize;
 	private int tableSize;
 	private GroupbyType groupbyType;
 	private OutputFormat outputFormat;
@@ -73,11 +73,16 @@ public class JobGenBrujinGraph extends JobGen {
 	private RecordDescriptor readOutputRec;
 	private RecordDescriptor combineOutputRec;
 
+	/** works for hybrid hashing */
+	private long inputSizeInRawRecords;
+	private long inputSizeInUniqueKeys;
+	private int recordSizeInBytes;
+	private int hashfuncStartLevel;
+
 	public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler,
 			final Map<String, NodeControllerInfo> ncMap,
 			int numPartitionPerMachine) {
 		super(job);
-		this.ncMap = ncMap;
 		this.scheduler = scheduler;
 		String[] nodes = new String[ncMap.size()];
 		ncMap.keySet().toArray(nodes);
@@ -164,23 +169,13 @@ public class JobGenBrujinGraph extends JobGen {
 			break;
 		case HYBRIDHASH:
 		default:
-			long inputSizeInRawRecords = conf.getLong(
-					GenomixJob.GROUPBY_HYBRID_INPUTSIZE, 154000000);
-			long inputSizeInUniqueKeys = conf.getLong(
-					GenomixJob.GROUPBY_HYBRID_INPUTKEYS, 38500000);
-			int recordSizeInBytes = conf.getInt(
-					GenomixJob.GROUPBY_HYBRID_RECORDSIZE_SINGLE, 9);
-			int hashfuncStartLevel = conf.getInt(
-					GenomixJob.GROUPBY_HYBRID_HASHLEVEL, 1);
 
 			singleGrouper = newHybridGroupby(jobSpec, keyFields,
 					inputSizeInRawRecords, inputSizeInUniqueKeys,
 					recordSizeInBytes, hashfuncStartLevel);
 			connPartition = new MToNPartitioningConnectorDescriptor(jobSpec,
 					new KmerHashPartitioncomputerFactory());
-			/** here read the different recordSize why ? */
-			recordSizeInBytes = conf.getInt(
-					GenomixJob.GROUPBY_HYBRID_RECORDSIZE_CROSS, 13);
+
 			crossGrouper = newHybridGroupby(jobSpec, keyFields,
 					inputSizeInRawRecords, inputSizeInUniqueKeys,
 					recordSizeInBytes, hashfuncStartLevel);
@@ -212,6 +207,7 @@ public class JobGenBrujinGraph extends JobGen {
 		combineOutputRec = new RecordDescriptor(new ISerializerDeserializer[] {
 				null, ByteSerializerDeserializer.INSTANCE,
 				ByteSerializerDeserializer.INSTANCE });
+		jobSpec.setFrameSize(frameSize);
 
 		// File input
 		HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
@@ -262,11 +258,31 @@ public class JobGenBrujinGraph extends JobGen {
 	@Override
 	protected void initJobConfiguration() {
 
-		kmers = conf.getInt(GenomixJob.KMER_LENGTH, 25);
-		frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, 4096);
-		tableSize = conf.getInt(GenomixJob.TABLE_SIZE, 10485767);
+		kmers = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
+		frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT,
+				GenomixJob.DEFAULT_FRAME_LIMIT);
+		tableSize = conf.getInt(GenomixJob.TABLE_SIZE,
+				GenomixJob.DEFAULT_TABLE_SIZE);
+		frameSize = conf.getInt(GenomixJob.FRAME_SIZE,
+				GenomixJob.DEFAULT_FRAME_SIZE);
+		inputSizeInRawRecords = conf.getLong(
+				GenomixJob.GROUPBY_HYBRID_INPUTSIZE,
+				GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTSIZE);
+		inputSizeInUniqueKeys = conf.getLong(
+				GenomixJob.GROUPBY_HYBRID_INPUTKEYS,
+				GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTKEYS);
+		recordSizeInBytes = conf.getInt(
+				GenomixJob.GROUPBY_HYBRID_RECORDSIZE_SINGLE,
+				GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE);
+		hashfuncStartLevel = conf.getInt(GenomixJob.GROUPBY_HYBRID_HASHLEVEL,
+				GenomixJob.DEFAULT_GROUPBY_HYBRID_HASHLEVEL);
+		/** here read the different recordSize why ? */
+		recordSizeInBytes = conf.getInt(
+				GenomixJob.GROUPBY_HYBRID_RECORDSIZE_CROSS,
+				GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS);
 
-		String type = conf.get(GenomixJob.GROUPBY_TYPE, "hybrid");
+		String type = conf.get(GenomixJob.GROUPBY_TYPE,
+				GenomixJob.DEFAULT_GROUPBY_TYPE);
 		if (type.equalsIgnoreCase("external")) {
 			groupbyType = GroupbyType.EXTERNAL;
 		} else if (type.equalsIgnoreCase("precluster")) {
@@ -275,13 +291,12 @@ public class JobGenBrujinGraph extends JobGen {
 			groupbyType = GroupbyType.HYBRIDHASH;
 		}
 
-		String output = conf.get(GenomixJob.OUTPUT_FORMAT, "binary");
-		if (output.equalsIgnoreCase("binary")) {
-			outputFormat = OutputFormat.BINARY;
-		} else if (output.equalsIgnoreCase("text")) {
+		String output = conf.get(GenomixJob.OUTPUT_FORMAT,
+				GenomixJob.DEFAULT_OUTPUT_FORMAT);
+		if (output.equalsIgnoreCase("text")) {
 			outputFormat = OutputFormat.TEXT;
 		} else {
-			outputFormat = OutputFormat.TEXT;
+			outputFormat = OutputFormat.BINARY;
 		}
 		job = new JobConf(conf);
 	}
