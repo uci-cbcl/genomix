@@ -15,8 +15,12 @@ public class KmerCountValue implements ValueBytes, Writable{
 	private byte count;
 
 	public KmerCountValue(ITupleReference tuple) {
-		adjBitMap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
-		count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
+		reset(tuple);
+	}
+	
+	public KmerCountValue() {
+		adjBitMap = 0;
+		count = 0;
 	}
 
 	@Override
@@ -53,6 +57,11 @@ public class KmerCountValue implements ValueBytes, Writable{
 	@Override
 	public String toString() {
 		return Kmer.GENE_CODE.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(count);
+	}
+
+	public void reset(ITupleReference tuple) {
+		adjBitMap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
+		count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
 	}
 
 }

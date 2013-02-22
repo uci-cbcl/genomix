@@ -75,34 +75,34 @@ public class Kmer {
 		public static String getSymbolFromBitMap(byte code) {
 			int left = (code >> 4) & 0x0F;
 			int right = code & 0x0F;
-			String str = new String();
+			StringBuilder str = new StringBuilder();
 			for (int i = A; i <= T; i++) {
 				if ((left & (1 << i)) != 0) {
-					str += (char)GENE_SYMBOL[i];
+					str.append((char)GENE_SYMBOL[i]);
 				}
 			}
-			str += '|';
+			str.append('|');
 			for (int i = A; i <= T; i++) {
 				if ((right & (1 << i)) != 0) {
-					str += (char)GENE_SYMBOL[i];
+					str.append((char)GENE_SYMBOL[i]);
 				}
 			}
-			return str;
+			return str.toString();
 		}
 	}
 
 	public static String recoverKmerFrom(int k, byte[] keyData, int keyStart,
 			int keyLength) {
-		String strKmer = new String();
+		StringBuilder strKmer = new StringBuilder();
 		int byteId = keyStart + keyLength - 1;
 		byte currentbyte = keyData[byteId];
 		for (int geneCount = 0; geneCount < k; geneCount++) {
 			if (geneCount % 4 == 0 && geneCount > 0) {
 				currentbyte = keyData[--byteId];
 			}
-			strKmer += (char) GENE_SYMBOL[(currentbyte >> ((geneCount % 4) * 2)) & 0x03];
+			strKmer.append((char) GENE_SYMBOL[(currentbyte >> ((geneCount % 4) * 2)) & 0x03]);
 		}
-		return strKmer;
+		return strKmer.toString();
 	}
 
 	/**
@@ -196,4 +196,5 @@ public class Kmer {
 		System.out.println(recoverKmerFrom(k, kmer, 0, kmer.length));
 
 	}
+
 }
