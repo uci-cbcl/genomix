@@ -43,7 +43,6 @@ import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableTableFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.HybridHashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
-import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
 
 public class Tester {
 
@@ -99,8 +98,6 @@ public class Tester {
 			long end = System.currentTimeMillis();
 			System.err.println(start + " " + end + " " + (end - start));
 		} finally {
-			HyracksUtils.destroyApp("test");
-			HyracksUtils.deinit();
 		}
 		/*
 		 * 
@@ -340,7 +337,7 @@ public class Tester {
 		// PrinterOperatorDescriptor printer = new
 		// PrinterOperatorDescriptor(spec);
 		PrinterOperatorDescriptor printer = new PrinterOperatorDescriptor(spec,
-				"G:\\data\\result");
+				"result");
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer,
 				NC1_ID, NC2_ID, NC3_ID, NC4_ID);
 		// PartitionConstraintHelper.addAbsoluteLocationConstraint(spec,
