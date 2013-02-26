@@ -91,7 +91,7 @@ public class JobGenBrujinGraph extends JobGen {
 			System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length,
 					nodes.length);
 		}
-		LOG.info("nc nodes:" + ncNodeNames.length + ncNodeNames.toString());
+		LOG.info("nc nodes:" + ncNodeNames.length + " " + ncNodeNames.toString());
 	}
 
 	private ExternalGroupOperatorDescriptor newExternalGroupby(
@@ -190,6 +190,7 @@ public class JobGenBrujinGraph extends JobGen {
 			InputSplit[] splits = job.getInputFormat().getSplits(job,
 					ncNodeNames.length);
 
+			LOG.info("HDFS read into " + splits.length + " splits");
 			String[] readSchedule = scheduler.getLocationConstraints(splits);
 			return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, job,
 					splits, readSchedule, new ReadsKeyValueParserFactory(kmers));
@@ -299,6 +300,12 @@ public class JobGenBrujinGraph extends JobGen {
 			outputFormat = OutputFormat.BINARY;
 		}
 		job = new JobConf(conf);
+		LOG.info("Genomix Graph Build Configuration");
+		LOG.info("Kmer:" + kmers);
+		LOG.info("Groupby type:" + type);
+		LOG.info("Output format:" + output);
+		LOG.info("Frame limit" + frameLimits);
+		LOG.info("Frame size" + frameSize);
 	}
 
 }

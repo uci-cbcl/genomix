@@ -69,7 +69,7 @@ public class Kmer {
 		}
 
 		public static byte mergePreNextAdj(byte pre, byte next) {
-			return (byte) (pre << 4 | next & 0x0f);
+			return (byte) (pre << 4 | (next & 0x0f));
 		}
 
 		public static String getSymbolFromBitMap(byte code) {
@@ -149,7 +149,7 @@ public class Kmer {
 	 * @return the shiftout gene, in gene code format
 	 */
 	public static byte MoveKmer(int k, byte[] kmer, byte c) {
-		int byteNum = (byte) Math.ceil((double) k / 4.0);
+		int byteNum = kmer.length;
 		byte output = (byte) (kmer[byteNum - 1] & 0x03);
 		for (int i = byteNum - 1; i > 0; i--) {
 			byte in = (byte) (kmer[i - 1] & 0x03);
@@ -158,7 +158,7 @@ public class Kmer {
 
 		int pos = ((k - 1) % 4) * 2;
 		byte code = (byte) (GENE_CODE.getCodeFromSymbol(c) << pos);
-		kmer[0] = (byte) ((kmer[0] >>> 2) | code);
+		kmer[0] = (byte) (((kmer[0] >>> 2) & 0x3f) | code);
 		return (byte) (1 << output);
 	}
 

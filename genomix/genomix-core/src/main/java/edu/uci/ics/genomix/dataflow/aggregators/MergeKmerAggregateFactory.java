@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.dataflow.aggregators;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -20,7 +19,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
  */
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 	private static final long serialVersionUID = 1L;
-	private static final int max = 127;
+	private static final int MAX = 127;
 
 	public MergeKmerAggregateFactory() {
 	}
@@ -49,20 +48,23 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 				});
 			}
 
+			private byte getField(IFrameTupleAccessor accessor, int tIndex,
+					int fieldId) {
+				int tupleOffset = accessor.getTupleStartOffset(tIndex);
+				int fieldStart = accessor.getFieldStartOffset(tIndex, fieldId);
+				int offset = tupleOffset + fieldStart
+						+ accessor.getFieldSlotsLength();
+				byte data = ByteSerializerDeserializer.getByte(accessor
+						.getBuffer().array(), offset);
+				return data;
+			}
+
 			@Override
 			public void init(ArrayTupleBuilder tupleBuilder,
 					IFrameTupleAccessor accessor, int tIndex,
 					AggregateState state) throws HyracksDataException {
-				byte bitmap = 0;
-				byte count = 0;
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldStart = accessor.getFieldStartOffset(tIndex, 1);
-
-				bitmap |= accessor.getBuffer().get(
-						tupleOffset + accessor.getFieldSlotsLength()
-								+ fieldStart);
-
-				count += 1;
+				byte bitmap = getField(accessor, tIndex, 1);
+				byte count = 1;
 
 				DataOutput fieldOutput = tupleBuilder.getDataOutput();
 				try {
@@ -81,16 +83,8 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 			public void aggregate(IFrameTupleAccessor accessor, int tIndex,
 					IFrameTupleAccessor stateAccessor, int stateTupleIndex,
 					AggregateState state) throws HyracksDataException {
-				// TODO Auto-generated method stub
-				byte bitmap = 0;
-				byte count = 0;
-
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldStart = accessor.getFieldStartOffset(tIndex, 1);
-
-				bitmap |= accessor.getBuffer().get(
-						tupleOffset + accessor.getFieldSlotsLength()
-								+ fieldStart);
+				byte bitmap = getField(accessor, tIndex, 1);
+				short count = 1;
 
 				int statetupleOffset = stateAccessor
 						.getTupleStartOffset(stateTupleIndex);
@@ -99,42 +93,24 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 				int stateoffset = statetupleOffset
 						+ stateAccessor.getFieldSlotsLength() + statefieldStart;
 
-				count += 1;
-				if (count > max) {
-					count = max;
-				}
-
 				byte[] data = stateAccessor.getBuffer().array();
 
-				ByteBuffer buf = ByteBuffer.wrap(data);
-				bitmap |= buf.getChar(stateoffset);
-				buf.position(stateoffset + 1);
-				count += buf.get();
-
-				if (count > max) {
-					count = (byte) max;
+				bitmap |= data[stateoffset];
+				count += data[stateoffset + 1];
+				if (count >= MAX) {
+					count = (byte) MAX;
 				}
-
-				buf.put(stateoffset, bitmap);
-				buf.put(stateoffset + 1, count);
+				data[stateoffset] = bitmap;
+				data[stateoffset + 1] = (byte) count;
 			}
 
 			@Override
 			public void outputPartialResult(ArrayTupleBuilder tupleBuilder,
 					IFrameTupleAccessor accessor, int tIndex,
 					AggregateState state) throws HyracksDataException {
-				// TODO Auto-generated method stub
-				byte bitmap;
-				byte count;
+				byte bitmap = getField(accessor, tIndex, 1);
+				byte count = getField(accessor, tIndex, 2);
 				DataOutput fieldOutput = tupleBuilder.getDataOutput();
-				byte[] data = accessor.getBuffer().array();
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldOffset = accessor.getFieldStartOffset(tIndex, 1);
-
-				int offset = fieldOffset + accessor.getFieldSlotsLength()
-						+ tupleOffset;
-				bitmap = ByteSerializerDeserializer.getByte(data, offset);
-				count = ByteSerializerDeserializer.getByte(data, offset + 1);
 				try {
 					fieldOutput.writeByte(bitmap);
 					tupleBuilder.addFieldEndOffset();
@@ -151,29 +127,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 			public void outputFinalResult(ArrayTupleBuilder tupleBuilder,
 					IFrameTupleAccessor accessor, int tIndex,
 					AggregateState state) throws HyracksDataException {
-				// TODO Auto-generated method stub
-				byte bitmap;
-				byte count;
-
-				byte[] data = accessor.getBuffer().array();
-				int tupleOffset = accessor.getTupleStartOffset(tIndex);
-				int fieldOffset = accessor.getFieldStartOffset(tIndex, 1);
-				int offset = tupleOffset + accessor.getFieldSlotsLength()
-						+ fieldOffset;
-
-				bitmap = ByteSerializerDeserializer.getByte(data, offset);
-				count = ByteSerializerDeserializer.getByte(data, offset + 1);
-
-				DataOutput fieldOutput = tupleBuilder.getDataOutput();
-				try {
-					fieldOutput.writeByte(bitmap);
-					tupleBuilder.addFieldEndOffset();
-					fieldOutput.writeByte(count);
-					tupleBuilder.addFieldEndOffset();
-				} catch (IOException e) {
-					throw new HyracksDataException(
-							"I/O exception when writing aggregation to the output buffer.");
-				}
+				outputPartialResult(tupleBuilder, accessor, tIndex, state);
 			}
 
 		};

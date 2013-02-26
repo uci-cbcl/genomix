@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.fs.Path;
 
@@ -30,7 +32,6 @@ public class FileScanDescriptor extends
 
 	private static final long serialVersionUID = 1L;
 	private int k;
-	private Path[] filesplit = null;
 	private String pathSurfix;
 	private int byteNum;
 
@@ -52,7 +53,6 @@ public class FileScanDescriptor extends
 			Path[] inputPaths) {
 		super(jobSpec, 0, 1);
 		this.k = kmers;
-		this.filesplit = inputPaths;
 		this.pathSurfix = inputPaths[0].toString();
 		// recordDescriptors[0] = news RecordDescriptor(
 		// new ISerializerDeserializer[] {
@@ -75,7 +75,6 @@ public class FileScanDescriptor extends
 			private ByteBuffer outputBuffer;
 			private FrameTupleAppender outputAppender;
 
-			@SuppressWarnings("resource")
 			@Override
 			public void initialize() {
 
@@ -101,13 +100,12 @@ public class FileScanDescriptor extends
 						while (read != null) {
 							read = readsfile.readLine();
 							// if(count % 4 == 1)
-							SplitReads(read.getBytes(),writer);
-							// read.getBytes();
-							read = readsfile.readLine();
-
-							read = readsfile.readLine();
-
-							read = readsfile.readLine();
+							Pattern genePattern = Pattern.compile("[AGCT]+");
+							Matcher geneMatcher = genePattern.matcher(read);
+							boolean isValid = geneMatcher.matches();
+							if (isValid) {
+								SplitReads(read.getBytes(),writer);
+							}
 							// count += 1;
 							// System.err.println(count);
 						}

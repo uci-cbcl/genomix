@@ -34,8 +34,6 @@ public class ReadsKeyValueParserFactory implements
 	@Override
 	public IKeyValueParser<LongWritable, Text> createKeyValueParser(
 			final IHyracksTaskContext ctx) {
-		;
-
 		final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(2);
 		final ByteBuffer outputBuffer = ctx.allocateFrame();
 		final FrameTupleAppender outputAppender = new FrameTupleAppender(
