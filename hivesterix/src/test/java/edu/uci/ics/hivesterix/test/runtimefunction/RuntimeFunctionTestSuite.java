@@ -34,7 +34,7 @@ public class RuntimeFunctionTestSuite extends AbstractTestSuiteClass {
 			if (isIgnored(qFile.getName(), ignores))
 				continue;
 
-			if (qFile.isFile()) {
+			if (qFile.isFile() && qFile.getName().startsWith("q13")) {
 				String resultFileName = hiveExtToResExt(qFile.getName());
 				File rFile = new File(PATH_TO_RESULTS + resultFileName);
 				testSuite.addTest(new RuntimeFunctionTestCase(qFile, rFile));

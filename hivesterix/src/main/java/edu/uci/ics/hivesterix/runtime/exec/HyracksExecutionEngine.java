@@ -94,11 +94,16 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 HiveRuleCollections.DATA_EXCHANGE));
         DEFAULT_LOGICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
                 HiveRuleCollections.CONSOLIDATION));
+        
 
         DEFAULT_PHYSICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
                 HiveRuleCollections.PHYSICAL_PLAN_REWRITES));
         DEFAULT_PHYSICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
                 HiveRuleCollections.prepareJobGenRules));
+    
+        DEFAULT_PHYSICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
+                HiveRuleCollections.prepareForMapReduceJobGenRUleCollection()));
+
     }
 
     /**

@@ -1,7 +1,9 @@
 package edu.uci.ics.hivesterix.optimizer.rulecollections;
 
 import java.util.LinkedList;
+import java.util.List;
 
+import edu.uci.ics.hivesterix.optimizer.rules.ConvertAlgebricks2MapReduceRule;
 import edu.uci.ics.hivesterix.optimizer.rules.InsertProjectBeforeWriteRule;
 import edu.uci.ics.hivesterix.optimizer.rules.IntroduceEarlyProjectRule;
 import edu.uci.ics.hivesterix.optimizer.rules.LocalGroupByRule;
@@ -110,5 +112,13 @@ public final class HiveRuleCollections {
 		prepareJobGenRules.add(new PushProjectIntoDataSourceScanRule());
 		prepareJobGenRules.add(new ReinferAllTypesRule());
 	}
+	
+	
+    //required for the conversion to MR
+    public final static List<IAlgebraicRewriteRule> prepareForMapReduceJobGenRUleCollection() {
+        List<IAlgebraicRewriteRule> prepareForJobGenRewrites = new LinkedList<IAlgebraicRewriteRule>();
+        prepareForJobGenRewrites.add(new ConvertAlgebricks2MapReduceRule());
+        return prepareForJobGenRewrites;
+    }
 
 }
