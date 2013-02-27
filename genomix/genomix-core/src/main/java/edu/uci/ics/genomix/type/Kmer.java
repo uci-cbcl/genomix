@@ -104,6 +104,14 @@ public class Kmer {
 		}
 		return strKmer.toString();
 	}
+	
+	public static int getByteNumFromK(int k){
+		int x = k/4;
+		if (k%4 !=0){
+			x+=1;
+		}
+		return x;
+	}
 
 	/**
 	 * Compress Kmer into bytes array AATAG will compress as [0 0 0 G][A T A A]
@@ -116,7 +124,7 @@ public class Kmer {
 	 * @return initialed kmer array
 	 */
 	public static byte[] CompressKmer(int k, byte[] array, int start) {
-		final int byteNum = (byte) Math.ceil((double) k / 4.0);
+		final int byteNum = getByteNumFromK(k);
 		byte[] bytes = new byte[byteNum];
 
 		byte l = 0;
