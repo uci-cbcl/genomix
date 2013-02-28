@@ -9,72 +9,126 @@ import org.apache.hadoop.io.WritableComparable;
 
 public class MessageWritable implements WritableComparable<MessageWritable>{
 	/**
-	 * bytes stores the chains of connected DNA
+	 * sourceVertexId stores source vertexId when headVertex sends the message
+	 * 				  stores neighber vertexValue when pathVertex sends the message
+	 * chainVertexId stores the chains of connected DNA
 	 * file stores the point to the file that stores the chains of connected DNA
 	 */
-	private byte[] bytes;
+	private byte[] sourceVertexIdOrNeighberInfo;
+	private byte[] chainVertexId;
 	private File file;
+	private boolean isRear;
+	private int lengthOfChain;
+	private static int k = 3;
 	
 	public MessageWritable(){		
 	}
 	
-	public MessageWritable(byte[] bytes, File file){
-		set(bytes,file);
-	}
-	
-	public void set(byte[] bytes, File file){
-		this.bytes = bytes;
+	public void set(byte[] sourceVertexIdOrNeighberInfo, byte[] chainVertexId, File file){
+		this.sourceVertexIdOrNeighberInfo = sourceVertexIdOrNeighberInfo;
+		this.chainVertexId = chainVertexId;
 		this.file = file;
+		this.isRear = false;
+		this.lengthOfChain = 0;
 	}
-			
-	public byte[] getBytes() {
-	    return bytes;
+
+	public byte[] getSourceVertexIdOrNeighberInfo() {
+		return sourceVertexIdOrNeighberInfo;
 	}
-	
-	public File getFile(){
+
+	public void setSourceVertexIdOrNeighberInfo(byte[] sourceVertexIdOrNeighberInfo) {
+		this.sourceVertexIdOrNeighberInfo = sourceVertexIdOrNeighberInfo;
+	}
+
+	public byte[] getChainVertexId() {
+		return chainVertexId;
+	}
+
+	public void setChainVertexId(byte[] chainVertexId) {
+		this.chainVertexId = chainVertexId;
+	}
+
+	public File getFile() {
 		return file;
 	}
 
+	public void setFile(File file) {
+		this.file = file;
+	}
+
+	public boolean isRear() {
+		return isRear;
+	}
+
+	public void setRear(boolean isRear) {
+		this.isRear = isRear;
+	}
+
+	public int getLengthOfChain() {
+		return lengthOfChain;
+	}
+
+	public void setLengthOfChain(int lengthOfChain) {
+		this.lengthOfChain = lengthOfChain;
+	}
+
+	public void incrementLength(){
+		this.lengthOfChain++;
+	}
+	
 	@Override
 	public void write(DataOutput out) throws IOException {
 		// TODO Auto-generated method stub
-		out.write(bytes);
-		out.writeUTF(file.getAbsolutePath()); 
+		out.writeInt(lengthOfChain);
+		if(lengthOfChain != 0)
+			out.write(chainVertexId);
+		out.write(sourceVertexIdOrNeighberInfo);
+		out.writeBoolean(isRear);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		// TODO Auto-generated method stub
-		in.readFully(bytes);
-		String absolutePath = in.readUTF();
-		file = new File(absolutePath);
+		lengthOfChain = in.readInt();
+		if(lengthOfChain != 0){
+			chainVertexId = new byte[(lengthOfChain-1)/4 + 1];
+			in.readFully(chainVertexId);
+		}
+		else
+			chainVertexId = new byte[0];
+		if(lengthOfChain % 2 == 0)
+			sourceVertexIdOrNeighberInfo = new byte[(k-1)/4 + 1];
+		else
+			sourceVertexIdOrNeighberInfo = new byte[1];
+		in.readFully(sourceVertexIdOrNeighberInfo);
+		isRear = in.readBoolean();
 	}
 
     @Override
     public int hashCode() {
     	int hashCode = 0;
-    	for(int i = 0; i < bytes.length; i++)
-    		hashCode = (int)bytes[i];
+    	for(int i = 0; i < chainVertexId.length; i++)
+    		hashCode = (int)chainVertexId[i];
         return hashCode;
     }
     @Override
     public boolean equals(Object o) {
         if (o instanceof MessageWritable) {
         	MessageWritable tp = (MessageWritable) o;
-            return bytes == tp.bytes && file == tp.file;
+            return chainVertexId == tp.chainVertexId && file == tp.file;
         }
         return false;
     }
     @Override
     public String toString() {
-        return bytes.toString() + "\t" + file.getAbsolutePath();
+        return chainVertexId.toString() + "\t" + file.getAbsolutePath();
     }
     
 	@Override
 	public int compareTo(MessageWritable tp) {
 		// TODO Auto-generated method stub
         int cmp;
-        if (bytes == tp.bytes)
+        if (chainVertexId == tp.chainVertexId)
             cmp = 0;
         else
             cmp = 1;

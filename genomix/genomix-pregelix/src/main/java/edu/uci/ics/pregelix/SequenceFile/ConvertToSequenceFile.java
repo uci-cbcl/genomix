@@ -33,7 +33,7 @@ public class ConvertToSequenceFile {
 		job.setOutputFormatClass(SequenceFileOutputFormat.class);
 		job.setInputFormatClass(TextInputFormat.class);
 		
-		TextInputFormat.addInputPath(job, new Path("folder/test.dat"));
+		TextInputFormat.addInputPath(job, new Path("data/webmap/part-00000"));
 		SequenceFileOutputFormat.setOutputPath(job, new Path("folder_seq"));
 		
 		// submit and wait for completion
