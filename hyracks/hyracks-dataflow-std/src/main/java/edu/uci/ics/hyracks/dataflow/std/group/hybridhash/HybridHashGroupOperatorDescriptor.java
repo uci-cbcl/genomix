@@ -195,7 +195,7 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
              * @param factor
              * @return
              */
-            private int getNumberOfPartitions(int tableSize, int framesLimit, int inputKeySize, double factor) {
+            private int getNumberOfPartitions(int tableSize, int framesLimit, long inputKeySize, double factor) {
 
                 int hashtableHeaderPages = HybridHashGroupHashTable.getHeaderPages(tableSize, frameSize);
 
@@ -268,7 +268,7 @@ public class HybridHashGroupOperatorDescriptor extends AbstractSingleActivityOpe
 
                 boolean checkFallback = true;
 
-                int numOfPartitions = getNumberOfPartitions(tableSize, framesLimit, inputCardinality
+                int numOfPartitions = getNumberOfPartitions(tableSize, framesLimit, (long)inputCardinality
                         * userProvidedRecordSizeInBytes / frameSize, fudgeFactor);
 
                 HybridHashGroupHashTable processor = new HybridHashGroupHashTable(ctx, framesLimit, tableSize,
