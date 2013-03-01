@@ -4,6 +4,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
+import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.dataflow.util.NonSyncWriter;
@@ -30,8 +34,8 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 		}
 
 		ConfFactory cf;
-		//Writer writer = null;
-		NonSyncWriter writer = null;
+		Writer writer = null;
+//		NonSyncWriter writer = null;
 
 		KmerCountValue reEnterCount = new KmerCountValue();
 		/**
@@ -42,10 +46,10 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				throws HyracksDataException {
 			try {
 				if (writer == null) {
-					writer = new NonSyncWriter((FSDataOutputStream) output);
-//					writer = SequenceFile.createWriter(cf.getConf(),
-//							(FSDataOutputStream) output, BytesWritable.class,
-//							BytesWritable.class, CompressionType.NONE, null);
+//					writer = new NonSyncWriter((FSDataOutputStream) output);
+					writer = SequenceFile.createWriter(cf.getConf(),
+							(FSDataOutputStream) output, BytesWritable.class,
+							BytesWritable.class, CompressionType.NONE, null);
 				}
 				byte[] kmer = tuple.getFieldData(0);
 				int keyStart = tuple.getFieldStart(0);
