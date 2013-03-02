@@ -245,10 +245,5 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>pregelix-core</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 </project>
