@@ -247,7 +247,7 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>genomix-core</artifactId>
+			<artifactId>genomix-data</artifactId>
 			<version>0.2.3-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>

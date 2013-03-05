@@ -40,7 +40,7 @@
 	</pluginRepositories>
 
     <modules>
-        <module>genomix-core</module>
+        <module>genomix-data</module>
         <module>genomix-hyracks</module>
         <module>genomix-hadoop</module>
     </modules>

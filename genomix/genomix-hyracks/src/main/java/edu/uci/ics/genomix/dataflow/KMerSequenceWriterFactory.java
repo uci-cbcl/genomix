@@ -49,7 +49,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 //					writer = new NonSyncWriter((FSDataOutputStream) output);
 					writer = SequenceFile.createWriter(cf.getConf(),
 							(FSDataOutputStream) output, BytesWritable.class,
-							BytesWritable.class, CompressionType.NONE, null);
+							KmerCountValue.class, CompressionType.NONE, null);
 				}
 				byte[] kmer = tuple.getFieldData(0);
 				int keyStart = tuple.getFieldStart(0);
