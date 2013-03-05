@@ -8,14 +8,13 @@ import java.io.IOException;
 import org.apache.hadoop.io.SequenceFile.ValueBytes;
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class KmerCountValue implements ValueBytes, Writable{
 	private byte adjBitMap;
 	private byte count;
 
-	public KmerCountValue(ITupleReference tuple) {
-		reset(tuple);
+	public KmerCountValue(byte bitmap, byte count) {
+		reset(bitmap, count);
 	}
 	
 	public KmerCountValue() {
@@ -59,9 +58,9 @@ public class KmerCountValue implements ValueBytes, Writable{
 		return Kmer.GENE_CODE.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(count);
 	}
 
-	public void reset(ITupleReference tuple) {
-		adjBitMap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
-		count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
+	public void reset(byte bitmap, byte count) {
+		this.adjBitMap = bitmap;
+		this.count = count;
 	}
 
 }

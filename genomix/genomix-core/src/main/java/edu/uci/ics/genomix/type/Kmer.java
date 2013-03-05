@@ -170,39 +170,6 @@ public class Kmer {
 		return (byte) (1 << output);
 	}
 
-	public static void main(String[] argv) {
-		byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
-		int k = 5;
-		byte[] kmer = CompressKmer(k, array, 0);
-		for (byte b : kmer) {
-			System.out.print(Integer.toBinaryString(b));
-			System.out.print(' ');
-		}
-		System.out.println();
-		System.out.println(recoverKmerFrom(k, kmer, 0, kmer.length));
 
-		for (int i = k; i < array.length-1; i++) {
-			byte out = MoveKmer(k, kmer, array[i]);
-
-			System.out.println((int) out);
-			for (byte b : kmer) {
-				System.out.print(Integer.toBinaryString(b));
-				System.out.print(' ');
-			}
-			System.out.println();
-			System.out.println(recoverKmerFrom(k, kmer, 0, kmer.length));
-		}
-
-		byte out = MoveKmer(k, kmer, array[array.length - 1]);
-
-		System.out.println((int) out);
-		for (byte b : kmer) {
-			System.out.print(Integer.toBinaryString(b));
-			System.out.print(' ');
-		}
-		System.out.println();
-		System.out.println(recoverKmerFrom(k, kmer, 0, kmer.length));
-
-	}
 
 }

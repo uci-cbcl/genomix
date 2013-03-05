@@ -41,6 +41,7 @@
 
     <modules>
         <module>genomix-core</module>
+        <module>genomix-hyracks</module>
         <module>genomix-hadoop</module>
     </modules>
 </project>

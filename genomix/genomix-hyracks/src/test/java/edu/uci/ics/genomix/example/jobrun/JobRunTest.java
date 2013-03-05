@@ -34,7 +34,7 @@ import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
 import edu.uci.ics.hyracks.hdfs.utils.TestUtils;
 
-public class JobRunTestCase {
+public class JobRunTest {
 	private static final String ACTUAL_RESULT_DIR = "actual";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
@@ -121,27 +121,27 @@ public class JobRunTestCase {
 
 	@Test
 	public void TestExternalGroupby() throws Exception {
-		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		System.err.println("Testing ExternalGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
-	@Test
+	//@Test
 	public void TestPreClusterGroupby() throws Exception {
-		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		System.err.println("Testing PreClusterGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
 	@Test
 	public void TestHybridGroupby() throws Exception {
-		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		System.err.println("Testing HybridGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}

@@ -54,7 +54,10 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				byte[] kmer = tuple.getFieldData(0);
 				int keyStart = tuple.getFieldStart(0);
 				int keyLength = tuple.getFieldLength(0);
-				reEnterCount.reset(tuple);
+				
+				byte bitmap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
+				byte count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
+				reEnterCount.reset(bitmap, count);
 				writer.appendRaw(kmer, keyStart, keyLength, reEnterCount);
 			} catch (IOException e) {
 				throw new HyracksDataException(e);
