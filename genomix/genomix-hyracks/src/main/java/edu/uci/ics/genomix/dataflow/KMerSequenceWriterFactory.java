@@ -10,7 +10,6 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.genomix.dataflow.util.NonSyncWriter;
 import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -35,9 +34,9 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 
 		ConfFactory cf;
 		Writer writer = null;
-//		NonSyncWriter writer = null;
 
 		KmerCountValue reEnterCount = new KmerCountValue();
+		BytesWritable reEnterKey = new BytesWritable();
 		/**
 		 * assumption is that output never change source!
 		 */
@@ -46,7 +45,6 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				throws HyracksDataException {
 			try {
 				if (writer == null) {
-//					writer = new NonSyncWriter((FSDataOutputStream) output);
 					writer = SequenceFile.createWriter(cf.getConf(),
 							(FSDataOutputStream) output, BytesWritable.class,
 							KmerCountValue.class, CompressionType.NONE, null);
@@ -58,7 +56,10 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				byte bitmap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
 				byte count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
 				reEnterCount.reset(bitmap, count);
-				writer.appendRaw(kmer, keyStart, keyLength, reEnterCount);
+				reEnterKey.set(kmer, keyStart, keyLength);
+				writer.append(reEnterKey, reEnterCount);
+				// @mark: this method can not used for read in hadoop 0.20.2. 
+				//writer.appendRaw(kmer, keyStart, keyLength, reEnterCount);
 			} catch (IOException e) {
 				throw new HyracksDataException(e);
 			}

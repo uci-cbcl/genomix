@@ -17,7 +17,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -55,7 +54,7 @@ public class JobRunTest {
 
 	private JobConf conf = new JobConf();
 	private int numberOfNC = 2;
-	private int numPartitionPerMachine = 2;
+	private int numPartitionPerMachine = 1;
 
 	private Driver driver;
 
@@ -122,13 +121,13 @@ public class JobRunTest {
 	@Test
 	public void TestExternalGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing ExternalGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
 	}
 
-	//@Test
+	@Test
 	public void TestPreClusterGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
@@ -147,29 +146,60 @@ public class JobRunTest {
 	}
 
 	private boolean checkResults() throws Exception {
-		FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH),
-				FileSystem.getLocal(new Configuration()), new Path(
-						DUMPED_RESULT), false, conf, null);
-		File dumped = new File( DUMPED_RESULT);
-		String format = conf.get(GenomixJob.OUTPUT_FORMAT); 
-		if( !"text".equalsIgnoreCase(format)){
-	        SequenceFile.Reader reader = null;
-	        Path path = new Path(HDFS_OUTPUT_FILE);
-	        FileSystem dfs = FileSystem.get(conf);
-	        reader = new SequenceFile.Reader(dfs, path, conf);
-	        BytesWritable key = (BytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-	        KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-	        File filePathTo = new File(CONVERT_RESULT);
-	        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
-	        int k = conf.getInt(GenomixJob.KMER_LENGTH, 25);
-	        while (reader.next(key, value)) {
-	            bw.write(Kmer.recoverKmerFrom(k, key.getBytes(), 0, key.getLength()) + "\t" + value.toString());
-	            bw.newLine();
-	        }
-	        bw.close();
-	        dumped = new File(CONVERT_RESULT);
+		File dumped = null;
+		String format = conf.get(GenomixJob.OUTPUT_FORMAT);
+		if ("text".equalsIgnoreCase(format)) {
+			FileUtil.copyMerge(FileSystem.get(conf),
+					new Path(HDFS_OUTPUT_PATH), FileSystem
+							.getLocal(new Configuration()), new Path(
+							DUMPED_RESULT), false, conf, null);
+			dumped = new File(DUMPED_RESULT);
+		} else {
+			
+			FileSystem.getLocal(new Configuration()).mkdirs(new Path(ACTUAL_RESULT_DIR
+			+ HDFS_OUTPUT_PATH));
+			File filePathTo = new File(CONVERT_RESULT);
+			BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+			for (int i = 0; i < numPartitionPerMachine * numberOfNC; i++) {
+				String partname = "/part-" + i;
+//				FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH
+//						+ partname), FileSystem.getLocal(new Configuration()),
+//						new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + partname), false, conf);
+				
+				
+				Path path = new Path(HDFS_OUTPUT_PATH
+						+ partname);
+				FileSystem dfs = FileSystem.get(conf);
+				if (dfs.getFileStatus(path).getLen() == 0){
+					continue;
+				}
+				SequenceFile.Reader reader = new SequenceFile.Reader(dfs, path,
+						conf);
+				BytesWritable key = (BytesWritable) ReflectionUtils
+						.newInstance(reader.getKeyClass(), conf);
+				KmerCountValue value = (KmerCountValue) ReflectionUtils
+						.newInstance(reader.getValueClass(), conf);
+
+				int k = conf.getInt(GenomixJob.KMER_LENGTH, 25);
+				while (reader.next(key, value)) {
+					if (key == null || value == null){
+						break;
+					}
+					bw.write(Kmer.recoverKmerFrom(k, key.getBytes(), 0,
+							key.getLength())
+							+ "\t" + value.toString());
+					System.out.println(Kmer.recoverKmerFrom(k, key.getBytes(), 0,
+							key.getLength())
+							+ "\t" + value.toString());
+					bw.newLine();
+				}
+				reader.close();
+
+			}
+			bw.close();
+			dumped = new File(CONVERT_RESULT);
 		}
-        
+
 		TestUtils.compareWithSortedResult(new File(EXPECTED_PATH), dumped);
 		return true;
 	}

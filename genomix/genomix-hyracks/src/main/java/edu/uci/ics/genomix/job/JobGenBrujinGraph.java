@@ -79,6 +79,14 @@ public class JobGenBrujinGraph extends JobGen {
 	private int recordSizeInBytes;
 	private int hashfuncStartLevel;
 
+	private void logDebug(String status){
+		String names = "";
+		for (String str : ncNodeNames){
+			names += str + " ";
+		}
+		LOG.info(status + " nc nodes:" + ncNodeNames.length + " " + names);
+	}
+	
 	public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler,
 			final Map<String, NodeControllerInfo> ncMap,
 			int numPartitionPerMachine) {
@@ -91,7 +99,7 @@ public class JobGenBrujinGraph extends JobGen {
 			System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length,
 					nodes.length);
 		}
-		LOG.info("nc nodes:" + ncNodeNames.length + " " + ncNodeNames.toString());
+		logDebug("initialize");
 	}
 
 	private ExternalGroupOperatorDescriptor newExternalGroupby(
@@ -192,6 +200,11 @@ public class JobGenBrujinGraph extends JobGen {
 
 			LOG.info("HDFS read into " + splits.length + " splits");
 			String[] readSchedule = scheduler.getLocationConstraints(splits);
+			String log = "";
+			for (String schedule: readSchedule){
+				log += schedule + " ";
+			}
+			LOG.info("HDFS read schedule " + log);
 			return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, job,
 					splits, readSchedule, new ReadsKeyValueParserFactory(kmers));
 		} catch (Exception e) {
@@ -213,10 +226,12 @@ public class JobGenBrujinGraph extends JobGen {
 		// File input
 		HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
 
+		logDebug("Read Operator");
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				readOperator, ncNodeNames);
 
 		generateDescriptorbyType(jobSpec);
+		logDebug("SingleGroupby Operator");
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				singleGrouper, ncNodeNames);
 
@@ -224,6 +239,7 @@ public class JobGenBrujinGraph extends JobGen {
 				jobSpec);
 		jobSpec.connect(readfileConn, readOperator, 0, singleGrouper, 0);
 
+		logDebug("CrossGrouper Operator");
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				crossGrouper, ncNodeNames);
 		jobSpec.connect(connPartition, singleGrouper, 0, crossGrouper, 0);
@@ -242,6 +258,7 @@ public class JobGenBrujinGraph extends JobGen {
 		HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(
 				jobSpec, job, writer);
 
+		logDebug("WriteOperator");
 		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
 				writeOperator, ncNodeNames);
 

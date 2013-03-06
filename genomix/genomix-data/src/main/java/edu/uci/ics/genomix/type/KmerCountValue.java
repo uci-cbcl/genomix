@@ -2,14 +2,12 @@ package edu.uci.ics.genomix.type;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.apache.hadoop.io.SequenceFile.ValueBytes;
 import org.apache.hadoop.io.Writable;
 
 
-public class KmerCountValue implements ValueBytes, Writable{
+public class KmerCountValue implements  Writable{
 	private byte adjBitMap;
 	private byte count;
 
@@ -20,25 +18,6 @@ public class KmerCountValue implements ValueBytes, Writable{
 	public KmerCountValue() {
 		adjBitMap = 0;
 		count = 0;
-	}
-
-	@Override
-	public int getSize() {
-		return 2;
-	}
-
-	@Override
-	public void writeCompressedBytes(DataOutputStream arg0)
-			throws IllegalArgumentException, IOException {
-		arg0.writeByte(adjBitMap);
-		arg0.writeByte(count);
-	}
-
-	@Override
-	public void writeUncompressedBytes(DataOutputStream arg0)
-			throws IOException {
-		arg0.writeByte(adjBitMap);
-		arg0.writeByte(count);
 	}
 
 	@Override
