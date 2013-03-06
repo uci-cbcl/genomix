@@ -15,7 +15,8 @@ public class KmerHashPartitioncomputerFactory implements
 		int hash = 1;
 		for (int i = offset; i < offset + length; i++)
 			hash = (31 * hash) + (int) bytes[i];
-		return hash;
+		
+		return hash < 0 ? -hash: hash;
 	}
 
 	public static long getLong(byte[] bytes, int offset) {
@@ -48,9 +49,6 @@ public class KmerHashPartitioncomputerFactory implements
 //				long l = getLong(buf.array(), startOffset + fieldOffset
 //						+ slotLength);
 				int part = hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength) % nParts;
-				if (part < 0){
-					part = -part;
-				}
 				return part;
 			}
 		};
