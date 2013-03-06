@@ -11,16 +11,24 @@ public class KmerHashPartitioncomputerFactory implements
 
 	private static final long serialVersionUID = 1L;
 
-	public KmerHashPartitioncomputerFactory() {
+	public static int hashBytes(byte[] bytes, int offset, int length) {
+		int hash = 1;
+		for (int i = offset; i < offset + length; i++)
+			hash = (31 * hash) + (int) bytes[i];
+		return hash;
 	}
 
-    public static long getLong(byte[] bytes, int offset) {
-        return (((long) (bytes[offset] & 0xff)) << 56) + (((long) (bytes[offset + 1] & 0xff)) << 48)
-                + (((long) (bytes[offset + 2] & 0xff)) << 40) + (((long) (bytes[offset + 3] & 0xff)) << 32)
-                + (((long) (bytes[offset + 4] & 0xff)) << 24) + (((long) (bytes[offset + 5] & 0xff)) << 16)
-                + (((long) (bytes[offset + 6] & 0xff)) << 8) + (((long) (bytes[offset + 7] & 0xff)) << 0);
-    }
-    
+	public static long getLong(byte[] bytes, int offset) {
+		return (((long) (bytes[offset] & 0xff)) << 56)
+				+ (((long) (bytes[offset + 1] & 0xff)) << 48)
+				+ (((long) (bytes[offset + 2] & 0xff)) << 40)
+				+ (((long) (bytes[offset + 3] & 0xff)) << 32)
+				+ (((long) (bytes[offset + 4] & 0xff)) << 24)
+				+ (((long) (bytes[offset + 5] & 0xff)) << 16)
+				+ (((long) (bytes[offset + 6] & 0xff)) << 8)
+				+ (((long) (bytes[offset + 7] & 0xff)) << 0);
+	}
+
 	@Override
 	public ITuplePartitionComputer createPartitioner() {
 		return new ITuplePartitionComputer() {
@@ -33,11 +41,13 @@ public class KmerHashPartitioncomputerFactory implements
 				int startOffset = accessor.getTupleStartOffset(tIndex);
 				int fieldOffset = accessor.getFieldStartOffset(tIndex, 0);
 				int slotLength = accessor.getFieldSlotsLength();
+				int fieldLength = accessor.getFieldLength(tIndex, 0);
 
 				ByteBuffer buf = accessor.getBuffer();
-				long l = getLong(buf.array(), startOffset
-						+ fieldOffset + slotLength);
-				return (int) (l % nParts);
+
+//				long l = getLong(buf.array(), startOffset + fieldOffset
+//						+ slotLength);
+				return hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength) % nParts;
 			}
 		};
 	}
