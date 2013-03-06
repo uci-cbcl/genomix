@@ -47,7 +47,11 @@ public class KmerHashPartitioncomputerFactory implements
 
 //				long l = getLong(buf.array(), startOffset + fieldOffset
 //						+ slotLength);
-				return hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength) % nParts;
+				int part = hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength) % nParts;
+				if (part < 0){
+					part = -part;
+				}
+				return part;
 			}
 		};
 	}
