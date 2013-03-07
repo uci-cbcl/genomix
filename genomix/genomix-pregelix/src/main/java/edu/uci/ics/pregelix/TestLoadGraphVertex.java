@@ -1,102 +1,67 @@
 package edu.uci.ics.pregelix;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.StringTokenizer;
+import java.util.Iterator;
 
-import edu.uci.ics.pregelix.LoadGraphVertex.SimpleLoadGraphVertexOutputFormat;
+import org.apache.hadoop.io.ByteWritable;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.NullWritable;
+
+import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.client.Client;
+import edu.uci.ics.pregelix.example.io.MessageWritable;
 
-public class TestLoadGraphVertex {
+/*
+ * vertexId: BytesWritable
+ * vertexValue: ByteWritable
+ * edgeValue: NullWritable
+ * message: MessageWritable
+ * 
+ * DNA:
+ * A: 00
+ * C: 01
+ * G: 10
+ * T: 11
+ * 
+ * succeed node
+ *  A 00000001 1
+ *  G 00000010 2
+ *  C 00000100 4
+ *  T 00001000 8
+ * precursor node
+ *  A 00010000 16
+ *  G 00100000 32
+ *  C 01000000 64
+ *  T 10000000 128
+ *  
+ * For example, ONE LINE in input file: 00,01,10	0001,0010,
+ * That means that vertexId is ACG, its succeed node is A and its precursor node is C.
+ * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
+ * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
+ */
+public class TestLoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
 
 	/**
-	 * If running in different machines, the parameters need to be changed.
-	 * Now, this test is not completed.
+	 * For test, just output original file
 	 */
-	private static final String EXPECT_RESULT_FILE = "~/workspace/genomix-pregelix/expect/expected_result";
-	private static final String INPUT_PATHS = "~/workspace/genomix-pregelix/folder";
-	private static final String OUTPUT_PATH = "~/workspace/genomix-pregelix/tmp/pg_result"; //result
-	private static final String IP = "169.234.134.212"; 
-	private static final String PORT = "3099";
-	/**
-	 * @param args
-	 * @throws Exception 
-	 */
-	@SuppressWarnings("deprecation")
-	public static void main(String[] args) throws Exception {
-		// TODO Auto-generated method stub
-		//initiate args
-		args = new String[8];
-		args[0] = "-inputpaths"; 
-		args[1] = INPUT_PATHS;
-		args[2] = "-outputpath";
-		args[3] = OUTPUT_PATH;
-		args[4] = "-ip";
-		args[5] = IP;
-		args[6] = "-port";
-		args[7] = PORT;
-        PregelixJob job = new PregelixJob(LoadGraphVertex.class.getSimpleName());
-        job.setVertexClass(LoadGraphVertex.class);
-        job.setVertexInputFormatClass(TextLoadGraphInputFormat.class);
-        job.setVertexOutputFormatClass(SimpleLoadGraphVertexOutputFormat.class);
-        Client.run(args, job);
-        
-        generateExpectBinaryFile();
-        
-        //test if the actual file is the same as the expected file
-        DataInputStream actual_dis = new DataInputStream(new FileInputStream(OUTPUT_PATH + "/*"));
-        DataInputStream expected_dis = new DataInputStream(new FileInputStream(EXPECT_RESULT_FILE));
-        String actualLine, expectedLine = null;
-        StringTokenizer actualSt, expectedSt;
-		byte[] actualVertexId, expectedVertexId = null;
-		byte actualVertexValue, expectedVertexValue;
-        byte[] tmp = null;
-        while(((actualLine = actual_dis.readLine()) != null) && 
-        		((expectedLine = expected_dis.readLine()) != null)){
-        	actualSt = new StringTokenizer(actualLine, " ");
-			actualVertexId = actualSt.nextToken().getBytes();
-			tmp = actualSt.nextToken().getBytes();
-			actualVertexValue = tmp[0];
-			
-			expectedSt = new StringTokenizer(expectedLine," ");
-			expectedVertexId = expectedSt.nextToken().getBytes();
-			tmp = expectedSt.nextToken().getBytes();
-			expectedVertexValue = tmp[0];
-			
-			//assertEquals("actualVextexId == expectedVertexId", actualVertexId, expectedVertexId);
-			//assertEquals("actualVertexValue == expectedVertexValue", actualVertexValue, expectedVertexValue);
-        }
-        
-        //assertEquals("actualLine should be the end and be equal to null", actualLine, null);
-        //assertEquals("expectedLine should be the end and be equal to null", expectedLine, null);
+	@Override
+	public void compute(Iterator<MessageWritable> msgIterator) {
+		voteToHalt();
 	}
 
-	@SuppressWarnings("deprecation")
-	public static void generateExpectBinaryFile() throws Exception{
-		DataInputStream dis = new DataInputStream(new FileInputStream(INPUT_PATHS + "/*"));
-		DataOutputStream dos = new DataOutputStream(new FileOutputStream(EXPECT_RESULT_FILE));
-		String line;
-		byte[] vertexId = null;
-		byte vertexValue;
-		byte[] tmp = null;
-		while((line = dis.readLine()) != null){
-			StringTokenizer st = new StringTokenizer(line, " ");
-			vertexId = st.nextToken().getBytes();
-			tmp = st.nextToken().getBytes();
-			vertexValue = tmp[0];		
-			
-			vertexValue = (byte) (vertexValue << 1); 
-			for(int i = 0; i < vertexId.length; i++)
-				dos.writeByte(vertexId[i]);
-			dos.writeByte((byte)32); //space
-			dos.writeByte(vertexValue);
-			dos.writeByte((byte)10); //line feed
-		}
-		
-		dis.close();
-		dos.close();
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) throws Exception {
+        PregelixJob job = new PregelixJob(MergeGraphVertex.class.getSimpleName());
+        job.setVertexClass(TestLoadGraphVertex.class);
+        /**
+         * BinaryInput and BinaryOutput
+         */
+        job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
+        job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class); 
+        job.setOutputKeyClass(BytesWritable.class);
+        job.setOutputValueClass(ByteWritable.class);
+        Client.run(args, job);
 	}
 }

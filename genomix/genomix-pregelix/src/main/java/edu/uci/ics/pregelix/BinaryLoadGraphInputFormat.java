@@ -14,6 +14,7 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.example.io.MessageWritable;
+import edu.uci.ics.pregelix.type.KmerCountValue;
 
 public class BinaryLoadGraphInputFormat extends
 	BinaryVertexInputFormat<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
@@ -35,7 +36,7 @@ public class BinaryLoadGraphInputFormat extends
         private BytesWritable vertexId = new BytesWritable();
         private ByteWritable vertexValue = new ByteWritable();
 
-        public BinaryLoadGraphReader(RecordReader<BytesWritable,ByteWritable> recordReader) {
+        public BinaryLoadGraphReader(RecordReader<BytesWritable,KmerCountValue> recordReader) {
             super(recordReader);
         }
 
@@ -59,13 +60,14 @@ public class BinaryLoadGraphInputFormat extends
 	            /**
 	             * set the src vertex id
 	             */
-	            vertexId.set(getRecordReader().getCurrentKey());
+            	vertexId = getRecordReader().getCurrentKey();
 	            vertex.setVertexId(vertexId);
 	            
 	            /**
 	             * set the vertex value
 	             */
-	            vertexValue.set(getRecordReader().getCurrentValue().get()); 
+	            KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
+	            vertexValue.set(kmerCountValue.getAdjBitMap()); 
 	            vertex.setVertexValue(vertexValue);
             }
             

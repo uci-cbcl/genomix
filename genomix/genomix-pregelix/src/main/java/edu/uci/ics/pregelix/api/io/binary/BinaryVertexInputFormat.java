@@ -15,6 +15,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
+import edu.uci.ics.pregelix.type.KmerCountValue;
 
 public class BinaryVertexInputFormat <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
 	extends VertexInputFormat<I, V, E, M>{
@@ -37,7 +38,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable, V extends Wr
     public static abstract class BinaryVertexReader<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<BytesWritable,ByteWritable> lineRecordReader;
+        private final RecordReader<BytesWritable,KmerCountValue> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -47,7 +48,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable, V extends Wr
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryVertexReader(RecordReader<BytesWritable, ByteWritable> recordReader) {
+        public BinaryVertexReader(RecordReader<BytesWritable, KmerCountValue> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -73,7 +74,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable, V extends Wr
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<BytesWritable,ByteWritable> getRecordReader() {
+        protected RecordReader<BytesWritable,KmerCountValue> getRecordReader() {
             return lineRecordReader;
         }
 

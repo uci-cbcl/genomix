@@ -100,4 +100,16 @@ public class BitwiseOperation {
 		else
 			return sb.substring(8*num - 2, 8*num);
 	}
+	
+	public static byte[] mergeTwoBytesArray(byte[] b1, int size1, byte[] b2, int size2){
+		String s1 = convertBytesToBinaryStringKmer(b1,size1);
+		String s2 = convertBytesToBinaryStringKmer(b2,size2);
+		return convertBinaryStringToBytes(s1 + s2);
+	}
+	
+	public static byte replaceLastFourBits(byte b1, byte b2){
+		String s1 = convertByteToBinaryString(b1);
+		String s2 = convertByteToBinaryString(b2);
+		return convertBinaryStringToByte(s1.substring(0,4) + s2.substring(4,8));
+	}
 }

@@ -215,7 +215,7 @@ public class GraphVertexOperation {
 	 */
 	public static byte[] getLastKmer(byte[] chainVertexId, int lengthOfChainVertex){
 		String originalVertexId = BitwiseOperation.convertBytesToBinaryString(chainVertexId);
-		return BitwiseOperation.convertBinaryStringToBytes(originalVertexId.substring(lengthOfChainVertex-1-k+1,lengthOfChainVertex-1));
+		return BitwiseOperation.convertBinaryStringToBytes(originalVertexId.substring(2*(lengthOfChainVertex-k),2*lengthOfChainVertex));
 	}
 	/**
 	 * read vertexId from RecordReader
@@ -223,5 +223,96 @@ public class GraphVertexOperation {
 	public static BytesWritable readVertexIdFromRecordReader(BytesWritable currentKey){
 		String finalBinaryString = BitwiseOperation.convertBytesToBinaryStringKmer(currentKey.getBytes(),k);
 		return new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(finalBinaryString));
+	}
+	/**
+	 * merge two BytesWritable. Ex. merge two vertexId
+	 */
+	public static BytesWritable mergeTwoChainVertex(byte[] b1, byte[] b2, int length){
+		return new BytesWritable(BitwiseOperation.mergeTwoBytesArray(b1, length, b2, length));
+	}
+	/**
+	 * update right neighber
+	 */
+	public static byte updateRightNeighber(byte oldVertexValue, byte newVertexValue){
+		return BitwiseOperation.replaceLastFourBits(oldVertexValue, newVertexValue);
+	}
+	/**
+	 * update right neighber based on next vertexId
+	 */
+	public static byte updateRightNeighberByVertexId(byte oldVertexValue, byte[] neighberVertexId){
+		String oldVertex = BitwiseOperation.convertByteToBinaryString(oldVertexValue);
+		String neighber = BitwiseOperation.convertBytesToBinaryStringKmer(neighberVertexId, k);
+		String lastTwoBits = neighber.substring(2*k-2,2*k);
+		if(lastTwoBits.compareTo("00") == 0)
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "0001");
+		else if(lastTwoBits.compareTo("01") == 0)
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "0010");
+		else if(lastTwoBits.compareTo("10") == 0)
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "0100");
+		else if(lastTwoBits.compareTo("11") == 0)
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "1000");
+		
+		return (Byte) null;
+	}
+	/**
+	 * get precursor in vertexValue from gene code
+	 */
+	public static byte getPrecursorFromGeneCode(byte vertexValue, char precursor){
+		String oldVertex = BitwiseOperation.convertByteToBinaryString(vertexValue);
+		switch(precursor){
+		case 'A':
+			return BitwiseOperation.convertBinaryStringToByte("0001" + oldVertex.substring(0,4));
+		case 'C':
+			return BitwiseOperation.convertBinaryStringToByte("0010" + oldVertex.substring(0,4));
+		case 'G':
+			return BitwiseOperation.convertBinaryStringToByte("0100" + oldVertex.substring(0,4));
+		case 'T':
+			return BitwiseOperation.convertBinaryStringToByte("1000" + oldVertex.substring(0,4));
+			default:
+				return (Byte) null;
+		}
+	}
+	/**
+	 * get succeed in vertexValue from gene code
+	 */
+	public static byte getSucceedFromGeneCode(byte vertexValue, char succeed){
+		String oldVertex = BitwiseOperation.convertByteToBinaryString(vertexValue);
+		switch(succeed){
+		case 'A':
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "0001");
+		case 'C':
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "0010");
+		case 'G':
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "0100");
+		case 'T':
+			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "1000");
+			default:
+				return (Byte) null;
+		}
+	}
+	/**
+	 * convert gene code to binary string
+	 */
+	public static String convertGeneCodeToBinaryString(String gene){
+		String result = "";
+		for(int i = 0; i < gene.length(); i++){
+			switch(gene.charAt(i)){
+			case 'A':
+				result += "00";
+				break;
+			case 'C':
+				result += "01";
+				break;
+			case 'G':
+				result += "10";
+				break;
+			case 'T':
+				result += "11";
+				break;
+				default:
+				break;
+			}
+		}
+		return result;
 	}
 }

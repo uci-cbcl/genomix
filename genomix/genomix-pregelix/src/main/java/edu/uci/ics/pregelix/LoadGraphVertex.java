@@ -104,17 +104,18 @@ public class LoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWri
         job.setVertexClass(LoadGraphVertex.class);
         /**
          * TextInput and TextOutput
-         * job.setVertexInputFormatClass(TextLoadGraphInputFormat.class);
-         * job.setVertexOutputFormatClass(SimpleLoadGraphVertexOutputFormat.class); 
-         */
+         */ 
+          job.setVertexInputFormatClass(TextLoadGraphInputFormat.class);
+          job.setVertexOutputFormatClass(SimpleLoadGraphVertexOutputFormat.class); 
+        
         
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
+      /*  job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class); 
         job.setOutputKeyClass(BytesWritable.class);
-        job.setOutputValueClass(ByteWritable.class);
+        job.setOutputValueClass(ByteWritable.class);*/
         Client.run(args, job);
 	}
 }
