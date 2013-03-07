@@ -16,18 +16,7 @@ public class KmerHashPartitioncomputerFactory implements
 		for (int i = offset; i < offset + length; i++)
 			hash = (31 * hash) + (int) bytes[i];
 		
-		return hash < 0 ? -hash: hash;
-	}
-
-	public static long getLong(byte[] bytes, int offset) {
-		return (((long) (bytes[offset] & 0xff)) << 56)
-				+ (((long) (bytes[offset + 1] & 0xff)) << 48)
-				+ (((long) (bytes[offset + 2] & 0xff)) << 40)
-				+ (((long) (bytes[offset + 3] & 0xff)) << 32)
-				+ (((long) (bytes[offset + 4] & 0xff)) << 24)
-				+ (((long) (bytes[offset + 5] & 0xff)) << 16)
-				+ (((long) (bytes[offset + 6] & 0xff)) << 8)
-				+ (((long) (bytes[offset + 7] & 0xff)) << 0);
+		return hash;
 	}
 
 	@Override
@@ -46,9 +35,10 @@ public class KmerHashPartitioncomputerFactory implements
 
 				ByteBuffer buf = accessor.getBuffer();
 
-//				long l = getLong(buf.array(), startOffset + fieldOffset
-//						+ slotLength);
 				int part = hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength) % nParts;
+				if (part < 0){
+					part = -(part+1);
+				}
 				return part;
 			}
 		};
