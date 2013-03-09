@@ -16,8 +16,10 @@
 package edu.uci.ics.graphbuilding;
 
 import java.io.IOException;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -26,6 +28,9 @@ import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerCountValue;
 
 /**
  * This class implement driver which start the mapreduce program for graphbuilding
@@ -61,13 +66,13 @@ public class GenomixDriver {
         conf.setReducerClass(GenomixReducer.class);
         conf.setCombinerClass(GenomixCombiner.class);
 
-        conf.setMapOutputKeyClass(KmerBytesWritable.class);
-        conf.setMapOutputValueClass(AdjacentWritable.class);
+        conf.setMapOutputKeyClass(BytesWritable.class);
+        conf.setMapOutputValueClass(KmerCountValue.class);
 
         conf.setInputFormat(TextInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
-        conf.setOutputKeyClass(KmerBytesWritable.class);
-        conf.setOutputValueClass(AdjacentWritable.class);
+        conf.setOutputKeyClass(BytesWritable.class);
+        conf.setOutputValueClass(KmerCountValue.class);
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         conf.setNumReduceTasks(numReducers);
