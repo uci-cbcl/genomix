@@ -10,11 +10,11 @@ CCHOST=`bin/getip.sh`
 
 #Remove the temp dir
 #rm -rf $CCTMP_DIR
-mkdir $CCTMP_DIR
+mkdir -p $CCTMP_DIR
 
 #Remove the logs dir
 #rm -rf $CCLOGS_DIR
-mkdir $CCLOGS_DIR
+mkdir -p $CCLOGS_DIR
 
 #Export JAVA_HOME and JAVA_OPTS
 export JAVA_HOME=$JAVA_HOME

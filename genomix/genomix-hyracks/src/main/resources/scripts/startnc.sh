@@ -12,11 +12,11 @@ CCHOST=`ssh ${CCHOST_NAME} "cd ${CURRENT_PATH}; bin/getip.sh"`
 #Clean up temp dir
 
 #rm -rf $NCTMP_DIR
-mkdir $NCTMP_DIR
+mkdir -p $NCTMP_DIR
 
 #Clean up log dir
 #rm -rf $NCLOGS_DIR
-mkdir $NCLOGS_DIR
+mkdir -p $NCLOGS_DIR
 
 
 #Clean up I/O working dir
@@ -24,7 +24,7 @@ io_dirs=$(echo $IO_DIRS | tr "," "\n")
 for io_dir in $io_dirs
 do
 	#rm -rf $io_dir
-	mkdir $io_dir
+	mkdir -p $io_dir
 done
 
 #Set JAVA_HOME

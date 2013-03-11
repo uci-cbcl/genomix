@@ -37,7 +37,7 @@ public class KmerHashPartitioncomputerFactory implements
 
 				int part = hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength) % nParts;
 				if (part < 0){
-					part = -(part+1);
+					part = -part;
 				}
 				return part;
 			}
