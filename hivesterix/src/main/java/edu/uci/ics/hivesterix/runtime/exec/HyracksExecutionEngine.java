@@ -80,7 +80,11 @@ public class HyracksExecutionEngine implements IExecutionEngine {
     private static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> DEFAULT_PHYSICAL_REWRITES = new ArrayList<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>>();
     static {
         SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
+        
+        //This type of rule means that you apply the rule over and over until no difference in the tree is detected.
         SequentialFixpointRuleController seqCtrlFullDfs = new SequentialFixpointRuleController(true);
+
+        //This type of rule means that you apply the rule only once.
         SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
         DEFAULT_LOGICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlFullDfs,
                 HiveRuleCollections.NORMALIZATION));
@@ -94,15 +98,13 @@ public class HyracksExecutionEngine implements IExecutionEngine {
                 HiveRuleCollections.DATA_EXCHANGE));
         DEFAULT_LOGICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqCtrlNoDfs,
                 HiveRuleCollections.CONSOLIDATION));
-        
 
         DEFAULT_PHYSICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
                 HiveRuleCollections.PHYSICAL_PLAN_REWRITES));
         DEFAULT_PHYSICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
                 HiveRuleCollections.prepareJobGenRules));
-    
         DEFAULT_PHYSICAL_REWRITES.add(new Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>(seqOnceCtrl,
-                HiveRuleCollections.prepareForMapReduceJobGenRUleCollection()));
+                HiveRuleCollections.prepareForMapReduceJobGenRUleCollection));
 
     }
 

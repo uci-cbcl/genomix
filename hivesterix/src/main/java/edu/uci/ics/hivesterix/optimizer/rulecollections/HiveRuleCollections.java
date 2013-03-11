@@ -8,6 +8,7 @@ import edu.uci.ics.hivesterix.optimizer.rules.InsertProjectBeforeWriteRule;
 import edu.uci.ics.hivesterix.optimizer.rules.IntroduceEarlyProjectRule;
 import edu.uci.ics.hivesterix.optimizer.rules.LocalGroupByRule;
 import edu.uci.ics.hivesterix.optimizer.rules.RemoveRedundantSelectRule;
+import edu.uci.ics.hivesterix.optimizer.rules.TagOperators2MappersOrReducers;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
@@ -115,10 +116,14 @@ public final class HiveRuleCollections {
 	
 	
     //required for the conversion to MR
-    public final static List<IAlgebraicRewriteRule> prepareForMapReduceJobGenRUleCollection() {
-        List<IAlgebraicRewriteRule> prepareForJobGenRewrites = new LinkedList<IAlgebraicRewriteRule>();
-        prepareForJobGenRewrites.add(new ConvertAlgebricks2MapReduceRule());
-        return prepareForJobGenRewrites;
+    public final static LinkedList<IAlgebraicRewriteRule> prepareForMapReduceJobGenRUleCollection = new LinkedList<IAlgebraicRewriteRule>();
+    static {
+        //this rule numbers the logical operators by super-nodes
+        prepareForMapReduceJobGenRUleCollection.add(new ConvertAlgebricks2MapReduceRule());
+        
+        //this rule maps the logical operators to mappers or reducers
+        prepareForMapReduceJobGenRUleCollection.add(new TagOperators2MappersOrReducers());
+        
     }
 
 }
