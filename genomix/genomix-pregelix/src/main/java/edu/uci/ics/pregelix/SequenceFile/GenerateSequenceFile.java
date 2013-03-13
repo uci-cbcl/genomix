@@ -20,7 +20,6 @@ public class GenerateSequenceFile {
 	static private final Path TMP_DIR = new Path(
 			GenerateSequenceFile.class.getSimpleName() + "_TMP");
 	private static Path outDir = new Path("data/webmap");
-	private final static int k = 3;
 	
 	/**
 	 * create test.dat
@@ -229,7 +228,7 @@ public class GenerateSequenceFile {
 	     try {
 	         while(reader.next(outKey, outValue)){
 	        	 System.out.println(iteration);
-			     System.out.println("key: " + BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),k));
+			     System.out.println("key: " + BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),GraphVertexOperation.k));
 			     System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(outValue.getAdjBitMap()));
 			     System.out.println();
 			     iteration++;
@@ -337,7 +336,7 @@ public class GenerateSequenceFile {
 	     try {
 	         while(reader.next(outKey, outValue)){
 	        	 System.out.println(iteration);
-			     System.out.println("key: " + BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),k));
+			     System.out.println("key: " + BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),GraphVertexOperation.k));
 			     System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(outValue.getAdjBitMap()));
 			     System.out.println();
 			     iteration++;
@@ -377,14 +376,105 @@ public class GenerateSequenceFile {
 		 generateNumOfLinesFromBigFile(inFile,outFile,10000);*/
 		 /**
 		  * AGC - A		C - TAT
+		  *  AGCATGCTAT
 		  * "AGCAAACACGAC T TGCC TAT"
 		  *  problem "AGCATGGACGTCGATTCTAT"
+		  *  problem "AGCAAACACGATTGCCTAT"
+		  *  problem "AGCACGTAACTTGCTCTAT"
+		  *  problem "AGCAACGATTGCCTAT"
+		  *  problem "AGCATTTAAACTCTAT"
+		  *  
 		  *  "AGCACTTAT"
 		  *  "AGCAAACACTTGCTGTACCGTGGCCTAT"
-		  */
-		 generateSequenceFileFromGeneCode("AGCATGCGGGTCTAT");//GTCGATT  //before T: GGACG
+		  *  "AGCAAACACTTGCTGTACCCTAT"
+		  *  
+		  *  compare "AGCAACTAT"
+		  *  	     "AGCACCTAT"
+		  *  		 "AGCATCTAT"
+		  *  
+		  *  k = 5
+		  *  AGCGC - A		C - TATAT
+		  *  
+		  *  k = 5
+		  *  AAAGCAGCTTGCTACTATAA
+		  *  
+		  *  k = 8
+		  *  AAAAAAGCAGCTTGCTACTATAAAAA
+		  *  
+		  *  k=4 
+		  *  AAGCATGCTATA
+		  *  
+		  *  Two strings 
+		  *  "AGCATGCTAT","TTCAGTACCCGC"
+		  */ 
+		 
+		 generateSequenceFileFromGeneCode3("AGCATGCTAT");//GTCGATT  //before T: GGACG
 	 }
-	 public static void generateSequenceFileFromGeneCode(String s) throws IOException{
+	 public static void generateSequenceFileFromGeneCode3(String s) throws IOException{
+		 Configuration conf = new Configuration();
+	     Path outFile = new Path(outDir, "sequenceShortFileMergeTest");
+	     FileSystem fileSys = FileSystem.get(conf);
+	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
+	         outFile, BytesWritable.class, KmerCountValue.class, 
+	         CompressionType.NONE);
+		 BytesWritable outKey = null;
+	     KmerCountValue outValue;
+	     byte adjBitMap; 
+	     ArrayList<String> lists = new ArrayList<String>();
+	     lists.add("001001"); //AGC
+	     lists.add("110011"); //TAT
+	     String binaryString = "";
+		 for(int i = 1; i < s.length()-GraphVertexOperation.k; i++){
+			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s.substring(i,i+GraphVertexOperation.k));
+			 if(lists.contains(binaryString)){
+				 System.out.println("error: " + binaryString);
+				 return;
+			 }
+			 lists.add(binaryString);
+			 outKey = new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(binaryString));
+			 outValue = new KmerCountValue();
+			 adjBitMap = GraphVertexOperation.getPrecursorFromGeneCode((byte)0, s.charAt(i-1));
+			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s.charAt(i+GraphVertexOperation.k));
+			 outValue.setAdjBitMap(adjBitMap);
+			 writer.append(outKey, outValue);
+		 }
+		 /**
+		  *  CAG - AGC ------ TAT - ATA
+		  *  GAG 					ATC
+		  */
+		 // AGC
+	     String tmpKey = "001001";
+		 byte[] key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+		 String tmpValue = "00000001";
+		 byte value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+		 BytesWritable keyWritable = new BytesWritable(key);
+		 ByteWritable valueWritable = new ByteWritable(value);
+	     
+	     ArrayList<BytesWritable> arrayOfKeys = new ArrayList<BytesWritable>();
+	     arrayOfKeys.add(keyWritable);
+	     ArrayList<ByteWritable> arrayOfValues = new ArrayList<ByteWritable>();
+	     arrayOfValues.add(valueWritable);
+	 
+	     // TAT
+	     tmpKey = "110011";
+	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+	     tmpValue = "00100000";
+	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+	     keyWritable = new BytesWritable(key);
+	     valueWritable = new ByteWritable(value);
+	     arrayOfKeys.add(keyWritable);
+	     arrayOfValues.add(valueWritable);
+	     
+	     KmerCountValue kmerCountValue = null;
+	     //wirte to sequence file
+	     for(int i = 0; i < arrayOfKeys.size(); i++){
+	    	 kmerCountValue = new KmerCountValue();
+	    	 kmerCountValue.setAdjBitMap(arrayOfValues.get(i).get());
+	    	 writer.append(arrayOfKeys.get(i), kmerCountValue);
+	     }
+	     writer.close();
+	 }
+	 public static void generateSequenceFileFromGeneCode4(String s) throws IOException{
 		 Configuration conf = new Configuration();
 	     Path outFile = new Path(outDir, "sequenceFileMergeTest4");
 	     FileSystem fileSys = FileSystem.get(conf);
@@ -395,15 +485,12 @@ public class GenerateSequenceFile {
 	     KmerCountValue outValue;
 	     byte adjBitMap; 
 	     ArrayList<String> lists = new ArrayList<String>();
-	     lists.add("010010"); //CAG
-	     lists.add("100010"); //GAG
-	     lists.add("001001"); //AGC
-	     lists.add("110011"); //TAT
-	     lists.add("001100"); //ATA
-	     lists.add("001101"); //ATC
+
+	     lists.add("00001001"); //AAGC
+	     lists.add("11001100"); //TATA
 	     String binaryString = "";
-		 for(int i = 1; i < s.length()-k; i++){
-			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s.substring(i,i+k));
+		 for(int i = 1; i < s.length()-GraphVertexOperation.k; i++){
+			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s.substring(i,i+GraphVertexOperation.k));
 			 if(lists.contains(binaryString)){
 				 System.out.println("error: " + binaryString);
 				 return;
@@ -412,7 +499,91 @@ public class GenerateSequenceFile {
 			 outKey = new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(binaryString));
 			 outValue = new KmerCountValue();
 			 adjBitMap = GraphVertexOperation.getPrecursorFromGeneCode((byte)0, s.charAt(i-1));
-			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s.charAt(i+k));
+			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s.charAt(i+GraphVertexOperation.k));
+			 outValue.setAdjBitMap(adjBitMap);
+			 writer.append(outKey, outValue);
+		 }
+		 
+		 /**
+		  *  CAG - AGC ------ TAT - ATA
+		  *  GAG 					ATC
+		  */	     
+	     // AGC
+	     String tmpKey = "00001001";
+	     byte[] key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+	     String tmpValue = "00000001";
+	     byte value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+	     BytesWritable keyWritable = new BytesWritable(key);
+	     ByteWritable valueWritable = new ByteWritable(value);
+	     
+	     ArrayList<BytesWritable> arrayOfKeys = new ArrayList<BytesWritable>();
+	     arrayOfKeys.add(keyWritable);
+	     ArrayList<ByteWritable> arrayOfValues = new ArrayList<ByteWritable>();
+	     arrayOfValues.add(valueWritable);
+
+	     // TAT
+	     tmpKey = "11001100";
+	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+	     tmpValue = "00100000";
+	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+	     keyWritable = new BytesWritable(key);
+	     valueWritable = new ByteWritable(value);
+	     arrayOfKeys.add(keyWritable);
+	     arrayOfValues.add(valueWritable);
+	     
+	     KmerCountValue kmerCountValue = null;
+	     //wirte to sequence file
+	     for(int i = 0; i < arrayOfKeys.size(); i++){
+	    	 kmerCountValue = new KmerCountValue();
+	    	 kmerCountValue.setAdjBitMap(arrayOfValues.get(i).get());
+	    	 writer.append(arrayOfKeys.get(i), kmerCountValue);
+	     }
+	     writer.close();
+	     
+	     //read outputs
+	     Path inFile = new Path(outDir, "sequenceFileMergeTest4");
+	     outKey = new BytesWritable();
+	     outValue = new KmerCountValue();
+	     SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
+	     int iteration = 1;
+	     try {
+	         while(reader.next(outKey, outValue)){
+	        	 System.out.println(iteration);
+			     System.out.println("key: " + BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),GraphVertexOperation.k));
+			     System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(outValue.getAdjBitMap()));
+			     System.out.println();
+			     iteration++;
+	         }
+	     } finally {
+	       reader.close();
+	     }
+	 }
+	 public static void generateSequenceFileFromGeneCode5(String s) throws IOException{
+		 Configuration conf = new Configuration();
+	     Path outFile = new Path(outDir, "sequenceFileMergeTest4");
+	     FileSystem fileSys = FileSystem.get(conf);
+	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
+	         outFile, BytesWritable.class, KmerCountValue.class, 
+	         CompressionType.NONE);
+		 BytesWritable outKey = null;
+	     KmerCountValue outValue;
+	     byte adjBitMap; 
+	     ArrayList<String> lists = new ArrayList<String>();
+
+	     lists.add("0000001001"); //AAAGC
+	     lists.add("1100110000"); //TATAA
+	     String binaryString = "";
+		 for(int i = 1; i < s.length()-GraphVertexOperation.k; i++){
+			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s.substring(i,i+GraphVertexOperation.k));
+			 if(lists.contains(binaryString)){
+				 System.out.println("error: " + binaryString);
+				 return;
+			 }
+			 lists.add(binaryString);
+			 outKey = new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(binaryString));
+			 outValue = new KmerCountValue();
+			 adjBitMap = GraphVertexOperation.getPrecursorFromGeneCode((byte)0, s.charAt(i-1));
+			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s.charAt(i+GraphVertexOperation.k));
 			 outValue.setAdjBitMap(adjBitMap);
 			 writer.append(outKey, outValue);
 		 }
@@ -420,10 +591,10 @@ public class GenerateSequenceFile {
 		  *  CAG - AGC ------ TAT - ATA
 		  *  GAG 					ATC
 		  */
-		 // CAG
-	     String tmpKey = "010010";
+		 // AGC
+	     String tmpKey = "0000001001";
 		 byte[] key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
-		 String tmpValue = "00000010";
+		 String tmpValue = "00000001";
 		 byte value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
 		 BytesWritable keyWritable = new BytesWritable(key);
 		 ByteWritable valueWritable = new ByteWritable(value);
@@ -433,49 +604,181 @@ public class GenerateSequenceFile {
 	     ArrayList<ByteWritable> arrayOfValues = new ArrayList<ByteWritable>();
 	     arrayOfValues.add(valueWritable);
 	     
-	     // AGC
-	     tmpKey = "001001";
-	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
-	     tmpValue = "01100001";
-	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
-	     keyWritable = new BytesWritable(key);
-	     valueWritable = new ByteWritable(value);
-	     arrayOfKeys.add(keyWritable);
-	     arrayOfValues.add(valueWritable);
-	     
-	     // GAG
-	     tmpKey = "100010";
-	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
-	     tmpValue = "00000010";
-	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
-	     keyWritable = new BytesWritable(key);
-	     valueWritable = new ByteWritable(value);
-	     arrayOfKeys.add(keyWritable);
-	     arrayOfValues.add(valueWritable);
-	     
 	     // TAT
-	     tmpKey = "110011";
+	     tmpKey = "1100110000";
 	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
-	     tmpValue = "00100011";
+	     tmpValue = "00100000";
 	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
 	     keyWritable = new BytesWritable(key);
 	     valueWritable = new ByteWritable(value);
 	     arrayOfKeys.add(keyWritable);
 	     arrayOfValues.add(valueWritable);
 
-	     // ATA
-	     tmpKey = "001100";
+	     KmerCountValue kmerCountValue = null;
+	     //wirte to sequence file
+	     for(int i = 0; i < arrayOfKeys.size(); i++){
+	    	 kmerCountValue = new KmerCountValue();
+	    	 kmerCountValue.setAdjBitMap(arrayOfValues.get(i).get());
+	    	 writer.append(arrayOfKeys.get(i), kmerCountValue);
+	     }
+	     writer.close();
+	     
+	     //read outputs
+	     Path inFile = new Path(outDir, "sequenceFileMergeTest4");
+	     outKey = new BytesWritable();
+	     outValue = new KmerCountValue();
+	     SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
+	     int iteration = 1;
+	     try {
+	         while(reader.next(outKey, outValue)){
+	        	 System.out.println(iteration);
+	        	 String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),GraphVertexOperation.k);
+			     System.out.println("key: " + kmer);
+			     System.out.println("code: " + GraphVertexOperation.convertBinaryStringToGenecode(kmer));
+			     System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(outValue.getAdjBitMap()));
+			     System.out.println();
+			     iteration++;
+	         }
+	     } finally {
+	       reader.close();
+	     }
+	 }
+	 
+	 public static void generateSequenceFileFromGeneCode8(String s) throws IOException{
+		 Configuration conf = new Configuration();
+	     Path outFile = new Path(outDir, "sequenceFileMergeTest4");
+	     FileSystem fileSys = FileSystem.get(conf);
+	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
+	         outFile, BytesWritable.class, KmerCountValue.class, 
+	         CompressionType.NONE);
+		 BytesWritable outKey = null;
+	     KmerCountValue outValue;
+	     byte adjBitMap; 
+	     ArrayList<String> lists = new ArrayList<String>();
+
+	     lists.add("0000000000001001"); //AAAAAAGC
+	     lists.add("1100110000000000"); //TATAAAAA
+	     String binaryString = "";
+		 for(int i = 1; i < s.length()-GraphVertexOperation.k; i++){
+			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s.substring(i,i+GraphVertexOperation.k));
+			 if(lists.contains(binaryString)){
+				 System.out.println("error: " + binaryString);
+				 return;
+			 }
+			 lists.add(binaryString);
+			 outKey = new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(binaryString));
+			 outValue = new KmerCountValue();
+			 adjBitMap = GraphVertexOperation.getPrecursorFromGeneCode((byte)0, s.charAt(i-1));
+			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s.charAt(i+GraphVertexOperation.k));
+			 outValue.setAdjBitMap(adjBitMap);
+			 writer.append(outKey, outValue);
+		 }
+		 /**
+		  *  CAG - AGC ------ TAT - ATA
+		  *  GAG 					ATC
+		  */
+		 // AGC
+	     String tmpKey = "0000000000001001";
+		 byte[] key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+		 String tmpValue = "00000001";
+		 byte value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+		 BytesWritable keyWritable = new BytesWritable(key);
+		 ByteWritable valueWritable = new ByteWritable(value);
+	     
+	     ArrayList<BytesWritable> arrayOfKeys = new ArrayList<BytesWritable>();
+	     arrayOfKeys.add(keyWritable);
+	     ArrayList<ByteWritable> arrayOfValues = new ArrayList<ByteWritable>();
+	     arrayOfValues.add(valueWritable);
+	     
+	     // TAT
+	     tmpKey = "1100110000000000";
 	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
-	     tmpValue = "10000000";
+	     tmpValue = "00100000";
 	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
 	     keyWritable = new BytesWritable(key);
 	     valueWritable = new ByteWritable(value);
 	     arrayOfKeys.add(keyWritable);
 	     arrayOfValues.add(valueWritable);
-	     // ATC
-	     tmpKey = "001101";
+
+	     KmerCountValue kmerCountValue = null;
+	     //wirte to sequence file
+	     for(int i = 0; i < arrayOfKeys.size(); i++){
+	    	 kmerCountValue = new KmerCountValue();
+	    	 kmerCountValue.setAdjBitMap(arrayOfValues.get(i).get());
+	    	 writer.append(arrayOfKeys.get(i), kmerCountValue);
+	     }
+	     writer.close();
+	     
+	     //read outputs
+	     Path inFile = new Path(outDir, "sequenceFileMergeTest4");
+	     outKey = new BytesWritable();
+	     outValue = new KmerCountValue();
+	     SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
+	     int iteration = 1;
+	     try {
+	         while(reader.next(outKey, outValue)){
+	        	 System.out.println(iteration);
+	        	 String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),GraphVertexOperation.k);
+			     System.out.println("key: " + kmer);
+			     System.out.println("code: " + GraphVertexOperation.convertBinaryStringToGenecode(kmer));
+			     System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(outValue.getAdjBitMap()));
+			     System.out.println();
+			     iteration++;
+	         }
+	     } finally {
+	       reader.close();
+	     }
+	 }
+	 
+	 public static void generateSequenceFileFromTwoGeneCode3(String s, String s2) throws IOException{
+		 Configuration conf = new Configuration();
+	     Path outFile = new Path(outDir, "sequenceFileMergeTest4");
+	     FileSystem fileSys = FileSystem.get(conf);
+	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
+	         outFile, BytesWritable.class, KmerCountValue.class, 
+	         CompressionType.NONE);
+		 BytesWritable outKey = null;
+	     KmerCountValue outValue;
+	     byte adjBitMap; 
+	     ArrayList<String> lists = new ArrayList<String>();
+	     lists.add("001001"); //AGC
+	     lists.add("110011"); //TAT
+	     String binaryString = "";
+		 for(int i = 1; i < s.length()-GraphVertexOperation.k; i++){
+			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s.substring(i,i+GraphVertexOperation.k));
+			 if(lists.contains(binaryString)){
+				 System.out.println("error: " + binaryString);
+				 return;
+			 }
+			 lists.add(binaryString);
+			 outKey = new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(binaryString));
+			 outValue = new KmerCountValue();
+			 adjBitMap = GraphVertexOperation.getPrecursorFromGeneCode((byte)0, s.charAt(i-1));
+			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s.charAt(i+GraphVertexOperation.k));
+			 outValue.setAdjBitMap(adjBitMap);
+			 writer.append(outKey, outValue);
+		 }
+		 /**
+		  *  CAG - AGC ------ TAT - ATA
+		  *  GAG 					ATC
+		  */
+		 // AGC
+	     String tmpKey = "001001";
+		 byte[] key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+		 String tmpValue = "00000001";
+		 byte value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+		 BytesWritable keyWritable = new BytesWritable(key);
+		 ByteWritable valueWritable = new ByteWritable(value);
+	     
+	     ArrayList<BytesWritable> arrayOfKeys = new ArrayList<BytesWritable>();
+	     arrayOfKeys.add(keyWritable);
+	     ArrayList<ByteWritable> arrayOfValues = new ArrayList<ByteWritable>();
+	     arrayOfValues.add(valueWritable);
+	 
+	     // TAT
+	     tmpKey = "110011";
 	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
-	     tmpValue = "10000000";
+	     tmpValue = "00100000";
 	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
 	     keyWritable = new BytesWritable(key);
 	     valueWritable = new ByteWritable(value);
@@ -483,6 +786,58 @@ public class GenerateSequenceFile {
 	     arrayOfValues.add(valueWritable);
 	     
 	     KmerCountValue kmerCountValue = null;
+	     //wirte to sequence file
+	     for(int i = 0; i < arrayOfKeys.size(); i++){
+	    	 kmerCountValue = new KmerCountValue();
+	    	 kmerCountValue.setAdjBitMap(arrayOfValues.get(i).get());
+	    	 writer.append(arrayOfKeys.get(i), kmerCountValue);
+	     }
+	     
+	     lists.add("111101"); //TTC
+	     lists.add("011001"); //CGC
+	     binaryString = "";
+		 for(int i = 1; i < s2.length()-GraphVertexOperation.k; i++){
+			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s2.substring(i,i+GraphVertexOperation.k));
+			 if(lists.contains(binaryString)){
+				 System.out.println("error: " + binaryString);
+				 return;
+			 }
+			 lists.add(binaryString);
+			 outKey = new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(binaryString));
+			 outValue = new KmerCountValue();
+			 adjBitMap = GraphVertexOperation.getPrecursorFromGeneCode((byte)0, s2.charAt(i-1));
+			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s2.charAt(i+GraphVertexOperation.k));
+			 outValue.setAdjBitMap(adjBitMap);
+			 writer.append(outKey, outValue);
+		 }
+		 /**
+		  *  CAG - AGC ------ TAT - ATA
+		  *  GAG 					ATC
+		  */
+		 // TTC
+	     tmpKey = "111101";
+		 key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+		 tmpValue = "00000001";
+		 value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+		 keyWritable = new BytesWritable(key);
+		 valueWritable = new ByteWritable(value);
+	     
+	     arrayOfKeys = new ArrayList<BytesWritable>();
+	     arrayOfKeys.add(keyWritable);
+	     arrayOfValues = new ArrayList<ByteWritable>();
+	     arrayOfValues.add(valueWritable);
+	 
+	     // CGC
+	     tmpKey = "011001";
+	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+	     tmpValue = "00100000";
+	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+	     keyWritable = new BytesWritable(key);
+	     valueWritable = new ByteWritable(value);
+	     arrayOfKeys.add(keyWritable);
+	     arrayOfValues.add(valueWritable);
+	     
+	     kmerCountValue = null;
 	     //wirte to sequence file
 	     for(int i = 0; i < arrayOfKeys.size(); i++){
 	    	 kmerCountValue = new KmerCountValue();

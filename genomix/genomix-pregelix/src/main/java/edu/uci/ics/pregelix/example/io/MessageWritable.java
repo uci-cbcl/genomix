@@ -7,6 +7,9 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.pregelix.GraphVertexOperation;
+import edu.uci.ics.pregelix.api.graph.Vertex;
+
 public class MessageWritable implements WritableComparable<MessageWritable>{
 	/**
 	 * sourceVertexId stores source vertexId when headVertex sends the message
@@ -14,30 +17,39 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 	 * chainVertexId stores the chains of connected DNA
 	 * file stores the point to the file that stores the chains of connected DNA
 	 */
-	private byte[] sourceVertexIdOrNeighberInfo;
+	private byte[] sourceVertexId;
+	private byte neighberInfo;
 	private byte[] chainVertexId;
 	private File file;
 	private boolean isRear;
 	private int lengthOfChain;
-	private static int k = 3;
 	
 	public MessageWritable(){		
 	}
 	
-	public void set(byte[] sourceVertexIdOrNeighberInfo, byte[] chainVertexId, File file){
-		this.sourceVertexIdOrNeighberInfo = sourceVertexIdOrNeighberInfo;
+	public void set(byte[] sourceVertexId, byte neighberInfo, byte[] chainVertexId, File file){
+		this.sourceVertexId = sourceVertexId;
+		this.neighberInfo = neighberInfo;
 		this.chainVertexId = chainVertexId;
 		this.file = file;
 		this.isRear = false;
 		this.lengthOfChain = 0;
 	}
 
-	public byte[] getSourceVertexIdOrNeighberInfo() {
-		return sourceVertexIdOrNeighberInfo;
+	public byte[] getSourceVertexId() {
+		return sourceVertexId;
 	}
 
-	public void setSourceVertexIdOrNeighberInfo(byte[] sourceVertexIdOrNeighberInfo) {
-		this.sourceVertexIdOrNeighberInfo = sourceVertexIdOrNeighberInfo;
+	public void setSourceVertexId(byte[] sourceVertexId) {
+		this.sourceVertexId = sourceVertexId;
+	}
+
+	public byte getNeighberInfo() {
+		return neighberInfo;
+	}
+
+	public void setNeighberInfo(byte neighberInfo) {
+		this.neighberInfo = neighberInfo;
 	}
 
 	public byte[] getChainVertexId() {
@@ -45,6 +57,20 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 	}
 
 	public void setChainVertexId(byte[] chainVertexId) {
+		/*if(lengthOfChain == 0){
+			this.chainVertexId = chainVertexId;
+			return;
+		}
+		int numOfByte = (2*lengthOfChain-1)/8 + 1;
+		if(chainVertexId.length == numOfByte)
+			this.chainVertexId = chainVertexId;
+		else{
+			byte[] tmp = new byte[numOfByte];
+			for(int i = 0; i < numOfByte; i++)
+				tmp[i] = chainVertexId[i];
+			this.chainVertexId = tmp;
+		}*/
+		
 		this.chainVertexId = chainVertexId;
 	}
 
@@ -82,7 +108,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 		out.writeInt(lengthOfChain);
 		if(lengthOfChain != 0)
 			out.write(chainVertexId);
-		out.write(sourceVertexIdOrNeighberInfo);
+		out.write(sourceVertexId);
+		out.write(neighberInfo);
 		out.writeBoolean(isRear);
 	}
 
@@ -96,11 +123,9 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 		}
 		else
 			chainVertexId = new byte[0];
-		if(lengthOfChain % 2 == 0)
-			sourceVertexIdOrNeighberInfo = new byte[(k-1)/4 + 1];
-		else
-			sourceVertexIdOrNeighberInfo = new byte[1];
-		in.readFully(sourceVertexIdOrNeighberInfo);
+		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		in.readFully(sourceVertexId);
+		neighberInfo = in.readByte();
 		isRear = in.readBoolean();
 	}
 

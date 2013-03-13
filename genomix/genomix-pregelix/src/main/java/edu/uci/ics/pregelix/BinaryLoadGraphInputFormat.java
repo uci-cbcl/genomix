@@ -13,6 +13,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
 import edu.uci.ics.pregelix.example.io.MessageWritable;
 import edu.uci.ics.pregelix.type.KmerCountValue;
 
@@ -60,15 +61,32 @@ public class BinaryLoadGraphInputFormat extends
 	            /**
 	             * set the src vertex id
 	             */
-            	vertexId = getRecordReader().getCurrentKey();
-	            vertex.setVertexId(vertexId);
+            	/*vertexId = getRecordReader().getCurrentKey();
+            	byte[] vertexBytes = vertexId.getBytes();
+            	int numOfByte = (2*GraphVertexOperation.k-1)/8 + 1;
+        		if(vertexBytes.length == numOfByte)
+        			vertex.setVertexId(vertexId);
+        		else{
+        			byte[] tmp = new byte[numOfByte];
+        			for(int i = 0; i < numOfByte; i++)
+        				tmp[i] = vertexBytes[i];
+        			vertex.setVertexId(new BytesWritable(tmp));
+        		}*/
 	            
+        		vertexId = getRecordReader().getCurrentKey();
+        		vertex.setVertexId(vertexId);
 	            /**
 	             * set the vertex value
 	             */
 	            KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
 	            vertexValue.set(kmerCountValue.getAdjBitMap()); 
 	            vertex.setVertexValue(vertexValue);
+	            
+	        	String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId.getBytes(),GraphVertexOperation.k);
+			    System.out.println("key: " + kmer);
+			    System.out.println("code: " + GraphVertexOperation.convertBinaryStringToGenecode(kmer));
+			    System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(kmerCountValue.getAdjBitMap()));
+			    System.out.println();
             }
             
             return vertex;

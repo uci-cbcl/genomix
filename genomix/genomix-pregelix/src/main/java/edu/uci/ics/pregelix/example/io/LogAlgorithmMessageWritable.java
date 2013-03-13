@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.pregelix.GraphVertexOperation;
+
 public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgorithmMessageWritable>{
 	/**
 	 * sourceVertexId stores source vertexId when headVertex sends the message
@@ -20,7 +22,6 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	private File file;
 	private int message;
 	private int sourceVertexState;
-	private static int k = 3;
 	
 	public LogAlgorithmMessageWritable(){		
 	}
@@ -107,7 +108,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		else
 			chainVertexId = new byte[0];
 		if(lengthOfChain % 2 == 0)
-			sourceVertexIdOrNeighberInfo = new byte[(k-1)/4 + 1];
+			sourceVertexIdOrNeighberInfo = new byte[(GraphVertexOperation.k-1)/4 + 1];
 		else
 			sourceVertexIdOrNeighberInfo = new byte[1];
 		in.readFully(sourceVertexIdOrNeighberInfo);

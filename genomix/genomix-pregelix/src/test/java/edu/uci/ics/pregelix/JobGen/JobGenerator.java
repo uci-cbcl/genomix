@@ -15,7 +15,6 @@ import edu.uci.ics.pregelix.BinaryLoadGraphOutputFormat;
 import edu.uci.ics.pregelix.LoadGraphVertex;
 import edu.uci.ics.pregelix.MergeGraphVertex;
 import edu.uci.ics.pregelix.LoadGraphVertex.SimpleLoadGraphVertexOutputFormat;
-import edu.uci.ics.pregelix.TestLoadGraphVertex;
 import edu.uci.ics.pregelix.TextLoadGraphInputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -64,6 +63,7 @@ public class JobGenerator {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		genBinaryLoadGraph();
+		//genSequenceLoadGraph();
 		//genBasicBinaryLoadGraph();
 	}
 

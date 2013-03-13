@@ -59,7 +59,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 	private int tmpMessage;
 	private ValueStateWritable tmpVal = new ValueStateWritable();
 	private LogAlgorithmMessageWritable tmpMsg = new LogAlgorithmMessageWritable();
-	public static final int k = 3; //kmer, k = 3
 	/**
 	 * For test, in compute method, make each vertexValue shift 1 to left.
 	 * It will be modified when going forward to next step.

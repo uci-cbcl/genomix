@@ -1,6 +1,10 @@
 package edu.uci.ics.pregelix;
 
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
@@ -13,6 +17,9 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 import edu.uci.ics.pregelix.SequenceFile.GenerateSequenceFile;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
+import edu.uci.ics.pregelix.example.io.MessageWritable;
+import edu.uci.ics.pregelix.hdfs.HDFSOperation;
+import edu.uci.ics.pregelix.type.KmerCountValue;
 
 public class GraphVertexOperation {
 	public static final int k = 3; //kmer, k: the length of kmer
@@ -167,7 +174,7 @@ public class GraphVertexOperation {
 	 * Ex. 01 10 00(nothing)	->	01 10 00(A)/01(C)/10(G)/11(T)		
 	 */
 	public static byte[] replaceLastTwoBits(byte[] vertexId, int n){
-		String binaryStringVertexId = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId, 3);
+		String binaryStringVertexId = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId, k);
 		String resultString = "";
 		for(int i = 0; i < binaryStringVertexId.length()-2; i++)
 			resultString += binaryStringVertexId.charAt(i);
@@ -315,4 +322,103 @@ public class GraphVertexOperation {
 		}
 		return result;
 	}
+	/**
+	 * flush chainVertexId to file -- local file and hdfs file
+	 * @throws IOException 
+	 */
+	public static void flushChainToFile(byte[] chainVertexId, int lengthOfChain, byte[] vertexId) throws IOException{
+		 DataOutputStream out = new DataOutputStream(new 
+                 FileOutputStream("data/ChainVertex"));
+		 out.write(vertexId);
+		 out.writeInt(lengthOfChain);
+		 out.write(chainVertexId);
+		 out.close();
+		 //String srcFile = "data/ChainVertex";
+		 //String dstFile = "testHDFS/output/ChainVertex";
+		 //HDFSOperation.copyFromLocalFile(srcFile, dstFile);
+	}
+	/**
+	 * convert binaryString to geneCode
+	 */
+	public static String convertBinaryStringToGenecode(String kmer){
+		String result = "";
+		for(int i = 0; i < kmer.length() ; ){
+			String substring = kmer.substring(i,i+2);
+			if(substring.compareTo("00") == 0)
+				result += "A";
+			else if(substring.compareTo("01") == 0)
+				result += "C";
+			else if(substring.compareTo("10") == 0)
+				result += "G";
+			else if(substring.compareTo("11") == 0)
+				result += "T";
+			i = i+2;
+		}
+		return result;
+	}
+	/**
+	 *  generate the valid data(byte[]) from BytesWritable
+	 */
+	public static byte[] generateValidDataFromBytesWritable(BytesWritable bw){
+		byte[] wholeBytes = bw.getBytes();
+		int validNum = bw.getLength();
+		byte[] validBytes = new byte[validNum];
+		for(int i = 0; i < validNum; i++)
+			validBytes[i] = wholeBytes[i];
+		return validBytes;
+	}
+	/**
+	 *  output test for message communication
+	 */
+	public static void testMessageCommunication(OutputStreamWriter writer, long step, byte[] tmpSourceVertextId,
+			byte[] tmpDestVertexId, MessageWritable tmpMsg){
+		//test
+    	String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(
+    			tmpSourceVertextId,GraphVertexOperation.k);
+    	try {
+    		writer.write("Step: " + step + "\r\n");
+			writer.write("Source Key: " + kmer + "\r\n");
+		
+        	writer.write("Source Code: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(kmer) + "\r\n");
+        	writer.write("Send Message to: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(
+		    				BitwiseOperation.convertBytesToBinaryStringKmer(
+		    						tmpDestVertexId,GraphVertexOperation.k)) + "\r\n");
+        	writer.write("Chain Message: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(
+		    						BitwiseOperation.convertBytesToBinaryString(
+		    								tmpMsg.getChainVertexId())) + "\r\n");
+        	writer.write("Chain Length: " + tmpMsg.getLengthOfChain() + "\r\n"); 
+        	writer.write("\r\n");
+    	} catch (IOException e) { e.printStackTrace(); }
+    	return;
+	}
+	/**
+	 *  output test for last message communication -- flush
+	 */
+	public static void testLastMessageCommunication(OutputStreamWriter writer, long step, byte[] tmpVertextId,
+			byte[] tmpSourceVertextId,  MessageWritable tmpMsg){
+		String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(
+    			tmpVertextId,GraphVertexOperation.k);
+    	try {
+    		writer.write("Step: " + step + "\r\n");
+    		writer.write("Over!" + "\r\n");
+			writer.write("Source Key: " + kmer + "\r\n");
+			
+        	writer.write("Source Code: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(kmer) + "\r\n");
+        
+        	writer.write("Flush Chain Message: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(
+		    						BitwiseOperation.convertBytesToBinaryString(
+		    								tmpMsg.getChainVertexId())) + "\r\n");
+        	writer.write("Chain Length: " + tmpMsg.getLengthOfChain() + "\r\n"); 
+        	writer.write("\r\n");
+    	} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+		
 }
