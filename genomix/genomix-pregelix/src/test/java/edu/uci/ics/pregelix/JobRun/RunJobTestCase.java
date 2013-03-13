@@ -52,12 +52,12 @@ public class RunJobTestCase extends TestCase{
         this.expectedFileName = expectedFile;
         giraphJobGens = new JobGen[4];
         giraphJobGens[0] = new JobGenOuterJoin(job);
-        waitawhile();
+        /*waitawhile();
         giraphJobGens[1] = new JobGenInnerJoin(job);
         waitawhile();
         giraphJobGens[2] = new JobGenOuterJoinSort(job);
         waitawhile();
-        giraphJobGens[3] = new JobGenOuterJoinSingleSort(job);
+        giraphJobGens[3] = new JobGenOuterJoinSingleSort(job);*/
     }
     
     private void waitawhile() throws InterruptedException {
