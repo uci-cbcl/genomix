@@ -10,7 +10,6 @@ import org.apache.hadoop.io.NullWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
-import edu.uci.ics.pregelix.example.GraphMutationVertex;
 import edu.uci.ics.pregelix.example.client.Client;
 import edu.uci.ics.pregelix.example.io.MessageWritable;
 
@@ -42,51 +41,18 @@ import edu.uci.ics.pregelix.example.io.MessageWritable;
  * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
-public class TestLoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
+public class testDeleteVertexId extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
 
-	private byte[] tmpVertexId;
-	private BytesWritable vid;
-	private TestLoadGraphVertex newVertex;
-	private MessageWritable tmpMsg = new MessageWritable();
 	/**
-	 * For test, just output original file
+	 * For test
 	 */
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
-		deleteVertex(getVertexId());
-		tmpVertexId = getVertexId().getBytes();
-		String a1 = "100100";
-		byte[] b1 = BitwiseOperation.convertBinaryStringToBytes(a1);
-		String a2 = "000000"; //"001001";
-		byte[] b2 = BitwiseOperation.convertBinaryStringToBytes(a2);
-		String valueString = "00000000";
-		byte value = BitwiseOperation.convertBinaryStringToByte(valueString);
-		if(getSuperstep() == 1 && Arrays.equals(b1,tmpVertexId)){
-			/*newVertex = new TestLoadGraphVertex();
-            vid.set(new BytesWritable(b2));
-            newVertex.setVertexId(vid);
-            newVertex.setVertexValue(getVertexValue());
-            addVertex(vid, newVertex);*/
-			//vertex.initialize(new BytesWritable(b2), new ByteWritable(value), null, null);
-			//addVertex(new BytesWritable(b2),this.createdNewLiveVertex());
-			deleteVertex(getVertexId());
+		String s = "100100";
+		byte[] b = BitwiseOperation.convertBinaryStringToBytes(s);
+		if(getSuperstep() == 1 && Arrays.equals(b,getVertexId().getBytes())){
+			//deleteVertex(getVertexId());
 		}
-		/*String a2 = "100111";
-		byte[] b2 = BitwiseOperation.convertBinaryStringToBytes(a2);
-		String a3 = "11111111";
-		byte[] b3 = BitwiseOperation.convertBinaryStringToBytes(a3);
-		byte[] bb1 = getVertexId().getBytes();
-		if(getSuperstep() == 1 && Arrays.equals(b1,bb1)){
-			//addVertex(new BytesWritable(b3),new ByteWritable(bb1[0]));
-			deleteVertex(new BytesWritable(b1));
-		}
-		else if(getSuperstep() == 2){
-			if(msgIterator.hasNext()){
-				tmpMsg = msgIterator.next();
-				byte[] b = tmpMsg.getChainVertexId();
-				setVertexValue(new ByteWritable(b[0]));
-			}		
-		}*/
 		voteToHalt();
 	}
 
