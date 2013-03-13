@@ -35,11 +35,11 @@ public class KmerHashPartitioncomputerFactory implements
 
 				ByteBuffer buf = accessor.getBuffer();
 
-				int part = hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength) % nParts;
-				if (part < 0){
-					part = -part;
+				int hash = hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength);
+				if (hash < 0){
+					hash = - (hash+1);
 				}
-				return part;
+				return hash % nParts;
 			}
 		};
 	}

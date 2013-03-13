@@ -4,6 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
@@ -40,10 +41,24 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 				throw new HyracksDataException(e);
 			}
 		}
+
+		@Override
+		public void open(DataOutput output) throws HyracksDataException {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void close(DataOutput output) throws HyracksDataException {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 
 	@Override
-	public ITupleWriter getTupleWriter() {
+	public ITupleWriter getTupleWriter(IHyracksTaskContext ctx)
+			throws HyracksDataException {
+		// TODO Auto-generated method stub
 		return new TupleWriter();
 	}
 

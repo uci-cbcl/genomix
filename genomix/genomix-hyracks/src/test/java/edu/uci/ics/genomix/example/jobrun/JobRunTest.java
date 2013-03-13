@@ -40,7 +40,6 @@ public class JobRunTest {
 	private static final String DATA_PATH = "src/test/resources/data/webmap/text.txt";
 	private static final String HDFS_INPUT_PATH = "/webmap";
 	private static final String HDFS_OUTPUT_PATH = "/webmap_result";
-	private static final String HDFS_OUTPUT_FILE = HDFS_OUTPUT_PATH + "/part-0";
 
 	private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR
 			+ HDFS_OUTPUT_PATH + "/merged.txt";
@@ -120,8 +119,9 @@ public class JobRunTest {
 
 	@Test
 	public void TestExternalGroupby() throws Exception {
+		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		System.err.println("Testing ExternalGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
@@ -129,6 +129,7 @@ public class JobRunTest {
 
 	@Test
 	public void TestPreClusterGroupby() throws Exception {
+		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		System.err.println("Testing PreClusterGroupBy");
@@ -138,6 +139,7 @@ public class JobRunTest {
 
 	@Test
 	public void TestHybridGroupby() throws Exception {
+		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		System.err.println("Testing HybridGroupBy");

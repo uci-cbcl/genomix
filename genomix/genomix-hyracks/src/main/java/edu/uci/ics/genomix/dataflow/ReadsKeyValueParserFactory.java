@@ -54,11 +54,6 @@ public class ReadsKeyValueParserFactory implements
 				}
 			}
 
-			@Override
-			public void flush(IFrameWriter writer) throws HyracksDataException {
-				FrameUtils.flushFrame(outputBuffer, writer);
-			}
-
 			private void SplitReads(byte[] array, IFrameWriter writer) {
 				/** first kmer */
 				byte[] kmer = Kmer.CompressKmer(k, array, 0);
@@ -105,6 +100,17 @@ public class ReadsKeyValueParserFactory implements
 				} catch (Exception e) {
 					throw new IllegalStateException(e);
 				}
+			}
+
+			@Override
+			public void open(IFrameWriter writer) throws HyracksDataException {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void close(IFrameWriter writer) throws HyracksDataException {
+				FrameUtils.flushFrame(outputBuffer, writer);
 			}
 		};
 	}

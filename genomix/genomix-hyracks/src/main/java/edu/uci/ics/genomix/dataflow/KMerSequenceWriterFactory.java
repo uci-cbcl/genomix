@@ -11,6 +11,7 @@ import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.type.KmerCountValue;
+import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
@@ -44,11 +45,6 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 		public void write(DataOutput output, ITupleReference tuple)
 				throws HyracksDataException {
 			try {
-				if (writer == null) {
-					writer = SequenceFile.createWriter(cf.getConf(),
-							(FSDataOutputStream) output, BytesWritable.class,
-							KmerCountValue.class, CompressionType.NONE, null);
-				}
 				byte[] kmer = tuple.getFieldData(0);
 				int keyStart = tuple.getFieldStart(0);
 				int keyLength = tuple.getFieldLength(0);
@@ -64,10 +60,26 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				throw new HyracksDataException(e);
 			}
 		}
+		@Override
+		public void open(DataOutput output) throws HyracksDataException {
+			try {
+				writer = SequenceFile.createWriter(cf.getConf(),
+						(FSDataOutputStream) output, BytesWritable.class,
+						KmerCountValue.class, CompressionType.NONE, null);
+			} catch (IOException e) {
+				throw new HyracksDataException(e);
+			}
+		}
+		@Override
+		public void close(DataOutput output) throws HyracksDataException {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 
 	@Override
-	public ITupleWriter getTupleWriter() {
+	public ITupleWriter getTupleWriter(IHyracksTaskContext ctx)
+			throws HyracksDataException {
 		return new TupleWriter(confFactory);
 	}
 
