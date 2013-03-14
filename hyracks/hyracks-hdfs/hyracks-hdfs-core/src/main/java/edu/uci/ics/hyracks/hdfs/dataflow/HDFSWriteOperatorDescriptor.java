@@ -97,15 +97,15 @@ public class HDFSWriteOperatorDescriptor extends
 				String fileName = outputDirPath + File.separator + "part-"
 						+ partition;
 
-				tupleWriter = tupleWriterFactory.getTupleWriter(ctx);
-				try {
-					FileSystem dfs = FileSystem.get(conf);
-					dos = dfs.create(new Path(fileName), true);
-					tupleWriter.open(dos);
-				} catch (Exception e) {
-					throw new HyracksDataException(e);
-				}
-			}
+                tupleWriter = tupleWriterFactory.getTupleWriter(ctx);
+                try {
+                    FileSystem dfs = FileSystem.get(conf);
+                    dos = dfs.create(new Path(fileName), true);
+                    tupleWriter.open(dos);
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
+                }
+            }
 
 			@Override
 			public void nextFrame(ByteBuffer buffer)
@@ -123,17 +123,17 @@ public class HDFSWriteOperatorDescriptor extends
 
 			}
 
-			@Override
-			public void close() throws HyracksDataException {
-				try {
-					tupleWriter.close(dos);
-					dos.close();
-				} catch (Exception e) {
-					throw new HyracksDataException(e);
-				} finally {
-					Thread.currentThread().setContextClassLoader(ctxCL);
-				}
-			}
+            @Override
+            public void close() throws HyracksDataException {
+                try {
+                    tupleWriter.close(dos);
+                    dos.close();
+                } catch (Exception e) {
+                    throw new HyracksDataException(e);
+                } finally {
+                    Thread.currentThread().setContextClassLoader(ctxCL);
+                }
+            }
 
 		};
 	}
