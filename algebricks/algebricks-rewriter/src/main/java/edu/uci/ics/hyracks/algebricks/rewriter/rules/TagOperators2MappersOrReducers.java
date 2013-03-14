@@ -1,4 +1,4 @@
-package edu.uci.ics.hivesterix.optimizer.rules;
+package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 /*
  * Very similar to ConvertAlgebricks2MapReduceRule of Pigsterix (in pigsterix.googlecode.com) aside of:
@@ -17,6 +17,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import edu.uci.ics.hyracks.algebricks.core.rewriter.base.TaggingMRCounter;
 
 /*
  * This class prints the Map-Reduce plan with no optimization yet
@@ -29,45 +30,8 @@ import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class TagOperators2MappersOrReducers implements IAlgebraicRewriteRule {
 
     private static int counterMR = -1; //counts the number of mappers and reducers overall
-    private String tagMapperReducerKey = TagOperators2MappersOrReducers.class.getName()+".LabelProvider";
-    private String tagStateAnnotationKey = ConvertAlgebricks2MapReduceRule.class.getName()+".LabelProvider";
-
-    //there's an TaggingMRCounter annotation associated to an operator
-    //this class is static as independant of TagOperators2MappersOrReducers
-    public static class TaggingMRCounter {
-        String label;
-        int counter;
-
-        public TaggingMRCounter() {
-            label        = "M";
-            this.counter =  0;
-        }
-
-        public TaggingMRCounter(String label, int counter) {
-            this.label   = label;
-            this.counter = counter;
-        }
-
-        public int getCounter() {
-            return counter;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public void incrementAndSetCounter() {
-            this.counter++;
-        }
-        @Override
-        public String toString() {
-
-            return new String(label+"-"+counter);
-        }
-
-    }
-
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+ 
+     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
 
         return false;
     }
@@ -86,7 +50,7 @@ public class TagOperators2MappersOrReducers implements IAlgebraicRewriteRule {
 
         if (children_list.isEmpty()){ 
             tag_MR_current = new TaggingMRCounter("M", ++counterMR);
-            annotations_current.put(tagMapperReducerKey, tag_MR_current);
+            annotations_current.put(TaggingMRCounter.tagMapperReducerKey, tag_MR_current);
 
         }
         else{ //i.e. no children
@@ -104,12 +68,12 @@ public class TagOperators2MappersOrReducers implements IAlgebraicRewriteRule {
             for(Mutable<ILogicalOperator> child:children_list){ //usually it's one child
 
                 //current's annotations for super-node
-                tag_super_node_current = (Pair)annotations_current.get(tagStateAnnotationKey);
+                tag_super_node_current = (Pair)annotations_current.get(TaggingMRCounter.tagSuperNodeKey);
 
                 //child's annotations for super-node
                 AbstractLogicalOperator child_sp = (AbstractLogicalOperator) child.getValue();
                 annotations_child     = child_sp.getAnnotations();
-                tag_super_node_child  = (Pair)annotations_child.get(tagStateAnnotationKey);
+                tag_super_node_child  = (Pair)annotations_child.get(TaggingMRCounter.tagSuperNodeKey);
 
                 //Have we switched super-node number?
                 int current_sn_number = Integer.parseInt(tag_super_node_current.second.toString()); //no need to recalculate it every iteration but easier to read
@@ -121,14 +85,14 @@ public class TagOperators2MappersOrReducers implements IAlgebraicRewriteRule {
             }
 
             if (inTheSameSuperNode){
-                tag_MR_current = (TaggingMRCounter) annotations_child.get(tagMapperReducerKey);
+                tag_MR_current = (TaggingMRCounter) annotations_child.get(TaggingMRCounter.tagMapperReducerKey);
             }
             else{
                 //consecutive reduces, but should have a different number
                 tag_MR_current = new TaggingMRCounter("R", ++counterMR);
             }
 
-            annotations_current.put(tagMapperReducerKey, tag_MR_current);
+            annotations_current.put(TaggingMRCounter.tagMapperReducerKey, tag_MR_current);
         }
 
         //Print the MR state

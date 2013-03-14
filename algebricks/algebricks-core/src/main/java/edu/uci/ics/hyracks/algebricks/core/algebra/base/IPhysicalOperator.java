@@ -57,4 +57,5 @@ public interface IPhysicalOperator {
     public void setHostQueryContext(Object context);
 
     public Object getHostQueryContext();
+
 }

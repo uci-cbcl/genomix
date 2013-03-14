@@ -48,5 +48,10 @@
   	<artifactId>algebricks-common</artifactId>
   	<version>0.2.3-SNAPSHOT</version>
   </dependency>
+  <dependency>
+   <groupId>commons-io</groupId>
+   <artifactId>commons-io</artifactId>
+   <version>1.4</version>
+  </dependency>
   </dependencies>
 </project>

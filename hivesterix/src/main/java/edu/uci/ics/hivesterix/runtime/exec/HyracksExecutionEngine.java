@@ -212,10 +212,17 @@ public class HyracksExecutionEngine implements IExecutionEngine {
 
                 // print optimized plan
                 LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
+                System.out.println("Keren1");
                 StringBuilder buffer = new StringBuilder();
                 PlanPrettyPrinter.printPlan(plan, buffer, pvisitor, 0);
                 String planStr = buffer.toString();
                 System.out.println(planStr);
+
+                System.out.println("Keren2");
+                StringBuilder buffer2 = new StringBuilder();
+                PlanPrettyPrinter.printPhysicalOps(plan, buffer2, 0);
+                String planStr2 = buffer2.toString();
+                System.out.println(planStr2);
 
                 if (planPrinter != null)
                     planPrinter.print(planStr);

@@ -20,6 +20,7 @@ import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksCountPartitio
 import edu.uci.ics.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.NotImplementedException;
+import edu.uci.ics.hyracks.algebricks.common.utils.Pair;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -54,7 +55,7 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     @Override
     public String toString() {
         return getOperatorTag().toString();
-    }
+    } 
 
     public void setHostQueryContext(Object context) {
         this.hostQueryContext = context;

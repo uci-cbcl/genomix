@@ -14,6 +14,10 @@
  */
 package edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -24,16 +28,29 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLog
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 
 public class PlanPrettyPrinter {
+    
     public static void printPlan(ILogicalPlan plan, StringBuilder out, LogicalOperatorPrettyPrintVisitor pvisitor,
             int indent) throws AlgebricksException {
         for (Mutable<ILogicalOperator> root : plan.getRoots()) {
             printOperator((AbstractLogicalOperator) root.getValue(), out, pvisitor, indent);
         }
     }
-
+    static int counter = 0;
+    static int counterMI = 0;
     public static void printPhysicalOps(ILogicalPlan plan, StringBuilder out, int indent) {
+        appendln(out, "digraph G {");
+        appendln(out, "     node[style=rounded]");
+        
+        
         for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printPhysicalOperator((AbstractLogicalOperator) root.getValue(), indent, out);
+            printPhysicalOperator2((AbstractLogicalOperator) root.getValue(), 5, out, counter);
+        }
+        appendln(out, "\n}");
+        File file = new File("/home/kereno/dot.txt");
+        try {
+            FileUtils.writeStringToFile(file, out.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -77,9 +94,31 @@ public class PlanPrettyPrinter {
 
     }
 
+    public static void printPhysicalOperator2(AbstractLogicalOperator op, int indent, StringBuilder out, int counter) {
+        
+        IPhysicalOperator pOp = op.getPhysicalOperator();
+        pad(out, indent);
+        
+        if (!op.getInputs().isEmpty()){
+            
+            for (Mutable<ILogicalOperator> i : op.getInputs()) {
+                append(out, op.toStringMR()+"_"+counter + " -> ");
+                if (op.getInputs().size()==1)
+                    counter++;
+                AbstractLogicalOperator child = (AbstractLogicalOperator)i.getValue(); 
+                appendln(out, child.toStringMR()+"_"+counter);
+                printPhysicalOperator2(child, indent, out, counter);
+            }
+        }
+    }
+
     private static void appendln(StringBuilder buf, String s) {
         buf.append(s);
         buf.append("\n");
+    }
+
+    private static void append(StringBuilder buf, String s) {
+        buf.append(s);
     }
 
     private static void pad(StringBuilder buf, int indent) {

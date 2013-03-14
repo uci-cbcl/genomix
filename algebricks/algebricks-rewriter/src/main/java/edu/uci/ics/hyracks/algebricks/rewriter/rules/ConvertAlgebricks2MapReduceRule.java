@@ -1,4 +1,4 @@
-package edu.uci.ics.hivesterix.optimizer.rules;
+package edu.uci.ics.hyracks.algebricks.rewriter.rules;
 
 /*
  * Very similar to ConvertAlgebricks2MapReduceRule of Pigsterix (in pigsterix.googlecode.com) aside of:
@@ -19,11 +19,10 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import edu.uci.ics.hyracks.algebricks.core.rewriter.base.TaggingMRCounter;
 
 public class ConvertAlgebricks2MapReduceRule implements IAlgebraicRewriteRule {
-    
-    private String tagStateAnnotationKey = ConvertAlgebricks2MapReduceRule.class.getName()+".LabelProvider";
-    
+        
     //there's an TaggingSNCounter annotation associated to an operator
     //this class is static as independant of ConvertAlgebricks2MapReduceRule
     public static class TaggingSNState {
@@ -64,12 +63,12 @@ public class ConvertAlgebricks2MapReduceRule implements IAlgebraicRewriteRule {
 		PhysicalOperatorTag tag = opPhy.getOperatorTag();
 
 		Map<String, Object> annotations = op.getAnnotations();
-		Pair tag_parent = (Pair)annotations.get(tagStateAnnotationKey);
+		Pair tag_parent = (Pair)annotations.get(TaggingMRCounter.tagSuperNodeKey);
 		
 		//at the root level, if the annotation doesn't exist then creates it
 		if (tag_parent == null) {
 			tag_parent = new Pair (new TaggingSNState(), 0);
-			annotations.put(tagStateAnnotationKey, tag_parent);
+			annotations.put(TaggingMRCounter.tagSuperNodeKey, tag_parent);
 		} 
 		System.out.println("super-node: #"+ tag_parent.second +", counter: #" +((TaggingSNState)tag_parent.first).getLabel() +" "+ op);
 		
@@ -93,12 +92,12 @@ public class ConvertAlgebricks2MapReduceRule implements IAlgebraicRewriteRule {
 			if (exchange){
 				((TaggingSNState)(tag_parent.first)).incrementAndSetLabel();
 				Pair p = new Pair(tag_parent.first, ((TaggingSNState)tag_parent.first).getLabel());
-				annotations_child.put(tagStateAnnotationKey, p);
+				annotations_child.put(TaggingMRCounter.tagSuperNodeKey, p);
 				//System.out.println("super-node: #" + p.second +", counter: #"+((TaggingSNState)p.first).getLabel()+" exchange operator");
 			}
 	
 			else{
-				annotations_child.put(tagStateAnnotationKey, tag_parent);
+				annotations_child.put(TaggingMRCounter.tagSuperNodeKey, tag_parent);
 			}
 		}
   	

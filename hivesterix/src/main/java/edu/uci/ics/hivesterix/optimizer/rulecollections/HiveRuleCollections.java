@@ -3,18 +3,17 @@ package edu.uci.ics.hivesterix.optimizer.rulecollections;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.uci.ics.hivesterix.optimizer.rules.ConvertAlgebricks2MapReduceRule;
 import edu.uci.ics.hivesterix.optimizer.rules.InsertProjectBeforeWriteRule;
 import edu.uci.ics.hivesterix.optimizer.rules.IntroduceEarlyProjectRule;
 import edu.uci.ics.hivesterix.optimizer.rules.LocalGroupByRule;
 import edu.uci.ics.hivesterix.optimizer.rules.RemoveRedundantSelectRule;
-import edu.uci.ics.hivesterix.optimizer.rules.TagOperators2MappersOrReducers;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import edu.uci.ics.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ComplexJoinInferenceRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.ConvertAlgebricks2MapReduceRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EliminateSubplanRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.ExtractCommonOperatorsRule;
@@ -37,6 +36,7 @@ import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveRedundantProjectionRu
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.RemoveUnusedAssignAndAggregateRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperatorsRule;
 import edu.uci.ics.hyracks.algebricks.rewriter.rules.SetExecutionModeRule;
+import edu.uci.ics.hyracks.algebricks.rewriter.rules.TagOperators2MappersOrReducers;
 
 public final class HiveRuleCollections {
 

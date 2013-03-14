@@ -37,6 +37,7 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
 import edu.uci.ics.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import edu.uci.ics.hyracks.algebricks.core.rewriter.base.TaggingMRCounter;
 
 public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
@@ -186,5 +187,14 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public boolean requiresVariableReferenceExpressions() {
         return true;
+    }
+
+    public String toStringMR(){
+    	String toString = this.getOperatorTag().name();
+
+    	Map<String, Object> annotations  = getAnnotations();
+    	TaggingMRCounter tagMapperReducerKey = (TaggingMRCounter) annotations.get(new String("tagMapperReducerKey"));
+    	
+    	return toString +"_"+tagMapperReducerKey;
     }
 }
