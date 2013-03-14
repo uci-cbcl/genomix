@@ -51,7 +51,6 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 		@Override
 		public void close(DataOutput output) throws HyracksDataException {
 			// TODO Auto-generated method stub
-			
 		}
 	}
 

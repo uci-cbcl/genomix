@@ -96,7 +96,7 @@ public class JobRunTest {
 		Path dest = new Path(HDFS_INPUT_PATH);
 		Path result = new Path(HDFS_OUTPUT_PATH);
 		dfs.mkdirs(dest);
-		dfs.mkdirs(result);
+		//dfs.mkdirs(result);
 		dfs.copyFromLocalFile(src, dest);
 
 		DataOutputStream confOutput = new DataOutputStream(
@@ -119,9 +119,9 @@ public class JobRunTest {
 
 	@Test
 	public void TestExternalGroupby() throws Exception {
-		cleanUpReEntry();
+		//cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing ExternalGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
@@ -131,7 +131,7 @@ public class JobRunTest {
 	public void TestPreClusterGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing PreClusterGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());
@@ -141,7 +141,7 @@ public class JobRunTest {
 	public void TestHybridGroupby() throws Exception {
 		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "text");
+		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing HybridGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());

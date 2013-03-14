@@ -38,6 +38,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 
 		KmerCountValue reEnterCount = new KmerCountValue();
 		BytesWritable reEnterKey = new BytesWritable();
+
 		/**
 		 * assumption is that output never change source!
 		 */
@@ -48,18 +49,19 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				byte[] kmer = tuple.getFieldData(0);
 				int keyStart = tuple.getFieldStart(0);
 				int keyLength = tuple.getFieldLength(0);
-				
+
 				byte bitmap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
 				byte count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
 				reEnterCount.reset(bitmap, count);
 				reEnterKey.set(kmer, keyStart, keyLength);
 				writer.append(reEnterKey, reEnterCount);
-				// @mark: this method can not used for read in hadoop 0.20.2. 
-				//writer.appendRaw(kmer, keyStart, keyLength, reEnterCount);
+				// @mark: this method can not used for read in hadoop 0.20.2.
+				// writer.appendRaw(kmer, keyStart, keyLength, reEnterCount);
 			} catch (IOException e) {
 				throw new HyracksDataException(e);
 			}
 		}
+
 		@Override
 		public void open(DataOutput output) throws HyracksDataException {
 			try {
@@ -70,10 +72,10 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				throw new HyracksDataException(e);
 			}
 		}
+
 		@Override
 		public void close(DataOutput output) throws HyracksDataException {
 			// TODO Auto-generated method stub
-			
 		}
 	}
 

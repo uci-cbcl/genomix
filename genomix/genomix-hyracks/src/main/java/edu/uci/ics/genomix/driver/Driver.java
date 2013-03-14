@@ -12,8 +12,6 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import edu.uci.ics.genomix.job.GenomixJob;
 import edu.uci.ics.genomix.job.JobGen;
 import edu.uci.ics.genomix.job.JobGenBrujinGraph;
-import edu.uci.ics.genomix.job.JobGenContigsGeneration;
-import edu.uci.ics.genomix.job.JobGenGraphCleanning;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -83,12 +81,6 @@ public class Driver {
 			default:
 				jobGen = new JobGenBrujinGraph(job, scheduler, ncMap,
 						numPartitionPerMachine);
-				break;
-			case GRAPH_CLEANNING:
-				jobGen = new JobGenGraphCleanning(job);
-				break;
-			case CONTIGS_GENERATION:
-				jobGen = new JobGenContigsGeneration(job);
 				break;
 			}
 

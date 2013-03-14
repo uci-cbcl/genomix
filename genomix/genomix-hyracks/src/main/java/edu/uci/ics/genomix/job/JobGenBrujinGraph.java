@@ -11,7 +11,7 @@ import edu.uci.ics.genomix.data.normalizers.VLongNormalizedKeyComputerFactory;
 import edu.uci.ics.genomix.data.partition.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.data.std.accessors.VLongBinaryHashFunctionFamily;
-import edu.uci.ics.genomix.data.std.primitive.VLongPointable;
+import edu.uci.ics.genomix.data.std.primitive.VLongKmerPointable;
 import edu.uci.ics.genomix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.dataflow.KMerSequenceWriterFactory;
 import edu.uci.ics.genomix.dataflow.KMerTextWriterFactory;
@@ -110,7 +110,7 @@ public class JobGenBrujinGraph extends JobGen {
 				keyFields,
 				frameLimits,
 				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-						.of(VLongPointable.FACTORY) },
+						.of(VLongKmerPointable.FACTORY) },
 				new VLongNormalizedKeyComputerFactory(),
 				aggeragater,
 				new DistributedMergeLmerAggregateFactory(),
@@ -119,7 +119,7 @@ public class JobGenBrujinGraph extends JobGen {
 						new FieldHashPartitionComputerFactory(
 								keyFields,
 								new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-										.of(VLongPointable.FACTORY) }),
+										.of(VLongKmerPointable.FACTORY) }),
 						tableSize), true);
 	}
 
@@ -137,7 +137,7 @@ public class JobGenBrujinGraph extends JobGen {
 				recordSizeInBytes,
 				tableSize,
 				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-						.of(VLongPointable.FACTORY) },
+						.of(VLongKmerPointable.FACTORY) },
 				new IBinaryHashFunctionFamily[] { new VLongBinaryHashFunctionFamily() },
 				hashfuncStartLevel, new VLongNormalizedKeyComputerFactory(),
 				new MergeKmerAggregateFactory(),
@@ -166,12 +166,12 @@ public class JobGenBrujinGraph extends JobGen {
 					new KmerHashPartitioncomputerFactory(),
 					keyFields,
 					new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-							.of(VLongPointable.FACTORY) });
+							.of(VLongKmerPointable.FACTORY) });
 			crossGrouper = new PreclusteredGroupOperatorDescriptor(
 					jobSpec,
 					keyFields,
 					new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-							.of(VLongPointable.FACTORY) },
+							.of(VLongKmerPointable.FACTORY) },
 					new DistributedMergeLmerAggregateFactory(),
 					combineOutputRec);
 			break;

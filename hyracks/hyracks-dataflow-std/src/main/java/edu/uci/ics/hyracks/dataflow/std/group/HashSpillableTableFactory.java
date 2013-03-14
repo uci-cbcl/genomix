@@ -256,7 +256,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                 outputAppender.reset(outputFrame, true);
 
-                writer.open();
+                //writer.open();
 
                 if (tPointers == null) {
                     // Not sorted
