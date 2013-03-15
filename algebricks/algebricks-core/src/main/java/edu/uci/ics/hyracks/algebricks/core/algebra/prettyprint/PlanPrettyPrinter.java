@@ -39,13 +39,11 @@ public class PlanPrettyPrinter {
     static int counterMI = 0;
     public static void printPhysicalOps(ILogicalPlan plan, StringBuilder out, int indent) {
         appendln(out, "digraph G {");
-        appendln(out, "     node[style=rounded]");
-        
-        
+                
         for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printPhysicalOperator2((AbstractLogicalOperator) root.getValue(), 5, out, counter);
+            printPhysicalOperator2((AbstractLogicalOperator) root.getValue(), 5, out, counter, "");
         }
-        appendln(out, "\n}");
+        appendln(out, "\n}\n}");
         File file = new File("/home/kereno/dot.txt");
         try {
             FileUtils.writeStringToFile(file, out.toString());
@@ -94,22 +92,54 @@ public class PlanPrettyPrinter {
 
     }
 
-    public static void printPhysicalOperator2(AbstractLogicalOperator op, int indent, StringBuilder out, int counter) {
+    public static void printPhysicalOperator2(AbstractLogicalOperator op, int indent, StringBuilder out, int counter, String supernode) {
         
         IPhysicalOperator pOp = op.getPhysicalOperator();
         pad(out, indent);
         
         if (!op.getInputs().isEmpty()){
-            
-            for (Mutable<ILogicalOperator> i : op.getInputs()) {
-                append(out, op.toStringMR()+"_"+counter + " -> ");
+        	
+        	int index1 = op.toStringMR().indexOf("_");
+        	String supernode_current = op.toStringMR().substring(index1+1, index1+3);
+        	if (supernode.isEmpty()){
+        		supernode = supernode_current;
+        		appendln(out, new String("subgraph cluster_"+supernode_current+" {"));
+        		pad(out, indent);
+        		appendln(out, new String("node [style=filled, color = pink];"));
+        		pad(out, indent);
+        		appendln(out, new String("color=blue;"));
+        		pad(out, indent);
+        		appendln(out, new String("label = \"" + supernode_current+"\";"));
+        		pad(out, indent);
+        	}
+        	for (Mutable<ILogicalOperator> i : op.getInputs()) {
+        		int index = ((AbstractLogicalOperator)i.getValue()).toStringMR().indexOf("_");
+            	String supernode_child = ((AbstractLogicalOperator)i.getValue()).toStringMR().substring(index+1, index+3);
+        		
+            	if (!supernode_current.equals(supernode_child)){
+            		appendln(out, new String("}"));
+            		pad(out, indent);
+            		appendln(out, new String("subgraph cluster_"+supernode_child+" {"));
+            		pad(out, indent);
+            		appendln(out, new String("node [style=filled, color = pink];"));
+            		pad(out, indent);
+            		appendln(out, new String("color=blue"));
+            		pad(out, indent);
+            		appendln(out, new String("label = \"" + supernode_child+"\";"));
+            		pad(out, indent);
+            	}
+        		appendln(out, op.toStringMR()+"_"+counter + "[style = filled]");
+        		pad(out, indent);
+            	append(out, op.toStringMR()+"_"+counter + " -> ");
                 if (op.getInputs().size()==1)
                     counter++;
                 AbstractLogicalOperator child = (AbstractLogicalOperator)i.getValue(); 
                 appendln(out, child.toStringMR()+"_"+counter);
-                printPhysicalOperator2(child, indent, out, counter);
-            }
+            	printPhysicalOperator2(child, indent, out, counter, supernode_current);
+            
+        	 }
         }
+	
     }
 
     private static void appendln(StringBuilder buf, String s) {
