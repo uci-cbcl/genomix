@@ -98,9 +98,9 @@ public class PlanPrettyPrinter {
         pad(out, indent);
         
         if (!op.getInputs().isEmpty()){
-        	
-        	int index1 = op.toStringMR().indexOf("_");
-        	String supernode_current = op.toStringMR().substring(index1+1, index1+3);
+        	String stringToVisualize = op.toStringMR(); 
+        	int index1 = stringToVisualize.indexOf("_");
+        	String supernode_current = op.toStringMR().substring(index1+1, stringToVisualize.length());
         	if (supernode.isEmpty()){
         		supernode = supernode_current;
         		appendln(out, new String("subgraph cluster_"+supernode_current+" {"));
@@ -113,8 +113,9 @@ public class PlanPrettyPrinter {
         		pad(out, indent);
         	}
         	for (Mutable<ILogicalOperator> i : op.getInputs()) {
-        		int index = ((AbstractLogicalOperator)i.getValue()).toStringMR().indexOf("_");
-            	String supernode_child = ((AbstractLogicalOperator)i.getValue()).toStringMR().substring(index+1, index+3);
+        		String logOpStr = ((AbstractLogicalOperator)i.getValue()).toStringMR();
+        		index1 = logOpStr.indexOf("_");
+        		String supernode_child = ((AbstractLogicalOperator)i.getValue()).toStringMR().substring(index1+1, logOpStr.length());
         		
             	if (!supernode_current.equals(supernode_child)){
             		appendln(out, new String("}"));
