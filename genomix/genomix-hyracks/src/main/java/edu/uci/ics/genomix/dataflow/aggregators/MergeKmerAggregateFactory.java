@@ -3,7 +3,7 @@ package edu.uci.ics.genomix.dataflow.aggregators;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
+import edu.uci.ics.genomix.data.std.accessors.ByteSerializerDeserializer;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;

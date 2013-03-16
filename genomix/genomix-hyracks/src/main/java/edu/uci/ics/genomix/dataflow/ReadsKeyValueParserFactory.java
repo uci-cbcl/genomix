@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import edu.uci.ics.genomix.data.serde.ByteSerializerDeserializer;
+import edu.uci.ics.genomix.data.std.accessors.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Kmer.GENE_CODE;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;

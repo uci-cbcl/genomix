@@ -118,8 +118,16 @@ public class JobRunTest {
 	}
 
 	@Test
+	public void TestAll() throws Exception{
+		cleanUpReEntry();
+		TestExternalGroupby();
+		cleanUpReEntry();
+		TestPreClusterGroupby();
+		cleanUpReEntry();
+		TestHybridGroupby();
+	}
+	
 	public void TestExternalGroupby() throws Exception {
-		//cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing ExternalGroupBy");
@@ -127,9 +135,7 @@ public class JobRunTest {
 		Assert.assertEquals(true, checkResults());
 	}
 
-	@Test
 	public void TestPreClusterGroupby() throws Exception {
-		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing PreClusterGroupBy");
@@ -137,9 +143,7 @@ public class JobRunTest {
 		Assert.assertEquals(true, checkResults());
 	}
 
-	@Test
 	public void TestHybridGroupby() throws Exception {
-		cleanUpReEntry();
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
 		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing HybridGroupBy");

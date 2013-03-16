@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.data.serde;
+package edu.uci.ics.genomix.data.std.accessors;
 
 import java.io.DataInput;
 import java.io.DataOutput;
