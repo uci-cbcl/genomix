@@ -8,9 +8,9 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.data.std.accessors.ByteSerializerDeserializer;
+import edu.uci.ics.genomix.data.std.accessors.KmerBinaryHashFunctionFamily;
 import edu.uci.ics.genomix.data.std.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.data.std.accessors.KmerNormarlizedComputerFactory;
-import edu.uci.ics.genomix.data.std.accessors.KmerBinaryHashFunctionFamily;
 import edu.uci.ics.genomix.data.std.primitive.KmerPointable;
 import edu.uci.ics.genomix.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.dataflow.KMerSequenceWriterFactory;
@@ -79,14 +79,14 @@ public class JobGenBrujinGraph extends JobGen {
 	private int recordSizeInBytes;
 	private int hashfuncStartLevel;
 
-	private void logDebug(String status){
+	private void logDebug(String status) {
 		String names = "";
-		for (String str : ncNodeNames){
+		for (String str : ncNodeNames) {
 			names += str + " ";
 		}
 		LOG.info(status + " nc nodes:" + ncNodeNames.length + " " + names);
 	}
-	
+
 	public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler,
 			final Map<String, NodeControllerInfo> ncMap,
 			int numPartitionPerMachine) {
@@ -126,7 +126,8 @@ public class JobGenBrujinGraph extends JobGen {
 	private HybridHashGroupOperatorDescriptor newHybridGroupby(
 			JobSpecification jobSpec, int[] keyFields,
 			long inputSizeInRawRecords, long inputSizeInUniqueKeys,
-			int recordSizeInBytes, int hashfuncStartLevel)
+			int recordSizeInBytes, int hashfuncStartLevel,
+			IAggregatorDescriptorFactory aggeragater)
 			throws HyracksDataException {
 		return new HybridHashGroupOperatorDescriptor(
 				jobSpec,
@@ -140,9 +141,8 @@ public class JobGenBrujinGraph extends JobGen {
 						.of(KmerPointable.FACTORY) },
 				new IBinaryHashFunctionFamily[] { new KmerBinaryHashFunctionFamily() },
 				hashfuncStartLevel, new KmerNormarlizedComputerFactory(),
-				new MergeKmerAggregateFactory(),
-				new DistributedMergeLmerAggregateFactory(), combineOutputRec,
-				true);
+				aggeragater, new DistributedMergeLmerAggregateFactory(),
+				combineOutputRec, true);
 	}
 
 	private void generateDescriptorbyType(JobSpecification jobSpec)
@@ -177,16 +177,17 @@ public class JobGenBrujinGraph extends JobGen {
 			break;
 		case HYBRIDHASH:
 		default:
-
 			singleGrouper = newHybridGroupby(jobSpec, keyFields,
 					inputSizeInRawRecords, inputSizeInUniqueKeys,
-					recordSizeInBytes, hashfuncStartLevel);
+					recordSizeInBytes, hashfuncStartLevel,
+					new MergeKmerAggregateFactory());
 			connPartition = new MToNPartitioningConnectorDescriptor(jobSpec,
 					new KmerHashPartitioncomputerFactory());
 
 			crossGrouper = newHybridGroupby(jobSpec, keyFields,
 					inputSizeInRawRecords, inputSizeInUniqueKeys,
-					recordSizeInBytes, hashfuncStartLevel);
+					recordSizeInBytes, hashfuncStartLevel,
+					new DistributedMergeLmerAggregateFactory());
 			break;
 		}
 	}
@@ -201,7 +202,7 @@ public class JobGenBrujinGraph extends JobGen {
 			LOG.info("HDFS read into " + splits.length + " splits");
 			String[] readSchedule = scheduler.getLocationConstraints(splits);
 			String log = "";
-			for (String schedule: readSchedule){
+			for (String schedule : readSchedule) {
 				log += schedule + " ";
 			}
 			LOG.info("HDFS read schedule " + log);

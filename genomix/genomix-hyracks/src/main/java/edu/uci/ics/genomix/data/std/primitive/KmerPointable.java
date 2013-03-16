@@ -41,15 +41,21 @@ public final class KmerPointable extends AbstractPointable implements
 
 	public static short getShortReverse(byte[] bytes, int offset, int length) {
 		if (length < 2) {
-			return (short) (bytes[offset]);
+			return (short) (bytes[offset] & 0xff);
 		}
 		return (short) (((bytes[offset + length - 1] & 0xff) << 8) + (bytes[offset
 				+ length - 2] & 0xff));
 	}
 
 	public static int getIntReverse(byte[] bytes, int offset, int length) {
-		if (length < 4) {
-			return getShortReverse(bytes, offset, length);
+		int shortValue = getShortReverse(bytes, offset, length);
+
+		if (length < 3) {
+			return shortValue;
+		}
+		if (length == 3) {
+			return (((bytes[offset + 2] & 0xff) << 16)
+					+ ((bytes[offset + 1] & 0xff) << 8) + ((bytes[offset] & 0xff)));
 		}
 		return ((bytes[offset + length - 1] & 0xff) << 24)
 				+ ((bytes[offset + length - 2] & 0xff) << 16)
@@ -83,8 +89,18 @@ public final class KmerPointable extends AbstractPointable implements
 		if (this.length != length) {
 			return this.length - length;
 		}
-
-		for (int i = length - 1; i >= 0; i--) {
+		
+		// Why have we write so much ? 
+		// We need to follow the normalized key and it's usage 
+		int bNormKey = getIntReverse(this.bytes, this.start, this.length);
+		int mNormKey = getIntReverse(bytes, offset, length);
+		int cmp = bNormKey - mNormKey;
+		if ( cmp != 0){
+			return ((((long) bNormKey) & 0xffffffffL) < (((long) mNormKey) & 0xffffffffL)) ? -1
+					: 1;
+		}
+		
+		for (int i = length - 5; i >= 0; i--) {
 			if (this.bytes[this.start + i] < bytes[offset + i]) {
 				return -1;
 			} else if (this.bytes[this.start + i] > bytes[offset + i]) {
@@ -96,7 +112,9 @@ public final class KmerPointable extends AbstractPointable implements
 
 	@Override
 	public int hash() {
-		return KmerHashPartitioncomputerFactory.hashBytes(bytes, start, length);
+		int hash = KmerHashPartitioncomputerFactory.hashBytes(bytes, start,
+				length);
+		return hash;
 	}
 
 	@Override
