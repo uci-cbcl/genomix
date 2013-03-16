@@ -17,7 +17,9 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 import edu.uci.ics.pregelix.SequenceFile.GenerateSequenceFile;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
+import edu.uci.ics.pregelix.example.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.pregelix.example.io.MessageWritable;
+import edu.uci.ics.pregelix.example.io.ValueStateWritable;
 import edu.uci.ics.pregelix.hdfs.HDFSOperation;
 import edu.uci.ics.pregelix.type.KmerCountValue;
 
@@ -170,6 +172,41 @@ public class GraphVertexOperation {
 		}
 	}
 	/**
+	 * check what kind of precursor node
+	 * return 0:A 1:C 2:G 3:T 4:nothing
+	 */
+	public static int findPrecursorNode(byte vertexValue){
+		String firstBit = "00010000"; //A
+		String secondBit = "00100000"; //C
+		String thirdBit = "01000000"; //G
+		String fourthBit = "10000000"; //T
+		int first = BitwiseOperation.convertBinaryStringToByte(firstBit) & 0xff;
+		int second = BitwiseOperation.convertBinaryStringToByte(secondBit) & 0xff;
+		int third = BitwiseOperation.convertBinaryStringToByte(thirdBit) & 0xff;
+		int fourth = BitwiseOperation.convertBinaryStringToByte(fourthBit) & 0xff;
+		int value = vertexValue & 0xff;
+		int tmp = value & first;
+		if(tmp != 0)
+			return 0;
+		else{
+			tmp = value & second;
+			if(tmp != 0)
+				return 1;
+			else{
+				tmp = value & third;
+				if(tmp != 0)
+					return 2;
+				else{
+					tmp = value & fourth;
+					if(tmp != 0)
+						return 3;
+					else
+						return 4;
+				}
+			}
+		}
+	}
+	/**
 	 * replace last two bits based on n
 	 * Ex. 01 10 00(nothing)	->	01 10 00(A)/01(C)/10(G)/11(T)		
 	 */
@@ -198,11 +235,45 @@ public class GraphVertexOperation {
 		return BitwiseOperation.convertBinaryStringToBytes(resultString);
 	}
 	/**
-	 * find the vertexId of the destination node
+	 * replace first two bits based on n
+	 * Ex. 01 10 00(nothing)	->	00(A)/01(C)/10(G)/11(T) 10 00	
+	 */
+	public static byte[] replaceFirstTwoBits(byte[] vertexId, int n){
+		String binaryStringVertexId = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId, k);
+		String resultString = "";
+		switch(n){
+		case 0:
+			resultString += "00";
+			break;
+		case 1:
+			resultString += "01";
+			break;
+		case 2:
+			resultString += "10";
+			break;
+		case 3:
+			resultString += "11";
+			break;
+		default:
+			break;
+		}
+		for(int i = 2; i < binaryStringVertexId.length(); i++)
+			resultString += binaryStringVertexId.charAt(i);
+		return BitwiseOperation.convertBinaryStringToBytes(resultString);
+	}
+	/**
+	 * find the vertexId of the destination node - left neighber
 	 */
 	public static byte[] getDestVertexId(byte[] sourceVertexId, byte vertexValue){
 		byte[] destVertexId = BitwiseOperation.shiftBitsLeft(sourceVertexId, 2);
 		return replaceLastTwoBits(destVertexId, findSucceedNode(vertexValue));
+	}
+	/**
+	 * find the vertexId of the destination node - right neighber
+	 */
+	public static byte[] getLeftDestVertexId(byte[] sourceVertexId, byte vertexValue){
+		byte[] destVertexId = BitwiseOperation.shiftBitsRight(sourceVertexId, 2);
+		return replaceFirstTwoBits(destVertexId, findPrecursorNode(vertexValue));
 	}
 	/**
 	 * update the chain vertexId
@@ -234,8 +305,9 @@ public class GraphVertexOperation {
 	/**
 	 * merge two BytesWritable. Ex. merge two vertexId
 	 */
-	public static BytesWritable mergeTwoChainVertex(byte[] b1, byte[] b2, int length){
-		return new BytesWritable(BitwiseOperation.mergeTwoBytesArray(b1, length, b2, length));
+	public static byte[] mergeTwoChainVertex(byte[] b1, int length, byte[] b2){
+		String s2 = BitwiseOperation.convertBytesToBinaryString(b2).substring(2*k-2,2*k);
+		return BitwiseOperation.mergeTwoBytesArray(b1, length, BitwiseOperation.convertBinaryStringToBytes(s2), 1);
 	}
 	/**
 	 * update right neighber
@@ -395,6 +467,42 @@ public class GraphVertexOperation {
     	return;
 	}
 	/**
+	 *  output test for message communication
+	 */
+	public static void testMessageCommunication2(OutputStreamWriter writer, long step, byte[] tmpSourceVertextId,
+			byte[] tmpDestVertexId, LogAlgorithmMessageWritable tmpMsg, byte[] myownId){
+		//test
+    	String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(
+    			tmpSourceVertextId,GraphVertexOperation.k);
+    	try {
+    		writer.write("Step: " + step + "\r\n");
+			writer.write("Source Key: " + kmer + "\r\n");
+		
+        	writer.write("Source Code: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(kmer) + "\r\n");
+        	writer.write("Send Message to: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(
+		    				BitwiseOperation.convertBytesToBinaryStringKmer(
+		    						tmpDestVertexId,GraphVertexOperation.k)) + "\r\n");
+        	if(tmpMsg.getLengthOfChain() != 0){
+        		writer.write("Chain Message: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(
+		    						BitwiseOperation.convertBytesToBinaryString(
+		    								tmpMsg.getChainVertexId())) + "\r\n");
+        		writer.write("Chain Length: " + tmpMsg.getLengthOfChain() + "\r\n"); 
+        	}
+        	if(myownId != null)
+        		writer.write("My own Id is: " + 
+        				GraphVertexOperation.convertBinaryStringToGenecode(
+	    						BitwiseOperation.convertBytesToBinaryStringKmer(
+	    								myownId,GraphVertexOperation.k)) + "\r\n");
+        	if(tmpMsg.getMessage() != 0)
+        		writer.write("Message is: " + tmpMsg.getMessage() + "\r\n");
+        	writer.write("\r\n");
+    	} catch (IOException e) { e.printStackTrace(); }
+    	return;
+	}
+	/**
 	 *  output test for last message communication -- flush
 	 */
 	public static void testLastMessageCommunication(OutputStreamWriter writer, long step, byte[] tmpVertextId,
@@ -420,5 +528,88 @@ public class GraphVertexOperation {
 			e.printStackTrace();
 		}
 	}
+	/**
+	 *  output test for log message communication
+	 */
+	public static void testLogMessageCommunication(OutputStreamWriter writer, long step, byte[] tmpSourceVertextId,
+			byte[] tmpDestVertexId, LogAlgorithmMessageWritable tmpMsg){
+		//test
+    	String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(
+    			tmpSourceVertextId,GraphVertexOperation.k);
+    	try {
+    		writer.write("Step: " + step + "\r\n");
+			writer.write("Source Key: " + kmer + "\r\n");
 		
+        	writer.write("Source Code: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(kmer) + "\r\n");
+        	writer.write("Send Message to: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(
+		    				BitwiseOperation.convertBytesToBinaryStringKmer(
+		    						tmpDestVertexId,GraphVertexOperation.k)) + "\r\n");
+        	writer.write("Message is: " +
+        			tmpMsg.getMessage() + "\r\n");
+        	writer.write("\r\n");
+    	} catch (IOException e) { e.printStackTrace(); }
+    	return;
+	}	
+	/**
+	 *  test set vertex state
+	 */
+	public static void testSetVertexState(OutputStreamWriter writer, long step,byte[] tmpSourceVertextId,
+			byte[] tmpDestVertexId, LogAlgorithmMessageWritable tmpMsg, ValueStateWritable tmpVal){
+		//test
+    	String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(
+    			tmpSourceVertextId,GraphVertexOperation.k);
+    	try {
+    		writer.write("Step: " + step + "\r\n");
+			writer.write("Source Key: " + kmer + "\r\n");
+		
+        	writer.write("Source Code: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(kmer) + "\r\n");
+        	if(tmpDestVertexId != null && tmpMsg != null){
+	        	writer.write("Send Message to: " + 
+			    		GraphVertexOperation.convertBinaryStringToGenecode(
+			    				BitwiseOperation.convertBytesToBinaryStringKmer(
+			    						tmpDestVertexId,GraphVertexOperation.k)) + "\r\n");
+	        	writer.write("Message is: " +
+	        			tmpMsg.getMessage() + "\r\n");
+        	}
+        	writer.write("Set vertex state to " +
+        			tmpVal.getState() + "\r\n");
+        	writer.write("\r\n");
+
+    	} catch (IOException e) { e.printStackTrace(); }
+    	return;
+	}
+	/**
+	 *  test delete vertex information
+	 */
+	public static void testDeleteVertexInfo(OutputStreamWriter writer, long step, byte[] vertexId, String reason){
+		try {
+    		writer.write("Step: " + step + "\r\n");
+			writer.write(reason + "\r\n");
+			writer.write("delete " + BitwiseOperation.convertBytesToBinaryStringKmer(vertexId, GraphVertexOperation.k) 
+				 + "\t" + GraphVertexOperation.convertBinaryStringToGenecode(
+		    				BitwiseOperation.convertBytesToBinaryStringKmer(
+		    						vertexId,GraphVertexOperation.k)) + "\r\n");
+			writer.write("\r\n");
+    	} catch (IOException e) { e.printStackTrace(); }
+    	return;
+	}
+	/**
+	 *  test merge chain vertex
+	 */
+	public static void testMergeChainVertex(OutputStreamWriter writer, long step, byte[] mergeChain,
+			int lengthOfChain){
+		try {
+    		writer.write("Step: " + step + "\r\n");
+        	writer.write("Merge Chain: " + 
+		    		GraphVertexOperation.convertBinaryStringToGenecode(
+		    						BitwiseOperation.convertBytesToBinaryString(
+		    								mergeChain)) + "\r\n");
+        	writer.write("Chain Length: " + lengthOfChain + "\r\n");
+			writer.write("\r\n");
+    	} catch (IOException e) { e.printStackTrace(); }
+    	return;
+	}
 }

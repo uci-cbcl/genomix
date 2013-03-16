@@ -2,7 +2,6 @@ package edu.uci.ics.pregelix;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -14,28 +13,30 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
-import edu.uci.ics.pregelix.example.io.MessageWritable;
+import edu.uci.ics.pregelix.example.io.LogAlgorithmMessageWritable;
+import edu.uci.ics.pregelix.example.io.ValueStateWritable;
 import edu.uci.ics.pregelix.type.KmerCountValue;
+import edu.uci.ics.pregelix.type.State;
 
-public class BinaryLoadGraphInputFormat extends
-	BinaryVertexInputFormat<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
+public class LogAlgorithmForMergeGraphInputFormat extends
+	BinaryVertexInputFormat<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{
 
 	/**
 	 * Format INPUT
 	 */
     @Override
-    public VertexReader<BytesWritable, ByteWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
     
     @SuppressWarnings("rawtypes")
     class BinaryLoadGraphReader extends
-            BinaryVertexReader<BytesWritable, ByteWritable, NullWritable, MessageWritable> {
+            BinaryVertexReader<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> {
         private final static String separator = " ";
         private Vertex vertex;
         private BytesWritable vertexId = new BytesWritable();
-        private ByteWritable vertexValue = new ByteWritable();
+        private ValueStateWritable vertexValue = new ValueStateWritable();
 
         public BinaryLoadGraphReader(RecordReader<BytesWritable,KmerCountValue> recordReader) {
             super(recordReader);
@@ -48,7 +49,7 @@ public class BinaryLoadGraphInputFormat extends
 
         @SuppressWarnings("unchecked")
         @Override
-        public Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable> getCurrentVertex() throws IOException,
+        public Vertex<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> getCurrentVertex() throws IOException,
                 InterruptedException {
             if (vertex == null)
                 vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -68,7 +69,8 @@ public class BinaryLoadGraphInputFormat extends
 	             * set the vertex value
 	             */
 	            KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
-	            vertexValue.set(kmerCountValue.getAdjBitMap()); 
+	            vertexValue.setValue(kmerCountValue.getAdjBitMap()); 
+	            vertexValue.setState(State.NON_VERTEX);
 	            vertex.setVertexValue(vertexValue);
 	            
 	        	String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId.getBytes(),GraphVertexOperation.k);

@@ -62,7 +62,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 	private MessageWritable tmpMsg = new MessageWritable();
 	OutputStreamWriter writer; 
 	/**
-	 * Naive Algorithm for merge graph
+	 * Naive Algorithm for path merge graph
 	 */
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
@@ -97,7 +97,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 						if(tmpChainVertexId.length == 0){
 							tmpMsg.setLengthOfChain(GraphVertexOperation.k);
 							tmpMsg.setChainVertexId(tmpVertextId);
-							sendMsg(new BytesWritable(tmpSourceVertextId),tmpMsg);
 						}
 						else{
 							tmpMsg.incrementLength();
@@ -105,9 +104,9 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 									tmpChainVertexId,
 									tmpMsg.getLengthOfChain()-1,
 									tmpVertextId));
-							sendMsg(new BytesWritable(tmpSourceVertextId),tmpMsg);
 							deleteVertex(getVertexId());
 						}
+						sendMsg(new BytesWritable(tmpSourceVertextId),tmpMsg);
 						//test
 						GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId,
 								tmpSourceVertextId,tmpMsg);

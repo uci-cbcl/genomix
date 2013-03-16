@@ -50,7 +50,7 @@ public class RunJobTestCase extends TestCase{
         job.setJobName(jobName);
         this.resultFileName = resultFile;
         this.expectedFileName = expectedFile;
-        giraphJobGens = new JobGen[4];
+        giraphJobGens = new JobGen[1];
         giraphJobGens[0] = new JobGenOuterJoin(job);
         /*waitawhile();
         giraphJobGens[1] = new JobGenInnerJoin(job);

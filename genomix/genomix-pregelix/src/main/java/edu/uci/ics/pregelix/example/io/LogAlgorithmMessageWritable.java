@@ -16,30 +16,47 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	 * chainVertexId stores the chains of connected DNA
 	 * file stores the point to the file that stores the chains of connected DNA
 	 */
-	private byte[] sourceVertexIdOrNeighberInfo;
+	private byte[] sourceVertexId;
+	private byte neighberInfo;
 	private int lengthOfChain;
 	private byte[] chainVertexId;
 	private File file;
 	private int message;
 	private int sourceVertexState;
 	
-	public LogAlgorithmMessageWritable(){		
+	public LogAlgorithmMessageWritable(){
+		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
 	}
 	
-	public void set(byte[] sourceVertexIdOrNeighberInfo, byte[] chainVertexId, File file){
-		this.sourceVertexIdOrNeighberInfo = sourceVertexIdOrNeighberInfo;
+	public void set(byte[] sourceVertexId,byte neighberInfo, byte[] chainVertexId, File file){
+		this.sourceVertexId = sourceVertexId;
 		this.chainVertexId = chainVertexId;
 		this.file = file;
 		this.message = 0;
 		this.lengthOfChain = 0;
 	}
-
-	public byte[] getSourceVertexIdOrNeighberInfo() {
-		return sourceVertexIdOrNeighberInfo;
+	
+	public void reset(){
+		sourceVertexId = null;
+		neighberInfo = (Byte) null;
+		message = 0;
+		sourceVertexState = 0;
 	}
 
-	public void setSourceVertexIdOrNeighberInfo(byte[] sourceVertexIdOrNeighberInfo) {
-		this.sourceVertexIdOrNeighberInfo = sourceVertexIdOrNeighberInfo;
+	public byte[] getSourceVertexId() {
+		return sourceVertexId;
+	}
+
+	public void setSourceVertexId(byte[] sourceVertexId) {
+		this.sourceVertexId = sourceVertexId;
+	}
+
+	public byte getNeighberInfo() {
+		return neighberInfo;
+	}
+
+	public void setNeighberInfo(byte neighberInfo) {
+		this.neighberInfo = neighberInfo;
 	}
 
 	public byte[] getChainVertexId() {
@@ -92,7 +109,8 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		out.writeInt(lengthOfChain);
 		if(lengthOfChain != 0)
 			out.write(chainVertexId);
-		out.write(sourceVertexIdOrNeighberInfo);
+		out.write(sourceVertexId);
+		out.write(neighberInfo);
 		out.writeInt(message);
 		out.writeInt(sourceVertexState);
 	}
@@ -107,11 +125,9 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		}
 		else
 			chainVertexId = new byte[0];
-		if(lengthOfChain % 2 == 0)
-			sourceVertexIdOrNeighberInfo = new byte[(GraphVertexOperation.k-1)/4 + 1];
-		else
-			sourceVertexIdOrNeighberInfo = new byte[1];
-		in.readFully(sourceVertexIdOrNeighberInfo);
+		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		in.readFully(sourceVertexId);
+		neighberInfo = in.readByte();
 		message = in.readInt();
 		sourceVertexState = in.readInt();
 	}

@@ -57,20 +57,6 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 	}
 
 	public void setChainVertexId(byte[] chainVertexId) {
-		/*if(lengthOfChain == 0){
-			this.chainVertexId = chainVertexId;
-			return;
-		}
-		int numOfByte = (2*lengthOfChain-1)/8 + 1;
-		if(chainVertexId.length == numOfByte)
-			this.chainVertexId = chainVertexId;
-		else{
-			byte[] tmp = new byte[numOfByte];
-			for(int i = 0; i < numOfByte; i++)
-				tmp[i] = chainVertexId[i];
-			this.chainVertexId = tmp;
-		}*/
-		
 		this.chainVertexId = chainVertexId;
 	}
 
