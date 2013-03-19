@@ -16,6 +16,8 @@ package edu.uci.ics.hyracks.algebricks.core.algebra.prettyprint;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -37,11 +39,15 @@ public class PlanPrettyPrinter {
     }
     static int counter = 0;
     static int counterMI = 0;
+    static Random randomGenerator = new Random();
     public static void printPhysicalOps(ILogicalPlan plan, StringBuilder out, int indent) {
         appendln(out, "digraph G {");
-                
+
+        int randomInt = 10000 + randomGenerator.nextInt(100);
+               
         for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printPhysicalOperator2((AbstractLogicalOperator) root.getValue(), 5, out, counter, "");
+        	pad(out, indent);
+        	printVisualizationGraph((AbstractLogicalOperator) root.getValue(), 5, out, counter, "", randomInt);
         }
         appendln(out, "\n}\n}");
         File file = new File("/home/kereno/dot.txt");
@@ -92,17 +98,19 @@ public class PlanPrettyPrinter {
 
     }
 
-    public static void printPhysicalOperator2(AbstractLogicalOperator op, int indent, StringBuilder out, int counter, String supernode) {
-        
-        IPhysicalOperator pOp = op.getPhysicalOperator();
-        pad(out, indent);
-        
-        if (!op.getInputs().isEmpty()){
-        	String stringToVisualize = op.toStringMR(); 
-        	int index1 = stringToVisualize.indexOf("_");
-        	String supernode_current = op.toStringMR().substring(index1+1, stringToVisualize.length());
-        	if (supernode.isEmpty()){
-        		supernode = supernode_current;
+    /*
+     * DFS traversal function. Calls iteratively all sons, and for each son calls itself recursively 
+     * Includes slim-maps only (no gathering of mappers to one)
+     * */
+    public static void printVisualizationGraph(AbstractLogicalOperator op, int indent, StringBuilder out, int counter, String current_supernode_name, int randomInt) {
+    
+    	
+    	if (!op.getInputs().isEmpty()){
+        	String stringToVisualize = op.toStringForVisualizationGraph(); 
+        	int firstOccurenceOf_ = stringToVisualize.indexOf("_");
+        	String supernode_current = op.toStringForVisualizationGraph().substring(firstOccurenceOf_+1, stringToVisualize.length());
+        	if (current_supernode_name.isEmpty()){
+        		current_supernode_name = supernode_current;
         		appendln(out, new String("subgraph cluster_"+supernode_current+" {"));
         		pad(out, indent);
         		appendln(out, new String("node [style=filled, color = pink];"));
@@ -112,12 +120,35 @@ public class PlanPrettyPrinter {
         		appendln(out, new String("label = \"" + supernode_current+"\";"));
         		pad(out, indent);
         	}
+        	boolean eraseExtraVertex = false;
         	for (Mutable<ILogicalOperator> i : op.getInputs()) {
-        		String logOpStr = ((AbstractLogicalOperator)i.getValue()).toStringMR();
-        		index1 = logOpStr.indexOf("_");
-        		String supernode_child = ((AbstractLogicalOperator)i.getValue()).toStringMR().substring(index1+1, logOpStr.length());
-        		
+        		String logOpStr = ((AbstractLogicalOperator)i.getValue()).toStringForVisualizationGraph();
+        		firstOccurenceOf_ = logOpStr.indexOf("_");
+        		String supernode_child = logOpStr.substring(firstOccurenceOf_+1, logOpStr.length());
+        		String missingVertex="";
             	if (!supernode_current.equals(supernode_child)){
+            		String currentNodeReducerOrMapper = supernode_current.substring(0,1);
+            		String childNodeReducerOrMapper = supernode_child.substring(0,1);
+            		boolean slim_map = currentNodeReducerOrMapper.equals(childNodeReducerOrMapper) && childNodeReducerOrMapper.equals("R"); 
+            		if (slim_map){
+            			
+            			appendln(out, new String("}"));
+                		pad(out, indent);
+                		appendln(out, new String("subgraph cluster_slim_map_"+randomInt+" {"));
+                		pad(out, indent);
+                		appendln(out, new String("node [style=filled, color = pink];"));
+                		pad(out, indent);
+                		appendln(out, new String("color=blue"));
+                		pad(out, indent);
+                		appendln(out, new String("label = \"SLIM-MAP"+"\";"));
+                		pad(out, indent);
+                		appendln(out, new String(stringToVisualize+"_"+counter+"->"+"slim_map_"+counter));
+                		
+                	}
+            		if(slim_map){
+            			pad(out, indent);
+                	}
+            		
             		appendln(out, new String("}"));
             		pad(out, indent);
             		appendln(out, new String("subgraph cluster_"+supernode_child+" {"));
@@ -128,24 +159,56 @@ public class PlanPrettyPrinter {
             		pad(out, indent);
             		appendln(out, new String("label = \"" + supernode_child+"\";"));
             		pad(out, indent);
+            	
+            		
+            		if(childNodeReducerOrMapper.equals("R")){
+	            		appendln(out, new String("slim_map_"+counter+" -> "+logOpStr+"_"+counter));
+	            		pad(out, indent);
+	            		eraseExtraVertex = true;
+	            	}
+            		else if (childNodeReducerOrMapper.equals("M")){
+            		    if (op.getInputs().size()>1){
+	            	    	List<Mutable<ILogicalOperator>> list= op.getInputs();
+	            	    	String left = ((AbstractLogicalOperator)(list.get(0).getValue())).toStringForVisualizationGraph();
+	            	    	String left_category = left.substring(left.indexOf("_")+1,left.length());
+	            	    	String right = ((AbstractLogicalOperator)(list.get(1).getValue())).toStringForVisualizationGraph();
+	            	    	String right_category = right.substring(left.indexOf("_")+1,right.length());
+	            	    	
+	            	    	if (right_category.startsWith("M") && left_category.startsWith("R")){
+	            	    		missingVertex = op.toStringForVisualizationGraph()+"_"+counter + " -> " + right+"_"+counter;
+	            	    		
+	            	    	}	    		            
+	            	    }	
+            		}
             	}
-        		appendln(out, op.toStringMR()+"_"+counter + "[style = filled]");
-        		pad(out, indent);
-            	append(out, op.toStringMR()+"_"+counter + " -> ");
-                if (op.getInputs().size()==1)
-                    counter++;
-                AbstractLogicalOperator child = (AbstractLogicalOperator)i.getValue(); 
-                appendln(out, child.toStringMR()+"_"+counter);
-            	printPhysicalOperator2(child, indent, out, counter, supernode_current);
+            	
+            	appendln(out, op.toStringForVisualizationGraph()+"_"+counter + "[style = filled]");
+            	AbstractLogicalOperator child = (AbstractLogicalOperator)i.getValue(); 
+	            
+            	if (!eraseExtraVertex){
+	            	pad(out, indent);
+	            	append(out, op.toStringForVisualizationGraph()+"_"+counter + " -> ");
+	                if (op.getInputs().size()==1){
+	                    counter++;
+	                }
+	                appendln(out, child.toStringForVisualizationGraph()+"_"+counter);
+	                
+            	}
+	            
+            	if (!missingVertex.isEmpty()){
+                	appendln(out, missingVertex);
+                }
+            	
+            	printVisualizationGraph(child, indent, out, counter, supernode_current, (randomGenerator.nextInt(100)+10000));
             
         	 }
         }
-	
     }
 
     private static void appendln(StringBuilder buf, String s) {
         buf.append(s);
         buf.append("\n");
+        
     }
 
     private static void append(StringBuilder buf, String s) {

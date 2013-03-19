@@ -189,7 +189,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
         return true;
     }
 
-    public String toStringMR(){
+    public String toStringForVisualizationGraph(){
     	String toString = this.getOperatorTag().name();
 
     	Map<String, Object> annotations  = getAnnotations();
