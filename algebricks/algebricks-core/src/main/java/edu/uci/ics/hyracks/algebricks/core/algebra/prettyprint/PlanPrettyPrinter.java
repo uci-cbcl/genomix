@@ -151,7 +151,7 @@ public class PlanPrettyPrinter {
             		
             		appendln(out, new String("}"));
             		pad(out, indent);
-            		appendln(out, new String("subgraph cluster_"+supernode_child+" {"));
+            		appendln(out, new String("subgraph cluster_"+childNodeReducerOrMapper+" {"));
             		pad(out, indent);
             		appendln(out, new String("node [style=filled, color = pink];"));
             		pad(out, indent);
