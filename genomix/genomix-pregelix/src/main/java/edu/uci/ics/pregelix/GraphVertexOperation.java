@@ -306,8 +306,8 @@ public class GraphVertexOperation {
 	 * merge two BytesWritable. Ex. merge two vertexId
 	 */
 	public static byte[] mergeTwoChainVertex(byte[] b1, int length, byte[] b2){
-		String s2 = BitwiseOperation.convertBytesToBinaryString(b2).substring(2*k-2,2*k);
-		return BitwiseOperation.mergeTwoBytesArray(b1, length, BitwiseOperation.convertBinaryStringToBytes(s2), 1);
+		String s2 = BitwiseOperation.convertBytesToBinaryString(b2).substring(2*k-2,2*length);
+		return BitwiseOperation.mergeTwoBytesArray(b1, length, BitwiseOperation.convertBinaryStringToBytes(s2), s2.length()/2);
 	}
 	/**
 	 * update right neighber

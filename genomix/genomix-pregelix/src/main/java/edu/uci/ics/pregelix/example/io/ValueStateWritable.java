@@ -11,14 +11,19 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 
 	private byte value;
 	private int state;
+	private int lengthOfMergeChain;
+	private byte[] mergeChain;
 
 	public ValueStateWritable() {
 		state = State.NON_VERTEX;
+		lengthOfMergeChain = 0;
 	}
 
-	public ValueStateWritable(byte value, int state) {
+	public ValueStateWritable(byte value, int state, int lengthOfMergeChain, byte[] mergeChain) {
 		this.value = value;
 		this.state = state;
+		this.lengthOfMergeChain = lengthOfMergeChain;
+		this.mergeChain = mergeChain;
 	}
 
 	public byte getValue() {
@@ -37,16 +42,42 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		this.state = state;
 	}
 
+	public int getLengthOfMergeChain() {
+		return lengthOfMergeChain;
+	}
+
+	public void setLengthOfMergeChain(int lengthOfMergeChain) {
+		this.lengthOfMergeChain = lengthOfMergeChain;
+	}
+
+	public byte[] getMergeChain() {
+		return mergeChain;
+	}
+
+	public void setMergeChain(byte[] mergeChain) {
+		this.mergeChain = mergeChain;
+	}
+
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		value = in.readByte();
 		state = in.readInt();
+		lengthOfMergeChain = in.readInt();
+		if(lengthOfMergeChain != 0){
+			mergeChain = new byte[(lengthOfMergeChain-1)/4 + 1];
+			in.readFully(mergeChain);
+		}
+		else
+			mergeChain = new byte[0];
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeByte(value);
 		out.writeInt(state);
+		out.writeInt(lengthOfMergeChain);
+		if(lengthOfMergeChain != 0)
+			out.write(mergeChain);
 	}
 
 	@Override
