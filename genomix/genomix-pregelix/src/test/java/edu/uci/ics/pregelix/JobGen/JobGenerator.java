@@ -66,6 +66,7 @@ public class JobGenerator {
     	job.setVertexClass(LogAlgorithmForMergeGraphVertex.class);
         job.setVertexInputFormatClass(LogAlgorithmForMergeGraphInputFormat.class); 
         job.setVertexOutputFormatClass(LogAlgorithmForMergeGraphOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(BytesWritable.class);
         job.setOutputValueClass(ByteWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);

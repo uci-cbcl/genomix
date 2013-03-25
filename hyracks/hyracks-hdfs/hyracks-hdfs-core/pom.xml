@@ -1,14 +1,12 @@
 <?xml version="1.0"?>
-<project
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>hyracks-hdfs-core</artifactId>
 	<name>hyracks-hdfs-core</name>
 	<parent>
 		<artifactId>hyracks-hdfs</artifactId>
 		<groupId>edu.uci.ics.hyracks</groupId>
-		<version>0.2.3-SNAPSHOT</version>
+		<version>0.2.4-SNAPSHOT</version>
 	</parent>
 
 	<build>
@@ -79,7 +77,7 @@
 				<dependency>
 					<groupId>edu.uci.ics.hyracks</groupId>
 					<artifactId>hyracks-hdfs-0.20.2</artifactId>
-					<version>0.2.3-SNAPSHOT</version>
+					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
@@ -98,7 +96,7 @@
 				<dependency>
 					<groupId>edu.uci.ics.hyracks</groupId>
 					<artifactId>hyracks-hdfs-0.20.2</artifactId>
-					<version>0.2.3-SNAPSHOT</version>
+					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
@@ -117,7 +115,7 @@
 				<dependency>
 					<groupId>edu.uci.ics.hyracks</groupId>
 					<artifactId>hyracks-hdfs-0.23.1</artifactId>
-					<version>0.2.3-SNAPSHOT</version>
+					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
@@ -136,7 +134,7 @@
 				<dependency>
 					<groupId>edu.uci.ics.hyracks</groupId>
 					<artifactId>hyracks-hdfs-0.23.1</artifactId>
-					<version>0.2.3-SNAPSHOT</version>
+					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
@@ -155,7 +153,7 @@
 				<dependency>
 					<groupId>edu.uci.ics.hyracks</groupId>
 					<artifactId>hyracks-hdfs-0.23.1</artifactId>
-					<version>0.2.3-SNAPSHOT</version>
+					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
@@ -174,7 +172,7 @@
 				<dependency>
 					<groupId>edu.uci.ics.hyracks</groupId>
 					<artifactId>hyracks-hdfs-0.23.1</artifactId>
-					<version>0.2.3-SNAPSHOT</version>
+					<version>${project.version}</version>
 					<type>jar</type>
 					<scope>compile</scope>
 				</dependency>
@@ -192,31 +190,31 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
+			<version>0.2.4-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

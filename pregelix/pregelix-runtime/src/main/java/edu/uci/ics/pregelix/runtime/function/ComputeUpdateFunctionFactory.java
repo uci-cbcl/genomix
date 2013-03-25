@@ -179,6 +179,7 @@ public class ComputeUpdateFunctionFactory implements IUpdateFunctionFactory {
                     return;
 
                 try {
+                	vertex.activate();
                     vertex.compute(msgIterator);
                     vertex.finishCompute();
                 } catch (IOException e) {

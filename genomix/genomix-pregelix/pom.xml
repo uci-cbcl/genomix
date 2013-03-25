@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.pregelix</groupId>
   <artifactId>genomix-pregelix</artifactId>
-  <version>0.2.3-SNAPSHOT</version>
+  <version>0.2.4-SNAPSHOT</version>
   <name>genomix-pregelix</name>
 
   <properties>
@@ -100,14 +100,14 @@
                 <dependency>
                 	<groupId>edu.uci.ics.hyracks</groupId>
                 	<artifactId>pregelix-core</artifactId>
-                	<version>0.2.3-SNAPSHOT</version>
+                	<version>0.2.4-SNAPSHOT</version>
                 	<type>jar</type>
                 	<scope>compile</scope>
                 </dependency>
                 <dependency>
                 	<groupId>edu.uci.ics.hyracks</groupId>
                 	<artifactId>pregelix-example</artifactId>
-                	<version>0.2.3-SNAPSHOT</version>
+                	<version>0.2.4-SNAPSHOT</version>
                 	<type>jar</type>
                 	<scope>compile</scope>
                 </dependency>
