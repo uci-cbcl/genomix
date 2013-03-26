@@ -138,28 +138,11 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 			tmpVertexValue = tmpVal.getValue();
 			tmpVertexState = tmpVal.getState();
 			tmpSourceVertextId = getVertexId().getBytes();
-			if(!GraphVertexOperation.isHead(new ByteWritable(tmpVertexValue))
-					&& !GraphVertexOperation.isRear(new ByteWritable(tmpVertexValue))){
-				// compute the right neighber - destination vertex Id
-				if(msgIterator.hasNext()){
-					tmpMsg = msgIterator.next();
-					tmpLengthOfMergeChainVertex = tmpMsg.getLengthOfChain();
-					tmpMergeChainVertexId = tmpMsg.getChainVertexId();
-					byte[] lastKmer = GraphVertexOperation.getLastKmer(tmpMergeChainVertexId, 
-							tmpLengthOfMergeChainVertex);
-					tmpDestVertexId = GraphVertexOperation.getDestVertexId(lastKmer, 
-							tmpMsg.getNeighberInfo());
-				}
-				else{
-					tmpMsg = new LogAlgorithmMessageWritable();
-					tmpDestVertexId = GraphVertexOperation.getDestVertexId(tmpSourceVertextId, 
-							getVertexValue().getValue());
-				}
-				
-				/*if(tmpMsg.getLengthOfChain()== 0){
-					tmpMsg.setLengthOfChain(GraphVertexOperation.k);
-					tmpMsg.setChainVertexId(getVertexId().getBytes());
-				}*/
+
+			if(getSuperstep() == 3){
+				tmpMsg = new LogAlgorithmMessageWritable();
+				tmpDestVertexId = GraphVertexOperation.getDestVertexId(tmpSourceVertextId, 
+						getVertexValue().getValue());
 				if(tmpVertexState == State.START_VERTEX){
 					tmpMsg.setMessage(Message.START);
 					tmpMsg.setSourceVertexId(tmpSourceVertextId);
@@ -177,6 +160,35 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 							tmpDestVertexId, tmpMsg, null);
 				}
 			}
+			else{
+				if(msgIterator.hasNext()){
+					tmpMsg = msgIterator.next();
+					tmpLengthOfMergeChainVertex = tmpVal.getLengthOfMergeChain();
+					tmpMergeChainVertexId = tmpVal.getMergeChain();
+					byte[] lastKmer = GraphVertexOperation.getLastKmer(tmpMergeChainVertexId, 
+							tmpLengthOfMergeChainVertex);
+					tmpDestVertexId = GraphVertexOperation.getDestVertexId(lastKmer, 
+							tmpMsg.getNeighberInfo());
+					if(tmpVertexState == State.START_VERTEX){
+						tmpMsg.setMessage(Message.START);
+						tmpMsg.setSourceVertexId(tmpSourceVertextId);
+						sendMsg(new BytesWritable(tmpDestVertexId),tmpMsg);
+						//test
+						GraphVertexOperation.testMessageCommunication2(writer, getSuperstep(), getVertexId().getBytes(),
+								tmpDestVertexId, tmpMsg, null);
+					}
+					else if(tmpVertexState != State.END_VERTEX){
+						tmpMsg.setMessage(Message.NON);
+						tmpMsg.setSourceVertexId(tmpSourceVertextId);
+						sendMsg(new BytesWritable(tmpDestVertexId),tmpMsg);
+						//test
+						GraphVertexOperation.testMessageCommunication2(writer, getSuperstep(), getVertexId().getBytes(),
+								tmpDestVertexId, tmpMsg, null);
+					}
+				}
+				else
+					voteToHalt();
+			}
 		}
 		//path node sends message back to head node
 		else if(getSuperstep()%3 == 1){
@@ -185,17 +197,13 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				tmpMsg = msgIterator.next();
 				tmpMessage = tmpMsg.getMessage();
 				tmpSourceVertextId = tmpMsg.getSourceVertexId();
-				tmpChainVertexId = tmpMsg.getChainVertexId();
 				if(tmpVal.getLengthOfMergeChain() == 0){
-					tmpMsg.setSourceVertexId(getVertexId().getBytes());
 					tmpVal.setLengthOfMergeChain(GraphVertexOperation.k);
 					tmpVal.setMergeChain(getVertexId().getBytes());
 					setVertexValue(tmpVal);
 				}
-				else{
-					tmpMsg.setLengthOfChain(tmpVal.getLengthOfMergeChain());
-					tmpMsg.setSourceVertexId(tmpVal.getMergeChain());
-				}
+				tmpMsg.setLengthOfChain(tmpVal.getLengthOfMergeChain());
+				tmpMsg.setChainVertexId(tmpVal.getMergeChain());
 				
 				tmpMsg.setNeighberInfo(tmpVal.getValue()); //set neighber
 				tmpMsg.setSourceVertexState(tmpVal.getState());
@@ -215,10 +223,10 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				}
 			}
 			else{
-				if(!GraphVertexOperation.isHead(new ByteWritable(getVertexValue().getValue()))
-						&& !GraphVertexOperation.isRear(new ByteWritable(getVertexValue().getValue()))
-						&& getVertexValue().getState() != State.START_VERTEX){
-
+				if(getVertexValue().getState() != State.START_VERTEX
+						&& getVertexValue().getState() != State.END_VERTEX
+						&& tmpMessage != Message.END && tmpMessage != Message.START){
+					
 					GraphVertexOperation.testDeleteVertexInfo(writer, getSuperstep(), getVertexId().getBytes(), "not receive any message");
 					deleteVertex(getVertexId()); //killSelf because it doesn't receive any message
 				}
@@ -228,28 +236,34 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 			if(msgIterator.hasNext()){
 				tmpMsg = msgIterator.next();
 				tmpVal = getVertexValue();
-				if(tmpMsg.getMessage() == Message.END)
-					tmpVertexState = State.END_VERTEX;
-				else
-					tmpVertexState = getVertexValue().getState();
-				tmpVal.setState(tmpVertexState);
+				tmpVertexState = tmpVal.getState();
 				tmpSourceVertextId = getVertexId().getBytes();
 				if(tmpVertexState == State.TODELETE){
-					GraphVertexOperation.testDeleteVertexInfo(writer, getSuperstep(), tmpSourceVertextId, "already merged by head");
+					GraphVertexOperation.testDeleteVertexInfo(writer, getSuperstep(),
+							tmpSourceVertextId, "already merged by head");
 					deleteVertex(new BytesWritable(tmpSourceVertextId)); //killSelf
 				}
 				else{
+					if(tmpMsg.getMessage() == Message.END){
+						if(tmpVertexState != State.START_VERTEX)
+							tmpVertexState = State.END_VERTEX;
+						else
+							tmpVertexState = State.FINAL_VERTEX;
+					}
+						
+					tmpVal.setState(tmpVertexState);
 					if(getSuperstep() == 5){
 						lengthOfMergeChainVertex = GraphVertexOperation.k;
 						mergeChainVertexId = getVertexId().getBytes();
 					}
 					else{
-						lengthOfMergeChainVertex = tmpMsg.getLengthOfChain();
-						mergeChainVertexId = tmpMsg.getChainVertexId();
+						lengthOfMergeChainVertex = tmpVal.getLengthOfMergeChain(); 
+						mergeChainVertexId = tmpVal.getMergeChain(); 
 					}
-					mergeChainVertexId = GraphVertexOperation.mergeTwoChainVertex(mergeChainVertexId, lengthOfMergeChainVertex,
-							tmpMsg.getSourceVertexId());
-					lengthOfMergeChainVertex = 2*lengthOfMergeChainVertex - GraphVertexOperation.k + 1;
+					mergeChainVertexId = GraphVertexOperation.mergeTwoChainVertex(mergeChainVertexId,
+							lengthOfMergeChainVertex, tmpMsg.getChainVertexId(), tmpMsg.getLengthOfChain()); //tmpMsg.getSourceVertexId()
+					lengthOfMergeChainVertex = lengthOfMergeChainVertex + tmpMsg.getLengthOfChain()
+							- GraphVertexOperation.k + 1;
 					tmpVal.setLengthOfMergeChain(lengthOfMergeChainVertex);
 					tmpVal.setMergeChain(mergeChainVertexId);
 					
@@ -259,17 +273,31 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					byte tmpByte = tmpMsg.getNeighberInfo();
 					tmpVertexValue = GraphVertexOperation.updateRightNeighber(getVertexValue().getValue(),tmpByte);
 					tmpVal.setValue(tmpVertexValue);
-					setVertexValue(tmpVal);
-					tmpMsg.setNeighberInfo(tmpVertexValue);
-					tmpMsg.setLengthOfChain(lengthOfMergeChainVertex);
-					tmpMsg.setChainVertexId(mergeChainVertexId);
-					sendMsg(getVertexId(),tmpMsg);
-					//test
-					GraphVertexOperation.testMessageCommunication2(writer, getSuperstep(), getVertexId().getBytes(),
-							getVertexId().getBytes(), tmpMsg, null);
+					if(tmpVertexState != State.FINAL_VERTEX){
+						setVertexValue(tmpVal);
+						tmpMsg = new LogAlgorithmMessageWritable();
+						tmpMsg.setNeighberInfo(tmpVertexValue);
+						sendMsg(getVertexId(),tmpMsg);
+						//test
+						GraphVertexOperation.testMessageCommunication2(writer, getSuperstep(), getVertexId().getBytes(),
+								getVertexId().getBytes(), tmpMsg, null);
+					}
 				}
-				if(tmpVertexState == State.END_VERTEX)
+				if(tmpVertexState == State.END_VERTEX){
 					voteToHalt();
+					//test
+					GraphVertexOperation.testVoteVertexInfo(writer, getSuperstep(), getVertexId().getBytes(),
+							" it is the rear!");
+				}
+				if(tmpVertexState == State.FINAL_VERTEX){
+					voteToHalt();
+					try {
+						GraphVertexOperation.flushChainToFile(tmpVal.getMergeChain(), 
+								tmpVal.getLengthOfMergeChain(),getVertexId().getBytes());
+			    		writer.write("Step: " + getSuperstep() + "\r\n");
+			    		writer.write("Flush! " + "\r\n");
+					} catch (IOException e) { e.printStackTrace(); }
+				}
 			}
 		}
 		try {

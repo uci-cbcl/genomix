@@ -305,9 +305,9 @@ public class GraphVertexOperation {
 	/**
 	 * merge two BytesWritable. Ex. merge two vertexId
 	 */
-	public static byte[] mergeTwoChainVertex(byte[] b1, int length, byte[] b2){
-		String s2 = BitwiseOperation.convertBytesToBinaryString(b2).substring(2*k-2,2*length);
-		return BitwiseOperation.mergeTwoBytesArray(b1, length, BitwiseOperation.convertBinaryStringToBytes(s2), s2.length()/2);
+	public static byte[] mergeTwoChainVertex(byte[] b1, int length, byte[] b2, int length2){
+		String s2 = BitwiseOperation.convertBytesToBinaryString(b2).substring(2*k-2,2*length2);
+		return BitwiseOperation.mergeTwoBytesArray(b1, length, BitwiseOperation.convertBinaryStringToBytes(s2), length2-k+1);
 	}
 	/**
 	 * update right neighber
@@ -589,6 +589,21 @@ public class GraphVertexOperation {
     		writer.write("Step: " + step + "\r\n");
 			writer.write(reason + "\r\n");
 			writer.write("delete " + BitwiseOperation.convertBytesToBinaryStringKmer(vertexId, GraphVertexOperation.k) 
+				 + "\t" + GraphVertexOperation.convertBinaryStringToGenecode(
+		    				BitwiseOperation.convertBytesToBinaryStringKmer(
+		    						vertexId,GraphVertexOperation.k)) + "\r\n");
+			writer.write("\r\n");
+    	} catch (IOException e) { e.printStackTrace(); }
+    	return;
+	}
+	/**
+	 *  test voteToHalt vertex information
+	 */
+	public static void testVoteVertexInfo(OutputStreamWriter writer, long step, byte[] vertexId, String reason){
+		try {
+    		writer.write("Step: " + step + "\r\n");
+			writer.write(reason + "\r\n");
+			writer.write("voteToHalt " + BitwiseOperation.convertBytesToBinaryStringKmer(vertexId, GraphVertexOperation.k) 
 				 + "\t" + GraphVertexOperation.convertBinaryStringToGenecode(
 		    				BitwiseOperation.convertBytesToBinaryStringKmer(
 		    						vertexId,GraphVertexOperation.k)) + "\r\n");

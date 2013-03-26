@@ -6,4 +6,5 @@ public class State {
 	public static final int END_VERTEX = 2;
 	public static final int MID_VERTEX = 3;
 	public static final int TODELETE = 4;
+	public static final int FINAL_VERTEX = 5;
 }

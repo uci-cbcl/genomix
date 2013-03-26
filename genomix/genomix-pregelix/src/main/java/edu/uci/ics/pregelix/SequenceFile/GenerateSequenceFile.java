@@ -372,8 +372,8 @@ public class GenerateSequenceFile {
 		 //createTestDat();
 		/* Path dir = new Path("data/webmap");
 		 Path inFile = new Path(dir, "part-1");
-		 Path outFile = new Path(dir, "part-1-out");
-		 generateNumOfLinesFromBigFile(inFile,outFile,10000);*/
+		 Path outFile = new Path(dir, "part-1-out-100");
+		 generateNumOfLinesFromBigFile(inFile,outFile,100);*/
 		 /**
 		  * AGC - A		C - TAT
 		  *  AGCATGCTAT
@@ -406,13 +406,15 @@ public class GenerateSequenceFile {
 		  *  
 		  *  Two strings 
 		  *  "AGCATGCTAT","TTCAGTACCCGC"
+		  *  
+		  *  AGCATGCTAT
 		  */ 
 		 
-		 generateSequenceFileFromGeneCode3("AGCATGCTAT");//GTCGATT  //before T: GGACG
+		 generateSequenceFileFromGeneCode3("AGCATGGCCTGCTAT");//GTCGATT  //before T: GGACG
 	 }
 	 public static void generateSequenceFileFromGeneCode3(String s) throws IOException{
 		 Configuration conf = new Configuration();
-	     Path outFile = new Path(outDir, "sequenceShortFileMergeTest");
+	     Path outFile = new Path(outDir, "11");//sequenceShortFileMergeTest
 	     FileSystem fileSys = FileSystem.get(conf);
 	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, BytesWritable.class, KmerCountValue.class, 

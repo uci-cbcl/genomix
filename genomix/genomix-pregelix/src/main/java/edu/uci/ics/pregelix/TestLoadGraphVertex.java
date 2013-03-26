@@ -44,16 +44,16 @@ import edu.uci.ics.pregelix.example.io.MessageWritable;
  */
 public class TestLoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
 
-	private byte[] tmpVertexId;
-	private BytesWritable vid;
-	private TestLoadGraphVertex newVertex;
-	private MessageWritable tmpMsg = new MessageWritable();
+	//private byte[] tmpVertexId;
+	//private BytesWritable vid;
+	//private TestLoadGraphVertex newVertex;
+	//private MessageWritable tmpMsg = new MessageWritable();
 	/**
 	 * For test, just output original file
 	 */
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
-		deleteVertex(getVertexId());
+		/*deleteVertex(getVertexId());
 		tmpVertexId = getVertexId().getBytes();
 		String a1 = "100100";
 		byte[] b1 = BitwiseOperation.convertBinaryStringToBytes(a1);
@@ -62,15 +62,15 @@ public class TestLoadGraphVertex extends Vertex<BytesWritable, ByteWritable, Nul
 		String valueString = "00000000";
 		byte value = BitwiseOperation.convertBinaryStringToByte(valueString);
 		if(getSuperstep() == 1 && Arrays.equals(b1,tmpVertexId)){
-			/*newVertex = new TestLoadGraphVertex();
+			newVertex = new TestLoadGraphVertex();
             vid.set(new BytesWritable(b2));
             newVertex.setVertexId(vid);
             newVertex.setVertexValue(getVertexValue());
-            addVertex(vid, newVertex);*/
+            addVertex(vid, newVertex);
 			//vertex.initialize(new BytesWritable(b2), new ByteWritable(value), null, null);
 			//addVertex(new BytesWritable(b2),this.createdNewLiveVertex());
 			deleteVertex(getVertexId());
-		}
+		}*/
 		/*String a2 = "100111";
 		byte[] b2 = BitwiseOperation.convertBinaryStringToBytes(a2);
 		String a3 = "11111111";
