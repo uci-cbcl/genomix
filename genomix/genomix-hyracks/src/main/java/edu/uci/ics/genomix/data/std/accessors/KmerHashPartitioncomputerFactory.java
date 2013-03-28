@@ -24,9 +24,6 @@ public class KmerHashPartitioncomputerFactory implements
 			@Override
 			public int partition(IFrameTupleAccessor accessor, int tIndex,
 					int nParts) {
-				if (nParts == 1) {
-					return 0;
-				}
 				int startOffset = accessor.getTupleStartOffset(tIndex);
 				int fieldOffset = accessor.getFieldStartOffset(tIndex, 0);
 				int slotLength = accessor.getFieldSlotsLength();
@@ -37,7 +34,7 @@ public class KmerHashPartitioncomputerFactory implements
 				int hash = hashBytes(buf.array(), startOffset + fieldOffset
 						+ slotLength, fieldLength);
 				if (hash < 0){
-					hash = (-hash+1);
+					hash = -(hash+1);
 				}
 
 				return hash % nParts;
