@@ -15,10 +15,9 @@ public class KmerHashPartitioncomputerFactory implements
 		int hash = 1;
 		for (int i = offset; i < offset + length; i++)
 			hash = (31 * hash) + (int) bytes[i];
-		
 		return hash;
 	}
-	
+
 	@Override
 	public ITuplePartitionComputer createPartitioner() {
 		return new ITuplePartitionComputer() {
@@ -35,10 +34,12 @@ public class KmerHashPartitioncomputerFactory implements
 
 				ByteBuffer buf = accessor.getBuffer();
 
-				int hash = hashBytes(buf.array(), startOffset + fieldOffset + slotLength, fieldLength);
+				int hash = hashBytes(buf.array(), startOffset + fieldOffset
+						+ slotLength, fieldLength);
 				if (hash < 0){
-					hash = - (hash+1);
+					hash = (-hash+1);
 				}
+
 				return hash % nParts;
 			}
 		};

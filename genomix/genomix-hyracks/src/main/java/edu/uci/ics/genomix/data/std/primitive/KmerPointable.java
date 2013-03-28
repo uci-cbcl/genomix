@@ -48,7 +48,7 @@ public final class KmerPointable extends AbstractPointable implements
 	}
 
 	public static int getIntReverse(byte[] bytes, int offset, int length) {
-		int shortValue = getShortReverse(bytes, offset, length);
+		int shortValue = getShortReverse(bytes, offset, length) & 0xffff;
 
 		if (length < 3) {
 			return shortValue;
@@ -65,7 +65,7 @@ public final class KmerPointable extends AbstractPointable implements
 
 	public static long getLongReverse(byte[] bytes, int offset, int length) {
 		if (length < 8) {
-			return getIntReverse(bytes, offset, length);
+			return ((long) getIntReverse(bytes, offset, length)) & 0x0ffffffffL;
 		}
 		return (((long) (bytes[offset + length - 1] & 0xff)) << 56)
 				+ (((long) (bytes[offset + length - 2] & 0xff)) << 48)
@@ -74,7 +74,7 @@ public final class KmerPointable extends AbstractPointable implements
 				+ (((long) (bytes[offset + length - 5] & 0xff)) << 24)
 				+ (((long) (bytes[offset + length - 6] & 0xff)) << 16)
 				+ (((long) (bytes[offset + length - 7] & 0xff)) << 8)
-				+ (((long) (bytes[offset + length - 8] & 0xff)) << 0);
+				+ (((long) (bytes[offset + length - 8] & 0xff)));
 	}
 
 	@Override
@@ -89,24 +89,13 @@ public final class KmerPointable extends AbstractPointable implements
 		if (this.length != length) {
 			return this.length - length;
 		}
-		
-		// Why have we write so much ? 
-		// We need to follow the normalized key and it's usage 
-		int bNormKey = getIntReverse(this.bytes, this.start, this.length);
-		int mNormKey = getIntReverse(bytes, offset, length);
-		int cmp = bNormKey - mNormKey;
-		if ( cmp != 0){
-			return ((((long) bNormKey) & 0xffffffffL) < (((long) mNormKey) & 0xffffffffL)) ? -1
-					: 1;
-		}
-		
-		for (int i = length - 5; i >= 0; i--) {
-			if (this.bytes[this.start + i] < bytes[offset + i]) {
-				return -1;
-			} else if (this.bytes[this.start + i] > bytes[offset + i]) {
-				return 1;
+		for (int i = length - 1; i >= 0; i--) {
+			int cmp = (this.bytes[this.start + i] & 0xff) - (bytes[offset + i] & 0xff);
+			if (cmp !=0){
+				return cmp;
 			}
 		}
+
 		return 0;
 	}
 
