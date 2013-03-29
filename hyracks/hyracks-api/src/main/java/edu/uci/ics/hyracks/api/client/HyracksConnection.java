@@ -14,12 +14,23 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
+import java.io.File;
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -106,5 +117,24 @@ public final class HyracksConnection implements IHyracksClientConnection {
     @Override
     public ClusterTopology getClusterTopology() throws Exception {
         return hci.getClusterTopology();
+    }
+
+    @Override
+    public void deployBinary(List<String> jars) throws Exception {
+        List<URL> binaryURLs = new ArrayList<URL>();
+        if (jars != null && jars.size() > 0) {
+            HttpClient hc = new DefaultHttpClient();
+            for (String jar : jars) {
+                String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/" + jar;
+                HttpPut put = new HttpPut(url);
+                put.setEntity(new FileEntity(new File(jar), "application/octet-stream"));
+                HttpResponse response = hc.execute(put);
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    throw new HyracksException(response.getStatusLine().toString());
+                }
+                binaryURLs.add(new URL(url));
+            }
+        }
+        hci.deployBinary(binaryURLs);
     }
 }

@@ -15,6 +15,7 @@
 package edu.uci.ics.hyracks.api.client;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
@@ -110,4 +111,12 @@ public interface IHyracksClientConnection {
      * @throws Exception
      */
     public ClusterTopology getClusterTopology() throws Exception;
+
+    /**
+     * Deploy the user-defined jars to the cluster
+     * 
+     * @param jars
+     *            a list of user-defined jars
+     */
+    public void deployBinary(List<String> jars) throws Exception;
 }
