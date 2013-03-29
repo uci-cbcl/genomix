@@ -73,6 +73,7 @@ import edu.uci.ics.hyracks.control.nc.work.AbortTasksWork;
 import edu.uci.ics.hyracks.control.nc.work.ApplicationMessageWork;
 import edu.uci.ics.hyracks.control.nc.work.BuildJobProfilesWork;
 import edu.uci.ics.hyracks.control.nc.work.CleanupJobletWork;
+import edu.uci.ics.hyracks.control.nc.work.DeployBinaryNotificationWork;
 import edu.uci.ics.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import edu.uci.ics.hyracks.control.nc.work.StartTasksWork;
 import edu.uci.ics.hyracks.ipc.api.IIPCHandle;
@@ -482,6 +483,12 @@ public class NodeControllerService extends AbstractRemoteService {
                 case GET_NODE_CONTROLLERS_INFO_RESPONSE: {
                     CCNCFunctions.GetNodeControllersInfoResponseFunction gncirf = (CCNCFunctions.GetNodeControllersInfoResponseFunction) fn;
                     setNodeControllersInfo(gncirf.getNodeControllerInfos());
+                    return;
+                }
+                
+                case NOTIFY_DEPLOY_BINARY: {
+                    CCNCFunctions.NotifyDeployBinaryFunction ndbf = (CCNCFunctions.NotifyDeployBinaryFunction) fn;
+                    queue.schedule(new DeployBinaryNotificationWork(NodeControllerService.this, ndbf.getNodeId()));
                     return;
                 }
             }

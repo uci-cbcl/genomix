@@ -14,10 +14,12 @@
  */
 package edu.uci.ics.hyracks.control.common.ipc;
 
+import java.net.URL;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.hyracks.api.client.HyracksClientInterfaceFunctions;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
@@ -61,6 +63,13 @@ public class NodeControllerRemoteProxy implements INodeController {
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
         CCNCFunctions.ReportPartitionAvailabilityFunction rpaf = new CCNCFunctions.ReportPartitionAvailabilityFunction(
                 pid, networkAddress);
+        ipcHandle.send(-1, rpaf, null);
+    }
+
+    @Override
+    public void deployBinary(List<URL> binaryURLs) throws Exception {
+        HyracksClientInterfaceFunctions.DeployBinaryFunction rpaf = new HyracksClientInterfaceFunctions.DeployBinaryFunction(
+                binaryURLs);
         ipcHandle.send(-1, rpaf, null);
     }
 }

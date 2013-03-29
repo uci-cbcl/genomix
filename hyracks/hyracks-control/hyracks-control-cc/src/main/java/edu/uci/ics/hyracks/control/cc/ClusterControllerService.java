@@ -49,6 +49,7 @@ import edu.uci.ics.hyracks.control.cc.dataset.DatasetDirectoryService;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
 import edu.uci.ics.hyracks.control.cc.web.WebServer;
 import edu.uci.ics.hyracks.control.cc.work.ApplicationMessageWork;
+import edu.uci.ics.hyracks.control.cc.work.DeployBinaryWork;
 import edu.uci.ics.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import edu.uci.ics.hyracks.control.cc.work.GetIpAddressNodeNameMapWork;
 import edu.uci.ics.hyracks.control.cc.work.GetJobStatusWork;
@@ -371,6 +372,12 @@ public class ClusterControllerService extends AbstractRemoteService {
                     } catch (IPCException e) {
                         e.printStackTrace();
                     }
+                    return;
+                }
+
+                case DEPLOY_BINARY: {
+                    HyracksClientInterfaceFunctions.DeployBinaryFunction dbf = (HyracksClientInterfaceFunctions.DeployBinaryFunction) fn;
+                    workQueue.schedule(new DeployBinaryWork(ClusterControllerService.this, dbf.getBinaryURLs()));
                     return;
                 }
             }

@@ -39,6 +39,8 @@ public interface IClusterController {
 
     public void notifyJobletCleanup(JobId jobId, String nodeId) throws Exception;
 
+    public void notifyDeployBinary(String nodeId) throws Exception;
+
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception;
 
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception;

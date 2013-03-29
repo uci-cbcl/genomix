@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.common.base;
 
+import java.net.URL;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -37,4 +38,6 @@ public interface INodeController {
     public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception;
 
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception;
+
+    public void deployBinary(List<URL> url) throws Exception;
 }

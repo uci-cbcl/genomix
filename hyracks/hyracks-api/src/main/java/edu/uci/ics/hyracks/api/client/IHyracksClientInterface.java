@@ -14,7 +14,9 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
+import java.net.URL;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
@@ -37,4 +39,6 @@ public interface IHyracksClientInterface {
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception;
 
     public ClusterTopology getClusterTopology() throws Exception;
+    
+    public void deployBinary(List<URL> binaryURLs) throws Exception;
 }

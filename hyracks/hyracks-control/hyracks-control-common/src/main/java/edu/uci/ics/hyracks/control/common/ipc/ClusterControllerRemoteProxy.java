@@ -70,6 +70,12 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
+    public void notifyDeployBinary(String nodeId) throws Exception {
+        CCNCFunctions.NotifyDeployBinaryFunction fn = new CCNCFunctions.NotifyDeployBinaryFunction(nodeId);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
         CCNCFunctions.NodeHeartbeatFunction fn = new CCNCFunctions.NodeHeartbeatFunction(id, hbData);
         ipcHandle.send(-1, fn, null);
@@ -126,4 +132,5 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     public void getNodeControllerInfos() throws Exception {
         ipcHandle.send(-1, new CCNCFunctions.GetNodeControllersInfoFunction(), null);
     }
+
 }

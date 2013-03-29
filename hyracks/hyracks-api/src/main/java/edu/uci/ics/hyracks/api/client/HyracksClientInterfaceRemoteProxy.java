@@ -14,7 +14,9 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
+import java.net.URL;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
@@ -78,5 +80,12 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     public ClusterTopology getClusterTopology() throws Exception {
         HyracksClientInterfaceFunctions.GetClusterTopologyFunction gctf = new HyracksClientInterfaceFunctions.GetClusterTopologyFunction();
         return (ClusterTopology) rpci.call(ipcHandle, gctf);
+    }
+
+    @Override
+    public void deployBinary(List<URL> binaryURLs) throws Exception {
+        HyracksClientInterfaceFunctions.DeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.DeployBinaryFunction(
+                binaryURLs);
+        rpci.call(ipcHandle, dbf);
     }
 }

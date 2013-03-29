@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.List;
@@ -80,6 +81,8 @@ public class CCNCFunctions {
         SEND_APPLICATION_MESSAGE,
         GET_NODE_CONTROLLERS_INFO,
         GET_NODE_CONTROLLERS_INFO_RESPONSE,
+        
+        NOTIFY_DEPLOY_BINARY,
 
         OTHER
     }
@@ -747,6 +750,25 @@ public class CCNCFunctions {
 
             // Write NetworkAddress
             writeNetworkAddress(dos, fn.getNetworkAddress());
+        }
+    }
+
+    public static class NotifyDeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final String nodeId;
+
+        public NotifyDeployBinaryFunction(String nodeId) {
+            this.nodeId = nodeId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.NOTIFY_DEPLOY_BINARY;
+        }
+
+        public String getNodeId() {
+            return nodeId;
         }
     }
 

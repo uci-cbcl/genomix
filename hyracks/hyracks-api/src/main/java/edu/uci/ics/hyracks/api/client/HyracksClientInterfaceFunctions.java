@@ -15,7 +15,9 @@
 package edu.uci.ics.hyracks.api.client;
 
 import java.io.Serializable;
+import java.net.URL;
 import java.util.EnumSet;
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
@@ -34,7 +36,8 @@ public class HyracksClientInterfaceFunctions {
         GET_DATASET_RECORD_DESCRIPTOR,
         GET_DATASET_RESULT_LOCATIONS,
         WAIT_FOR_COMPLETION,
-        GET_NODE_CONTROLLERS_INFO
+        GET_NODE_CONTROLLERS_INFO,
+        DEPLOY_BINARY
     }
 
     public abstract static class Function implements Serializable {
@@ -198,6 +201,25 @@ public class HyracksClientInterfaceFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.GET_CLUSTER_TOPOLOGY;
+        }
+    }
+    
+    public static class DeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final List<URL> binaryURLs;
+
+        public DeployBinaryFunction(List<URL> binaryURLs) {
+            this.binaryURLs = binaryURLs;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DEPLOY_BINARY;
+        }
+
+        public List<URL> getBinaryURLs() {
+            return binaryURLs;
         }
     }
 }
