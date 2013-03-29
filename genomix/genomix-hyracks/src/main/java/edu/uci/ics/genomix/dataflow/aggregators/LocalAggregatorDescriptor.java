@@ -39,16 +39,12 @@ public class LocalAggregatorDescriptor implements IAggregatorDescriptor {
 		return data;
 	}
 
-	protected byte getCount(IFrameTupleAccessor accessor, int tIndex) {
-		return 1;
-	}
-
 	@Override
 	public void init(ArrayTupleBuilder tupleBuilder,
 			IFrameTupleAccessor accessor, int tIndex, AggregateState state)
 			throws HyracksDataException {
 		byte bitmap = getField(accessor, tIndex, 1);
-		byte count = getCount(accessor, tIndex);
+		byte count = 1;
 
 		DataOutput fieldOutput = tupleBuilder.getDataOutput();
 		try {
@@ -67,7 +63,7 @@ public class LocalAggregatorDescriptor implements IAggregatorDescriptor {
 			IFrameTupleAccessor stateAccessor, int stateTupleIndex,
 			AggregateState state) throws HyracksDataException {
 		byte bitmap = getField(accessor, tIndex, 1);
-		short count = getCount(accessor, tIndex);
+		short count = 1;
 
 		int statetupleOffset = stateAccessor
 				.getTupleStartOffset(stateTupleIndex);
