@@ -48,6 +48,12 @@ public class RunJobTestCase extends TestCase {
     private static String HDFS_INPUTPATH3 = "/clique";
     private static String HDFS_OUTPUTPAH3 = "/resultclique";
 
+    private static String HDFS_INPUTPATH4 = "/clique2";
+    private static String HDFS_OUTPUTPAH4 = "/resultclique";
+
+    private static String HDFS_INPUTPATH5 = "/clique3";
+    private static String HDFS_OUTPUTPAH5 = "/resultclique";
+
     private final PregelixJob job;
     private JobGen[] giraphJobGens;
     private final String resultFileName;
@@ -68,9 +74,15 @@ public class RunJobTestCase extends TestCase {
         } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH2)) {
             FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
             FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
-        } else {
+        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH3)) {
             FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
             FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
+        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH4)) {
+            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH4);
+            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH4));
+        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH5)) {
+            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH5);
+            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH5));
         }
         job.setJobName(jobName);
         this.resultFileName = resultFile;
