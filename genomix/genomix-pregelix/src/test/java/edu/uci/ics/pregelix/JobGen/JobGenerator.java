@@ -47,7 +47,7 @@ public class JobGenerator {
     
     private static void generateBinaryLoadGraphJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(MergeGraphVertex.class);
+    	job.setVertexClass(TestLoadGraphVertex.class);
     	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
         job.setOutputKeyClass(BytesWritable.class);
@@ -59,6 +59,22 @@ public class JobGenerator {
     
     private static void genBinaryLoadGraph() throws IOException {
     	generateBinaryLoadGraphJob("BinaryLoadGraph", outputBase + "BinaryLoadGraph.xml");
+    }
+    
+    private static void generateMergeGraphJob(String jobName, String outputPath) throws IOException {
+    	PregelixJob job = new PregelixJob(jobName);
+    	job.setVertexClass(TestLoadGraphVertex.class);
+    	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
+        job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
+        job.setOutputKeyClass(BytesWritable.class);
+        job.setOutputValueClass(ByteWritable.class);
+        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
+        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+    
+    private static void genMergeGraph() throws IOException {
+    	generateMergeGraphJob("MergeGraph", outputBase + "MergeGraph.xml");
     }
     
     private static void generateLogAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
@@ -85,7 +101,8 @@ public class JobGenerator {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		genBinaryLoadGraph();
-		//genLogAlgorithmForMergeGraph();
+		genMergeGraph();
+		genLogAlgorithmForMergeGraph();
 		//genSequenceLoadGraph();
 		//genBasicBinaryLoadGraph();
 	}

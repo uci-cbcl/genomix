@@ -41,7 +41,7 @@ public class RunJobTestSuite extends TestSuite{
 	private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
 	private static final String FILE_EXTENSION_OF_RESULTS = "result";
 
-	private static final String DATA_PATH = "data/webmap/part-1-out-200000";//sequenceFileMergeTest
+	private static final String DATA_PATH = "data/webmap/part-1-out-500000";//sequenceFileMergeTest
 	private static final String HDFS_PATH = "/webmap/";
 	
 	private static final String HYRACKS_APP_NAME = "pregelix";
@@ -169,7 +169,7 @@ public class RunJobTestSuite extends TestSuite{
 		long totalTime = endTime - startTime;
 		System.out.println(totalTime);
 		try {
-			writer.write("Time: " + totalTime);
+			writer.write("Time: " + totalTime + "\r\n");
 			writer.close();
 		} catch (IOException e) { // TODO Auto-generated catch block 
 			e.printStackTrace();} 
