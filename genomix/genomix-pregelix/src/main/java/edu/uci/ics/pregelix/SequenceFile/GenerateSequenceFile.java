@@ -13,7 +13,7 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 import edu.uci.ics.pregelix.GraphVertexOperation;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
-import edu.uci.ics.pregelix.type.KmerCountValue;
+import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class GenerateSequenceFile {
 	
@@ -349,7 +349,10 @@ public class GenerateSequenceFile {
 	public static void generateNumOfLinesFromBigFile(Path inFile, Path outFile, int numOfLines) throws IOException{
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
-	    SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
+	    
+		ClassLoader ctxLoader = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader(GenerateSequenceFile.class.getClassLoader());
+		SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
 	    SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, BytesWritable.class, KmerCountValue.class, 
 	         CompressionType.NONE);
@@ -364,13 +367,14 @@ public class GenerateSequenceFile {
 	    }
 	    writer.close();
 	    reader.close();
+	    Thread.currentThread().setContextClassLoader(ctxLoader);
 	}
 	
 	 public static void main(String[] argv) throws Exception {
 		 //createTestDat();
 		 //createMergeTest();
 		 //createTestDat();
-		/* Path dir = new Path("data/webmap");
+		 /*Path dir = new Path("data/webmap");
 		 Path inFile = new Path(dir, "part-1");
 		 Path outFile = new Path(dir, "part-1-out-100");
 		 generateNumOfLinesFromBigFile(inFile,outFile,100);*/
@@ -410,11 +414,12 @@ public class GenerateSequenceFile {
 		  *  AGCATGCTAT
 		  */ 
 		 
-		 generateSequenceFileFromGeneCode3("AGCATGGCCTGCTAT");//GTCGATT  //before T: GGACG
+		 //generateSequenceFileFromGeneCode3("AGCATGCTAT");//GTCGATT  //before T: GGACG
+		 generateSequenceFileFromGeneCode15("AAAAAAAAAAAAAGCATGCTATAAAAAAAAAAAA");
 	 }
 	 public static void generateSequenceFileFromGeneCode3(String s) throws IOException{
 		 Configuration conf = new Configuration();
-	     Path outFile = new Path(outDir, "11");//sequenceShortFileMergeTest
+	     Path outFile = new Path(outDir, "sequenceShortFileMergeTest");//sequenceShortFileMergeTest
 	     FileSystem fileSys = FileSystem.get(conf);
 	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, BytesWritable.class, KmerCountValue.class, 
@@ -562,7 +567,7 @@ public class GenerateSequenceFile {
 	 }
 	 public static void generateSequenceFileFromGeneCode5(String s) throws IOException{
 		 Configuration conf = new Configuration();
-	     Path outFile = new Path(outDir, "sequenceFileMergeTest4");
+	     Path outFile = new Path(outDir, "sequenceFileMergeTest5");
 	     FileSystem fileSys = FileSystem.get(conf);
 	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, BytesWritable.class, KmerCountValue.class, 
@@ -626,7 +631,7 @@ public class GenerateSequenceFile {
 	     writer.close();
 	     
 	     //read outputs
-	     Path inFile = new Path(outDir, "sequenceFileMergeTest4");
+	     Path inFile = new Path(outDir, "sequenceFileMergeTest5");
 	     outKey = new BytesWritable();
 	     outValue = new KmerCountValue();
 	     SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
@@ -645,10 +650,9 @@ public class GenerateSequenceFile {
 	       reader.close();
 	     }
 	 }
-	 
 	 public static void generateSequenceFileFromGeneCode8(String s) throws IOException{
 		 Configuration conf = new Configuration();
-	     Path outFile = new Path(outDir, "sequenceFileMergeTest4");
+	     Path outFile = new Path(outDir, "sequenceFileMergeTest8");
 	     FileSystem fileSys = FileSystem.get(conf);
 	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, BytesWritable.class, KmerCountValue.class, 
@@ -712,7 +716,7 @@ public class GenerateSequenceFile {
 	     writer.close();
 	     
 	     //read outputs
-	     Path inFile = new Path(outDir, "sequenceFileMergeTest4");
+	     Path inFile = new Path(outDir, "sequenceFileMergeTest8");
 	     outKey = new BytesWritable();
 	     outValue = new KmerCountValue();
 	     SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
@@ -731,7 +735,91 @@ public class GenerateSequenceFile {
 	       reader.close();
 	     }
 	 }
-	 
+	 public static void generateSequenceFileFromGeneCode15(String s) throws IOException{
+		 Configuration conf = new Configuration();
+	     Path outFile = new Path(outDir, "sequenceFileMergeTest15");
+	     FileSystem fileSys = FileSystem.get(conf);
+	     SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
+	         outFile, BytesWritable.class, KmerCountValue.class, 
+	         CompressionType.NONE);
+		 BytesWritable outKey = null;
+	     KmerCountValue outValue;
+	     byte adjBitMap; 
+	     ArrayList<String> lists = new ArrayList<String>();
+
+	     lists.add("000000000000000000000000001001"); //AAAAAAAAAAAAAGC
+	     lists.add("110011000000000000000000000000"); //TATAAAAAAAAAAAA
+	     String binaryString = "";
+		 for(int i = 1; i < s.length()-GraphVertexOperation.k; i++){
+			 binaryString = GraphVertexOperation.convertGeneCodeToBinaryString(s.substring(i,i+GraphVertexOperation.k));
+			 if(lists.contains(binaryString)){
+				 System.out.println("error: " + binaryString);
+				 return;
+			 }
+			 lists.add(binaryString);
+			 outKey = new BytesWritable(BitwiseOperation.convertBinaryStringToBytes(binaryString));
+			 outValue = new KmerCountValue();
+			 adjBitMap = GraphVertexOperation.getPrecursorFromGeneCode((byte)0, s.charAt(i-1));
+			 adjBitMap = GraphVertexOperation.getSucceedFromGeneCode(adjBitMap, s.charAt(i+GraphVertexOperation.k));
+			 outValue.setAdjBitMap(adjBitMap);
+			 writer.append(outKey, outValue);
+		 }
+		 /**
+		  *  CAG - AGC ------ TAT - ATA
+		  *  GAG 					ATC
+		  */
+		 // AGC
+	     String tmpKey = "000000000000000000000000001001";
+		 byte[] key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+		 String tmpValue = "00000001";
+		 byte value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+		 BytesWritable keyWritable = new BytesWritable(key);
+		 ByteWritable valueWritable = new ByteWritable(value);
+	     
+	     ArrayList<BytesWritable> arrayOfKeys = new ArrayList<BytesWritable>();
+	     arrayOfKeys.add(keyWritable);
+	     ArrayList<ByteWritable> arrayOfValues = new ArrayList<ByteWritable>();
+	     arrayOfValues.add(valueWritable);
+	     
+	     // TAT
+	     tmpKey = "110011000000000000000000000000";
+	     key = BitwiseOperation.convertBinaryStringToBytes(tmpKey);
+	     tmpValue = "00100000";
+	     value = BitwiseOperation.convertBinaryStringToByte(tmpValue);
+	     keyWritable = new BytesWritable(key);
+	     valueWritable = new ByteWritable(value);
+	     arrayOfKeys.add(keyWritable);
+	     arrayOfValues.add(valueWritable);
+
+	     KmerCountValue kmerCountValue = null;
+	     //wirte to sequence file
+	     for(int i = 0; i < arrayOfKeys.size(); i++){
+	    	 kmerCountValue = new KmerCountValue();
+	    	 kmerCountValue.setAdjBitMap(arrayOfValues.get(i).get());
+	    	 writer.append(arrayOfKeys.get(i), kmerCountValue);
+	     }
+	     writer.close();
+	     
+	     //read outputs
+	     Path inFile = new Path(outDir, "sequenceFileMergeTest15");
+	     outKey = new BytesWritable();
+	     outValue = new KmerCountValue();
+	     SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
+	     int iteration = 1;
+	     try {
+	         while(reader.next(outKey, outValue)){
+	        	 System.out.println(iteration);
+	        	 String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(outKey.getBytes(),GraphVertexOperation.k);
+			     System.out.println("key: " + kmer);
+			     System.out.println("code: " + GraphVertexOperation.convertBinaryStringToGenecode(kmer));
+			     System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(outValue.getAdjBitMap()));
+			     System.out.println();
+			     iteration++;
+	         }
+	     } finally {
+	       reader.close();
+	     }
+	 }
 	 public static void generateSequenceFileFromTwoGeneCode3(String s, String s2) throws IOException{
 		 Configuration conf = new Configuration();
 	     Path outFile = new Path(outDir, "sequenceFileMergeTest4");

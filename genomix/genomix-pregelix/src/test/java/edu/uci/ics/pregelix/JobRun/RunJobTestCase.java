@@ -1,6 +1,9 @@
 package edu.uci.ics.pregelix.JobRun;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 
 import junit.framework.TestCase;
 
@@ -68,6 +71,7 @@ public class RunJobTestCase extends TestCase{
 	@Test
 	public void test() throws Exception {
 		setUp();
+		
         for (JobGen jobGen : giraphJobGens) {
             FileSystem dfs = FileSystem.get(job.getConfiguration());
             dfs.delete(new Path(HDFS_OUTPUTPAH), true);

@@ -3,7 +3,6 @@ package edu.uci.ics.pregelix.api.io.binary;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -15,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
-import edu.uci.ics.pregelix.type.KmerCountValue;
+import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class BinaryVertexInputFormat <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
 	extends VertexInputFormat<I, V, E, M>{

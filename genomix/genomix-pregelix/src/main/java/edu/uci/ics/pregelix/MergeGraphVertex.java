@@ -67,7 +67,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
 		try {
-			writer = new OutputStreamWriter(new FileOutputStream("test/check",true));
+			writer = new OutputStreamWriter(new FileOutputStream("test/check_Naive",true));
 		} catch (FileNotFoundException e1) { e1.printStackTrace();}
 		tmpVertextId = GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId());
 		if (getSuperstep() == 1) {

@@ -47,7 +47,7 @@ public class JobGenerator {
     
     private static void generateBinaryLoadGraphJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(TestLoadGraphVertex.class);
+    	job.setVertexClass(MergeGraphVertex.class);
     	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
         job.setOutputKeyClass(BytesWritable.class);
@@ -84,8 +84,8 @@ public class JobGenerator {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		//genLogAlgorithmForMergeGraph();
 		genBinaryLoadGraph();
+		//genLogAlgorithmForMergeGraph();
 		//genSequenceLoadGraph();
 		//genBasicBinaryLoadGraph();
 	}

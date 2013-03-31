@@ -15,7 +15,7 @@ import edu.uci.ics.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
 import edu.uci.ics.pregelix.example.io.MessageWritable;
-import edu.uci.ics.pregelix.type.KmerCountValue;
+import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class BinaryLoadGraphInputFormat extends
 	BinaryVertexInputFormat<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
