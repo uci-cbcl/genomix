@@ -63,7 +63,7 @@ public class JobGenerator {
     
     private static void generateMergeGraphJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(TestLoadGraphVertex.class);
+    	job.setVertexClass(MergeGraphVertex.class);
     	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
         job.setOutputKeyClass(BytesWritable.class);
