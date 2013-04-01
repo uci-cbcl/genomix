@@ -24,7 +24,7 @@ import edu.uci.ics.pregelix.hdfs.HDFSOperation;
 import edu.uci.ics.pregelix.type.KmerCountValue;
 
 public class GraphVertexOperation {
-	public static final int k = 15; //kmer, k: the length of kmer
+	public static final int k = 55; //kmer, k: the length of kmer
 	static private final Path TMP_DIR = new Path(
 			GenerateSequenceFile.class.getSimpleName() + "_INTERIM");
 	/**

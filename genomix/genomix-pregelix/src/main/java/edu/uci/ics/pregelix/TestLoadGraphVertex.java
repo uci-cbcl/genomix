@@ -94,6 +94,7 @@ public class TestLoadGraphVertex extends Vertex<BytesWritable, ByteWritable, Nul
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
+		//final int k = Integer.parseInt(args[0]);
         PregelixJob job = new PregelixJob(MergeGraphVertex.class.getSimpleName());
         job.setVertexClass(TestLoadGraphVertex.class);
         /**
