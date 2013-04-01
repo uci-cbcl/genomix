@@ -58,6 +58,9 @@ public class KmerCountValue implements  Writable{
 	public byte getAdjBitMap() {
         return adjBitMap;
     }
+	public void setAdjBitMap(byte adjBitMap) {
+		this.adjBitMap = adjBitMap;
+	}
 	public byte getCount() {
 	    return count;
 	}
