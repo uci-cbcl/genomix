@@ -49,7 +49,7 @@ public class GenomixCombiner extends MapReduceBase implements
             bytCount = (byte) 127;
         else
             bytCount = (byte) count;
-        vaWriter.reset(groupByAdjList, bytCount);
+        vaWriter.set(groupByAdjList, bytCount);
         output.collect(key, vaWriter);
     }
 }

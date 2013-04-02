@@ -50,7 +50,7 @@ public class GenomixReducer extends MapReduceBase implements
             bytCount = (byte) 127;
         else
             bytCount = (byte) count;
-        valWriter.reset(groupByAdjList, bytCount);
+        valWriter.set(groupByAdjList, bytCount);
         output.collect(key, valWriter);
         reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
     }

@@ -92,13 +92,13 @@ public class Kmer {
 			StringBuilder str = new StringBuilder();
 			for (int i = A; i <= T; i++) {
 				if ((left & (1 << i)) != 0) {
-					str.append((char)GENE_SYMBOL[i]);
+					str.append((char) GENE_SYMBOL[i]);
 				}
 			}
 			str.append('|');
 			for (int i = A; i <= T; i++) {
 				if ((right & (1 << i)) != 0) {
-					str.append((char)GENE_SYMBOL[i]);
+					str.append((char) GENE_SYMBOL[i]);
 				}
 			}
 			return str.toString();
@@ -118,17 +118,17 @@ public class Kmer {
 		}
 		return strKmer.toString();
 	}
-	
-	public static int getByteNumFromK(int k){
-		int x = k/4;
-		if (k%4 !=0){
-			x+=1;
+
+	public static int getByteNumFromK(int k) {
+		int x = k / 4;
+		if (k % 4 != 0) {
+			x += 1;
 		}
 		return x;
 	}
 
 	/**
-	 * Compress Kmer into bytes array AATAG will compress as [0 0 0 G][A T A A]
+	 * Compress Kmer into bytes array AATAG will compress as [0x000G, 0xATAA]
 	 * 
 	 * @param kmer
 	 * @param input
@@ -137,7 +137,7 @@ public class Kmer {
 	 *            position
 	 * @return initialed kmer array
 	 */
-	public static byte[] CompressKmer(int k, byte[] array, int start) {
+	public static byte[] compressKmer(int k, byte[] array, int start) {
 		final int byteNum = getByteNumFromK(k);
 		byte[] bytes = new byte[byteNum];
 
@@ -170,7 +170,7 @@ public class Kmer {
 	 *            Input new gene character
 	 * @return the shiftout gene, in gene code format
 	 */
-	public static byte MoveKmer(int k, byte[] kmer, byte c) {
+	public static byte moveKmer(int k, byte[] kmer, byte c) {
 		int byteNum = kmer.length;
 		byte output = (byte) (kmer[byteNum - 1] & 0x03);
 		for (int i = byteNum - 1; i > 0; i--) {
@@ -178,12 +178,101 @@ public class Kmer {
 			kmer[i] = (byte) (((kmer[i] >>> 2) & 0x3f) | (in << 6));
 		}
 
-		int pos = ((k - 1) % 4) * 2;
+		int pos = ((k - 1) % 4) << 1;
 		byte code = (byte) (GENE_CODE.getCodeFromSymbol(c) << pos);
 		kmer[0] = (byte) (((kmer[0] >>> 2) & 0x3f) | code);
 		return (byte) (1 << output);
 	}
 
+	public static byte reverseKmerByte(byte k) {
+		int x = (((k >> 2) & 0x33) | ((k << 2) & 0xcc));
+		return (byte) (((x >> 4) & 0x0f) | ((x << 4) & 0xf0));
+	}
 
+	public static byte[] reverseKmer(int k, byte[] kmer) {
+		byte[] reverseKmer = new byte[kmer.length];
 
+		int curPosAtKmer = ((k - 1) % 4) << 1;
+		int curByteAtKmer = 0;
+
+		int curPosAtReverse = 0;
+		int curByteAtReverse = reverseKmer.length - 1;
+		reverseKmer[curByteAtReverse] = 0;
+		for (int i = 0; i < k; i++) {
+			byte gene = (byte) ((kmer[curByteAtKmer] >> curPosAtKmer) & 0x03);
+			reverseKmer[curByteAtReverse] |= gene << curPosAtReverse;
+			curPosAtReverse += 2;
+			if (curPosAtReverse >= 8) {
+				curPosAtReverse = 0;
+				reverseKmer[--curByteAtReverse] = 0;
+			}
+			curPosAtKmer -= 2;
+			if (curPosAtKmer < 0) {
+				curPosAtKmer = 6;
+				curByteAtKmer++;
+			}
+		}
+
+		return reverseKmer;
+	}
+
+	/**
+	 * Compress Reversed Kmer into bytes array AATAG will compress as
+	 * [0x000A,0xATAG]
+	 * 
+	 * @param kmer
+	 * @param input
+	 *            array
+	 * @param start
+	 *            position
+	 * @return initialed kmer array
+	 */
+	public static byte[] compressKmerReverse(int k, byte[] array, int start) {
+		final int byteNum = getByteNumFromK(k);
+		byte[] bytes = new byte[byteNum];
+
+		byte l = 0;
+		int bytecount = 0;
+		int bcount = byteNum - 1;
+		for (int i = start + k - 1; i >= 0; i--) {
+			byte code = GENE_CODE.getCodeFromSymbol(array[i]);
+			l |= (byte) (code << bytecount);
+			bytecount += 2;
+			if (bytecount == 8) {
+				bytes[bcount--] = l;
+				l = 0;
+				bytecount = 0;
+			}
+		}
+		if (bcount >= 0) {
+			bytes[0] = l;
+		}
+		return bytes;
+	}
+
+	/**
+	 * Shift Kmer to accept new input
+	 * 
+	 * @param kmer
+	 * @param bytes
+	 *            Kmer Array
+	 * @param c
+	 *            Input new gene character
+	 * @return the shiftout gene, in gene code format
+	 */
+	public static byte moveKmerReverse(int k, byte[] kmer, byte c) {
+		int pos = ((k - 1) % 4) << 1;
+		byte output = (byte) ((kmer[0] >> pos) & 0x03);
+		for (int i = 0; i < kmer.length - 1; i++) {
+			byte in = (byte) ((kmer[i + 1] >> 6) & 0x03);
+			kmer[i] = (byte) ((kmer[i] << 2) | in);
+		}
+		// (k%4) * 2
+		if (k % 4 != 0) {
+			kmer[0] &= (1 << ((k % 4) << 1)) - 1;
+		}
+		kmer[kmer.length - 1] = (byte) ((kmer[kmer.length - 1] << 2) | GENE_CODE
+				.getCodeFromSymbol(c));
+		return (byte) (1 << output);
+	}
 }

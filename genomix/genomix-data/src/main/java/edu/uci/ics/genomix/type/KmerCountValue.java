@@ -20,15 +20,14 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-
-public class KmerCountValue implements  Writable{
+public class KmerCountValue implements Writable {
 	private byte adjBitMap;
 	private byte count;
 
 	public KmerCountValue(byte bitmap, byte count) {
-		reset(bitmap, count);
+		set(bitmap, count);
 	}
-	
+
 	public KmerCountValue() {
 		adjBitMap = 0;
 		count = 0;
@@ -48,20 +47,24 @@ public class KmerCountValue implements  Writable{
 
 	@Override
 	public String toString() {
-		return Kmer.GENE_CODE.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(count);
+		return Kmer.GENE_CODE.getSymbolFromBitMap(adjBitMap) + '\t'
+				+ String.valueOf(count);
 	}
 
-	public void reset(byte bitmap, byte count) {
+	public void set(byte bitmap, byte count) {
 		this.adjBitMap = bitmap;
 		this.count = count;
 	}
+
 	public byte getAdjBitMap() {
-        return adjBitMap;
-    }
+		return adjBitMap;
+	}
+
 	public void setAdjBitMap(byte adjBitMap) {
 		this.adjBitMap = adjBitMap;
 	}
+
 	public byte getCount() {
-	    return count;
+		return count;
 	}
 }

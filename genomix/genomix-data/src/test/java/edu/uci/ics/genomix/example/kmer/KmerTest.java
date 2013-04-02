@@ -12,31 +12,70 @@ public class KmerTest {
 	
 	@Test
 	public void TestCompressKmer() {
-		byte[] kmer = Kmer.CompressKmer(k, array, 0);
+		byte[] kmer = Kmer.compressKmer(k, array, 0);
 		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
 		Assert.assertEquals(result, "AATAGAA");
 		
-		kmer = Kmer.CompressKmer(k, array, 1);
+		kmer = Kmer.compressKmer(k, array, 1);
 		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
 		Assert.assertEquals(result, "ATAGAAG");
 	}
 	
 	@Test
 	public void TestMoveKmer(){
-		byte[] kmer = Kmer.CompressKmer(k, array, 0);
+		byte[] kmer = Kmer.compressKmer(k, array, 0);
 		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
 		Assert.assertEquals(result, "AATAGAA");
 		
 		for (int i = k; i < array.length-1; i++) {
-			Kmer.MoveKmer(k, kmer, array[i]);
+			Kmer.moveKmer(k, kmer, array[i]);
 			Assert.assertTrue(false);
 		}
 
-		byte out = Kmer.MoveKmer(k, kmer, array[array.length - 1]);
+		byte out = Kmer.moveKmer(k, kmer, array[array.length - 1]);
 		Assert.assertEquals(out, Kmer.GENE_CODE.getAdjBit((byte) 'A'));
 		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
 		Assert.assertEquals(result, "ATAGAAG");
 		
 	}
+	
+	@Test
+	public void TestReverseKmer(){
+		byte[] kmer = Kmer.compressKmer(k, array, 0);
+		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
+		Assert.assertEquals(result, "AATAGAA");
+		byte[] reversed = Kmer.reverseKmer(k, kmer);
+		result = Kmer.recoverKmerFrom(k, reversed, 0, kmer.length);
+		Assert.assertEquals(result, "AAGATAA");
+	}
+	
+	@Test
+	public void TestCompressKmerReverse() {
+		byte[] kmer = Kmer.compressKmerReverse(k, array, 0);
+		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
+		Assert.assertEquals(result, "AAGATAA");
+		
+		kmer = Kmer.compressKmerReverse(k, array, 1);
+		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
+		Assert.assertEquals(result, "GAAGATA");
+	}
+	
+	@Test
+	public void TestMoveKmerReverse(){
+		byte[] kmer = Kmer.compressKmerReverse(k, array, 0);
+		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
+		Assert.assertEquals(result, "AAGATAA");
+		
+		for (int i = k; i < array.length-1; i++) {
+			Kmer.moveKmerReverse(k, kmer, array[i]);
+			Assert.assertTrue(false);
+		}
+
+		byte out = Kmer.moveKmerReverse(k, kmer, array[array.length - 1]);
+		Assert.assertEquals(out, Kmer.GENE_CODE.getAdjBit((byte) 'A'));
+		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
+		Assert.assertEquals(result, "GAAGATA");
+	}
+
 
 }

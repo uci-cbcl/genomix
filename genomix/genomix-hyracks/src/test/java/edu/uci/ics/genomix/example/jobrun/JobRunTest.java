@@ -45,6 +45,7 @@ public class JobRunTest {
 			+ HDFS_OUTPUT_PATH + "/merged.txt";
 	private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
 	private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
+	private static final String EXPECTED_REVERSE_PATH = "src/test/resources/expected/result_reverse";
 
 	private static final String HYRACKS_APP_NAME = "genomix";
 	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
@@ -125,33 +126,59 @@ public class JobRunTest {
 		TestPreClusterGroupby();
 		cleanUpReEntry();
 		TestHybridGroupby();
+		cleanUpReEntry();
+		conf.setBoolean(GenomixJob.REVERSED_KMER, true);
+		TestExternalReversedGroupby();
+		cleanUpReEntry();
+		TestPreClusterReversedGroupby();
+		cleanUpReEntry();
+		TestHybridReversedGroupby();
 	}
 	
 	public void TestExternalGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing ExternalGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-		Assert.assertEquals(true, checkResults());
+		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
 	}
 
 	public void TestPreClusterGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing PreClusterGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-		Assert.assertEquals(true, checkResults());
+		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
 	}
 
 	public void TestHybridGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
-		conf.set(GenomixJob.OUTPUT_FORMAT, "binary");
 		System.err.println("Testing HybridGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-		Assert.assertEquals(true, checkResults());
+		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
+	}
+	
+	public void TestExternalReversedGroupby() throws Exception{
+		conf.set(GenomixJob.GROUPBY_TYPE, "external");
+		conf.setBoolean(GenomixJob.REVERSED_KMER, true);
+		System.err.println("Testing ExternalGroupBy + Reversed");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+		Assert.assertEquals(true, checkResults(EXPECTED_REVERSE_PATH));
+	}
+	public void TestPreClusterReversedGroupby() throws Exception{
+		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
+		conf.setBoolean(GenomixJob.REVERSED_KMER, true);
+		System.err.println("Testing PreclusterGroupBy + Reversed");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+		Assert.assertEquals(true, checkResults(EXPECTED_REVERSE_PATH));
+	}
+	public void TestHybridReversedGroupby() throws Exception{
+		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
+		conf.setBoolean(GenomixJob.REVERSED_KMER, true);
+		System.err.println("Testing HybridGroupBy + Reversed");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+		Assert.assertEquals(true, checkResults(EXPECTED_REVERSE_PATH));
 	}
 
-	private boolean checkResults() throws Exception {
+	private boolean checkResults(String expectedPath) throws Exception {
 		File dumped = null;
 		String format = conf.get(GenomixJob.OUTPUT_FORMAT);
 		if ("text".equalsIgnoreCase(format)) {
@@ -206,7 +233,7 @@ public class JobRunTest {
 			dumped = new File(CONVERT_RESULT);
 		}
 
-		TestUtils.compareWithSortedResult(new File(EXPECTED_PATH), dumped);
+		TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
 		return true;
 	}
 

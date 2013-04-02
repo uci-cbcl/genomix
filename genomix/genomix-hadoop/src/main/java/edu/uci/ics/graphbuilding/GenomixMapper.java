@@ -78,27 +78,27 @@ public class GenomixMapper extends MapReduceBase implements
             /** first kmer */
             byte count = 0;
             byte[] array = geneLine.getBytes();
-            byte[] kmer = Kmer.CompressKmer(KMER_SIZE, array, 0);
+            byte[] kmer = Kmer.compressKmer(KMER_SIZE, array, 0);
             byte pre = 0;
             byte next = GENE_CODE.getAdjBit(array[KMER_SIZE]);
             byte adj = GENE_CODE.mergePreNextAdj(pre, next);
-            outputAdjList.reset(adj, count);
+            outputAdjList.set(adj, count);
             outputKmer.set(kmer, 0, kmer.length);
             output.collect(outputKmer, outputAdjList);
             /** middle kmer */
             for (int i = KMER_SIZE; i < array.length - 1; i++) {
-                pre = Kmer.MoveKmer(KMER_SIZE, kmer, array[i]);
+                pre = Kmer.moveKmer(KMER_SIZE, kmer, array[i]);
                 next = GENE_CODE.getAdjBit(array[i + 1]);
                 adj = GENE_CODE.mergePreNextAdj(pre, next);
-                outputAdjList.reset(adj, count);
+                outputAdjList.set(adj, count);
                 outputKmer.set(kmer, 0, kmer.length);
                 output.collect(outputKmer, outputAdjList);
             }
             /** last kmer */
-            pre = Kmer.MoveKmer(KMER_SIZE, kmer, array[array.length - 1]);
+            pre = Kmer.moveKmer(KMER_SIZE, kmer, array[array.length - 1]);
             next = 0;
             adj = GENE_CODE.mergePreNextAdj(pre, next);
-            outputAdjList.reset(adj, count);
+            outputAdjList.set(adj, count);
             outputKmer.set(kmer, 0, kmer.length);
             output.collect(outputKmer, outputAdjList);
         }

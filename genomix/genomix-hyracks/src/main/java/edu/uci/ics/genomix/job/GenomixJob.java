@@ -21,6 +21,8 @@ public class GenomixJob extends JobConf {
 	public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
 	/** Graph outputformat */
 	public static final String OUTPUT_FORMAT = "genomix.graph.output";
+	/** Get reversed Kmer Sequence */
+	public static final String REVERSED_KMER = "genomix.kmer.reversed";
 
 	/** Configurations used by hybrid groupby function in graph build phrase */
 	public static final String GROUPBY_HYBRID_INPUTSIZE = "genomix.graph.groupby.hybrid.inputsize";
@@ -28,8 +30,8 @@ public class GenomixJob extends JobConf {
 	public static final String GROUPBY_HYBRID_RECORDSIZE_SINGLE = "genomix.graph.groupby.hybrid.recordsize.single";
 	public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
 	public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
-	
-	public static final int DEFAULT_KMER= 55;
+
+	public static final int DEFAULT_KMER = 55;
 	public static final int DEFAULT_FRAME_SIZE = 32768;
 	public static final int DEFAULT_FRAME_LIMIT = 4096;
 	public static final int DEFAULT_TABLE_SIZE = 10485767;
@@ -38,10 +40,12 @@ public class GenomixJob extends JobConf {
 	public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE = 9;
 	public static final int DEFAULT_GROUPBY_HYBRID_HASHLEVEL = 1;
 	public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS = 13;
-	
-	public static final String DEFAULT_GROUPBY_TYPE ="hybrid";
-	public static final String DEFAULT_OUTPUT_FORMAT ="binary";
-	
+
+	public static final boolean DEFAULT_REVERSED = false;
+
+	public static final String DEFAULT_GROUPBY_TYPE = "hybrid";
+	public static final String DEFAULT_OUTPUT_FORMAT = "binary";
+
 	public GenomixJob() throws IOException {
 		super(new Configuration());
 	}

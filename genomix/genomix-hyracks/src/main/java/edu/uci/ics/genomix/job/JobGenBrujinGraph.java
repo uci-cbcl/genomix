@@ -66,6 +66,7 @@ public class JobGenBrujinGraph extends JobGen {
 	private int tableSize;
 	private GroupbyType groupbyType;
 	private OutputFormat outputFormat;
+	private boolean bGenerateReversedKmer;
 
 	private AbstractOperatorDescriptor singleGrouper;
 	private IConnectorDescriptor connPartition;
@@ -207,7 +208,8 @@ public class JobGenBrujinGraph extends JobGen {
 			}
 			LOG.info("HDFS read schedule " + log);
 			return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, job,
-					splits, readSchedule, new ReadsKeyValueParserFactory(kmers));
+					splits, readSchedule, new ReadsKeyValueParserFactory(kmers,
+							bGenerateReversedKmer));
 		} catch (Exception e) {
 			throw new HyracksDataException(e);
 		}
@@ -299,6 +301,9 @@ public class JobGenBrujinGraph extends JobGen {
 		recordSizeInBytes = conf.getInt(
 				GenomixJob.GROUPBY_HYBRID_RECORDSIZE_CROSS,
 				GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS);
+
+		bGenerateReversedKmer = conf.getBoolean(GenomixJob.REVERSED_KMER,
+				GenomixJob.DEFAULT_REVERSED);
 
 		String type = conf.get(GenomixJob.GROUPBY_TYPE,
 				GenomixJob.DEFAULT_GROUPBY_TYPE);

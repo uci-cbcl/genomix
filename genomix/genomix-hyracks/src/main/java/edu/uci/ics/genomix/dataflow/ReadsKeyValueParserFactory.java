@@ -25,10 +25,12 @@ public class ReadsKeyValueParserFactory implements
 
 	private int k;
 	private int byteNum;
+	private boolean bReversed;
 
-	public ReadsKeyValueParserFactory(int k) {
+	public ReadsKeyValueParserFactory(int k, boolean bGenerateReversed) {
 		this.k = k;
 		byteNum = (byte) Math.ceil((double) k / 4.0);
+		bReversed = bGenerateReversed;
 	}
 
 	@Override
@@ -56,22 +58,41 @@ public class ReadsKeyValueParserFactory implements
 
 			private void SplitReads(byte[] array, IFrameWriter writer) {
 				/** first kmer */
-				byte[] kmer = Kmer.CompressKmer(k, array, 0);
+				byte[] kmer = Kmer.compressKmer(k, array, 0);
 				byte pre = 0;
 				byte next = GENE_CODE.getAdjBit(array[k]);
 				InsertToFrame(kmer, pre, next, writer);
 
 				/** middle kmer */
 				for (int i = k; i < array.length - 1; i++) {
-					pre = Kmer.MoveKmer(k, kmer, array[i]);
+					pre = Kmer.moveKmer(k, kmer, array[i]);
 					next = GENE_CODE.getAdjBit(array[i + 1]);
 					InsertToFrame(kmer, pre, next, writer);
 
 				}
 				/** last kmer */
-				pre = Kmer.MoveKmer(k, kmer, array[array.length - 1]);
+				pre = Kmer.moveKmer(k, kmer, array[array.length - 1]);
 				next = 0;
 				InsertToFrame(kmer, pre, next, writer);
+
+				if (bReversed) {
+					/** first kmer */
+					kmer = Kmer.compressKmerReverse(k, array, 0);
+					next = 0;
+					pre = GENE_CODE.getAdjBit(array[k]);
+					InsertToFrame(kmer, pre, next, writer);
+					/** middle kmer */
+					for (int i = k; i < array.length - 1; i++) {
+						next = Kmer.moveKmerReverse(k, kmer, array[i]);
+						pre = GENE_CODE.getAdjBit(array[i + 1]);
+						InsertToFrame(kmer, pre, next, writer);
+					}
+					/** last kmer */
+					next = Kmer.moveKmerReverse(k, kmer,
+							array[array.length - 1]);
+					pre = 0;
+					InsertToFrame(kmer, pre, next, writer);
+				}
 			}
 
 			private void InsertToFrame(byte[] kmer, byte pre, byte next,
@@ -105,7 +126,7 @@ public class ReadsKeyValueParserFactory implements
 			@Override
 			public void open(IFrameWriter writer) throws HyracksDataException {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
