@@ -41,7 +41,7 @@ public class RunJobTestSuite extends TestSuite{
 	private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
 	private static final String FILE_EXTENSION_OF_RESULTS = "result";
 
-	private static final String DATA_PATH = "data/webmap/part-1-out-200000";//sequenceFileMergeTest
+	private static final String DATA_PATH = "data/webmap/part-1-out-10000";//sequenceFileMergeTest
 	private static final String HDFS_PATH = "/webmap/";
 	
 	private static final String HYRACKS_APP_NAME = "pregelix";
