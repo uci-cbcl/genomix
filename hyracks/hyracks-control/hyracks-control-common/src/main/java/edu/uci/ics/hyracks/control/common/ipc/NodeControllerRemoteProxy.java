@@ -19,11 +19,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import edu.uci.ics.hyracks.api.client.HyracksClientInterfaceFunctions;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -67,9 +67,8 @@ public class NodeControllerRemoteProxy implements INodeController {
     }
 
     @Override
-    public void deployBinary(List<URL> binaryURLs) throws Exception {
-        HyracksClientInterfaceFunctions.DeployBinaryFunction rpaf = new HyracksClientInterfaceFunctions.DeployBinaryFunction(
-                binaryURLs);
+    public void deployBinary(DeploymentId deploymentId, List<URL> binaryURLs) throws Exception {
+        CCNCFunctions.DeployBinaryFunction rpaf = new CCNCFunctions.DeployBinaryFunction(deploymentId, binaryURLs);
         ipcHandle.send(-1, rpaf, null);
     }
 }

@@ -23,6 +23,7 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -39,5 +40,5 @@ public interface INodeController {
 
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception;
 
-    public void deployBinary(List<URL> url) throws Exception;
+    public void deployBinary(DeploymentId deploymentId, List<URL> url) throws Exception;
 }

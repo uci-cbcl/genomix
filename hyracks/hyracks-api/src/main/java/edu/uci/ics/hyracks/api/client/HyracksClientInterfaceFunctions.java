@@ -203,10 +203,9 @@ public class HyracksClientInterfaceFunctions {
             return FunctionId.GET_CLUSTER_TOPOLOGY;
         }
     }
-    
+
     public static class DeployBinaryFunction extends Function {
         private static final long serialVersionUID = 1L;
-
         private final List<URL> binaryURLs;
 
         public DeployBinaryFunction(List<URL> binaryURLs) {

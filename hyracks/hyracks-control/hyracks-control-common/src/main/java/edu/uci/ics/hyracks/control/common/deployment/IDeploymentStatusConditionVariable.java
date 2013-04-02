@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2013 by The Regents of the University of California
+ * Copyright 2009-2010 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,22 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.nc.work;
+package edu.uci.ics.hyracks.control.common.deployment;
 
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
-import edu.uci.ics.hyracks.control.nc.NodeControllerService;
+public interface IDeploymentStatusConditionVariable {
 
-public class DeployBinaryNotificationWork extends AbstractWork {
-
-	private NodeControllerService ccs;
-
-	public DeployBinaryNotificationWork(NodeControllerService ccs, String nodeId) {
-		this.ccs = ccs;
-	}
-
-	@Override
-	public void run() {
-
-	}
-
+    public DeploymentStatus waitForCompletion() throws Exception;
 }

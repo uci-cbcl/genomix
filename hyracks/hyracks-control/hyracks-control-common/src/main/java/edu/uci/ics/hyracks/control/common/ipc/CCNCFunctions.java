@@ -38,12 +38,14 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentStatus;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
@@ -81,7 +83,8 @@ public class CCNCFunctions {
         SEND_APPLICATION_MESSAGE,
         GET_NODE_CONTROLLERS_INFO,
         GET_NODE_CONTROLLERS_INFO_RESPONSE,
-        
+
+        DEPLOY_BINARY,
         NOTIFY_DEPLOY_BINARY,
 
         OTHER
@@ -753,13 +756,42 @@ public class CCNCFunctions {
         }
     }
 
+    public static class DeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final List<URL> binaryURLs;
+        private final DeploymentId deploymentId;
+
+        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs) {
+            this.binaryURLs = binaryURLs;
+            this.deploymentId = deploymentId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DEPLOY_BINARY;
+        }
+
+        public List<URL> getBinaryURLs() {
+            return binaryURLs;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+    }
+
     public static class NotifyDeployBinaryFunction extends Function {
         private static final long serialVersionUID = 1L;
 
         private final String nodeId;
+        private final DeploymentId deploymentId;
+        private final DeploymentStatus deploymentStatus;
 
-        public NotifyDeployBinaryFunction(String nodeId) {
+        public NotifyDeployBinaryFunction(DeploymentId deploymentId, String nodeId, DeploymentStatus deploymentStatus) {
             this.nodeId = nodeId;
+            this.deploymentId = deploymentId;
+            this.deploymentStatus = deploymentStatus;
         }
 
         @Override
@@ -769,6 +801,14 @@ public class CCNCFunctions {
 
         public String getNodeId() {
             return nodeId;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+
+        public DeploymentStatus getDeploymentStatus() {
+            return deploymentStatus;
         }
     }
 

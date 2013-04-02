@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2013 by The Regents of the University of California
+ * Copyright 2009-2010 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,25 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.hyracks.control.cc.work;
+package edu.uci.ics.hyracks.control.common.deployment;
 
-import java.net.URL;
-import java.util.List;
-
-import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
-
-public class DeployBinaryWork extends AbstractWork {
-
-	private ClusterControllerService ccs;
-
-	public DeployBinaryWork(ClusterControllerService ncs, List<URL> binaryURLs) {
-		this.ccs = ncs;
-	}
-
-	@Override
-	public void run() {
-
-	}
-
+public enum DeploymentStatus {
+    SUCCEED,
+    FAIL
 }
