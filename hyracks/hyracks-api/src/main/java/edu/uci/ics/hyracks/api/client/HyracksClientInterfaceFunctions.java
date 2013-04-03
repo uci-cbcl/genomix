@@ -21,6 +21,7 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataset.DatasetDirectoryRecord;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 
@@ -37,7 +38,7 @@ public class HyracksClientInterfaceFunctions {
         GET_DATASET_RESULT_LOCATIONS,
         WAIT_FOR_COMPLETION,
         GET_NODE_CONTROLLERS_INFO,
-        DEPLOY_BINARY
+        CLI_DEPLOY_BINARY
     }
 
     public abstract static class Function implements Serializable {
@@ -204,21 +205,27 @@ public class HyracksClientInterfaceFunctions {
         }
     }
 
-    public static class DeployBinaryFunction extends Function {
+    public static class CliDeployBinaryFunction extends Function {
         private static final long serialVersionUID = 1L;
         private final List<URL> binaryURLs;
+        private final DeploymentId deploymentId;
 
-        public DeployBinaryFunction(List<URL> binaryURLs) {
+        public CliDeployBinaryFunction(List<URL> binaryURLs, DeploymentId deploymentId) {
             this.binaryURLs = binaryURLs;
+            this.deploymentId = deploymentId;
         }
 
         @Override
         public FunctionId getFunctionId() {
-            return FunctionId.DEPLOY_BINARY;
+            return FunctionId.CLI_DEPLOY_BINARY;
         }
 
         public List<URL> getBinaryURLs() {
             return binaryURLs;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
         }
     }
 }

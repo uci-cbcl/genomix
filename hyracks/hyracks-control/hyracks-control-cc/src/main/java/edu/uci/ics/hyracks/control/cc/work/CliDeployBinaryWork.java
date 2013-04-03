@@ -26,23 +26,41 @@ import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
+import edu.uci.ics.hyracks.control.common.work.IPCResponder;
 
 public class CliDeployBinaryWork extends AbstractWork {
 
     private ClusterControllerService ccs;
     private List<URL> binaryURLs;
+    private DeploymentId deploymentId;
+    private IPCResponder<DeploymentId> callback;
 
-    public CliDeployBinaryWork(ClusterControllerService ncs, List<URL> binaryURLs) {
+    public CliDeployBinaryWork(ClusterControllerService ncs, List<URL> binaryURLs, DeploymentId deploymentId,
+            IPCResponder<DeploymentId> callback) {
         this.ccs = ncs;
         this.binaryURLs = binaryURLs;
+        this.deploymentId = deploymentId;
     }
 
     @Override
     public void run() {
         try {
+            if (deploymentId == null) {
+                deploymentId = new DeploymentId(UUID.randomUUID().toString());
+            }
+            /**
+             * Deploy for the cluster controller
+             */
+            DeploymentUtils.deploy(deploymentId, binaryURLs, ccs.getApplicationContext()
+                    .getJobSerializerDeserializerContainer());
+
+            /**
+             * Deploy for the node controllers
+             */
             Map<String, NodeControllerState> nodeControllerStateMap = ccs.getNodeMap();
-            DeploymentId deploymentId = new DeploymentId(UUID.randomUUID().toString());
+
             Set<String> nodeIds = new TreeSet<String>();
             for (String nc : nodeControllerStateMap.keySet()) {
                 nodeIds.add(nc);
@@ -62,8 +80,9 @@ public class CliDeployBinaryWork extends AbstractWork {
              */
             dRun.waitForCompletion();
             ccs.removeDeploymentRun(deploymentId);
+            callback.setValue(deploymentId);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            callback.setException(e);
         }
     }
 }

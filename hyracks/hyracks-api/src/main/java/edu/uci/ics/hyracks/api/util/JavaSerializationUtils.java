@@ -33,6 +33,19 @@ public class JavaSerializationUtils {
         return baos.toByteArray();
     }
 
+    public static byte[] serialize(Serializable jobSpec, ClassLoader classLoader) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        ClassLoader ctxCL = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(classLoader);
+            oos.writeObject(jobSpec);
+            return baos.toByteArray();
+        } finally {
+            Thread.currentThread().setContextClassLoader(ctxCL);
+        }
+    }
+
     public static Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
         if (bytes == null) {
             return null;

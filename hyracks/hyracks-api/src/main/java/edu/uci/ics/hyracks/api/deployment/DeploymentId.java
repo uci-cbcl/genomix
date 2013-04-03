@@ -23,7 +23,7 @@ public class DeploymentId implements Serializable {
         if (!(o instanceof DeploymentId)) {
             return false;
         }
-        return ((DeploymentId) o).equals(deploymentKey);
+        return ((DeploymentId) o).deploymentKey.equals(deploymentKey);
     }
 
     @Override

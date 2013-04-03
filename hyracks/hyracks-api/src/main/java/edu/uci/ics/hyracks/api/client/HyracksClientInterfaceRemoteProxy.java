@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -83,9 +84,16 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public void deployBinary(List<URL> binaryURLs) throws Exception {
-        HyracksClientInterfaceFunctions.DeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.DeployBinaryFunction(
-                binaryURLs);
+    public DeploymentId deployBinary(List<URL> binaryURLs) throws Exception {
+        HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliDeployBinaryFunction(
+                binaryURLs, null);
+        return (DeploymentId) rpci.call(ipcHandle, dbf);
+    }
+
+    @Override
+    public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId) throws Exception {
+        HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliDeployBinaryFunction(
+                binaryURLs, deploymentId);
         rpci.call(ipcHandle, dbf);
     }
 }

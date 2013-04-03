@@ -382,9 +382,10 @@ public class ClusterControllerService extends AbstractRemoteService {
                     return;
                 }
 
-                case DEPLOY_BINARY: {
-                    HyracksClientInterfaceFunctions.DeployBinaryFunction dbf = (HyracksClientInterfaceFunctions.DeployBinaryFunction) fn;
-                    workQueue.schedule(new CliDeployBinaryWork(ClusterControllerService.this, dbf.getBinaryURLs()));
+                case CLI_DEPLOY_BINARY: {
+                    HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf = (HyracksClientInterfaceFunctions.CliDeployBinaryFunction) fn;
+                    workQueue.schedule(new CliDeployBinaryWork(ClusterControllerService.this, dbf.getBinaryURLs(), dbf
+                            .getDeploymentId(), new IPCResponder<DeploymentId>(handle, mid)));
                     return;
                 }
             }
