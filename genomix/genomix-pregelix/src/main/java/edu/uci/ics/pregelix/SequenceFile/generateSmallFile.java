@@ -44,8 +44,8 @@ public class generateSmallFile {
 		// TODO Auto-generated method stub
 		Path dir = new Path("data/webmap");
 		Path inFile = new Path(dir, "part-1");
-		Path outFile = new Path(dir, "part-1-out-10000");
-		generateNumOfLinesFromBigFile(inFile,outFile,10000);
+		Path outFile = new Path(dir, "part-1-out-1000000");
+		generateNumOfLinesFromBigFile(inFile,outFile,1000000);
 	}
 
 }

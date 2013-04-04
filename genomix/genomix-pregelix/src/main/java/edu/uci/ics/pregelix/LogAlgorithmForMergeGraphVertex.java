@@ -58,7 +58,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 	private byte[] tmpVertextId;
 	private byte[] tmpSourceVertextId;
 	private byte[] tmpDestVertexId;
-	private byte[] tmpChainVertexId;
 	private byte[] mergeChainVertexId;
 	private int lengthOfMergeChainVertex;
 	private byte[] tmpMergeChainVertexId;
@@ -81,8 +80,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 		if (getSuperstep() == 1) {
 			tmpVal = getVertexValue();
 			tmpVertexValue = tmpVal.getValue();
-			tmpChainVertexId = new byte[0];
-			tmpMsg.setChainVertexId(tmpChainVertexId);
+			tmpMsg.setChainVertexId(new byte[0]);
 			if(GraphVertexOperation.isHead(new ByteWritable(tmpVertexValue))){
 				tmpMsg.setMessage(Message.START);
 				tmpDestVertexId = GraphVertexOperation.getDestVertexId(tmpVertextId, tmpVertexValue); 

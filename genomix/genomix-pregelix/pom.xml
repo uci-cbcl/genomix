@@ -3,6 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.uci.ics.pregelix</groupId>
   <artifactId>genomix-pregelix</artifactId>
+  <packaging>jar</packaging>
   <version>0.2.4-SNAPSHOT</version>
   <name>genomix-pregelix</name>
 
@@ -54,6 +55,29 @@
                                         </execution>
                                 </executions>
                         </plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>appassembler-maven-plugin</artifactId>
+				<version>1.3</version>
+				<executions>
+					<execution>
+						<configuration>
+							<programs>
+								<program>
+									<mainClass>edu.uci.ics.pregelix.example.Client</mainClass>
+									<name>pregelix</name>
+								</program>
+							</programs>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>lib</repositoryName>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
                         <plugin>
                                 <groupId>org.apache.maven.plugins</groupId>
                                 <artifactId>maven-surefire-plugin</artifactId>

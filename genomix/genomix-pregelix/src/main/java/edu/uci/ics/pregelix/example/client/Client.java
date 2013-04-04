@@ -46,21 +46,6 @@ public class Client {
         @Option(name = "-plan", usage = "query plan choice", required = false)
         public Plan planChoice = Plan.OUTER_JOIN;
 
-        @Option(name = "-vnum", usage = "number of vertices", required = false)
-        public long numVertices;
-
-        @Option(name = "-enum", usage = "number of vertices", required = false)
-        public long numEdges;
-
-        @Option(name = "-source-vertex", usage = "source vertex id, for shortest paths/reachibility only", required = false)
-        public long sourceId;
-
-        @Option(name = "-dest-vertex", usage = "dest vertex id, for reachibility only", required = false)
-        public long destId;
-
-        @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
-        public long numIteration = -1;
-
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
     }
@@ -81,8 +66,6 @@ public class Client {
         for (int i = 1; i < inputs.length; i++)
             FileInputFormat.addInputPaths(job, inputs[0]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
-        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, options.numVertices);
-        job.getConfiguration().setLong(PregelixJob.NUM_EDGES, options.numEdges);
         return options;
     }
 

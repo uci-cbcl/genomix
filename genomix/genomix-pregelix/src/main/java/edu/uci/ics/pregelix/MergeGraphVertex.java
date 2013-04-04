@@ -53,12 +53,12 @@ import edu.uci.ics.pregelix.hdfs.HDFSOperation;
  */
 public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
 	
-	private byte[] tmpVertextId;
-	private byte[] tmpSourceVertextId;
-	private byte[] tmpDestVertexId;
-	private byte[] tmpChainVertexId;
-	private byte tmpNeighberByte;
-	private byte tmpVertexValue;
+    /** The number of bytes for vertex id */
+    public static final int numBytes = (GraphVertexOperation.k-1)/4 + 1;
+    private BytesWritable tmpVertextId = new BytesWritable();
+	private BytesWritable tmpDestVertexId = new BytesWritable();
+	private BytesWritable tmpChainVertexId = new BytesWritable();
+	private ByteWritable tmpVertexValue = new ByteWritable();
 	private MessageWritable tmpMsg = new MessageWritable();
 	OutputStreamWriter writer; 
 	/**
@@ -69,19 +69,19 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 		try {
 			writer = new OutputStreamWriter(new FileOutputStream("test/check_Naive",true));
 		} catch (FileNotFoundException e1) { e1.printStackTrace();}
-		tmpVertextId = GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId());
+		tmpVertextId.set(GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId()),0,numBytes);
 		if (getSuperstep() == 1) {
 			if(GraphVertexOperation.isHead(getVertexValue())){
-				tmpSourceVertextId = tmpVertextId; 
-				tmpDestVertexId = GraphVertexOperation.getDestVertexId(tmpSourceVertextId,
-						getVertexValue().get());
-				tmpMsg.setSourceVertexId(tmpSourceVertextId);
-				tmpChainVertexId = new byte[0];
-				tmpMsg.setChainVertexId(tmpChainVertexId);
-				sendMsg(new BytesWritable(tmpDestVertexId),tmpMsg);
+				//tmpSourceVertextId = tmpVertextId; 
+				tmpDestVertexId.set(GraphVertexOperation.getDestVertexId(tmpVertextId.getBytes(),
+						getVertexValue().get()), 0, numBytes); 
+				tmpMsg.setSourceVertexId(tmpVertextId.getBytes());
+				tmpMsg.setLengthOfChain(0);
+				tmpMsg.setChainVertexId(tmpChainVertexId.getBytes());
+				sendMsg(tmpDestVertexId,tmpMsg);
 				//test
-				GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpSourceVertextId,
-						tmpDestVertexId,tmpMsg);
+				//GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
+				//		tmpDestVertexId.getBytes(),tmpMsg);
 				}
 		}
 		//path node sends message back to head node
@@ -90,53 +90,48 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 				tmpMsg = msgIterator.next();
 				if(!tmpMsg.isRear()){
 					if(GraphVertexOperation.isPathVertex(getVertexValue())){
-						tmpSourceVertextId = tmpMsg.getSourceVertexId();
-						tmpNeighberByte = getVertexValue().get();
-						tmpMsg.setNeighberInfo(tmpNeighberByte); //set neighber
-						tmpChainVertexId = tmpMsg.getChainVertexId();
-						if(tmpChainVertexId.length == 0){
+						tmpDestVertexId.set(tmpMsg.getSourceVertexId(), 0, numBytes);
+						tmpMsg.setNeighberInfo(getVertexValue().get()); //set neighber
+						if(tmpMsg.getLengthOfChain() == 0){
 							tmpMsg.setLengthOfChain(GraphVertexOperation.k);
-							tmpMsg.setChainVertexId(tmpVertextId);
+							tmpMsg.setChainVertexId(tmpVertextId.getBytes());
 						}
 						else{
 							tmpMsg.incrementLength();
 							tmpMsg.setChainVertexId(GraphVertexOperation.updateChainVertexId(
-									tmpChainVertexId,
+									tmpMsg.getChainVertexId(),
 									tmpMsg.getLengthOfChain()-1,
-									tmpVertextId));
+									tmpVertextId.getBytes()));
 							deleteVertex(getVertexId());
 						}
-						sendMsg(new BytesWritable(tmpSourceVertextId),tmpMsg);
+						sendMsg(tmpDestVertexId,tmpMsg);
 						//test
-						GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId,
-								tmpSourceVertextId,tmpMsg);
+						GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
+								tmpDestVertexId.getBytes(),tmpMsg);
 					}
 					else if(GraphVertexOperation.isRear(getVertexValue())){
-						tmpSourceVertextId = tmpMsg.getSourceVertexId();
-						tmpMsg.setSourceVertexId(tmpVertextId);
+						tmpDestVertexId.set(tmpMsg.getSourceVertexId(), 0, numBytes);
+						tmpMsg.setSourceVertexId(tmpVertextId.getBytes());
 						tmpMsg.setRear(true);
-						sendMsg(new BytesWritable(tmpSourceVertextId),tmpMsg);
+						sendMsg(tmpDestVertexId,tmpMsg);
 						//test
 						try {
 							writer.write("It is Rear!\r\n");
 						} catch (IOException e) { e.printStackTrace(); }
-						GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId,
-								tmpSourceVertextId,tmpMsg);
+						GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
+								tmpDestVertexId.getBytes(),tmpMsg);
 					}
 				}
 				else{
-					tmpVertexValue = GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().get(),
-							tmpMsg.getSourceVertexId());
-					//setVertexValue(new ByteWritable(tmpVertexValue));
-					//setVertexId(new BytesWritable(tmpMsg.getChainVertexId()));
-					//addVertex(new BytesWritable(tmpMsg.getChainVertexId()),new ByteWritable(tmpVertexValue));
+					tmpVertexValue.set(GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().get(),
+							tmpMsg.getSourceVertexId()));
 					try {
 						GraphVertexOperation.flushChainToFile(tmpMsg.getChainVertexId(), 
-								tmpMsg.getLengthOfChain(),tmpVertextId);
+								tmpMsg.getLengthOfChain(),tmpVertextId.getBytes());
 					} catch (IOException e) { e.printStackTrace(); }
 					//test
-		        	GraphVertexOperation.testLastMessageCommunication(writer,getSuperstep(),tmpVertextId,
-		        			tmpSourceVertextId,tmpMsg);
+		        	GraphVertexOperation.testLastMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
+		        			tmpDestVertexId.getBytes(),tmpMsg);
 					
 				}
 			}
@@ -145,26 +140,24 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 		else if(getSuperstep()%2 == 1){
 			if (msgIterator.hasNext()){
 				tmpMsg = msgIterator.next();
-				tmpNeighberByte = tmpMsg.getNeighberInfo();
-				tmpChainVertexId = tmpMsg.getChainVertexId();
 				if(!tmpMsg.isRear()){
-					byte[] lastKmer = GraphVertexOperation.getLastKmer(tmpChainVertexId, 
+					byte[] lastKmer = GraphVertexOperation.getLastKmer(tmpMsg.getChainVertexId(), 
 							tmpMsg.getLengthOfChain());
-					tmpDestVertexId = GraphVertexOperation.getDestVertexId(lastKmer, tmpNeighberByte);
-					tmpSourceVertextId = tmpVertextId;
-					tmpMsg.setSourceVertexId(tmpSourceVertextId);
-					sendMsg(new BytesWritable(tmpDestVertexId),tmpMsg);
+					tmpDestVertexId.set(GraphVertexOperation.getDestVertexId(lastKmer,
+							tmpMsg.getNeighberInfo()), 0, numBytes);
+					tmpMsg.setSourceVertexId(tmpVertextId.getBytes());
+					sendMsg(tmpDestVertexId,tmpMsg);
 					//test
-					GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId,
-							tmpDestVertexId,tmpMsg);
+					GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
+							tmpDestVertexId.getBytes(),tmpMsg);
 				}
 				else{	
-					tmpDestVertexId = GraphVertexOperation.getDestVertexId(tmpVertextId,
-							getVertexValue().get());
-					sendMsg(new BytesWritable(tmpDestVertexId),tmpMsg);
+					tmpDestVertexId.set(GraphVertexOperation.getDestVertexId(tmpVertextId.getBytes(),
+							getVertexValue().get()), 0, numBytes);
+					sendMsg(tmpDestVertexId,tmpMsg);
 					//test
-					GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId,
-							tmpDestVertexId,tmpMsg);
+					GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
+							tmpDestVertexId.getBytes(),tmpMsg);
 				}
 			}
 		}
@@ -173,32 +166,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
 		} catch (IOException e) { e.printStackTrace(); }
 		voteToHalt();
 	}
-	
-   private void signalTerminate() {
-        Configuration conf = getContext().getConfiguration();
-        try {
-            IterationUtils.writeForceTerminationState(conf, BspUtils.getJobId(conf));
-            writeMergeGraphResult(conf, true);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-   
-   private void writeMergeGraphResult(Configuration conf, boolean terminate) {
-       try {
-           FileSystem dfs = FileSystem.get(conf);
-           String pathStr = IterationUtils.TMP_DIR + BspUtils.getJobId(conf) + "MergeGraph";
-           Path path = new Path(pathStr);
-           if (!dfs.exists(path)) {
-               FSDataOutputStream output = dfs.create(path, true);
-               output.writeBoolean(terminate);
-               output.flush();
-               output.close();
-           }
-       } catch (IOException e) {
-           throw new IllegalStateException(e);
-       }
-   }
 
 	/**
 	 * @param args

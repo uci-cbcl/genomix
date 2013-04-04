@@ -414,8 +414,8 @@ public class GenerateSequenceFile {
 		  *  AGCATGCTAT
 		  */ 
 		 
-		 //generateSequenceFileFromGeneCode3("AGCATGCTAT");//GTCGATT  //before T: GGACG
-		 generateSequenceFileFromGeneCode15("AAAAAAAAAAAAAGCATGCTATAAAAAAAAAAAA");
+		 generateSequenceFileFromGeneCode3("AGCATGCTAT");//GTCGATT  //before T: GGACG
+		 //generateSequenceFileFromGeneCode15("AAAAAAAAAAAAAGCATGCTATAAAAAAAAAAAA");
 	 }
 	 public static void generateSequenceFileFromGeneCode3(String s) throws IOException{
 		 Configuration conf = new Configuration();

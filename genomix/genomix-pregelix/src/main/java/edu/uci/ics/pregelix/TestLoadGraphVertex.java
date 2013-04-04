@@ -44,49 +44,11 @@ import edu.uci.ics.pregelix.example.io.MessageWritable;
  */
 public class TestLoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
 
-	//private byte[] tmpVertexId;
-	//private BytesWritable vid;
-	//private TestLoadGraphVertex newVertex;
-	//private MessageWritable tmpMsg = new MessageWritable();
 	/**
 	 * For test, just output original file
 	 */
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
-		/*deleteVertex(getVertexId());
-		tmpVertexId = getVertexId().getBytes();
-		String a1 = "100100";
-		byte[] b1 = BitwiseOperation.convertBinaryStringToBytes(a1);
-		String a2 = "000000"; //"001001";
-		byte[] b2 = BitwiseOperation.convertBinaryStringToBytes(a2);
-		String valueString = "00000000";
-		byte value = BitwiseOperation.convertBinaryStringToByte(valueString);
-		if(getSuperstep() == 1 && Arrays.equals(b1,tmpVertexId)){
-			newVertex = new TestLoadGraphVertex();
-            vid.set(new BytesWritable(b2));
-            newVertex.setVertexId(vid);
-            newVertex.setVertexValue(getVertexValue());
-            addVertex(vid, newVertex);
-			//vertex.initialize(new BytesWritable(b2), new ByteWritable(value), null, null);
-			//addVertex(new BytesWritable(b2),this.createdNewLiveVertex());
-			deleteVertex(getVertexId());
-		}*/
-		/*String a2 = "100111";
-		byte[] b2 = BitwiseOperation.convertBinaryStringToBytes(a2);
-		String a3 = "11111111";
-		byte[] b3 = BitwiseOperation.convertBinaryStringToBytes(a3);
-		byte[] bb1 = getVertexId().getBytes();
-		if(getSuperstep() == 1 && Arrays.equals(b1,bb1)){
-			//addVertex(new BytesWritable(b3),new ByteWritable(bb1[0]));
-			deleteVertex(new BytesWritable(b1));
-		}
-		else if(getSuperstep() == 2){
-			if(msgIterator.hasNext()){
-				tmpMsg = msgIterator.next();
-				byte[] b = tmpMsg.getChainVertexId();
-				setVertexValue(new ByteWritable(b[0]));
-			}		
-		}*/
 		voteToHalt();
 	}
 
@@ -95,7 +57,7 @@ public class TestLoadGraphVertex extends Vertex<BytesWritable, ByteWritable, Nul
 	 */
 	public static void main(String[] args) throws Exception {
 		//final int k = Integer.parseInt(args[0]);
-        PregelixJob job = new PregelixJob(MergeGraphVertex.class.getSimpleName());
+        PregelixJob job = new PregelixJob(TestLoadGraphVertex.class.getSimpleName());
         job.setVertexClass(TestLoadGraphVertex.class);
         /**
          * BinaryInput and BinaryOutput
