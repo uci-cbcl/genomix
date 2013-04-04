@@ -10,7 +10,6 @@ import org.apache.hadoop.io.NullWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
-import edu.uci.ics.pregelix.example.GraphMutationVertex;
 import edu.uci.ics.pregelix.example.client.Client;
 import edu.uci.ics.pregelix.example.io.MessageWritable;
 

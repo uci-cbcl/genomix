@@ -10,17 +10,17 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import edu.uci.ics.genomix.pregelix.BinaryLoadGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.BinaryLoadGraphOutputFormat;
-import edu.uci.ics.genomix.pregelix.LoadGraphVertex;
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphOutputFormat;
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphVertex;
-import edu.uci.ics.genomix.pregelix.MergeGraphVertex;
-import edu.uci.ics.genomix.pregelix.TestLoadGraphVertex;
-import edu.uci.ics.genomix.pregelix.TextLoadGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.testDeleteVertexId;
-import edu.uci.ics.genomix.pregelix.LoadGraphVertex.SimpleLoadGraphVertexOutputFormat;
+import edu.uci.ics.pregelix.BinaryLoadGraphInputFormat;
+import edu.uci.ics.pregelix.BinaryLoadGraphOutputFormat;
+import edu.uci.ics.pregelix.LoadGraphVertex;
+import edu.uci.ics.pregelix.LogAlgorithmForMergeGraphInputFormat;
+import edu.uci.ics.pregelix.LogAlgorithmForMergeGraphOutputFormat;
+import edu.uci.ics.pregelix.LogAlgorithmForMergeGraphVertex;
+import edu.uci.ics.pregelix.MergeGraphVertex;
+import edu.uci.ics.pregelix.TestLoadGraphVertex;
+import edu.uci.ics.pregelix.TextLoadGraphInputFormat;
+import edu.uci.ics.pregelix.testDeleteVertexId;
+import edu.uci.ics.pregelix.LoadGraphVertex.SimpleLoadGraphVertexOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 

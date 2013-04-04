@@ -1,8 +1,6 @@
 package edu.uci.ics.pregelix;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
@@ -16,25 +14,23 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.pregelix.api.io.binary.BinaryVertexInputFormat.BinaryVertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
 import edu.uci.ics.pregelix.example.io.MessageWritable;
-import edu.uci.ics.pregelix.example.io.VLongWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class BinaryLoadGraphInputFormat extends
 	BinaryVertexInputFormat<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
-	//static int number = 0;
+	static int number = 0;
 	/**
 	 * Format INPUT
 	 */
     @Override
     public VertexReader<BytesWritable, ByteWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
-    	/*try{
+    	try{
     	System.out.println("split: "  + number++ + " length:"+ split.getLength());
     	}catch (Exception ex){
     		
-    	}*/
+    	}
         return new BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }	
 }

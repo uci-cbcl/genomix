@@ -7,8 +7,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.pregelix.GraphVertexOperation;
-import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.GraphVertexOperation;
 
 public class MessageWritable implements WritableComparable<MessageWritable>{
 	/**

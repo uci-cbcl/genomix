@@ -15,8 +15,8 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
 import edu.uci.ics.pregelix.example.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.pregelix.example.io.ValueStateWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.pregelix.type.State;
+import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class LogAlgorithmForMergeGraphInputFormat extends
 	BinaryVertexInputFormat<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{
