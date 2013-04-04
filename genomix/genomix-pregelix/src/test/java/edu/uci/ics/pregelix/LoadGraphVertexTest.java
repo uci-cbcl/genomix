@@ -14,7 +14,7 @@ import java.util.StringTokenizer;
 
 import org.junit.Test;
 
-import edu.uci.ics.pregelix.LoadGraphVertex.SimpleLoadGraphVertexOutputFormat;
+import edu.uci.ics.genomix.pregelix.LoadGraphVertex.SimpleLoadGraphVertexOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.example.client.Client;
 

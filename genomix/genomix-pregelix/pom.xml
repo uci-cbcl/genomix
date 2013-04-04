@@ -64,7 +64,7 @@
 						<configuration>
 							<programs>
 								<program>
-									<mainClass>edu.uci.ics.pregelix.example.Client</mainClass>
+									<mainClass>edu.uci.ics.genomix.pregelix.example.Client</mainClass>
 									<name>pregelix</name>
 								</program>
 							</programs>
@@ -124,13 +124,6 @@
                 <dependency>
                 	<groupId>edu.uci.ics.hyracks</groupId>
                 	<artifactId>pregelix-core</artifactId>
-                	<version>0.2.4-SNAPSHOT</version>
-                	<type>jar</type>
-                	<scope>compile</scope>
-                </dependency>
-                <dependency>
-                	<groupId>edu.uci.ics.hyracks</groupId>
-                	<artifactId>pregelix-example</artifactId>
                 	<version>0.2.4-SNAPSHOT</version>
                 	<type>jar</type>
                 	<scope>compile</scope>

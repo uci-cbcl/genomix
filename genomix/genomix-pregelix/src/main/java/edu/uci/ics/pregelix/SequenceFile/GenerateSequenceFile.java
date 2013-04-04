@@ -11,9 +11,9 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 
-import edu.uci.ics.pregelix.GraphVertexOperation;
-import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
+import edu.uci.ics.genomix.pregelix.GraphVertexOperation;
 import edu.uci.ics.genomix.type.KmerCountValue;
+import edu.uci.ics.pregelix.bitwise.BitwiseOperation;
 
 public class GenerateSequenceFile {
 	

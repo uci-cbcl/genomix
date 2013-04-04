@@ -19,7 +19,7 @@
    </property>
    <property>
       <name>mapred.max.split.size</name>
-      <value>128</value>
+      <value>128000</value>
    </property>
 
 </configuration>

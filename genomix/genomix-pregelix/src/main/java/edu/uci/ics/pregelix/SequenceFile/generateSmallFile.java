@@ -28,7 +28,7 @@ public class generateSmallFile {
 	    int i = 0;
 	    
 	    for(i = 0; i < numOfLines; i++){
-	    	 System.out.println(i);
+	    	 //System.out.println(i);
 	    	 reader.next(outKey, outValue);
 	    	 writer.append(outKey, outValue);
 	    }
@@ -44,8 +44,8 @@ public class generateSmallFile {
 		// TODO Auto-generated method stub
 		Path dir = new Path("data/webmap");
 		Path inFile = new Path(dir, "part-1");
-		Path outFile = new Path(dir, "part-1-out-1000000");
-		generateNumOfLinesFromBigFile(inFile,outFile,1000000);
+		Path outFile = new Path(dir, "part-1-out-20000000");
+		generateNumOfLinesFromBigFile(inFile,outFile,20000000);
 	}
 
 }
