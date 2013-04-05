@@ -82,6 +82,26 @@ public class Kmer {
 			return r;
 		}
 
+		/** 
+		 * It works for path merge. 
+		 * Merge the kmer by his next, we need to make sure the @{t} is a single neighbor.
+		 * @param t the neighbor code in BitMap
+		 * @return the genecode 
+		 */
+		public static byte getGeneCodeFromBitMap(byte t) {
+			switch (t) {
+			case 1 << A:
+				return A;
+			case 1 << C:
+				return C;
+			case 1 << G:
+				return G;
+			case 1 << T:
+				return T;
+			}
+			return -1;
+		}
+
 		public static byte mergePreNextAdj(byte pre, byte next) {
 			return (byte) (pre << 4 | (next & 0x0f));
 		}
