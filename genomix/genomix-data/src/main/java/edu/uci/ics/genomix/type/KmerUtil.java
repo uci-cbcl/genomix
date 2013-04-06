@@ -150,5 +150,33 @@ public class KmerUtil {
 		}
 		return mergedKmer;
 	}
+	
+	/**
+	 * Safely shifted the kmer forward without change the input kmer
+	 * e.g. AGCGC shift with T => GCGCT
+	 * @param k: kmer length
+	 * @param kmer: input kmer
+	 * @param afterCode: input genecode 
+	 * @return new created kmer that shifted by afterCode
+	 */
+	public static byte[] shiftKmerWithNextCode(int k, final byte[] kmer, byte afterCode){
+		byte[] shifted = kmer.clone();
+		Kmer.moveKmer(k, shifted, Kmer.GENE_CODE.getSymbolFromCode(afterCode));
+		return shifted;
+	}
+	
+	/**
+	 * Safely shifted the kmer backward without change the input kmer
+	 * e.g. AGCGC shift with T => TAGCG
+	 * @param k: kmer length
+	 * @param kmer: input kmer
+	 * @param preCode: input genecode 
+	 * @return new created kmer that shifted by preCode
+	 */
+	public static byte[] shiftKmerWithPreCode(int k, final byte[] kmer, byte preCode){
+		byte[] shifted = kmer.clone();
+		Kmer.moveKmerReverse(k, shifted, Kmer.GENE_CODE.getSymbolFromCode(preCode));
+		return shifted;
+	}
 
 }

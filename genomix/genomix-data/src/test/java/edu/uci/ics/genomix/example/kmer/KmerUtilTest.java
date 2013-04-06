@@ -107,5 +107,18 @@ public class KmerUtilTest {
 		Assert.assertEquals(text5+text7, Kmer.recoverKmerFrom(7+6, merged, 0, merged.length));
 
 	}
-	
+	@Test 
+	public void TestShift(){
+		byte[] kmer = Kmer.compressKmer(9, array, 0);
+		String text = "AGCTGACCG";
+		Assert.assertEquals(text, Kmer.recoverKmerFrom(9, kmer, 0, kmer.length));
+		
+		byte [] kmerForward = KmerUtil.shiftKmerWithNextCode(9, kmer, Kmer.GENE_CODE.A);
+		Assert.assertEquals(text, Kmer.recoverKmerFrom(9, kmer, 0, kmer.length));
+		Assert.assertEquals("GCTGACCGA", Kmer.recoverKmerFrom(9, kmerForward, 0, kmerForward.length));
+		byte [] kmerBackward = KmerUtil.shiftKmerWithPreCode(9, kmer, Kmer.GENE_CODE.C);
+		Assert.assertEquals(text, Kmer.recoverKmerFrom(9, kmer, 0, kmer.length));
+		Assert.assertEquals("CAGCTGACC", Kmer.recoverKmerFrom(9, kmerBackward, 0, kmerBackward.length));
+		
+	}
 }
