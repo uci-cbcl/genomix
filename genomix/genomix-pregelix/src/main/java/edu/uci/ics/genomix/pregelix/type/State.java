@@ -1,0 +1,10 @@
+package edu.uci.ics.genomix.pregelix.type;
+
+public class State {
+	public static final int NON_VERTEX = 0;
+	public static final int START_VERTEX = 1;
+	public static final int END_VERTEX = 2;
+	public static final int MID_VERTEX = 3;
+	public static final int TODELETE = 4;
+	public static final int FINAL_VERTEX = 5;
+}
