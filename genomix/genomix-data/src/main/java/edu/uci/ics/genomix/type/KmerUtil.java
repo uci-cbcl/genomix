@@ -19,13 +19,13 @@ public class KmerUtil {
 	}
 
 	/**
-	 * Get last kmer from kmer-chain. e.g. kmerChain is AAGCTA, if k =5, it will
+	 * Get last kmer from kmer-chain. 
+	 * e.g. kmerChain is AAGCTA, if k =5, it will
 	 * return AGCTA
-	 * 
 	 * @param k
 	 * @param kInChain
 	 * @param kmerChain
-	 * @return
+	 * @return LastKmer bytes array
 	 */
 	public static byte[] getLastKmerFromChain(int k, int kInChain,
 			byte[] kmerChain) {
@@ -61,7 +61,7 @@ public class KmerUtil {
 	 * @param k
 	 * @param kInChain
 	 * @param kmerChain
-	 * @return
+	 * @return FirstKmer bytes array
 	 */
 	public static byte[] getFirstKmerFromChain(int k, int kInChain,
 			byte[] kmerChain) {
@@ -87,6 +87,15 @@ public class KmerUtil {
 		return kmer;
 	}
 
+	/**
+	 * Merge kmer with next neighbor in gene-code format.
+	 * The k of new kmer will increase by 1
+	 * e.g. AAGCT merge with A => AAGCTA
+	 * @param k :input k of kmer
+	 * @param kmer : input bytes of kmer
+	 * @param nextCode: next neighbor in gene-code format
+	 * @return the merged Kmer, this K of this Kmer is k+1
+	 */
 	public static byte[] mergeKmerWithNextCode(int k, byte[] kmer, byte nextCode) {
 		int byteNum = kmer.length;
 		if (k % 4 == 0) {
@@ -104,6 +113,15 @@ public class KmerUtil {
 		return mergedKmer;
 	}
 
+	/**
+	 * Merge kmer with previous neighbor in gene-code format.
+	 * The k of new kmer will increase by 1
+	 * e.g. AAGCT merge with A => AAAGCT
+	 * @param k :input k of kmer
+	 * @param kmer : input bytes of kmer
+	 * @param preCode: next neighbor in gene-code format
+	 * @return the merged Kmer,this K of this Kmer is k+1
+	 */
 	public static byte[] mergeKmerWithPreCode(int k, byte[] kmer, byte preCode) {
 		int byteNum = kmer.length;
 		byte[] mergedKmer = null;
@@ -123,6 +141,15 @@ public class KmerUtil {
 		return mergedKmer;
 	}
 
+	/**
+	 * Merge two kmer to one kmer
+	 * e.g. ACTA + ACCGT => ACTAACCGT
+	 * @param preK : previous k of kmer
+	 * @param kmerPre : bytes array of previous kmer
+	 * @param nextK : next k of kmer
+	 * @param kmerNext : bytes array of next kmer
+	 * @return merged kmer, the new k is @preK + @nextK
+	 */
 	public static byte[] mergeTwoKmer(int preK, byte[] kmerPre, int nextK,
 			byte[] kmerNext) {
 		int byteNum = Kmer.getByteNumFromK(preK + nextK);
@@ -157,7 +184,7 @@ public class KmerUtil {
 	 * @param k: kmer length
 	 * @param kmer: input kmer
 	 * @param afterCode: input genecode 
-	 * @return new created kmer that shifted by afterCode
+	 * @return new created kmer that shifted by afterCode, the K will not change
 	 */
 	public static byte[] shiftKmerWithNextCode(int k, final byte[] kmer, byte afterCode){
 		byte[] shifted = kmer.clone();
@@ -171,7 +198,7 @@ public class KmerUtil {
 	 * @param k: kmer length
 	 * @param kmer: input kmer
 	 * @param preCode: input genecode 
-	 * @return new created kmer that shifted by preCode
+	 * @return new created kmer that shifted by preCode, the K will not change
 	 */
 	public static byte[] shiftKmerWithPreCode(int k, final byte[] kmer, byte preCode){
 		byte[] shifted = kmer.clone();
