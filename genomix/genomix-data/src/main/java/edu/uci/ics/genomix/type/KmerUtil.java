@@ -158,7 +158,9 @@ public class KmerUtil {
 		for (; i <= kmerPre.length; i++) {
 			mergedKmer[byteNum - i] = kmerPre[kmerPre.length - i];
 		}
-		i--;
+		if ( i > 1){
+			i--;
+		}
 		if (preK % 4 == 0) {
 			for (int j = 1; j <= kmerNext.length; j++) {
 				mergedKmer[byteNum - i - j] = kmerNext[kmerNext.length - j];
