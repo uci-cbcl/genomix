@@ -72,4 +72,10 @@ public class NodeControllerRemoteProxy implements INodeController {
         CCNCFunctions.DeployBinaryFunction rpaf = new CCNCFunctions.DeployBinaryFunction(deploymentId, binaryURLs);
         ipcHandle.send(-1, rpaf, null);
     }
+
+    @Override
+    public void undeployBinary(DeploymentId deploymentId) throws Exception {
+        CCNCFunctions.UnDeployBinaryFunction rpaf = new CCNCFunctions.UnDeployBinaryFunction(deploymentId);
+        ipcHandle.send(-1, rpaf, null);
+    }
 }

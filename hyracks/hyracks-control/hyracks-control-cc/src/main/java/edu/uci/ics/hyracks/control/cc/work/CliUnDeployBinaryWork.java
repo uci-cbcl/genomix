@@ -15,8 +15,6 @@
 
 package edu.uci.ics.hyracks.control.cc.work;
 
-import java.net.URL;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,19 +26,14 @@ import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
-import edu.uci.ics.hyracks.control.common.work.IPCResponder;
 
-public class CliDeployBinaryWork extends AbstractWork {
+public class CliUnDeployBinaryWork extends AbstractWork {
 
     private ClusterControllerService ccs;
-    private List<URL> binaryURLs;
     private DeploymentId deploymentId;
-    private IPCResponder<DeploymentId> callback;
 
-    public CliDeployBinaryWork(ClusterControllerService ncs, List<URL> binaryURLs, DeploymentId deploymentId,
-            IPCResponder<DeploymentId> callback) {
+    public CliUnDeployBinaryWork(ClusterControllerService ncs, DeploymentId deploymentId) {
         this.ccs = ncs;
-        this.binaryURLs = binaryURLs;
         this.deploymentId = deploymentId;
     }
 
@@ -53,8 +46,7 @@ public class CliDeployBinaryWork extends AbstractWork {
             /**
              * Deploy for the cluster controller
              */
-            DeploymentUtils.deploy(deploymentId, binaryURLs, ccs.getApplicationContext()
-                    .getJobSerializerDeserializerContainer(), ccs.getServerContext());
+            DeploymentUtils.undeploy(deploymentId, ccs.getApplicationContext().getJobSerializerDeserializerContainer());
 
             /**
              * Deploy for the node controllers
@@ -72,17 +64,15 @@ public class CliDeployBinaryWork extends AbstractWork {
              * deploy binaries to each node controller
              */
             for (NodeControllerState ncs : nodeControllerStateMap.values()) {
-                ncs.getNodeController().deployBinary(deploymentId, binaryURLs);
+                ncs.getNodeController().undeployBinary(deploymentId);
             }
-
+            
             /**
              * wait for completion
              */
             dRun.waitForCompletion();
-            ccs.removeDeploymentRun(deploymentId);
-            callback.setValue(deploymentId);
         } catch (Exception e) {
-            callback.setException(e);
+            throw new RuntimeException(e);
         }
     }
 }

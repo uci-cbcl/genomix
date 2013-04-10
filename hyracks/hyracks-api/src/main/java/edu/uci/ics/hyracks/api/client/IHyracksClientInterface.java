@@ -45,5 +45,7 @@ public interface IHyracksClientInterface {
 
     public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId) throws Exception;
 
+    public void unDeployBinary(DeploymentId deploymentId) throws Exception;
+
     public JobId startJob(DeploymentId deploymentId, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception;
 }

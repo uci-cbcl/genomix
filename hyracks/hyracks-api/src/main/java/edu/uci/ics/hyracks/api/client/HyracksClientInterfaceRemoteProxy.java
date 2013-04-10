@@ -103,4 +103,11 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
                 binaryURLs, deploymentId);
         rpci.call(ipcHandle, dbf);
     }
+
+    @Override
+    public void unDeployBinary(DeploymentId deploymentId) throws Exception {
+        HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction(
+                deploymentId);
+        rpci.call(ipcHandle, dbf);
+    }
 }

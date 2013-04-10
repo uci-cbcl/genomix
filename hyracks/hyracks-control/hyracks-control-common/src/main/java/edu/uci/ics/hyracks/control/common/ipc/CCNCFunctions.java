@@ -86,6 +86,7 @@ public class CCNCFunctions {
 
         DEPLOY_BINARY,
         NOTIFY_DEPLOY_BINARY,
+        UNDEPLOY_BINARY,
 
         OTHER
     }
@@ -787,6 +788,25 @@ public class CCNCFunctions {
 
         public List<URL> getBinaryURLs() {
             return binaryURLs;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+    }
+
+    public static class UnDeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final DeploymentId deploymentId;
+
+        public UnDeployBinaryFunction(DeploymentId deploymentId) {
+            this.deploymentId = deploymentId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.UNDEPLOY_BINARY;
         }
 
         public DeploymentId getDeploymentId() {

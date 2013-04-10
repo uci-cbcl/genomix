@@ -38,7 +38,8 @@ public class HyracksClientInterfaceFunctions {
         GET_DATASET_RESULT_LOCATIONS,
         WAIT_FOR_COMPLETION,
         GET_NODE_CONTROLLERS_INFO,
-        CLI_DEPLOY_BINARY
+        CLI_DEPLOY_BINARY,
+        CLI_UNDEPLOY_BINARY
     }
 
     public abstract static class Function implements Serializable {
@@ -234,6 +235,24 @@ public class HyracksClientInterfaceFunctions {
 
         public List<URL> getBinaryURLs() {
             return binaryURLs;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+    }
+
+    public static class CliUnDeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+        private final DeploymentId deploymentId;
+
+        public CliUnDeployBinaryFunction(DeploymentId deploymentId) {
+            this.deploymentId = deploymentId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.CLI_UNDEPLOY_BINARY;
         }
 
         public DeploymentId getDeploymentId() {
