@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.api.job;
 
+import java.io.Serializable;
 import java.net.URL;
 import java.util.List;
 
@@ -22,13 +23,9 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 public interface IJobSerializerDeserializer {
 
-    public JobSpecification deserializeJobSpecification(byte[] jsBytes) throws HyracksException;
+    public Object deserialize(byte[] bytes) throws HyracksException;
 
-    public byte[] serializeJobSpecication(JobSpecification jobSpec) throws HyracksException;
-
-    public ActivityClusterGraph deserializeActivityClusterGraph(byte[] acgBytes) throws HyracksException;
-
-    public byte[] serializeActivityClusterGraph(ActivityClusterGraph acg) throws HyracksException;
+    public byte[] serialize(Serializable job) throws HyracksException;
 
     public void addClassPathURLs(List<URL> binaryURLs) throws HyracksException;
 

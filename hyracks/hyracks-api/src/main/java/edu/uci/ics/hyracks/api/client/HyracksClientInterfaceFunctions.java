@@ -80,10 +80,18 @@ public class HyracksClientInterfaceFunctions {
 
         private final byte[] acggfBytes;
         private final EnumSet<JobFlag> jobFlags;
+        private final DeploymentId deploymentId;
 
         public StartJobFunction(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) {
             this.acggfBytes = acggfBytes;
             this.jobFlags = jobFlags;
+            this.deploymentId = null;
+        }
+
+        public StartJobFunction(DeploymentId deploymentId, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) {
+            this.acggfBytes = acggfBytes;
+            this.jobFlags = jobFlags;
+            this.deploymentId = deploymentId;
         }
 
         @Override
@@ -97,6 +105,10 @@ public class HyracksClientInterfaceFunctions {
 
         public EnumSet<JobFlag> getJobFlags() {
             return jobFlags;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
         }
     }
 

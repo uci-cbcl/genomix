@@ -15,6 +15,7 @@
 
 package edu.uci.ics.hyracks.api.job;
 
+import java.io.Serializable;
 import java.net.URL;
 import java.util.List;
 
@@ -24,36 +25,18 @@ import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 public class JobSerializerDeserializer implements IJobSerializerDeserializer {
 
     @Override
-    public JobSpecification deserializeJobSpecification(byte[] jsBytes) throws HyracksException {
+    public Object deserialize(byte[] jsBytes) throws HyracksException {
         try {
-            return (JobSpecification) JavaSerializationUtils.deserialize(jsBytes);
+            return JavaSerializationUtils.deserialize(jsBytes);
         } catch (Exception e) {
             throw new HyracksException(e);
         }
     }
 
     @Override
-    public byte[] serializeJobSpecication(JobSpecification jobSpec) throws HyracksException {
+    public byte[] serialize(Serializable obj) throws HyracksException {
         try {
-            return JavaSerializationUtils.serialize(jobSpec);
-        } catch (Exception e) {
-            throw new HyracksException(e);
-        }
-    }
-
-    @Override
-    public ActivityClusterGraph deserializeActivityClusterGraph(byte[] acgBytes) throws HyracksException {
-        try {
-            return (ActivityClusterGraph) JavaSerializationUtils.deserialize(acgBytes);
-        } catch (Exception e) {
-            throw new HyracksException(e);
-        }
-    }
-
-    @Override
-    public byte[] serializeActivityClusterGraph(ActivityClusterGraph acg) throws HyracksException {
-        try {
-            return JavaSerializationUtils.serialize(acg);
+            return JavaSerializationUtils.serialize(obj);
         } catch (Exception e) {
             throw new HyracksException(e);
         }

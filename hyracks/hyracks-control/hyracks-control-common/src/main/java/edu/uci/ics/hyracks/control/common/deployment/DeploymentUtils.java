@@ -3,10 +3,12 @@ package edu.uci.ics.hyracks.control.common.deployment;
 import java.net.URL;
 import java.util.List;
 
+import edu.uci.ics.hyracks.api.application.IApplicationContext;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializer;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
+import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 
 public class DeploymentUtils {
 
@@ -18,6 +20,19 @@ public class DeploymentUtils {
             container.addJobSerializerDeserializer(deploymentId, jobSerDe);
         }
         jobSerDe.addClassPathURLs(urls);
+    }
+
+    public static Object deserialize(byte[] bytes, DeploymentId deploymentId, IApplicationContext appCtx)
+            throws HyracksException {
+        try {
+            IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
+            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
+                    .getJobSerializerDeerializer(deploymentId);
+            Object obj = jobSerDe == null ? JavaSerializationUtils.deserialize(bytes) : jobSerDe.deserialize(bytes);
+            return obj;
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
     }
 
 }

@@ -93,7 +93,12 @@ public class CCNCFunctions {
     public static class SendApplicationMessageFunction extends Function {
         private static final long serialVersionUID = 1L;
         private byte[] serializedMessage;
+        private DeploymentId deploymentId;
         private String nodeId;
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
 
         public String getNodeId() {
             return nodeId;
@@ -107,8 +112,9 @@ public class CCNCFunctions {
             return serializedMessage;
         }
 
-        public SendApplicationMessageFunction(byte[] data, String nodeId) {
+        public SendApplicationMessageFunction(byte[] data, DeploymentId deploymentId, String nodeId) {
             this.serializedMessage = data;
+            this.deploymentId = deploymentId;
             this.nodeId = nodeId;
         }
 
@@ -587,14 +593,17 @@ public class CCNCFunctions {
     public static class StartTasksFunction extends Function {
         private static final long serialVersionUID = 1L;
 
+        private final DeploymentId deploymentId;
         private final JobId jobId;
         private final byte[] planBytes;
         private final List<TaskAttemptDescriptor> taskDescriptors;
         private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
         private final EnumSet<JobFlag> flags;
 
-        public StartTasksFunction(JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
+        public StartTasksFunction(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
+                List<TaskAttemptDescriptor> taskDescriptors,
                 Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, EnumSet<JobFlag> flags) {
+            this.deploymentId = deploymentId;
             this.jobId = jobId;
             this.planBytes = planBytes;
             this.taskDescriptors = taskDescriptors;
@@ -605,6 +614,10 @@ public class CCNCFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.START_TASKS;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
         }
 
         public JobId getJobId() {

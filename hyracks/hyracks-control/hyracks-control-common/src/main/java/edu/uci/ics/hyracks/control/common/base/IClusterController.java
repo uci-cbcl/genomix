@@ -51,7 +51,7 @@ public interface IClusterController {
 
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception;
 
-    public void sendApplicationMessageToCC(byte[] data, String nodeId) throws Exception;
+    public void sendApplicationMessageToCC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
 
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, int partition,
             int nPartitions, NetworkAddress networkAddress) throws Exception;

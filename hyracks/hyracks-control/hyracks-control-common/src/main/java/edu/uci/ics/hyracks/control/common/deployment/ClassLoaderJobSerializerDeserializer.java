@@ -1,5 +1,6 @@
 package edu.uci.ics.hyracks.control.common.deployment;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -8,7 +9,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
-import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializer;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
@@ -18,7 +18,7 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
     private URLClassLoader classLoader;
 
     @Override
-    public JobSpecification deserializeJobSpecification(byte[] jsBytes) throws HyracksException {
+    public JobSpecification deserialize(byte[] jsBytes) throws HyracksException {
         try {
             if (classLoader == null) {
                 return (JobSpecification) JavaSerializationUtils.deserialize(jsBytes);
@@ -30,36 +30,12 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
     }
 
     @Override
-    public byte[] serializeJobSpecication(JobSpecification jobSpec) throws HyracksException {
+    public byte[] serialize(Serializable jobSpec) throws HyracksException {
         try {
             if (classLoader == null) {
                 return JavaSerializationUtils.serialize(jobSpec);
             }
             return JavaSerializationUtils.serialize(jobSpec, classLoader);
-        } catch (Exception e) {
-            throw new HyracksException(e);
-        }
-    }
-
-    @Override
-    public ActivityClusterGraph deserializeActivityClusterGraph(byte[] acgBytes) throws HyracksException {
-        try {
-            if (classLoader == null) {
-                return (ActivityClusterGraph) JavaSerializationUtils.deserialize(acgBytes);
-            }
-            return (ActivityClusterGraph) JavaSerializationUtils.deserialize(acgBytes, classLoader);
-        } catch (Exception e) {
-            throw new HyracksException(e);
-        }
-    }
-
-    @Override
-    public byte[] serializeActivityClusterGraph(ActivityClusterGraph acg) throws HyracksException {
-        try {
-            if (classLoader == null) {
-                return JavaSerializationUtils.serialize(acg);
-            }
-            return JavaSerializationUtils.serialize(acg, classLoader);
         } catch (Exception e) {
             throw new HyracksException(e);
         }
@@ -75,11 +51,11 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
         });
         try {
             if (classLoader == null) {
-                /**crate a new classloader*/
+                /** crate a new classloader */
                 URL[] urls = binaryURLs.toArray(new URL[binaryURLs.size()]);
                 classLoader = new URLClassLoader(urls, this.getClass().getClassLoader());
             } else {
-                /**add URLs to the existing classloader*/
+                /** add URLs to the existing classloader */
                 Object[] urls = binaryURLs.toArray(new URL[binaryURLs.size()]);
                 Method method = classLoader.getClass().getDeclaredMethod("addURL", new Class[] { URL.class });
                 method.setAccessible(true);
