@@ -1,0 +1,3 @@
+GCA	AT|T	2
+AGC	|A	1
+TGC	|A	1

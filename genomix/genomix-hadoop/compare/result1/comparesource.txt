@@ -1,0 +1,8 @@
+GCA	ACT|T	3
+AGC	|A	1
+CGC	T|AT	2
+TGC	|A	1
+ATC	C|G	2
+TCG	A|C	2
+CAT	G|C	2
+GCT	C|	1
