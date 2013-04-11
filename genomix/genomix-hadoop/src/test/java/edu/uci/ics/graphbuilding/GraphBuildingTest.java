@@ -35,23 +35,24 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.KmerCountValue;
+import edu.uci.ics.utils.TestUtils;
 /**
  * This class test the correctness of graphbuilding program
  */
 @SuppressWarnings("deprecation")
 public class GraphBuildingTest {
 
-    private static final String ACTUAL_RESULT_DIR = "actual";
-    @SuppressWarnings("deprecation")
+    private static final String ACTUAL_RESULT_DIR = "actual1";
+    private static final String COMPARE_DIR = "compare";
     private JobConf conf = new JobConf();
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/text.txt";
+    private static final String DATA_PATH = "data/webmap/Test.txt";
     private static final String HDFS_PATH = "/webmap";
-    private static final String RESULT_PATH = "/result2";
-    private static final String EXPECTED_PATH = "expected/result2";
-    private static final String TEST_SOURCE_DIR = "testactual/source.txt";
+    private static final String RESULT_PATH = "/result1";
+    private static final String EXPECTED_PATH = "expected/result1";
+    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH + "/comparesource.txt";
     private static final int COUNT_REDUCER = 4;
-    private static final int SIZE_KMER = 12;
+    private static final int SIZE_KMER = 3;
     
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -70,11 +71,12 @@ public class GraphBuildingTest {
 
         SequenceFile.Reader reader = null;
         Path path = new Path(RESULT_PATH + "/part-00000");
-        reader = new SequenceFile.Reader(dfs, path, conf);
+        reader = new SequenceFile.Reader(dfs, path, conf); 
         BytesWritable key = (BytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
         File filePathTo = new File(TEST_SOURCE_DIR);
         BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+        
         while (reader.next(key, value)) {
             bw.write(Kmer.recoverKmerFrom(SIZE_KMER, key.getBytes(), 0, key.getLength()) + "\t" + value.toString());
             bw.newLine();
@@ -82,7 +84,7 @@ public class GraphBuildingTest {
         bw.close();
 
         dumpResult();
-//        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
+        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
 
         cleanupHadoop();
 
@@ -114,7 +116,7 @@ public class GraphBuildingTest {
 
     private void dumpResult() throws IOException {
         Path src = new Path(RESULT_PATH);
-        Path dest = new Path(ACTUAL_RESULT_DIR + "/");
+        Path dest = new Path(ACTUAL_RESULT_DIR);
         dfs.copyToLocalFile(src, dest);
     }
 }

@@ -71,7 +71,5 @@ public class TestUtils {
 
     public static void main(String[] args) throws Exception {
         TestUtils TUtils = new TestUtils();
-        TUtils.compareWithResult(new File("/Users/hadoop/Documents/workspace/Test/part-00000"), new File(
-                "/Users/hadoop/Documents/workspace/Test/test.txt"));
     }
 }

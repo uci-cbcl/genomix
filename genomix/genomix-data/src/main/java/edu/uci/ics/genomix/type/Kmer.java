@@ -15,7 +15,7 @@
 package edu.uci.ics.genomix.type;
 
 public class Kmer {
-
+ 
 	public final static byte[] GENE_SYMBOL = { 'A', 'C', 'G', 'T' };
 
 	public final static class GENE_CODE {

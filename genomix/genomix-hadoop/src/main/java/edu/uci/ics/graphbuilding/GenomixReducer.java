@@ -41,8 +41,7 @@ public class GenomixReducer extends MapReduceBase implements
         byte bytCount = 0;
         while (values.hasNext()) {
             //Merge By the all adjacent Nodes;
-            KmerCountValue geneValue = values.next();
-            
+            KmerCountValue geneValue = values.next();            
             groupByAdjList = (byte) (groupByAdjList | geneValue.getAdjBitMap());
             count = count + (int) geneValue.getCount();
         }

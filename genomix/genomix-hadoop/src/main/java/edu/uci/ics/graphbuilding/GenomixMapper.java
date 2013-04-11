@@ -55,20 +55,20 @@ public class GenomixMapper extends MapReduceBase implements
 
     /*succeed node
       A 00000001 1
-      G 00000010 2
-      C 00000100 4
+      C 00000010 2
+      G 00000100 4
       T 00001000 8
       precursor node
       A 00010000 16
-      G 00100000 32
-      C 01000000 64
+      C 00100000 32
+      G 01000000 64
       T 10000000 128*/
     @Override
     public void map(LongWritable key, Text value, OutputCollector<BytesWritable, KmerCountValue> output,
             Reporter reporter) throws IOException {
         /* A 00
-           G 01
-           C 10
+           C 01
+           G 10
            T 11*/
         String geneLine = value.toString(); // Read the Real Gene Line
         Pattern genePattern = Pattern.compile("[AGCT]+");
@@ -76,7 +76,7 @@ public class GenomixMapper extends MapReduceBase implements
         boolean isValid = geneMatcher.matches();
         if (isValid == true) {
             /** first kmer */
-            byte count = 0;
+            byte count = 1;
             byte[] array = geneLine.getBytes();
             byte[] kmer = Kmer.compressKmer(KMER_SIZE, array, 0);
             byte pre = 0;
