@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.pregelix;
 
 import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -17,24 +16,41 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.KmerUtil;
-import edu.uci.ics.genomix.pregelix.SequenceFile.GenerateSequenceFile;
 import edu.uci.ics.genomix.pregelix.bitwise.BitwiseOperation;
-import edu.uci.ics.genomix.pregelix.example.io.LogAlgorithmMessageWritable;
-import edu.uci.ics.genomix.pregelix.example.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.example.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.hdfs.HDFSOperation;
+import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.sequencefile.GenerateSequenceFile;
 
 public class GraphVertexOperation {
-	public static final int k = 3; //kmer, k: the length of kmer
+	public static final int k = 5; //kmer, k: the length of kmer
+	public static final int numBytes = (GraphVertexOperation.k-1)/4 + 1;
 	static private final Path TMP_DIR = new Path(
 			GenerateSequenceFile.class.getSimpleName() + "_INTERIM");
 	/**
 	 * Single Vertex: in-degree = out-degree = 1
 	 * @param vertexValue 
 	 */
-	public static boolean isPathVertex(ByteWritable vertexValue){
-		byte value = vertexValue.get();
+	public static boolean isPathVertex(byte value){
 		if(KmerUtil.inDegree(value) == 1 && KmerUtil.outDegree(value) == 1)
+			return true;
+		return false;
+	}
+	/** 
+	 * Head Vertex:  out-degree > 0, 
+	 * @param vertexValue 
+	 */
+	public static boolean isHeadVertex(byte value){
+		if(KmerUtil.outDegree(value) > 0 && !isPathVertex(value))
+			return true;
+		return false;
+	}
+	/**
+	 * Rear Vertex:  in-degree > 0, 
+	 * @param vertexValue 
+	 */
+	public static boolean isRearVertex(byte value){
+		if(KmerUtil.inDegree(value) > 0 && !isPathVertex(value))
 			return true;
 		return false;
 	}
@@ -42,8 +58,7 @@ public class GraphVertexOperation {
 	 * Head Vertex:  in-degree != 1, out-degree = 1, 
 	 * @param vertexValue 
 	 */
-	public static boolean isHead(ByteWritable vertexValue){
-		byte value = vertexValue.get();
+	public static boolean isHead(byte value){
 		if(KmerUtil.inDegree(value) != 1 && KmerUtil.outDegree(value) == 1)
 			return true;
 		return false;
@@ -52,8 +67,7 @@ public class GraphVertexOperation {
 	 * Rear Vertex:  in-degree = 1, out-degree != 1, 
 	 * @param vertexValue 
 	 */
-	public static boolean isRear(ByteWritable vertexValue){
-		byte value = vertexValue.get();
+	public static boolean isRear(byte value){
 		if(KmerUtil.inDegree(value) == 1 && KmerUtil.outDegree(value) != 1)
 			return true;
 		return false;
@@ -257,13 +271,18 @@ public class GraphVertexOperation {
 	 * update right neighber
 	 */
 	public static byte updateRightNeighber(byte oldVertexValue, byte newVertexValue){
-		return BitwiseOperation.replaceLastFourBits(oldVertexValue, newVertexValue);
+		return (byte) ((byte)(oldVertexValue & 0xF0) | (byte) (newVertexValue & 0x0F));
 	}
 	/**
 	 * update right neighber based on next vertexId
 	 */
 	public static byte updateRightNeighberByVertexId(byte oldVertexValue, byte[] neighberVertexId){
-		String oldVertex = BitwiseOperation.convertByteToBinaryString(oldVertexValue);
+		
+		String neighberVertex = Kmer.recoverKmerFrom(GraphVertexOperation.k, neighberVertexId, 0, neighberVertexId.length);
+		
+		byte newBit = Kmer.GENE_CODE.getAdjBit((byte)neighberVertex.charAt(neighberVertex.length() - 1));
+		return (byte) ((byte)(oldVertexValue & 0xF0) | (byte) (newBit & 0x0F));
+		/*String oldVertex = BitwiseOperation.convertByteToBinaryString(oldVertexValue);
 		String neighber = BitwiseOperation.convertBytesToBinaryStringKmer(neighberVertexId, k);
 		String lastTwoBits = neighber.substring(2*k-2,2*k);
 		if(lastTwoBits.compareTo("00") == 0)
@@ -275,7 +294,7 @@ public class GraphVertexOperation {
 		else if(lastTwoBits.compareTo("11") == 0)
 			return BitwiseOperation.convertBinaryStringToByte(oldVertex.substring(0,4) + "1000");
 		
-		return (Byte) null;
+		return (Byte) null;*/
 	}
 	/**
 	 * get precursor in vertexValue from gene code

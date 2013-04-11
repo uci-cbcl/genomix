@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.example.io;
+package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -37,8 +37,10 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	}
 	
 	public void reset(){
-		sourceVertexId = null;
+		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
 		neighberInfo = (Byte) null;
+		lengthOfChain = 0;
+		chainVertexId = null;
 		message = 0;
 		sourceVertexState = 0;
 	}
@@ -109,10 +111,12 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		out.writeInt(lengthOfChain);
 		if(lengthOfChain != 0)
 			out.write(chainVertexId);
-		out.write(sourceVertexId);
-		out.write(neighberInfo);
+
 		out.writeInt(message);
 		out.writeInt(sourceVertexState);
+		
+		out.write(sourceVertexId); 
+		out.write(neighberInfo);
 	}
 
 	@Override
@@ -125,11 +129,13 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		}
 		else
 			chainVertexId = new byte[0];
+
+		message = in.readInt();
+		sourceVertexState = in.readInt();
+		
 		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
 		in.readFully(sourceVertexId);
 		neighberInfo = in.readByte();
-		message = in.readInt();
-		sourceVertexState = in.readInt();
 	}
 
     @Override

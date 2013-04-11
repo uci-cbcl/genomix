@@ -41,7 +41,7 @@ public class RunJobTestSuite extends TestSuite{
 	private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
 	private static final String FILE_EXTENSION_OF_RESULTS = "result";
 
-	private static final String DATA_PATH = "data/input/SinglePath.seq";//sequenceFileMergeTest
+	private static final String DATA_PATH = "data/result/TreePath";//sequenceShortFileMergeTest
 	private static final String HDFS_PATH = "/webmap/";
 	
 	private static final String HYRACKS_APP_NAME = "pregelix";
@@ -144,31 +144,17 @@ public class RunJobTestSuite extends TestSuite{
 	 * Runs the tests and collects their result in a TestResult.
 	 */
 	@Override
-	public void run(TestResult result) {
-		OutputStreamWriter writer = null;
-		try {
-			writer = new OutputStreamWriter(new FileOutputStream("test/time",true));
-		} catch (FileNotFoundException e1) { e1.printStackTrace();}
-		
-		
+	public void run(TestResult result) {		
 		try {
 			int testCount = countTestCases();
 			for (int i = 0; i < testCount; i++) {
-				long startTime = System.currentTimeMillis();
 				// cleanupStores();
 				Test each = this.testAt(i);
 				if (result.shouldStop())
 					break;
 				runTest(each, result);
-				long endTime = System.currentTimeMillis();
-				long totalTime = endTime - startTime;
-				System.out.println(totalTime);
-				try {
-					writer.write("Time: " + totalTime + "\r\n");
-				} catch (IOException e) { // TODO Auto-generated catch block 
-					e.printStackTrace();} 
 			}
-			writer.close();
+
 			tearDown();
 		} catch (Exception e) {
 			throw new IllegalStateException(e);

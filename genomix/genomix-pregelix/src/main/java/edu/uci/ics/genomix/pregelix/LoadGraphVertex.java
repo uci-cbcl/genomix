@@ -1,22 +1,17 @@
 package edu.uci.ics.genomix.pregelix;
 
-import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.RecordWriter;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
+import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphInputFormat;
+import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.io.VertexWriter;
-import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat;
-import edu.uci.ics.pregelix.api.io.text.TextVertexOutputFormat.TextVertexWriter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.genomix.pregelix.example.client.Client;
-import edu.uci.ics.genomix.pregelix.example.io.MessageWritable;
 
 /*
  * vertexId: BytesWritable
@@ -47,75 +42,29 @@ import edu.uci.ics.genomix.pregelix.example.io.MessageWritable;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class LoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
-	
-	private ByteWritable tmpVertexValue = new ByteWritable();
-	
+
 	/**
-	 * For test, in compute method, make each vertexValue shift 1 to left.
-	 * It will be modified when going forward to next step.
+	 * For test, just output original file
 	 */
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
-		if(getSuperstep() == 1){
-			tmpVertexValue.set(getVertexValue().get());
-			tmpVertexValue.set((byte) (tmpVertexValue.get() << 1));
-			setVertexValue(tmpVertexValue);
-		}
-		else
-			voteToHalt();
-	 }
-	
-    /**
-     * Simple VertexWriter that supports {@link SimpleLoadGraphVertex}
-     */
-    public static class SimpleLoadGraphVertexWriter extends
-            TextVertexWriter<BytesWritable, ByteWritable, NullWritable> {
-        public SimpleLoadGraphVertexWriter(RecordWriter<Text, Text> lineRecordWriter) {
-            super(lineRecordWriter);
-        }
+		voteToHalt();
+	}
 
-        @Override
-        public void writeVertex(Vertex<BytesWritable, ByteWritable, NullWritable, ?> vertex) throws IOException,
-                InterruptedException {
-            getRecordWriter().write(new Text(vertex.getVertexId().toString()),
-                    new Text(vertex.getVertexValue().toString()));
-        }
-    }
-
-    /**
-     * Simple VertexOutputFormat that supports {@link SimpleLoadGraphVertex}
-     */
-    public static class SimpleLoadGraphVertexOutputFormat extends
-            TextVertexOutputFormat<BytesWritable, ByteWritable, NullWritable> {
-
-        @Override
-        public VertexWriter<BytesWritable, ByteWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
-                throws IOException, InterruptedException {
-            RecordWriter<Text, Text> recordWriter = textOutputFormat.getRecordWriter(context);
-            return new SimpleLoadGraphVertexWriter(recordWriter);
-        }
-    }
-	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
+		//final int k = Integer.parseInt(args[0]);
         PregelixJob job = new PregelixJob(LoadGraphVertex.class.getSimpleName());
         job.setVertexClass(LoadGraphVertex.class);
         /**
-         * TextInput and TextOutput
-         */ 
-          job.setVertexInputFormatClass(TextLoadGraphInputFormat.class);
-          job.setVertexOutputFormatClass(SimpleLoadGraphVertexOutputFormat.class); 
-        
-        
-        /**
          * BinaryInput and BinaryOutput
          */
-      /*  job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
+        job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class); 
         job.setOutputKeyClass(BytesWritable.class);
-        job.setOutputValueClass(ByteWritable.class);*/
+        job.setOutputValueClass(ByteWritable.class);
         Client.run(args, job);
 	}
 }

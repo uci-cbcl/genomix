@@ -16,7 +16,7 @@ import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
-public class BinaryVertexInputFormat <I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
+public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
 	extends VertexInputFormat<I, V, E, M>{
 	
     /** Uses the SequenceFileInputFormat to do everything */
@@ -34,7 +34,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable, V extends Wr
      * @param <E>
      *            Edge value
      */
-    public static abstract class BinaryVertexReader<I extends WritableComparable, V extends Writable, E extends Writable, M extends Writable>
+    public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
         private final RecordReader<BytesWritable,KmerCountValue> lineRecordReader;

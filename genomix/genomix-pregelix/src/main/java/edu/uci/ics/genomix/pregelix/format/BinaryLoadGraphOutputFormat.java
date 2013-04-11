@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix;
+package edu.uci.ics.genomix.pregelix.format;
 
 import java.io.IOException;
 
@@ -9,16 +9,18 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.ValueWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
 public class BinaryLoadGraphOutputFormat extends 
-	BinaryVertexOutputFormat<BytesWritable, ByteWritable, NullWritable> {
+	BinaryVertexOutputFormat<BytesWritable, ValueStateWritable, NullWritable> {
 
         @Override
-        public VertexWriter<BytesWritable, ByteWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
+        public VertexWriter<BytesWritable, ValueStateWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
                 throws IOException, InterruptedException {
-            RecordWriter<BytesWritable, ByteWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
+            RecordWriter<BytesWritable, ValueStateWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
             return new BinaryLoadGraphVertexWriter(recordWriter);
         }
         
@@ -26,13 +28,13 @@ public class BinaryLoadGraphOutputFormat extends
          * Simple VertexWriter that supports {@link BinaryLoadGraphVertex}
          */
         public static class BinaryLoadGraphVertexWriter extends
-                BinaryVertexWriter<BytesWritable, ByteWritable, NullWritable> {
-            public BinaryLoadGraphVertexWriter(RecordWriter<BytesWritable, ByteWritable> lineRecordWriter) {
+                BinaryVertexWriter<BytesWritable, ValueStateWritable, NullWritable> {
+            public BinaryLoadGraphVertexWriter(RecordWriter<BytesWritable, ValueStateWritable> lineRecordWriter) {
                 super(lineRecordWriter);
             }
 
             @Override
-            public void writeVertex(Vertex<BytesWritable, ByteWritable, NullWritable, ?> vertex) throws IOException,
+            public void writeVertex(Vertex<BytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
                 getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
             }

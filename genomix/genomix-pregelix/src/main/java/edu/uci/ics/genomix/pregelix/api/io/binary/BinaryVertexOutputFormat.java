@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.pregelix.api.io.binary;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -12,6 +11,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
@@ -49,7 +49,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
         /** Context passed to initialize */
         private TaskAttemptContext context;
         /** Internal line record writer */
-        private final RecordWriter<BytesWritable, ByteWritable> lineRecordWriter;
+        private final RecordWriter<BytesWritable, ValueStateWritable> lineRecordWriter;
 
         /**
          * Initialize with the LineRecordWriter.
@@ -57,7 +57,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
          * @param lineRecordWriter
          *            Line record writer from SequenceFileOutputFormat
          */
-        public BinaryVertexWriter(RecordWriter<BytesWritable, ByteWritable> lineRecordWriter) {
+        public BinaryVertexWriter(RecordWriter<BytesWritable, ValueStateWritable> lineRecordWriter) {
             this.lineRecordWriter = lineRecordWriter;
         }
 
@@ -76,7 +76,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
          * 
          * @return Record writer to be used for writing.
          */
-        public RecordWriter<BytesWritable, ByteWritable> getRecordWriter() {
+        public RecordWriter<BytesWritable, ValueStateWritable> getRecordWriter() {
             return lineRecordWriter;
         }
 

@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.SequenceFile;
+package edu.uci.ics.genomix.pregelix.sequencefile;
 
 import java.io.IOException;
 

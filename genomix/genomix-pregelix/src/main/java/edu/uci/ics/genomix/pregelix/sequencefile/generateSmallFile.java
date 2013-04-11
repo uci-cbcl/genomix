@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.SequenceFile;
+package edu.uci.ics.genomix.pregelix.sequencefile;
 
 import java.io.IOException;
 
@@ -16,9 +16,7 @@ public class generateSmallFile {
 	public static void generateNumOfLinesFromBigFile(Path inFile, Path outFile, int numOfLines) throws IOException{
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
-	    
-		//ClassLoader ctxLoader = Thread.currentThread().getContextClassLoader();
-		//Thread.currentThread().setContextClassLoader(GenerateSequenceFile.class.getClassLoader());
+
 		SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
 	    SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, BytesWritable.class, KmerCountValue.class, 
@@ -34,7 +32,6 @@ public class generateSmallFile {
 	    }
 	    writer.close();
 	    reader.close();
-	    //Thread.currentThread().setContextClassLoader(ctxLoader);
 	}
 	/**
 	 * @param args

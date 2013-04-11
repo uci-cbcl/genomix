@@ -10,16 +10,14 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import edu.uci.ics.genomix.pregelix.BinaryLoadGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.BinaryLoadGraphOutputFormat;
 import edu.uci.ics.genomix.pregelix.LoadGraphVertex;
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphInputFormat;
+import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForMergeGraphInputFormat;
+import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForMergeGraphOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphVertex;
 import edu.uci.ics.genomix.pregelix.MergeGraphVertex;
-import edu.uci.ics.genomix.pregelix.TestLoadGraphVertex;
-import edu.uci.ics.genomix.pregelix.TextLoadGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.LoadGraphVertex.SimpleLoadGraphVertexOutputFormat;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 
@@ -32,21 +30,6 @@ public class JobGenerator {
     private static void generateLoadGraphJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
     	job.setVertexClass(LoadGraphVertex.class);
-    	job.setVertexInputFormatClass(TextLoadGraphInputFormat.class);
-        job.setVertexOutputFormatClass(SimpleLoadGraphVertexOutputFormat.class);
-        FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
-        FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
-        job.getConfiguration().setLong(PregelixJob.NUM_VERTICE, 20);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-    
-    private static void genLoadGraph() throws IOException {
-    	generateLoadGraphJob("LoadGraph", outputBase + "LoadGraph.xml");
-    }
-    
-    private static void generateBinaryLoadGraphJob(String jobName, String outputPath) throws IOException {
-    	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(TestLoadGraphVertex.class);
     	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
         job.setOutputKeyClass(BytesWritable.class);
@@ -56,8 +39,8 @@ public class JobGenerator {
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
-    private static void genBinaryLoadGraph() throws IOException {
-    	generateBinaryLoadGraphJob("BinaryLoadGraph", outputBase + "BinaryLoadGraph.xml");
+    private static void genLoadGraph() throws IOException {
+    	generateLoadGraphJob("LoadGraph", outputBase + "LoadGraph.xml");
     }
     
     private static void generateMergeGraphJob(String jobName, String outputPath) throws IOException {
@@ -66,7 +49,7 @@ public class JobGenerator {
     	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
         job.setOutputKeyClass(BytesWritable.class);
-        job.setOutputValueClass(ByteWritable.class);
+        job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -83,7 +66,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(LogAlgorithmForMergeGraphOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(BytesWritable.class);
-        job.setOutputValueClass(ByteWritable.class);
+        job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -99,7 +82,7 @@ public class JobGenerator {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		//genBinaryLoadGraph();
+		//genLoadGraph();
 		genMergeGraph();
 		//genLogAlgorithmForMergeGraph();
 		//genSequenceLoadGraph();

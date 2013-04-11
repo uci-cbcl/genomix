@@ -1,16 +1,10 @@
 package edu.uci.ics.genomix.pregelix;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.Iterator;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 
@@ -18,12 +12,13 @@ import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.KmerUtil;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.genomix.pregelix.bitwise.BitwiseOperation;
-import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
-import edu.uci.ics.genomix.pregelix.example.client.Client;
-import edu.uci.ics.genomix.pregelix.example.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.hdfs.HDFSOperation;
+import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphInputFormat;
+import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.log.NaiveAlgorithmLogFormatter;
+import edu.uci.ics.genomix.pregelix.type.State;
 
 /*
  * vertexId: BytesWritable
@@ -53,140 +48,169 @@ import edu.uci.ics.genomix.pregelix.hdfs.HDFSOperation;
  * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
-public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
+public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, NullWritable, MessageWritable>{
 	
-    /** The number of bytes for vertex id */
-    public static final int numBytes = (GraphVertexOperation.k-1)/4 + 1;
-    private BytesWritable tmpVertextId = new BytesWritable();
-	private BytesWritable tmpDestVertexId = new BytesWritable();
+	public static Logger logger = Logger.getLogger(MergeGraphVertex.class.getName()); 
+	NaiveAlgorithmLogFormatter formatter = new NaiveAlgorithmLogFormatter();
+	public static FileHandler handler;
+	
+    private byte[] tmpVertexId;
+    private byte[] tmpDestVertexId;
+	private BytesWritable destVertexId = new BytesWritable();
 	private BytesWritable tmpChainVertexId = new BytesWritable();
-	private ByteWritable tmpVertexValue = new ByteWritable();
+	private ValueStateWritable tmpVertexValue = new ValueStateWritable();
 	private MessageWritable tmpMsg = new MessageWritable();
-	OutputStreamWriter writer; 
 	/**
 	 * Naive Algorithm for path merge graph
+	 * @throws Exception 
+	 * @throws  
 	 */
+	public MergeGraphVertex(){
+		if(handler == null){
+			try {
+				handler = new FileHandler("log/" + MergeGraphVertex.class.getName() + ".log");
+			} catch (Exception e) { e.printStackTrace();} 
+		}
+	}
+	
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
-		try {
-			writer = new OutputStreamWriter(new FileOutputStream("test/check_Naive",true));
-		} catch (FileNotFoundException e1) { e1.printStackTrace();}
-		tmpVertextId.set(GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId()),0,numBytes);
+		
+		tmpVertexId = GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId());
 		if (getSuperstep() == 1) {
-			if(GraphVertexOperation.isHead(getVertexValue())){ 
-				tmpDestVertexId.set(tmpVertextId);
-				//change
-				Kmer.moveKmer(GraphVertexOperation.k, tmpDestVertexId.getBytes(), 
-						(byte)GraphVertexOperation.findSucceedNode(getVertexValue().get()));
-				//tmpDestVertexId.set(GraphVertexOperation.getDestVertexId(tmpDestVertexId.getBytes(),
-				//		getVertexValue().get()), 0, numBytes); 
-				tmpMsg.setSourceVertexId(tmpVertextId.getBytes());
+			if(GraphVertexOperation.isHeadVertex(getVertexValue().getValue())){ 
+				tmpMsg.setSourceVertexId(tmpVertexId);
+				tmpMsg.setHead(tmpVertexId);
 				tmpMsg.setLengthOfChain(0);
 				tmpMsg.setChainVertexId(tmpChainVertexId.getBytes());
-				sendMsg(tmpDestVertexId,tmpMsg);
-				//test
-				GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
-						tmpDestVertexId.getBytes(),tmpMsg);
+				for(byte x = Kmer.GENE_CODE.A; x<= Kmer.GENE_CODE.T ; x++){
+					if((getVertexValue().getValue() & (1 << x)) != 0){
+						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, x);
+						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
+						sendMsg(destVertexId,tmpMsg);
+						
+						//log
+						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
+						if(logger.getHandlers() != null)
+							logger.removeHandler(handler);
+						handler.setFormatter(formatter);
+						logger.addHandler(handler);
+						logger.info("##### It is the head! #####");
+					}
 				}
+			}
 		}
+		
 		//path node sends message back to head node
 		else if(getSuperstep()%2 == 0){
+			
 			 if(msgIterator.hasNext()){
 				tmpMsg = msgIterator.next();
+					
 				if(!tmpMsg.isRear()){
-					if(GraphVertexOperation.isPathVertex(getVertexValue())){
-						tmpDestVertexId.set(tmpMsg.getSourceVertexId(), 0, numBytes);
-						tmpMsg.setNeighberInfo(getVertexValue().get()); //set neighber
+					if(getSuperstep() == 2)
+						tmpMsg.setHead(tmpVertexId);
+					if(GraphVertexOperation.isPathVertex(getVertexValue().getValue())){
+						tmpDestVertexId = tmpMsg.getSourceVertexId();
+						tmpMsg.setNeighberInfo(getVertexValue().getValue()); //set neighber
 						if(tmpMsg.getLengthOfChain() == 0){
 							tmpMsg.setLengthOfChain(GraphVertexOperation.k);
-							tmpMsg.setChainVertexId(tmpVertextId.getBytes());
+							tmpMsg.setChainVertexId(tmpVertexId);
 						}
 						else{
-							/*
-							tmpMsg.incrementLength();
-							tmpMsg.setChainVertexId(GraphVertexOperation.updateChainVertexId(
-									tmpChainVertexId,
-									tmpMsg.getLengthOfChain()-1,
-									tmpVertextId));
-							 */
-							 //change
+							String source = Kmer.recoverKmerFrom(GraphVertexOperation.k, tmpVertexId, 0, tmpVertexId.length);
 							tmpMsg.setChainVertexId(KmerUtil.mergeKmerWithNextCode(
 									tmpMsg.getLengthOfChain(),
 									tmpMsg.getChainVertexId(),
-									(byte)GraphVertexOperation.findSucceedNode(getVertexValue().get())));
+									Kmer.GENE_CODE.getCodeFromSymbol((byte)source.charAt(source.length() - 1))));
 							tmpMsg.incrementLength();
 							deleteVertex(getVertexId());
 						}
-						sendMsg(tmpDestVertexId,tmpMsg);
-						//test
-						GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
-								tmpDestVertexId.getBytes(),tmpMsg);
+						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
+						sendMsg(destVertexId,tmpMsg);
+						
+						//log
+						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
+						if(logger.getHandlers() != null)
+							logger.removeHandler(handler);
+						handler.setFormatter(formatter);
+						logger.addHandler(handler);
+						logger.info("##### It is the path! #####");
 					}
-					else if(GraphVertexOperation.isRear(getVertexValue())){
-						tmpDestVertexId.set(tmpMsg.getSourceVertexId(), 0, numBytes);
-						tmpMsg.setSourceVertexId(tmpVertextId.getBytes());
-						tmpMsg.setRear(true);
-						sendMsg(tmpDestVertexId,tmpMsg);
-						//test
-						try {
-							writer.write("It is Rear!\r\n");
-						} catch (IOException e) { e.printStackTrace(); }
-						GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
-								tmpDestVertexId.getBytes(),tmpMsg);
+					else if(GraphVertexOperation.isRearVertex(getVertexValue().getValue())){
+						if(getSuperstep() == 2)
+							voteToHalt();
+						else{
+							tmpDestVertexId = tmpMsg.getSourceVertexId();
+							tmpMsg.setSourceVertexId(tmpVertexId);
+							tmpMsg.setRear(true);
+							destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
+							sendMsg(destVertexId,tmpMsg);
+	
+							//log
+							formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
+							if(logger.getHandlers() != null)
+								logger.removeHandler(handler);
+							handler.setFormatter(formatter);
+							logger.addHandler(handler);
+							logger.info("##### It is the rear! #####!");
+						}
 					}
 				}
 				else{
-					tmpVertexValue.set(GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().get(),
+					tmpVertexValue.setState(State.START_VERTEX);
+					tmpVertexValue.setValue(GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getValue(),
 							tmpMsg.getSourceVertexId()));
+					tmpVertexValue.setLengthOfMergeChain(tmpMsg.getLengthOfChain());
+					tmpVertexValue.setMergeChain(tmpMsg.getChainVertexId());
+					setVertexValue(tmpVertexValue);
 					try {
+						String source = Kmer.recoverKmerFrom(tmpMsg.getLengthOfChain(), tmpMsg.getChainVertexId(), 0, tmpMsg.getChainVertexId().length);
 						GraphVertexOperation.flushChainToFile(tmpMsg.getChainVertexId(), 
-								tmpMsg.getLengthOfChain(),tmpVertextId.getBytes());
+								tmpMsg.getLengthOfChain(),tmpVertexId);
 					} catch (IOException e) { e.printStackTrace(); }
-					//test
-		        	GraphVertexOperation.testLastMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
-		        			tmpDestVertexId.getBytes(),tmpMsg);
 				}
 			}
 		}
 		//head node sends message to path node
 		else if(getSuperstep()%2 == 1){
-			if (msgIterator.hasNext()){
+			while (msgIterator.hasNext()){
 				tmpMsg = msgIterator.next();
 				if(!tmpMsg.isRear()){
 					byte[] lastKmer = KmerUtil.getLastKmerFromChain(GraphVertexOperation.k,
 							tmpMsg.getLengthOfChain(),
 							tmpMsg.getChainVertexId());
-					//byte[] lastKmer = GraphVertexOperation.getLastKmer(tmpMsg.getChainVertexId(), 
-					//		tmpMsg.getLengthOfChain());
-					tmpDestVertexId.set(lastKmer, 0, numBytes);
-					//change
-					Kmer.moveKmer(GraphVertexOperation.k, tmpDestVertexId.getBytes(), 
-							(byte)GraphVertexOperation.findSucceedNode(getVertexValue().get()));
-					//tmpDestVertexId.set(GraphVertexOperation.getDestVertexId(lastKmer,
-					//		tmpMsg.getNeighberInfo()), 0, numBytes);
-					tmpMsg.setSourceVertexId(tmpVertextId.getBytes());
-					sendMsg(tmpDestVertexId,tmpMsg);
-					//test
-					GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
-							tmpDestVertexId.getBytes(),tmpMsg);
+					tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, lastKmer, 
+							Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpMsg.getNeighberInfo() & 0x0F)));
+
+					tmpMsg.setSourceVertexId(tmpVertexId);
+					destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
+					sendMsg(destVertexId,tmpMsg);
+					
+					//log
+					formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
+					if(logger.getHandlers() != null)
+						logger.removeHandler(handler);
+					handler.setFormatter(formatter);
+					logger.addHandler(handler);
+					logger.info("");
 				}
 				else{	
-					tmpDestVertexId.set(tmpVertextId);
-					//change
-					Kmer.moveKmer(GraphVertexOperation.k, tmpDestVertexId.getBytes(), 
-							(byte)GraphVertexOperation.findSucceedNode(getVertexValue().get()));
-					//tmpDestVertexId.set(GraphVertexOperation.getDestVertexId(tmpVertextId.getBytes(),
-					//		getVertexValue().get()), 0, numBytes);
-					sendMsg(tmpDestVertexId,tmpMsg);
-					//test
-					GraphVertexOperation.testMessageCommunication(writer,getSuperstep(),tmpVertextId.getBytes(),
-							tmpDestVertexId.getBytes(),tmpMsg);
+					tmpDestVertexId = tmpMsg.getHead();
+					destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
+					sendMsg(destVertexId,tmpMsg);
+					
+					//log
+					formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
+					if(logger.getHandlers() != null)
+						logger.removeHandler(handler);
+					handler.setFormatter(formatter);
+					logger.addHandler(handler);
+					logger.info("##### Rear is sent back! #####");
 				}
 			}
 		}
-		try {
-			writer.close();
-		} catch (IOException e) { e.printStackTrace(); }
+		
 		voteToHalt();
 	}
 
@@ -202,7 +226,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWr
         job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class); 
         job.setOutputKeyClass(BytesWritable.class);
-        job.setOutputValueClass(ByteWritable.class);
+        job.setOutputValueClass(ValueStateWritable.class);
         Client.run(args, job);
 	}
 }

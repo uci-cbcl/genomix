@@ -1,6 +1,7 @@
-package edu.uci.ics.genomix.pregelix;
+package edu.uci.ics.genomix.pregelix.format;
 
 import java.io.IOException;
+import java.util.logging.FileHandler;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -8,15 +9,16 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
+import edu.uci.ics.genomix.pregelix.GraphVertexOperation;
+import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.bitwise.BitwiseOperation;
+import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.genomix.pregelix.bitwise.BitwiseOperation;
-import edu.uci.ics.genomix.pregelix.example.io.LogAlgorithmMessageWritable;
-import edu.uci.ics.genomix.pregelix.example.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
-import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class LogAlgorithmForMergeGraphInputFormat extends
 	BinaryVertexInputFormat<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{
@@ -33,7 +35,6 @@ public class LogAlgorithmForMergeGraphInputFormat extends
     @SuppressWarnings("rawtypes")
     class BinaryLoadGraphReader extends
             BinaryVertexReader<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> {
-        private final static String separator = " ";
         private Vertex vertex;
         private BytesWritable vertexId = new BytesWritable();
         private ValueStateWritable vertexValue = new ValueStateWritable();
@@ -73,11 +74,11 @@ public class LogAlgorithmForMergeGraphInputFormat extends
 	            vertexValue.setState(State.NON_VERTEX);
 	            vertex.setVertexValue(vertexValue);
 	            
-	        	String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId.getBytes(),GraphVertexOperation.k);
+	        	/*String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId.getBytes(),GraphVertexOperation.k);
 			    System.out.println("key: " + kmer);
 			    System.out.println("code: " + GraphVertexOperation.convertBinaryStringToGenecode(kmer));
 			    System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(kmerCountValue.getAdjBitMap()));
-			    System.out.println();
+			    System.out.println();*/
             }
             
             return vertex;

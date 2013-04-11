@@ -1,8 +1,7 @@
-package edu.uci.ics.genomix.pregelix;
+package edu.uci.ics.genomix.pregelix.format;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
@@ -11,15 +10,17 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexOutputFormat;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
-import edu.uci.ics.genomix.pregelix.example.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.type.State;
 
 public class LogAlgorithmForMergeGraphOutputFormat extends 
 	BinaryVertexOutputFormat<BytesWritable, ValueStateWritable, NullWritable> {
 
+		
         @Override
         public VertexWriter<BytesWritable, ValueStateWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
                 throws IOException, InterruptedException {
-            RecordWriter<BytesWritable, ByteWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
+            RecordWriter<BytesWritable, ValueStateWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
             return new BinaryLoadGraphVertexWriter(recordWriter);
         }
         
@@ -28,15 +29,16 @@ public class LogAlgorithmForMergeGraphOutputFormat extends
          */
         public static class BinaryLoadGraphVertexWriter extends
                 BinaryVertexWriter<BytesWritable, ValueStateWritable, NullWritable> {
-            public BinaryLoadGraphVertexWriter(RecordWriter<BytesWritable, ByteWritable> lineRecordWriter) {
+        	
+            public BinaryLoadGraphVertexWriter(RecordWriter<BytesWritable, ValueStateWritable> lineRecordWriter) {
                 super(lineRecordWriter);
             }
 
             @Override
             public void writeVertex(Vertex<BytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
-                getRecordWriter().write(vertex.getVertexId(),
-                		new ByteWritable(vertex.getVertexValue().getValue()));
+            	if(vertex.getVertexValue().getState() != State.FINAL_DELETE)
+                    getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
             }
         }
 }

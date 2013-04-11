@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.example.io;
+package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
 

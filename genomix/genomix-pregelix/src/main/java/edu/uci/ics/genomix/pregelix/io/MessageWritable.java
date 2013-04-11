@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.example.io;
+package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -22,17 +22,19 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 	private File file;
 	private boolean isRear;
 	private int lengthOfChain;
+	private byte[] head;
 	
 	public MessageWritable(){		
 	}
 	
-	public void set(byte[] sourceVertexId, byte neighberInfo, byte[] chainVertexId, File file){
+	public void set(byte[] sourceVertexId, byte neighberInfo, byte[] chainVertexId, File file, byte[] head){
 		this.sourceVertexId = sourceVertexId;
 		this.neighberInfo = neighberInfo;
 		this.chainVertexId = chainVertexId;
 		this.file = file;
 		this.isRear = false;
 		this.lengthOfChain = 0;
+		this.head = head;
 	}
 
 	public byte[] getSourceVertexId() {
@@ -82,6 +84,15 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 	public void setLengthOfChain(int lengthOfChain) {
 		this.lengthOfChain = lengthOfChain;
 	}
+	
+
+	public byte[] getHead() {
+		return head;
+	}
+
+	public void setHead(byte[] head) {
+		this.head = head;
+	}
 
 	public void incrementLength(){
 		this.lengthOfChain++;
@@ -94,6 +105,7 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 		if(lengthOfChain != 0)
 			out.write(chainVertexId);
 		out.write(sourceVertexId);
+		out.write(head);
 		out.write(neighberInfo);
 		out.writeBoolean(isRear);
 	}
@@ -110,8 +122,11 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 			chainVertexId = new byte[0];
 		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
 		in.readFully(sourceVertexId);
+		head = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		in.readFully(head);
 		neighberInfo = in.readByte();
 		isRear = in.readBoolean();
+
 	}
 
     @Override

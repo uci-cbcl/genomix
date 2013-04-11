@@ -1,9 +1,6 @@
 package edu.uci.ics.genomix.pregelix.JobRun;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 
 import junit.framework.TestCase;
 
