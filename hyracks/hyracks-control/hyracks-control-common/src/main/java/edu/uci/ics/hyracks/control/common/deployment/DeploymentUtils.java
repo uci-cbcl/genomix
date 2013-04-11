@@ -1,11 +1,19 @@
 package edu.uci.ics.hyracks.control.common.deployment;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.application.IApplicationContext;
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
@@ -17,24 +25,35 @@ import edu.uci.ics.hyracks.control.common.context.ServerContext;
 
 public class DeploymentUtils {
 
-    private static final String DEPLOYMENT = "deployment";
+    private static final String DEPLOYMENT = "applications";
 
-    public static void undeploy(DeploymentId deploymentId, IJobSerializerDeserializerContainer container)
-            throws HyracksException {
+    public static void undeploy(DeploymentId deploymentId, IJobSerializerDeserializerContainer container,
+            ServerContext ctx) throws HyracksException {
         container.removeJobSerializerDeserializer(deploymentId);
+        String rootDir = ctx.getBaseDir().toString();
+        String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + DEPLOYMENT + File.separator + deploymentId
+                : rootDir + File.separator + DEPLOYMENT + File.separator + deploymentId;
+        try {
+            File dFile = new File(deploymentDir);
+            if (dFile.exists()) {
+                FileUtils.forceDelete(dFile);
+            }
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
     }
 
     public static void deploy(DeploymentId deploymentId, List<URL> urls, IJobSerializerDeserializerContainer container,
-            ServerContext ctx) throws HyracksException {
+            ServerContext ctx, boolean isNC) throws HyracksException {
         IJobSerializerDeserializer jobSerDe = container.getJobSerializerDeerializer(deploymentId);
         if (jobSerDe == null) {
             jobSerDe = new ClassLoaderJobSerializerDeserializer();
             container.addJobSerializerDeserializer(deploymentId, jobSerDe);
         }
         String rootDir = ctx.getBaseDir().toString();
-        String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + DEPLOYMENT : rootDir + File.separator
-                + DEPLOYMENT;
-        jobSerDe.addClassPathURLs(downloadURLs(urls, deploymentDir));
+        String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + DEPLOYMENT + File.separator + deploymentId
+                : rootDir + File.separator + DEPLOYMENT + File.separator + deploymentId;
+        jobSerDe.addClassPathURLs(downloadURLs(urls, deploymentDir, isNC));
     }
 
     public static Object deserialize(byte[] bytes, DeploymentId deploymentId, IApplicationContext appCtx)
@@ -50,7 +69,21 @@ public class DeploymentUtils {
         }
     }
 
-    private static List<URL> downloadURLs(List<URL> urls, String deploymentDir) throws HyracksException {
+    public static Class<?> loadClass(String className, DeploymentId deploymentId, IApplicationContext appCtx)
+            throws HyracksException {
+        try {
+            IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
+            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
+                    .getJobSerializerDeerializer(deploymentId);
+            Class<?> cl = jobSerDe == null ? JavaSerializationUtils.loadClass(className) : jobSerDe
+                    .loadClass(className);
+            return cl;
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
+    }
+
+    private static List<URL> downloadURLs(List<URL> urls, String deploymentDir, boolean isNC) throws HyracksException {
         try {
             List<URL> downloadedFileURLs = new ArrayList<URL>();
             File dir = new File(deploymentDir);
@@ -60,10 +93,23 @@ public class DeploymentUtils {
             for (URL url : urls) {
                 String urlString = url.toString();
                 int slashIndex = urlString.lastIndexOf('/');
-                String fileName = urlString.substring(slashIndex + 1);
+                String fileName = urlString.substring(slashIndex + 1).split("&")[1];
                 String filePath = deploymentDir + File.separator + fileName;
                 File targetFile = new File(filePath);
-                FileUtils.copyURLToFile(url, targetFile);
+                if (isNC) {
+                    HttpClient hc = new DefaultHttpClient();
+                    System.out.println(url.toString());
+                    HttpGet get = new HttpGet(url.toString());
+                    HttpResponse response = hc.execute(get);
+                    InputStream is = response.getEntity().getContent();
+                    OutputStream os = new FileOutputStream(targetFile);
+                    try {
+                        IOUtils.copyLarge(is, os);
+                    } finally {
+                        os.close();
+                        is.close();
+                    }
+                }
                 downloadedFileURLs.add(targetFile.toURI().toURL());
             }
             return downloadedFileURLs;

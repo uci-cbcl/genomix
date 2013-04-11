@@ -26,7 +26,7 @@ public class DeployBinaryWork extends AbstractWork {
     public void run() {
         try {
             DeploymentUtils.deploy(deploymentId, binaryURLs, ncs.getApplicationContext()
-                    .getJobSerializerDeserializerContainer(), ncs.getServerContext());
+                    .getJobSerializerDeserializerContainer(), ncs.getServerContext(), true);
             IClusterController ccs = ncs.getClusterController();
             ccs.notifyDeployBinary(deploymentId, ncs.getId(), DeploymentStatus.SUCCEED);
         } catch (Exception e) {

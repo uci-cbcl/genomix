@@ -27,6 +27,8 @@ public interface IJobSerializerDeserializer {
 
     public byte[] serialize(Serializable job) throws HyracksException;
 
+    public Class<?> loadClass(String className) throws HyracksException;
+
     public void addClassPathURLs(List<URL> binaryURLs) throws HyracksException;
 
 }

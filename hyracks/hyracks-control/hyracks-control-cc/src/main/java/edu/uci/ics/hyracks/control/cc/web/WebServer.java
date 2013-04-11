@@ -70,6 +70,10 @@ public class WebServer {
 
         addHandler(createAdminConsoleHandler());
         addHandler(createStaticResourcesHandler());
+
+        handler = new ContextHandler("/applications");
+        handler.setHandler(new ApplicationInstallationHandler(ccs));
+        addHandler(handler);
     }
 
     private Handler createAdminConsoleHandler() {

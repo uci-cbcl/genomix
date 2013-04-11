@@ -92,4 +92,13 @@ public class TestJobletContext implements IHyracksJobletContext {
     public Object getGlobalJobData() {
         return null;
     }
+
+    @Override
+    public Class<?> loadClass(String className) {
+        try {
+            return Class.forName(className);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

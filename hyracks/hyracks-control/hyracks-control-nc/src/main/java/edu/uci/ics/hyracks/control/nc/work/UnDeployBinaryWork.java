@@ -20,7 +20,8 @@ public class UnDeployBinaryWork extends AbstractWork {
     @Override
     public void run() {
         try {
-            DeploymentUtils.undeploy(deploymentId, ncs.getApplicationContext().getJobSerializerDeserializerContainer());
+            DeploymentUtils.undeploy(deploymentId, ncs.getApplicationContext().getJobSerializerDeserializerContainer(),
+                    ncs.getServerContext());
             IClusterController ccs = ncs.getClusterController();
             ccs.notifyDeployBinary(deploymentId, ncs.getId(), DeploymentStatus.SUCCEED);
         } catch (Exception e) {

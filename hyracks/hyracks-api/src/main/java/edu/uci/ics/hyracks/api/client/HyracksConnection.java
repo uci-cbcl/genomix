@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -30,6 +31,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import edu.uci.ics.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -120,12 +122,17 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public void deployBinary(List<String> jars) throws Exception {
+    public DeploymentId deployBinary(List<String> jars) throws Exception {
+        DeploymentId deploymentId = new DeploymentId(UUID.randomUUID().toString());
         List<URL> binaryURLs = new ArrayList<URL>();
         if (jars != null && jars.size() > 0) {
             HttpClient hc = new DefaultHttpClient();
             for (String jar : jars) {
-                String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/" + jar;
+                int slashIndex = jar.lastIndexOf('/');
+                String fileName = jar.substring(slashIndex + 1);
+                String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/"
+                        + deploymentId.toString() + "&" + fileName;
+                System.out.print("put URL: " + url);
                 HttpPut put = new HttpPut(url);
                 put.setEntity(new FileEntity(new File(jar), "application/octet-stream"));
                 HttpResponse response = hc.execute(put);
@@ -135,6 +142,31 @@ public final class HyracksConnection implements IHyracksClientConnection {
                 binaryURLs.add(new URL(url));
             }
         }
-        hci.deployBinary(binaryURLs);
+        hci.deployBinary(binaryURLs, deploymentId);
+        return deploymentId;
+    }
+
+    @Override
+    public void unDeployBinary(DeploymentId deploymentId) throws Exception {
+        hci.unDeployBinary(deploymentId);
+    }
+
+    @Override
+    public JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec) throws Exception {
+        return startJob(deploymentId, jobSpec, EnumSet.noneOf(JobFlag.class));
+    }
+
+    @Override
+    public JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags)
+            throws Exception {
+        JobSpecificationActivityClusterGraphGeneratorFactory jsacggf = new JobSpecificationActivityClusterGraphGeneratorFactory(
+                jobSpec);
+        return startJob(deploymentId, jsacggf, jobFlags);
+    }
+
+    @Override
+    public JobId startJob(DeploymentId deploymentId, IActivityClusterGraphGeneratorFactory acggf,
+            EnumSet<JobFlag> jobFlags) throws Exception {
+        return hci.startJob(deploymentId, JavaSerializationUtils.serialize(acggf), jobFlags);
     }
 }

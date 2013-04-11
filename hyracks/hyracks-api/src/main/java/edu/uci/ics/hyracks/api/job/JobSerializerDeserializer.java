@@ -47,4 +47,13 @@ public class JobSerializerDeserializer implements IJobSerializerDeserializer {
         throw new UnsupportedOperationException("Not supported by " + this.getClass().getName());
     }
 
+    @Override
+    public Class<?> loadClass(String className) throws HyracksException {
+        try {
+            return this.getClass().getClassLoader().loadClass(className);
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
+    }
+
 }

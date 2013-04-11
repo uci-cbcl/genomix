@@ -68,6 +68,10 @@ public class JavaSerializationUtils {
         }
     }
 
+    public static Class<?> loadClass(String className) throws IOException, ClassNotFoundException {
+        return Class.forName(className);
+    }
+
     private static class ClassLoaderObjectInputStream extends ObjectInputStream {
         private ClassLoader classLoader;
 

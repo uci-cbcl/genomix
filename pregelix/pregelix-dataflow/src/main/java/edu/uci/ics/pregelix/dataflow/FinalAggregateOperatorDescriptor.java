@@ -60,7 +60,7 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
             @SuppressWarnings("rawtypes")
             private GlobalAggregator aggregator = BspUtils.createGlobalAggregator(conf);
             private FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
-                    inputRdFactory.createRecordDescriptor());
+                    inputRdFactory.createRecordDescriptor(ctx));
             private ByteBufferInputStream inputStream = new ByteBufferInputStream();
             private DataInput input = new DataInputStream(inputStream);
             private Writable partialAggregateValue = BspUtils.createFinalAggregateValue(conf);

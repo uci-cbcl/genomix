@@ -31,9 +31,6 @@ public class JobSerializerDeserializerContainer implements IJobSerializerDeseria
             return defaultJobSerDe;
         }
         IJobSerializerDeserializer jobSerDe = jobSerializerDeserializerMap.get(deploymentId);
-        if (jobSerDe == null) {
-            return defaultJobSerDe;
-        }
         return jobSerDe;
     }
 

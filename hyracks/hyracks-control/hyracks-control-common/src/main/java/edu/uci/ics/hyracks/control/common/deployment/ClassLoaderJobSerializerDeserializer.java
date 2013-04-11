@@ -10,7 +10,6 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializer;
-import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.api.util.JavaSerializationUtils;
 
 public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeserializer {
@@ -18,12 +17,12 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
     private URLClassLoader classLoader;
 
     @Override
-    public JobSpecification deserialize(byte[] jsBytes) throws HyracksException {
+    public Object deserialize(byte[] jsBytes) throws HyracksException {
         try {
             if (classLoader == null) {
-                return (JobSpecification) JavaSerializationUtils.deserialize(jsBytes);
+                return JavaSerializationUtils.deserialize(jsBytes);
             }
-            return (JobSpecification) JavaSerializationUtils.deserialize(jsBytes, classLoader);
+            return JavaSerializationUtils.deserialize(jsBytes, classLoader);
         } catch (Exception e) {
             throw new HyracksException(e);
         }
@@ -53,6 +52,9 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
             if (classLoader == null) {
                 /** crate a new classloader */
                 URL[] urls = binaryURLs.toArray(new URL[binaryURLs.size()]);
+                for (URL url : urls) {
+                    System.out.println("Class loader url " + url);
+                }
                 classLoader = new URLClassLoader(urls, this.getClass().getClassLoader());
             } else {
                 /** add URLs to the existing classloader */
@@ -61,6 +63,15 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
                 method.setAccessible(true);
                 method.invoke(classLoader, urls);
             }
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
+    }
+
+    @Override
+    public Class<?> loadClass(String className) throws HyracksException {
+        try {
+            return classLoader.loadClass(className);
         } catch (Exception e) {
             throw new HyracksException(e);
         }

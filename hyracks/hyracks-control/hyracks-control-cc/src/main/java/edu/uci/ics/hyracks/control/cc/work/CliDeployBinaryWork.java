@@ -27,10 +27,10 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.common.work.IPCResponder;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class CliDeployBinaryWork extends AbstractWork {
+public class CliDeployBinaryWork extends SynchronizableWork {
 
     private ClusterControllerService ccs;
     private List<URL> binaryURLs;
@@ -42,10 +42,11 @@ public class CliDeployBinaryWork extends AbstractWork {
         this.ccs = ncs;
         this.binaryURLs = binaryURLs;
         this.deploymentId = deploymentId;
+        this.callback = callback;
     }
 
     @Override
-    public void run() {
+    public void doRun() {
         try {
             if (deploymentId == null) {
                 deploymentId = new DeploymentId(UUID.randomUUID().toString());
@@ -54,7 +55,7 @@ public class CliDeployBinaryWork extends AbstractWork {
              * Deploy for the cluster controller
              */
             DeploymentUtils.deploy(deploymentId, binaryURLs, ccs.getApplicationContext()
-                    .getJobSerializerDeserializerContainer(), ccs.getServerContext());
+                    .getJobSerializerDeserializerContainer(), ccs.getServerContext(), false);
 
             /**
              * Deploy for the node controllers
@@ -65,7 +66,7 @@ public class CliDeployBinaryWork extends AbstractWork {
             for (String nc : nodeControllerStateMap.keySet()) {
                 nodeIds.add(nc);
             }
-            DeploymentRun dRun = new DeploymentRun(nodeIds);
+            final DeploymentRun dRun = new DeploymentRun(nodeIds);
             ccs.addDeploymentRun(deploymentId, dRun);
 
             /***
@@ -75,12 +76,21 @@ public class CliDeployBinaryWork extends AbstractWork {
                 ncs.getNodeController().deployBinary(deploymentId, binaryURLs);
             }
 
-            /**
-             * wait for completion
-             */
-            dRun.waitForCompletion();
-            ccs.removeDeploymentRun(deploymentId);
-            callback.setValue(deploymentId);
+            ccs.getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        /**
+                         * wait for completion
+                         */
+                        dRun.waitForCompletion();
+                        ccs.removeDeploymentRun(deploymentId);
+                        callback.setValue(deploymentId);
+                    } catch (Exception e) {
+                        callback.setException(e);
+                    }
+                }
+            });
         } catch (Exception e) {
             callback.setException(e);
         }

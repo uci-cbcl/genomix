@@ -46,7 +46,8 @@ public class CliUnDeployBinaryWork extends AbstractWork {
             /**
              * Deploy for the cluster controller
              */
-            DeploymentUtils.undeploy(deploymentId, ccs.getApplicationContext().getJobSerializerDeserializerContainer());
+            DeploymentUtils.undeploy(deploymentId, ccs.getApplicationContext().getJobSerializerDeserializerContainer(),
+                    ccs.getServerContext());
 
             /**
              * Deploy for the node controllers
@@ -66,7 +67,7 @@ public class CliUnDeployBinaryWork extends AbstractWork {
             for (NodeControllerState ncs : nodeControllerStateMap.values()) {
                 ncs.getNodeController().undeployBinary(deploymentId);
             }
-            
+
             /**
              * wait for completion
              */
