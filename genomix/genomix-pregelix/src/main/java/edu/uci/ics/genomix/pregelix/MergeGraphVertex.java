@@ -1,9 +1,6 @@
 package edu.uci.ics.genomix.pregelix;
 
-import java.io.IOException;
 import java.util.Iterator;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -17,7 +14,6 @@ import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphInputFormat;
 import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.log.NaiveAlgorithmLogFormatter;
 import edu.uci.ics.genomix.pregelix.type.State;
 
 /*
@@ -50,10 +46,6 @@ import edu.uci.ics.genomix.pregelix.type.State;
  */
 public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, NullWritable, MessageWritable>{
 	
-	public static Logger logger = Logger.getLogger(MergeGraphVertex.class.getName()); 
-	NaiveAlgorithmLogFormatter formatter = new NaiveAlgorithmLogFormatter();
-	public static FileHandler handler;
-	
     private byte[] tmpVertexId;
     private byte[] tmpDestVertexId;
 	private BytesWritable destVertexId = new BytesWritable();
@@ -65,13 +57,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 	 * @throws Exception 
 	 * @throws  
 	 */
-	public MergeGraphVertex(){
-		if(handler == null){
-			try {
-				handler = new FileHandler("log/" + MergeGraphVertex.class.getName() + ".log");
-			} catch (Exception e) { e.printStackTrace();} 
-		}
-	}
 	
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
@@ -88,14 +73,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, x);
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						sendMsg(destVertexId,tmpMsg);
-						
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### It is the head! #####");
 					}
 				}
 			}
@@ -128,14 +105,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 						}
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						sendMsg(destVertexId,tmpMsg);
-						
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### It is the path! #####");
 					}
 					else if(GraphVertexOperation.isRearVertex(getVertexValue().getValue())){
 						if(getSuperstep() == 2)
@@ -146,14 +115,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 							tmpMsg.setRear(true);
 							destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 							sendMsg(destVertexId,tmpMsg);
-	
-							//log
-							formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
-							if(logger.getHandlers() != null)
-								logger.removeHandler(handler);
-							handler.setFormatter(formatter);
-							logger.addHandler(handler);
-							logger.info("##### It is the rear! #####!");
 						}
 					}
 				}
@@ -164,11 +125,11 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 					tmpVertexValue.setLengthOfMergeChain(tmpMsg.getLengthOfChain());
 					tmpVertexValue.setMergeChain(tmpMsg.getChainVertexId());
 					setVertexValue(tmpVertexValue);
-					try {
+					/*try {
 						String source = Kmer.recoverKmerFrom(tmpMsg.getLengthOfChain(), tmpMsg.getChainVertexId(), 0, tmpMsg.getChainVertexId().length);
 						GraphVertexOperation.flushChainToFile(tmpMsg.getChainVertexId(), 
 								tmpMsg.getLengthOfChain(),tmpVertexId);
-					} catch (IOException e) { e.printStackTrace(); }
+					} catch (IOException e) { e.printStackTrace(); }*/
 				}
 			}
 		}
@@ -186,27 +147,11 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 					tmpMsg.setSourceVertexId(tmpVertexId);
 					destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 					sendMsg(destVertexId,tmpMsg);
-					
-					//log
-					formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
-					if(logger.getHandlers() != null)
-						logger.removeHandler(handler);
-					handler.setFormatter(formatter);
-					logger.addHandler(handler);
-					logger.info("");
 				}
 				else{	
 					tmpDestVertexId = tmpMsg.getHead();
 					destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 					sendMsg(destVertexId,tmpMsg);
-					
-					//log
-					formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, GraphVertexOperation.k);
-					if(logger.getHandlers() != null)
-						logger.removeHandler(handler);
-					handler.setFormatter(formatter);
-					logger.addHandler(handler);
-					logger.info("##### Rear is sent back! #####");
 				}
 			}
 		}

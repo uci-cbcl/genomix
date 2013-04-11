@@ -1,8 +1,6 @@
 package edu.uci.ics.genomix.pregelix;
 
 import java.util.Iterator;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -14,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForMergeGraphInputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForMergeGraphOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.log.LogAlgorithmLogFormatter;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.Kmer;
@@ -49,10 +46,7 @@ import edu.uci.ics.genomix.type.KmerUtil;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{
-	public static Logger logger = Logger.getLogger(LogAlgorithmForMergeGraphVertex.class.getName()); 
-	LogAlgorithmLogFormatter formatter = new LogAlgorithmLogFormatter();
-	public static FileHandler handler;
-	
+
 	private byte[] tmpVertexId;
 	private byte[] tmpDestVertexId;
 	private BytesWritable destVertexId = new BytesWritable();
@@ -64,14 +58,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 	/**
 	 * Log Algorithm for path merge graph
 	 */
-	public LogAlgorithmForMergeGraphVertex(){
-		if(handler == null){
-			try {
-				handler = new FileHandler("log/" + LogAlgorithmForMergeGraphVertex.class.getName() + ".log");
-			} catch (Exception e) { e.printStackTrace();} 
-		}
-	}
-	
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
 
@@ -86,13 +72,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, x);
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						sendMsg(destVertexId,tmpMsg);
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### It is the head! #####");
 					}
 				}
 				voteToHalt();
@@ -105,14 +84,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						tmpDestVertexId = KmerUtil.shiftKmerWithPreCode(GraphVertexOperation.k, tmpVertexId, x);
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						sendMsg(destVertexId,tmpMsg);
-
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### It is the rear! #####");
 					}
 				}
 				voteToHalt();
@@ -120,14 +91,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 			if(GraphVertexOperation.isPathVertex(tmpVal.getValue())){
 				tmpVal.setState(State.MID_VERTEX);
 				setVertexValue(tmpVal);
-				
-				//log
-				formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-				if(logger.getHandlers() != null)
-					logger.removeHandler(handler);
-				handler.setFormatter(formatter);
-				logger.addHandler(handler);
-				logger.info("##### It is the path! #####");
 			}
 		}
 		else if(getSuperstep() == 2){
@@ -142,25 +105,11 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					if(tmpMsg.getMessage() == Message.START && tmpVal.getState() == State.MID_VERTEX){
 						tmpVal.setState(State.START_VERTEX);
 						setVertexValue(tmpVal);
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### Set state! #####");
 					}
 					else if(tmpMsg.getMessage() == Message.END && tmpVal.getState() == State.MID_VERTEX){
 						tmpVal.setState(State.END_VERTEX);
 						setVertexValue(tmpVal);
 						voteToHalt();
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### Set state! #####");
 					}
 					else
 						voteToHalt();
@@ -191,14 +140,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					voteToHalt();
 				}
 				
-				//log
-				formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-				if(logger.getHandlers() != null)
-					logger.removeHandler(handler);
-				handler.setFormatter(formatter);
-				logger.addHandler(handler);
-				logger.info("##### head node sends message to path node! #####");
-				
 			}
 			else{
 				if(msgIterator.hasNext()){
@@ -213,27 +154,13 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						tmpMsg.setMessage(Message.START);
 						tmpMsg.setSourceVertexId(getVertexId().getBytes());
 						sendMsg(destVertexId, tmpMsg);
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### head node sends message to path node! #####");
-						voteToHalt();
+
 					}
 					else if(tmpVal.getState() != State.END_VERTEX){
 						tmpMsg.setMessage(Message.NON);
 						tmpMsg.setSourceVertexId(getVertexId().getBytes());
 						sendMsg(destVertexId,tmpMsg);
 						
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### head node sends message to path node! #####");
 					}
 					
 				}
@@ -260,8 +187,8 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				//kill Message because it has been merged by the head
 				if(tmpVal.getState() == State.END_VERTEX){
 					tmpMsg.setMessage(Message.END);
-					//tmpVal.setState(State.FINAL_DELETE);
-					//setVertexValue(tmpVal);
+					tmpVal.setState(State.FINAL_DELETE);
+					setVertexValue(tmpVal);
 					//deleteVertex(getVertexId());
 				}
 				else
@@ -274,45 +201,18 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				destVertexId.set(tmpMsg.getSourceVertexId(), 0, tmpMsg.getSourceVertexId().length);
 				sendMsg(destVertexId,tmpMsg);
 				
-				//log
-				formatter.set(getSuperstep(), tmpVertexId, tmpMsg.getSourceVertexId(), tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-				if(logger.getHandlers() != null)
-					logger.removeHandler(handler);
-				handler.setFormatter(formatter);
-				logger.addHandler(handler);
-				logger.info("##### path node sends message back to head node! #####");
-				
 			}
 			else{
 				//String source2 = Kmer.recoverKmerFrom(5, tmpVertexId, 0, tmpVertexId.length);
 				if(getVertexValue().getState() != State.START_VERTEX
 						&& getVertexValue().getState() != State.END_VERTEX){
-					
-					//log
-					formatter.set(getSuperstep(), tmpVertexId, null, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-					formatter.setOperation(1);
-					if(logger.getHandlers() != null)
-						logger.removeHandler(handler);
-					handler.setFormatter(formatter);
-					logger.addHandler(handler);
-					logger.info("##### Delete! Not receive message! #####");
 					deleteVertex(getVertexId()); //killSelf because it doesn't receive any message
 				}
 			}
 		}
 		else if(getSuperstep()%3 == 2){
-			if(tmpVal.getState() == State.TODELETE){
-				//log
-				formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-				if(logger.getHandlers() != null)
-					logger.removeHandler(handler);
-				handler.setFormatter(formatter);
-				logger.addHandler(handler);
-				logger.info("##### Delete! Already merge by head! #####");
-				formatter.setOperation(0);
-				
+			if(tmpVal.getState() == State.TODELETE)
 				deleteVertex(getVertexId()); //killSelf
-			}
 			else{
 				if(msgIterator.hasNext()){
 					tmpMsg = msgIterator.next();
@@ -341,14 +241,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 							- GraphVertexOperation.k + 1;
 					tmpVal.setLengthOfMergeChain(lengthOfMergeChainVertex);
 					tmpVal.setMergeChain(mergeChainVertexId);
-					
-					//log
-					formatter.setMergeChain(getSuperstep(), tmpVertexId, lengthOfMergeChainVertex, mergeChainVertexId, GraphVertexOperation.k);
-					if(logger.getHandlers() != null)
-						logger.removeHandler(handler);
-					handler.setFormatter(formatter);
-					logger.addHandler(handler);
-					logger.info("##### Merge Chain INFO #####");
 
 					tmpVertexValue = GraphVertexOperation.updateRightNeighber(getVertexValue().getValue(),tmpMsg.getNeighberInfo());
 					tmpVal.setValue(tmpVertexValue);
@@ -357,28 +249,10 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						tmpMsg = new LogAlgorithmMessageWritable(); //reset
 						tmpMsg.setNeighberInfo(tmpVertexValue);
 						sendMsg(getVertexId(),tmpMsg);
-						
-						//log
-						formatter.set(getSuperstep(), tmpVertexId, tmpDestVertexId, tmpMsg, tmpVal.getState(), GraphVertexOperation.k);
-						if(logger.getHandlers() != null)
-							logger.removeHandler(handler);
-						handler.setFormatter(formatter);
-						logger.addHandler(handler);
-						logger.info("##### head node sends message to path node! #####");
 					}
 				}
-				if(tmpVal.getState() == State.END_VERTEX){
+				if(tmpVal.getState() == State.END_VERTEX)
 					voteToHalt();
-					
-					//log
-					formatter.setVotoToHalt(getSuperstep(), tmpVertexId, GraphVertexOperation.k);
-					if(logger.getHandlers() != null)
-						logger.removeHandler(handler);
-					handler.setFormatter(formatter);
-					logger.addHandler(handler);
-					logger.info("##### Because it's rear! #####");
-					formatter.setOperation(0);
-				}
 				if(tmpVal.getState() == State.FINAL_VERTEX){
 					voteToHalt();
 					/*try {
