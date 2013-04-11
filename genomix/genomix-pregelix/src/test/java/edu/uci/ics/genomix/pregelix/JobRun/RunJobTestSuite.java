@@ -187,4 +187,12 @@ public class RunJobTestSuite extends TestSuite{
 		return false;
 	}
 
+	public JobConf getConf() {
+		return conf;
+	}
+
+	public void setConf(JobConf conf) {
+		this.conf = conf;
+	}
+
 }

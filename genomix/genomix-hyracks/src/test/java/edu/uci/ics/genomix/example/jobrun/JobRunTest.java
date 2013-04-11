@@ -37,7 +37,7 @@ public class JobRunTest {
 	private static final String ACTUAL_RESULT_DIR = "actual";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-	private static final String DATA_PATH = "src/test/resources/data/webmap/text.txt";
+	private static final String DATA_PATH = "src/test/resources/data/mergeTest/ThreeKmer";
 	private static final String HDFS_INPUT_PATH = "/webmap";
 	private static final String HDFS_OUTPUT_PATH = "/webmap_result";
 
@@ -195,11 +195,10 @@ public class JobRunTest {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
 			for (int i = 0; i < numPartitionPerMachine * numberOfNC; i++) {
 				String partname = "/part-" + i;
-//				FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH
-//						+ partname), FileSystem.getLocal(new Configuration()),
-//						new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + partname), false, conf);
-				
-				
+				FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH						
+						+ partname), FileSystem.getLocal(new Configuration()),						
+						new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + partname), false, conf);
+					
 				Path path = new Path(HDFS_OUTPUT_PATH
 						+ partname);
 				FileSystem dfs = FileSystem.get(conf);

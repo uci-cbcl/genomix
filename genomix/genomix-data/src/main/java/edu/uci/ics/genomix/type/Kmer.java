@@ -197,7 +197,6 @@ public class Kmer {
 			byte in = (byte) (kmer[i - 1] & 0x03);
 			kmer[i] = (byte) (((kmer[i] >>> 2) & 0x3f) | (in << 6));
 		}
-
 		int pos = ((k - 1) % 4) << 1;
 		byte code = (byte) (GENE_CODE.getCodeFromSymbol(c) << pos);
 		kmer[0] = (byte) (((kmer[0] >>> 2) & 0x3f) | code);
@@ -295,4 +294,5 @@ public class Kmer {
 				.getCodeFromSymbol(c));
 		return (byte) (1 << output);
 	}
+
 }

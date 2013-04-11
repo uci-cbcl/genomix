@@ -24,7 +24,7 @@ public class KmerTest {
 	@Test
 	public void TestMoveKmer(){
 		byte[] kmer = Kmer.compressKmer(k, array, 0);
-		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
+		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length); 
 		Assert.assertEquals(result, "AATAGAA");
 		
 		for (int i = k; i < array.length-1; i++) {
@@ -36,8 +36,8 @@ public class KmerTest {
 		Assert.assertEquals(out, Kmer.GENE_CODE.getAdjBit((byte) 'A'));
 		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
 		Assert.assertEquals(result, "ATAGAAG");
-		
 	}
+
 	
 	@Test
 	public void TestReverseKmer(){
