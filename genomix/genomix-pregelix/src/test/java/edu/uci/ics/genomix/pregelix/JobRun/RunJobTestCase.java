@@ -158,7 +158,7 @@ public class RunJobTestCase extends TestCase{
     }
 
     private void compareResults() throws Exception {
-		FileSystem.getLocal(new Configuration()).mkdirs(new Path("actual"));
+		/*FileSystem.getLocal(new Configuration()).mkdirs(new Path("actual"));
 		//File filePathTo = new File(CONVERT_RESULT);
 		//BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
 		for (int i = 0; i < 1 * 2; i++) {
@@ -167,7 +167,7 @@ public class RunJobTestCase extends TestCase{
 					+ partname), FileSystem.getLocal(new Configuration()),						
 					new Path("actual/test" + partname), false, job.getConfiguration());
 		}
-		
+		*/
         TestUtils.compareWithResult(new File(resultFileName), new File(expectedFileName));
     }
 
