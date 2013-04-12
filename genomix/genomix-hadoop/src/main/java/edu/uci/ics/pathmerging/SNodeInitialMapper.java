@@ -105,10 +105,8 @@ public class SNodeInitialMapper extends MapReduceBase implements
         boolean inDegree = measureDegree(precursor);
         boolean outDegree = measureDegree(succeed);
         byte initial = 0;
-        byte[] kmerValue = new byte[key.getLength()];
-        for (int i = 0; i < kmerValue.length; i++) {
-            kmerValue[i] = key.getBytes()[i];
-        }
+        byte[] kmerValue = key.getBytes();
+        int kmerLength = key.getLength();
         if (inDegree == true && outDegree == false) {
             flag = (byte) 2;
             switch (succeed) {
@@ -125,7 +123,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
                     initial = (byte) 0x03;
                     break;
             }
-            byte[] newKmer = KmerUtil.shiftKmerWithNextCode(KMER_SIZE, kmerValue, initial);
+            byte[] newKmer = KmerUtil.shiftKmerWithNextCode(KMER_SIZE, kmerValue,0, kmerLength, initial);
             outputKmer.set(newKmer, 0, kmerValue.length);
             adjBitMap = (byte) (adjBitMap & 0xF0);
             outputAdjList.set(null, 0, 0, adjBitMap, flag, KMER_SIZE);

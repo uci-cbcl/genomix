@@ -50,20 +50,18 @@ public class MergePathReducer extends MapReduceBase implements
 
         if (values.hasNext() == true) {
 
-            byte[] keyBytes = new byte[key.getLength()];
-            for (int i = 0; i < keyBytes.length; i++) {
-                keyBytes[i] = key.getBytes()[i];
-            }
+            byte[] keyBytes = key.getBytes();
+            int keyLength = key.getLength();
             if (outputAdjList.getFlag() == 1) {
                 byte adjBitMap = outputAdjList.getAdjBitMap();
                 byte bitFlag = outputAdjList.getFlag();
                 int kmerSize = outputAdjList.getKmerSize();
                 int mergeByteNum = Kmer.getByteNumFromK(KMER_SIZE + kmerSize);
-                byte[] valueBytes = new byte[outputAdjList.getLength()];
-                for (int i = 0; i < valueBytes.length; i++) {
-                    valueBytes[i] = outputAdjList.getBytes()[i];
-                }
-                byte[] mergeKmer = KmerUtil.mergeTwoKmer(outputAdjList.getKmerSize(), valueBytes, KMER_SIZE, keyBytes);
+                byte[] valueBytes = outputAdjList.getBytes();
+                int valueLength = outputAdjList.getLength();
+                
+                byte[] mergeKmer = KmerUtil.mergeTwoKmer(outputAdjList.getKmerSize(), valueBytes,0, valueLength, 
+                		KMER_SIZE, keyBytes, 0, keyLength);
                 outputKmer.set(mergeKmer, 0, mergeByteNum);
 
                 outputAdjList = values.next();
@@ -84,11 +82,10 @@ public class MergePathReducer extends MapReduceBase implements
                 byte flag = outputAdjList.getFlag();
                 int kmerSize = outputAdjList.getKmerSize();
                 int mergeByteNum = Kmer.getByteNumFromK(KMER_SIZE + kmerSize);
-                byte[] valueBytes = new byte[outputAdjList.getLength()];
-                for (int i = 0; i < valueBytes.length; i++) {
-                    valueBytes[i] = outputAdjList.getBytes()[i];
-                }
-                byte[] mergeKmer = KmerUtil.mergeTwoKmer(outputAdjList.getKmerSize(), valueBytes, KMER_SIZE, keyBytes);
+                byte[] valueBytes = outputAdjList.getBytes();
+                int valueLength =outputAdjList.getLength();
+                byte[] mergeKmer = KmerUtil.mergeTwoKmer(outputAdjList.getKmerSize(), valueBytes, 0, valueLength,
+                		KMER_SIZE, keyBytes, 0, keyLength);
                 outputKmer.set(mergeKmer, 0, mergeByteNum);
 
                 adjBitMap = (byte) (adjBitMap & 0xF0);
@@ -98,22 +95,18 @@ public class MergePathReducer extends MapReduceBase implements
                 mos.getCollector("uncomplete" + I_MERGE, reporter).collect(outputKmer, outputAdjList);
             }
         } else {
-            byte[] keyBytes = new byte[key.getLength()];
-            for (int i = 0; i < keyBytes.length; i++) {
-                keyBytes[i] = key.getBytes()[i];
-            }
+            byte[] keyBytes = key.getBytes();
+            int keyLength = key.getLength();
             if (outputAdjList.getFlag() != 0) {
                 byte adjBitMap = outputAdjList.getAdjBitMap();
                 byte flag = outputAdjList.getFlag();
                 int kmerSize = outputAdjList.getKmerSize();
                 int mergeByteNum = Kmer.getByteNumFromK(KMER_SIZE - 1 + kmerSize);
-                byte[] tmpKmer = KmerUtil.getFirstKmerFromChain(KMER_SIZE - 1, KMER_SIZE, keyBytes);
-                byte[] valueBytes = new byte[outputAdjList.getLength()];
-                for (int i = 0; i < valueBytes.length; i++) {
-                    valueBytes[i] = outputAdjList.getBytes()[i];
-                }
-                byte[] mergeKmer = KmerUtil.mergeTwoKmer(outputAdjList.getKmerSize(), valueBytes, KMER_SIZE - 1,
-                        tmpKmer);
+                byte[] tmpKmer = KmerUtil.getFirstKmerFromChain(KMER_SIZE - 1, KMER_SIZE, keyBytes,0,keyLength);
+                byte[] valueBytes = outputAdjList.getBytes();
+                int valueLength = outputAdjList.getLength();
+                byte[] mergeKmer = KmerUtil.mergeTwoKmer(outputAdjList.getKmerSize(), valueBytes,0, valueLength,
+                		KMER_SIZE - 1, tmpKmer,0,tmpKmer.length);
                 outputKmer.set(mergeKmer, 0, mergeByteNum);
                 outputAdjList.set(null, 0, 0, adjBitMap, flag, KMER_SIZE + kmerSize);
                 mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputAdjList);

@@ -71,7 +71,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 				tmpMsg.setChainVertexId(tmpChainVertexId.getBytes());
 				for(byte x = Kmer.GENE_CODE.A; x<= Kmer.GENE_CODE.T ; x++){
 					if((getVertexValue().getValue() & (1 << x)) != 0){
-						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, x);
+						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, 0, tmpVertexId.length, x);
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						sendMsg(destVertexId,tmpMsg);
 					}
@@ -99,7 +99,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 							String source = Kmer.recoverKmerFrom(GraphVertexOperation.k, tmpVertexId, 0, tmpVertexId.length);
 							tmpMsg.setChainVertexId(KmerUtil.mergeKmerWithNextCode(
 									tmpMsg.getLengthOfChain(),
-									tmpMsg.getChainVertexId(),
+									tmpMsg.getChainVertexId(),0, tmpMsg.getChainVertexId().length,
 									Kmer.GENE_CODE.getCodeFromSymbol((byte)source.charAt(source.length() - 1))));
 							tmpMsg.incrementLength();
 							deleteVertex(getVertexId());
@@ -141,8 +141,8 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 				if(!tmpMsg.isRear()){
 					byte[] lastKmer = KmerUtil.getLastKmerFromChain(GraphVertexOperation.k,
 							tmpMsg.getLengthOfChain(),
-							tmpMsg.getChainVertexId());
-					tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, lastKmer, 
+							tmpMsg.getChainVertexId(), 0 , tmpMsg.getChainVertexId().length);
+					tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, lastKmer, 0, lastKmer.length,
 							Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpMsg.getNeighberInfo() & 0x0F)));
 
 					tmpMsg.setSourceVertexId(tmpVertexId);

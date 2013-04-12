@@ -49,20 +49,18 @@ public class MergePathMapper extends MapReduceBase implements
         precursor = (byte) ((precursor & 0xff) >> 4);
         succeed = (byte) (succeed & adjBitMap);
 
-        byte[] kmerValue = new byte[key.getLength()];
-        for (int i = 0; i < kmerValue.length; i++) {
-            kmerValue[i] = key.getBytes()[i];
-        }
+        byte[] kmerValue = key.getBytes();
+        int kmerLength = key.getLength();
         if (bitFlag == 1) {
             byte succeedCode = GENE_CODE.getGeneCodeFromBitMap(succeed);
             int originalByteNum = Kmer.getByteNumFromK(KMER_SIZE);
-            byte[] tmpKmer = KmerUtil.getLastKmerFromChain(KMER_SIZE, value.getKmerSize(), kmerValue);
-            byte[] newKmer = KmerUtil.shiftKmerWithNextCode(KMER_SIZE, tmpKmer, succeedCode);
+            byte[] tmpKmer = KmerUtil.getLastKmerFromChain(KMER_SIZE, value.getKmerSize(), kmerValue, 0, kmerLength);
+            byte[] newKmer = KmerUtil.shiftKmerWithNextCode(KMER_SIZE, tmpKmer,0, tmpKmer.length, succeedCode);
             outputKmer.set(newKmer, 0, originalByteNum);
 
             int mergeByteNum = Kmer.getByteNumFromK(value.getKmerSize() - (KMER_SIZE - 1));
             byte[] mergeKmer = KmerUtil.getFirstKmerFromChain(value.getKmerSize() - (KMER_SIZE - 1),
-                    value.getKmerSize(), kmerValue);
+                    value.getKmerSize(), kmerValue, 0, kmerLength);
             outputAdjList.set(mergeKmer, 0, mergeByteNum, adjBitMap, bitFlag, value.getKmerSize() - (KMER_SIZE - 1));
             output.collect(outputKmer, outputAdjList);
         } else {
