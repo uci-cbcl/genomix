@@ -144,6 +144,7 @@ public class Driver implements IDriver {
             end = System.currentTimeMillis();
             time = end - start;
             LOG.info("result writing finished " + time + "ms");
+            hcc.unDeployBinary(deploymentId);
             LOG.info("job finished");
         } catch (Exception e) {
             throw new HyracksException(e);

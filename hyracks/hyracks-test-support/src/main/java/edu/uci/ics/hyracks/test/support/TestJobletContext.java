@@ -101,4 +101,9 @@ public class TestJobletContext implements IHyracksJobletContext {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return this.getClass().getClassLoader();
+    }
 }

@@ -25,20 +25,24 @@ import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.NodeControllerState;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
-import edu.uci.ics.hyracks.control.common.work.AbstractWork;
+import edu.uci.ics.hyracks.control.common.work.IPCResponder;
+import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
-public class CliUnDeployBinaryWork extends AbstractWork {
+public class CliUnDeployBinaryWork extends SynchronizableWork {
 
     private ClusterControllerService ccs;
     private DeploymentId deploymentId;
+    private IPCResponder<DeploymentId> callback;
 
-    public CliUnDeployBinaryWork(ClusterControllerService ncs, DeploymentId deploymentId) {
+    public CliUnDeployBinaryWork(ClusterControllerService ncs, DeploymentId deploymentId,
+            IPCResponder<DeploymentId> callback) {
         this.ccs = ncs;
         this.deploymentId = deploymentId;
+        this.callback = callback;
     }
 
     @Override
-    public void run() {
+    public void doRun() {
         try {
             if (deploymentId == null) {
                 deploymentId = new DeploymentId(UUID.randomUUID().toString());
@@ -58,7 +62,7 @@ public class CliUnDeployBinaryWork extends AbstractWork {
             for (String nc : nodeControllerStateMap.keySet()) {
                 nodeIds.add(nc);
             }
-            DeploymentRun dRun = new DeploymentRun(nodeIds);
+            final DeploymentRun dRun = new DeploymentRun(nodeIds);
             ccs.addDeploymentRun(deploymentId, dRun);
 
             /***
@@ -68,10 +72,21 @@ public class CliUnDeployBinaryWork extends AbstractWork {
                 ncs.getNodeController().undeployBinary(deploymentId);
             }
 
-            /**
-             * wait for completion
-             */
-            dRun.waitForCompletion();
+            ccs.getExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        /**
+                         * wait for completion
+                         */
+                        dRun.waitForCompletion();
+                        ccs.removeDeploymentRun(deploymentId);
+                        callback.setValue(null);
+                    } catch (Exception e) {
+                        callback.setException(e);
+                    }
+                }
+            });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -31,4 +31,6 @@ public interface IJobSerializerDeserializer {
 
     public void addClassPathURLs(List<URL> binaryURLs) throws HyracksException;
 
+    public ClassLoader getClassLoader() throws HyracksException;
+
 }

@@ -392,8 +392,8 @@ public class ClusterControllerService extends AbstractRemoteService {
 
                 case CLI_UNDEPLOY_BINARY: {
                     HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction udbf = (HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction) fn;
-                    workQueue
-                            .schedule(new CliUnDeployBinaryWork(ClusterControllerService.this, udbf.getDeploymentId()));
+                    workQueue.schedule(new CliUnDeployBinaryWork(ClusterControllerService.this, udbf.getDeploymentId(),
+                            new IPCResponder<DeploymentId>(handle, mid)));
                     return;
                 }
             }

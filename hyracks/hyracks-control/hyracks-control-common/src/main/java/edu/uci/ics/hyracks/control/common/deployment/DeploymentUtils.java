@@ -83,6 +83,19 @@ public class DeploymentUtils {
         }
     }
 
+    public static ClassLoader getClassLoader(DeploymentId deploymentId, IApplicationContext appCtx)
+            throws HyracksException {
+        try {
+            IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
+            IJobSerializerDeserializer jobSerDe = deploymentId == null ? null : jobSerDeContainer
+                    .getJobSerializerDeerializer(deploymentId);
+            ClassLoader cl = jobSerDe == null ? DeploymentUtils.class.getClassLoader() : jobSerDe.getClassLoader();
+            return cl;
+        } catch (Exception e) {
+            throw new HyracksException(e);
+        }
+    }
+
     private static List<URL> downloadURLs(List<URL> urls, String deploymentDir, boolean isNC) throws HyracksException {
         try {
             List<URL> downloadedFileURLs = new ArrayList<URL>();

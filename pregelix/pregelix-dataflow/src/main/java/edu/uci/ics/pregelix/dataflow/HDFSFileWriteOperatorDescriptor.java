@@ -79,10 +79,11 @@ public class HDFSFileWriteOperatorDescriptor extends AbstractSingleActivityOpera
                 frameDeserializer = new FrameDeserializer(ctx.getFrameSize(), rd0);
                 ctxCL = Thread.currentThread().getContextClassLoader();
                 Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-                conf = confFactory.createConfiguration();
+                conf = confFactory.createConfiguration(ctx);
 
                 VertexOutputFormat outputFormat = BspUtils.createVertexOutputFormat(conf);
                 context = ctxFactory.createContext(conf, partition);
+                context.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
                 try {
                     vertexWriter = outputFormat.createVertexWriter(context);
                 } catch (InterruptedException e) {

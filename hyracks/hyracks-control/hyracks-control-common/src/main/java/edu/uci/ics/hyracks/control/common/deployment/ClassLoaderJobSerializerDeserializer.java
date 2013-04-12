@@ -76,4 +76,9 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
             throw new HyracksException(e);
         }
     }
+
+    @Override
+    public ClassLoader getClassLoader() throws HyracksException {
+        return classLoader;
+    }
 }

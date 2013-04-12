@@ -297,4 +297,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public ClassLoader getClassLoader() {
+        try {
+            return DeploymentUtils.getClassLoader(deploymentId, appCtx);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

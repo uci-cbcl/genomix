@@ -56,7 +56,7 @@ public class FinalAggregateOperatorDescriptor extends AbstractSingleActivityOper
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new AbstractUnaryInputSinkOperatorNodePushable() {
-            private Configuration conf = confFactory.createConfiguration();
+            private Configuration conf = confFactory.createConfiguration(ctx);
             @SuppressWarnings("rawtypes")
             private GlobalAggregator aggregator = BspUtils.createGlobalAggregator(conf);
             private FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(),
