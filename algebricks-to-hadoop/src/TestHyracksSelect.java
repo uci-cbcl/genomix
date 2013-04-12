@@ -83,9 +83,12 @@ public class TestHyracksSelect {
 	}
 
 	public static void main(String[] args) {
-
-		// TODO: variables to fill-up
-		IDataSink dataSink = null;
+		List<String> variables = new ArrayList();
+		variables.add(new String("int"));
+		
+		
+		Schema schema = new Schema(variables, );
+		IDataSink dataSink = new HiveDataSink(new FileSinkOperator(), schema ); //Schema provided by Hive or Piglet
 		List<Mutable<ILogicalExpression>> expressions = null;
 		Mutable<ILogicalExpression> condition = null;
 		List<LogicalVariable> variables = null;
@@ -282,7 +285,7 @@ public class TestHyracksSelect {
 
 		// Simulate Hyracks planning to create IoperatorNodePushable, once I
 		// have these
-
+/*
 		IHyracksJobBuilder jobBuilder = new JobBuilder(spec,
 				context.getClusterLocations());
 		for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
@@ -296,7 +299,7 @@ public class TestHyracksSelect {
 																		// cast
 																		// mandatory
 																		// here??
-		}
+		//}*/
 
 	}
 }
