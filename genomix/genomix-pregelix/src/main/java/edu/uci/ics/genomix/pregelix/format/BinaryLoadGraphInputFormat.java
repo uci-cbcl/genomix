@@ -38,19 +38,12 @@ public class BinaryLoadGraphInputFormat extends
 @SuppressWarnings("rawtypes")
 class BinaryLoadGraphReader extends
         BinaryVertexReader<BytesWritable, ValueStateWritable, NullWritable, MessageWritable> {
-	public static Logger logger = Logger.getLogger(BinaryLoadGraphReader.class.getName()); 
-	DataLoadLogFormatter formatter = new DataLoadLogFormatter();
-	FileHandler handler;
     private Vertex vertex;
     private BytesWritable vertexId = new BytesWritable();
     private ValueStateWritable vertexValue = new ValueStateWritable();
 
     public BinaryLoadGraphReader(RecordReader<BytesWritable,KmerCountValue> recordReader) {
         super(recordReader);
-		try {
-			handler = new FileHandler("log/" + BinaryLoadGraphReader.class.getName() + ".log");
-		} catch (SecurityException e1) { e1.printStackTrace();} 
-		catch (IOException e1) { e1.printStackTrace();}
     }
 
     @Override
@@ -81,14 +74,6 @@ class BinaryLoadGraphReader extends
             KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
             vertexValue.setValue(kmerCountValue.getAdjBitMap()); 
             vertex.setVertexValue(vertexValue);
-            
-			//log
-			formatter.set(vertexId, kmerCountValue, GraphVertexOperation.k);
-			if(logger.getHandlers() != null)
-				logger.removeHandler(handler);
-			handler.setFormatter(formatter);
-			logger.addHandler(handler);
-			logger.info("");
         }
         
         return vertex;

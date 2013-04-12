@@ -58,6 +58,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 	/**
 	 * Log Algorithm for path merge graph
 	 */
+	
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
 
@@ -101,7 +102,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				}
 				else{
 					tmpMsg = msgIterator.next();
-					
 					if(tmpMsg.getMessage() == Message.START && tmpVal.getState() == State.MID_VERTEX){
 						tmpVal.setState(State.START_VERTEX);
 						setVertexValue(tmpVal);
@@ -113,15 +113,11 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					}
 					else
 						voteToHalt();
-					
-
 				}
 			}
 		}
 		//head node sends message to path node
 		else if(getSuperstep()%3 == 0){
-			//tmpVal = getVertexValue();
-
 			if(getSuperstep() == 3){
 				tmpMsg = new LogAlgorithmMessageWritable();
 				tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, 
@@ -133,13 +129,12 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					sendMsg(destVertexId, tmpMsg);
 					voteToHalt();
 				}
-				else if(tmpVal.getState() != State.END_VERTEX){
+				else if(tmpVal.getState() != State.END_VERTEX && tmpVal.getState() != State.FINAL_DELETE){
 					tmpMsg.setMessage(Message.NON);
 					tmpMsg.setSourceVertexId(getVertexId().getBytes());
 					sendMsg(destVertexId,tmpMsg);
 					voteToHalt();
 				}
-				
 			}
 			else{
 				if(msgIterator.hasNext()){
@@ -154,15 +149,13 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						tmpMsg.setMessage(Message.START);
 						tmpMsg.setSourceVertexId(getVertexId().getBytes());
 						sendMsg(destVertexId, tmpMsg);
-
+						voteToHalt();
 					}
-					else if(tmpVal.getState() != State.END_VERTEX){
+					else if(tmpVal.getState() != State.END_VERTEX && tmpVal.getState() != State.FINAL_DELETE){
 						tmpMsg.setMessage(Message.NON);
 						tmpMsg.setSourceVertexId(getVertexId().getBytes());
 						sendMsg(destVertexId,tmpMsg);
-						
 					}
-					
 				}
 			}
 		}
@@ -185,7 +178,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				tmpMsg.setSourceVertexState(tmpVal.getState());
 				
 				//kill Message because it has been merged by the head
-				if(tmpVal.getState() == State.END_VERTEX){
+				if(tmpVal.getState() == State.END_VERTEX || tmpVal.getState() == State.FINAL_DELETE){
 					tmpMsg.setMessage(Message.END);
 					tmpVal.setState(State.FINAL_DELETE);
 					setVertexValue(tmpVal);
@@ -200,14 +193,11 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				}
 				destVertexId.set(tmpMsg.getSourceVertexId(), 0, tmpMsg.getSourceVertexId().length);
 				sendMsg(destVertexId,tmpMsg);
-				
 			}
 			else{
-				//String source2 = Kmer.recoverKmerFrom(5, tmpVertexId, 0, tmpVertexId.length);
 				if(getVertexValue().getState() != State.START_VERTEX
-						&& getVertexValue().getState() != State.END_VERTEX){
+						&& getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE)
 					deleteVertex(getVertexId()); //killSelf because it doesn't receive any message
-				}
 			}
 		}
 		else if(getSuperstep()%3 == 2){
@@ -251,14 +241,11 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						sendMsg(getVertexId(),tmpMsg);
 					}
 				}
-				if(tmpVal.getState() == State.END_VERTEX)
+				if(tmpVal.getState() == State.END_VERTEX || tmpVal.getState() == State.FINAL_DELETE)
 					voteToHalt();
 				if(tmpVal.getState() == State.FINAL_VERTEX){
+					//String source = Kmer.recoverKmerFrom(tmpVal.getLengthOfMergeChain(), tmpVal.getMergeChain(), 0, tmpVal.getMergeChain().length);
 					voteToHalt();
-					/*try {
-						GraphVertexOperation.flushChainToFile(tmpVal.getMergeChain(), 
-								tmpVal.getLengthOfMergeChain(),tmpVertexId);
-					} catch (IOException e) { e.printStackTrace(); }*/
 				}
 			}
 			

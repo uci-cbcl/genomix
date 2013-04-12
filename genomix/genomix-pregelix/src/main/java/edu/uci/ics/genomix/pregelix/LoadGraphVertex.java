@@ -10,6 +10,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphInputFormat;
 import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -64,7 +65,7 @@ public class LoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWri
         job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class); 
         job.setOutputKeyClass(BytesWritable.class);
-        job.setOutputValueClass(ByteWritable.class);
+        job.setOutputValueClass(ValueStateWritable.class);
         Client.run(args, job);
 	}
 }

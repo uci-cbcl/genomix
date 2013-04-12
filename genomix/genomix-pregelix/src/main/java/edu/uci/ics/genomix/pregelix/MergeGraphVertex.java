@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.BytesWritable;
@@ -125,11 +126,11 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 					tmpVertexValue.setLengthOfMergeChain(tmpMsg.getLengthOfChain());
 					tmpVertexValue.setMergeChain(tmpMsg.getChainVertexId());
 					setVertexValue(tmpVertexValue);
-					/*try {
-						String source = Kmer.recoverKmerFrom(tmpMsg.getLengthOfChain(), tmpMsg.getChainVertexId(), 0, tmpMsg.getChainVertexId().length);
+					try {
+						//String source = Kmer.recoverKmerFrom(tmpMsg.getLengthOfChain(), tmpMsg.getChainVertexId(), 0, tmpMsg.getChainVertexId().length);
 						GraphVertexOperation.flushChainToFile(tmpMsg.getChainVertexId(), 
 								tmpMsg.getLengthOfChain(),tmpVertexId);
-					} catch (IOException e) { e.printStackTrace(); }*/
+					} catch (IOException e) { e.printStackTrace(); }
 				}
 			}
 		}
@@ -155,7 +156,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 				}
 			}
 		}
-		
 		voteToHalt();
 	}
 

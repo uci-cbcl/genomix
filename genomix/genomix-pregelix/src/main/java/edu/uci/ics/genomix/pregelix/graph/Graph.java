@@ -53,6 +53,6 @@ public class Graph {
 	public static void main(String[] args) throws Exception
 	{
 		Graph g = new Graph();
-		g.start("SinglePath");
+		g.start("Path");
 	}
 }

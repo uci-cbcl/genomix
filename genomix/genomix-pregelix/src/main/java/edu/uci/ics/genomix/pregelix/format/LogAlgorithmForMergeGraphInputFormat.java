@@ -73,12 +73,6 @@ public class LogAlgorithmForMergeGraphInputFormat extends
 	            vertexValue.setValue(kmerCountValue.getAdjBitMap()); 
 	            vertexValue.setState(State.NON_VERTEX);
 	            vertex.setVertexValue(vertexValue);
-	            
-	        	/*String kmer = BitwiseOperation.convertBytesToBinaryStringKmer(vertexId.getBytes(),GraphVertexOperation.k);
-			    System.out.println("key: " + kmer);
-			    System.out.println("code: " + GraphVertexOperation.convertBinaryStringToGenecode(kmer));
-			    System.out.println("value: " + BitwiseOperation.convertByteToBinaryString(kmerCountValue.getAdjBitMap()));
-			    System.out.println();*/
             }
             
             return vertex;
