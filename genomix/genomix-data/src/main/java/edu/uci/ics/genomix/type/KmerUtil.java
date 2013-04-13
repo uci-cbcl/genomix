@@ -176,7 +176,7 @@ public class KmerUtil {
 						- j - 1] << posNeedToMove));
 			}
 			if ( nextK % 4 == 0 || (nextK % 4) * 2 + posNeedToMove > 8) {
-				mergedKmer[0] = (byte) (kmerNext[offsetNext] >> (8 - posNeedToMove));
+				mergedKmer[0] = (byte) ((0xff & kmerNext[offsetNext] )>> (8 - posNeedToMove));
 			}
 		}
 		return mergedKmer;
