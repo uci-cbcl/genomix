@@ -105,6 +105,11 @@ public class KmerUtilTest {
 		String text7 = "GCTGAC";
 		merged = KmerUtil.mergeTwoKmer(7, kmer5, 0, kmer5.length, 6, kmer7, 0, kmer7.length);
 		Assert.assertEquals(text5+text7, Kmer.recoverKmerFrom(7+6, merged, 0, merged.length));
+		
+		byte[] kmer8 = Kmer.compressKmer(4, array, 1);
+		String text8 = "GCTG";
+		merged = KmerUtil.mergeTwoKmer(7, kmer5, 0, kmer5.length, 4, kmer8, 0, kmer8.length);
+		Assert.assertEquals(text5+text8, Kmer.recoverKmerFrom(7+4, merged, 0, merged.length));
 
 	}
 	@Test 
