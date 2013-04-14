@@ -55,13 +55,13 @@ public class GenerateTestInput {
 		// TODO Auto-generated method stub
 		OutputStreamWriter writer;
 		try {
-			writer = new OutputStreamWriter(new FileOutputStream("SinglePath"));
-			writer.write(simplePath(5,10,1));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/55/SinglePath_55"));
+			writer.write(simplePath(55,60,1));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("SimplePath"));
-			writer.write(simplePath(5,10,3));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/55/SimplePath_55"));
+			writer.write(simplePath(55,60,3));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("TreePath"));
+			/*writer = new OutputStreamWriter(new FileOutputStream("TreePath"));
 			writer.write(treePath(5, 5, 5, 3));
 			writer.close();
 			writer = new OutputStreamWriter(new FileOutputStream("CyclePath"));
@@ -69,7 +69,7 @@ public class GenerateTestInput {
 			writer.close();
 			writer = new OutputStreamWriter(new FileOutputStream("BridgePath"));
 			writer.write(bridgePath(5,2));
-			writer.close();
+			writer.close();*/
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

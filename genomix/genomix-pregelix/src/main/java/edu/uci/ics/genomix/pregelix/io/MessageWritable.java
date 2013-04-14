@@ -6,8 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
-
-import edu.uci.ics.genomix.pregelix.GraphVertexOperation;
+import edu.uci.ics.genomix.pregelix.MergeGraphVertex;
 
 public class MessageWritable implements WritableComparable<MessageWritable>{
 	/**
@@ -120,9 +119,9 @@ public class MessageWritable implements WritableComparable<MessageWritable>{
 		}
 		else
 			chainVertexId = new byte[0];
-		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		sourceVertexId = new byte[(MergeGraphVertex.kmerSize-1)/4 + 1];
 		in.readFully(sourceVertexId);
-		head = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		head = new byte[(MergeGraphVertex.kmerSize-1)/4 + 1];
 		in.readFully(head);
 		neighberInfo = in.readByte();
 		isRear = in.readBoolean();

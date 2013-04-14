@@ -40,9 +40,9 @@ public class generateSmallFile {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		Path dir = new Path("data/webmap");
-		Path inFile = new Path(dir, "part-1");
-		Path outFile = new Path(dir, "part-1-out-20000000");
-		generateNumOfLinesFromBigFile(inFile,outFile,20000000);
+		Path inFile = new Path(dir, "part-2");
+		Path outFile = new Path(dir, "part-2-out-20000");
+		generateNumOfLinesFromBigFile(inFile,outFile,20000);
 	}
 
 }

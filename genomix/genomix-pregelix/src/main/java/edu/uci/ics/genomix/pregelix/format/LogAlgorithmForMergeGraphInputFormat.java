@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.pregelix.format;
 
 import java.io.IOException;
-import java.util.logging.FileHandler;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -9,9 +8,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import edu.uci.ics.genomix.pregelix.GraphVertexOperation;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.bitwise.BitwiseOperation;
 import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;

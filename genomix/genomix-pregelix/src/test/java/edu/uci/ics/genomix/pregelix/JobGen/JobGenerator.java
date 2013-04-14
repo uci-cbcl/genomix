@@ -48,10 +48,12 @@ public class JobGenerator {
     	job.setVertexClass(MergeGraphVertex.class);
     	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
         job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(BytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
+        job.getConfiguration().setInt(MergeGraphVertex.KMER_SIZE, 55);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -69,6 +71,7 @@ public class JobGenerator {
         job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
+        job.getConfiguration().setInt(LogAlgorithmForMergeGraphVertex.KMER_SIZE, 55);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     

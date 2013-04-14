@@ -2,9 +2,6 @@ package edu.uci.ics.genomix.pregelix.log;
 
 import java.util.logging.*;
 
-import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
-
 import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;

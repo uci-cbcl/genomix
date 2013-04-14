@@ -6,8 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
-
-import edu.uci.ics.genomix.pregelix.GraphVertexOperation;
+import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphVertex;
 
 public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgorithmMessageWritable>{
 	/**
@@ -25,7 +24,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	private int sourceVertexState;
 	
 	public LogAlgorithmMessageWritable(){
-		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		sourceVertexId = new byte[(LogAlgorithmForMergeGraphVertex.kmerSize-1)/4 + 1];
 	}
 	
 	public void set(byte[] sourceVertexId,byte neighberInfo, byte[] chainVertexId, File file){
@@ -37,7 +36,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	}
 	
 	public void reset(){
-		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		sourceVertexId = new byte[(LogAlgorithmForMergeGraphVertex.kmerSize-1)/4 + 1];
 		neighberInfo = (Byte) null;
 		lengthOfChain = 0;
 		chainVertexId = null;
@@ -133,7 +132,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		message = in.readInt();
 		sourceVertexState = in.readInt();
 		
-		sourceVertexId = new byte[(GraphVertexOperation.k-1)/4 + 1];
+		sourceVertexId = new byte[(LogAlgorithmForMergeGraphVertex.kmerSize-1)/4 + 1];
 		in.readFully(sourceVertexId);
 		neighberInfo = in.readByte();
 	}

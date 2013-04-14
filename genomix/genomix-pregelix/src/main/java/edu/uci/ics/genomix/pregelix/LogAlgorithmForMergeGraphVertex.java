@@ -46,7 +46,9 @@ import edu.uci.ics.genomix.type.KmerUtil;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{
-
+	public static final String KMER_SIZE = "LogAlgorithmForMergeGraphVertex.kmerSize";
+	public static int kmerSize = -1;
+	
 	private byte[] tmpVertexId;
 	private byte[] tmpDestVertexId;
 	private BytesWritable destVertexId = new BytesWritable();
@@ -59,9 +61,17 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 	 * Log Algorithm for path merge graph
 	 */
 	
+	/**
+     *	Load KmerSize
+     */
+	public LogAlgorithmForMergeGraphVertex(){
+		
+	}
+	
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
-
+		if(kmerSize == -1)
+			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
 		tmpVertexId = GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId());
 		tmpVal = getVertexValue();
 		if (getSuperstep() == 1) {
@@ -70,7 +80,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				tmpMsg.setMessage(Message.START);
 				for(byte x = Kmer.GENE_CODE.A; x<= Kmer.GENE_CODE.T ; x++){
 					if((tmpVal.getValue() & (1 << x)) != 0){
-						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, 0, tmpVertexId.length,x);
+						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, tmpVertexId, 0, tmpVertexId.length, x);
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						sendMsg(destVertexId,tmpMsg);
 					}
@@ -82,7 +92,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				
 				for(byte x = Kmer.GENE_CODE.A; x<= Kmer.GENE_CODE.T ; x++){
 					if(((tmpVal.getValue()>> 4) & (1 << x)) != 0){
-						tmpDestVertexId = KmerUtil.shiftKmerWithPreCode(GraphVertexOperation.k, tmpVertexId, 0, tmpVertexId.length, x);
+						tmpDestVertexId = KmerUtil.shiftKmerWithPreCode(kmerSize, tmpVertexId, 0, tmpVertexId.length, x);
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						sendMsg(destVertexId,tmpMsg);
 					}
@@ -120,7 +130,8 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 		else if(getSuperstep()%3 == 0){
 			if(getSuperstep() == 3){
 				tmpMsg = new LogAlgorithmMessageWritable();
-				tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, tmpVertexId, 0, tmpVertexId.length,
+				tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, tmpVertexId, 
+						0, tmpVertexId.length, 
 						Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)));
 				destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 				if(tmpVal.getState() == State.START_VERTEX){
@@ -139,10 +150,12 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 			else{
 				if(msgIterator.hasNext()){
 					tmpMsg = msgIterator.next();
-					byte[] lastKmer = KmerUtil.getLastKmerFromChain(GraphVertexOperation.k,
+					byte[] lastKmer = KmerUtil.getLastKmerFromChain(kmerSize,
 							tmpVal.getLengthOfMergeChain(),
-							tmpVal.getMergeChain(),0,tmpVal.getMergeChain().length);
-					tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(GraphVertexOperation.k, lastKmer, 0, lastKmer.length,
+							tmpVal.getMergeChain(),
+							0, tmpVal.getMergeChain().length);
+					tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, lastKmer, 
+							0, lastKmer.length,
 							Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F))); //tmpMsg.getNeighberInfo()
 					destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 					if(tmpVal.getState() == State.START_VERTEX){
@@ -166,7 +179,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				tmpMsg = msgIterator.next();
 				int message = tmpMsg.getMessage();
 				if(tmpVal.getLengthOfMergeChain() == 0){
-					tmpVal.setLengthOfMergeChain(GraphVertexOperation.k);
+					tmpVal.setLengthOfMergeChain(kmerSize);
 					tmpVal.setMergeChain(tmpVertexId);
 					setVertexValue(tmpVal);
 				}
@@ -215,22 +228,22 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					}
 						
 					if(getSuperstep() == 5){
-						lengthOfMergeChainVertex = GraphVertexOperation.k;
+						lengthOfMergeChainVertex = kmerSize;
 						mergeChainVertexId = tmpVertexId;
 					}
 					else{
 						lengthOfMergeChainVertex = tmpVal.getLengthOfMergeChain(); 
 						mergeChainVertexId = tmpVal.getMergeChain(); 
 					}
-					byte[] tmplastKmer = KmerUtil.getLastKmerFromChain(tmpMsg.getLengthOfChain() - GraphVertexOperation.k + 1,
+					byte[] tmplastKmer = KmerUtil.getLastKmerFromChain(tmpMsg.getLengthOfChain() - kmerSize + 1,
 							tmpMsg.getLengthOfChain(), tmpMsg.getChainVertexId(),0, tmpMsg.getChainVertexId().length);
 					mergeChainVertexId = KmerUtil.mergeTwoKmer(lengthOfMergeChainVertex, 
-							mergeChainVertexId, 0, mergeChainVertexId.length,
-							tmpMsg.getLengthOfChain() - GraphVertexOperation.k + 1, 
-							tmplastKmer, 0 , tmplastKmer.length
-							);
+							mergeChainVertexId, 
+							0, mergeChainVertexId.length,
+							tmpMsg.getLengthOfChain() - kmerSize + 1, 
+							tmplastKmer, 0, tmplastKmer.length);
 					lengthOfMergeChainVertex = lengthOfMergeChainVertex + tmpMsg.getLengthOfChain()
-							- GraphVertexOperation.k + 1;
+							- kmerSize + 1;
 					tmpVal.setLengthOfMergeChain(lengthOfMergeChainVertex);
 					tmpVal.setMergeChain(mergeChainVertexId);
 
@@ -258,8 +271,8 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(MergeGraphVertex.class.getSimpleName());
-        job.setVertexClass(MergeGraphVertex.class);
+        PregelixJob job = new PregelixJob(LogAlgorithmForMergeGraphVertex.class.getSimpleName());
+        job.setVertexClass(LogAlgorithmForMergeGraphVertex.class);
         /**
          * BinaryInput and BinaryOutput~/
          */
@@ -267,6 +280,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
         job.setVertexOutputFormatClass(LogAlgorithmForMergeGraphOutputFormat.class); 
         job.setOutputKeyClass(BytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
+        job.setDynamicVertexValueSize(true);
         Client.run(args, job);
 	}
 }

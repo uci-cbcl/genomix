@@ -10,6 +10,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphVertex;
+import edu.uci.ics.genomix.pregelix.MergeGraphVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
@@ -31,6 +33,9 @@ public class Client {
 
         @Option(name = "-plan", usage = "query plan choice", required = false)
         public Plan planChoice = Plan.OUTER_JOIN;
+        
+        @Option(name = "-kmer-size", usage = "the size of kmer", required = false)
+        public int sizeKmer;
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
@@ -52,6 +57,8 @@ public class Client {
         for (int i = 1; i < inputs.length; i++)
             FileInputFormat.addInputPaths(job, inputs[0]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
+        job.getConfiguration().setInt(MergeGraphVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(LogAlgorithmForMergeGraphVertex.KMER_SIZE, options.sizeKmer);
         return options;
     }
 
