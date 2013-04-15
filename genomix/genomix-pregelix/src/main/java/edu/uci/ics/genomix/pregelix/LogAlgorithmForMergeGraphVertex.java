@@ -103,6 +103,10 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				tmpVal.setState(State.MID_VERTEX);
 				setVertexValue(tmpVal);
 			}
+			if(!GraphVertexOperation.isHeadVertex(tmpVal.getValue())
+					&& !GraphVertexOperation.isRearVertex(tmpVal.getValue())
+					&& !GraphVertexOperation.isRearVertex(tmpVal.getValue()))
+				voteToHalt();
 		}
 		else if(getSuperstep() == 2){
 			while(msgIterator.hasNext()){
@@ -130,33 +134,12 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 		else if(getSuperstep()%3 == 0){
 			if(getSuperstep() == 3){
 				tmpMsg = new LogAlgorithmMessageWritable();
-				tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, tmpVertexId, 
-						0, tmpVertexId.length, 
-						Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)));
-				destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
-				if(tmpVal.getState() == State.START_VERTEX){
-					tmpMsg.setMessage(Message.START);
-					tmpMsg.setSourceVertexId(getVertexId().getBytes());
-					sendMsg(destVertexId, tmpMsg);
+				if(Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)) == -1)
 					voteToHalt();
-				}
-				else if(tmpVal.getState() != State.END_VERTEX && tmpVal.getState() != State.FINAL_DELETE){
-					tmpMsg.setMessage(Message.NON);
-					tmpMsg.setSourceVertexId(getVertexId().getBytes());
-					sendMsg(destVertexId,tmpMsg);
-					voteToHalt();
-				}
-			}
-			else{
-				if(msgIterator.hasNext()){
-					tmpMsg = msgIterator.next();
-					byte[] lastKmer = KmerUtil.getLastKmerFromChain(kmerSize,
-							tmpVal.getLengthOfMergeChain(),
-							tmpVal.getMergeChain(),
-							0, tmpVal.getMergeChain().length);
-					tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, lastKmer, 
-							0, lastKmer.length,
-							Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F))); //tmpMsg.getNeighberInfo()
+				else{
+					tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, tmpVertexId, 
+							0, tmpVertexId.length, 
+							Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)));
 					destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 					if(tmpVal.getState() == State.START_VERTEX){
 						tmpMsg.setMessage(Message.START);
@@ -168,6 +151,35 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						tmpMsg.setMessage(Message.NON);
 						tmpMsg.setSourceVertexId(getVertexId().getBytes());
 						sendMsg(destVertexId,tmpMsg);
+						voteToHalt();
+					}
+				}
+			}
+			else{
+				if(msgIterator.hasNext()){
+					tmpMsg = msgIterator.next();
+					byte[] lastKmer = KmerUtil.getLastKmerFromChain(kmerSize,
+							tmpVal.getLengthOfMergeChain(),
+							tmpVal.getMergeChain(),
+							0, tmpVal.getMergeChain().length);
+					if(Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)) == -1)
+						voteToHalt();
+					else{
+						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, lastKmer, 
+								0, lastKmer.length,
+								Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F))); //tmpMsg.getNeighberInfo()
+						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
+						if(tmpVal.getState() == State.START_VERTEX){
+							tmpMsg.setMessage(Message.START);
+							tmpMsg.setSourceVertexId(getVertexId().getBytes());
+							sendMsg(destVertexId, tmpMsg);
+							voteToHalt();
+						}
+						else if(tmpVal.getState() != State.END_VERTEX && tmpVal.getState() != State.FINAL_DELETE){
+							tmpMsg.setMessage(Message.NON);
+							tmpMsg.setSourceVertexId(getVertexId().getBytes());
+							sendMsg(destVertexId,tmpMsg);
+						}
 					}
 				}
 			}
@@ -183,7 +195,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					tmpVal.setMergeChain(tmpVertexId);
 					setVertexValue(tmpVal);
 				}
-				
 				tmpMsg.setLengthOfChain(tmpVal.getLengthOfMergeChain());
 				tmpMsg.setChainVertexId(tmpVal.getMergeChain());
 				
@@ -206,6 +217,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				}
 				destVertexId.set(tmpMsg.getSourceVertexId(), 0, tmpMsg.getSourceVertexId().length);
 				sendMsg(destVertexId,tmpMsg);
+				voteToHalt();
 			}
 			else{
 				if(getVertexValue().getState() != State.START_VERTEX
