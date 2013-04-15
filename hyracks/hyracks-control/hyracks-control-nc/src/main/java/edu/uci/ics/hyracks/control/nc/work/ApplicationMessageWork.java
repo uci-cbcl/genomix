@@ -14,49 +14,46 @@
  */
 package edu.uci.ics.hyracks.control.nc.work;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.messages.IMessage;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.NodeControllerService;
 import edu.uci.ics.hyracks.control.nc.application.NCApplicationContext;
 
 /**
  * @author rico
- * 
  */
 public class ApplicationMessageWork extends AbstractWork {
-
     private static final Logger LOGGER = Logger.getLogger(ApplicationMessageWork.class.getName());
     private byte[] message;
+    private DeploymentId deploymentId;
     private String nodeId;
     private NodeControllerService ncs;
-    private String appName;
 
-    public ApplicationMessageWork(NodeControllerService ncs, byte[] message, String appName, String nodeId) {
+    public ApplicationMessageWork(NodeControllerService ncs, byte[] message, DeploymentId deploymentId, String nodeId) {
         this.ncs = ncs;
+        this.deploymentId = deploymentId;
         this.nodeId = nodeId;
         this.message = message;
-        this.appName = appName;
     }
 
     @Override
     public void run() {
-
-        NCApplicationContext ctx = ncs.getApplications().get(appName);
+        NCApplicationContext ctx = ncs.getApplicationContext();
         try {
-            IMessage data = (IMessage) ctx.deserialize(message);
+            IMessage data = (IMessage) DeploymentUtils.deserialize(message, deploymentId, ctx);;
             if (ctx.getMessageBroker() != null) {
                 ctx.getMessageBroker().receivedMessage(data, nodeId);
             } else {
                 LOGGER.log(Level.WARNING, "Messsage was sent, but no Message Broker set!");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error in application message delivery!", e);
-        } catch (ClassNotFoundException e) {
-            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error in application message delivery!", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -64,5 +61,4 @@ public class ApplicationMessageWork extends AbstractWork {
     public String toString() {
         return "nodeID: " + nodeId;
     }
-
 }

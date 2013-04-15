@@ -81,15 +81,13 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
         final List<FileSplit> splits = splitsFactory.getSplits();
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
-            private ClassLoader ctxCL;
             private ContextFactory ctxFactory = new ContextFactory();
 
             @Override
             public void initialize() throws HyracksDataException {
                 ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
-                    Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-                    Configuration conf = confFactory.createConfiguration();
+                    Configuration conf = confFactory.createConfiguration(ctx);
                     writer.open();
                     for (int i = 0; i < scheduledLocations.length; i++) {
                         if (scheduledLocations[i].equals(ctx.getJobletContext().getApplicationContext().getNodeId())) {
@@ -135,10 +133,11 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                 VertexInputFormat vertexInputFormat = BspUtils.createVertexInputFormat(conf);
                 InputSplit split = splits.get(splitId);
                 TaskAttemptContext mapperContext = ctxFactory.createContext(conf, splitId);
+                mapperContext.getConfiguration().setClassLoader(ctx.getJobletContext().getClassLoader());
 
                 VertexReader vertexReader = vertexInputFormat.createVertexReader(split, mapperContext);
                 vertexReader.initialize(split, mapperContext);
-                Vertex readerVertex = (Vertex) BspUtils.createVertex(conf);
+                Vertex readerVertex = (Vertex) BspUtils.createVertex(mapperContext.getConfiguration());
                 ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldSize);
                 DataOutput dos = tb.getDataOutput();
 

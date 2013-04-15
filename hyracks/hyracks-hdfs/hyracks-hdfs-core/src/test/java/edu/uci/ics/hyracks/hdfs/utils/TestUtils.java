@@ -15,12 +15,9 @@
 
 package edu.uci.ics.hyracks.hdfs.utils;
 
-import java.awt.List;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class TestUtils {
 
@@ -50,44 +47,6 @@ public class TestUtils {
             readerExpected.close();
             readerActual.close();
         }
-    }
-    
-    /**
-     * Compare with the sorted expected file.
-     * The actual file may not be sorted; 
-     * @param expectedFile
-     * @param actualFile
-     */
-    public static void compareWithSortedResult(File expectedFile, File actualFile) throws Exception{
-    	BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
-    	BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-    	ArrayList<String> actualLines = new ArrayList<String>();
-    	String lineExpected, lineActual;
-    	try{
-    		while ( (lineActual = readerActual.readLine())!=null){
-    			actualLines.add(lineActual);
-    		}
-    		Collections.sort(actualLines);
-    		int num = 1;
-    		for(String actualLine : actualLines){
-    			lineExpected = readerExpected.readLine();
-    			if (lineExpected == null){
-    				throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
-    			}
-    			if ( !equalStrings(lineExpected, actualLine)){
-    				   throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
-                               + actualLine);
-    			}
-                ++num;
-    		}
-	        lineExpected = readerExpected.readLine();
-	        if (lineExpected != null) {
-	            throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineExpected);
-	        }
-    	} finally{
-    		readerActual.close();
-    		readerExpected.close();
-    	}
     }
 
     private static boolean equalStrings(String s1, String s2) {

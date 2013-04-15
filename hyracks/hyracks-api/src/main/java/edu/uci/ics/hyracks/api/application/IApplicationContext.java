@@ -16,24 +16,15 @@ package edu.uci.ics.hyracks.api.application;
 
 import java.io.Serializable;
 
+import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
 
 /**
- * Base class of the {@link ICCApplicationContext} and the
- * {@link INCApplicationContext}.
+ * Base class of the {@link ICCApplicationContext} and the {@link INCApplicationContext}.
  * 
  * @author vinayakb
- * 
  */
 public interface IApplicationContext {
-    /**
-     * Provides the Class Loader that loads classes for this Hyracks Application
-     * at the CC.
-     * 
-     * @return the application {@link ClassLoader}.
-     */
-    public ClassLoader getClassLoader();
-
     /**
      * Gets the distributed state that is made available to all the Application
      * Contexts of this application in the cluster.
@@ -46,5 +37,6 @@ public interface IApplicationContext {
 
     public IMessageBroker getMessageBroker();
 
-    public String getApplicationName();
+    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer();
+
 }

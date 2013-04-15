@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.common.ipc;
 
+import java.net.URL;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import edu.uci.ics.hyracks.api.comm.NetworkAddress;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -38,9 +40,10 @@ public class NodeControllerRemoteProxy implements INodeController {
     }
 
     @Override
-    public void startTasks(String appName, JobId jobId, byte[] planBytes, List<TaskAttemptDescriptor> taskDescriptors,
+    public void startTasks(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
+            List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, EnumSet<JobFlag> flags) throws Exception {
-        CCNCFunctions.StartTasksFunction stf = new CCNCFunctions.StartTasksFunction(appName, jobId, planBytes,
+        CCNCFunctions.StartTasksFunction stf = new CCNCFunctions.StartTasksFunction(deploymentId, jobId, planBytes,
                 taskDescriptors, connectorPolicies, flags);
         ipcHandle.send(-1, stf, null);
     }
@@ -58,23 +61,21 @@ public class NodeControllerRemoteProxy implements INodeController {
     }
 
     @Override
-    public void createApplication(String appName, boolean deployHar, byte[] serializedDistributedState)
-            throws Exception {
-        CCNCFunctions.CreateApplicationFunction caf = new CCNCFunctions.CreateApplicationFunction(appName, deployHar,
-                serializedDistributedState);
-        ipcHandle.send(-1, caf, null);
-    }
-
-    @Override
-    public void destroyApplication(String appName) throws Exception {
-        CCNCFunctions.DestroyApplicationFunction daf = new CCNCFunctions.DestroyApplicationFunction(appName);
-        ipcHandle.send(-1, daf, null);
-    }
-
-    @Override
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
         CCNCFunctions.ReportPartitionAvailabilityFunction rpaf = new CCNCFunctions.ReportPartitionAvailabilityFunction(
                 pid, networkAddress);
+        ipcHandle.send(-1, rpaf, null);
+    }
+
+    @Override
+    public void deployBinary(DeploymentId deploymentId, List<URL> binaryURLs) throws Exception {
+        CCNCFunctions.DeployBinaryFunction rpaf = new CCNCFunctions.DeployBinaryFunction(deploymentId, binaryURLs);
+        ipcHandle.send(-1, rpaf, null);
+    }
+
+    @Override
+    public void undeployBinary(DeploymentId deploymentId) throws Exception {
+        CCNCFunctions.UnDeployBinaryFunction rpaf = new CCNCFunctions.UnDeployBinaryFunction(deploymentId);
         ipcHandle.send(-1, rpaf, null);
     }
 }

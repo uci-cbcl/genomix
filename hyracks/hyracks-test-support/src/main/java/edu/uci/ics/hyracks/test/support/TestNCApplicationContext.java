@@ -18,6 +18,7 @@ import java.io.Serializable;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
+import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
 
 public class TestNCApplicationContext implements INCApplicationContext {
@@ -35,11 +36,6 @@ public class TestNCApplicationContext implements INCApplicationContext {
     @Override
     public String getNodeId() {
         return nodeId;
-    }
-
-    @Override
-    public ClassLoader getClassLoader() {
-        return getClass().getClassLoader();
     }
 
     @Override
@@ -63,15 +59,9 @@ public class TestNCApplicationContext implements INCApplicationContext {
     }
 
     @Override
-    public String getApplicationName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public void setMessageBroker(IMessageBroker staticticsConnector) {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
@@ -79,4 +69,10 @@ public class TestNCApplicationContext implements INCApplicationContext {
         // TODO Auto-generated method stub
         return null;
     }
+
+	@Override
+	public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

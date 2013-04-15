@@ -14,6 +14,9 @@
  */
 package edu.uci.ics.hyracks.control.cc.web;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,13 +25,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jetty.http.HttpMethods;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
-import edu.uci.ics.hyracks.control.common.application.ApplicationContext;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
 public class ApplicationInstallationHandler extends AbstractHandler {
@@ -52,18 +55,21 @@ public class ApplicationInstallationHandler extends AbstractHandler {
             if (parts.length != 1) {
                 return;
             }
-            final String appName = parts[0];
+            final String[] params = parts[0].split("&");
+            String deployIdString = params[0];
+            String rootDir = ccs.getServerContext().getBaseDir().toString();
+            final String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + "applications/" + deployIdString
+                    : rootDir + File.separator + "/applications/" + File.separator + deployIdString;
             if (HttpMethods.PUT.equals(request.getMethod())) {
                 class OutputStreamGetter extends SynchronizableWork {
                     private OutputStream os;
 
                     @Override
                     protected void doRun() throws Exception {
-                        ApplicationContext appCtx;
-                        appCtx = ccs.getApplicationMap().get(appName);
-                        if (appCtx != null) {
-                            os = appCtx.getHarOutputStream();
-                        }
+                        FileUtils.forceMkdir(new File(deploymentDir));
+                        String fileName = params[1];
+                        File jarFile = new File(deploymentDir, fileName);
+                        os = new FileOutputStream(jarFile);
                     }
                 }
                 OutputStreamGetter r = new OutputStreamGetter();
@@ -83,11 +89,9 @@ public class ApplicationInstallationHandler extends AbstractHandler {
 
                     @Override
                     protected void doRun() throws Exception {
-                        ApplicationContext appCtx;
-                        appCtx = ccs.getApplicationMap().get(appName);
-                        if (appCtx != null && appCtx.containsHar()) {
-                            is = appCtx.getHarInputStream();
-                        }
+                        String fileName = params[1];
+                        File jarFile = new File(deploymentDir, fileName);
+                        is = new FileInputStream(jarFile);
                     }
                 }
                 InputStreamGetter r = new InputStreamGetter();

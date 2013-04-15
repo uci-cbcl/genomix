@@ -39,63 +39,55 @@ import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 
 /**
- * The HDFS file write operator using the Hadoop old API. To use this operator,
- * a user need to provide an ITupleWriterFactory.
+ * The HDFS file write operator using the Hadoop old API.
+ * To use this operator, a user need to provide an ITupleWriterFactory.
  */
 @SuppressWarnings("deprecation")
-public class HDFSWriteOperatorDescriptor extends
-		AbstractSingleActivityOperatorDescriptor {
+public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-	private static final long serialVersionUID = 1L;
-	private ConfFactory confFactory;
-	private ITupleWriterFactory tupleWriterFactory;
+    private static final long serialVersionUID = 1L;
+    private ConfFactory confFactory;
+    private ITupleWriterFactory tupleWriterFactory;
 
-	/**
-	 * The constructor of HDFSWriteOperatorDescriptor.
-	 * 
-	 * @param spec
-	 *            the JobSpecification object
-	 * @param conf
-	 *            the Hadoop JobConf which contains the output path
-	 * @param tupleWriterFactory
-	 *            the ITupleWriterFactory implementation object
-	 * @throws HyracksException
-	 */
-	public HDFSWriteOperatorDescriptor(JobSpecification spec, JobConf conf,
-			ITupleWriterFactory tupleWriterFactory) throws HyracksException {
-		super(spec, 1, 0);
-		this.confFactory = new ConfFactory(conf);
-		this.tupleWriterFactory = tupleWriterFactory;
-	}
+    /**
+     * The constructor of HDFSWriteOperatorDescriptor.
+     * 
+     * @param spec
+     *            the JobSpecification object
+     * @param conf
+     *            the Hadoop JobConf which contains the output path
+     * @param tupleWriterFactory
+     *            the ITupleWriterFactory implementation object
+     * @throws HyracksException
+     */
+    public HDFSWriteOperatorDescriptor(JobSpecification spec, JobConf conf, ITupleWriterFactory tupleWriterFactory)
+            throws HyracksException {
+        super(spec, 1, 0);
+        this.confFactory = new ConfFactory(conf);
+        this.tupleWriterFactory = tupleWriterFactory;
+    }
 
-	@Override
-	public IOperatorNodePushable createPushRuntime(
-			final IHyracksTaskContext ctx,
-			final IRecordDescriptorProvider recordDescProvider,
-			final int partition, final int nPartitions)
-			throws HyracksDataException {
+    @Override
+    public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+            final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
+            throws HyracksDataException {
 
-		return new AbstractUnaryInputSinkOperatorNodePushable() {
+        return new AbstractUnaryInputSinkOperatorNodePushable() {
 
-			private FSDataOutputStream dos;
-			private RecordDescriptor inputRd = recordDescProvider
-					.getInputRecordDescriptor(getActivityId(), 0);;
-			private FrameTupleAccessor accessor = new FrameTupleAccessor(
-					ctx.getFrameSize(), inputRd);
-			private FrameTupleReference tuple = new FrameTupleReference();
-			private ITupleWriter tupleWriter;
-			private ClassLoader ctxCL;
+            private FSDataOutputStream dos;
+            private RecordDescriptor inputRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);;
+            private FrameTupleAccessor accessor = new FrameTupleAccessor(ctx.getFrameSize(), inputRd);
+            private FrameTupleReference tuple = new FrameTupleReference();
+            private ITupleWriter tupleWriter;
+            private ClassLoader ctxCL;
 
-			@Override
-			public void open() throws HyracksDataException {
-				ctxCL = Thread.currentThread().getContextClassLoader();
-				Thread.currentThread().setContextClassLoader(
-						this.getClass().getClassLoader());
-				JobConf conf = confFactory.getConf();
-				String outputDirPath = FileOutputFormat.getOutputPath(conf)
-						.toString();
-				String fileName = outputDirPath + File.separator + "part-"
-						+ partition;
+            @Override
+            public void open() throws HyracksDataException {
+                ctxCL = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                JobConf conf = confFactory.getConf();
+                String outputDirPath = FileOutputFormat.getOutputPath(conf).toString();
+                String fileName = outputDirPath + File.separator + "part-" + partition;
 
                 tupleWriter = tupleWriterFactory.getTupleWriter(ctx);
                 try {
@@ -107,21 +99,20 @@ public class HDFSWriteOperatorDescriptor extends
                 }
             }
 
-			@Override
-			public void nextFrame(ByteBuffer buffer)
-					throws HyracksDataException {
-				accessor.reset(buffer);
-				int tupleCount = accessor.getTupleCount();
-				for (int i = 0; i < tupleCount; i++) {
-					tuple.reset(accessor, i);
-					tupleWriter.write(dos, tuple);
-				}
-			}
+            @Override
+            public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                accessor.reset(buffer);
+                int tupleCount = accessor.getTupleCount();
+                for (int i = 0; i < tupleCount; i++) {
+                    tuple.reset(accessor, i);
+                    tupleWriter.write(dos, tuple);
+                }
+            }
 
-			@Override
-			public void fail() throws HyracksDataException {
+            @Override
+            public void fail() throws HyracksDataException {
 
-			}
+            }
 
             @Override
             public void close() throws HyracksDataException {
@@ -135,6 +126,6 @@ public class HDFSWriteOperatorDescriptor extends
                 }
             }
 
-		};
-	}
+        };
+    }
 }

@@ -16,8 +16,7 @@ package edu.uci.ics.hyracks.control.cc.work;
 
 import java.util.EnumSet;
 
-import edu.uci.ics.hyracks.api.dataset.IDatasetDirectoryService;
-import edu.uci.ics.hyracks.api.exceptions.HyracksException;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGenerator;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
@@ -26,6 +25,7 @@ import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.control.cc.ClusterControllerService;
 import edu.uci.ics.hyracks.control.cc.application.CCApplicationContext;
 import edu.uci.ics.hyracks.control.cc.job.JobRun;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.IResultCallback;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
@@ -33,31 +33,28 @@ public class JobStartWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final byte[] acggfBytes;
     private final EnumSet<JobFlag> jobFlags;
+    private final DeploymentId deploymentId;
     private final JobId jobId;
-    private final String appName;
     private final IResultCallback<JobId> callback;
 
-    public JobStartWork(ClusterControllerService ccs, String appName, byte[] acggfBytes, EnumSet<JobFlag> jobFlags,
-            JobId jobId, IResultCallback<JobId> callback) {
+    public JobStartWork(ClusterControllerService ccs, DeploymentId deploymentId, byte[] acggfBytes,
+            EnumSet<JobFlag> jobFlags, JobId jobId, IResultCallback<JobId> callback) {
+        this.deploymentId = deploymentId;
         this.jobId = jobId;
         this.ccs = ccs;
         this.acggfBytes = acggfBytes;
         this.jobFlags = jobFlags;
-        this.appName = appName;
         this.callback = callback;
     }
 
     @Override
     protected void doRun() throws Exception {
         try {
-            final CCApplicationContext appCtx = ccs.getApplicationMap().get(appName);
-            if (appCtx == null) {
-                throw new HyracksException("No application with id " + appName + " found");
-            }
-            IActivityClusterGraphGeneratorFactory acggf = appCtx.createActivityClusterGraphGeneratorFactory(acggfBytes);
-            IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(appName, jobId, appCtx,
-                    jobFlags);
-            JobRun run = new JobRun(ccs, jobId, appName, acgg, jobFlags);
+            final CCApplicationContext appCtx = ccs.getApplicationContext();
+            IActivityClusterGraphGeneratorFactory acggf = (IActivityClusterGraphGeneratorFactory) DeploymentUtils
+                    .deserialize(acggfBytes, deploymentId, appCtx);
+            IActivityClusterGraphGenerator acgg = acggf.createActivityClusterGraphGenerator(jobId, appCtx, jobFlags);
+            JobRun run = new JobRun(ccs, deploymentId, jobId, acgg, jobFlags);
             run.setStatus(JobStatus.INITIALIZED, null);
             ccs.getActiveRunMap().put(jobId, run);
             appCtx.notifyJobCreation(jobId, acggf);

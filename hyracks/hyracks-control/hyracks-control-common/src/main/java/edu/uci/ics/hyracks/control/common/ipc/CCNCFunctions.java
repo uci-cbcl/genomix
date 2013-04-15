@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.List;
@@ -37,13 +38,14 @@ import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataset.ResultSetId;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
-import edu.uci.ics.hyracks.control.common.application.ApplicationStatus;
 import edu.uci.ics.hyracks.control.common.controllers.NodeParameters;
 import edu.uci.ics.hyracks.control.common.controllers.NodeRegistration;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentStatus;
 import edu.uci.ics.hyracks.control.common.heartbeat.HeartbeatData;
 import edu.uci.ics.hyracks.control.common.job.PartitionDescriptor;
 import edu.uci.ics.hyracks.control.common.job.PartitionRequest;
@@ -72,18 +74,19 @@ public class CCNCFunctions {
         REGISTER_RESULT_PARTITION_LOCATION,
         REPORT_RESULT_PARTITION_WRITE_COMPLETION,
         REPORT_RESULT_PARTITION_FAILURE,
-        APPLICATION_STATE_CHANGE_RESPONSE,
 
         NODE_REGISTRATION_RESULT,
         START_TASKS,
         ABORT_TASKS,
         CLEANUP_JOBLET,
-        CREATE_APPLICATION,
-        DESTROY_APPLICATION,
         REPORT_PARTITION_AVAILABILITY,
         SEND_APPLICATION_MESSAGE,
         GET_NODE_CONTROLLERS_INFO,
         GET_NODE_CONTROLLERS_INFO_RESPONSE,
+
+        DEPLOY_BINARY,
+        NOTIFY_DEPLOY_BINARY,
+        UNDEPLOY_BINARY,
 
         OTHER
     }
@@ -91,8 +94,12 @@ public class CCNCFunctions {
     public static class SendApplicationMessageFunction extends Function {
         private static final long serialVersionUID = 1L;
         private byte[] serializedMessage;
+        private DeploymentId deploymentId;
         private String nodeId;
-        private String appName;
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
 
         public String getNodeId() {
             return nodeId;
@@ -106,20 +113,15 @@ public class CCNCFunctions {
             return serializedMessage;
         }
 
-        public SendApplicationMessageFunction(byte[] data, String appName, String nodeId) {
-            super();
+        public SendApplicationMessageFunction(byte[] data, DeploymentId deploymentId, String nodeId) {
             this.serializedMessage = data;
+            this.deploymentId = deploymentId;
             this.nodeId = nodeId;
-            this.appName = appName;
         }
 
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.SEND_APPLICATION_MESSAGE;
-        }
-
-        public String getAppName() {
-            return appName;
         }
 
     }
@@ -563,37 +565,6 @@ public class CCNCFunctions {
         }
     }
 
-    public static class ApplicationStateChangeResponseFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String nodeId;
-        private final String appName;
-        private final ApplicationStatus status;
-
-        public ApplicationStateChangeResponseFunction(String nodeId, String appName, ApplicationStatus status) {
-            this.nodeId = nodeId;
-            this.appName = appName;
-            this.status = status;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.APPLICATION_STATE_CHANGE_RESPONSE;
-        }
-
-        public String getNodeId() {
-            return nodeId;
-        }
-
-        public String getApplicationName() {
-            return appName;
-        }
-
-        public ApplicationStatus getStatus() {
-            return status;
-        }
-    }
-
     public static class NodeRegistrationResult extends Function {
         private static final long serialVersionUID = 1L;
 
@@ -623,17 +594,17 @@ public class CCNCFunctions {
     public static class StartTasksFunction extends Function {
         private static final long serialVersionUID = 1L;
 
-        private final String appName;
+        private final DeploymentId deploymentId;
         private final JobId jobId;
         private final byte[] planBytes;
         private final List<TaskAttemptDescriptor> taskDescriptors;
         private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies;
         private final EnumSet<JobFlag> flags;
 
-        public StartTasksFunction(String appName, JobId jobId, byte[] planBytes,
+        public StartTasksFunction(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
                 List<TaskAttemptDescriptor> taskDescriptors,
                 Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, EnumSet<JobFlag> flags) {
-            this.appName = appName;
+            this.deploymentId = deploymentId;
             this.jobId = jobId;
             this.planBytes = planBytes;
             this.taskDescriptors = taskDescriptors;
@@ -646,8 +617,8 @@ public class CCNCFunctions {
             return FunctionId.START_TASKS;
         }
 
-        public String getAppName() {
-            return appName;
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
         }
 
         public JobId getJobId() {
@@ -718,56 +689,6 @@ public class CCNCFunctions {
 
         public JobStatus getStatus() {
             return status;
-        }
-    }
-
-    public static class CreateApplicationFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-        private final boolean deployHar;
-        private final byte[] serializedDistributedState;
-
-        public CreateApplicationFunction(String appName, boolean deployHar, byte[] serializedDistributedState) {
-            this.appName = appName;
-            this.deployHar = deployHar;
-            this.serializedDistributedState = serializedDistributedState;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.CREATE_APPLICATION;
-        }
-
-        public String getAppName() {
-            return appName;
-        }
-
-        public boolean isDeployHar() {
-            return deployHar;
-        }
-
-        public byte[] getSerializedDistributedState() {
-            return serializedDistributedState;
-        }
-    }
-
-    public static class DestroyApplicationFunction extends Function {
-        private static final long serialVersionUID = 1L;
-
-        private final String appName;
-
-        public DestroyApplicationFunction(String appName) {
-            this.appName = appName;
-        }
-
-        @Override
-        public FunctionId getFunctionId() {
-            return FunctionId.DESTROY_APPLICATION;
-        }
-
-        public String getAppName() {
-            return appName;
         }
     }
 
@@ -846,6 +767,81 @@ public class CCNCFunctions {
 
             // Write NetworkAddress
             writeNetworkAddress(dos, fn.getNetworkAddress());
+        }
+    }
+
+    public static class DeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final List<URL> binaryURLs;
+        private final DeploymentId deploymentId;
+
+        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs) {
+            this.binaryURLs = binaryURLs;
+            this.deploymentId = deploymentId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.DEPLOY_BINARY;
+        }
+
+        public List<URL> getBinaryURLs() {
+            return binaryURLs;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+    }
+
+    public static class UnDeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final DeploymentId deploymentId;
+
+        public UnDeployBinaryFunction(DeploymentId deploymentId) {
+            this.deploymentId = deploymentId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.UNDEPLOY_BINARY;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+    }
+
+    public static class NotifyDeployBinaryFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final String nodeId;
+        private final DeploymentId deploymentId;
+        private final DeploymentStatus deploymentStatus;
+
+        public NotifyDeployBinaryFunction(DeploymentId deploymentId, String nodeId, DeploymentStatus deploymentStatus) {
+            this.nodeId = nodeId;
+            this.deploymentId = deploymentId;
+            this.deploymentStatus = deploymentStatus;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.NOTIFY_DEPLOY_BINARY;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        public DeploymentId getDeploymentId() {
+            return deploymentId;
+        }
+
+        public DeploymentStatus getDeploymentStatus() {
+            return deploymentStatus;
         }
     }
 

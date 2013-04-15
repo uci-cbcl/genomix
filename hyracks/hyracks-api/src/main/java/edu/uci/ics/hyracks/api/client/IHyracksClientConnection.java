@@ -14,11 +14,12 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
-import java.io.File;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.IActivityClusterGraphGeneratorFactory;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -32,26 +33,6 @@ import edu.uci.ics.hyracks.api.topology.ClusterTopology;
  * @author vinayakb
  */
 public interface IHyracksClientConnection {
-    /**
-     * Create a Hyracks Application
-     * 
-     * @param appName
-     *            Name of the application
-     * @param harFile
-     *            Archive that contains deployable code for the application
-     * @throws Exception
-     */
-    public void createApplication(String appName, File harFile) throws Exception;
-
-    /**
-     * Destroy an already-deployed Hyracks application
-     * 
-     * @param appName
-     *            Name of the application
-     * @throws Exception
-     */
-    public void destroyApplication(String appName) throws Exception;
-
     /**
      * Gets the status of the specified Job.
      * 
@@ -71,7 +52,7 @@ public interface IHyracksClientConnection {
      *            Job Specification
      * @throws Exception
      */
-    public JobId startJob(String appName, JobSpecification jobSpec) throws Exception;
+    public JobId startJob(JobSpecification jobSpec) throws Exception;
 
     /**
      * Start the specified Job.
@@ -84,7 +65,7 @@ public interface IHyracksClientConnection {
      *            Flags
      * @throws Exception
      */
-    public JobId startJob(String appName, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+    public JobId startJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
     /**
      * Start the specified Job.
@@ -97,8 +78,15 @@ public interface IHyracksClientConnection {
      *            Flags
      * @throws Exception
      */
-    public JobId startJob(String appName, IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags)
-            throws Exception;
+    public JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception;
+
+    /**
+     * Gets the IP Address and port for the DatasetDirectoryService wrapped in NetworkAddress
+     * 
+     * @return {@link NetworkAddress}
+     * @throws Exception
+     */
+    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
 
     /**
      * Gets the IP Address and port for the DatasetDirectoryService wrapped in NetworkAddress
@@ -132,4 +120,60 @@ public interface IHyracksClientConnection {
      * @throws Exception
      */
     public ClusterTopology getClusterTopology() throws Exception;
+
+    /**
+     * Deploy the user-defined jars to the cluster
+     * 
+     * @param jars
+     *            a list of user-defined jars
+     */
+    public DeploymentId deployBinary(List<String> jars) throws Exception;
+
+    /**
+     * undeploy a certain deployment
+     * 
+     * @param jars
+     *            a list of user-defined jars
+     */
+    public void unDeployBinary(DeploymentId deploymentId) throws Exception;
+
+    /**
+     * Start the specified Job.
+     * 
+     * @param deploymentId
+     *            the id of the specific deployment
+     * @param jobSpec
+     *            Job Specification
+     * @throws Exception
+     */
+    public JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec) throws Exception;
+
+    /**
+     * Start the specified Job.
+     * 
+     * @param deploymentId
+     *            the id of the specific deployment
+     * @param jobSpec
+     *            Job Specification
+     * @param jobFlags
+     *            Flags
+     * @throws Exception
+     */
+    public JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags)
+            throws Exception;
+
+    /**
+     * Start the specified Job.
+     * 
+     * @param deploymentId
+     *            the id of the specific deployment
+     * @param acggf
+     *            Activity Cluster Graph Generator Factory
+     * @param jobFlags
+     *            Flags
+     * @throws Exception
+     */
+    public JobId startJob(DeploymentId deploymentId, IActivityClusterGraphGeneratorFactory acggf,
+            EnumSet<JobFlag> jobFlags) throws Exception;
+
 }
