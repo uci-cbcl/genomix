@@ -209,7 +209,7 @@ public class RunJobTestSuite extends TestSuite {
 
     private static String jobExtToResExt(String fname) {
         int dot = fname.lastIndexOf('.');
-        return fname.substring(0, dot + 1) + FILE_EXTENSION_OF_RESULTS;
+        return fname.substring(0, dot);
     }
 
     private static boolean isInList(List<String> onlys, String name) {
