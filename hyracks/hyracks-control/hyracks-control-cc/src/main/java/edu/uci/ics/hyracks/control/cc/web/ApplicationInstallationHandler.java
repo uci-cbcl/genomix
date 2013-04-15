@@ -70,7 +70,6 @@ public class ApplicationInstallationHandler extends AbstractHandler {
                         String fileName = params[1];
                         File jarFile = new File(deploymentDir, fileName);
                         os = new FileOutputStream(jarFile);
-                        System.out.println("client put: " + jarFile.getAbsolutePath());
                     }
                 }
                 OutputStreamGetter r = new OutputStreamGetter();
@@ -93,7 +92,6 @@ public class ApplicationInstallationHandler extends AbstractHandler {
                         String fileName = params[1];
                         File jarFile = new File(deploymentDir, fileName);
                         is = new FileInputStream(jarFile);
-                        System.out.println("client request: " + jarFile.getAbsolutePath());
                     }
                 }
                 InputStreamGetter r = new InputStreamGetter();

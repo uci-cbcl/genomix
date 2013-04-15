@@ -61,14 +61,13 @@ public class RunJobTestSuite extends TestSuite {
 
     private static final String DATA_PATH3 = "data/clique/clique.txt";
     private static final String HDFS_PATH3 = "/clique/";
-    
+
     private static final String DATA_PATH4 = "data/clique2/clique.txt";
     private static final String HDFS_PATH4 = "/clique2/";
-    
+
     private static final String DATA_PATH5 = "data/clique3/clique.txt";
     private static final String HDFS_PATH5 = "/clique3/";
 
-    private static final String HYRACKS_APP_NAME = "pregelix";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
 
@@ -116,12 +115,12 @@ public class RunJobTestSuite extends TestSuite {
         dest = new Path(HDFS_PATH3);
         dfs.mkdirs(dest);
         dfs.copyFromLocalFile(src, dest);
-        
+
         src = new Path(DATA_PATH4);
         dest = new Path(HDFS_PATH4);
         dfs.mkdirs(dest);
         dfs.copyFromLocalFile(src, dest);
-        
+
         src = new Path(DATA_PATH5);
         dest = new Path(HDFS_PATH5);
         dfs.mkdirs(dest);
@@ -154,6 +153,7 @@ public class RunJobTestSuite extends TestSuite {
         RunJobTestSuite testSuite = new RunJobTestSuite();
         testSuite.setUp();
         boolean onlyEnabled = false;
+        FileSystem dfs = FileSystem.get(testSuite.conf);
 
         if (onlys.size() > 0) {
             onlyEnabled = true;
@@ -169,7 +169,7 @@ public class RunJobTestSuite extends TestSuite {
                     String resultFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName());
                     String expectedFileName = EXPECTED_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName());
                     testSuite.addTest(new RunJobTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile.getAbsolutePath()
-                            .toString(), resultFileName, expectedFileName));
+                            .toString(), resultFileName, expectedFileName, dfs));
                 }
             }
         }

@@ -111,7 +111,6 @@ public class DeploymentUtils {
                 File targetFile = new File(filePath);
                 if (isNC) {
                     HttpClient hc = new DefaultHttpClient();
-                    System.out.println(url.toString());
                     HttpGet get = new HttpGet(url.toString());
                     HttpResponse response = hc.execute(get);
                     InputStream is = response.getEntity().getContent();

@@ -52,9 +52,6 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
             if (classLoader == null) {
                 /** crate a new classloader */
                 URL[] urls = binaryURLs.toArray(new URL[binaryURLs.size()]);
-                for (URL url : urls) {
-                    System.out.println("Class loader url " + url);
-                }
                 classLoader = new URLClassLoader(urls, this.getClass().getClassLoader());
             } else {
                 /** add URLs to the existing classloader */

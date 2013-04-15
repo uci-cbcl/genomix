@@ -132,10 +132,12 @@ public final class HyracksConnection implements IHyracksClientConnection {
                 String fileName = jar.substring(slashIndex + 1);
                 String url = "http://" + ccHost + ":" + ccInfo.getWebPort() + "/applications/"
                         + deploymentId.toString() + "&" + fileName;
-                System.out.print("put URL: " + url);
                 HttpPut put = new HttpPut(url);
                 put.setEntity(new FileEntity(new File(jar), "application/octet-stream"));
                 HttpResponse response = hc.execute(put);
+                if (response != null) {
+                    response.getEntity().consumeContent();
+                }
                 if (response.getStatusLine().getStatusCode() != 200) {
                     throw new HyracksException(response.getStatusLine().toString());
                 }
