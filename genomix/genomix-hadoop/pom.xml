@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>genomix</artifactId>
-		<version>0.2.4-SNAPSHOT</version>
+		<version>0.2.5-SNAPSHOT</version>
 	</parent>
 
 	<properties>
@@ -151,7 +151,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>genomix-data</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
