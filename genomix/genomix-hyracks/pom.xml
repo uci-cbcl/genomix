@@ -241,13 +241,6 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.5-SNAPSHOT</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>genomix-data</artifactId>
 			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>

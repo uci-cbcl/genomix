@@ -30,8 +30,6 @@ import edu.uci.ics.genomix.driver.Driver.Plan;
 import edu.uci.ics.genomix.job.GenomixJob;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.KmerCountValue;
-import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
-import edu.uci.ics.hyracks.hdfs.utils.TestUtils;
 
 public class JobRunTest {
 	private static final String ACTUAL_RESULT_DIR = "actual";
