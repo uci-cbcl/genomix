@@ -62,7 +62,6 @@ public class JobRunTest {
 	public void setUp() throws Exception {
 		cleanupStores();
 		HyracksUtils.init();
-		HyracksUtils.createApp(HYRACKS_APP_NAME);
 		FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
 		FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
 		startHDFS();
@@ -97,7 +96,7 @@ public class JobRunTest {
 		Path dest = new Path(HDFS_INPUT_PATH);
 		Path result = new Path(HDFS_OUTPUT_PATH);
 		dfs.mkdirs(dest);
-		//dfs.mkdirs(result);
+		// dfs.mkdirs(result);
 		dfs.copyFromLocalFile(src, dest);
 
 		DataOutputStream confOutput = new DataOutputStream(
@@ -119,7 +118,7 @@ public class JobRunTest {
 	}
 
 	@Test
-	public void TestAll() throws Exception{
+	public void TestAll() throws Exception {
 		cleanUpReEntry();
 		TestExternalGroupby();
 		cleanUpReEntry();
@@ -134,7 +133,7 @@ public class JobRunTest {
 		cleanUpReEntry();
 		TestHybridReversedGroupby();
 	}
-	
+
 	public void TestExternalGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
 		System.err.println("Testing ExternalGroupBy");
@@ -155,22 +154,24 @@ public class JobRunTest {
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
 	}
-	
-	public void TestExternalReversedGroupby() throws Exception{
+
+	public void TestExternalReversedGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "external");
 		conf.setBoolean(GenomixJob.REVERSED_KMER, true);
 		System.err.println("Testing ExternalGroupBy + Reversed");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults(EXPECTED_REVERSE_PATH));
 	}
-	public void TestPreClusterReversedGroupby() throws Exception{
+
+	public void TestPreClusterReversedGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
 		conf.setBoolean(GenomixJob.REVERSED_KMER, true);
 		System.err.println("Testing PreclusterGroupBy + Reversed");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults(EXPECTED_REVERSE_PATH));
 	}
-	public void TestHybridReversedGroupby() throws Exception{
+
+	public void TestHybridReversedGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
 		conf.setBoolean(GenomixJob.REVERSED_KMER, true);
 		System.err.println("Testing HybridGroupBy + Reversed");
@@ -188,21 +189,21 @@ public class JobRunTest {
 							DUMPED_RESULT), false, conf, null);
 			dumped = new File(DUMPED_RESULT);
 		} else {
-			
-			FileSystem.getLocal(new Configuration()).mkdirs(new Path(ACTUAL_RESULT_DIR
-			+ HDFS_OUTPUT_PATH));
+
+			FileSystem.getLocal(new Configuration()).mkdirs(
+					new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH));
 			File filePathTo = new File(CONVERT_RESULT);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
 			for (int i = 0; i < numPartitionPerMachine * numberOfNC; i++) {
 				String partname = "/part-" + i;
-				FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH						
-						+ partname), FileSystem.getLocal(new Configuration()),						
-						new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + partname), false, conf);
-					
-				Path path = new Path(HDFS_OUTPUT_PATH
-						+ partname);
+				FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH
+						+ partname), FileSystem.getLocal(new Configuration()),
+						new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH
+								+ partname), false, conf);
+
+				Path path = new Path(HDFS_OUTPUT_PATH + partname);
 				FileSystem dfs = FileSystem.get(conf);
-				if (dfs.getFileStatus(path).getLen() == 0){
+				if (dfs.getFileStatus(path).getLen() == 0) {
 					continue;
 				}
 				SequenceFile.Reader reader = new SequenceFile.Reader(dfs, path,
@@ -214,15 +215,14 @@ public class JobRunTest {
 
 				int k = conf.getInt(GenomixJob.KMER_LENGTH, 25);
 				while (reader.next(key, value)) {
-					if (key == null || value == null){
+					if (key == null || value == null) {
 						break;
 					}
 					bw.write(Kmer.recoverKmerFrom(k, key.getBytes(), 0,
 							key.getLength())
 							+ "\t" + value.toString());
-					System.out.println(Kmer.recoverKmerFrom(k, key.getBytes(), 0,
-							key.getLength())
-							+ "\t" + value.toString());
+					System.out.println(Kmer.recoverKmerFrom(k, key.getBytes(),
+							0, key.getLength()) + "\t" + value.toString());
 					bw.newLine();
 				}
 				reader.close();
@@ -232,13 +232,12 @@ public class JobRunTest {
 			dumped = new File(CONVERT_RESULT);
 		}
 
-		TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
+		TestUtils.compareWithResult(new File(expectedPath), dumped);
 		return true;
 	}
 
 	@After
 	public void tearDown() throws Exception {
-		HyracksUtils.destroyApp(HYRACKS_APP_NAME);
 		HyracksUtils.deinit();
 		cleanupHDFS();
 	}

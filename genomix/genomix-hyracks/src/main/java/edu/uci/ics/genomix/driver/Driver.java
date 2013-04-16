@@ -108,7 +108,6 @@ public class Driver {
 	private void execute(JobSpecification job) throws Exception {
 		job.setUseConnectorPolicyForScheduling(false);
 		JobId jobId = hcc.startJob(
-				applicationName,
 				job,
 				profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet
 						.noneOf(JobFlag.class));
