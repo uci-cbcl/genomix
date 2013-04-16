@@ -2,11 +2,8 @@ package edu.uci.ics.genomix.pregelix;
 
 import java.util.Iterator;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.KmerUtil;
@@ -50,7 +47,9 @@ import edu.uci.ics.genomix.pregelix.type.State;
 public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, NullWritable, MessageWritable>{
 	
 	public static final String KMER_SIZE = "MergeGraphVertex.kmerSize";
+	public static final String ITERATIONS = "MergeGraphVertex.iteration";
 	public static int kmerSize = -1;
+	private int maxIteration = -1;
 	
     private byte[] tmpVertexId;
     private byte[] tmpDestVertexId;
@@ -63,7 +62,6 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 	 * @throws Exception 
 	 * @throws  
 	 */
-	
 	/**
      *	Load KmerSize
      */
@@ -71,6 +69,8 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 	public void compute(Iterator<MessageWritable> msgIterator) {
 		if(kmerSize == -1)
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+        if (maxIteration < 0) 
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 100);
 		tmpVertexId = GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId());
 		if (getSuperstep() == 1) {
 			if(GraphVertexOperation.isHeadVertex(getVertexValue().getValue())){ 
@@ -89,8 +89,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 		}
 		
 		//path node sends message back to head node
-		else if(getSuperstep()%2 == 0){
-			
+		else if(getSuperstep()%2 == 0 && getSuperstep() <= maxIteration){
 			 if(msgIterator.hasNext()){
 				tmpMsg = msgIterator.next();
 					
@@ -147,7 +146,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 			}
 		}
 		//head node sends message to path node
-		else if(getSuperstep()%2 == 1){
+		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
 			while (msgIterator.hasNext()){
 				tmpMsg = msgIterator.next();
 				if(!tmpMsg.isRear()){
