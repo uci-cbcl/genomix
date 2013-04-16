@@ -106,10 +106,6 @@ public final class HyracksConnection implements IHyracksClientConnection {
         return hci.getDatasetDirectoryServiceInfo();
     }
 
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
-        return hci.getDatasetDirectoryServiceInfo();
-    }
-
     @Override
     public void waitForCompletion(JobId jobId) throws Exception {
         hci.waitForCompletion(jobId);

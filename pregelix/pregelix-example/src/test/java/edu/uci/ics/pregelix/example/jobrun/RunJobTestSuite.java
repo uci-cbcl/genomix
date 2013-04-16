@@ -51,7 +51,6 @@ public class RunJobTestSuite extends TestSuite {
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
     private static final String PATH_TO_IGNORE = "src/test/resources/ignore.txt";
     private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
-    private static final String FILE_EXTENSION_OF_RESULTS = "result";
 
     private static final String DATA_PATH = "data/webmap/webmap_link.txt";
     private static final String HDFS_PATH = "/webmap/";
@@ -78,7 +77,7 @@ public class RunJobTestSuite extends TestSuite {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
-        PregelixHyracksIntegrationUtil.init();
+        PregelixHyracksIntegrationUtil.init("src/test/resources/topology.xml");
         LOGGER.info("Hyracks mini-cluster started");
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));

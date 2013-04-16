@@ -89,14 +89,6 @@ public interface IHyracksClientConnection {
     public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
 
     /**
-     * Gets the IP Address and port for the DatasetDirectoryService wrapped in NetworkAddress
-     * 
-     * @return {@link NetworkAddress}
-     * @throws Exception
-     */
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
-
-    /**
      * Waits until the specified job has completed, either successfully or has
      * encountered a permanent failure.
      * 

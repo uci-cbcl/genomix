@@ -35,8 +35,6 @@ public interface IHyracksClientInterface {
 
     public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
 
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
-
     public void waitForCompletion(JobId jobId) throws Exception;
 
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception;

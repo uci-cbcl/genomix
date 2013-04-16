@@ -14,7 +14,6 @@
  */
 package edu.uci.ics.pregelix.core.util;
 
-import java.io.File;
 import java.util.EnumSet;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;

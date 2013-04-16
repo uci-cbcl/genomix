@@ -85,7 +85,6 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
 
             @Override
             public void initialize() throws HyracksDataException {
-                ctxCL = Thread.currentThread().getContextClassLoader();
                 try {
                     Configuration conf = confFactory.createConfiguration(ctx);
                     writer.open();
@@ -107,8 +106,6 @@ public class VertexFileScanOperatorDescriptor extends AbstractSingleActivityOper
                     writer.close();
                 } catch (Exception e) {
                     throw new HyracksDataException(e);
-                } finally {
-                    Thread.currentThread().setContextClassLoader(ctxCL);
                 }
             }
 

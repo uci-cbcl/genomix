@@ -66,6 +66,7 @@ public class Driver implements IDriver {
     @Override
     public void runJob(PregelixJob job, Plan planChoice, String ipAddress, int port, boolean profiling)
             throws HyracksException {
+        DeploymentId deploymentId = null;
         try {
             /** add hadoop configurations */
             URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
@@ -115,7 +116,7 @@ public class Driver implements IDriver {
             for (URL url : urls)
                 if (url.toString().endsWith(".jar"))
                     jars.add(new File(url.getPath()));
-            DeploymentId deploymentId = installApplication(jars);
+            deploymentId = installApplication(jars);
 
             start = System.currentTimeMillis();
             FileSystem dfs = FileSystem.get(job.getConfiguration());
@@ -151,8 +152,8 @@ public class Driver implements IDriver {
                 /**
                  * destroy application if there is any exception
                  */
-                if (hcc != null) {
-                    destroyApplication(applicationName);
+                if (hcc != null && deploymentId == null) {
+                    hcc.unDeployBinary(deploymentId);
                 }
             } catch (Exception e2) {
                 throw new HyracksException(e2);

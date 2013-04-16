@@ -361,27 +361,6 @@ public class ClusterControllerService extends AbstractRemoteService {
                     return;
                 }
 
-                case GET_DATASET_DIRECTORY_SERIVICE_INFO: {
-                    workQueue.schedule(new GetDatasetDirectoryServiceInfoWork(ClusterControllerService.this,
-                            new IPCResponder<NetworkAddress>(handle, mid)));
-                    return;
-                }
-
-                case GET_DATASET_RESULT_STATUS: {
-                    HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction gdrlf = (HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction) fn;
-                    workQueue.schedule(new GetResultStatusWork(ClusterControllerService.this, gdrlf.getJobId(), gdrlf
-                            .getResultSetId(), new IPCResponder<Status>(handle, mid)));
-                    return;
-                }
-
-                case GET_DATASET_RESULT_LOCATIONS: {
-                    HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf = (HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction) fn;
-                    workQueue.schedule(new GetResultPartitionLocationsWork(ClusterControllerService.this, gdrlf
-                            .getJobId(), gdrlf.getResultSetId(), gdrlf.getKnownRecords(),
-                            new IPCResponder<DatasetDirectoryRecord[]>(handle, mid)));
-                    return;
-                }
-
                 case WAIT_FOR_COMPLETION: {
                     HyracksClientInterfaceFunctions.WaitForCompletionFunction wfcf = (HyracksClientInterfaceFunctions.WaitForCompletionFunction) fn;
                     workQueue.schedule(new WaitForJobCompletionWork(ClusterControllerService.this, wfcf.getJobId(),
