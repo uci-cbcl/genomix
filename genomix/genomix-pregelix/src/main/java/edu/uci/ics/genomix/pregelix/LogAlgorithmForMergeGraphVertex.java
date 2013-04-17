@@ -162,7 +162,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 							tmpVal.getLengthOfMergeChain(),
 							tmpVal.getMergeChain(),
 							0, tmpVal.getMergeChain().length);
-					if(Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)) == -1)
+					if(Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)) == -1 || lastKmer == null)
 						voteToHalt();
 					else{
 						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, lastKmer, 
@@ -220,15 +220,20 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				//voteToHalt();
 			}
 			else{
-				if(getVertexValue().getState() != State.START_VERTEX
+				if(getVertexValue().getState() != State.START_VERTEX && getVertexValue().getState() != State.NON_EXIST
 						&& getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE){
+					tmpVal.setState(State.NON_EXIST);
+					setVertexValue(tmpVal);
 					deleteVertex(getVertexId()); //killSelf because it doesn't receive any message
 				}
 			}
 		}
 		else if(getSuperstep()%3 == 2 && getSuperstep() <= maxIteration){
-			if(tmpVal.getState() == State.TODELETE)
+			if(tmpVal.getState() == State.TODELETE && getVertexValue().getState() != State.NON_EXIST){
+				tmpVal.setState(State.NON_EXIST);
+				setVertexValue(tmpVal);
 				deleteVertex(getVertexId()); //killSelf
+			}
 			else{
 				if(msgIterator.hasNext()){
 					tmpMsg = msgIterator.next();
@@ -269,7 +274,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 						sendMsg(getVertexId(),tmpMsg);
 					}
 				}
-				if(tmpVal.getState() == State.END_VERTEX || tmpVal.getState() == State.FINAL_DELETE)
+				if(tmpVal.getState() == State.END_VERTEX || tmpVal.getState() == State.FINAL_DELETE || tmpVal.getState() == State.NON_EXIST)
 					voteToHalt();
 				if(tmpVal.getState() == State.FINAL_VERTEX){
 					//String source = Kmer.recoverKmerFrom(tmpVal.getLengthOfMergeChain(), tmpVal.getMergeChain(), 0, tmpVal.getMergeChain().length);

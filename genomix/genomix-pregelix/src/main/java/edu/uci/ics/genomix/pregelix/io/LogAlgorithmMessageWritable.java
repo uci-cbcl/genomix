@@ -122,7 +122,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	public void readFields(DataInput in) throws IOException {
 		// TODO Auto-generated method stub
 		lengthOfChain = in.readInt();
-		if(lengthOfChain != 0){
+		if(lengthOfChain > 0){
 			chainVertexId = new byte[(lengthOfChain-1)/4 + 1];
 			in.readFully(chainVertexId);
 		}
