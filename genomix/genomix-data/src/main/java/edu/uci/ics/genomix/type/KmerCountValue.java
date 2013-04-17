@@ -47,7 +47,7 @@ public class KmerCountValue implements Writable {
 
 	@Override
 	public String toString() {
-		return Kmer.GENE_CODE.getSymbolFromBitMap(adjBitMap) + '\t'
+		return GeneCode.getSymbolFromBitMap(adjBitMap) + '\t'
 				+ String.valueOf(count);
 	}
 

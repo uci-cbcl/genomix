@@ -4,7 +4,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class KmerTest {
 	static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
@@ -12,70 +13,68 @@ public class KmerTest {
 	
 	@Test
 	public void TestCompressKmer() {
-		byte[] kmer = Kmer.compressKmer(k, array, 0);
-		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "AATAGAA");
+		KmerBytesWritable kmer = new KmerBytesWritable(k);
+		kmer.setByRead(k, array, 0);
+		Assert.assertEquals(kmer.toString(), "AATAGAA");
 		
-		kmer = Kmer.compressKmer(k, array, 1);
-		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "ATAGAAG");
+		kmer.setByRead(k, array, 1);
+		Assert.assertEquals(kmer.toString(), "ATAGAAG");
 	}
 	
 	@Test
 	public void TestMoveKmer(){
-		byte[] kmer = Kmer.compressKmer(k, array, 0);
-		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length); 
-		Assert.assertEquals(result, "AATAGAA");
+		KmerBytesWritable kmer = new KmerBytesWritable(k);
+		kmer.setByRead(k, array, 0);
+		Assert.assertEquals(kmer.toString(), "AATAGAA");
 		
 		for (int i = k; i < array.length-1; i++) {
-			Kmer.moveKmer(k, kmer, array[i]);
+			kmer.shiftKmerWithNextCode(array[i]);
 			Assert.assertTrue(false);
 		}
 
-		byte out = Kmer.moveKmer(k, kmer, array[array.length - 1]);
-		Assert.assertEquals(out, Kmer.GENE_CODE.getAdjBit((byte) 'A'));
-		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "ATAGAAG");
+		byte out = kmer.shiftKmerWithNextChar( array[array.length - 1]);
+		Assert.assertEquals(out, GeneCode.getAdjBit((byte) 'A'));
+		Assert.assertEquals(kmer.toString(), "ATAGAAG");
 	}
-
 	
-	@Test
-	public void TestReverseKmer(){
-		byte[] kmer = Kmer.compressKmer(k, array, 0);
-		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "AATAGAA");
-		byte[] reversed = Kmer.reverseKmer(k, kmer);
-		result = Kmer.recoverKmerFrom(k, reversed, 0, kmer.length);
-		Assert.assertEquals(result, "AAGATAA");
-	}
 	
 	@Test
 	public void TestCompressKmerReverse() {
-		byte[] kmer = Kmer.compressKmerReverse(k, array, 0);
-		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "AAGATAA");
+		KmerBytesWritable kmer = new KmerBytesWritable(k);
+		kmer.setByRead(k, array, 0);
+		Assert.assertEquals(kmer.toString(), "AATAGAA");
 		
-		kmer = Kmer.compressKmerReverse(k, array, 1);
-		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "GAAGATA");
+		kmer.setByReadReverse(k, array, 1);
+		Assert.assertEquals(kmer.toString(), "GAAGATA");
 	}
 	
 	@Test
 	public void TestMoveKmerReverse(){
-		byte[] kmer = Kmer.compressKmerReverse(k, array, 0);
-		String result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "AAGATAA");
+		KmerBytesWritable kmer = new KmerBytesWritable(k);
+		kmer.setByRead(k, array, 0);
+		Assert.assertEquals(kmer.toString(), "AATAGAA");
 		
 		for (int i = k; i < array.length-1; i++) {
-			Kmer.moveKmerReverse(k, kmer, array[i]);
+			kmer.shiftKmerWithPreChar( array[i]);
 			Assert.assertTrue(false);
 		}
 
-		byte out = Kmer.moveKmerReverse(k, kmer, array[array.length - 1]);
-		Assert.assertEquals(out, Kmer.GENE_CODE.getAdjBit((byte) 'A'));
-		result = Kmer.recoverKmerFrom(k, kmer, 0, kmer.length);
-		Assert.assertEquals(result, "GAAGATA");
+		byte out = kmer.shiftKmerWithPreChar(array[array.length - 1]);
+		Assert.assertEquals(out, GeneCode.getAdjBit((byte) 'A'));
+		Assert.assertEquals(kmer.toString(), "GAATAGA");
 	}
 
+	@Test
+	public void TestGetGene(){
+		KmerBytesWritable kmer = new KmerBytesWritable(k);
+		String text = "AGCTGACCG";
+		byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C','G' };
+		kmer.setByRead(9, array, 0);
+		
+		for(int i =0; i < 9; i++){
+			Assert.assertEquals(text.charAt(i), 
+					(char)(GeneCode.getSymbolFromCode(kmer.getGeneCodeAtPosition(i))));
+		}
+	}
 
 }
