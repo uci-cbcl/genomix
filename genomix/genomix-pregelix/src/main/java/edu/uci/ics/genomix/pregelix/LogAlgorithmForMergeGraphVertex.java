@@ -45,9 +45,11 @@ import edu.uci.ics.genomix.type.KmerUtil;
  * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
-public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{
+public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{	
 	public static final String KMER_SIZE = "LogAlgorithmForMergeGraphVertex.kmerSize";
+	public static final String ITERATIONS = "MergeGraphVertex.iteration";
 	public static int kmerSize = -1;
+	private int maxIteration = -1;
 	
 	private byte[] tmpVertexId;
 	private byte[] tmpDestVertexId;
@@ -60,18 +62,15 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 	/**
 	 * Log Algorithm for path merge graph
 	 */
-	
 	/**
-     *	Load KmerSize
+     *	Load KmerSize, MaxIteration
      */
-	public LogAlgorithmForMergeGraphVertex(){
-		
-	}
-	
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
 		if(kmerSize == -1)
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+        if (maxIteration < 0)
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 100);
 		tmpVertexId = GraphVertexOperation.generateValidDataFromBytesWritable(getVertexId());
 		tmpVal = getVertexValue();
 		if (getSuperstep() == 1) {
@@ -103,12 +102,12 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				tmpVal.setState(State.MID_VERTEX);
 				setVertexValue(tmpVal);
 			}
-			if(!GraphVertexOperation.isHeadVertex(tmpVal.getValue())
+			/*if(!GraphVertexOperation.isHeadVertex(tmpVal.getValue())
 					&& !GraphVertexOperation.isRearVertex(tmpVal.getValue())
 					&& !GraphVertexOperation.isRearVertex(tmpVal.getValue()))
-				voteToHalt();
+				voteToHalt();*/
 		}
-		else if(getSuperstep() == 2){
+		else if(getSuperstep() == 2 && getSuperstep() <= maxIteration){
 			while(msgIterator.hasNext()){
 				if(!GraphVertexOperation.isPathVertex(tmpVal.getValue())){
 					msgIterator.next();
@@ -116,7 +115,8 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				}
 				else{
 					tmpMsg = msgIterator.next();
-					if(tmpMsg.getMessage() == Message.START && tmpVal.getState() == State.MID_VERTEX){
+					if(tmpMsg.getMessage() == Message.START && 
+							(tmpVal.getState() == State.MID_VERTEX || tmpVal.getState() == State.END_VERTEX)){
 						tmpVal.setState(State.START_VERTEX);
 						setVertexValue(tmpVal);
 					}
@@ -131,7 +131,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 			}
 		}
 		//head node sends message to path node
-		else if(getSuperstep()%3 == 0){
+		else if(getSuperstep()%3 == 0 && getSuperstep() <= maxIteration){
 			if(getSuperstep() == 3){
 				tmpMsg = new LogAlgorithmMessageWritable();
 				if(Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F)) == -1)
@@ -167,7 +167,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					else{
 						tmpDestVertexId = KmerUtil.shiftKmerWithNextCode(kmerSize, lastKmer, 
 								0, lastKmer.length,
-								Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F))); //tmpMsg.getNeighberInfo()
+								Kmer.GENE_CODE.getGeneCodeFromBitMap((byte)(tmpVal.getValue() & 0x0F))); 
 						destVertexId.set(tmpDestVertexId, 0, tmpDestVertexId.length);
 						if(tmpVal.getState() == State.START_VERTEX){
 							tmpMsg.setMessage(Message.START);
@@ -186,7 +186,7 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 		}
 		
 		//path node sends message back to head node
-		else if(getSuperstep()%3 == 1){
+		else if(getSuperstep()%3 == 1 && getSuperstep() <= maxIteration){
 			if(msgIterator.hasNext()){
 				tmpMsg = msgIterator.next();
 				int message = tmpMsg.getMessage();
@@ -217,15 +217,16 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 				}
 				destVertexId.set(tmpMsg.getSourceVertexId(), 0, tmpMsg.getSourceVertexId().length);
 				sendMsg(destVertexId,tmpMsg);
-				voteToHalt();
+				//voteToHalt();
 			}
 			else{
 				if(getVertexValue().getState() != State.START_VERTEX
-						&& getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE)
+						&& getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE){
 					deleteVertex(getVertexId()); //killSelf because it doesn't receive any message
+				}
 			}
 		}
-		else if(getSuperstep()%3 == 2){
+		else if(getSuperstep()%3 == 2 && getSuperstep() <= maxIteration){
 			if(tmpVal.getState() == State.TODELETE)
 				deleteVertex(getVertexId()); //killSelf
 			else{
@@ -275,7 +276,6 @@ public class LogAlgorithmForMergeGraphVertex extends Vertex<BytesWritable, Value
 					voteToHalt();
 				}
 			}
-			
 		}
 	}
 

@@ -71,7 +71,7 @@ public class JobGenerator {
         job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
-        job.getConfiguration().setInt(LogAlgorithmForMergeGraphVertex.KMER_SIZE, 55);
+        job.getConfiguration().setInt(LogAlgorithmForMergeGraphVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -86,8 +86,8 @@ public class JobGenerator {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		//genLoadGraph();
-		genMergeGraph();
-		//genLogAlgorithmForMergeGraph();
+		//genMergeGraph();
+		genLogAlgorithmForMergeGraph();
 		//genSequenceLoadGraph();
 		//genBasicBinaryLoadGraph();
 	}
