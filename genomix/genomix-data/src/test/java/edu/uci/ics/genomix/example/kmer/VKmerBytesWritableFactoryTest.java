@@ -5,12 +5,13 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
-public class KmerUtilTest {
+public class VKmerBytesWritableFactoryTest {
 	static byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C','G','T'};
 	
-	KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(8);
+	VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(8);
 	
 	@Test
 	public void TestDegree(){
@@ -24,19 +25,24 @@ public class KmerUtilTest {
 	@Test
 	public void TestGetLastKmer(){
 		KmerBytesWritable kmer = new KmerBytesWritable(9);
-		kmer.setByRead(9, array, 0);
+		kmer.setByRead( array, 0);
 		Assert.assertEquals("AGCTGACCG", kmer.toString());
 		KmerBytesWritable lastKmer ;
 		for(int i = 8; i>0 ; i--){
 			lastKmer = kmerFactory.getLastKmerFromChain(i, kmer);
 			Assert.assertEquals("AGCTGACCG".substring(9-i), lastKmer.toString());
 		}
+		VKmerBytesWritable vlastKmer ;
+		for(int i = 8; i>0 ; i--){
+			vlastKmer = kmerFactory.getLastKmerFromChain(i, kmer);
+			Assert.assertEquals("AGCTGACCG".substring(9-i), vlastKmer.toString());
+		}
 	}
 	
 	@Test
 	public void TestMergeNext(){
 		KmerBytesWritable kmer = new KmerBytesWritable(9);
-		kmer.setByRead(9, array, 0);
+		kmer.setByRead(array, 0);
 		Assert.assertEquals("AGCTGACCG", kmer.toString());
 		
 		String text = "AGCTGACCG";
@@ -57,7 +63,7 @@ public class KmerUtilTest {
 	@Test
 	public void TestMergePre(){
 		KmerBytesWritable kmer = new KmerBytesWritable(9);
-		kmer.setByRead(9, array, 0);
+		kmer.setByRead(array, 0);
 		Assert.assertEquals("AGCTGACCG", kmer.toString());
 		String text = "AGCTGACCG";
 		for(byte x = GeneCode.A; x<= GeneCode.T ; x++){
@@ -77,10 +83,10 @@ public class KmerUtilTest {
 	@Test
 	public void TestMergeTwoKmer(){
 		KmerBytesWritable kmer1 = new KmerBytesWritable(9);
-		kmer1.setByRead(9, array, 0);
+		kmer1.setByRead( array, 0);
 		String text1 = "AGCTGACCG";
 		KmerBytesWritable kmer2 = new KmerBytesWritable(9);
-		kmer2.setByRead(9, array, 1);
+		kmer2.setByRead(array, 1);
 		String text2 = "GCTGACCGT";
 		Assert.assertEquals(text1, kmer1.toString());
 		Assert.assertEquals(text2, kmer2.toString());
@@ -89,7 +95,7 @@ public class KmerUtilTest {
 		Assert.assertEquals(text1+text2, merged.toString());
 		
 		KmerBytesWritable kmer3 =  new KmerBytesWritable(3);
-		kmer3.setByRead(3, array, 1);
+		kmer3.setByRead(array, 1);
 		String text3 = "GCT";
 		Assert.assertEquals(text3, kmer3.toString());
 		
@@ -99,16 +105,16 @@ public class KmerUtilTest {
 		Assert.assertEquals(text3+text1, merged.toString());
 		
 		KmerBytesWritable kmer4 = new KmerBytesWritable(8);
-		kmer4.setByRead(8, array, 0);
+		kmer4.setByRead( array, 0);
 		String text4 = "AGCTGACC";
 		Assert.assertEquals(text4, kmer4.toString());
 		merged = kmerFactory.mergeTwoKmer(kmer4, kmer3);
 		Assert.assertEquals(text4+text3, merged.toString());
 		
 		KmerBytesWritable kmer5 = new KmerBytesWritable(7);
-		kmer5.setByRead(7, array, 0);
+		kmer5.setByRead( array, 0);
 		String text5 = "AGCTGAC";
-		KmerBytesWritable kmer6 = new KmerBytesWritable(9);
+		VKmerBytesWritable kmer6 = new VKmerBytesWritable(9);
 		kmer6.setByRead(9, array, 1);
 		String text6 = "GCTGACCGT";
 		merged = kmerFactory.mergeTwoKmer(kmer5, kmer6);
@@ -127,14 +133,14 @@ public class KmerUtilTest {
 	}
 	@Test 
 	public void TestShift(){
-		KmerBytesWritable kmer = new KmerBytesWritable(kmerFactory.getKmerByRead(9, array, 0));
+		VKmerBytesWritable kmer = new VKmerBytesWritable(kmerFactory.getKmerByRead(9, array, 0));
 		String text = "AGCTGACCG";
 		Assert.assertEquals(text, kmer.toString());
 		
-		KmerBytesWritable kmerForward = kmerFactory.shiftKmerWithNextCode(kmer,GeneCode.A);
+		VKmerBytesWritable kmerForward = kmerFactory.shiftKmerWithNextCode(kmer,GeneCode.A);
 		Assert.assertEquals(text,  kmer.toString());
 		Assert.assertEquals("GCTGACCGA", kmerForward.toString());
-		KmerBytesWritable kmerBackward = kmerFactory.shiftKmerWithPreCode(kmer,GeneCode.C);
+		VKmerBytesWritable kmerBackward = kmerFactory.shiftKmerWithPreCode(kmer,GeneCode.C);
 		Assert.assertEquals(text, kmer.toString());
 		Assert.assertEquals("CAGCTGACC", kmerBackward.toString());
 		
@@ -144,7 +150,7 @@ public class KmerUtilTest {
 	@Test
 	public void TestReverseKmer(){
 		KmerBytesWritable kmer = new KmerBytesWritable(7);
-		kmer.setByRead(7, array, 0);
+		kmer.setByRead( array, 0);
 		Assert.assertEquals(kmer.toString(), "AGCTGAC");
 		KmerBytesWritable reversed = kmerFactory.reverse(kmer);
 		Assert.assertEquals(reversed.toString(), "CAGTCGA");

@@ -21,11 +21,16 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
+/**
+ * Fix kmer length byteswritable
+ * It was used to generate the graph in which phase the kmer length doesn't change.
+ * Thus the size of bytes doesn't change either.
+ */
 public class KmerBytesWritable extends BinaryComparable implements
 		WritableComparable<BinaryComparable> {
-	private byte size;
-	private byte[] bytes;
-	private byte kmerlength;
+	protected int size;
+	protected byte[] bytes;
+	protected int kmerlength;
 
 	/**
 	 * Initial Kmer space by kmerlength
@@ -34,15 +39,15 @@ public class KmerBytesWritable extends BinaryComparable implements
 	 *            kmerlength
 	 */
 	public KmerBytesWritable(int k) {
-		int length = KmerUtil.getByteNumFromK(k);
-		this.bytes = new byte[length];
-		this.size = (byte) length;
-		this.kmerlength = (byte) k;
+		this.kmerlength = k;
+		this.size = KmerUtil.getByteNumFromK(kmerlength);
+		this.bytes = new byte[this.size];
 	}
 
 	public KmerBytesWritable(KmerBytesWritable right) {
-		this.bytes = new byte[right.size];
+		this.kmerlength = right.kmerlength;
 		this.size =  right.size;
+		this.bytes = new byte[right.size];
 		set(right);
 	}
 
@@ -66,31 +71,7 @@ public class KmerBytesWritable extends BinaryComparable implements
 
 	@Override
 	public int getLength() {
-		return (int) size;
-	}
-
-	public void setSize(byte size) {
-		if ((int) size > getCapacity()) {
-			setCapacity((byte) (size * 3 / 2));
-		}
-		this.size = size;
-	}
-
-	public int getCapacity() {
-		return bytes.length;
-	}
-
-	public void setCapacity(byte new_cap) {
-		if (new_cap != getCapacity()) {
-			byte[] new_data = new byte[new_cap];
-			if (new_cap < size) {
-				size = new_cap;
-			}
-			if (size != 0) {
-				System.arraycopy(bytes, 0, new_data, 0, size);
-			}
-			bytes = new_data;
-		}
+		return size;
 	}
 
 	/**
@@ -101,15 +82,11 @@ public class KmerBytesWritable extends BinaryComparable implements
 	 * @param array
 	 * @param start
 	 */
-	public void setByRead(int k, byte[] array, int start) {
-		this.kmerlength = (byte) k;
-		setSize((byte) 0);
-		setSize((byte) KmerUtil.getByteNumFromK(k));
-
+	public void setByRead(byte[] array, int start) {
 		byte l = 0;
 		int bytecount = 0;
 		int bcount = this.size - 1;
-		for (int i = start; i < start + k; i++) {
+		for (int i = start; i < start + kmerlength; i++) {
 			byte code = GeneCode.getCodeFromSymbol(array[i]);
 			l |= (byte) (code << bytecount);
 			bytecount += 2;
@@ -133,15 +110,11 @@ public class KmerBytesWritable extends BinaryComparable implements
 	 * @param start
 	 *            position
 	 */
-	public void setByReadReverse(int k, byte[] array, int start) {
-		this.kmerlength = (byte) k;
-		setSize((byte) 0);
-		setSize((byte) KmerUtil.getByteNumFromK(k));
-
+	public void setByReadReverse(byte[] array, int start) {
 		byte l = 0;
 		int bytecount = 0;
 		int bcount = size - 1;
-		for (int i = start + k - 1; i >= 0; i--) {
+		for (int i = start + kmerlength - 1; i >= 0; i--) {
 			byte code = GeneCode.getCodeFromSymbol(array[i]);
 			l |= (byte) (code << bytecount);
 			bytecount += 2;
@@ -220,43 +193,30 @@ public class KmerBytesWritable extends BinaryComparable implements
 	}
 
 	public void set(KmerBytesWritable newData) {
-		set(newData.kmerlength, newData.bytes, (byte) 0, newData.size);
+		set(newData.bytes, 0, newData.size);
 	}
 
-	public void set(int k, byte[] newData, int offset, int length) {
-		this.kmerlength = (byte) k;
-		setSize((byte) 0);
-		setSize((byte) (length - offset));
+	public void set(byte[] newData, int offset, int length) {
 		System.arraycopy(newData, offset, bytes, 0, size);
 	}
 
 	/**
-	 * Reset array by kmerlength
-	 * @param k
+	 * Don't read the kmerlength from datastream, 
+	 * Read it from configuration
 	 */
-	public void reset(int k) {
-		this.kmerlength = (byte) k;
-		setSize((byte) 0);
-		setSize((byte) KmerUtil.getByteNumFromK(k));
-	}
-
+	@Override
 	public void readFields(DataInput in) throws IOException {
-		this.kmerlength = in.readByte();
-		setSize((byte) 0); // clear the old data
-		setSize(in.readByte());
 		in.readFully(bytes, 0, size);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeByte(this.kmerlength);
-		out.writeByte(size);
 		out.write(bytes, 0, size);
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return super.hashCode() * this.kmerlength;
 	}
 
 	@Override
