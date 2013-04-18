@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.type.Kmer;
 public class GenerateTextFile {
 
 	public static void generate() throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter("text/naive_CyclePath"));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("text/new_SimplePath"));
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
 		for(int i = 0; i < 2; i++){
