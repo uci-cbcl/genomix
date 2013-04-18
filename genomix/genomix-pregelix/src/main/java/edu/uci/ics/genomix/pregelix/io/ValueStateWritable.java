@@ -5,7 +5,7 @@ import java.io.*;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.old.Kmer;
 
 
 public class ValueStateWritable implements WritableComparable<ValueStateWritable> {

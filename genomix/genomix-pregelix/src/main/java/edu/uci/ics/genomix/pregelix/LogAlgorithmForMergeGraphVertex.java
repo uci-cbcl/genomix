@@ -14,8 +14,8 @@ import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.KmerUtil;
+import edu.uci.ics.genomix.type.old.Kmer;
+import edu.uci.ics.genomix.type.old.KmerUtil;
 
 /*
  * vertexId: BytesWritable

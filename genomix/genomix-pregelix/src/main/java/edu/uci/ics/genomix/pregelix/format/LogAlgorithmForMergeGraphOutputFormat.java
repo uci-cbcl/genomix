@@ -13,7 +13,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.old.Kmer;
 
 public class LogAlgorithmForMergeGraphOutputFormat extends 
 	BinaryVertexOutputFormat<BytesWritable, ValueStateWritable, NullWritable> {
