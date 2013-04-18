@@ -32,10 +32,31 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     /**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
-	protected int size;
+    private static final long serialVersionUID = 1L;
+    private static final byte[] EMPTY_BYTES = {};
+
+    protected int size;
     protected byte[] bytes;
     protected int kmerlength;
+
+    @Deprecated
+    public KmerBytesWritable() {
+        this(0, EMPTY_BYTES);
+    }
+
+    public KmerBytesWritable(int k, byte[] storage) {
+        this.kmerlength = k;
+        if (k > 0){
+            this.size = KmerUtil.getByteNumFromK(kmerlength);
+            this.bytes = storage;
+            if (this.bytes.length < size){
+                throw new ArrayIndexOutOfBoundsException("Storage is smaller than required space for kmerlength:k");
+            }
+        }else{
+            this.bytes = storage;
+            this.size = 0;
+        }
+    }
 
     /**
      * Initial Kmer space by kmerlength
@@ -213,7 +234,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void readFields(DataInput in) throws IOException {
         this.kmerlength = in.readInt();
         this.size = KmerUtil.getByteNumFromK(kmerlength);
-        if ( this.bytes.length < this.size){
+        if (this.bytes.length < this.size) {
             this.bytes = new byte[this.size];
         }
         in.readFully(bytes, 0, size);

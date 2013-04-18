@@ -7,10 +7,14 @@ public class VKmerBytesWritable extends KmerBytesWritable {
      * 
      */
     private static final long serialVersionUID = 1L;
-    public static final int DEFAULT_KMER_LENGTH = 21;
 
+    @Deprecated
     public VKmerBytesWritable() {
-        this(DEFAULT_KMER_LENGTH);
+        super();
+    }
+    
+    public VKmerBytesWritable(int k, byte[] storage){
+        super(k, storage);
     }
 
     public VKmerBytesWritable(int k) {
