@@ -3,12 +3,16 @@ package edu.uci.ics.genomix.type;
 import org.apache.hadoop.io.WritableComparator;
 
 public class VKmerBytesWritable extends KmerBytesWritable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     public static final int DEFAULT_KMER_LENGTH = 21;
-    
-    public VKmerBytesWritable(){
+
+    public VKmerBytesWritable() {
         this(DEFAULT_KMER_LENGTH);
     }
-    
+
     public VKmerBytesWritable(int k) {
         super(k);
     }

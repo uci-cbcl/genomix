@@ -74,7 +74,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
                 if (bReversed) {
                     /** first kmer */
-                    kmer.setByRead(array, 0);
+                    kmer.setByReadReverse(array, 0);
                     next = 0;
                     pre = GeneCode.getAdjBit(array[k]);
                     InsertToFrame(kmer, pre, next, writer);

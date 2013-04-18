@@ -14,9 +14,11 @@
  */
 package edu.uci.ics.genomix.type;
 
-import java.io.IOException;
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
+
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
@@ -26,8 +28,12 @@ import org.apache.hadoop.io.WritableComparator;
  * It was used to generate the graph in which phase the kmer length doesn't change.
  * Thus the size of bytes doesn't change either.
  */
-public class KmerBytesWritable extends BinaryComparable implements WritableComparable<BinaryComparable> {
-    protected int size;
+public class KmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	protected int size;
     protected byte[] bytes;
     protected int kmerlength;
 

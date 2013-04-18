@@ -58,8 +58,6 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 				reEnterCount.set(bitmap, count);
 				reEnterKey.set(kmer, keyStart, keyLength);
 				writer.append(reEnterKey, reEnterCount);
-				// @mark: this method can not used for read in hadoop 0.20.2.
-				// writer.appendRaw(kmer, keyStart, keyLength, reEnterCount);
 			} catch (IOException e) {
 				throw new HyracksDataException(e);
 			}
