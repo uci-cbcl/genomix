@@ -63,7 +63,7 @@ public class MergeGraphVertex extends Vertex<BytesWritable, ValueStateWritable, 
 	 * @throws  
 	 */
 	/**
-     *	Load KmerSize
+     *	Load KmerSize, MaxIteration
      */
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {

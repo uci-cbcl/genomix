@@ -8,6 +8,7 @@ public class State {
 	public static final int TODELETE = 4;
 	public static final int FINAL_VERTEX = 5;
 	public static final int FINAL_DELETE = 6;
+	public static final int NON_EXIST = 7;
 	
 	public final static class STATE_CONTENT{
 
@@ -34,6 +35,9 @@ public class State {
 				break;
 			case FINAL_DELETE:
 				r = "FINAL_DELETE";
+				break;
+			case NON_EXIST:
+				r = "NON_EXIST";
 				break;
 			}
 			return r;

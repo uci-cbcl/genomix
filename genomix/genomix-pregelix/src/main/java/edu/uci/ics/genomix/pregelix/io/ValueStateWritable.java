@@ -5,6 +5,7 @@ import java.io.*;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.type.Kmer;
 
 
 public class ValueStateWritable implements WritableComparable<ValueStateWritable> {
@@ -63,6 +64,8 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		value = in.readByte();
 		state = in.readInt();
 		lengthOfMergeChain = in.readInt();
+		if(lengthOfMergeChain < 0)
+			System.out.println();
 		if(lengthOfMergeChain != 0){
 			mergeChain = new byte[(lengthOfMergeChain-1)/4 + 1];
 			in.readFully(mergeChain);
@@ -84,6 +87,16 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	public int compareTo(ValueStateWritable o) {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+	
+	@Override
+	public String toString() {
+		if(lengthOfMergeChain == 0)
+			return Kmer.GENE_CODE.getSymbolFromBitMap(value);
+		return 	Kmer.GENE_CODE.getSymbolFromBitMap(value) + "\t" +
+				lengthOfMergeChain + "\t" +
+				Kmer.recoverKmerFrom(lengthOfMergeChain, mergeChain, 0, mergeChain.length) + "\t" +
+				state;
 	}
 	
 }
