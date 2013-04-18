@@ -40,7 +40,9 @@ public class LogAlgorithmForMergeGraphOutputFormat extends
             public void writeVertex(Vertex<BytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
             	if(vertex.getVertexValue().getState() != State.FINAL_DELETE
-            			&& vertex.getVertexValue().getState() != State.END_VERTEX)
+            			&& vertex.getVertexValue().getState() != State.END_VERTEX
+            			&& vertex.getVertexValue().getState() != State.TODELETE
+            			&& vertex.getVertexValue().getState() != State.KILL_SELF)
                     getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
             }
         }
