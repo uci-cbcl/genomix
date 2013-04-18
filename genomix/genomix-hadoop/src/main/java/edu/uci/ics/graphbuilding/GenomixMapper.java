@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
@@ -28,8 +27,8 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.Kmer.GENE_CODE;
+import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 /**
@@ -37,7 +36,7 @@ import edu.uci.ics.genomix.type.KmerCountValue;
  */
 @SuppressWarnings("deprecation")
 public class GenomixMapper extends MapReduceBase implements
-        Mapper<LongWritable, Text, BytesWritable, KmerCountValue> {
+        Mapper<LongWritable, Text, KmerBytesWritable, KmerCountValue> {
 
     public class CurrenByte {
         public byte curByte;
@@ -45,12 +44,14 @@ public class GenomixMapper extends MapReduceBase implements
     }
 
     public static int KMER_SIZE;
-    public KmerCountValue outputAdjList = new KmerCountValue();
-    public BytesWritable outputKmer = new BytesWritable();
+    public KmerCountValue outputAdjList; 
+    public KmerBytesWritable outputKmer; 
 
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
+        outputAdjList = new KmerCountValue();
+        outputKmer = new KmerBytesWritable(KMER_SIZE);
     }
 
     /*succeed node
@@ -64,7 +65,7 @@ public class GenomixMapper extends MapReduceBase implements
       G 01000000 64
       T 10000000 128*/
     @Override
-    public void map(LongWritable key, Text value, OutputCollector<BytesWritable, KmerCountValue> output,
+    public void map(LongWritable key, Text value, OutputCollector<KmerBytesWritable, KmerCountValue> output,
             Reporter reporter) throws IOException {
         /* A 00
            C 01
@@ -78,28 +79,25 @@ public class GenomixMapper extends MapReduceBase implements
             /** first kmer */
             byte count = 1;
             byte[] array = geneLine.getBytes();
-            byte[] kmer = Kmer.compressKmer(KMER_SIZE, array, 0);
+            outputKmer.setByRead( array, 0);
             byte pre = 0;
-            byte next = GENE_CODE.getAdjBit(array[KMER_SIZE]);
-            byte adj = GENE_CODE.mergePreNextAdj(pre, next);
+            byte next = GeneCode.getAdjBit(array[KMER_SIZE]);
+            byte adj = GeneCode.mergePreNextAdj(pre, next);
             outputAdjList.set(adj, count);
-            outputKmer.set(kmer, 0, kmer.length);
             output.collect(outputKmer, outputAdjList);
             /** middle kmer */
             for (int i = KMER_SIZE; i < array.length - 1; i++) {
-                pre = Kmer.moveKmer(KMER_SIZE, kmer, array[i]);
-                next = GENE_CODE.getAdjBit(array[i + 1]);
-                adj = GENE_CODE.mergePreNextAdj(pre, next);
+                pre = outputKmer.shiftKmerWithNextChar(array[i]);
+                next = GeneCode.getAdjBit(array[i + 1]);
+                adj = GeneCode.mergePreNextAdj(pre, next);
                 outputAdjList.set(adj, count);
-                outputKmer.set(kmer, 0, kmer.length);
                 output.collect(outputKmer, outputAdjList);
             }
             /** last kmer */
-            pre = Kmer.moveKmer(KMER_SIZE, kmer, array[array.length - 1]);
+            pre = outputKmer.shiftKmerWithNextChar(array[array.length - 1]);
             next = 0;
-            adj = GENE_CODE.mergePreNextAdj(pre, next);
+            adj = GeneCode.mergePreNextAdj(pre, next);
             outputAdjList.set(adj, count);
-            outputKmer.set(kmer, 0, kmer.length);
             output.collect(outputKmer, outputAdjList);
         }
     }

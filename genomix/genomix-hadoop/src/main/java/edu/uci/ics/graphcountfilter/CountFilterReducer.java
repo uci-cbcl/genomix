@@ -17,18 +17,19 @@ package edu.uci.ics.graphcountfilter;
 import java.io.IOException;
 import java.util.Iterator;
 import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+
 @SuppressWarnings("deprecation")
 public class CountFilterReducer extends MapReduceBase implements
-        Reducer<BytesWritable, ByteWritable, BytesWritable, ByteWritable> {
+        Reducer<KmerBytesWritable, ByteWritable, KmerBytesWritable, ByteWritable> {
     @Override
-    public void reduce(BytesWritable key, Iterator<ByteWritable> values,
-            OutputCollector<BytesWritable, ByteWritable> output, Reporter reporter) throws IOException {
+    public void reduce(KmerBytesWritable key, Iterator<ByteWritable> values,
+            OutputCollector<KmerBytesWritable, ByteWritable> output, Reporter reporter) throws IOException {
         output.collect(key, values.next()); //Output the Pair
     }
 }

@@ -16,31 +16,31 @@ package edu.uci.ics.pathmerging;
 
 import java.io.IOException;
 import java.util.Iterator;
-import org.apache.hadoop.io.BytesWritable;
+
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+
 @SuppressWarnings("deprecation")
 public class SNodeInitialReducer extends MapReduceBase implements
-        Reducer<BytesWritable, MergePathValueWritable, BytesWritable, MergePathValueWritable> {
-    public BytesWritable outputKmer = new BytesWritable();
-    public MergePathValueWritable outputAdjList = new MergePathValueWritable();
+        Reducer<KmerBytesWritable, MergePathValueWritable, KmerBytesWritable, MergePathValueWritable> {
+    private MergePathValueWritable outputAdjList = new MergePathValueWritable();
 
     @Override
-    public void reduce(BytesWritable key, Iterator<MergePathValueWritable> values,
-            OutputCollector<BytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
+    public void reduce(KmerBytesWritable key, Iterator<MergePathValueWritable> values,
+            OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
         outputAdjList = values.next();
-        outputKmer.set(key);
         if (values.hasNext() == true) {
             if (outputAdjList.getFlag() != 2) {
                 byte adjBitMap = outputAdjList.getAdjBitMap();
                 int kmerSize = outputAdjList.getKmerSize();
                 byte bitFlag = 1;
                 outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, kmerSize);
-                output.collect(outputKmer, outputAdjList);
-                
+                output.collect(key, outputAdjList);
+
             } else {
                 boolean flag = false;
                 while (values.hasNext()) {
@@ -55,12 +55,11 @@ public class SNodeInitialReducer extends MapReduceBase implements
                     int kmerSize = outputAdjList.getKmerSize();
                     byte bitFlag = 1;
                     outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, kmerSize);
-                    output.collect(outputKmer, outputAdjList);
+                    output.collect(key, outputAdjList);
                 }
             }
-        }
-        else {
-            output.collect(outputKmer, outputAdjList);
+        } else {
+            output.collect(key, outputAdjList);
         }
     }
 }

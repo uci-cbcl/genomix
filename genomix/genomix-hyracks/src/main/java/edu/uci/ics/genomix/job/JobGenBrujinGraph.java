@@ -280,6 +280,10 @@ public class JobGenBrujinGraph extends JobGen {
 	protected void initJobConfiguration() {
 
 		kmers = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
+		if (kmers % 2 == 0){
+		    kmers--;
+		    conf.setInt(GenomixJob.KMER_LENGTH, kmers);
+		}
 		frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT,
 				GenomixJob.DEFAULT_FRAME_LIMIT);
 		tableSize = conf.getInt(GenomixJob.TABLE_SIZE,

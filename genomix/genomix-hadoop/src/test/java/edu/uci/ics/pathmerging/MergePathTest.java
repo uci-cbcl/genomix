@@ -11,12 +11,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
+
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.utils.TestUtils;
 
 @SuppressWarnings("deprecation")
@@ -52,7 +53,7 @@ public class MergePathTest {
         SequenceFile.Reader reader = null;
         Path path = new Path(HDFA_PATH_DATA + "/complete2" + "/complete2-r-00000");
         reader = new SequenceFile.Reader(dfs, path, conf);
-        BytesWritable key = (BytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+        KmerBytesWritable key = (KmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         MergePathValueWritable value = (MergePathValueWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
         File filePathTo = new File(TEST_SOURCE_DIR);
         BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));

@@ -9,130 +9,122 @@ import edu.uci.ics.hyracks.data.std.api.INumeric;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
 
-public final class KmerPointable extends AbstractPointable implements
-		IHashable, IComparable, INumeric {
-	public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
-		private static final long serialVersionUID = 1L;
+public final class KmerPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
+    public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
+        private static final long serialVersionUID = 1L;
 
-		@Override
-		public boolean isFixedLength() {
-			return false;
-		}
+        @Override
+        public boolean isFixedLength() {
+            return false;
+        }
 
-		@Override
-		public int getFixedLength() {
-			return -1;
-		}
-	};
+        @Override
+        public int getFixedLength() {
+            return -1;
+        }
+    };
 
-	public static final IPointableFactory FACTORY = new IPointableFactory() {
-		private static final long serialVersionUID = 1L;
+    public static final IPointableFactory FACTORY = new IPointableFactory() {
+        private static final long serialVersionUID = 1L;
 
-		@Override
-		public IPointable createPointable() {
-			return new KmerPointable();
-		}
+        @Override
+        public IPointable createPointable() {
+            return new KmerPointable();
+        }
 
-		@Override
-		public ITypeTraits getTypeTraits() {
-			return TYPE_TRAITS;
-		}
-	};
+        @Override
+        public ITypeTraits getTypeTraits() {
+            return TYPE_TRAITS;
+        }
+    };
 
-	public static short getShortReverse(byte[] bytes, int offset, int length) {
-		if (length < 2) {
-			return (short) (bytes[offset] & 0xff);
-		}
-		return (short) (((bytes[offset + length - 1] & 0xff) << 8) + (bytes[offset
-				+ length - 2] & 0xff));
-	}
+    public static short getShortReverse(byte[] bytes, int offset, int length) {
+        if (length < 2) {
+            return (short) (bytes[offset] & 0xff);
+        }
+        return (short) (((bytes[offset + length - 1] & 0xff) << 8) + (bytes[offset + length - 2] & 0xff));
+    }
 
-	public static int getIntReverse(byte[] bytes, int offset, int length) {
-		int shortValue = getShortReverse(bytes, offset, length) & 0xffff;
+    public static int getIntReverse(byte[] bytes, int offset, int length) {
+        int shortValue = getShortReverse(bytes, offset, length) & 0xffff;
 
-		if (length < 3) {
-			return shortValue;
-		}
-		if (length == 3) {
-			return (((bytes[offset + 2] & 0xff) << 16)
-					+ ((bytes[offset + 1] & 0xff) << 8) + ((bytes[offset] & 0xff)));
-		}
-		return ((bytes[offset + length - 1] & 0xff) << 24)
-				+ ((bytes[offset + length - 2] & 0xff) << 16)
-				+ ((bytes[offset + length - 3] & 0xff) << 8)
-				+ ((bytes[offset + length - 4] & 0xff) << 0);
-	}
+        if (length < 3) {
+            return shortValue;
+        }
+        if (length == 3) {
+            return (((bytes[offset + 2] & 0xff) << 16) + ((bytes[offset + 1] & 0xff) << 8) + ((bytes[offset] & 0xff)));
+        }
+        return ((bytes[offset + length - 1] & 0xff) << 24) + ((bytes[offset + length - 2] & 0xff) << 16)
+                + ((bytes[offset + length - 3] & 0xff) << 8) + ((bytes[offset + length - 4] & 0xff) << 0);
+    }
 
-	public static long getLongReverse(byte[] bytes, int offset, int length) {
-		if (length < 8) {
-			return ((long) getIntReverse(bytes, offset, length)) & 0x0ffffffffL;
-		}
-		return (((long) (bytes[offset + length - 1] & 0xff)) << 56)
-				+ (((long) (bytes[offset + length - 2] & 0xff)) << 48)
-				+ (((long) (bytes[offset + length - 3] & 0xff)) << 40)
-				+ (((long) (bytes[offset + length - 4] & 0xff)) << 32)
-				+ (((long) (bytes[offset + length - 5] & 0xff)) << 24)
-				+ (((long) (bytes[offset + length - 6] & 0xff)) << 16)
-				+ (((long) (bytes[offset + length - 7] & 0xff)) << 8)
-				+ (((long) (bytes[offset + length - 8] & 0xff)));
-	}
+    public static long getLongReverse(byte[] bytes, int offset, int length) {
+        if (length < 8) {
+            return ((long) getIntReverse(bytes, offset, length)) & 0x0ffffffffL;
+        }
+        return (((long) (bytes[offset + length - 1] & 0xff)) << 56)
+                + (((long) (bytes[offset + length - 2] & 0xff)) << 48)
+                + (((long) (bytes[offset + length - 3] & 0xff)) << 40)
+                + (((long) (bytes[offset + length - 4] & 0xff)) << 32)
+                + (((long) (bytes[offset + length - 5] & 0xff)) << 24)
+                + (((long) (bytes[offset + length - 6] & 0xff)) << 16)
+                + (((long) (bytes[offset + length - 7] & 0xff)) << 8) + (((long) (bytes[offset + length - 8] & 0xff)));
+    }
 
-	@Override
-	public int compareTo(IPointable pointer) {
-		return compareTo(pointer.getByteArray(), pointer.getStartOffset(),
-				pointer.getLength());
-	}
+    @Override
+    public int compareTo(IPointable pointer) {
+        return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
+    }
 
-	@Override
-	public int compareTo(byte[] bytes, int offset, int length) {
+    @Override
+    public int compareTo(byte[] bytes, int offset, int length) {
 
-		if (this.length != length) {
-			return this.length - length;
-		}
-		for (int i = length - 1; i >= 0; i--) {
-			int cmp = (this.bytes[this.start + i] & 0xff) - (bytes[offset + i] & 0xff);
-			if (cmp !=0){
-				return cmp;
-			}
-		}
+        if (this.length != length) {
+            return this.length - length;
+        }
+        for (int i = length - 1; i >= 0; i--) {
+            int cmp = (this.bytes[this.start + i] & 0xff) - (bytes[offset + i] & 0xff);
+            if (cmp != 0) {
+                return cmp;
+            }
+        }
 
-		return 0;
-	}
+        return 0;
+    }
 
-	@Override
-	public int hash() {
-		int hash = KmerHashPartitioncomputerFactory.hashBytes(bytes, start,
-				length);
-		return hash;
-	}
+    @Override
+    public int hash() {
+        int hash = KmerHashPartitioncomputerFactory.hashBytes(bytes, start, length);
+        return hash;
+    }
 
-	@Override
-	public byte byteValue() {
-		return bytes[start + length - 1];
-	}
+    @Override
+    public byte byteValue() {
+        return bytes[start + length - 1];
+    }
 
-	@Override
-	public short shortValue() {
-		return getShortReverse(bytes, start, length);
-	}
+    @Override
+    public short shortValue() {
+        return getShortReverse(bytes, start, length);
+    }
 
-	@Override
-	public int intValue() {
-		return getIntReverse(bytes, start, length);
-	}
+    @Override
+    public int intValue() {
+        return getIntReverse(bytes, start, length);
+    }
 
-	@Override
-	public long longValue() {
-		return getLongReverse(bytes, start, length);
-	}
+    @Override
+    public long longValue() {
+        return getLongReverse(bytes, start, length);
+    }
 
-	@Override
-	public float floatValue() {
-		return Float.intBitsToFloat(intValue());
-	}
+    @Override
+    public float floatValue() {
+        return Float.intBitsToFloat(intValue());
+    }
 
-	@Override
-	public double doubleValue() {
-		return Double.longBitsToDouble(longValue());
-	}
+    @Override
+    public double doubleValue() {
+        return Double.longBitsToDouble(longValue());
+    }
 }

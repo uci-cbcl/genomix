@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import org.apache.hadoop.io.BytesWritable;
 
 import edu.uci.ics.genomix.data.std.accessors.ByteSerializerDeserializer;
+import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.genomix.type.KmerUtil;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -46,7 +47,7 @@ public class StatReadsKeyValueParserFactory implements IKeyValueParserFactory<By
 					IFrameWriter writer) throws HyracksDataException {
 				byte adjMap = value.getAdjBitMap();
 				byte count = value.getCount();
-				InsertToFrame((byte) (KmerUtil.inDegree(adjMap)*10+KmerUtil.outDegree(adjMap)),count,writer);
+				InsertToFrame((byte) (GeneCode.inDegree(adjMap)*10+GeneCode.outDegree(adjMap)),count,writer);
 			}
 
 			@Override

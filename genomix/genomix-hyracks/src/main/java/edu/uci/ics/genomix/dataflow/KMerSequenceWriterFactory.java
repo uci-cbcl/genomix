@@ -4,12 +4,13 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.JobConf;
 
+import edu.uci.ics.genomix.job.GenomixJob;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -23,9 +24,11 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 
 	private static final long serialVersionUID = 1L;
 	private ConfFactory confFactory;
+	private final int kmerlength;
 
 	public KMerSequenceWriterFactory(JobConf conf) throws HyracksDataException {
 		this.confFactory = new ConfFactory(conf);
+		this.kmerlength = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
 	}
 
 	public class TupleWriter implements ITupleWriter {
@@ -37,7 +40,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 		Writer writer = null;
 
 		KmerCountValue reEnterCount = new KmerCountValue();
-		BytesWritable reEnterKey = new BytesWritable();
+		KmerBytesWritable reEnterKey = new KmerBytesWritable(kmerlength);
 
 		/**
 		 * assumption is that output never change source!
@@ -66,7 +69,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 		public void open(DataOutput output) throws HyracksDataException {
 			try {
 				writer = SequenceFile.createWriter(cf.getConf(),
-						(FSDataOutputStream) output, BytesWritable.class,
+						(FSDataOutputStream) output, KmerBytesWritable.class,
 						KmerCountValue.class, CompressionType.NONE, null);
 			} catch (IOException e) {
 				throw new HyracksDataException(e);

@@ -18,12 +18,12 @@ package edu.uci.ics.graphbuilding;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 /**
@@ -31,12 +31,12 @@ import edu.uci.ics.genomix.type.KmerCountValue;
  */
 @SuppressWarnings("deprecation")
 public class GenomixCombiner extends MapReduceBase implements
-        Reducer<BytesWritable, KmerCountValue, BytesWritable, KmerCountValue> {
-    public KmerCountValue vaWriter = new KmerCountValue();
+        Reducer<KmerBytesWritable, KmerCountValue, KmerBytesWritable, KmerCountValue> {
+    private KmerCountValue vaWriter = new KmerCountValue();
 
     @Override
-    public void reduce(BytesWritable key, Iterator<KmerCountValue> values,
-            OutputCollector<BytesWritable, KmerCountValue> output, Reporter reporter) throws IOException {
+    public void reduce(KmerBytesWritable key, Iterator<KmerCountValue> values,
+            OutputCollector<KmerBytesWritable, KmerCountValue> output, Reporter reporter) throws IOException {
         byte groupByAdjList = 0;
         int count = 0;
         byte bytCount = 0;

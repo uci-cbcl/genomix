@@ -15,31 +15,37 @@
 package edu.uci.ics.pathmerging;
 
 import java.io.IOException;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.KmerUtil;
-import edu.uci.ics.genomix.type.Kmer.GENE_CODE;
+
+import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
 @SuppressWarnings("deprecation")
 public class MergePathMapper extends MapReduceBase implements
-        Mapper<BytesWritable, MergePathValueWritable, BytesWritable, MergePathValueWritable> {
-    public static int KMER_SIZE;
-    public BytesWritable outputKmer = new BytesWritable();
-    public MergePathValueWritable outputAdjList = new MergePathValueWritable();
-
+        Mapper<KmerBytesWritable, MergePathValueWritable, KmerBytesWritable, MergePathValueWritable> {
+    private int KMER_SIZE;
+    private VKmerBytesWritableFactory outputKmerFactory;
+    private MergePathValueWritable outputAdjList; 
+    private VKmerBytesWritable tmpKmer;
+    private VKmerBytesWritable outputKmer;
 
     public void configure(JobConf job) {
         KMER_SIZE = job.getInt("sizeKmer", 0);
+        outputKmerFactory = new VKmerBytesWritableFactory(KMER_SIZE);
+        outputAdjList = new MergePathValueWritable();
+        tmpKmer = new VKmerBytesWritable(KMER_SIZE);
+        outputKmer = new VKmerBytesWritable(KMER_SIZE);
     }
 
     @Override
-    public void map(BytesWritable key, MergePathValueWritable value,
-            OutputCollector<BytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
+    public void map(KmerBytesWritable key, MergePathValueWritable value,
+            OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
 
         byte precursor = (byte) 0xF0;
         byte succeed = (byte) 0x0F;
@@ -49,24 +55,18 @@ public class MergePathMapper extends MapReduceBase implements
         precursor = (byte) ((precursor & 0xff) >> 4);
         succeed = (byte) (succeed & adjBitMap);
 
-        byte[] kmerValue = key.getBytes();
-        int kmerLength = key.getLength();
         if (bitFlag == 1) {
-            byte succeedCode = GENE_CODE.getGeneCodeFromBitMap(succeed);
-            int originalByteNum = Kmer.getByteNumFromK(KMER_SIZE);
-            byte[] tmpKmer = KmerUtil.getLastKmerFromChain(KMER_SIZE, value.getKmerSize(), kmerValue, 0, kmerLength);
-            byte[] newKmer = KmerUtil.shiftKmerWithNextCode(KMER_SIZE, tmpKmer,0, tmpKmer.length, succeedCode);
-            outputKmer.set(newKmer, 0, originalByteNum);
+            byte succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
+            tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
+            outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));
 
-            int mergeByteNum = Kmer.getByteNumFromK(value.getKmerSize() - (KMER_SIZE - 1));
-            byte[] mergeKmer = KmerUtil.getFirstKmerFromChain(value.getKmerSize() - (KMER_SIZE - 1),
-                    value.getKmerSize(), kmerValue, 0, kmerLength);
-            outputAdjList.set(mergeKmer, 0, mergeByteNum, adjBitMap, bitFlag, value.getKmerSize() - (KMER_SIZE - 1));
+            KmerBytesWritable mergedKmer = outputKmerFactory.getFirstKmerFromChain(value.getKmerSize()
+                    - (KMER_SIZE - 1), value.getKmer());
+            outputAdjList.set(mergedKmer, adjBitMap, bitFlag);
             output.collect(outputKmer, outputAdjList);
         } else {
-            outputKmer.set(key);
             outputAdjList.set(value);
-            output.collect(outputKmer, outputAdjList);
+            output.collect(key, outputAdjList);
         }
     }
 }

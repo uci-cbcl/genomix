@@ -5,14 +5,14 @@
 
 <configuration>
 
-<property>
-    <name>fs.default.name</name>
-    <value>hdfs://127.0.0.1:31888</value>
-</property>
-<property>
-    <name>hadoop.tmp.dir</name>
-    <value>/tmp/hadoop</value>
-</property>
+	<property>
+		<name>fs.default.name</name>
+		<value>hdfs://127.0.0.1:31888</value>
+	</property>
+	<property>
+		<name>hadoop.tmp.dir</name>
+		<value>/tmp/hadoop</value>
+	</property>
 
 
 </configuration>
