@@ -5,7 +5,7 @@ import java.util.logging.*;
 import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.old.Kmer;
 
 public class LogAlgorithmLogFormatter extends Formatter {
 	//

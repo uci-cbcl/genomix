@@ -16,7 +16,6 @@ package edu.uci.ics.gbresultschecking;
 
 import java.io.IOException;
 import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -27,13 +26,12 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 @SuppressWarnings({ "unused", "deprecation" })
-public class ResultsCheckingMapper extends MapReduceBase implements Mapper<BytesWritable, KmerCountValue, Text, Text> {
-    BytesWritable valWriter = new BytesWritable();
+public class ResultsCheckingMapper extends MapReduceBase implements Mapper<KmerBytesWritable, KmerCountValue, Text, Text> {
+    KmerBytesWritable valWriter;
     private final static IntWritable one = new IntWritable(1);
     public static Text textkey = new Text();
     public static Text textvalue = new Text();
@@ -42,16 +40,16 @@ public class ResultsCheckingMapper extends MapReduceBase implements Mapper<Bytes
 
     public void configure(JobConf job) {
         KMER_SIZE = job.getInt("sizeKmer", 0);
+        valWriter= new KmerBytesWritable(KMER_SIZE);
     }
 
     @Override
-    public void map(BytesWritable key, KmerCountValue value, OutputCollector<Text, Text> output, Reporter reporter)
+    public void map(KmerBytesWritable key, KmerCountValue value, OutputCollector<Text, Text> output, Reporter reporter)
             throws IOException {
 
         FileSplit fileSplit = (FileSplit) reporter.getInputSplit();
         String filename = fileSplit.getPath().getName();
-        byte[] bkey = key.getBytes();
-        textkey.set(Kmer.recoverKmerFrom(KMER_SIZE, key.getBytes(), 0, key.getLength()) + "\t" + value.toString());
+        textkey.set(key.toString() + "\t" + value.toString());
         textvalue.set(filename);
         output.collect(textkey, textvalue);
     }

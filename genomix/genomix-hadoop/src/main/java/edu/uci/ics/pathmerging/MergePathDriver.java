@@ -17,7 +17,6 @@ package edu.uci.ics.pathmerging;
 import java.io.IOException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -28,6 +27,8 @@ import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class MergePathDriver {
@@ -67,13 +68,13 @@ public class MergePathDriver {
         conf.setMapperClass(SNodeInitialMapper.class); 
         conf.setReducerClass(SNodeInitialReducer.class);
         
-        conf.setMapOutputKeyClass(BytesWritable.class);
+        conf.setMapOutputKeyClass(KmerBytesWritable.class);
         conf.setMapOutputValueClass(MergePathValueWritable.class);
         
         conf.setInputFormat(SequenceFileInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
         
-        conf.setOutputKeyClass(BytesWritable.class);
+        conf.setOutputKeyClass(KmerBytesWritable.class);
         conf.setOutputValueClass(MergePathValueWritable.class);
         
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
@@ -97,7 +98,7 @@ public class MergePathDriver {
             conf.setMapperClass(MergePathMapper.class);
             conf.setReducerClass(MergePathReducer.class);
             
-            conf.setMapOutputKeyClass(BytesWritable.class);
+            conf.setMapOutputKeyClass(KmerBytesWritable.class);
             conf.setMapOutputValueClass(MergePathValueWritable.class);
             
             conf.setInputFormat(SequenceFileInputFormat.class);
@@ -107,14 +108,14 @@ public class MergePathDriver {
             String complete = "complete" + iMerge;
            
             MultipleOutputs.addNamedOutput(conf, uncomplete,
-                    MergePathMultiSeqOutputFormat.class, BytesWritable.class,
+                    MergePathMultiSeqOutputFormat.class, KmerBytesWritable.class,
                     MergePathValueWritable.class);
 
             MultipleOutputs.addNamedOutput(conf, complete,
-                    MergePathMultiSeqOutputFormat.class, BytesWritable.class,
+                    MergePathMultiSeqOutputFormat.class, KmerBytesWritable.class,
                     MergePathValueWritable.class);
             
-            conf.setOutputKeyClass(BytesWritable.class);
+            conf.setOutputKeyClass(KmerBytesWritable.class);
             conf.setOutputValueClass(MergePathValueWritable.class);
             
             FileInputFormat.setInputPaths(conf, new Path(inputPath + "-step1"));

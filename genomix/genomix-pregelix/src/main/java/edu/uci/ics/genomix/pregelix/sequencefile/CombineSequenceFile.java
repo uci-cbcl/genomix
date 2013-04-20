@@ -9,7 +9,7 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.old.Kmer;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 

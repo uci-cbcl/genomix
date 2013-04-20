@@ -26,14 +26,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.utils.TestUtils;
 /**
@@ -72,13 +71,13 @@ public class GraphBuildingTest {
         SequenceFile.Reader reader = null;
         Path path = new Path(RESULT_PATH + "/part-00000");
         reader = new SequenceFile.Reader(dfs, path, conf); 
-        BytesWritable key = (BytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+        KmerBytesWritable key = (KmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
         File filePathTo = new File(TEST_SOURCE_DIR);
         BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
         
         while (reader.next(key, value)) {
-            bw.write(Kmer.recoverKmerFrom(SIZE_KMER, key.getBytes(), 0, key.getLength()) + "\t" + value.toString());
+            bw.write(key.toString() + "\t" + value.toString());
             bw.newLine();
         }
         bw.close();

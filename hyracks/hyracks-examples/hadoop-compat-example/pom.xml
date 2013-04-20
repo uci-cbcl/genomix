@@ -8,13 +8,13 @@
   <parent>
     <groupId>edu.uci.ics.hyracks</groupId>
     <artifactId>hyracks-examples</artifactId>
-    <version>0.2.4-SNAPSHOT</version>
+    <version>0.2.5-SNAPSHOT</version>
   </parent>
 
   <modules>
     <module>hadoopcompathelper</module>
     <module>hadoopcompatclient</module>
-    <module>hadoopcompatapp</module>
+    <module>hadoopcompatserver</module>
   </modules>
 
   <dependencies>
@@ -29,7 +29,7 @@
       <dependency>
          <groupId>edu.uci.ics.hyracks</groupId>
          <artifactId>hyracks-hadoop-compat</artifactId>
-         <version>0.2.4-SNAPSHOT</version>
+         <version>0.2.5-SNAPSHOT</version>
          <type>jar</type>
          <scope>compile</scope>
       </dependency>

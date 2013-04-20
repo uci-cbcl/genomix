@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>genomix</artifactId>
-		<version>0.2.4-SNAPSHOT</version>
+		<version>0.2.5-SNAPSHOT</version>
 	</parent>
 
 	<properties>
@@ -38,7 +38,15 @@
 									<mainClass>edu.uci.ics.genomix.driver.Driver</mainClass>
 									<name>genomix</name>
 								</program>
-							</programs>
+                                <program>
+                                     <mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+                                     <name>genomixcc</name>
+                                </program>
+                                <program>
+                                     <mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+                                     <name>genomixnc</name>
+                                </program>
+                            </programs>
 							<repositoryLayout>flat</repositoryLayout>
 							<repositoryName>lib</repositoryName>
 						</configuration>
@@ -167,40 +175,40 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-api</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-data-std</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -214,13 +222,13 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks.examples</groupId>
 			<artifactId>hyracks-integration-tests</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-ipc</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -237,19 +245,19 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>genomix-data</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

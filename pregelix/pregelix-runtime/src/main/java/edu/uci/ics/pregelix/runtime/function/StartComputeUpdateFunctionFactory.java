@@ -112,7 +112,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
             @Override
             public void open(IHyracksTaskContext ctx, RecordDescriptor rd, IFrameWriter... writers)
                     throws HyracksDataException {
-                this.conf = confFactory.createConfiguration();
+                this.conf = confFactory.createConfiguration(ctx);
                 this.dynamicStateLength = BspUtils.getDynamicVertexValueSize(conf);
                 this.aggregator = BspUtils.createGlobalAggregator(conf);
                 this.aggregator.init();
@@ -176,8 +176,12 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 vertex.setOutputAppenders(appenders);
                 vertex.setOutputTupleBuilders(tbs);
 
-                if (!msgIterator.hasNext() && vertex.isHalted())
+                if (!msgIterator.hasNext() && vertex.isHalted()) {
                     return;
+                }
+                if (vertex.isHalted()) {
+                    vertex.activate();
+                }
 
                 try {
                     vertex.compute(msgIterator);

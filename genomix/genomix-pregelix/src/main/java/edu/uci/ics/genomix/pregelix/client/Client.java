@@ -36,6 +36,9 @@ public class Client {
         
         @Option(name = "-kmer-size", usage = "the size of kmer", required = false)
         public int sizeKmer;
+        
+        @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
+        public long numIteration = -1;
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
@@ -59,6 +62,10 @@ public class Client {
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
         job.getConfiguration().setInt(MergeGraphVertex.KMER_SIZE, options.sizeKmer);
         job.getConfiguration().setInt(LogAlgorithmForMergeGraphVertex.KMER_SIZE, options.sizeKmer);
+        if (options.numIteration > 0){
+            job.getConfiguration().setLong(MergeGraphVertex.ITERATIONS, options.numIteration);
+            //job.getConfiguration().setLong(LogAlgorithmForMergeGraphVertex.ITERATIONS, options.numIteration);
+        }
         return options;
     }
 

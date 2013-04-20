@@ -18,7 +18,6 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -27,6 +26,8 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class CountFilterDriver {
@@ -59,13 +60,13 @@ public class CountFilterDriver {
         conf.setReducerClass(CountFilterReducer.class);
         conf.setCombinerClass(CountFilterReducer.class);
 
-        conf.setMapOutputKeyClass(BytesWritable.class);
+        conf.setMapOutputKeyClass(KmerBytesWritable.class);
         conf.setMapOutputValueClass(ByteWritable.class);
 
         conf.setInputFormat(SequenceFileInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
         
-        conf.setOutputKeyClass(BytesWritable.class);
+        conf.setOutputKeyClass(KmerBytesWritable.class);
         conf.setOutputValueClass(ByteWritable.class);
         
         FileInputFormat.setInputPaths(conf, new Path(inputPath));

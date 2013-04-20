@@ -6,7 +6,7 @@ import java.util.logging.LogRecord;
 
 import org.apache.hadoop.io.BytesWritable;
 
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.old.Kmer;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class DataLoadLogFormatter extends Formatter{

@@ -25,8 +25,8 @@ import org.apache.hadoop.mapred.JobConf;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
-public class RunJobTestSuite extends TestSuite{
-	
+public class RunJobTestSuite extends TestSuite {
+
 	private static final Logger LOGGER = Logger.getLogger(RunJobTestSuite.class
 			.getName());
 
@@ -40,9 +40,9 @@ public class RunJobTestSuite extends TestSuite{
 	private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
 	private static final String FILE_EXTENSION_OF_RESULTS = "result";
 
-	private static final String DATA_PATH = "data/input/part-1-out-500000";//sequenceShortFileMergeTest
+	private static final String DATA_PATH = "data/result/TreePath";// sequenceShortFileMergeTest
 	private static final String HDFS_PATH = "/webmap/";
-	
+
 	private static final String HYRACKS_APP_NAME = "pregelix";
 	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
 			+ File.separator + "conf.xml";
@@ -50,13 +50,12 @@ public class RunJobTestSuite extends TestSuite{
 
 	private JobConf conf = new JobConf();
 	private int numberOfNC = 2;
-	
+
 	public void setUp() throws Exception {
 		ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
 		ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
 		cleanupStores();
 		PregelixHyracksIntegrationUtil.init("src/test/resources/topology.xml");
-		PregelixHyracksIntegrationUtil.createApp(HYRACKS_APP_NAME);
 		LOGGER.info("Hyracks mini-cluster started");
 		FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
 		FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
@@ -69,7 +68,7 @@ public class RunJobTestSuite extends TestSuite{
 		FileUtils.cleanDirectory(new File("teststore"));
 		FileUtils.cleanDirectory(new File("build"));
 	}
-	
+
 	private void startHDFS() throws IOException {
 		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
 		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
@@ -90,7 +89,7 @@ public class RunJobTestSuite extends TestSuite{
 		confOutput.flush();
 		confOutput.close();
 	}
-	
+
 	/**
 	 * cleanup hdfs cluster
 	 */
@@ -99,12 +98,11 @@ public class RunJobTestSuite extends TestSuite{
 	}
 
 	public void tearDown() throws Exception {
-		PregelixHyracksIntegrationUtil.destroyApp(HYRACKS_APP_NAME);
 		PregelixHyracksIntegrationUtil.deinit();
 		LOGGER.info("Hyracks mini-cluster shut down");
 		cleanupHDFS();
 	}
-	
+
 	public static Test suite() throws Exception {
 		List<String> ignores = getFileList(PATH_TO_IGNORE);
 		List<String> onlys = getFileList(PATH_TO_ONLY);
@@ -138,12 +136,12 @@ public class RunJobTestSuite extends TestSuite{
 		}
 		return testSuite;
 	}
-	
+
 	/**
 	 * Runs the tests and collects their result in a TestResult.
 	 */
 	@Override
-	public void run(TestResult result) {		
+	public void run(TestResult result) {
 		try {
 			int testCount = countTestCases();
 			for (int i = 0; i < testCount; i++) {
@@ -158,8 +156,7 @@ public class RunJobTestSuite extends TestSuite{
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}
-		
-		
+
 	}
 
 	protected static List<String> getFileList(String ignorePath)

@@ -1,0 +1,16 @@
+target
+.classpath
+.settings
+.project
+ClusterControllerService
+actual
+build
+edu.uci.ics.hyracks.control.nc.NodeControllerService
+exception
+expected
+teststore1
+teststore2
+derby.log
+hadoop-conf-tmp
+metastore_db
+teststore

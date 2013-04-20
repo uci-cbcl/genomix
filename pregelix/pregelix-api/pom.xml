@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>pregelix</artifactId>
-		<version>0.2.4-SNAPSHOT</version>
+		<version>0.2.5-SNAPSHOT</version>
 	</parent>
 
 	<properties>
@@ -41,9 +41,10 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>2.5</version>
-				<configuration>
+				<groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
 					<filesets>
 						<fileset>
 							<directory>.</directory>
@@ -67,7 +68,7 @@
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.4-SNAPSHOT</version>
+			<version>0.2.5-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -80,7 +81,7 @@
 		<dependency>
                         <groupId>edu.uci.ics.hyracks</groupId>
                         <artifactId>hyracks-hdfs-core</artifactId>
-                        <version>0.2.4-SNAPSHOT</version>
+                        <version>0.2.5-SNAPSHOT</version>
                         <type>jar</type>
                         <scope>compile</scope>
                 </dependency>

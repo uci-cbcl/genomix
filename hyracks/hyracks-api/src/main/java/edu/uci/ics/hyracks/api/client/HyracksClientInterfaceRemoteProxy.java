@@ -14,10 +14,13 @@
  */
 package edu.uci.ics.hyracks.api.client;
 
+import java.net.URL;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import edu.uci.ics.hyracks.api.comm.NetworkAddress;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobStatus;
@@ -42,27 +45,6 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public void createApplication(String appName) throws Exception {
-        HyracksClientInterfaceFunctions.CreateApplicationFunction caf = new HyracksClientInterfaceFunctions.CreateApplicationFunction(
-                appName);
-        rpci.call(ipcHandle, caf);
-    }
-
-    @Override
-    public void startApplication(String appName) throws Exception {
-        HyracksClientInterfaceFunctions.StartApplicationFunction saf = new HyracksClientInterfaceFunctions.StartApplicationFunction(
-                appName);
-        rpci.call(ipcHandle, saf);
-    }
-
-    @Override
-    public void destroyApplication(String appName) throws Exception {
-        HyracksClientInterfaceFunctions.DestroyApplicationFunction daf = new HyracksClientInterfaceFunctions.DestroyApplicationFunction(
-                appName);
-        rpci.call(ipcHandle, daf);
-    }
-
-    @Override
     public JobStatus getJobStatus(JobId jobId) throws Exception {
         HyracksClientInterfaceFunctions.GetJobStatusFunction gjsf = new HyracksClientInterfaceFunctions.GetJobStatusFunction(
                 jobId);
@@ -70,9 +52,16 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public JobId startJob(String appName, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception {
+    public JobId startJob(byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception {
         HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
-                appName, acggfBytes, jobFlags);
+                acggfBytes, jobFlags);
+        return (JobId) rpci.call(ipcHandle, sjf);
+    }
+
+    @Override
+    public JobId startJob(DeploymentId deploymentId, byte[] acggfBytes, EnumSet<JobFlag> jobFlags) throws Exception {
+        HyracksClientInterfaceFunctions.StartJobFunction sjf = new HyracksClientInterfaceFunctions.StartJobFunction(
+                deploymentId, acggfBytes, jobFlags);
         return (JobId) rpci.call(ipcHandle, sjf);
     }
 
@@ -99,5 +88,19 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     public ClusterTopology getClusterTopology() throws Exception {
         HyracksClientInterfaceFunctions.GetClusterTopologyFunction gctf = new HyracksClientInterfaceFunctions.GetClusterTopologyFunction();
         return (ClusterTopology) rpci.call(ipcHandle, gctf);
+    }
+
+    @Override
+    public void deployBinary(List<URL> binaryURLs, DeploymentId deploymentId) throws Exception {
+        HyracksClientInterfaceFunctions.CliDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliDeployBinaryFunction(
+                binaryURLs, deploymentId);
+        rpci.call(ipcHandle, dbf);
+    }
+
+    @Override
+    public void unDeployBinary(DeploymentId deploymentId) throws Exception {
+        HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction dbf = new HyracksClientInterfaceFunctions.CliUnDeployBinaryFunction(
+                deploymentId);
+        rpci.call(ipcHandle, dbf);
     }
 }

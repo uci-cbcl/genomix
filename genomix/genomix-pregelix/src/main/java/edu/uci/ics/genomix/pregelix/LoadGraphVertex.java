@@ -49,6 +49,7 @@ public class LoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWri
 	 */
 	@Override
 	public void compute(Iterator<MessageWritable> msgIterator) {
+		deleteVertex(getVertexId());
 		voteToHalt();
 	}
 

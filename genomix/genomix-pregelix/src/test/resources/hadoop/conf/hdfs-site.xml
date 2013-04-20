@@ -12,7 +12,7 @@
 
 <property>
 	<name>dfs.block.size</name>
-	<value>65536</value>
+	<value>655360</value>
 </property>
 
 </configuration>

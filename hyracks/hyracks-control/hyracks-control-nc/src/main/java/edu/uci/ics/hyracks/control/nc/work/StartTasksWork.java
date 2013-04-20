@@ -36,12 +36,14 @@ import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.partitions.PartitionId;
+import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.job.TaskAttemptDescriptor;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 import edu.uci.ics.hyracks.control.nc.Joblet;
@@ -59,7 +61,7 @@ public class StartTasksWork extends AbstractWork {
 
     private final NodeControllerService ncs;
 
-    private final String appName;
+    private final DeploymentId deploymentId;
 
     private final JobId jobId;
 
@@ -71,11 +73,11 @@ public class StartTasksWork extends AbstractWork {
 
     private final EnumSet<JobFlag> flags;
 
-    public StartTasksWork(NodeControllerService ncs, String appName, JobId jobId, byte[] acgBytes,
+    public StartTasksWork(NodeControllerService ncs, DeploymentId deploymentId, JobId jobId, byte[] acgBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, EnumSet<JobFlag> flags) {
         this.ncs = ncs;
-        this.appName = appName;
+        this.deploymentId = deploymentId;
         this.jobId = jobId;
         this.acgBytes = acgBytes;
         this.taskDescriptors = taskDescriptors;
@@ -86,10 +88,9 @@ public class StartTasksWork extends AbstractWork {
     @Override
     public void run() {
         try {
-            Map<String, NCApplicationContext> applications = ncs.getApplications();
-            NCApplicationContext appCtx = applications.get(appName);
-            final Joblet joblet = getOrCreateLocalJoblet(jobId, appCtx, acgBytes == null ? null
-                    : (ActivityClusterGraph) appCtx.deserialize(acgBytes));
+            NCApplicationContext appCtx = ncs.getApplicationContext();
+            final Joblet joblet = getOrCreateLocalJoblet(deploymentId, jobId, appCtx, acgBytes == null ? null
+                    : (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, deploymentId, appCtx));
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
 
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
@@ -167,15 +168,15 @@ public class StartTasksWork extends AbstractWork {
         }
     }
 
-    private Joblet getOrCreateLocalJoblet(JobId jobId, INCApplicationContext appCtx, ActivityClusterGraph acg)
-            throws Exception {
+    private Joblet getOrCreateLocalJoblet(DeploymentId deploymentId, JobId jobId, INCApplicationContext appCtx,
+            ActivityClusterGraph acg) throws Exception {
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet ji = jobletMap.get(jobId);
         if (ji == null) {
             if (acg == null) {
                 throw new NullPointerException("JobActivityGraph was null");
             }
-            ji = new Joblet(ncs, jobId, appCtx, acg);
+            ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg);
             jobletMap.put(jobId, ji);
         }
         return ji;

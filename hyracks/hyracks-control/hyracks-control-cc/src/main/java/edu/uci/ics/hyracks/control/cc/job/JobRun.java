@@ -29,6 +29,7 @@ import edu.uci.ics.hyracks.api.dataflow.ActivityId;
 import edu.uci.ics.hyracks.api.dataflow.ConnectorDescriptorId;
 import edu.uci.ics.hyracks.api.dataflow.TaskId;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.ActivityCluster;
 import edu.uci.ics.hyracks.api.job.ActivityClusterGraph;
@@ -45,9 +46,9 @@ import edu.uci.ics.hyracks.control.cc.scheduler.JobScheduler;
 import edu.uci.ics.hyracks.control.common.job.profiling.om.JobProfile;
 
 public class JobRun implements IJobStatusConditionVariable {
-    private final JobId jobId;
+    private final DeploymentId deploymentId;
 
-    private final String applicationName;
+    private final JobId jobId;
 
     private final IActivityClusterGraphGenerator acgg;
 
@@ -83,10 +84,10 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Exception pendingException;
 
-    public JobRun(ClusterControllerService ccs, JobId jobId, String applicationName,
+    public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId,
             IActivityClusterGraphGenerator acgg, EnumSet<JobFlag> jobFlags) {
+        this.deploymentId = deploymentId;
         this.jobId = jobId;
-        this.applicationName = applicationName;
         this.acgg = acgg;
         this.acg = acgg.initialize();
         this.scheduler = new JobScheduler(ccs, this, acgg.getConstraints());
@@ -99,12 +100,12 @@ public class JobRun implements IJobStatusConditionVariable {
         connectorPolicyMap = new HashMap<ConnectorDescriptorId, IConnectorPolicy>();
     }
 
-    public JobId getJobId() {
-        return jobId;
+    public DeploymentId getDeploymentId() {
+        return deploymentId;
     }
 
-    public String getApplicationName() {
-        return applicationName;
+    public JobId getJobId() {
+        return jobId;
     }
 
     public ActivityClusterGraph getActivityClusterGraph() {
@@ -208,7 +209,6 @@ public class JobRun implements IJobStatusConditionVariable {
         JSONObject result = new JSONObject();
 
         result.put("job-id", jobId.toString());
-        result.put("application-name", applicationName);
         result.put("status", getStatus());
         result.put("create-time", getCreateTime());
         result.put("start-time", getCreateTime());

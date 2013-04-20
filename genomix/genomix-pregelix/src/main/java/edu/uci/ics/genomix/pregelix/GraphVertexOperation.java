@@ -2,8 +2,8 @@ package edu.uci.ics.genomix.pregelix;
 
 import org.apache.hadoop.io.BytesWritable;
 
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.KmerUtil;
+import edu.uci.ics.genomix.type.old.Kmer;
+import edu.uci.ics.genomix.type.old.KmerUtil;
 
 public class GraphVertexOperation {
 	

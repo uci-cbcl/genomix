@@ -15,33 +15,32 @@
 package edu.uci.ics.graphcountfilter;
 
 import java.io.IOException;
+
 import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
+
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 
-@SuppressWarnings({ "unused", "deprecation" })
+@SuppressWarnings({ "deprecation" })
 public class CountFilterMapper extends MapReduceBase implements
-        Mapper<BytesWritable, KmerCountValue, BytesWritable, ByteWritable> {
-    public static int THRESHOLD;
-    public BytesWritable outputKmer = new BytesWritable();
-    public ByteWritable outputAdjList = new ByteWritable();
+        Mapper<KmerBytesWritable, KmerCountValue, KmerBytesWritable, ByteWritable> {
+    private int THRESHOLD;
+    private ByteWritable adjByte = new ByteWritable();
     @Override
     public void configure(JobConf job) {
         THRESHOLD = Integer.parseInt(job.get("countThreshold"));
     }
-    public void map(BytesWritable key, KmerCountValue value, OutputCollector<BytesWritable, ByteWritable> output,
+    public void map(KmerBytesWritable key, KmerCountValue value, OutputCollector<KmerBytesWritable, ByteWritable> output,
             Reporter reporter) throws IOException {
         if(value.getCount() >= THRESHOLD){
-            outputKmer.set(key);
-            outputAdjList.set(value.getAdjBitMap());
-            output.collect(outputKmer, outputAdjList);
+            adjByte.set(value.getAdjBitMap());
+            output.collect(key, adjByte );
         }
     }
 }

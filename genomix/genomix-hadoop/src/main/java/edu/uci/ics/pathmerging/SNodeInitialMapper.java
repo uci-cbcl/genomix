@@ -15,25 +15,28 @@
 package edu.uci.ics.pathmerging;
 
 import java.io.IOException;
+
 import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import edu.uci.ics.genomix.type.KmerUtil;
+
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class SNodeInitialMapper extends MapReduceBase implements
-        Mapper<BytesWritable, ByteWritable, BytesWritable, MergePathValueWritable> {
+        Mapper<KmerBytesWritable, ByteWritable, KmerBytesWritable, MergePathValueWritable> {
 
-    public static int KMER_SIZE;
-    public BytesWritable outputKmer = new BytesWritable();
-    public MergePathValueWritable outputAdjList = new MergePathValueWritable();
+    public int KMER_SIZE;
+    public KmerBytesWritable outputKmer;
+    public MergePathValueWritable outputAdjList;
 
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
+        outputKmer = new KmerBytesWritable(KMER_SIZE);
+        outputAdjList = new MergePathValueWritable();
     }
 
     boolean measureDegree(byte adjacent) {
@@ -92,8 +95,8 @@ public class SNodeInitialMapper extends MapReduceBase implements
     }
 
     @Override
-    public void map(BytesWritable key, ByteWritable value,
-            OutputCollector<BytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
+    public void map(KmerBytesWritable key, ByteWritable value,
+            OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
 
         byte precursor = (byte) 0xF0;
         byte succeed = (byte) 0x0F;
@@ -105,8 +108,6 @@ public class SNodeInitialMapper extends MapReduceBase implements
         boolean inDegree = measureDegree(precursor);
         boolean outDegree = measureDegree(succeed);
         byte initial = 0;
-        byte[] kmerValue = key.getBytes();
-        int kmerLength = key.getLength();
         if (inDegree == true && outDegree == false) {
             flag = (byte) 2;
             switch (succeed) {
@@ -123,8 +124,8 @@ public class SNodeInitialMapper extends MapReduceBase implements
                     initial = (byte) 0x03;
                     break;
             }
-            byte[] newKmer = KmerUtil.shiftKmerWithNextCode(KMER_SIZE, kmerValue,0, kmerLength, initial);
-            outputKmer.set(newKmer, 0, kmerValue.length);
+            outputKmer.set(key);
+            outputKmer.shiftKmerWithNextCode(initial);
             adjBitMap = (byte) (adjBitMap & 0xF0);
             outputAdjList.set(null, 0, 0, adjBitMap, flag, KMER_SIZE);
             output.collect(outputKmer, outputAdjList);

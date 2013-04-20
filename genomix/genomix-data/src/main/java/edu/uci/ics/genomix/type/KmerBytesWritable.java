@@ -14,138 +14,267 @@
  */
 package edu.uci.ics.genomix.type;
 
-import java.io.IOException;
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
+
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
-public class KmerBytesWritable extends BinaryComparable implements
-		WritableComparable<BinaryComparable> {
-	private static final int LENGTH_BYTES = 4;
-	private static final byte[] EMPTY_BYTES = {};
-	private byte size;
-	private byte[] bytes;
+/**
+ * Fix kmer length byteswritable
+ * It was used to generate the graph in which phase the kmer length doesn't change.
+ * Thus the size of bytes doesn't change either.
+ */
+public class KmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
+    /**
+	 * 
+	 */
+    private static final long serialVersionUID = 1L;
+    private static final byte[] EMPTY_BYTES = {};
 
-	public KmerBytesWritable() {
-		this(EMPTY_BYTES);
-	}
+    protected int size;
+    protected byte[] bytes;
+    protected int kmerlength;
 
-	public KmerBytesWritable(byte[] bytes) {
-		this.bytes = bytes;
-		this.size = (byte) bytes.length;
-	}
+    @Deprecated
+    public KmerBytesWritable() {
+        this(0, EMPTY_BYTES);
+    }
 
-	@Override
-	public byte[] getBytes() {
-		return bytes;
-	}
+    public KmerBytesWritable(int k, byte[] storage) {
+        this.kmerlength = k;
+        if (k > 0){
+            this.size = KmerUtil.getByteNumFromK(kmerlength);
+            this.bytes = storage;
+            if (this.bytes.length < size){
+                throw new ArrayIndexOutOfBoundsException("Storage is smaller than required space for kmerlength:k");
+            }
+        }else{
+            this.bytes = storage;
+            this.size = 0;
+        }
+    }
 
-	@Deprecated
-	public byte[] get() {
-		return getBytes();
-	}
+    /**
+     * Initial Kmer space by kmerlength
+     * 
+     * @param k
+     *            kmerlength
+     */
+    public KmerBytesWritable(int k) {
+        this.kmerlength = k;
+        this.size = KmerUtil.getByteNumFromK(kmerlength);
+        this.bytes = new byte[this.size];
+    }
 
-	@Override
-	public int getLength() {
-		return (int) size;
-	}
+    public KmerBytesWritable(KmerBytesWritable right) {
+        this.kmerlength = right.kmerlength;
+        this.size = right.size;
+        this.bytes = new byte[right.size];
+        set(right);
+    }
 
-	@Deprecated
-	public int getSize() {
-		return getLength();
-	}
+    public byte getGeneCodeAtPosition(int pos) {
+        if (pos >= kmerlength) {
+            return -1;
+        }
+        int posByte = pos / 4;
+        int shift = (pos % 4) << 1;
+        return (byte) ((bytes[size - 1 - posByte] >> shift) & 0x3);
+    }
 
-	public void setSize(byte size) {
-		if ((int) size > getCapacity()) {
-			setCapacity((byte) (size * 3 / 2));
-		}
-		this.size = size;
-	}
+    public int getKmerLength() {
+        return this.kmerlength;
+    }
 
-	public int getCapacity() {
-		return bytes.length;
-	}
+    @Override
+    public byte[] getBytes() {
+        return bytes;
+    }
 
-	public void setCapacity(byte new_cap) {
-		if (new_cap != getCapacity()) {
-			byte[] new_data = new byte[new_cap];
-			if (new_cap < size) {
-				size = new_cap;
-			}
-			if (size != 0) {
-				System.arraycopy(bytes, 0, new_data, 0, size);
-			}
-			bytes = new_data;
-		}
-	}
+    @Override
+    public int getLength() {
+        return size;
+    }
 
-	public void set(KmerBytesWritable newData) {
-		set(newData.bytes, (byte) 0, newData.size);
-	}
+    /**
+     * Read Kmer from read text into bytes array e.g. AATAG will compress as
+     * [0x000G, 0xATAA]
+     * 
+     * @param k
+     * @param array
+     * @param start
+     */
+    public void setByRead(byte[] array, int start) {
+        byte l = 0;
+        int bytecount = 0;
+        int bcount = this.size - 1;
+        for (int i = start; i < start + kmerlength; i++) {
+            byte code = GeneCode.getCodeFromSymbol(array[i]);
+            l |= (byte) (code << bytecount);
+            bytecount += 2;
+            if (bytecount == 8) {
+                bytes[bcount--] = l;
+                l = 0;
+                bytecount = 0;
+            }
+        }
+        if (bcount >= 0) {
+            bytes[0] = l;
+        }
+    }
 
-	public void set(byte[] newData, byte offset, byte length) {
-		setSize((byte) 0);
-		setSize(length);
-		System.arraycopy(newData, offset, bytes, 0, size);
-	}
+    /**
+     * Compress Reversed Kmer into bytes array AATAG will compress as
+     * [0x000A,0xATAG]
+     * 
+     * @param input
+     *            array
+     * @param start
+     *            position
+     */
+    public void setByReadReverse(byte[] array, int start) {
+        byte l = 0;
+        int bytecount = 0;
+        int bcount = size - 1;
+        for (int i = start + kmerlength - 1; i >= 0; i--) {
+            byte code = GeneCode.getCodeFromSymbol(array[i]);
+            l |= (byte) (code << bytecount);
+            bytecount += 2;
+            if (bytecount == 8) {
+                bytes[bcount--] = l;
+                l = 0;
+                bytecount = 0;
+            }
+        }
+        if (bcount >= 0) {
+            bytes[0] = l;
+        }
+    }
 
-	public void readFields(DataInput in) throws IOException {
-		setSize((byte) 0); // clear the old data
-		setSize(in.readByte());
-		in.readFully(bytes, 0, size);
-	}
+    /**
+     * Shift Kmer to accept new char input
+     * 
+     * @param c
+     *            Input new gene character
+     * @return the shift out gene, in gene code format
+     */
+    public byte shiftKmerWithNextChar(byte c) {
+        return shiftKmerWithNextCode(GeneCode.getCodeFromSymbol(c));
+    }
 
-	@Override
-	public void write(DataOutput out) throws IOException {
-		out.writeByte(size);
-		out.write(bytes, 0, size);
-	}
+    /**
+     * Shift Kmer to accept new gene code
+     * 
+     * @param c
+     *            Input new gene code
+     * @return the shift out gene, in gene code format
+     */
+    public byte shiftKmerWithNextCode(byte c) {
+        byte output = (byte) (bytes[size - 1] & 0x03);
+        for (int i = size - 1; i > 0; i--) {
+            byte in = (byte) (bytes[i - 1] & 0x03);
+            bytes[i] = (byte) (((bytes[i] >>> 2) & 0x3f) | (in << 6));
+        }
+        int pos = ((kmerlength - 1) % 4) << 1;
+        byte code = (byte) (c << pos);
+        bytes[0] = (byte) (((bytes[0] >>> 2) & 0x3f) | code);
+        return (byte) (1 << output);
+    }
 
-	@Override
-	public int hashCode() {
-		return super.hashCode();
-	}
+    /**
+     * Shift Kmer to accept new input char
+     * 
+     * @param c
+     *            Input new gene character
+     * @return the shiftout gene, in gene code format
+     */
+    public byte shiftKmerWithPreChar(byte c) {
+        return shiftKmerWithPreCode(GeneCode.getCodeFromSymbol(c));
+    }
 
-	@Override
-	public boolean equals(Object right_obj) {
-		if (right_obj instanceof KmerBytesWritable)
-			return super.equals(right_obj);
-		return false;
-	}
+    /**
+     * Shift Kmer to accept new gene code
+     * 
+     * @param c
+     *            Input new gene code
+     * @return the shiftout gene, in gene code format
+     */
+    public byte shiftKmerWithPreCode(byte c) {
+        int pos = ((kmerlength - 1) % 4) << 1;
+        byte output = (byte) ((bytes[0] >> pos) & 0x03);
+        for (int i = 0; i < size - 1; i++) {
+            byte in = (byte) ((bytes[i + 1] >> 6) & 0x03);
+            bytes[i] = (byte) ((bytes[i] << 2) | in);
+        }
+        // (k%4) * 2
+        if (kmerlength % 4 != 0) {
+            bytes[0] &= (1 << ((kmerlength % 4) << 1)) - 1;
+        }
+        bytes[size - 1] = (byte) ((bytes[size - 1] << 2) | c);
+        return (byte) (1 << output);
+    }
 
-	@Override
-	public String toString() {
-		StringBuffer sb = new StringBuffer(3 * size);
-		for (int idx = 0; idx < (int) size; idx++) {
-			// if not the first, put a blank separator in
-			if (idx != 0) {
-				sb.append(' ');
-			}
-			String num = Integer.toHexString(0xff & bytes[idx]);
-			// if it is only one digit, add a leading 0.
-			if (num.length() < 2) {
-				sb.append('0');
-			}
-			sb.append(num);
-		}
-		return sb.toString();
-	}
+    public void set(KmerBytesWritable newData) {
+        set(newData.bytes, 0, newData.size);
+    }
 
-	public static class Comparator extends WritableComparator {
-		public Comparator() {
-			super(KmerBytesWritable.class);
-		}
+    public void set(byte[] newData, int offset, int length) {
+        System.arraycopy(newData, offset, bytes, 0, size);
+    }
 
-		public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-			return compareBytes(b1, s1 + LENGTH_BYTES, l1 - LENGTH_BYTES, b2,
-					s2 + LENGTH_BYTES, l2 - LENGTH_BYTES);
-		}
-	}
+    /**
+     * Don't read the kmerlength from datastream,
+     * Read it from configuration
+     */
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        this.kmerlength = in.readInt();
+        this.size = KmerUtil.getByteNumFromK(kmerlength);
+        if (this.bytes.length < this.size) {
+            this.bytes = new byte[this.size];
+        }
+        in.readFully(bytes, 0, size);
+    }
 
-	static { // register this comparator
-		WritableComparator.define(KmerBytesWritable.class, new Comparator());
-	}
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeInt(kmerlength);
+        out.write(bytes, 0, size);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode() * this.kmerlength;
+    }
+
+    @Override
+    public boolean equals(Object right_obj) {
+        if (right_obj instanceof KmerBytesWritable)
+            return this.kmerlength == ((KmerBytesWritable) right_obj).kmerlength && super.equals(right_obj);
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return KmerUtil.recoverKmerFrom(this.kmerlength, this.getBytes(), 0, this.getLength());
+    }
+
+    public static class Comparator extends WritableComparator {
+        public Comparator() {
+            super(KmerBytesWritable.class);
+        }
+
+        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+            return compareBytes(b1, s1, l1, b2, s2, l2);
+        }
+    }
+
+    static { // register this comparator
+        WritableComparator.define(KmerBytesWritable.class, new Comparator());
+    }
 
 }
