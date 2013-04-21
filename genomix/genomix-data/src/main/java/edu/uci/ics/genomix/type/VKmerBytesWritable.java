@@ -107,7 +107,7 @@ public class VKmerBytesWritable extends KmerBytesWritable {
             int kmerlength1 = readInt(b1, s1);
             int kmerlength2 = readInt(b2, s2);
             if (kmerlength1 == kmerlength2) {
-                compareBytes(b1, s1 + LEAD_BYTES, l1 - LEAD_BYTES, b2, s2 + LEAD_BYTES, l2 - LEAD_BYTES);
+                return compareBytes(b1, s1 + LEAD_BYTES, l1 - LEAD_BYTES, b2, s2 + LEAD_BYTES, l2 - LEAD_BYTES);
             }
             return kmerlength1 - kmerlength2;
         }
