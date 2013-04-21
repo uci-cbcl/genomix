@@ -100,6 +100,35 @@ public class VKmerBytesWritableFactory {
         return kmer;
     }
 
+    public VKmerBytesWritable getSubKmerFromChain(int startK, int kSize, final KmerBytesWritable kmerChain) {
+        if (startK + kSize > kmerChain.getKmerLength()) {
+            return null;
+        }
+        if (startK == 0 && kSize == kmerChain.getKmerLength()) {
+            kmer.set(kmerChain);
+            return kmer;
+        }
+        kmer.reset(kSize);
+
+        /** from end to start */
+        int byteInChain = kmerChain.getLength() - 1 - startK / 4;
+        int posInByteOfChain = startK % 4 << 1; // *2
+        int byteInKmer = kmer.getLength() - 1;
+        for (; byteInKmer >= 0 && byteInChain > 0; byteInKmer--, byteInChain--) {
+            kmer.getBytes()[byteInKmer] = (byte) ((0xff & kmerChain.getBytes()[byteInChain]) >> posInByteOfChain);
+            kmer.getBytes()[byteInKmer] |= ((kmerChain.getBytes()[byteInChain - 1] << (8 - posInByteOfChain)));
+        }
+
+        /** last kmer byte */
+        if (byteInKmer == 0) {
+            kmer.getBytes()[0] = (byte) ((kmerChain.getBytes()[0] & 0xff) >> posInByteOfChain);
+        }
+        if (kSize % 4 != 0) {
+            kmer.getBytes()[0] &= (1 << ((kSize % 4) << 1)) - 1;
+        }
+        return kmer;
+    }
+
     /**
      * Merge kmer with next neighbor in gene-code format.
      * The k of new kmer will increase by 1
