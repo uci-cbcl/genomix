@@ -301,10 +301,10 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 		else{
 			if(getVertexValue().getState() != State.START_VERTEX 
 					&& getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE){
-				//vertexVal.setState(State.KILL_SELF);
-				//setVertexValue(vertexVal);
-				//voteToHalt();
-				deleteVertex(getVertexId());//killSelf because it doesn't receive any message
+				vertexVal.setState(State.KILL_SELF);
+				setVertexValue(vertexVal);
+				voteToHalt();
+				//deleteVertex(getVertexId());//killSelf because it doesn't receive any message
 			}
 		}
 	}
@@ -328,22 +328,26 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
 		initVertex();
-		if (getSuperstep() == 1) 
-			startSendMsg();
-		else if(getSuperstep() == 2)
-			initState(msgIterator);
-		else if(getSuperstep()%3 == 0 && getSuperstep() <= maxIteration){
-			sendMsgToPathVertex(msgIterator);
-		}
-		else if(getSuperstep()%3 == 1 && getSuperstep() <= maxIteration){
-			responseMsgToHeadVertex(msgIterator);
-		}
-		else if(getSuperstep()%3 == 2 && getSuperstep() <= maxIteration){
-			if(vertexVal.getState() == State.TODELETE){ //|| vertexVal.getState() == State.KILL_SELF)
-				deleteVertex(getVertexId()); //killSelf  voteToHalt()
+		if(vertexVal.getState() != State.NON_EXIST && vertexVal.getState() != State.KILL_SELF){
+			if (getSuperstep() == 1) 
+				startSendMsg();
+			else if(getSuperstep() == 2)
+				initState(msgIterator);
+			else if(getSuperstep()%3 == 0 && getSuperstep() <= maxIteration){
+				sendMsgToPathVertex(msgIterator);
 			}
-			else{
-				mergeChainVertex(msgIterator);
+			else if(getSuperstep()%3 == 1 && getSuperstep() <= maxIteration){
+				responseMsgToHeadVertex(msgIterator);
+			}
+			else if(getSuperstep()%3 == 2 && getSuperstep() <= maxIteration){
+				if(vertexVal.getState() == State.TODELETE){ //|| vertexVal.getState() == State.KILL_SELF)
+					vertexVal.setState(State.NON_EXIST);
+					setVertexValue(vertexVal);
+					voteToHalt(); //killSelf  deleteVertex(getVertexId());
+				}
+				else{
+					mergeChainVertex(msgIterator);
+				}
 			}
 		}
 	}

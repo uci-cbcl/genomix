@@ -138,7 +138,8 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 			if(GraphVertexOperation.isPathVertex(vertexVal.getAdjMap())){
 				chainVertexId = kmerFactory.mergeKmerWithNextCode(msg.getChainVertexId(),
 						vertexId.getGeneCodeAtPosition(kmerSize - 1));
-				deleteVertex(getVertexId());
+				vertexVal.setState(State.NON_EXIST); //deleteVertex(getVertexId());
+				setVertexValue(vertexVal);
 				msg.set(vertexId, chainVertexId, msg.getHeadVertexId(), vertexVal.getAdjMap(), false);
 				sendMsg(destVertexId,msg);
 			}
@@ -159,30 +160,32 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	@Override
 	public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
 		initVertex();
-		if (getSuperstep() == 1) {
-			if(GraphVertexOperation.isHeadVertex(vertexVal.getAdjMap())){ 
-				msg.set(vertexId, chainVertexId, vertexId, (byte)0, false);
-				sendMsgToAllNextNodes(vertexId, vertexVal.getAdjMap());
+		if(vertexVal.getState() != State.NON_EXIST){
+			if (getSuperstep() == 1) {
+				if(GraphVertexOperation.isHeadVertex(vertexVal.getAdjMap())){ 
+					msg.set(vertexId, chainVertexId, vertexId, (byte)0, false);
+					sendMsgToAllNextNodes(vertexId, vertexVal.getAdjMap());
+				}
 			}
-		}
-		else if(getSuperstep() == 2){
-			if(msgIterator.hasNext()){
-				msg = msgIterator.next();
-				initChainVertex();
+			else if(getSuperstep() == 2){
+				if(msgIterator.hasNext()){
+					msg = msgIterator.next();
+					initChainVertex();
+				}
 			}
-		}
-		//head node sends message to path node
-		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
-			while (msgIterator.hasNext()){
-				msg = msgIterator.next();
-				sendMsgToPathVertex();
+			//head node sends message to path node
+			else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
+				while (msgIterator.hasNext()){
+					msg = msgIterator.next();
+					sendMsgToPathVertex();
+				}
 			}
-		}
-		//path node sends message back to head node
-		else if(getSuperstep()%2 == 0 && getSuperstep() > 2 && getSuperstep() <= maxIteration){
-			 while(msgIterator.hasNext()){
-				msg = msgIterator.next();
-				responseMsgToHeadVertex();
+			//path node sends message back to head node
+			else if(getSuperstep()%2 == 0 && getSuperstep() > 2 && getSuperstep() <= maxIteration){
+				 while(msgIterator.hasNext()){
+					msg = msgIterator.next();
+					responseMsgToHeadVertex();
+				}
 			}
 		}
 		voteToHalt();
