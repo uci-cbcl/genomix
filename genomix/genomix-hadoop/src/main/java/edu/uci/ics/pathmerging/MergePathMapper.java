@@ -28,24 +28,24 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
 @SuppressWarnings("deprecation")
 public class MergePathMapper extends MapReduceBase implements
-        Mapper<KmerBytesWritable, MergePathValueWritable, KmerBytesWritable, MergePathValueWritable> {
+        Mapper<VKmerBytesWritable, MergePathValueWritable, VKmerBytesWritable, MergePathValueWritable> {
     private int KMER_SIZE;
     private VKmerBytesWritableFactory outputKmerFactory;
-    private MergePathValueWritable outputAdjList; 
+    private MergePathValueWritable outputValue; 
     private VKmerBytesWritable tmpKmer;
     private VKmerBytesWritable outputKmer;
 
     public void configure(JobConf job) {
         KMER_SIZE = job.getInt("sizeKmer", 0);
         outputKmerFactory = new VKmerBytesWritableFactory(KMER_SIZE);
-        outputAdjList = new MergePathValueWritable();
+        outputValue = new MergePathValueWritable();
         tmpKmer = new VKmerBytesWritable(KMER_SIZE);
         outputKmer = new VKmerBytesWritable(KMER_SIZE);
     }
 
     @Override
-    public void map(KmerBytesWritable key, MergePathValueWritable value,
-            OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
+    public void map(VKmerBytesWritable key, MergePathValueWritable value,
+            OutputCollector<VKmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
 
         byte precursor = (byte) 0xF0;
         byte succeed = (byte) 0x0F;
@@ -59,14 +59,14 @@ public class MergePathMapper extends MapReduceBase implements
             byte succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
             tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
             outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));
-
-            KmerBytesWritable mergedKmer = outputKmerFactory.getFirstKmerFromChain(value.getKmerSize()
-                    - (KMER_SIZE - 1), value.getKmer());
-            outputAdjList.set(mergedKmer, adjBitMap, bitFlag);
-            output.collect(outputKmer, outputAdjList);
+            
+            tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(key.getKmerLength() - (KMER_SIZE - 1), key));
+            outputValue.set(tmpKmer, adjBitMap, bitFlag);
+            output.collect(outputKmer, outputValue);
         } else {
-            outputAdjList.set(value);
-            output.collect(key, outputAdjList);
+            outputKmer.set(key);
+            outputValue.set(value);
+            output.collect(key, outputValue);
         }
     }
 }

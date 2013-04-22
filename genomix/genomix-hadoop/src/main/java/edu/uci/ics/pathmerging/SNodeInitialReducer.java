@@ -16,50 +16,50 @@ package edu.uci.ics.pathmerging;
 
 import java.io.IOException;
 import java.util.Iterator;
-
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class SNodeInitialReducer extends MapReduceBase implements
-        Reducer<KmerBytesWritable, MergePathValueWritable, KmerBytesWritable, MergePathValueWritable> {
-    private MergePathValueWritable outputAdjList = new MergePathValueWritable();
+        Reducer<KmerBytesWritable, MergePathValueWritable, VKmerBytesWritable, MergePathValueWritable> {
+    private VKmerBytesWritable outputKmer = new VKmerBytesWritable();
+    private MergePathValueWritable outputValue = new MergePathValueWritable();
 
     @Override
     public void reduce(KmerBytesWritable key, Iterator<MergePathValueWritable> values,
-            OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
-        outputAdjList = values.next();
+            OutputCollector<VKmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
+        outputKmer.set(key);
+        outputValue = values.next();
         if (values.hasNext() == true) {
-            if (outputAdjList.getFlag() != 2) {
-                byte adjBitMap = outputAdjList.getAdjBitMap();
-                int kmerSize = outputAdjList.getKmerSize();
+            if (outputValue.getFlag() == 2) {
                 byte bitFlag = 1;
-                outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, kmerSize);
-                output.collect(key, outputAdjList);
-
+                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());
+                output.collect(outputKmer, outputValue);
             } else {
                 boolean flag = false;
                 while (values.hasNext()) {
-                    outputAdjList = values.next();
-                    if (outputAdjList.getFlag() != 2) {
+                    outputValue = values.next();
+                    if (outputValue.getFlag() == 2) {
                         flag = true;
                         break;
                     }
                 }
                 if (flag == true) {
-                    byte adjBitMap = outputAdjList.getAdjBitMap();
-                    int kmerSize = outputAdjList.getKmerSize();
                     byte bitFlag = 1;
-                    outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, kmerSize);
-                    output.collect(key, outputAdjList);
+                    outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());
+                    output.collect(outputKmer, outputValue);
                 }
             }
         } else {
-            output.collect(key, outputAdjList);
+            if (outputValue.getFlag() == 2) {
+                byte bitFlag = 0;
+                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());
+                output.collect(outputKmer, outputValue);
+            }
         }
     }
 }

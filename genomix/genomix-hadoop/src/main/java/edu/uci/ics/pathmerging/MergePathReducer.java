@@ -29,12 +29,14 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
 @SuppressWarnings("deprecation")
 public class MergePathReducer extends MapReduceBase implements
-        Reducer<KmerBytesWritable, MergePathValueWritable, KmerBytesWritable, MergePathValueWritable> {
+        Reducer<VKmerBytesWritable, MergePathValueWritable, VKmerBytesWritable, MergePathValueWritable> {
     private VKmerBytesWritableFactory kmerFactory;
     private VKmerBytesWritable outputKmer;
     private VKmerBytesWritable tmpKmer;
     private int KMER_SIZE;
-    private MergePathValueWritable outputAdjList;
+    private MergePathValueWritable outputValue;
+    private MergePathValueWritable tmpOutputValue;
+    
     MultipleOutputs mos = null;
     private int I_MERGE;
 
@@ -42,7 +44,7 @@ public class MergePathReducer extends MapReduceBase implements
         mos = new MultipleOutputs(job);
         I_MERGE = Integer.parseInt(job.get("iMerge"));
         KMER_SIZE = job.getInt("sizeKmer", 0);
-        outputAdjList = new MergePathValueWritable();
+        outputValue = new MergePathValueWritable();
         kmerFactory = new VKmerBytesWritableFactory(KMER_SIZE);
         outputKmer = new VKmerBytesWritable(KMER_SIZE);
         tmpKmer = new VKmerBytesWritable(KMER_SIZE);
@@ -50,58 +52,72 @@ public class MergePathReducer extends MapReduceBase implements
 
     @SuppressWarnings("unchecked")
     @Override
-    public void reduce(KmerBytesWritable key, Iterator<MergePathValueWritable> values,
-            OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
-        outputAdjList = values.next();
-
-        
+    public void reduce(VKmerBytesWritable key, Iterator<MergePathValueWritable> values,
+            OutputCollector<VKmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
+        outputValue = values.next();
         if (values.hasNext() == true) {
-
-            if (outputAdjList.getFlag() == 1) {
-                byte adjBitMap = outputAdjList.getAdjBitMap();
-                byte bitFlag = outputAdjList.getFlag();
-                outputKmer.set(kmerFactory.mergeTwoKmer(outputAdjList.getKmer(), key));
-                
-                outputAdjList = values.next();
-                byte nextAdj = outputAdjList.getAdjBitMap();
+            if(outputValue.getFlag() != 1){
+                byte nextAdj = outputValue.getAdjBitMap();
                 byte succeed = (byte) 0x0F;
                 succeed = (byte) (succeed & nextAdj);
-                adjBitMap = (byte) (adjBitMap & 0xF0);
-                adjBitMap = (byte) (adjBitMap | succeed);
-                outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, KMER_SIZE + outputAdjList.getKmerSize());
-
-                mos.getCollector("uncomplete" + I_MERGE, reporter).collect(outputKmer, outputAdjList);
-            } else {
-                byte nextAdj = outputAdjList.getAdjBitMap();
-                byte succeed = (byte) 0x0F;
-                succeed = (byte) (succeed & nextAdj);
-                outputAdjList = values.next();
-                byte adjBitMap = outputAdjList.getAdjBitMap();
-                byte flag = outputAdjList.getFlag();
-                int kmerSize = outputAdjList.getKmerSize();
                 
-                outputKmer.set(kmerFactory.mergeTwoKmer(outputAdjList.getKmer(), key));
+                outputValue = values.next();
+                byte adjBitMap = outputValue.getAdjBitMap();
+                byte flag = outputValue.getFlag();                
+                outputKmer.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), key));
+
                 adjBitMap = (byte) (adjBitMap & 0xF0);
                 adjBitMap = (byte) (adjBitMap | succeed);
-                outputAdjList.set(null, 0, 0, adjBitMap, flag, KMER_SIZE + kmerSize);
-
-                mos.getCollector("uncomplete" + I_MERGE, reporter).collect(outputKmer, outputAdjList);
+                outputValue.set(null, 0, 0, adjBitMap, flag, 0);
+                mos.getCollector("uncomplete" + I_MERGE, reporter).collect(outputKmer, outputValue);
+            }
+            else{
+                tmpOutputValue.set(outputValue);
+                byte tmpAdjMap = tmpOutputValue.getAdjBitMap();
+                
+                outputValue = values.next();
+                if(outputValue.getFlag() != 1) {
+                    outputKmer.set(kmerFactory.mergeTwoKmer(tmpOutputValue.getKmer(), key));
+                    
+                    byte nextAdj = outputValue.getAdjBitMap();
+                    byte succeed = (byte) 0x0F;
+                    succeed = (byte) (succeed & nextAdj);
+                    tmpAdjMap = (byte) (tmpAdjMap & 0xF0);
+                    tmpAdjMap = (byte) (tmpAdjMap | succeed);
+                    outputValue.set(null, 0, 0, tmpAdjMap, tmpOutputValue.getFlag(), 0);
+                    mos.getCollector("uncomplete" + I_MERGE, reporter).collect(outputKmer, outputValue);
+                }
+                else{
+                    
+                    tmpKmer.set(kmerFactory.getFirstKmerFromChain(KMER_SIZE-1, key));
+                    outputKmer.set(kmerFactory.mergeTwoKmer(tmpOutputValue.getKmer(), tmpKmer));
+                    tmpOutputValue.set(null, 0, 0, tmpAdjMap, tmpOutputValue.getFlag(), 0);
+                    mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, tmpOutputValue);
+                    
+                    tmpKmer.set(kmerFactory.getFirstKmerFromChain(KMER_SIZE-1, key));
+                    outputKmer.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), tmpKmer));                    
+                    outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), outputValue.getFlag(), 0);
+                    mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputValue);
+                                        
+                    while(values.hasNext()) {
+                        outputValue = values.next();
+                        tmpKmer.set(kmerFactory.getFirstKmerFromChain(KMER_SIZE-1, key));
+                        outputKmer.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), tmpKmer));                    
+                        outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), outputValue.getFlag(), 0);
+                        mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputValue);
+                    }
+                }
             }
         } else {
-            if (outputAdjList.getFlag() != 0) {
-                byte adjBitMap = outputAdjList.getAdjBitMap();
-                byte flag = outputAdjList.getFlag();
-                int kmerSize = outputAdjList.getKmerSize();
-                
-                tmpKmer.set(kmerFactory.getFirstKmerFromChain(KMER_SIZE - 1, key));
-                outputKmer.set(kmerFactory.mergeTwoKmer(outputAdjList.getKmer(), tmpKmer));
-                outputAdjList.set(null, 0, 0, adjBitMap, flag, KMER_SIZE + kmerSize);
-                mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputAdjList);
+            if (outputValue.getFlag() != 0) {
+                tmpKmer.set(kmerFactory.getFirstKmerFromChain(KMER_SIZE-1, key));
+                outputKmer.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), tmpKmer));                    
+                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), outputValue.getFlag(), 0);
+                mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputValue);
             } else
-                mos.getCollector("uncomplete" + I_MERGE, reporter).collect(key, outputAdjList);
+                mos.getCollector("uncomplete" + I_MERGE, reporter).collect(key, outputValue);
         }
     }
-
     public void close() throws IOException {
         // TODO Auto-generated method stub
         mos.close();
