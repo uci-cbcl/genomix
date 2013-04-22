@@ -4,35 +4,42 @@ import java.io.*;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.old.Kmer;
+import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 
 public class ValueStateWritable implements WritableComparable<ValueStateWritable> {
 
-	private byte value;
+	private byte adjMap;
 	private int state;
-	private int lengthOfMergeChain;
-	private byte[] mergeChain;
+	private VKmerBytesWritable mergeChain;
 
 	public ValueStateWritable() {
 		state = State.NON_VERTEX;
-		lengthOfMergeChain = 0;
+		mergeChain = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
 	}
 
-	public ValueStateWritable(byte value, int state, int lengthOfMergeChain, byte[] mergeChain) {
-		this.value = value;
+	public ValueStateWritable(byte adjMap, int state, VKmerBytesWritable mergeChain) {
+		this.adjMap = adjMap;
 		this.state = state;
-		this.lengthOfMergeChain = lengthOfMergeChain;
-		this.mergeChain = mergeChain;
+		this.mergeChain.set(mergeChain);
+	}
+	
+	public void set(byte adjMap, int state, VKmerBytesWritable mergeChain){
+		this.adjMap = adjMap;
+		this.state = state;
+		this.mergeChain.set(mergeChain);
 	}
 
-	public byte getValue() {
-		return value;
+	public byte getAdjMap() {
+		return adjMap;
 	}
 
-	public void setValue(byte value) {
-		this.value = value;
+	public void setAdjMap(byte adjMap) {
+		this.adjMap = adjMap;
 	}
 
 	public int getState() {
@@ -44,43 +51,33 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	}
 
 	public int getLengthOfMergeChain() {
-		return lengthOfMergeChain;
+		return mergeChain.getKmerLength();
 	}
 
-	public void setLengthOfMergeChain(int lengthOfMergeChain) {
-		this.lengthOfMergeChain = lengthOfMergeChain;
-	}
-
-	public byte[] getMergeChain() {
+	public VKmerBytesWritable getMergeChain() {
 		return mergeChain;
 	}
 
-	public void setMergeChain(byte[] mergeChain) {
-		this.mergeChain = mergeChain;
+	public void setMergeChain(KmerBytesWritable mergeChain) {
+		this.mergeChain.set(mergeChain);
+	}
+	
+	public void setMergeChain(VKmerBytesWritable mergeChain) {
+		this.mergeChain.set(mergeChain);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		value = in.readByte();
+		adjMap = in.readByte();
 		state = in.readInt();
-		lengthOfMergeChain = in.readInt();
-		if(lengthOfMergeChain < 0)
-			System.out.println();
-		if(lengthOfMergeChain != 0){
-			mergeChain = new byte[(lengthOfMergeChain-1)/4 + 1];
-			in.readFully(mergeChain);
-		}
-		else
-			mergeChain = new byte[0];
+		mergeChain.readFields(in);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeByte(value);
+		out.writeByte(adjMap);
 		out.writeInt(state);
-		out.writeInt(lengthOfMergeChain);
-		if(lengthOfMergeChain != 0)
-			out.write(mergeChain);
+		mergeChain.write(out);
 	}
 
 	@Override
@@ -91,11 +88,11 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	
 	@Override
 	public String toString() {
-		if(lengthOfMergeChain == 0)
-			return Kmer.GENE_CODE.getSymbolFromBitMap(value);
-		return 	Kmer.GENE_CODE.getSymbolFromBitMap(value) + "\t" +
-				lengthOfMergeChain + "\t" +
-				Kmer.recoverKmerFrom(lengthOfMergeChain, mergeChain, 0, mergeChain.length) + "\t" +
+		if(mergeChain.getKmerLength() == 0)
+			return GeneCode.getSymbolFromBitMap(adjMap);
+		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
+				getLengthOfMergeChain() + "\t" +
+				mergeChain.toString() + "\t" +
 				state;
 	}
 	

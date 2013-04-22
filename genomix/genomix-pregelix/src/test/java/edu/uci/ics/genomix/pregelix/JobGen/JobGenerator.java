@@ -5,19 +5,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-import edu.uci.ics.genomix.pregelix.LoadGraphVertex;
-import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForMergeGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForMergeGraphOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
+import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphVertex;
-import edu.uci.ics.genomix.pregelix.MergeGraphVertex;
+import edu.uci.ics.genomix.pregelix.operator.LoadGraphVertex;
+import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 
@@ -30,10 +29,11 @@ public class JobGenerator {
     private static void generateLoadGraphJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
     	job.setVertexClass(LoadGraphVertex.class);
-    	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
-        job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
-        job.setOutputKeyClass(BytesWritable.class);
-        job.setOutputValueClass(ByteWritable.class);
+    	job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
+        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -45,15 +45,15 @@ public class JobGenerator {
     
     private static void generateMergeGraphJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(MergeGraphVertex.class);
-    	job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class);
-        job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class);
+    	job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
+    	job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
+        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(BytesWritable.class);
+        job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
-        job.getConfiguration().setInt(MergeGraphVertex.KMER_SIZE, 55);
+        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -63,15 +63,15 @@ public class JobGenerator {
     
     private static void generateLogAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(LogAlgorithmForMergeGraphVertex.class);
-        job.setVertexInputFormatClass(LogAlgorithmForMergeGraphInputFormat.class); 
-        job.setVertexOutputFormatClass(LogAlgorithmForMergeGraphOutputFormat.class);
+    	job.setVertexClass(LogAlgorithmForPathMergeVertex.class);
+        job.setVertexInputFormatClass(LogAlgorithmForPathMergeInputFormat.class); 
+        job.setVertexOutputFormatClass(LogAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(BytesWritable.class);
+        job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
-        job.getConfiguration().setInt(LogAlgorithmForMergeGraphVertex.KMER_SIZE, 5);
+        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -88,8 +88,6 @@ public class JobGenerator {
 		//genLoadGraph();
 		//genMergeGraph();
 		genLogAlgorithmForMergeGraph();
-		//genSequenceLoadGraph();
-		//genBasicBinaryLoadGraph();
 	}
 
 }

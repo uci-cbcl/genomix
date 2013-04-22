@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.api.io.binary;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -14,12 +13,14 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
 	extends VertexInputFormat<I, V, E, M>{
 	
     /** Uses the SequenceFileInputFormat to do everything */
+	@SuppressWarnings("rawtypes")
 	protected SequenceFileInputFormat binaryInputFormat = new SequenceFileInputFormat();
     
     /**
@@ -37,7 +38,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends
     public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<BytesWritable,KmerCountValue> lineRecordReader;
+        private final RecordReader<KmerBytesWritable,KmerCountValue> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -47,7 +48,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryVertexReader(RecordReader<BytesWritable, KmerCountValue> recordReader) {
+        public BinaryVertexReader(RecordReader<KmerBytesWritable, KmerCountValue> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -73,7 +74,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<BytesWritable,KmerCountValue> getRecordReader() {
+        protected RecordReader<KmerBytesWritable,KmerCountValue> getRecordReader() {
             return lineRecordReader;
         }
 
@@ -87,7 +88,8 @@ public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends
         }
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public List<InputSplit> getSplits(JobContext context, int numWorkers) throws IOException, InterruptedException {
         // Ignore the hint of numWorkers here since we are using SequenceFileInputFormat
         // to do this for us

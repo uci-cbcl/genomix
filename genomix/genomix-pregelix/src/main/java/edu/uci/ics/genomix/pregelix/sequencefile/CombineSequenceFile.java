@@ -5,13 +5,11 @@ import java.io.File;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 
-import edu.uci.ics.genomix.type.old.Kmer;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
-
 
 public class CombineSequenceFile {
 
@@ -25,24 +23,23 @@ public class CombineSequenceFile {
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
 		
-		Path p = new Path("data/SinglePath_55");
-		Path p2 = new Path("data/result");
-		Path outFile = new Path(p2, "output"); 
+		Path p = new Path("output");
+		//Path p2 = new Path("data/result");
+		Path outFile = new Path("output"); 
 		SequenceFile.Reader reader;
 	    SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
-	         outFile, BytesWritable.class, KmerCountValue.class, 
+	         outFile, KmerBytesWritable.class, KmerCountValue.class, 
 	         CompressionType.NONE);
-	    BytesWritable key = new BytesWritable();
+	    KmerBytesWritable key = new KmerBytesWritable(kmerSize);
 	    KmerCountValue value = new KmerCountValue();
 	    
-	    File dir = new File("data/SinglePath_55");
+	    File dir = new File("output");
 		for(File child : dir.listFiles()){
 			String name = child.getAbsolutePath();
 			Path inFile = new Path(p, name);
 			reader = new SequenceFile.Reader(fileSys, inFile, conf);
 			while (reader.next(key, value)) {
-				System.out.println(Kmer.recoverKmerFrom(kmerSize, key.getBytes(), 0,
-						key.getLength())
+				System.out.println(key.toString()
 						+ "\t" + value.toString());
 				writer.append(key, value);
 			}
@@ -53,8 +50,7 @@ public class CombineSequenceFile {
 		
 		reader = new SequenceFile.Reader(fileSys, outFile, conf);
 		while (reader.next(key, value)) {
-			System.err.println(Kmer.recoverKmerFrom(kmerSize, key.getBytes(), 0,
-					key.getLength())
+			System.err.println(key.toString()
 					+ "\t" + value.toString());
 		}
 		reader.close();

@@ -4,27 +4,22 @@ import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-import org.apache.hadoop.io.BytesWritable;
-
-import edu.uci.ics.genomix.type.old.Kmer;
 import edu.uci.ics.genomix.type.KmerCountValue;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class DataLoadLogFormatter extends Formatter{
-    private BytesWritable key;
+    private VKmerBytesWritable key;
     private KmerCountValue value;
-    private int k;
 
-    public void set(BytesWritable key, 
-    		KmerCountValue value, int k){
-    	this.key = key;
+    public void set(VKmerBytesWritable key, 
+    		KmerCountValue value){
+    	this.key.set(key);
     	this.value = value;
-    	this.k = k;
     }
     public String format(LogRecord record) {
-        StringBuilder builder = new StringBuilder(1000);
+        StringBuilder builder = new StringBuilder(1000); 
         
-        builder.append(Kmer.recoverKmerFrom(k, key.getBytes(), 0,
-							key.getLength())
+        builder.append(key.toString()
 							+ "\t" + value.toString() + "\r\n");
 
         if(!formatMessage(record).equals(""))
