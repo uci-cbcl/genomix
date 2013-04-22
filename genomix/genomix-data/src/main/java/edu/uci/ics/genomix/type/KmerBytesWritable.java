@@ -264,12 +264,19 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     }
 
     public static class Comparator extends WritableComparator {
+        public final int LEAD_BYTES = 4;
+
         public Comparator() {
             super(KmerBytesWritable.class);
         }
 
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            return compareBytes(b1, s1, l1, b2, s2, l2);
+            int kmerlength1 = readInt(b1, s1);
+            int kmerlength2 = readInt(b2, s2);
+            if (kmerlength1 == kmerlength2) {
+                return compareBytes(b1, s1 + LEAD_BYTES, l1 - LEAD_BYTES, b2, s2 + LEAD_BYTES, l2 - LEAD_BYTES);
+            }
+            return kmerlength1 - kmerlength2;
         }
     }
 
