@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.type;
 
 public class KmerUtil {
+    public static final String empty = "";
 
     public static int getByteNumFromK(int k) {
         int x = k / 4;
@@ -18,6 +19,9 @@ public class KmerUtil {
     public static String recoverKmerFrom(int k, byte[] keyData, int keyStart, int keyLength) {
         StringBuilder strKmer = new StringBuilder();
         int byteId = keyStart + keyLength - 1;
+        if (byteId < 0){
+            return empty;
+        }
         byte currentbyte = keyData[byteId];
         for (int geneCount = 0; geneCount < k; geneCount++) {
             if (geneCount % 4 == 0 && geneCount > 0) {

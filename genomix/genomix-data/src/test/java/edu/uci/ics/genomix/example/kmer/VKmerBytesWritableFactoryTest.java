@@ -31,11 +31,50 @@ public class VKmerBytesWritableFactoryTest {
         for (int i = 8; i > 0; i--) {
             lastKmer = kmerFactory.getLastKmerFromChain(i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(9 - i), lastKmer.toString());
+            lastKmer = kmerFactory.getSubKmerFromChain(9-i, i, kmer);
+            Assert.assertEquals("AGCTGACCG".substring(9 - i), lastKmer.toString());
         }
         VKmerBytesWritable vlastKmer;
         for (int i = 8; i > 0; i--) {
             vlastKmer = kmerFactory.getLastKmerFromChain(i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(9 - i), vlastKmer.toString());
+            vlastKmer = kmerFactory.getSubKmerFromChain(9-i, i, kmer);
+            Assert.assertEquals("AGCTGACCG".substring(9 - i), vlastKmer.toString());
+        }
+    }
+    
+    @Test
+    public void TestGetFirstKmer(){
+        KmerBytesWritable kmer = new KmerBytesWritable(9);
+        kmer.setByRead(array, 0);
+        Assert.assertEquals("AGCTGACCG", kmer.toString());
+        KmerBytesWritable firstKmer;
+        for (int i = 8; i > 0; i--) {
+            firstKmer = kmerFactory.getFirstKmerFromChain(i, kmer);
+            Assert.assertEquals("AGCTGACCG".substring(0,i), firstKmer.toString());
+            firstKmer = kmerFactory.getSubKmerFromChain(0,i,kmer);
+            Assert.assertEquals("AGCTGACCG".substring(0,i), firstKmer.toString());   
+        }
+        VKmerBytesWritable vfirstKmer;
+        for (int i = 8; i > 0; i--) {
+            vfirstKmer = kmerFactory.getFirstKmerFromChain(i, kmer);
+            Assert.assertEquals("AGCTGACCG".substring(0,i), vfirstKmer.toString());
+            vfirstKmer = kmerFactory.getSubKmerFromChain(0, i, kmer);
+            Assert.assertEquals("AGCTGACCG".substring(0,i), vfirstKmer.toString());   
+        }
+    }
+    
+    @Test 
+    public void TestGetSubKmer(){
+        KmerBytesWritable kmer = new KmerBytesWritable(9);
+        kmer.setByRead(array, 0);
+        Assert.assertEquals("AGCTGACCG", kmer.toString());
+        VKmerBytesWritable subKmer;
+        for (int istart = 0; istart < kmer.getKmerLength()-1; istart++) {
+            for(int isize = 1; isize + istart <= kmer.getKmerLength(); isize ++){
+                subKmer = kmerFactory.getSubKmerFromChain(istart, isize, kmer);
+                Assert.assertEquals("AGCTGACCG".substring(istart, istart+isize), subKmer.toString());  
+            }
         }
     }
 
