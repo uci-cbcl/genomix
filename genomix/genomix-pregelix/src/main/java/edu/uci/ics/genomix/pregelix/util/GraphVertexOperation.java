@@ -1,16 +1,14 @@
-package edu.uci.ics.genomix.pregelix;
+package edu.uci.ics.genomix.pregelix.util;
 
-import org.apache.hadoop.io.BytesWritable;
-
-import edu.uci.ics.genomix.type.old.Kmer;
-import edu.uci.ics.genomix.type.old.KmerUtil;
+import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class GraphVertexOperation {
 	
 	/**
 	 *  generate the valid data(byte[]) from BytesWritable
 	 */
-	public static byte[] generateValidDataFromBytesWritable(BytesWritable bw){
+	public static byte[] generateValidDataFromBytesWritable(VKmerBytesWritable bw){
 		byte[] wholeBytes = bw.getBytes();
 		int validNum = bw.getLength();
 		byte[] validBytes = new byte[validNum];
@@ -23,7 +21,7 @@ public class GraphVertexOperation {
 	 * @param vertexValue 
 	 */
 	public static boolean isPathVertex(byte value){
-		if(KmerUtil.inDegree(value) == 1 && KmerUtil.outDegree(value) == 1)
+		if(GeneCode.inDegree(value) == 1 && GeneCode.outDegree(value) == 1)
 			return true;
 		return false;
 	}
@@ -32,7 +30,7 @@ public class GraphVertexOperation {
 	 * @param vertexValue 
 	 */
 	public static boolean isHeadVertex(byte value){
-		if(KmerUtil.outDegree(value) > 0 && !isPathVertex(value))
+		if(GeneCode.outDegree(value) > 0 && !isPathVertex(value))
 			return true;
 		return false;
 	}
@@ -41,18 +39,17 @@ public class GraphVertexOperation {
 	 * @param vertexValue 
 	 */
 	public static boolean isRearVertex(byte value){
-		if(KmerUtil.inDegree(value) > 0 && !isPathVertex(value))
+		if(GeneCode.inDegree(value) > 0 && !isPathVertex(value))
 			return true;
 		return false;
 	}
 	/**
 	 * update right neighber based on next vertexId
 	 */
-	public static byte updateRightNeighberByVertexId(byte oldVertexValue, byte[] neighberVertexId, int k){
+	public static byte updateRightNeighberByVertexId(byte oldVertexValue, VKmerBytesWritable neighberVertex, int k){
+		byte geneCode = neighberVertex.getGeneCodeAtPosition(k-1);
 		
-		String neighberVertex = Kmer.recoverKmerFrom(k, neighberVertexId, 0, neighberVertexId.length);
-		
-		byte newBit = Kmer.GENE_CODE.getAdjBit((byte)neighberVertex.charAt(neighberVertex.length() - 1));
+		byte newBit = GeneCode.getAdjBit(geneCode);
 		return (byte) ((byte)(oldVertexValue & 0xF0) | (byte) (newBit & 0x0F));
 	}
 	/**
@@ -61,4 +58,5 @@ public class GraphVertexOperation {
 	public static byte updateRightNeighber(byte oldVertexValue, byte newVertexValue){
 		return (byte) ((byte)(oldVertexValue & 0xF0) | (byte) (newVertexValue & 0x0F));
 	}
+
 }

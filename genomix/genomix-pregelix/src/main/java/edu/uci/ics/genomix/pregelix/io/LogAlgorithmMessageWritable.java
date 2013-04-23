@@ -2,11 +2,12 @@ package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphVertex;
+
+import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgorithmMessageWritable>{
 	/**
@@ -15,65 +16,55 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	 * chainVertexId stores the chains of connected DNA
 	 * file stores the point to the file that stores the chains of connected DNA
 	 */
-	private byte[] sourceVertexId;
-	private byte neighberInfo;
-	private int lengthOfChain;
-	private byte[] chainVertexId;
-	private File file;
+	private VKmerBytesWritable sourceVertexId;
+	private VKmerBytesWritable chainVertexId;
+	private byte adjMap;
 	private int message;
 	private int sourceVertexState;
 	
 	public LogAlgorithmMessageWritable(){
-		sourceVertexId = new byte[(LogAlgorithmForMergeGraphVertex.kmerSize-1)/4 + 1];
+		sourceVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
+		chainVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
 	}
 	
-	public void set(byte[] sourceVertexId,byte neighberInfo, byte[] chainVertexId, File file){
-		this.sourceVertexId = sourceVertexId;
-		this.chainVertexId = chainVertexId;
-		this.file = file;
-		this.message = 0;
-		this.lengthOfChain = 0;
+	public void set(VKmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, int message, int sourceVertexState){
+		this.sourceVertexId.set(sourceVertexId);
+		this.chainVertexId.set(chainVertexId);
+		this.adjMap = adjMap;
+		this.message = message;
+		this.sourceVertexState = sourceVertexState;
 	}
 	
 	public void reset(){
-		sourceVertexId = new byte[(LogAlgorithmForMergeGraphVertex.kmerSize-1)/4 + 1];
-		neighberInfo = (Byte) null;
-		lengthOfChain = 0;
-		chainVertexId = null;
+		//sourceVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
+		chainVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
+		adjMap = (byte)0;
 		message = 0;
 		sourceVertexState = 0;
 	}
 
-	public byte[] getSourceVertexId() {
+	public VKmerBytesWritable getSourceVertexId() {
 		return sourceVertexId;
 	}
 
-	public void setSourceVertexId(byte[] sourceVertexId) {
-		this.sourceVertexId = sourceVertexId;
+	public void setSourceVertexId(VKmerBytesWritable sourceVertexId) {
+		this.sourceVertexId.set(sourceVertexId);
 	}
 
-	public byte getNeighberInfo() {
-		return neighberInfo;
+	public byte getAdjMap() {
+		return adjMap;
 	}
 
-	public void setNeighberInfo(byte neighberInfo) {
-		this.neighberInfo = neighberInfo;
+	public void setAdjMap(byte adjMap) {
+		this.adjMap = adjMap;
 	}
 
-	public byte[] getChainVertexId() {
+	public VKmerBytesWritable getChainVertexId() {
 		return chainVertexId;
 	}
 
-	public void setChainVertexId(byte[] chainVertexId) {
-		this.chainVertexId = chainVertexId;
-	}
-
-	public File getFile() {
-		return file;
-	}
-
-	public void setFile(File file) {
-		this.file = file;
+	public void setChainVertexId(VKmerBytesWritable chainVertexId) {
+		this.chainVertexId.set(chainVertexId);
 	}
 
 	public int getMessage() {
@@ -93,84 +84,48 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	}
 
 	public int getLengthOfChain() {
-		return lengthOfChain;
-	}
-
-	public void setLengthOfChain(int lengthOfChain) {
-		this.lengthOfChain = lengthOfChain;
-	}
-
-	public void incrementLength(){
-		this.lengthOfChain++;
+		return chainVertexId.getKmerLength();
 	}
 	
 	@Override
 	public void write(DataOutput out) throws IOException {
-		// TODO Auto-generated method stub
-		out.writeInt(lengthOfChain);
-		if(lengthOfChain != 0)
-			out.write(chainVertexId);
-
+		sourceVertexId.write(out);
+		chainVertexId.write(out);
+		out.write(adjMap);
 		out.writeInt(message);
 		out.writeInt(sourceVertexState);
-		
-		out.write(sourceVertexId); 
-		out.write(neighberInfo);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		// TODO Auto-generated method stub
-		lengthOfChain = in.readInt();
-		if(lengthOfChain > 0){
-			chainVertexId = new byte[(lengthOfChain-1)/4 + 1];
-			in.readFully(chainVertexId);
-		}
-		else
-			chainVertexId = new byte[0];
-
+		sourceVertexId.readFields(in);
+		chainVertexId.readFields(in);
+		adjMap = in.readByte();
 		message = in.readInt();
 		sourceVertexState = in.readInt();
-		
-		sourceVertexId = new byte[(LogAlgorithmForMergeGraphVertex.kmerSize-1)/4 + 1];
-		in.readFully(sourceVertexId);
-		neighberInfo = in.readByte();
 	}
 
-    @Override
+	 @Override
     public int hashCode() {
-    	int hashCode = 0;
-    	for(int i = 0; i < chainVertexId.length; i++)
-    		hashCode = (int)chainVertexId[i];
-        return hashCode;
+        return chainVertexId.hashCode();
     }
+	 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof LogAlgorithmMessageWritable) {
+        if (o instanceof NaiveAlgorithmMessageWritable) {
         	LogAlgorithmMessageWritable tp = (LogAlgorithmMessageWritable) o;
-            return chainVertexId == tp.chainVertexId && file == tp.file;
+            return chainVertexId.equals(tp.chainVertexId);
         }
         return false;
     }
+    
     @Override
     public String toString() {
-        return chainVertexId.toString() + "\t" + file.getAbsolutePath();
+        return chainVertexId.toString();
     }
-    @Override
+    
+	@Override
 	public int compareTo(LogAlgorithmMessageWritable tp) {
-		// TODO Auto-generated method stub
-        int cmp;
-        if (chainVertexId == tp.chainVertexId)
-            cmp = 0;
-        else
-            cmp = 1;
-        if (cmp != 0)
-            return cmp;
-        if (file == tp.file)
-            return 0;
-        else
-            return 1;
+		return chainVertexId.compareTo(tp.chainVertexId);
 	}
-
-
 }

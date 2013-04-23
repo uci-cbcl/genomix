@@ -24,39 +24,40 @@ import java.util.Collections;
 public class TestUtils {
     /**
      * Compare with the sorted expected file.
-     * The actual file may not be sorted; 
+     * The actual file may not be sorted;
+     * 
      * @param expectedFile
      * @param actualFile
      */
-    public static void compareWithSortedResult(File expectedFile, File actualFile) throws Exception{
+    public static void compareWithSortedResult(File expectedFile, File actualFile) throws Exception {
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         ArrayList<String> actualLines = new ArrayList<String>();
         String lineExpected, lineActual;
-        try{
-                while ( (lineActual = readerActual.readLine())!=null){
-                        actualLines.add(lineActual);
-                }
-                Collections.sort(actualLines);
-                int num = 1;
-                for(String actualLine : actualLines){
-                        lineExpected = readerExpected.readLine();
-                        if (lineExpected == null){
-                                throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
-                        }
-                        if ( !equalStrings(lineExpected, actualLine)){
-                                   throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
-                               + actualLine);
-                        }
-                ++num;
-                }
+        try {
+            while ((lineActual = readerActual.readLine()) != null) {
+                actualLines.add(lineActual);
+            }
+            Collections.sort(actualLines);
+            int num = 1;
+            for (String actualLine : actualLines) {
                 lineExpected = readerExpected.readLine();
-                if (lineExpected != null) {
-                    throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineExpected);
+                if (lineExpected == null) {
+                    throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
                 }
-        } finally{
-                readerActual.close();
-                readerExpected.close();
+                if (!equalStrings(lineExpected, actualLine)) {
+                    throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
+                            + actualLine);
+                }
+                ++num;
+            }
+            lineExpected = readerExpected.readLine();
+            if (lineExpected != null) {
+                throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineExpected);
+            }
+        } finally {
+            readerActual.close();
+            readerExpected.close();
         }
     }
 

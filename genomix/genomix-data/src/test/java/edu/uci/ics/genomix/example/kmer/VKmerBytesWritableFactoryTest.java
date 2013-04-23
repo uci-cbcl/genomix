@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.genomix.example.kmer;
 
 import org.junit.Assert;
@@ -31,49 +46,49 @@ public class VKmerBytesWritableFactoryTest {
         for (int i = 8; i > 0; i--) {
             lastKmer = kmerFactory.getLastKmerFromChain(i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(9 - i), lastKmer.toString());
-            lastKmer = kmerFactory.getSubKmerFromChain(9-i, i, kmer);
+            lastKmer = kmerFactory.getSubKmerFromChain(9 - i, i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(9 - i), lastKmer.toString());
         }
         VKmerBytesWritable vlastKmer;
         for (int i = 8; i > 0; i--) {
             vlastKmer = kmerFactory.getLastKmerFromChain(i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(9 - i), vlastKmer.toString());
-            vlastKmer = kmerFactory.getSubKmerFromChain(9-i, i, kmer);
+            vlastKmer = kmerFactory.getSubKmerFromChain(9 - i, i, kmer);
             Assert.assertEquals("AGCTGACCG".substring(9 - i), vlastKmer.toString());
         }
     }
-    
+
     @Test
-    public void TestGetFirstKmer(){
+    public void TestGetFirstKmer() {
         KmerBytesWritable kmer = new KmerBytesWritable(9);
         kmer.setByRead(array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
         KmerBytesWritable firstKmer;
         for (int i = 8; i > 0; i--) {
             firstKmer = kmerFactory.getFirstKmerFromChain(i, kmer);
-            Assert.assertEquals("AGCTGACCG".substring(0,i), firstKmer.toString());
-            firstKmer = kmerFactory.getSubKmerFromChain(0,i,kmer);
-            Assert.assertEquals("AGCTGACCG".substring(0,i), firstKmer.toString());   
+            Assert.assertEquals("AGCTGACCG".substring(0, i), firstKmer.toString());
+            firstKmer = kmerFactory.getSubKmerFromChain(0, i, kmer);
+            Assert.assertEquals("AGCTGACCG".substring(0, i), firstKmer.toString());
         }
         VKmerBytesWritable vfirstKmer;
         for (int i = 8; i > 0; i--) {
             vfirstKmer = kmerFactory.getFirstKmerFromChain(i, kmer);
-            Assert.assertEquals("AGCTGACCG".substring(0,i), vfirstKmer.toString());
+            Assert.assertEquals("AGCTGACCG".substring(0, i), vfirstKmer.toString());
             vfirstKmer = kmerFactory.getSubKmerFromChain(0, i, kmer);
-            Assert.assertEquals("AGCTGACCG".substring(0,i), vfirstKmer.toString());   
+            Assert.assertEquals("AGCTGACCG".substring(0, i), vfirstKmer.toString());
         }
     }
-    
-    @Test 
-    public void TestGetSubKmer(){
+
+    @Test
+    public void TestGetSubKmer() {
         KmerBytesWritable kmer = new KmerBytesWritable(9);
         kmer.setByRead(array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
         VKmerBytesWritable subKmer;
-        for (int istart = 0; istart < kmer.getKmerLength()-1; istart++) {
-            for(int isize = 1; isize + istart <= kmer.getKmerLength(); isize ++){
+        for (int istart = 0; istart < kmer.getKmerLength() - 1; istart++) {
+            for (int isize = 1; isize + istart <= kmer.getKmerLength(); isize++) {
                 subKmer = kmerFactory.getSubKmerFromChain(istart, isize, kmer);
-                Assert.assertEquals("AGCTGACCG".substring(istart, istart+isize), subKmer.toString());  
+                Assert.assertEquals("AGCTGACCG".substring(istart, istart + isize), subKmer.toString());
             }
         }
     }

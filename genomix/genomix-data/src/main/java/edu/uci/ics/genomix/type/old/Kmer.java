@@ -1,15 +1,29 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.genomix.type.old;
 
 @Deprecated
 public class Kmer {
-    
+
     public final static byte[] GENE_SYMBOL = { 'A', 'C', 'G', 'T' };
 
     public final static class GENE_CODE {
 
         /**
-         * make sure this 4 ids equal to the sequence id of char in
-         * {@GENE_SYMBOL}
+         * make sure this 4 ids equal to the sequence id of char in {@GENE_SYMBOL}
          */
         public static final byte A = 0;
         public static final byte C = 1;
@@ -19,22 +33,22 @@ public class Kmer {
         public static byte getCodeFromSymbol(byte ch) {
             byte r = 0;
             switch (ch) {
-            case 'A':
-            case 'a':
-                r = A;
-                break;
-            case 'C':
-            case 'c':
-                r = C;
-                break;
-            case 'G':
-            case 'g':
-                r = G;
-                break;
-            case 'T':
-            case 't':
-                r = T;
-                break;
+                case 'A':
+                case 'a':
+                    r = A;
+                    break;
+                case 'C':
+                case 'c':
+                    r = C;
+                    break;
+                case 'G':
+                case 'g':
+                    r = G;
+                    break;
+                case 'T':
+                case 't':
+                    r = T;
+                    break;
             }
             return r;
         }
@@ -49,42 +63,44 @@ public class Kmer {
         public static byte getAdjBit(byte t) {
             byte r = 0;
             switch (t) {
-            case 'A':
-            case 'a':
-                r = 1 << A;
-                break;
-            case 'C':
-            case 'c':
-                r = 1 << C;
-                break;
-            case 'G':
-            case 'g':
-                r = 1 << G;
-                break;
-            case 'T':
-            case 't':
-                r = 1 << T;
-                break;
+                case 'A':
+                case 'a':
+                    r = 1 << A;
+                    break;
+                case 'C':
+                case 'c':
+                    r = 1 << C;
+                    break;
+                case 'G':
+                case 'g':
+                    r = 1 << G;
+                    break;
+                case 'T':
+                case 't':
+                    r = 1 << T;
+                    break;
             }
             return r;
         }
 
-        /** 
-         * It works for path merge. 
+        /**
+         * It works for path merge.
          * Merge the kmer by his next, we need to make sure the @{t} is a single neighbor.
-         * @param t the neighbor code in BitMap
-         * @return the genecode 
+         * 
+         * @param t
+         *            the neighbor code in BitMap
+         * @return the genecode
          */
         public static byte getGeneCodeFromBitMap(byte t) {
             switch (t) {
-            case 1 << A:
-                return A;
-            case 1 << C:
-                return C;
-            case 1 << G:
-                return G;
-            case 1 << T:
-                return T;
+                case 1 << A:
+                    return A;
+                case 1 << C:
+                    return C;
+                case 1 << G:
+                    return G;
+                case 1 << T:
+                    return T;
             }
             return -1;
         }
@@ -112,8 +128,7 @@ public class Kmer {
         }
     }
 
-    public static String recoverKmerFrom(int k, byte[] keyData, int keyStart,
-            int keyLength) {
+    public static String recoverKmerFrom(int k, byte[] keyData, int keyStart, int keyLength) {
         StringBuilder strKmer = new StringBuilder();
         int byteId = keyStart + keyLength - 1;
         byte currentbyte = keyData[byteId];
@@ -277,8 +292,7 @@ public class Kmer {
         if (k % 4 != 0) {
             kmer[0] &= (1 << ((k % 4) << 1)) - 1;
         }
-        kmer[kmer.length - 1] = (byte) ((kmer[kmer.length - 1] << 2) | GENE_CODE
-                .getCodeFromSymbol(c));
+        kmer[kmer.length - 1] = (byte) ((kmer[kmer.length - 1] << 2) | GENE_CODE.getCodeFromSymbol(c));
         return (byte) (1 << output);
     }
 

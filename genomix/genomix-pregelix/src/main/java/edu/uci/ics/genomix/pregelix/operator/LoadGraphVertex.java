@@ -1,16 +1,15 @@
-package edu.uci.ics.genomix.pregelix;
+package edu.uci.ics.genomix.pregelix.operator;
 
 import java.util.Iterator;
 
-import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphInputFormat;
-import edu.uci.ics.genomix.pregelix.format.BinaryLoadGraphOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
+import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.NaiveAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -18,7 +17,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * vertexId: BytesWritable
  * vertexValue: ByteWritable
  * edgeValue: NullWritable
- * message: MessageWritable
+ * message: NaiveAlgorithmMessageWritable
  * 
  * DNA:
  * A: 00
@@ -42,14 +41,13 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
-public class LoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWritable, MessageWritable>{
+public class LoadGraphVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable>{
 
 	/**
 	 * For test, just output original file
 	 */
 	@Override
-	public void compute(Iterator<MessageWritable> msgIterator) {
-		deleteVertex(getVertexId());
+	public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
 		voteToHalt();
 	}
 
@@ -57,15 +55,15 @@ public class LoadGraphVertex extends Vertex<BytesWritable, ByteWritable, NullWri
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		//final int k = Integer.parseInt(args[0]);
         PregelixJob job = new PregelixJob(LoadGraphVertex.class.getSimpleName());
         job.setVertexClass(LoadGraphVertex.class);
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(BinaryLoadGraphInputFormat.class); 
-        job.setVertexOutputFormatClass(BinaryLoadGraphOutputFormat.class); 
-        job.setOutputKeyClass(BytesWritable.class);
+        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class); 
+        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class); 
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         Client.run(args, job);
 	}

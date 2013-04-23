@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.genomix.dataflow;
 
 import java.nio.ByteBuffer;
@@ -62,13 +77,13 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
                 /** middle kmer */
                 for (int i = k; i < array.length - 1; i++) {
-                    pre = kmer.shiftKmerWithNextChar(array[i]);
+                    pre = GeneCode.getBitMapFromGeneCode(kmer.shiftKmerWithNextChar(array[i]));
                     next = GeneCode.getAdjBit(array[i + 1]);
                     InsertToFrame(kmer, pre, next, writer);
                 }
 
                 /** last kmer */
-                pre = kmer.shiftKmerWithNextChar(array[array.length - 1]);
+                pre = GeneCode.getBitMapFromGeneCode(kmer.shiftKmerWithNextChar(array[array.length - 1]));
                 next = 0;
                 InsertToFrame(kmer, pre, next, writer);
 
@@ -80,12 +95,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     InsertToFrame(kmer, pre, next, writer);
                     /** middle kmer */
                     for (int i = k; i < array.length - 1; i++) {
-                        next = kmer.shiftKmerWithPreChar(array[i]);
+                        next = GeneCode.getBitMapFromGeneCode(kmer.shiftKmerWithPreChar(array[i]));
                         pre = GeneCode.getAdjBit(array[i + 1]);
                         InsertToFrame(kmer, pre, next, writer);
                     }
                     /** last kmer */
-                    next = kmer.shiftKmerWithPreChar(array[array.length - 1]);
+                    next = GeneCode.getBitMapFromGeneCode(kmer.shiftKmerWithPreChar(array[array.length - 1]));
                     pre = 0;
                     InsertToFrame(kmer, pre, next, writer);
                 }

@@ -25,6 +25,10 @@ public class SNodeInitialReducer extends MapReduceBase implements
         byte targetPointFlag = 0x00;
         byte targetAdjList = 0x00;
         byte outputFlag = 0x00;
+        if(key.toString().equals("TCG")){
+            int a = 2;
+            int b = a;
+        }
         if (values.hasNext() == true) {
             switch (outputValue.getFlag()) {
                 case (byte) 0x01:
@@ -48,14 +52,14 @@ public class SNodeInitialReducer extends MapReduceBase implements
                         endFlag = 0x01;
                         break;
                     case (byte) 0x02:
-                        targetPointFlag = 0x01;
+                        targetPointFlag = 0x02;
                         targetAdjList = outputValue.getAdjBitMap();
                         break;
                 }
                 if(startFlag != 0x00 && endFlag!= 0x00 && targetPointFlag != 0x00)
                     break;
             }
-            if(targetPointFlag != 0x02) {
+            if(targetPointFlag == 0x02) {
                 if(startFlag == 0x01) {
                     outputFlag = (byte) (outputFlag | startFlag);
                 }

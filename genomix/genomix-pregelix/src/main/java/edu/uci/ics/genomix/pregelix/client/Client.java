@@ -10,8 +10,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.pregelix.LogAlgorithmForMergeGraphVertex;
-import edu.uci.ics.genomix.pregelix.MergeGraphVertex;
+import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
@@ -60,11 +60,11 @@ public class Client {
         for (int i = 1; i < inputs.length; i++)
             FileInputFormat.addInputPaths(job, inputs[0]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
-        job.getConfiguration().setInt(MergeGraphVertex.KMER_SIZE, options.sizeKmer);
-        job.getConfiguration().setInt(LogAlgorithmForMergeGraphVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         if (options.numIteration > 0){
-            job.getConfiguration().setLong(MergeGraphVertex.ITERATIONS, options.numIteration);
-            //job.getConfiguration().setLong(LogAlgorithmForMergeGraphVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setLong(NaiveAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setLong(LogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
         }
         return options;
     }

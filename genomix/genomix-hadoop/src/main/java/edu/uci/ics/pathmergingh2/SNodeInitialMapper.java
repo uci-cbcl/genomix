@@ -91,42 +91,45 @@ public class SNodeInitialMapper extends MapReduceBase implements
         succeed = (byte) (succeed & adjBitMap);
         boolean inDegree = measureDegree(precursor);
         boolean outDegree = measureDegree(succeed);
-        
+        if (key.toString().equals("CGC")) {
+            int a = 2;
+            int b = a;
+        }
         if (inDegree == false && outDegree == false) {
+
             outputKmer.set(key);
             bitFlag = (byte) 2;
             outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, 0);
             output.collect(outputKmer, outputAdjList);
-        }
-        else{
-            for(int i = 0 ; i < 4; i ++){
+        } else {
+            for (int i = 0; i < 4; i++) {
                 byte temp = 0x01;
                 byte shiftedCode = 0;
-                temp  = (byte)(temp << i);
-                temp = (byte) (succeed & temp);
-                if(temp != 0 ){
-                    byte succeedCode = GeneCode.getGeneCodeFromBitMap(temp);
-                    shiftedCode = key.shiftKmerWithNextCode(succeedCode);
-                    outputKmer.set(key);
-                    bitFlag = (byte)0x01;
-                    outputAdjList.set(null, 0, 0, (byte)0, bitFlag, 0);
-                    output.collect(outputKmer, outputAdjList);
-                    key.shiftKmerWithPreCode(shiftedCode);
-                }
-            }
-            for(int i = 0; i < 4;i ++){
-                byte temp = 0x01;
-                byte shiftedCode = 0;
-                temp = (byte)(temp << i);
-                temp = (byte)(precursor & temp);
-                if(temp != 0){
+                temp = (byte) (temp << i);
+                temp = (byte) (precursor & temp);
+                if (temp != 0) {
                     byte precurCode = GeneCode.getGeneCodeFromBitMap(temp);
                     shiftedCode = key.shiftKmerWithPreCode(precurCode);
                     outputKmer.set(key);
-                    bitFlag = (byte)0x80;
-                    outputAdjList.set(null, 0, 0, (byte)0, bitFlag, 0);
+                    bitFlag = (byte) 0x80;
+                    outputAdjList.set(null, 0, 0, (byte) 6, bitFlag, 0);
                     output.collect(outputKmer, outputAdjList);
                     key.shiftKmerWithNextCode(shiftedCode);
+                }
+            }
+            for (int i = 0; i < 4; i++) {
+                byte temp = 0x01;
+                byte shiftedCode = 0;
+                temp = (byte) (temp << i);
+                temp = (byte) (succeed & temp);
+                if (temp != 0) {
+                    byte succeedCode = GeneCode.getGeneCodeFromBitMap(temp);
+                    shiftedCode = key.shiftKmerWithNextCode(succeedCode);
+                    outputKmer.set(key);
+                    bitFlag = (byte) 0x01;
+                    outputAdjList.set(null, 0, 0, (byte) 0, bitFlag, 0);
+                    output.collect(outputKmer, outputAdjList);
+                    key.shiftKmerWithPreCode(shiftedCode);
                 }
             }
         }

@@ -2,8 +2,8 @@ package edu.uci.ics.genomix.pregelix.log;
 
 import java.util.logging.*;
 
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.type.old.Kmer;
+import edu.uci.ics.genomix.pregelix.io.NaiveAlgorithmMessageWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class NaiveAlgorithmLogFormatter extends Formatter {
 	//
@@ -11,22 +11,20 @@ public class NaiveAlgorithmLogFormatter extends Formatter {
     //
     //private static final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
     private long step;
-    private byte[] sourceVertexId;
-    private byte[] destVertexId;
-    private MessageWritable msg;
-    private int k;
+    private VKmerBytesWritable sourceVertexId;
+    private VKmerBytesWritable destVertexId;
+    private NaiveAlgorithmMessageWritable msg;
 
-    public void set(long step, byte[] sourceVertexId, 
-    		byte[] destVertexId, MessageWritable msg, int k){
+    public void set(long step, VKmerBytesWritable sourceVertexId, 
+    		VKmerBytesWritable destVertexId, NaiveAlgorithmMessageWritable msg){
     	this.step = step;
-    	this.sourceVertexId = sourceVertexId;
-    	this.destVertexId = destVertexId;
+    	this.sourceVertexId.set(sourceVertexId);
+    	this.destVertexId.set(destVertexId);
     	this.msg = msg;
-    	this.k = k;
     }
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder(1000);
-        String source = Kmer.recoverKmerFrom(k, sourceVertexId, 0, sourceVertexId.length);
+        String source = sourceVertexId.toString();
         
         String chain = "";
         
@@ -35,11 +33,11 @@ public class NaiveAlgorithmLogFormatter extends Formatter {
         
         if(destVertexId != null){
         	builder.append("Send message to " + "\r\n");
-        	String dest = Kmer.recoverKmerFrom(k, destVertexId, 0, destVertexId.length);
+        	String dest = destVertexId.toString();
         	builder.append("Destination Code: " + dest + "\r\n");
         }
         if(msg.getLengthOfChain() != 0){
-        	chain = Kmer.recoverKmerFrom(msg.getLengthOfChain(), msg.getChainVertexId(), 0, msg.getChainVertexId().length);
+        	chain = msg.getChainVertexId().toString();
         	builder.append("Chain Message: " + chain + "\r\n");
         	builder.append("Chain Length: " + msg.getLengthOfChain() + "\r\n");
         }

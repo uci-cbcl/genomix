@@ -5,7 +5,7 @@ import java.util.logging.*;
 import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.old.Kmer;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class LogAlgorithmLogFormatter extends Formatter {
 	//
@@ -13,13 +13,11 @@ public class LogAlgorithmLogFormatter extends Formatter {
     //
     //private static final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
     private long step;
-    private byte[] sourceVertexId;
-    private byte[] destVertexId;
-    private LogAlgorithmMessageWritable msg;
+    private VKmerBytesWritable sourceVertexId = new VKmerBytesWritable(1);
+    private VKmerBytesWritable destVertexId = new VKmerBytesWritable(1);
+    private LogAlgorithmMessageWritable msg = new LogAlgorithmMessageWritable();
     private int state;
-    private int k;
-    private byte[] mergeChain;
-    private int lengthOfMergeChain;
+    private VKmerBytesWritable mergeChain = new VKmerBytesWritable(1);;
     //private boolean testDelete = false;
     /** 0: general operation 
      *  1: testDelete 
@@ -27,60 +25,57 @@ public class LogAlgorithmLogFormatter extends Formatter {
      *  3: testVoteToHalt
      */ 
     private int operation; 
+    
+    public LogAlgorithmLogFormatter(){
+    }
 
-    public void set(long step, byte[] sourceVertexId, 
-    		byte[] destVertexId, LogAlgorithmMessageWritable msg, int state, int k){
+    public void set(long step, VKmerBytesWritable sourceVertexId, 
+    		VKmerBytesWritable destVertexId, LogAlgorithmMessageWritable msg, int state){
     	this.step = step;
-    	this.sourceVertexId = sourceVertexId;
-    	this.destVertexId = destVertexId;
+    	this.sourceVertexId.set(sourceVertexId);
+    	this.destVertexId.set(destVertexId);
     	this.msg = msg;
     	this.state = state;
-    	this.k = k;
     	this.operation = 0;
     }
-    public void setMergeChain(long step, byte[] sourceVertexId, 
-    		int lengthOfMergeChain, byte[] mergeChain, int k){
+    public void setMergeChain(long step, VKmerBytesWritable sourceVertexId, 
+    		VKmerBytesWritable mergeChain){
     	this.reset();
     	this.step = step;
-    	this.sourceVertexId = sourceVertexId;
-    	this.lengthOfMergeChain = lengthOfMergeChain;
-    	this.mergeChain = mergeChain;
-    	this.k = k;
+    	this.sourceVertexId.set(sourceVertexId);
+    	this.mergeChain.set(mergeChain);
     	this.operation = 2;
     }
-    public void setVotoToHalt(long step, byte[] sourceVertexId, int k){
+    public void setVotoToHalt(long step, VKmerBytesWritable sourceVertexId){
     	this.reset();
     	this.step = step;
-    	this.sourceVertexId = sourceVertexId;
-    	this.k = k;
+    	this.sourceVertexId.set(sourceVertexId);
     	this.operation = 3;
     }
     public void reset(){
-    	this.sourceVertexId = null;
-    	this.destVertexId = null;
-    	this.msg = null;
+    	this.sourceVertexId = new VKmerBytesWritable(1);
+    	this.destVertexId = new VKmerBytesWritable(1);
+    	this.msg = new LogAlgorithmMessageWritable();
     	this.state = 0;
-    	this.k = 0;
-    	this.mergeChain = null;
-    	this.lengthOfMergeChain = 0;
+    	this.mergeChain = new VKmerBytesWritable(1);
     }
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder(1000);
-        String source = Kmer.recoverKmerFrom(k, sourceVertexId, 0, sourceVertexId.length);
+        String source = sourceVertexId.toString();
         String chain = "";
         
         builder.append("Step: " + step + "\r\n");
         builder.append("Source Code: " + source + "\r\n");
         if(operation == 0){
-	        if(destVertexId != null){
-	        	String dest = Kmer.recoverKmerFrom(k, destVertexId, 0, destVertexId.length);
+	        if(destVertexId.getKmerLength() != -1){
+	        	String dest = destVertexId.toString();
 		        builder.append("Send message to " + "\r\n");
 		        builder.append("Destination Code: " + dest + "\r\n");
 	        }
 	        builder.append("Message is: " + Message.MESSAGE_CONTENT.getContentFromCode(msg.getMessage()) + "\r\n");
 	        	
-	        if(msg.getLengthOfChain() != 0){
-	        	chain = Kmer.recoverKmerFrom(msg.getLengthOfChain(), msg.getChainVertexId(), 0, msg.getChainVertexId().length);
+	        if(msg.getLengthOfChain() != -1){
+	        	chain = msg.getChainVertexId().toString();
 	        	builder.append("Chain Message: " + chain + "\r\n");
 	        	builder.append("Chain Length: " + msg.getLengthOfChain() + "\r\n");
 	        }
@@ -88,9 +83,9 @@ public class LogAlgorithmLogFormatter extends Formatter {
 	        builder.append("State is: " + State.STATE_CONTENT.getContentFromCode(state) + "\r\n");
         }
         if(operation == 2){
-        	chain = Kmer.recoverKmerFrom(lengthOfMergeChain, mergeChain, 0, mergeChain.length);
+        	chain = mergeChain.toString();
         	builder.append("Merge Chain: " + chain + "\r\n");
-        	builder.append("Merge Chain Length: " + lengthOfMergeChain + "\r\n");
+        	builder.append("Merge Chain Length: " + mergeChain.getKmerLength() + "\r\n");
         }
         if(operation == 3)
         	builder.append("Vote to halt!");

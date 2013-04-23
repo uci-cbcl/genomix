@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.genomix.job;
 
 import java.util.Map;
@@ -47,292 +62,234 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 public class JobGenBrujinGraph extends JobGen {
-	public enum GroupbyType {
-		EXTERNAL, PRECLUSTER, HYBRIDHASH,
-	}
+    public enum GroupbyType {
+        EXTERNAL,
+        PRECLUSTER,
+        HYBRIDHASH,
+    }
 
-	public enum OutputFormat {
-		TEXT, BINARY,
-	}
+    public enum OutputFormat {
+        TEXT,
+        BINARY,
+    }
 
-	JobConf job;
-	private static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
-	private Scheduler scheduler;
-	private String[] ncNodeNames;
+    JobConf job;
+    private static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
+    private Scheduler scheduler;
+    private String[] ncNodeNames;
 
-	private int kmers;
-	private int frameLimits;
-	private int frameSize;
-	private int tableSize;
-	private GroupbyType groupbyType;
-	private OutputFormat outputFormat;
-	private boolean bGenerateReversedKmer;
+    private int kmers;
+    private int frameLimits;
+    private int frameSize;
+    private int tableSize;
+    private GroupbyType groupbyType;
+    private OutputFormat outputFormat;
+    private boolean bGenerateReversedKmer;
 
-	private AbstractOperatorDescriptor singleGrouper;
-	private IConnectorDescriptor connPartition;
-	private AbstractOperatorDescriptor crossGrouper;
-	private RecordDescriptor readOutputRec;
-	private RecordDescriptor combineOutputRec;
+    private AbstractOperatorDescriptor singleGrouper;
+    private IConnectorDescriptor connPartition;
+    private AbstractOperatorDescriptor crossGrouper;
+    private RecordDescriptor readOutputRec;
+    private RecordDescriptor combineOutputRec;
 
-	/** works for hybrid hashing */
-	private long inputSizeInRawRecords;
-	private long inputSizeInUniqueKeys;
-	private int recordSizeInBytes;
-	private int hashfuncStartLevel;
+    /** works for hybrid hashing */
+    private long inputSizeInRawRecords;
+    private long inputSizeInUniqueKeys;
+    private int recordSizeInBytes;
+    private int hashfuncStartLevel;
 
-	private void logDebug(String status) {
-		String names = "";
-		for (String str : ncNodeNames) {
-			names += str + " ";
-		}
-		LOG.info(status + " nc nodes:" + ncNodeNames.length + " " + names);
-	}
+    private void logDebug(String status) {
+        String names = "";
+        for (String str : ncNodeNames) {
+            names += str + " ";
+        }
+        LOG.info(status + " nc nodes:" + ncNodeNames.length + " " + names);
+    }
 
-	public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler,
-			final Map<String, NodeControllerInfo> ncMap,
-			int numPartitionPerMachine) {
-		super(job);
-		this.scheduler = scheduler;
-		String[] nodes = new String[ncMap.size()];
-		ncMap.keySet().toArray(nodes);
-		ncNodeNames = new String[nodes.length * numPartitionPerMachine];
-		for (int i = 0; i < numPartitionPerMachine; i++) {
-			System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length,
-					nodes.length);
-		}
-		logDebug("initialize");
-	}
+    public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
+            int numPartitionPerMachine) {
+        super(job);
+        this.scheduler = scheduler;
+        String[] nodes = new String[ncMap.size()];
+        ncMap.keySet().toArray(nodes);
+        ncNodeNames = new String[nodes.length * numPartitionPerMachine];
+        for (int i = 0; i < numPartitionPerMachine; i++) {
+            System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length, nodes.length);
+        }
+        logDebug("initialize");
+    }
 
-	private ExternalGroupOperatorDescriptor newExternalGroupby(
-			JobSpecification jobSpec, int[] keyFields,
-			IAggregatorDescriptorFactory aggeragater) {
-		return new ExternalGroupOperatorDescriptor(
-				jobSpec,
-				keyFields,
-				frameLimits,
-				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-						.of(KmerPointable.FACTORY) },
-				new KmerNormarlizedComputerFactory(),
-				aggeragater,
-				new DistributedMergeLmerAggregateFactory(),
-				combineOutputRec,
-				new HashSpillableTableFactory(
-						new FieldHashPartitionComputerFactory(
-								keyFields,
-								new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-										.of(KmerPointable.FACTORY) }),
-						tableSize), true);
-	}
+    private ExternalGroupOperatorDescriptor newExternalGroupby(JobSpecification jobSpec, int[] keyFields,
+            IAggregatorDescriptorFactory aggeragater) {
+        return new ExternalGroupOperatorDescriptor(jobSpec, keyFields, frameLimits,
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
+                new KmerNormarlizedComputerFactory(), aggeragater, new DistributedMergeLmerAggregateFactory(),
+                combineOutputRec, new HashSpillableTableFactory(
+                        new FieldHashPartitionComputerFactory(keyFields,
+                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
+                                        .of(KmerPointable.FACTORY) }), tableSize), true);
+    }
 
-	private HybridHashGroupOperatorDescriptor newHybridGroupby(
-			JobSpecification jobSpec, int[] keyFields,
-			long inputSizeInRawRecords, long inputSizeInUniqueKeys,
-			int recordSizeInBytes, int hashfuncStartLevel,
-			IAggregatorDescriptorFactory aggeragater)
-			throws HyracksDataException {
-		return new HybridHashGroupOperatorDescriptor(
-				jobSpec,
-				keyFields,
-				frameLimits,
-				inputSizeInRawRecords,
-				inputSizeInUniqueKeys,
-				recordSizeInBytes,
-				tableSize,
-				new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-						.of(KmerPointable.FACTORY) },
-				new IBinaryHashFunctionFamily[] { new KmerBinaryHashFunctionFamily() },
-				hashfuncStartLevel, new KmerNormarlizedComputerFactory(),
-				aggeragater, new DistributedMergeLmerAggregateFactory(),
-				combineOutputRec, true);
-	}
+    private HybridHashGroupOperatorDescriptor newHybridGroupby(JobSpecification jobSpec, int[] keyFields,
+            long inputSizeInRawRecords, long inputSizeInUniqueKeys, int recordSizeInBytes, int hashfuncStartLevel,
+            IAggregatorDescriptorFactory aggeragater) throws HyracksDataException {
+        return new HybridHashGroupOperatorDescriptor(jobSpec, keyFields, frameLimits, inputSizeInRawRecords,
+                inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
+                new IBinaryHashFunctionFamily[] { new KmerBinaryHashFunctionFamily() }, hashfuncStartLevel,
+                new KmerNormarlizedComputerFactory(), aggeragater, new DistributedMergeLmerAggregateFactory(),
+                combineOutputRec, true);
+    }
 
-	private void generateDescriptorbyType(JobSpecification jobSpec)
-			throws HyracksDataException {
-		int[] keyFields = new int[] { 0 }; // the id of grouped key
+    private void generateDescriptorbyType(JobSpecification jobSpec) throws HyracksDataException {
+        int[] keyFields = new int[] { 0 }; // the id of grouped key
 
-		switch (groupbyType) {
-		case EXTERNAL:
-			singleGrouper = newExternalGroupby(jobSpec, keyFields,
-					new MergeKmerAggregateFactory());
-			connPartition = new MToNPartitioningConnectorDescriptor(jobSpec,
-					new KmerHashPartitioncomputerFactory());
-			crossGrouper = newExternalGroupby(jobSpec, keyFields,
-					new DistributedMergeLmerAggregateFactory());
-			break;
-		case PRECLUSTER:
-			singleGrouper = newExternalGroupby(jobSpec, keyFields,
-					new MergeKmerAggregateFactory());
-			connPartition = new MToNPartitioningMergingConnectorDescriptor(
-					jobSpec,
-					new KmerHashPartitioncomputerFactory(),
-					keyFields,
-					new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-							.of(KmerPointable.FACTORY) });
-			crossGrouper = new PreclusteredGroupOperatorDescriptor(
-					jobSpec,
-					keyFields,
-					new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory
-							.of(KmerPointable.FACTORY) },
-					new DistributedMergeLmerAggregateFactory(),
-					combineOutputRec);
-			break;
-		case HYBRIDHASH:
-		default:
-			singleGrouper = newHybridGroupby(jobSpec, keyFields,
-					inputSizeInRawRecords, inputSizeInUniqueKeys,
-					recordSizeInBytes, hashfuncStartLevel,
-					new MergeKmerAggregateFactory());
-			connPartition = new MToNPartitioningConnectorDescriptor(jobSpec,
-					new KmerHashPartitioncomputerFactory());
+        switch (groupbyType) {
+            case EXTERNAL:
+                singleGrouper = newExternalGroupby(jobSpec, keyFields, new MergeKmerAggregateFactory());
+                connPartition = new MToNPartitioningConnectorDescriptor(jobSpec, new KmerHashPartitioncomputerFactory());
+                crossGrouper = newExternalGroupby(jobSpec, keyFields, new DistributedMergeLmerAggregateFactory());
+                break;
+            case PRECLUSTER:
+                singleGrouper = newExternalGroupby(jobSpec, keyFields, new MergeKmerAggregateFactory());
+                connPartition = new MToNPartitioningMergingConnectorDescriptor(jobSpec,
+                        new KmerHashPartitioncomputerFactory(), keyFields,
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) });
+                crossGrouper = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
+                        new DistributedMergeLmerAggregateFactory(), combineOutputRec);
+                break;
+            case HYBRIDHASH:
+            default:
+                singleGrouper = newHybridGroupby(jobSpec, keyFields, inputSizeInRawRecords, inputSizeInUniqueKeys,
+                        recordSizeInBytes, hashfuncStartLevel, new MergeKmerAggregateFactory());
+                connPartition = new MToNPartitioningConnectorDescriptor(jobSpec, new KmerHashPartitioncomputerFactory());
 
-			crossGrouper = newHybridGroupby(jobSpec, keyFields,
-					inputSizeInRawRecords, inputSizeInUniqueKeys,
-					recordSizeInBytes, hashfuncStartLevel,
-					new DistributedMergeLmerAggregateFactory());
-			break;
-		}
-	}
+                crossGrouper = newHybridGroupby(jobSpec, keyFields, inputSizeInRawRecords, inputSizeInUniqueKeys,
+                        recordSizeInBytes, hashfuncStartLevel, new DistributedMergeLmerAggregateFactory());
+                break;
+        }
+    }
 
-	public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec)
-			throws HyracksDataException {
-		try {
+    public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec) throws HyracksDataException {
+        try {
 
-			InputSplit[] splits = job.getInputFormat().getSplits(job,
-					ncNodeNames.length);
+            InputSplit[] splits = job.getInputFormat().getSplits(job, ncNodeNames.length);
 
-			LOG.info("HDFS read into " + splits.length + " splits");
-			String[] readSchedule = scheduler.getLocationConstraints(splits);
-			String log = "";
-			for (String schedule : readSchedule) {
-				log += schedule + " ";
-			}
-			LOG.info("HDFS read schedule " + log);
-			return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, job,
-					splits, readSchedule, new ReadsKeyValueParserFactory(kmers,
-							bGenerateReversedKmer));
-		} catch (Exception e) {
-			throw new HyracksDataException(e);
-		}
-	}
+            LOG.info("HDFS read into " + splits.length + " splits");
+            String[] readSchedule = scheduler.getLocationConstraints(splits);
+            String log = "";
+            for (String schedule : readSchedule) {
+                log += schedule + " ";
+            }
+            LOG.info("HDFS read schedule " + log);
+            return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, job, splits, readSchedule,
+                    new ReadsKeyValueParserFactory(kmers, bGenerateReversedKmer));
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+    }
 
-	@Override
-	public JobSpecification generateJob() throws HyracksException {
+    @Override
+    public JobSpecification generateJob() throws HyracksException {
 
-		JobSpecification jobSpec = new JobSpecification();
-		readOutputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-				null, ByteSerializerDeserializer.INSTANCE });
-		combineOutputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-				null, ByteSerializerDeserializer.INSTANCE,
-				ByteSerializerDeserializer.INSTANCE });
-		jobSpec.setFrameSize(frameSize);
+        JobSpecification jobSpec = new JobSpecification();
+        readOutputRec = new RecordDescriptor(
+                new ISerializerDeserializer[] { null, ByteSerializerDeserializer.INSTANCE });
+        combineOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
+                ByteSerializerDeserializer.INSTANCE, ByteSerializerDeserializer.INSTANCE });
+        jobSpec.setFrameSize(frameSize);
 
-		// File input
-		HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
+        // File input
+        HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
 
-		logDebug("Read Operator");
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				readOperator, ncNodeNames);
+        logDebug("Read Operator");
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, readOperator, ncNodeNames);
 
-		generateDescriptorbyType(jobSpec);
-		logDebug("SingleGroupby Operator");
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				singleGrouper, ncNodeNames);
+        generateDescriptorbyType(jobSpec);
+        logDebug("SingleGroupby Operator");
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, singleGrouper, ncNodeNames);
 
-		IConnectorDescriptor readfileConn = new OneToOneConnectorDescriptor(
-				jobSpec);
-		jobSpec.connect(readfileConn, readOperator, 0, singleGrouper, 0);
+        IConnectorDescriptor readfileConn = new OneToOneConnectorDescriptor(jobSpec);
+        jobSpec.connect(readfileConn, readOperator, 0, singleGrouper, 0);
 
-		logDebug("CrossGrouper Operator");
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				crossGrouper, ncNodeNames);
-		jobSpec.connect(connPartition, singleGrouper, 0, crossGrouper, 0);
+        logDebug("CrossGrouper Operator");
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, crossGrouper, ncNodeNames);
+        jobSpec.connect(connPartition, singleGrouper, 0, crossGrouper, 0);
 
-		// Output
-		ITupleWriterFactory writer = null;
-		switch (outputFormat) {
-		case TEXT:
-			writer = new KMerTextWriterFactory(kmers);
-			break;
-		case BINARY:
-		default:
-			writer = new KMerSequenceWriterFactory(job);
-			break;
-		}
-		HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(
-				jobSpec, job, writer);
+        // Output
+        ITupleWriterFactory writer = null;
+        switch (outputFormat) {
+            case TEXT:
+                writer = new KMerTextWriterFactory(kmers);
+                break;
+            case BINARY:
+            default:
+                writer = new KMerSequenceWriterFactory(job);
+                break;
+        }
+        HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(jobSpec, job, writer);
 
-		logDebug("WriteOperator");
-		PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec,
-				writeOperator, ncNodeNames);
+        logDebug("WriteOperator");
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, writeOperator, ncNodeNames);
 
-		IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(
-				jobSpec);
-		jobSpec.connect(printConn, crossGrouper, 0, writeOperator, 0);
-		jobSpec.addRoot(writeOperator);
+        IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(jobSpec);
+        jobSpec.connect(printConn, crossGrouper, 0, writeOperator, 0);
+        jobSpec.addRoot(writeOperator);
 
-		if (groupbyType == GroupbyType.PRECLUSTER) {
-			jobSpec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
-		}
-		return jobSpec;
-	}
+        if (groupbyType == GroupbyType.PRECLUSTER) {
+            jobSpec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
+        }
+        return jobSpec;
+    }
 
-	@Override
-	protected void initJobConfiguration() {
+    @Override
+    protected void initJobConfiguration() {
 
-		kmers = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
-		if (kmers % 2 == 0){
-		    kmers--;
-		    conf.setInt(GenomixJob.KMER_LENGTH, kmers);
-		}
-		frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT,
-				GenomixJob.DEFAULT_FRAME_LIMIT);
-		tableSize = conf.getInt(GenomixJob.TABLE_SIZE,
-				GenomixJob.DEFAULT_TABLE_SIZE);
-		frameSize = conf.getInt(GenomixJob.FRAME_SIZE,
-				GenomixJob.DEFAULT_FRAME_SIZE);
-		inputSizeInRawRecords = conf.getLong(
-				GenomixJob.GROUPBY_HYBRID_INPUTSIZE,
-				GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTSIZE);
-		inputSizeInUniqueKeys = conf.getLong(
-				GenomixJob.GROUPBY_HYBRID_INPUTKEYS,
-				GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTKEYS);
-		recordSizeInBytes = conf.getInt(
-				GenomixJob.GROUPBY_HYBRID_RECORDSIZE_SINGLE,
-				GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE);
-		hashfuncStartLevel = conf.getInt(GenomixJob.GROUPBY_HYBRID_HASHLEVEL,
-				GenomixJob.DEFAULT_GROUPBY_HYBRID_HASHLEVEL);
-		/** here read the different recordSize why ? */
-		recordSizeInBytes = conf.getInt(
-				GenomixJob.GROUPBY_HYBRID_RECORDSIZE_CROSS,
-				GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS);
+        kmers = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
+        if (kmers % 2 == 0) {
+            kmers--;
+            conf.setInt(GenomixJob.KMER_LENGTH, kmers);
+        }
+        frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, GenomixJob.DEFAULT_FRAME_LIMIT);
+        tableSize = conf.getInt(GenomixJob.TABLE_SIZE, GenomixJob.DEFAULT_TABLE_SIZE);
+        frameSize = conf.getInt(GenomixJob.FRAME_SIZE, GenomixJob.DEFAULT_FRAME_SIZE);
+        inputSizeInRawRecords = conf.getLong(GenomixJob.GROUPBY_HYBRID_INPUTSIZE,
+                GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTSIZE);
+        inputSizeInUniqueKeys = conf.getLong(GenomixJob.GROUPBY_HYBRID_INPUTKEYS,
+                GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTKEYS);
+        recordSizeInBytes = conf.getInt(GenomixJob.GROUPBY_HYBRID_RECORDSIZE_SINGLE,
+                GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE);
+        hashfuncStartLevel = conf.getInt(GenomixJob.GROUPBY_HYBRID_HASHLEVEL,
+                GenomixJob.DEFAULT_GROUPBY_HYBRID_HASHLEVEL);
+        /** here read the different recordSize why ? */
+        recordSizeInBytes = conf.getInt(GenomixJob.GROUPBY_HYBRID_RECORDSIZE_CROSS,
+                GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS);
 
-		bGenerateReversedKmer = conf.getBoolean(GenomixJob.REVERSED_KMER,
-				GenomixJob.DEFAULT_REVERSED);
+        bGenerateReversedKmer = conf.getBoolean(GenomixJob.REVERSED_KMER, GenomixJob.DEFAULT_REVERSED);
 
-		String type = conf.get(GenomixJob.GROUPBY_TYPE,
-				GenomixJob.DEFAULT_GROUPBY_TYPE);
-		if (type.equalsIgnoreCase("external")) {
-			groupbyType = GroupbyType.EXTERNAL;
-		} else if (type.equalsIgnoreCase("precluster")) {
-			groupbyType = GroupbyType.PRECLUSTER;
-		} else {
-			groupbyType = GroupbyType.HYBRIDHASH;
-		}
+        String type = conf.get(GenomixJob.GROUPBY_TYPE, GenomixJob.DEFAULT_GROUPBY_TYPE);
+        if (type.equalsIgnoreCase("external")) {
+            groupbyType = GroupbyType.EXTERNAL;
+        } else if (type.equalsIgnoreCase("precluster")) {
+            groupbyType = GroupbyType.PRECLUSTER;
+        } else {
+            groupbyType = GroupbyType.HYBRIDHASH;
+        }
 
-		String output = conf.get(GenomixJob.OUTPUT_FORMAT,
-				GenomixJob.DEFAULT_OUTPUT_FORMAT);
-		if (output.equalsIgnoreCase("text")) {
-			outputFormat = OutputFormat.TEXT;
-		} else {
-			outputFormat = OutputFormat.BINARY;
-		}
-		job = new JobConf(conf);
-		LOG.info("Genomix Graph Build Configuration");
-		LOG.info("Kmer:" + kmers);
-		LOG.info("Groupby type:" + type);
-		LOG.info("Output format:" + output);
-		LOG.info("Frame limit" + frameLimits);
-		LOG.info("Frame size" + frameSize);
-	}
+        String output = conf.get(GenomixJob.OUTPUT_FORMAT, GenomixJob.DEFAULT_OUTPUT_FORMAT);
+        if (output.equalsIgnoreCase("text")) {
+            outputFormat = OutputFormat.TEXT;
+        } else {
+            outputFormat = OutputFormat.BINARY;
+        }
+        job = new JobConf(conf);
+        LOG.info("Genomix Graph Build Configuration");
+        LOG.info("Kmer:" + kmers);
+        LOG.info("Groupby type:" + type);
+        LOG.info("Output format:" + output);
+        LOG.info("Frame limit" + frameLimits);
+        LOG.info("Frame size" + frameSize);
+    }
 
 }
