@@ -182,7 +182,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         int pos = ((kmerlength - 1) % 4) << 1;
         byte code = (byte) (c << pos);
         bytes[0] = (byte) (((bytes[0] >>> 2) & 0x3f) | code);
-        return (byte) (1 << output);
+        return (byte) output;
     }
 
     /**
@@ -215,7 +215,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
             bytes[0] &= (1 << ((kmerlength % 4) << 1)) - 1;
         }
         bytes[size - 1] = (byte) ((bytes[size - 1] << 2) | c);
-        return (byte) (1 << output);
+        return (byte) output;
     }
 
     public void set(KmerBytesWritable newData) {
