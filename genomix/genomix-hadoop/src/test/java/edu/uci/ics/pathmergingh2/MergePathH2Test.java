@@ -1,4 +1,4 @@
-package edu.uci.ics.pathmerging;
+package edu.uci.ics.pathmergingh2;
 
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
@@ -22,8 +22,8 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.utils.TestUtils;
 
 @SuppressWarnings("deprecation")
-public class MergePathTest {
-    private static final String ACTUAL_RESULT_DIR = "actual3";
+public class MergePathH2Test {
+    private static final String ACTUAL_RESULT_DIR = "actual4";
     private static final String COMPARE_DIR = "compare";
     private JobConf conf = new JobConf();
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
@@ -31,8 +31,8 @@ public class MergePathTest {
     private static final String HDFS_PATH = "/webmap";
     private static final String HDFA_PATH_DATA = "/webmapdata";
     
-    private static final String RESULT_PATH = "/result3";
-    private static final String EXPECTED_PATH = "expected/result3";
+    private static final String RESULT_PATH = "/result4";
+    private static final String EXPECTED_PATH = "expected/result4";
     private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH + "/comparesource.txt";
     private static final int COUNT_REDUCER = 1;
     private static final int SIZE_KMER = 3;
@@ -48,8 +48,8 @@ public class MergePathTest {
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
 
-        MergePathDriver tldriver = new MergePathDriver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, HDFA_PATH_DATA, COUNT_REDUCER, SIZE_KMER, 1, HADOOP_CONF_PATH);
+        MergePathH2Driver tldriver = new MergePathH2Driver();
+        tldriver.run(HDFS_PATH, RESULT_PATH, HDFA_PATH_DATA, COUNT_REDUCER, SIZE_KMER, 0, HADOOP_CONF_PATH);
         
 /*        SequenceFile.Reader reader = null;
         Path path = new Path(RESULT_PATH + "/part-00000");
@@ -104,3 +104,4 @@ public class MergePathTest {
         dfs.copyToLocalFile(src, dest);
     }
 }
+

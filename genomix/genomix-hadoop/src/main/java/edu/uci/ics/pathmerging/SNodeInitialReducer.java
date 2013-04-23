@@ -37,7 +37,7 @@ public class SNodeInitialReducer extends MapReduceBase implements
         if (values.hasNext() == true) {
             if (outputValue.getFlag() == 2) {
                 byte bitFlag = 1;
-                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());
+                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());///outputValue.getKmerLength()
                 output.collect(outputKmer, outputValue);
             } else {
                 boolean flag = false;

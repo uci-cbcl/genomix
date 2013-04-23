@@ -22,8 +22,6 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
-
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
@@ -45,6 +43,7 @@ public class MergePathReducer extends MapReduceBase implements
         I_MERGE = Integer.parseInt(job.get("iMerge"));
         KMER_SIZE = job.getInt("sizeKmer", 0);
         outputValue = new MergePathValueWritable();
+        tmpOutputValue = new MergePathValueWritable();
         kmerFactory = new VKmerBytesWritableFactory(KMER_SIZE);
         outputKmer = new VKmerBytesWritable(KMER_SIZE);
         tmpKmer = new VKmerBytesWritable(KMER_SIZE);

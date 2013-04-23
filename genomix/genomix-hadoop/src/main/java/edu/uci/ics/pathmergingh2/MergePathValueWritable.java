@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pathmerging;
+package edu.uci.ics.pathmergingh2;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -80,10 +80,6 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
         }
         return null;
     }
-    
-    public int getKmerLength() {
-        return kmer.getKmerLength();
-    }
 
     public byte getAdjBitMap() {
         return this.adjBitMap;
@@ -94,7 +90,7 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
     }
 
     public String toString() {
-        return GeneCode.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(flag) + '\t' + kmer.toString();
+        return GeneCode.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(flag);
     }
 
     @Override
@@ -106,7 +102,9 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
             return null;
     }
 
-
+    public int getKmerLength() {
+        return kmer.getKmerLength();
+    }
     @Override
     public int getLength() {
         return kmer.getLength();
