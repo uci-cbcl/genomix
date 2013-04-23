@@ -87,14 +87,14 @@ public class GenomixMapper extends MapReduceBase implements
             output.collect(outputKmer, outputAdjList);
             /** middle kmer */
             for (int i = KMER_SIZE; i < array.length - 1; i++) {
-                pre = outputKmer.shiftKmerWithNextChar(array[i]);
+                pre = GeneCode.getBitMapFromGeneCode(outputKmer.shiftKmerWithNextChar(array[i]));
                 next = GeneCode.getAdjBit(array[i + 1]);
                 adj = GeneCode.mergePreNextAdj(pre, next);
                 outputAdjList.set(adj, count);
                 output.collect(outputKmer, outputAdjList);
             }
             /** last kmer */
-            pre = outputKmer.shiftKmerWithNextChar(array[array.length - 1]);
+            pre = GeneCode.getBitMapFromGeneCode(outputKmer.shiftKmerWithNextChar(array[array.length - 1]));
             next = 0;
             adj = GeneCode.mergePreNextAdj(pre, next);
             outputAdjList.set(adj, count);

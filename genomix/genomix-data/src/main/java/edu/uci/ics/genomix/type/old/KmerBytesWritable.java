@@ -8,8 +8,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 @Deprecated
-public class KmerBytesWritable extends BinaryComparable implements
-        WritableComparable<BinaryComparable> {
+public class KmerBytesWritable extends BinaryComparable implements WritableComparable<BinaryComparable> {
     private static final int LENGTH_BYTES = 4;
     private static final byte[] EMPTY_BYTES = {};
     private byte size;
@@ -126,8 +125,7 @@ public class KmerBytesWritable extends BinaryComparable implements
         }
 
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            return compareBytes(b1, s1 + LENGTH_BYTES, l1 - LENGTH_BYTES, b2,
-                    s2 + LENGTH_BYTES, l2 - LENGTH_BYTES);
+            return compareBytes(b1, s1 + LENGTH_BYTES, l1 - LENGTH_BYTES, b2, s2 + LENGTH_BYTES, l2 - LENGTH_BYTES);
         }
     }
 

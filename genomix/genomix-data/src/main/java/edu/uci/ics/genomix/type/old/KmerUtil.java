@@ -22,16 +22,16 @@ public class KmerUtil {
     }
 
     /**
-     * Get last kmer from kmer-chain. 
+     * Get last kmer from kmer-chain.
      * e.g. kmerChain is AAGCTA, if k =5, it will
      * return AGCTA
+     * 
      * @param k
      * @param kInChain
      * @param kmerChain
      * @return LastKmer bytes array
      */
-    public static byte[] getLastKmerFromChain(int k, int kInChain,
-            byte[] kmerChain, int offset, int length) {
+    public static byte[] getLastKmerFromChain(int k, int kInChain, byte[] kmerChain, int offset, int length) {
         if (k > kInChain) {
             return null;
         }
@@ -66,8 +66,7 @@ public class KmerUtil {
      * @param kmerChain
      * @return FirstKmer bytes array
      */
-    public static byte[] getFirstKmerFromChain(int k, int kInChain,
-            byte[] kmerChain, int offset, int length) {
+    public static byte[] getFirstKmerFromChain(int k, int kInChain, byte[] kmerChain, int offset, int length) {
         if (k > kInChain) {
             return null;
         }
@@ -94,9 +93,13 @@ public class KmerUtil {
      * Merge kmer with next neighbor in gene-code format.
      * The k of new kmer will increase by 1
      * e.g. AAGCT merge with A => AAGCTA
-     * @param k :input k of kmer
-     * @param kmer : input bytes of kmer
-     * @param nextCode: next neighbor in gene-code format
+     * 
+     * @param k
+     *            :input k of kmer
+     * @param kmer
+     *            : input bytes of kmer
+     * @param nextCode
+     *            : next neighbor in gene-code format
      * @return the merged Kmer, this K of this Kmer is k+1
      */
     public static byte[] mergeKmerWithNextCode(int k, byte[] kmer, int offset, int length, byte nextCode) {
@@ -120,9 +123,13 @@ public class KmerUtil {
      * Merge kmer with previous neighbor in gene-code format.
      * The k of new kmer will increase by 1
      * e.g. AAGCT merge with A => AAAGCT
-     * @param k :input k of kmer
-     * @param kmer : input bytes of kmer
-     * @param preCode: next neighbor in gene-code format
+     * 
+     * @param k
+     *            :input k of kmer
+     * @param kmer
+     *            : input bytes of kmer
+     * @param preCode
+     *            : next neighbor in gene-code format
      * @return the merged Kmer,this K of this Kmer is k+1
      */
     public static byte[] mergeKmerWithPreCode(int k, byte[] kmer, int offset, int length, byte preCode) {
@@ -147,10 +154,15 @@ public class KmerUtil {
     /**
      * Merge two kmer to one kmer
      * e.g. ACTA + ACCGT => ACTAACCGT
-     * @param preK : previous k of kmer
-     * @param kmerPre : bytes array of previous kmer
-     * @param nextK : next k of kmer
-     * @param kmerNext : bytes array of next kmer
+     * 
+     * @param preK
+     *            : previous k of kmer
+     * @param kmerPre
+     *            : bytes array of previous kmer
+     * @param nextK
+     *            : next k of kmer
+     * @param kmerNext
+     *            : bytes array of next kmer
      * @return merged kmer, the new k is @preK + @nextK
      */
     public static byte[] mergeTwoKmer(int preK, byte[] kmerPre, int offsetPre, int lengthPre, int nextK,
@@ -161,7 +173,7 @@ public class KmerUtil {
         for (; i <= lengthPre; i++) {
             mergedKmer[byteNum - i] = kmerPre[offsetPre + lengthPre - i];
         }
-        if ( i > 1){
+        if (i > 1) {
             i--;
         }
         if (preK % 4 == 0) {
@@ -172,52 +184,58 @@ public class KmerUtil {
             int posNeedToMove = ((preK % 4) << 1);
             mergedKmer[byteNum - i] |= kmerNext[offsetNext + lengthNext - 1] << posNeedToMove;
             for (int j = 1; j < lengthNext; j++) {
-                mergedKmer[byteNum - i - j] = (byte) (((kmerNext[offsetNext + lengthNext
-                        - j] & 0xff) >> (8 - posNeedToMove)) | (kmerNext[offsetNext + lengthNext
-                        - j - 1] << posNeedToMove));
+                mergedKmer[byteNum - i - j] = (byte) (((kmerNext[offsetNext + lengthNext - j] & 0xff) >> (8 - posNeedToMove)) | (kmerNext[offsetNext
+                        + lengthNext - j - 1] << posNeedToMove));
             }
-            if ( (nextK % 4) * 2 + posNeedToMove > 8) {
+            if ((nextK % 4) * 2 + posNeedToMove > 8) {
                 mergedKmer[0] = (byte) (kmerNext[offsetNext] >> (8 - posNeedToMove));
             }
         }
         return mergedKmer;
     }
-    
+
     /**
      * Safely shifted the kmer forward without change the input kmer
      * e.g. AGCGC shift with T => GCGCT
-     * @param k: kmer length
-     * @param kmer: input kmer
-     * @param afterCode: input genecode 
+     * 
+     * @param k
+     *            : kmer length
+     * @param kmer
+     *            : input kmer
+     * @param afterCode
+     *            : input genecode
      * @return new created kmer that shifted by afterCode, the K will not change
      */
-    public static byte[] shiftKmerWithNextCode(int k, final byte[] kmer, int offset, int length, byte afterCode){
-        byte[] shifted = Arrays.copyOfRange(kmer, offset, offset+length);
+    public static byte[] shiftKmerWithNextCode(int k, final byte[] kmer, int offset, int length, byte afterCode) {
+        byte[] shifted = Arrays.copyOfRange(kmer, offset, offset + length);
         Kmer.moveKmer(k, shifted, Kmer.GENE_CODE.getSymbolFromCode(afterCode));
         return shifted;
     }
-    
+
     /**
      * Safely shifted the kmer backward without change the input kmer
      * e.g. AGCGC shift with T => TAGCG
-     * @param k: kmer length
-     * @param kmer: input kmer
-     * @param preCode: input genecode 
+     * 
+     * @param k
+     *            : kmer length
+     * @param kmer
+     *            : input kmer
+     * @param preCode
+     *            : input genecode
      * @return new created kmer that shifted by preCode, the K will not change
      */
-    public static byte[] shiftKmerWithPreCode(int k, final byte[] kmer, int offset, int length, byte preCode){
-        byte[] shifted = Arrays.copyOfRange(kmer, offset, offset+length);
+    public static byte[] shiftKmerWithPreCode(int k, final byte[] kmer, int offset, int length, byte preCode) {
+        byte[] shifted = Arrays.copyOfRange(kmer, offset, offset + length);
         Kmer.moveKmerReverse(k, shifted, Kmer.GENE_CODE.getSymbolFromCode(preCode));
         return shifted;
     }
 
-    public static byte getGeneCodeAtPosition(int pos, int k, final byte[] kmer,
-            int offset, int length) {
+    public static byte getGeneCodeAtPosition(int pos, int k, final byte[] kmer, int offset, int length) {
         if (pos >= k) {
             return -1;
         }
         int posByte = pos / 4;
-        int shift = (pos  % 4) << 1;
+        int shift = (pos % 4) << 1;
         return (byte) ((kmer[offset + length - 1 - posByte] >> shift) & 0x3);
     }
 }

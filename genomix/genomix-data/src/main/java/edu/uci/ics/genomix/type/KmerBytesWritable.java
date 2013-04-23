@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package edu.uci.ics.genomix.type;
 
 import java.io.DataInput;
@@ -46,13 +47,13 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     public KmerBytesWritable(int k, byte[] storage) {
         this.kmerlength = k;
-        if (k > 0){
+        if (k > 0) {
             this.size = KmerUtil.getByteNumFromK(kmerlength);
             this.bytes = storage;
-            if (this.bytes.length < size){
+            if (this.bytes.length < size) {
                 throw new ArrayIndexOutOfBoundsException("Storage is smaller than required space for kmerlength:k");
             }
-        }else{
+        } else {
             this.bytes = storage;
             this.size = 0;
         }
@@ -182,7 +183,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         int pos = ((kmerlength - 1) % 4) << 1;
         byte code = (byte) (c << pos);
         bytes[0] = (byte) (((bytes[0] >>> 2) & 0x3f) | code);
-        return (byte) (1 << output);
+        return output;
     }
 
     /**
@@ -215,7 +216,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
             bytes[0] &= (1 << ((kmerlength % 4) << 1)) - 1;
         }
         bytes[size - 1] = (byte) ((bytes[size - 1] << 2) | c);
-        return (byte) (1 << output);
+        return output;
     }
 
     public void set(KmerBytesWritable newData) {
@@ -248,7 +249,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     @Override
     public int hashCode() {
-        return super.hashCode() * this.kmerlength;
+        return super.hashCode() * 31 + this.kmerlength;
     }
 
     @Override
