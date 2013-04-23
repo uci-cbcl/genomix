@@ -33,6 +33,7 @@ public class MergePathMapper extends MapReduceBase implements
     private VKmerBytesWritable tmpKmer;
     private VKmerBytesWritable outputKmer;
 
+
     public void configure(JobConf job) {
         KMER_SIZE = job.getInt("sizeKmer", 0);
         outputKmerFactory = new VKmerBytesWritableFactory(KMER_SIZE);
@@ -52,8 +53,7 @@ public class MergePathMapper extends MapReduceBase implements
         precursor = (byte) (precursor & adjBitMap);
         precursor = (byte) ((precursor & 0xff) >> 4);
         succeed = (byte) (succeed & adjBitMap);
-
-        if (bitFlag == 1) {
+       if (bitFlag == 1) {
             byte succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
             tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
             outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));

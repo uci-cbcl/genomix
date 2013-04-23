@@ -43,9 +43,10 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
         kmer.set(bytes, 0, bytes.length);
     }
 
-    public void set (MergePathValueWritable right) {
+    public void set(MergePathValueWritable right) {
         set(right.getBytes(), 0, right.getLength(), right.getAdjBitMap(), right.getFlag(), right.getKmerLength());
     }
+
     public void set(KmerBytesWritable mergedKmer, byte adjBitMap, byte bitFlag) {
         set(mergedKmer.getBytes(), 0, mergedKmer.getLength(), adjBitMap, bitFlag, mergedKmer.getKmerLength());
     }
@@ -69,6 +70,7 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
     @Override
     public void write(DataOutput arg0) throws IOException {
         // TODO Auto-generated method stub
+
         kmer.write(arg0);
         arg0.writeByte(adjBitMap);
         arg0.writeByte(flag);
@@ -105,6 +107,7 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
     public int getKmerLength() {
         return kmer.getKmerLength();
     }
+
     @Override
     public int getLength() {
         return kmer.getLength();

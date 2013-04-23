@@ -16,7 +16,7 @@ public class MergePathH2Mapper extends MapReduceBase implements
 
     private int KMER_SIZE;
     private VKmerBytesWritableFactory outputKmerFactory;
-    private MergePathValueWritable outputValue; 
+    private MergePathValueWritable outputValue;
     private VKmerBytesWritable tmpKmer;
     private VKmerBytesWritable outputKmer;
 
@@ -27,6 +27,7 @@ public class MergePathH2Mapper extends MapReduceBase implements
         tmpKmer = new VKmerBytesWritable(KMER_SIZE);
         outputKmer = new VKmerBytesWritable(KMER_SIZE);
     }
+
     @Override
     public void map(VKmerBytesWritable key, MergePathValueWritable value,
             OutputCollector<VKmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
@@ -36,15 +37,15 @@ public class MergePathH2Mapper extends MapReduceBase implements
         byte bitFlag = value.getFlag();
         precursor = (byte) (precursor & adjBitMap);
         precursor = (byte) ((precursor & 0xff) >> 4);
-        succeed = (byte) (succeed & adjBitMap);        
+        succeed = (byte) (succeed & adjBitMap);
         byte bitStartEnd = (byte) (0x81 & bitFlag);
-        
+
         switch (bitStartEnd) {
             case 0x01:
                 byte succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
                 tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
                 outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));
-                
+
                 tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(key.getKmerLength() - (KMER_SIZE - 1), key));
                 bitFlag = (byte) (bitFlag | 0x08);
                 outputValue.set(tmpKmer, adjBitMap, bitFlag);
@@ -62,12 +63,12 @@ public class MergePathH2Mapper extends MapReduceBase implements
                 succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
                 tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
                 outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));
-                
+
                 tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(key.getKmerLength() - (KMER_SIZE - 1), key));
                 bitFlag = (byte) (bitFlag | 0x08);
                 outputValue.set(tmpKmer, adjBitMap, bitFlag);
                 output.collect(outputKmer, outputValue);
-                
+
                 bitFlag = (byte) (bitFlag & 0xF7);
                 tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(KMER_SIZE, key));
                 outputKmer.set(tmpKmer);//?????
@@ -78,7 +79,7 @@ public class MergePathH2Mapper extends MapReduceBase implements
                 break;
             case (byte) 0x81:
                 outputKmer.set(key);
-            outputValue.set(null, 0, 0, adjBitMap, bitFlag, 0);//????????
+                outputValue.set(null, 0, 0, adjBitMap, bitFlag, 0);//????????
                 break;
         }
     }

@@ -16,7 +16,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
-
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.utils.TestUtils;
@@ -104,4 +103,3 @@ public class MergePathH2Test {
         dfs.copyToLocalFile(src, dest);
     }
 }
-

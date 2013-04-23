@@ -12,7 +12,11 @@
 <property><name>dfs.namenode.logging.level</name><value>info</value></property>
 <property><name>dfs.datanode.address</name><value>127.0.0.1:0</value></property>
 <property><name>io.skip.checksum.errors</name><value>false</value></property>
+<<<<<<< Updated upstream
 <property><name>fs.default.name</name><value>hdfs://localhost:55383</value></property>
+=======
+<property><name>fs.default.name</name><value>hdfs://localhost:50310</value></property>
+>>>>>>> Stashed changes
 <property><name>mapred.child.tmp</name><value>./tmp</value></property>
 <property><name>fs.har.impl.disable.cache</name><value>true</value></property>
 <property><name>dfs.safemode.threshold.pct</name><value>0.999f</value></property>
@@ -125,7 +129,11 @@
 <property><name>mapred.map.output.compression.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value></property>
 <property><name>mapred.tasktracker.dns.interface</name><value>default</value></property>
 <property><name>dfs.namenode.decommission.interval</name><value>3</value></property>
+<<<<<<< Updated upstream
 <property><name>dfs.http.address</name><value>localhost:55384</value></property>
+=======
+<property><name>dfs.http.address</name><value>localhost:50311</value></property>
+>>>>>>> Stashed changes
 <property><name>dfs.heartbeat.interval</name><value>3</value></property>
 <property><name>mapred.job.tracker</name><value>local</value></property>
 <property><name>io.seqfile.sorter.recordlimit</name><value>1000000</value></property>

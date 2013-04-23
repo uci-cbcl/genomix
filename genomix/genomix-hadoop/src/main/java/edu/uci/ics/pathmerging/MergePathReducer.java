@@ -34,7 +34,6 @@ public class MergePathReducer extends MapReduceBase implements
     private int KMER_SIZE;
     private MergePathValueWritable outputValue;
     private MergePathValueWritable tmpOutputValue;
-    
     MultipleOutputs mos = null;
     private int I_MERGE;
 
@@ -106,13 +105,14 @@ public class MergePathReducer extends MapReduceBase implements
                         mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputValue);
                     }
                 }
-            }
+            }                        
         } else {
             if (outputValue.getFlag() != 0) {
                 tmpKmer.set(kmerFactory.getFirstKmerFromChain(KMER_SIZE-1, key));
                 outputKmer.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), tmpKmer));                    
                 outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), outputValue.getFlag(), 0);
                 mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputValue);
+
             } else
                 mos.getCollector("uncomplete" + I_MERGE, reporter).collect(key, outputValue);
         }

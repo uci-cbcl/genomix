@@ -94,7 +94,7 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
     }
 
     public String toString() {
-        return GeneCode.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(flag) + '\t' + kmer.toString();
+        return GeneCode.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(flag);
     }
 
     @Override

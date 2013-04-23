@@ -2,6 +2,7 @@ package edu.uci.ics.pathmergingh2;
 
 import java.io.IOException;
 import java.util.Iterator;
+
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -24,6 +25,7 @@ public class MergePathH2Reducer extends MapReduceBase implements
 
     MultipleOutputs mos = null;
     private int I_MERGE;
+
 
     public void configure(JobConf job) {
         mos = new MultipleOutputs(job);
@@ -92,6 +94,7 @@ public class MergePathH2Reducer extends MapReduceBase implements
                 outputKmer.set(key);
                 mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputValue);
             }
+
         }
     }
 }

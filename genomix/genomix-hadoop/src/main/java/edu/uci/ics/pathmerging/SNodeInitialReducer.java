@@ -29,6 +29,7 @@ public class SNodeInitialReducer extends MapReduceBase implements
     private VKmerBytesWritable outputKmer = new VKmerBytesWritable();
     private MergePathValueWritable outputValue = new MergePathValueWritable();
 
+
     @Override
     public void reduce(KmerBytesWritable key, Iterator<MergePathValueWritable> values,
             OutputCollector<VKmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {

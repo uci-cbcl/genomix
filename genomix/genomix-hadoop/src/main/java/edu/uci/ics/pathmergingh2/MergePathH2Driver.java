@@ -55,7 +55,7 @@ public class MergePathH2Driver {
         conf.setJobName("Initial Path-Starting-Points Table");
         conf.setMapperClass(SNodeInitialMapper.class); 
         conf.setReducerClass(SNodeInitialReducer.class);
-        
+
         conf.setMapOutputKeyClass(KmerBytesWritable.class);
         conf.setMapOutputValueClass(MergePathValueWritable.class);
         
@@ -88,14 +88,9 @@ public class MergePathH2Driver {
             conf.setReducerClass(MergePathReducer.class);
             
             conf.setMapOutputKeyClass(VKmerBytesWritable.class);
-            conf.setMapOutputValueClass(MergePathValueWritable.class);
-            
-            conf.setInputFormat(SequenceFileInputFormat.class);
-            
-            String uncomplete = "uncomplete" + iMerge;
-            String complete = "complete" + iMerge;
-           
-            MultipleOutputs.addNamedOutput(conf, uncomplete,
+            conf.setMapOutputKeyClass(BytesWritable.class);
+
+<<<<<<< Updated upstream
                     MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
                     MergePathValueWritable.class);
 
@@ -114,6 +109,7 @@ public class MergePathH2Driver {
             dfs.delete(new Path(inputPath + "-step1"), true);
             dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
             dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
+<<<<<<< Updated upstream
         }
 
         conf = new JobConf(MergePathDriver.class);

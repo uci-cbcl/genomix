@@ -35,10 +35,10 @@ public class SNodeInitialReducer extends MapReduceBase implements
                     startFlag = 0x01;
                     break;
                 case (byte) 0x80:
-                    endFlag = 0x01;
+                    endFlag = (byte) 0x80;
                     break;
                 case (byte) 0x02:
-                    targetPointFlag = 0x01;
+                    targetPointFlag = 0x02;
                     targetAdjList = outputValue.getAdjBitMap();
                     break;
             }
@@ -46,13 +46,13 @@ public class SNodeInitialReducer extends MapReduceBase implements
                 outputValue = values.next();
                 switch (outputValue.getFlag()) {
                     case (byte) 0x01:
-                        startFlag = 0x01;
+                        startFlag = (byte) 0x01;
                         break;
                     case (byte) 0x80:
-                        endFlag = 0x01;
+                        endFlag = (byte) 0x80;
                         break;
                     case (byte) 0x02:
-                        targetPointFlag = 0x02;
+                        targetPointFlag = (byte) 0x02;
                         targetAdjList = outputValue.getAdjBitMap();
                         break;
                 }
@@ -60,10 +60,10 @@ public class SNodeInitialReducer extends MapReduceBase implements
                     break;
             }
             if(targetPointFlag == 0x02) {
-                if(startFlag == 0x01) {
+                if(startFlag == (byte) 0x01) {
                     outputFlag = (byte) (outputFlag | startFlag);
                 }
-                if(endFlag == 0x80) {
+                if(endFlag == (byte) 0x80) {
                     outputFlag = (byte) (outputFlag | endFlag);
                 }
                 outputValue.set(null, 0, 0, targetAdjList, outputFlag, 0);

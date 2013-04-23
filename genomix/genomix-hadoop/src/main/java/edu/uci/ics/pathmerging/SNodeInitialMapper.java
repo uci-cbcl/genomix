@@ -97,7 +97,6 @@ public class SNodeInitialMapper extends MapReduceBase implements
     @Override
     public void map(KmerBytesWritable key, ByteWritable value,
             OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
-
         byte precursor = (byte) 0xF0;
         byte succeed = (byte) 0x0F;
         byte adjBitMap = value.get();
@@ -107,7 +106,6 @@ public class SNodeInitialMapper extends MapReduceBase implements
         succeed = (byte) (succeed & adjBitMap);
         boolean inDegree = measureDegree(precursor);
         boolean outDegree = measureDegree(succeed);
-
         if (inDegree == false && outDegree == false) {
             outputKmer.set(key);
             bitFlag = (byte) 2;
