@@ -138,8 +138,9 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 			if(GraphVertexOperation.isPathVertex(vertexVal.getAdjMap())){
 				chainVertexId = kmerFactory.mergeKmerWithNextCode(msg.getChainVertexId(),
 						vertexId.getGeneCodeAtPosition(kmerSize - 1));
-				vertexVal.setState(State.NON_EXIST); //deleteVertex(getVertexId());
-				setVertexValue(vertexVal);
+				deleteVertex(getVertexId());
+				//vertexVal.setState(State.NON_EXIST); 
+				//setVertexValue(vertexVal);
 				msg.set(vertexId, chainVertexId, msg.getHeadVertexId(), vertexVal.getAdjMap(), false);
 				sendMsg(destVertexId,msg);
 			}

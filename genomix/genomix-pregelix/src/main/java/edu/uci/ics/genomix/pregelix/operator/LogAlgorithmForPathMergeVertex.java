@@ -301,10 +301,10 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 		else{
 			if(getVertexValue().getState() != State.START_VERTEX 
 					&& getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE){
-				vertexVal.setState(State.KILL_SELF);
-				setVertexValue(vertexVal);
-				voteToHalt();
-				//deleteVertex(getVertexId());//killSelf because it doesn't receive any message
+				//vertexVal.setState(State.KILL_SELF);
+				//setVertexValue(vertexVal);
+				//voteToHalt();
+				deleteVertex(getVertexId());//killSelf because it doesn't receive any message
 			}
 		}
 	}
@@ -341,9 +341,10 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 			}
 			else if(getSuperstep()%3 == 2 && getSuperstep() <= maxIteration){
 				if(vertexVal.getState() == State.TODELETE){ //|| vertexVal.getState() == State.KILL_SELF)
-					vertexVal.setState(State.NON_EXIST);
-					setVertexValue(vertexVal);
-					voteToHalt(); //killSelf  deleteVertex(getVertexId());
+					//vertexVal.setState(State.NON_EXIST);
+					//setVertexValue(vertexVal);
+					//voteToHalt();
+					deleteVertex(getVertexId()); //killSelf  
 				}
 				else{
 					mergeChainVertex(msgIterator);
