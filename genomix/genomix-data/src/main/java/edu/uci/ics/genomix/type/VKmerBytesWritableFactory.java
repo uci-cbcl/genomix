@@ -80,6 +80,7 @@ public class VKmerBytesWritableFactory {
         if (byteInKmer == 0) {
             kmer.getBytes()[0] = (byte) ((kmerChain.getBytes()[0] & 0xff) >> posInByteOfChain);
         }
+        kmer.clearLeadBit();
         return kmer;
     }
 
@@ -112,6 +113,7 @@ public class VKmerBytesWritableFactory {
         } else {
             kmer.getBytes()[0] = (byte) (kmerChain.getBytes()[kmerChain.getLength() - i] & ((1 << posInByteOfChain) - 1));
         }
+        kmer.clearLeadBit();
         return kmer;
     }
 
@@ -138,9 +140,7 @@ public class VKmerBytesWritableFactory {
         if (byteInKmer == 0) {
             kmer.getBytes()[0] = (byte) ((kmerChain.getBytes()[0] & 0xff) >> posInByteOfChain);
         }
-        if (kSize % 4 != 0) {
-            kmer.getBytes()[0] &= (1 << ((kSize % 4) << 1)) - 1;
-        }
+        kmer.clearLeadBit();
         return kmer;
     }
 
@@ -167,6 +167,7 @@ public class VKmerBytesWritableFactory {
         } else {
             this.kmer.getBytes()[0] = (byte) (kmer.getBytes()[0] | ((nextCode & 0x3) << ((kmer.getKmerLength() % 4) << 1)));
         }
+        this.kmer.clearLeadBit();
         return this.kmer;
     }
 
@@ -194,6 +195,7 @@ public class VKmerBytesWritableFactory {
             this.kmer.getBytes()[byteInMergedKmer] = (byte) ((kmer.getBytes()[i] << 2) | ((kmer.getBytes()[i + 1] >> 6) & 0x3));
         }
         this.kmer.getBytes()[byteInMergedKmer] = (byte) ((kmer.getBytes()[kmer.getLength() - 1] << 2) | (preCode & 0x3));
+        this.kmer.clearLeadBit();
         return this.kmer;
     }
 
@@ -235,6 +237,7 @@ public class VKmerBytesWritableFactory {
                 kmer.getBytes()[0] = (byte) ((0xff & nextKmer.getBytes()[0]) >> (8 - posNeedToMove));
             }
         }
+        kmer.clearLeadBit();
         return kmer;
     }
 
@@ -302,6 +305,7 @@ public class VKmerBytesWritableFactory {
                 curByteAtKmer++;
             }
         }
+        this.kmer.clearLeadBit();
         return this.kmer;
     }
 }
