@@ -68,14 +68,24 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public KmerBytesWritable(int k) {
         this.kmerlength = k;
         this.size = KmerUtil.getByteNumFromK(kmerlength);
-        this.bytes = new byte[this.size];
+        if (k > 0) {
+            this.bytes = new byte[this.size];
+        } else {
+            this.bytes = EMPTY_BYTES;
+        }
     }
 
     public KmerBytesWritable(KmerBytesWritable right) {
-        this.kmerlength = right.kmerlength;
-        this.size = right.size;
-        this.bytes = new byte[right.size];
-        set(right);
+        if (right != null) {
+            this.kmerlength = right.kmerlength;
+            this.size = right.size;
+            this.bytes = new byte[right.size];
+            set(right);
+        }else{
+            this.kmerlength = 0;
+            this.size = 0;
+            this.bytes = EMPTY_BYTES;
+        }
     }
 
     public byte getGeneCodeAtPosition(int pos) {
@@ -216,19 +226,26 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         clearLeadBit();
         return output;
     }
-    
-    protected void clearLeadBit(){
+
+    protected void clearLeadBit() {
         if (kmerlength % 4 != 0) {
             bytes[0] &= (1 << ((kmerlength % 4) << 1)) - 1;
         }
     }
 
     public void set(KmerBytesWritable newData) {
-        set(newData.bytes, 0, newData.size);
+        if (kmerlength != newData.kmerlength){
+            throw new IllegalArgumentException("kmerSize is different, try to use VKmerBytesWritable instead");
+        }
+        if (kmerlength > 0 ){
+            set(newData.bytes, 0, newData.size);
+        }
     }
 
     public void set(byte[] newData, int offset, int length) {
-        System.arraycopy(newData, offset, bytes, 0, size);
+        if (kmerlength > 0){
+            System.arraycopy(newData, offset, bytes, 0, size);
+        }
     }
 
     /**
@@ -239,16 +256,20 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void readFields(DataInput in) throws IOException {
         this.kmerlength = in.readInt();
         this.size = KmerUtil.getByteNumFromK(kmerlength);
-        if (this.bytes.length < this.size) {
-            this.bytes = new byte[this.size];
+        if (this.kmerlength > 0) {
+            if (this.bytes.length < this.size) {
+                this.bytes = new byte[this.size];
+            }
+            in.readFully(bytes, 0, size);
         }
-        in.readFully(bytes, 0, size);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(kmerlength);
-        out.write(bytes, 0, size);
+        if (kmerlength > 0) {
+            out.write(bytes, 0, size);
+        }
     }
 
     @Override
