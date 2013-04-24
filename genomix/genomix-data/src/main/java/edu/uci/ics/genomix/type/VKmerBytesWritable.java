@@ -89,13 +89,20 @@ public class VKmerBytesWritable extends KmerBytesWritable {
         super.setByReadReverse(array, start);
     }
 
+    @Override
     public void set(KmerBytesWritable newData) {
-        set(newData.kmerlength, newData.bytes, 0, newData.size);
+        if (newData == null){
+            this.set(0,null,0,0);
+        }else{
+            this.set(newData.kmerlength, newData.bytes, 0, newData.size);
+        }
     }
 
     public void set(int k, byte[] newData, int offset, int length) {
         reset(k);
-        System.arraycopy(newData, offset, bytes, 0, size);
+        if (k > 0 ){
+            System.arraycopy(newData, offset, bytes, 0, size);
+        }
     }
 
     /**
