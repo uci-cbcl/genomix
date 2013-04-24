@@ -107,6 +107,7 @@ public class VKmerBytesWritable extends KmerBytesWritable {
         this.kmerlength = k;
         setSize(0);
         setSize(KmerUtil.getByteNumFromK(k));
+        clearLeadBit();
     }
 
 }

@@ -108,7 +108,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
             output.collect(outputKmer, outputAdjList);
         } else {
             for (int i = 0; i < 4; i++) {
-                byte temp = 0x01;
+                byte temp = (byte) 0x01;
                 byte shiftedCode = 0;
                 temp = (byte) (temp << i);
                 temp = (byte) (precursor & temp);
@@ -116,9 +116,6 @@ public class SNodeInitialMapper extends MapReduceBase implements
                     byte precurCode = GeneCode.getGeneCodeFromBitMap(temp);
                     shiftedCode = key.shiftKmerWithPreCode(precurCode);
                     outputKmer.set(key);
-                    for(int j = 0; j < key.getLength(); j ++){
-                        System.out.println(key.getBytes()[j]);                        
-                    }
                     bitFlag = (byte) 0x80;
                     outputAdjList.set(null, 0, 0, (byte) 0, bitFlag, 0);
                     output.collect(outputKmer, outputAdjList);
@@ -126,7 +123,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
                 }
             }
             for (int i = 0; i < 4; i++) {
-                byte temp = 0x01;
+                byte temp = (byte) 0x01;
                 byte shiftedCode = 0;
                 temp = (byte) (temp << i);
                 temp = (byte) (succeed & temp);

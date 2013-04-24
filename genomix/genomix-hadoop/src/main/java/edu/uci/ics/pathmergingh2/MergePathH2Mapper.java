@@ -41,7 +41,7 @@ public class MergePathH2Mapper extends MapReduceBase implements
         byte bitStartEnd = (byte) (0x81 & bitFlag);
 
         switch (bitStartEnd) {
-            case 0x01:
+            case (byte) 0x01:
                 byte succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
                 tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
                 outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));
@@ -59,7 +59,7 @@ public class MergePathH2Mapper extends MapReduceBase implements
                 outputValue.set(tmpKmer, adjBitMap, bitFlag);
                 output.collect(outputKmer, outputValue);
                 break;
-            case 0x00:
+            case (byte) 0x00:
                 succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
                 tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
                 outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));

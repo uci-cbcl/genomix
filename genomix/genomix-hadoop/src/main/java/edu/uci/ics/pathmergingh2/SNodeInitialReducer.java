@@ -32,13 +32,13 @@ public class SNodeInitialReducer extends MapReduceBase implements
         if (values.hasNext() == true) {
             switch (outputValue.getFlag()) {
                 case (byte) 0x01:
-                    startFlag = 0x01;
+                    startFlag = (byte) 0x01;
                     break;
                 case (byte) 0x80:
                     endFlag = (byte) 0x80;
                     break;
                 case (byte) 0x02:
-                    targetPointFlag = 0x02;
+                    targetPointFlag = (byte) 0x02;
                     targetAdjList = outputValue.getAdjBitMap();
                     break;
             }
@@ -56,10 +56,10 @@ public class SNodeInitialReducer extends MapReduceBase implements
                         targetAdjList = outputValue.getAdjBitMap();
                         break;
                 }
-                if(startFlag != 0x00 && endFlag!= 0x00 && targetPointFlag != 0x00)
+                if(startFlag != (byte) 0x00 && endFlag!= (byte) 0x00 && targetPointFlag != (byte) 0x00)
                     break;
             }
-            if(targetPointFlag == 0x02) {
+            if(targetPointFlag == (byte) 0x02) {
                 if(startFlag == (byte) 0x01) {
                     outputFlag = (byte) (outputFlag | startFlag);
                 }
