@@ -70,6 +70,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private void SplitReads(byte[] array, IFrameWriter writer) {
                 /** first kmer */
                 int k = kmer.getKmerLength();
+                if (k >= array.length){
+                	return;
+                }
                 kmer.setByRead(array, 0);
                 byte pre = 0;
                 byte next = GeneCode.getAdjBit(array[k]);

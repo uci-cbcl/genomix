@@ -7,38 +7,49 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgorithmMessageWritable>{
+public class LogAlgorithmMessageWritable implements
+		WritableComparable<LogAlgorithmMessageWritable> {
 	/**
 	 * sourceVertexId stores source vertexId when headVertex sends the message
-	 * 				  stores neighber vertexValue when pathVertex sends the message
-	 * chainVertexId stores the chains of connected DNA
-	 * file stores the point to the file that stores the chains of connected DNA
+	 * stores neighber vertexValue when pathVertex sends the message
+	 * chainVertexId stores the chains of connected DNA file stores the point to
+	 * the file that stores the chains of connected DNA
 	 */
 	private VKmerBytesWritable sourceVertexId;
 	private VKmerBytesWritable chainVertexId;
 	private byte adjMap;
 	private int message;
 	private int sourceVertexState;
-	
-	public LogAlgorithmMessageWritable(){
-		sourceVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
+
+	public LogAlgorithmMessageWritable() {
+		if (LogAlgorithmForPathMergeVertex.kmerSize > 0) {
+			sourceVertexId = new VKmerBytesWritable(
+					LogAlgorithmForPathMergeVertex.kmerSize);
+			chainVertexId = new VKmerBytesWritable(
+					LogAlgorithmForPathMergeVertex.kmerSize);
+		} else {
+			sourceVertexId = new VKmerBytesWritable(55);
+			chainVertexId = new VKmerBytesWritable(55);
+		}
 	}
-	
-	public void set(VKmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, int message, int sourceVertexState){
+
+	public void set(KmerBytesWritable sourceVertexId,
+			KmerBytesWritable chainVertexId, byte adjMap, int message,
+			int sourceVertexState) {
 		this.sourceVertexId.set(sourceVertexId);
 		this.chainVertexId.set(chainVertexId);
 		this.adjMap = adjMap;
 		this.message = message;
 		this.sourceVertexState = sourceVertexState;
 	}
-	
-	public void reset(){
-		//sourceVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
-		adjMap = (byte)0;
+
+	public void reset() {
+		// sourceVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
+		chainVertexId.reset(0);
+		adjMap = (byte) 0;
 		message = 0;
 		sourceVertexState = 0;
 	}
@@ -47,7 +58,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		return sourceVertexId;
 	}
 
-	public void setSourceVertexId(VKmerBytesWritable sourceVertexId) {
+	public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
 		this.sourceVertexId.set(sourceVertexId);
 	}
 
@@ -86,7 +97,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	public int getLengthOfChain() {
 		return chainVertexId.getKmerLength();
 	}
-	
+
 	@Override
 	public void write(DataOutput out) throws IOException {
 		sourceVertexId.write(out);
@@ -105,25 +116,25 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		sourceVertexState = in.readInt();
 	}
 
-	 @Override
-    public int hashCode() {
-        return chainVertexId.hashCode();
-    }
-	 
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof NaiveAlgorithmMessageWritable) {
-        	LogAlgorithmMessageWritable tp = (LogAlgorithmMessageWritable) o;
-            return chainVertexId.equals(tp.chainVertexId);
-        }
-        return false;
-    }
-    
-    @Override
-    public String toString() {
-        return chainVertexId.toString();
-    }
-    
+	@Override
+	public int hashCode() {
+		return chainVertexId.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof LogAlgorithmMessageWritable) {
+			LogAlgorithmMessageWritable tp = (LogAlgorithmMessageWritable) o;
+			return chainVertexId.equals(tp.chainVertexId);
+		}
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		return chainVertexId.toString();
+	}
+
 	@Override
 	public int compareTo(LogAlgorithmMessageWritable tp) {
 		return chainVertexId.compareTo(tp.chainVertexId);
