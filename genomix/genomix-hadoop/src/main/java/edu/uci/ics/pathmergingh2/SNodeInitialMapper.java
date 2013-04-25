@@ -1,29 +1,14 @@
-/*
- * Copyright 2009-2012 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.uci.ics.pathmerging;
+package edu.uci.ics.pathmergingh2;
 
 import java.io.IOException;
-
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class SNodeInitialMapper extends MapReduceBase implements
@@ -106,23 +91,47 @@ public class SNodeInitialMapper extends MapReduceBase implements
         succeed = (byte) (succeed & adjBitMap);
         boolean inDegree = measureDegree(precursor);
         boolean outDegree = measureDegree(succeed);
+        if (key.toString().equals("CGC")) {
+            int a = 2;
+            int b = a;
+        }
+        if (key.toString().equals("TCG")) {
+            int a = 2;
+            int b = a;
+        }
         if (inDegree == false && outDegree == false) {
             outputKmer.set(key);
+            System.out.println(outputKmer.hashCode());
             bitFlag = (byte) 2;
-            outputAdjList.set(adjBitMap, bitFlag, null);///~~~~~kmersize----->0
+            outputAdjList.set(adjBitMap, bitFlag, null);
             output.collect(outputKmer, outputAdjList);
-        }
-        else{
-            for(int i = 0 ; i < 4; i ++){
-                byte temp = 0x01;
+        } else {
+            for (int i = 0; i < 4; i++) {
+                byte temp = (byte) 0x01;
                 byte shiftedCode = 0;
-                temp  = (byte)(temp << i);
+                temp = (byte) (temp << i);
+                temp = (byte) (precursor & temp);
+                if (temp != 0) {
+                    byte precurCode = GeneCode.getGeneCodeFromBitMap(temp);
+                    shiftedCode = key.shiftKmerWithPreCode(precurCode);
+                    outputKmer.set(key);
+                    bitFlag = (byte) 0x80;
+                    outputAdjList.set((byte) 0, bitFlag, null);
+                    output.collect(outputKmer, outputAdjList);
+                    key.shiftKmerWithNextCode(shiftedCode);
+                }
+            }
+            for (int i = 0; i < 4; i++) {
+                byte temp = (byte) 0x01;
+                byte shiftedCode = 0;
+                temp = (byte) (temp << i);
                 temp = (byte) (succeed & temp);
-                if(temp != 0 ){
+                if (temp != 0) {
                     byte succeedCode = GeneCode.getGeneCodeFromBitMap(temp);
                     shiftedCode = key.shiftKmerWithNextCode(succeedCode);
                     outputKmer.set(key);
-                    outputAdjList.set((byte)0, bitFlag, null);
+                    bitFlag = (byte) 0x01;
+                    outputAdjList.set((byte) 0, bitFlag, null);
                     output.collect(outputKmer, outputAdjList);
                     key.shiftKmerWithPreCode(shiftedCode);
                 }

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pathmerging;
+package edu.uci.ics.pathmergingh2;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -22,7 +22,6 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class MergePathValueWritable extends BinaryComparable implements WritableComparable<BinaryComparable> {
@@ -35,7 +34,13 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
     public MergePathValueWritable() {
         this((byte) 0, (byte) 0, 0, EMPTY_BYTES);
     }
-
+    
+    public MergePathValueWritable(int k) {
+        this.adjBitMap = 0;
+        this.flag = 0;
+        this.kmer = new VKmerBytesWritable(k);
+    }
+    
     public MergePathValueWritable(byte adjBitMap, byte flag, int kmerSize, byte[] bytes) {
         this.adjBitMap = adjBitMap;
         this.flag = flag;

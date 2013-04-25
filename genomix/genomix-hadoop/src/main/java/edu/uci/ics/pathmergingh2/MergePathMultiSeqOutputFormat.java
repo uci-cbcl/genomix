@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.pathmerging;
+package edu.uci.ics.pathmergingh2;
 
 import java.io.File;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
+
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 

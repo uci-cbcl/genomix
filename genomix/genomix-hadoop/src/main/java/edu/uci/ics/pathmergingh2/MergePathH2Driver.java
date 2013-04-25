@@ -1,18 +1,4 @@
-/*
- * Copyright 2009-2012 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package edu.uci.ics.pathmerging;
+package edu.uci.ics.pathmergingh2;
 
 import java.io.IOException;
 import org.apache.hadoop.fs.FileSystem;
@@ -29,12 +15,12 @@ import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
 import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
+
 @SuppressWarnings("deprecation")
-public class MergePathDriver {
+public class MergePathH2Driver {
     
     private static class Options {
         @Option(name = "-inputpath", usage = "the input path", required = true)
@@ -61,7 +47,7 @@ public class MergePathDriver {
     public void run(String inputPath, String outputPath, String mergeResultPath, int numReducers, int sizeKmer, int mergeRound, String defaultConfPath)
             throws IOException{
 
-        JobConf conf = new JobConf(MergePathDriver.class);
+        JobConf conf = new JobConf(MergePathH2Driver.class);
         conf.setInt("sizeKmer", sizeKmer);
         
         if (defaultConfPath != null) {
@@ -70,7 +56,7 @@ public class MergePathDriver {
         conf.setJobName("Initial Path-Starting-Points Table");
         conf.setMapperClass(SNodeInitialMapper.class); 
         conf.setReducerClass(SNodeInitialReducer.class);
-        
+
         conf.setMapOutputKeyClass(KmerBytesWritable.class);
         conf.setMapOutputValueClass(MergePathValueWritable.class);
         
@@ -89,8 +75,7 @@ public class MergePathDriver {
         int iMerge = 0;
 /*----------------------------------------------------------------------*/
         for(iMerge = 0; iMerge < mergeRound; iMerge ++){
-        
-            conf = new JobConf(MergePathDriver.class);
+            conf = new JobConf(MergePathH2Driver.class);
             conf.setInt("sizeKmer", sizeKmer);
             conf.setInt("iMerge", iMerge);
             
@@ -99,8 +84,8 @@ public class MergePathDriver {
             }
             conf.setJobName("Path Merge");
             
-            conf.setMapperClass(MergePathMapper.class);
-            conf.setReducerClass(MergePathReducer.class);
+            conf.setMapperClass(MergePathH2Mapper.class);
+            conf.setReducerClass(MergePathH2Reducer.class);
             
             conf.setMapOutputKeyClass(VKmerBytesWritable.class);
             conf.setMapOutputValueClass(MergePathValueWritable.class);
@@ -115,7 +100,7 @@ public class MergePathDriver {
                     MergePathValueWritable.class);
 
             MultipleOutputs.addNamedOutput(conf, complete,
-                    MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
+                    MergePathMultiTextOutputFormat.class, VKmerBytesWritable.class,
                     MergePathValueWritable.class);
             
             conf.setOutputKeyClass(VKmerBytesWritable.class);
@@ -130,8 +115,7 @@ public class MergePathDriver {
             dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
             dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
         }
-        /*----------------------------------------*/
-        conf = new JobConf(MergePathDriver.class);
+        conf = new JobConf(MergePathH2Driver.class);
         conf.setInt("sizeKmer", sizeKmer);
         conf.setInt("iMerge", iMerge);
         
@@ -140,8 +124,8 @@ public class MergePathDriver {
         }
         conf.setJobName("Path Merge");
         
-        conf.setMapperClass(MergePathMapper.class);
-        conf.setReducerClass(MergePathReducer.class);
+        conf.setMapperClass(MergePathH2Mapper.class);
+        conf.setReducerClass(MergePathH2Reducer.class);
         
         conf.setMapOutputKeyClass(VKmerBytesWritable.class);
         conf.setMapOutputValueClass(MergePathValueWritable.class);
@@ -152,11 +136,11 @@ public class MergePathDriver {
         String complete = "complete" + iMerge;
        
         MultipleOutputs.addNamedOutput(conf, uncomplete,
-                MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
+                MergePathMultiTextOutputFormat.class, VKmerBytesWritable.class,
                 MergePathValueWritable.class);
 
         MultipleOutputs.addNamedOutput(conf, complete,
-                MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
+                MergePathMultiTextOutputFormat.class, VKmerBytesWritable.class,
                 MergePathValueWritable.class);
         
         conf.setOutputKeyClass(VKmerBytesWritable.class);
@@ -176,7 +160,7 @@ public class MergePathDriver {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-        MergePathDriver driver = new MergePathDriver();
+        MergePathH2Driver driver = new MergePathH2Driver();
         driver.run(options.inputPath, options.outputPath, options.mergeResultPath, options.numReducers, options.sizeKmer, options.mergeRound, null);
     }
 }
