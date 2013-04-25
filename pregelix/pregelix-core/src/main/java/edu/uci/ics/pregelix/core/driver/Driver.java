@@ -147,16 +147,6 @@ public class Driver implements IDriver {
             hcc.unDeployBinary(deploymentId);
             LOG.info("job finished");
         } catch (Exception e) {
-            try {
-                /**
-                 * destroy application if there is any exception
-                 */
-                if (hcc != null && deploymentId == null) {
-                    hcc.unDeployBinary(deploymentId);
-                }
-            } catch (Exception e2) {
-                throw new HyracksException(e2);
-            }
             throw new HyracksException(e);
         }
     }
