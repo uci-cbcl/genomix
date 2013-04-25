@@ -32,7 +32,7 @@ public class LogAlgorithmForPathMergeInputFormat extends
     @SuppressWarnings("rawtypes")
     class BinaryLoadGraphReader extends
             BinaryVertexReader<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> {
-        private Vertex vertex;
+        private Vertex vertex = null;
         private KmerBytesWritable vertexId = null;
         private ValueStateWritable vertexValue = new ValueStateWritable();
 
