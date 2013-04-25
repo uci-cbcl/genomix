@@ -21,14 +21,49 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
+/**
+ * The serializer/deserializer/classloader interface for job/task information such as job specifications, activity graphs and so on.
+ * 
+ * @author yingyib
+ */
 public interface IJobSerializerDeserializer {
 
+    /**
+     * Deserialize the bytes to an object
+     * 
+     * @param bytes
+     *            the binary content of an object
+     * @return the deserialized object
+     * @throws HyracksException
+     */
     public Object deserialize(byte[] bytes) throws HyracksException;
 
-    public byte[] serialize(Serializable job) throws HyracksException;
+    /**
+     * Serialize a object into bytes
+     * 
+     * @param object
+     *            a Serializable Java object
+     * @return
+     *         the byte array which contains the binary content of the input object
+     * @throws HyracksException
+     */
+    public byte[] serialize(Serializable object) throws HyracksException;
 
+    /**
+     * Load a class by its name
+     * 
+     * @param className
+     *            the name of the class
+     * @return
+     * @throws HyracksException
+     */
     public Class<?> loadClass(String className) throws HyracksException;
 
+    /**
+     * 
+     * @param binaryURLs
+     * @throws HyracksException
+     */
     public void addClassPathURLs(List<URL> binaryURLs) throws HyracksException;
 
     public ClassLoader getClassLoader() throws HyracksException;

@@ -30,6 +30,14 @@ import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.IPCResponder;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
+/***
+ * This is the work happens on the CC for a dynamic deployment.
+ * It first deploys the jar to CC application context.
+ * Then, it remotely calls each NC service to deploy the jars listed as http URLs.
+ * NOTE: in current implementation, a user cannot deploy with the same deployment id simultaneously.
+ * 
+ * @author yingyib
+ */
 public class CliDeployBinaryWork extends SynchronizableWork {
 
     private ClusterControllerService ccs;
@@ -67,6 +75,8 @@ public class CliDeployBinaryWork extends SynchronizableWork {
                 nodeIds.add(nc);
             }
             final DeploymentRun dRun = new DeploymentRun(nodeIds);
+
+            /** The following call prevents a user to deploy with the same deployment id simultaneously. */
             ccs.addDeploymentRun(deploymentId, dRun);
 
             /***

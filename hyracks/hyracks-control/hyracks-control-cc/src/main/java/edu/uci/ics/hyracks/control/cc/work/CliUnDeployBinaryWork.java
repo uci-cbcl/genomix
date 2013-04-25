@@ -28,6 +28,14 @@ import edu.uci.ics.hyracks.control.common.deployment.DeploymentUtils;
 import edu.uci.ics.hyracks.control.common.work.IPCResponder;
 import edu.uci.ics.hyracks.control.common.work.SynchronizableWork;
 
+/***
+ * This is the work happens on the CC for an undeployment.
+ * It first undeploys the jar to CC application context by giving it a deployment id.
+ * Then, it remotely calls each NC service to undeploy by giving them a deployment id.
+ * NOTE: in current implementation, a user cannot undeploy with the same deployment id simultaneously.
+ * 
+ * @author yingyib
+ */
 public class CliUnDeployBinaryWork extends SynchronizableWork {
 
     private ClusterControllerService ccs;
@@ -63,6 +71,8 @@ public class CliUnDeployBinaryWork extends SynchronizableWork {
                 nodeIds.add(nc);
             }
             final DeploymentRun dRun = new DeploymentRun(nodeIds);
+            
+            /** The following call prevents a user to undeploy with the same deployment id simultaneously. */
             ccs.addDeploymentRun(deploymentId, dRun);
 
             /***

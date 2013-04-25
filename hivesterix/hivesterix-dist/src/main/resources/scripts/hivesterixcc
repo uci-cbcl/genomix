@@ -16,7 +16,6 @@
 # ------------------------------------------------------------------------
 #
 
-
 # resolve links - $0 may be a softlink
 PRG="$0"
 
@@ -91,6 +90,18 @@ fi
 
 CLASSPATH=$CLASSPATH_PREFIX:"$HADOOP_HOME"/conf:/etc/hadoop/conf:"$BASEDIR"/etc:$1
 
+#add the desired hive patch
+CLASSPATH=${CLASSPATH}:${REPO}/a-hive-patch.jar
+
+#add the desired jetty jar
+for f in ${REPO}/servlet-api-3*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
+for f in ${REPO}/*.jar; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
 # For Cygwin, switch paths to Windows format before running java
 if $cygwin; then
   [ -n "$CLASSPATH" ] && CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
@@ -102,10 +113,10 @@ fi
 
 exec "$JAVACMD" $JAVA_OPTS  \
   -classpath "$CLASSPATH" \
-  -Dapp.name="pregelix" \
+  -Dapp.name="hivesterixcc" \
   -Dapp.pid="$$" \
   -Dapp.repo="$REPO" \
   -Dapp.home="$BASEDIR" \
   -Dbasedir="$BASEDIR" \
-  org.apache.hadoop.util.RunJar \
+  edu.uci.ics.hyracks.control.cc.CCDriver \
   "$@"
