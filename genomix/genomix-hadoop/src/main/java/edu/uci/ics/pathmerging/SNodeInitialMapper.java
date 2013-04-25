@@ -22,8 +22,8 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.GeneCode;
 
 @SuppressWarnings("deprecation")
 public class SNodeInitialMapper extends MapReduceBase implements
@@ -97,43 +97,36 @@ public class SNodeInitialMapper extends MapReduceBase implements
     @Override
     public void map(KmerBytesWritable key, ByteWritable value,
             OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
-
         byte precursor = (byte) 0xF0;
         byte succeed = (byte) 0x0F;
         byte adjBitMap = value.get();
-        byte flag = (byte) 0;
+        byte bitFlag = (byte) 0;
         precursor = (byte) (precursor & adjBitMap);
         precursor = (byte) ((precursor & 0xff) >> 4);
         succeed = (byte) (succeed & adjBitMap);
         boolean inDegree = measureDegree(precursor);
         boolean outDegree = measureDegree(succeed);
-        byte initial = 0;
-        if (inDegree == true && outDegree == false) {
-            flag = (byte) 2;
-            switch (succeed) {
-                case 1:
-                    initial = (byte) 0x00;
-                    break;
-                case 2:
-                    initial = (byte) 0x01;
-                    break;
-                case 4:
-                    initial = (byte) 0x02;
-                    break;
-                case 8:
-                    initial = (byte) 0x03;
-                    break;
-            }
-            outputKmer.set(key);
-            outputKmer.shiftKmerWithNextCode(initial);
-            adjBitMap = (byte) (adjBitMap & 0xF0);
-            outputAdjList.set(null, 0, 0, adjBitMap, flag, KMER_SIZE);
-            output.collect(outputKmer, outputAdjList);
-        }
         if (inDegree == false && outDegree == false) {
             outputKmer.set(key);
-            outputAdjList.set(null, 0, 0, adjBitMap, flag, KMER_SIZE);
+            bitFlag = (byte) 2;
+            outputAdjList.set(adjBitMap, bitFlag, null);///~~~~~kmersize----->0
             output.collect(outputKmer, outputAdjList);
+        }
+        else{
+            for(int i = 0 ; i < 4; i ++){
+                byte temp = 0x01;
+                byte shiftedCode = 0;
+                temp  = (byte)(temp << i);
+                temp = (byte) (succeed & temp);
+                if(temp != 0 ){
+                    byte succeedCode = GeneCode.getGeneCodeFromBitMap(temp);
+                    shiftedCode = key.shiftKmerWithNextCode(succeedCode);
+                    outputKmer.set(key);
+                    outputAdjList.set((byte)0, bitFlag, null);
+                    output.collect(outputKmer, outputAdjList);
+                    key.shiftKmerWithPreCode(shiftedCode);
+                }
+            }
         }
     }
 }

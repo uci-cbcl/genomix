@@ -23,12 +23,15 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
+import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class MergePathDriver {
@@ -74,7 +77,7 @@ public class MergePathDriver {
         conf.setInputFormat(SequenceFileInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
         
-        conf.setOutputKeyClass(KmerBytesWritable.class);
+        conf.setOutputKeyClass(VKmerBytesWritable.class);
         conf.setOutputValueClass(MergePathValueWritable.class);
         
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
@@ -83,8 +86,9 @@ public class MergePathDriver {
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(inputPath + "-step1"), true);
         JobClient.runJob(conf);
+        int iMerge = 0;
 /*----------------------------------------------------------------------*/
-        for(int iMerge = 0; iMerge < mergeRound; iMerge ++){
+        for(iMerge = 0; iMerge < mergeRound; iMerge ++){
         
             conf = new JobConf(MergePathDriver.class);
             conf.setInt("sizeKmer", sizeKmer);
@@ -98,24 +102,23 @@ public class MergePathDriver {
             conf.setMapperClass(MergePathMapper.class);
             conf.setReducerClass(MergePathReducer.class);
             
-            conf.setMapOutputKeyClass(KmerBytesWritable.class);
+            conf.setMapOutputKeyClass(VKmerBytesWritable.class);
             conf.setMapOutputValueClass(MergePathValueWritable.class);
             
             conf.setInputFormat(SequenceFileInputFormat.class);
-            conf.setOutputFormat(MultipleSequenceFileOutputFormat.class);
             
             String uncomplete = "uncomplete" + iMerge;
             String complete = "complete" + iMerge;
            
             MultipleOutputs.addNamedOutput(conf, uncomplete,
-                    MergePathMultiSeqOutputFormat.class, KmerBytesWritable.class,
+                    MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
                     MergePathValueWritable.class);
 
             MultipleOutputs.addNamedOutput(conf, complete,
-                    MergePathMultiSeqOutputFormat.class, KmerBytesWritable.class,
+                    MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
                     MergePathValueWritable.class);
             
-            conf.setOutputKeyClass(KmerBytesWritable.class);
+            conf.setOutputKeyClass(VKmerBytesWritable.class);
             conf.setOutputValueClass(MergePathValueWritable.class);
             
             FileInputFormat.setInputPaths(conf, new Path(inputPath + "-step1"));
@@ -127,6 +130,46 @@ public class MergePathDriver {
             dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
             dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
         }
+        /*----------------------------------------*/
+        conf = new JobConf(MergePathDriver.class);
+        conf.setInt("sizeKmer", sizeKmer);
+        conf.setInt("iMerge", iMerge);
+        
+        if (defaultConfPath != null) {
+            conf.addResource(new Path(defaultConfPath));
+        }
+        conf.setJobName("Path Merge");
+        
+        conf.setMapperClass(MergePathMapper.class);
+        conf.setReducerClass(MergePathReducer.class);
+        
+        conf.setMapOutputKeyClass(VKmerBytesWritable.class);
+        conf.setMapOutputValueClass(MergePathValueWritable.class);
+        
+        conf.setInputFormat(SequenceFileInputFormat.class);
+        
+        String uncomplete = "uncomplete" + iMerge;
+        String complete = "complete" + iMerge;
+       
+        MultipleOutputs.addNamedOutput(conf, uncomplete,
+                MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
+                MergePathValueWritable.class);
+
+        MultipleOutputs.addNamedOutput(conf, complete,
+                MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
+                MergePathValueWritable.class);
+        
+        conf.setOutputKeyClass(VKmerBytesWritable.class);
+        conf.setOutputValueClass(MergePathValueWritable.class);
+        
+        FileInputFormat.setInputPaths(conf, new Path(inputPath + "-step1"));
+        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+        conf.setNumReduceTasks(numReducers);
+        dfs.delete(new Path(outputPath), true);
+        JobClient.runJob(conf);
+        dfs.delete(new Path(inputPath + "-step1"), true);
+        dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
+        dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
     }
 
     public static void main(String[] args) throws Exception {

@@ -28,115 +28,53 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class MergePathValueWritable extends BinaryComparable implements WritableComparable<BinaryComparable> {
 
     private static final byte[] EMPTY_BYTES = {};
-    private int size;
-    private byte[] bytes;
-
     private byte adjBitMap;
     private byte flag;
-    private int kmerSize;
-    
     private VKmerBytesWritable kmer;
 
     public MergePathValueWritable() {
-        this((byte) 0, (byte) 0, (byte) 0, EMPTY_BYTES);
+        this((byte) 0, (byte) 0, 0, EMPTY_BYTES);
     }
 
-    public MergePathValueWritable(byte adjBitMap, byte flag, byte kmerSize, byte[] bytes) {
+    public MergePathValueWritable(byte adjBitMap, byte flag, int kmerSize, byte[] bytes) {
         this.adjBitMap = adjBitMap;
         this.flag = flag;
-        this.kmerSize = kmerSize;
-
-        this.bytes = bytes;
-        this.size = bytes.length;
-        this.kmer = new VKmerBytesWritable(kmerSize);
+        this.kmer = new VKmerBytesWritable(kmerSize, bytes);
         kmer.set(bytes, 0, bytes.length);
     }
 
-    public void setSize(int size) {
-        if (size > getCapacity()) {
-            setCapacity(size * 3 / 2);
-        }
-        this.size = size;
+    public void set(MergePathValueWritable right) {
+        set(right.getAdjBitMap(), right.getFlag(), right.getKmer());
     }
 
-    public int getCapacity() {
-        return bytes.length;
-    }
-
-    public void setCapacity(int new_cap) {
-        if (new_cap != getCapacity()) {
-            byte[] new_data = new byte[new_cap];
-            if (new_cap < size) {
-                size = new_cap;
-            }
-            if (size != 0) {
-                System.arraycopy(bytes, 0, new_data, 0, size);
-            }
-            bytes = new_data;
-        }
-    }
-
-    public void set(MergePathValueWritable newData) {
-        set(newData.bytes, 0, newData.size, newData.adjBitMap, newData.flag, newData.kmerSize);
-    }
-    
-    public void set(KmerBytesWritable mergedKmer, byte adjBitMap, byte bitFlag) {
-        set(mergedKmer.getBytes(),0,mergedKmer.getLength(), adjBitMap, bitFlag, mergedKmer.getKmerLength());
-    }
-
-    public void set(byte[] newData, int offset, int length, byte adjBitMap, byte flag, int kmerSize) {
-        setSize(0);        
-        if (length != 0) {
-            setSize(length);
-            System.arraycopy(newData, offset, bytes, 0, size);
-            kmer.set(kmerSize, newData, offset, length);
-        }
-            this.adjBitMap = adjBitMap;
-            this.flag = flag;
-            this.kmerSize = kmerSize;
-    }
-    
-    public KmerBytesWritable getKmer(){
-        if (size != 0){
-            return kmer;
-        }
-        return null;
+    public void set(byte adjBitMap, byte flag, VKmerBytesWritable kmer) {
+        this.kmer.set(kmer);
+        this.adjBitMap = adjBitMap;
+        this.flag = flag;
     }
 
     @Override
     public void readFields(DataInput arg0) throws IOException {
         // TODO Auto-generated method stub
-        setSize(0); // clear the old data
-        setSize(arg0.readInt());
-        if(size != 0){
-        arg0.readFully(bytes, 0, size);
-        kmer.set(bytes,0,size);
-        }
+        kmer.readFields(arg0);
         adjBitMap = arg0.readByte();
         flag = arg0.readByte();
-        kmerSize = arg0.readInt();
     }
 
     @Override
     public void write(DataOutput arg0) throws IOException {
         // TODO Auto-generated method stub
-        arg0.writeInt(size);
-        arg0.write(bytes, 0, size);
+
+        kmer.write(arg0);
         arg0.writeByte(adjBitMap);
         arg0.writeByte(flag);
-        arg0.writeInt(kmerSize);
     }
 
-    @Override
-    public byte[] getBytes() {
-        // TODO Auto-generated method stub
-        return bytes;
-    }
-
-    @Override
-    public int getLength() {
-        // TODO Auto-generated method stub
-        return size;
+    public VKmerBytesWritable getKmer() {
+        if (kmer.getLength() != 0) {
+            return kmer;
+        }
+        return null;
     }
 
     public byte getAdjBitMap() {
@@ -147,26 +85,26 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
         return this.flag;
     }
 
-    public int getKmerSize() {
-        return this.kmerSize;
-    }
-
     public String toString() {
-        StringBuffer sb = new StringBuffer(3 * size);
-        for (int idx = 0; idx < size; idx++) {
-            // if not the first, put a blank separator in
-            if (idx != 0) {
-                sb.append(' ');
-            }
-            String num = Integer.toHexString(0xff & bytes[idx]);
-            // if it is only one digit, add a leading 0.
-            if (num.length() < 2) {
-                sb.append('0');
-            }
-            sb.append(num);
-        }
-        return GeneCode.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(flag) + '\t' + sb.toString();
+        return GeneCode.getSymbolFromBitMap(adjBitMap) + '\t' + String.valueOf(flag);
     }
 
- 
+    @Override
+    public byte[] getBytes() {
+        // TODO Auto-generated method stub
+        if (kmer.getLength() != 0) {
+            return kmer.getBytes();
+        } else
+            return null;
+
+    }
+
+    public int getKmerLength() {
+        return kmer.getKmerLength();
+    }
+
+    @Override
+    public int getLength() {
+        return kmer.getLength();
+    }
 }
