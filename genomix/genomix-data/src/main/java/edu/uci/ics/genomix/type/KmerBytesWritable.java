@@ -123,7 +123,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         byte l = 0;
         int bytecount = 0;
         int bcount = this.size - 1;
-        for (int i = start; i < start + kmerlength; i++) {
+        for (int i = start; i < start + kmerlength && i < array.length; i++) {
             byte code = GeneCode.getCodeFromSymbol(array[i]);
             l |= (byte) (code << bytecount);
             bytecount += 2;
@@ -151,7 +151,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         byte l = 0;
         int bytecount = 0;
         int bcount = size - 1;
-        for (int i = start + kmerlength - 1; i >= 0; i--) {
+        for (int i = start + kmerlength - 1; i >= 0 && i < array.length; i--) {
             byte code = GeneCode.getCodeFromSymbol(array[i]);
             l |= (byte) (code << bytecount);
             bytecount += 2;

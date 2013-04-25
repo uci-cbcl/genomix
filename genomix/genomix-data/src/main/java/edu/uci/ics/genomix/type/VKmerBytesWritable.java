@@ -38,18 +38,18 @@ public class VKmerBytesWritable extends KmerBytesWritable {
         super(other);
     }
 
-    public void setSize(int size) {
+    protected void setSize(int size) {
         if (size > getCapacity()) {
             setCapacity((size * 3 / 2));
         }
         this.size = size;
     }
 
-    public int getCapacity() {
+    protected int getCapacity() {
         return bytes.length;
     }
 
-    public void setCapacity(int new_cap) {
+    protected void setCapacity(int new_cap) {
         if (new_cap != getCapacity()) {
             byte[] new_data = new byte[new_cap];
             if (new_cap < size) {
