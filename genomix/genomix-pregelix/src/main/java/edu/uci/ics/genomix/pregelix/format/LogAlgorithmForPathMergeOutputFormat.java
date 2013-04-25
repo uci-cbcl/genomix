@@ -39,10 +39,7 @@ public class LogAlgorithmForPathMergeOutputFormat extends
             public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
             	if(vertex.getVertexValue().getState() != State.FINAL_DELETE
-            			&& vertex.getVertexValue().getState() != State.END_VERTEX
-            			&& vertex.getVertexValue().getState() != State.TODELETE
-            			&& vertex.getVertexValue().getState() != State.KILL_SELF
-            			&& vertex.getVertexValue().getState() != State.NON_EXIST)
+            			&& vertex.getVertexValue().getState() != State.END_VERTEX)
                     getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
             }
         }

@@ -19,11 +19,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 
 	public ValueStateWritable() {
 		state = State.NON_VERTEX;
-		if (NaiveAlgorithmForPathMergeVertex.kmerSize > 0){
-			mergeChain = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
-		}else{
-			mergeChain = new VKmerBytesWritable(55);
-		}
+		mergeChain = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
 	}
 
 	public ValueStateWritable(byte adjMap, int state, VKmerBytesWritable mergeChain) {
