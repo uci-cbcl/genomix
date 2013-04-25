@@ -48,11 +48,11 @@ public class MergePathH2Test {
         startHadoop();
 
         MergePathH2Driver tldriver = new MergePathH2Driver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, HDFA_PATH_DATA, COUNT_REDUCER, SIZE_KMER, 0, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, HDFA_PATH_DATA, COUNT_REDUCER, SIZE_KMER, 1, HADOOP_CONF_PATH);
         
 /*        SequenceFile.Reader reader = null;
-        Path path = new Path(RESULT_PATH + "/part-00000");
-//        Path path = new Path(RESULT_PATH + "/uncomplete0" + "/uncomplete0-r-00000");
+//        Path path = new Path(RESULT_PATH + "/part-00000");
+        Path path = new Path(RESULT_PATH + "/uncomplete0" + "/uncomplete0-r-00000");
         reader = new SequenceFile.Reader(dfs, path, conf);
         VKmerBytesWritable key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         MergePathValueWritable value = (MergePathValueWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
@@ -63,7 +63,7 @@ public class MergePathH2Test {
             bw.newLine();
         }
         bw.close();*/
-        dumpResult();
+//        dumpResult();
         
 //        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
 

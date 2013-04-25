@@ -18,8 +18,10 @@ import java.io.File;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
 
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public class MergePathMultiSeqOutputFormat extends MultipleSequenceFileOutputFormat<BytesWritable, MergePathValueWritable>{
+
+public class MergePathMultiSeqOutputFormat extends MultipleSequenceFileOutputFormat<VKmerBytesWritable, MergePathValueWritable>{
     @Override
     protected String generateLeafFileName(String name) {
         // TODO Auto-generated method stub System.out.println(name); 

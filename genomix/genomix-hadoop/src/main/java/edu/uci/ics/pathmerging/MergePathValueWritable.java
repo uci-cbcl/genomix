@@ -43,17 +43,12 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
         kmer.set(bytes, 0, bytes.length);
     }
 
-    public void set (MergePathValueWritable right) {
-        set(right.getBytes(), 0, right.getLength(), right.getAdjBitMap(), right.getFlag(), right.getKmerLength());
-    }
-    public void set(KmerBytesWritable mergedKmer, byte adjBitMap, byte bitFlag) {
-        set(mergedKmer.getBytes(), 0, mergedKmer.getLength(), adjBitMap, bitFlag, mergedKmer.getKmerLength());
+    public void set(MergePathValueWritable right) {
+        set(right.getAdjBitMap(), right.getFlag(), right.getKmer());
     }
 
-    public void set(byte[] newData, int offset, int length, byte adjBitMap, byte flag, int kmerSize) {
-        if (length != 0) {
-            kmer.set(kmerSize, newData, offset, length);
-        }
+    public void set(byte adjBitMap, byte flag, VKmerBytesWritable kmer) {
+        this.kmer.set(kmer);
         this.adjBitMap = adjBitMap;
         this.flag = flag;
     }
@@ -69,20 +64,17 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
     @Override
     public void write(DataOutput arg0) throws IOException {
         // TODO Auto-generated method stub
+
         kmer.write(arg0);
         arg0.writeByte(adjBitMap);
         arg0.writeByte(flag);
     }
 
-    public KmerBytesWritable getKmer() {
+    public VKmerBytesWritable getKmer() {
         if (kmer.getLength() != 0) {
             return kmer;
         }
         return null;
-    }
-    
-    public int getKmerLength() {
-        return kmer.getKmerLength();
     }
 
     public byte getAdjBitMap() {
@@ -104,8 +96,12 @@ public class MergePathValueWritable extends BinaryComparable implements Writable
             return kmer.getBytes();
         } else
             return null;
+
     }
 
+    public int getKmerLength() {
+        return kmer.getKmerLength();
+    }
 
     @Override
     public int getLength() {

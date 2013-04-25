@@ -115,7 +115,7 @@ public class MergePathDriver {
                     MergePathValueWritable.class);
 
             MultipleOutputs.addNamedOutput(conf, complete,
-                    MergePathMultiTextOutputFormat.class, VKmerBytesWritable.class,
+                    MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
                     MergePathValueWritable.class);
             
             conf.setOutputKeyClass(VKmerBytesWritable.class);
@@ -152,11 +152,11 @@ public class MergePathDriver {
         String complete = "complete" + iMerge;
        
         MultipleOutputs.addNamedOutput(conf, uncomplete,
-                MergePathMultiTextOutputFormat.class, VKmerBytesWritable.class,
+                MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
                 MergePathValueWritable.class);
 
         MultipleOutputs.addNamedOutput(conf, complete,
-                MergePathMultiTextOutputFormat.class, VKmerBytesWritable.class,
+                MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
                 MergePathValueWritable.class);
         
         conf.setOutputKeyClass(VKmerBytesWritable.class);

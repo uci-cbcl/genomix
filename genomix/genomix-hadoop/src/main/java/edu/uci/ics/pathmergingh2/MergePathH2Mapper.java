@@ -48,15 +48,15 @@ public class MergePathH2Mapper extends MapReduceBase implements
 
                 tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(key.getKmerLength() - (KMER_SIZE - 1), key));
                 bitFlag = (byte) (bitFlag | 0x08);
-                outputValue.set(tmpKmer, adjBitMap, bitFlag);
+                outputValue.set(adjBitMap, bitFlag, tmpKmer);
                 output.collect(outputKmer, outputValue);
                 break;
             case (byte) 0x80:
                 tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(KMER_SIZE, key));
-                outputKmer.set(tmpKmer);//?????
+                outputKmer.set(tmpKmer);
                 tmpKmer.set(outputKmerFactory.getLastKmerFromChain(key.getKmerLength() - KMER_SIZE, key));
                 bitFlag = (byte) (bitFlag | 0x10);
-                outputValue.set(tmpKmer, adjBitMap, bitFlag);
+                outputValue.set(adjBitMap, bitFlag, tmpKmer);
                 output.collect(outputKmer, outputValue);
                 break;
             case (byte) 0x00:
@@ -66,20 +66,21 @@ public class MergePathH2Mapper extends MapReduceBase implements
 
                 tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(key.getKmerLength() - (KMER_SIZE - 1), key));
                 bitFlag = (byte) (bitFlag | 0x08);
-                outputValue.set(tmpKmer, adjBitMap, bitFlag);
+                outputValue.set(adjBitMap, bitFlag, tmpKmer);
                 output.collect(outputKmer, outputValue);
 
                 bitFlag = (byte) (bitFlag & 0xF7);
                 tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(KMER_SIZE, key));
-                outputKmer.set(tmpKmer);//?????
+                outputKmer.set(tmpKmer);
                 tmpKmer.set(outputKmerFactory.getLastKmerFromChain(key.getKmerLength() - KMER_SIZE, key));
                 bitFlag = (byte) (bitFlag | 0x10);
-                outputValue.set(tmpKmer, adjBitMap, bitFlag);
+                outputValue.set(adjBitMap, bitFlag, tmpKmer);
                 output.collect(outputKmer, outputValue);
                 break;
             case (byte) 0x81:
                 outputKmer.set(key);
-                outputValue.set(null, 0, 0, adjBitMap, bitFlag, 0);//????????
+                outputValue.set(adjBitMap, bitFlag, null);
+                output.collect(outputKmer, outputValue);
                 break;
         }
     }

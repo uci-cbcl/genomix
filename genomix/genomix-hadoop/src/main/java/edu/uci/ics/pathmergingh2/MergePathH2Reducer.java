@@ -26,7 +26,6 @@ public class MergePathH2Reducer extends MapReduceBase implements
     MultipleOutputs mos = null;
     private int I_MERGE;
 
-
     public void configure(JobConf job) {
         mos = new MultipleOutputs(job);
         I_MERGE = Integer.parseInt(job.get("iMerge"));
@@ -43,58 +42,78 @@ public class MergePathH2Reducer extends MapReduceBase implements
     public void reduce(VKmerBytesWritable key, Iterator<MergePathValueWritable> values,
             OutputCollector<VKmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
         outputValue = values.next();
+        outputKmer.set(key);
         if (values.hasNext() == true) {
             byte bitFlag = outputValue.getFlag();
             byte bitStartEnd = (byte) (0x81 & bitFlag);
             byte bitPosiNegative = (byte) (0x18 & bitFlag);
-            byte succeed = (byte) 0x0F;            
-
+            byte succeed = (byte) 0x0F;
             switch (bitPosiNegative) {
                 case (byte) 0x08:
-                    tmpKmer1.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), key));
-                byte adjBitMap = outputValue.getAdjBitMap();
+                    if (outputValue.getKmerLength() != 0)
+                        tmpKmer1.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), key));
+                    else
+                        tmpKmer1.set(key);
+                    byte adjBitMap = outputValue.getAdjBitMap();
                     outputValue = values.next();
-                    if (bitStartEnd == 0x80) {
-                        tmpKmer2.set(kmerFactory.mergeTwoKmer(key, outputValue.getKmer()));
-                        tmpOutputValue.set(null, 0, 0, outputValue.getAdjBitMap(), outputValue.getFlag(), 0);
+                    bitStartEnd = (byte) (0x81 & outputValue.getFlag());
+                    if (bitStartEnd == (byte) 0x80) {
+                        if (outputValue.getKmerLength() != 0)
+                            tmpKmer2.set(kmerFactory.mergeTwoKmer(key, outputValue.getKmer()));
+                        else
+                            tmpKmer2.set(key);
+                        byte tmpFlag = (byte) 0x80;
+                        tmpOutputValue.set(outputValue.getAdjBitMap(), outputValue.getFlag(), null);
                         mos.getCollector("uncomplete" + I_MERGE, reporter).collect(tmpKmer2, tmpOutputValue);
                     }
-
-                    outputKmer.set(kmerFactory.mergeTwoKmer(tmpKmer1, outputValue.getKmer()));
-                    succeed = (byte) (succeed & outputValue.getFlag());
+                    if (outputValue.getKmerLength() != 0)
+                        outputKmer.set(kmerFactory.mergeTwoKmer(tmpKmer1, outputValue.getKmer()));
+                    else
+                        outputKmer.set(tmpKmer1);
+                    succeed = (byte) (succeed & outputValue.getAdjBitMap());
                     adjBitMap = (byte) (adjBitMap & 0xF0);
                     adjBitMap = (byte) (adjBitMap | succeed);
                     byte outputFlag = (byte) (0x81 & bitFlag);
-                    outputFlag = (byte) (outputFlag & outputValue.getFlag());
-                    outputValue.set(null, 0, 0, adjBitMap, outputFlag, 0);
+                    outputFlag = (byte) (outputFlag | ((byte) 0x81 & outputValue.getFlag()));
+                    outputValue.set(adjBitMap, outputFlag, null);
                     mos.getCollector("uncomplete" + I_MERGE, reporter).collect(outputKmer, outputValue);
                     break;
                 case (byte) 0x10:
-                    tmpKmer1.set(kmerFactory.mergeTwoKmer(key, outputValue.getKmer()));
-                    if (bitStartEnd == 0x80) {
-                        tmpOutputValue.set(null, 0, 0, outputValue.getAdjBitMap(), outputValue.getFlag(), 0);
+                    if (outputValue.getKmerLength() != 0)
+                        tmpKmer1.set(kmerFactory.mergeTwoKmer(key, outputValue.getKmer()));
+                    else
+                        tmpKmer1.set(key);
+                    if (bitStartEnd == (byte) 0x80) {
+                        byte tmpFlag = (byte) 0x80;
+                        tmpOutputValue.set(outputValue.getAdjBitMap(), tmpFlag, null);
                         mos.getCollector("uncomplete" + I_MERGE, reporter).collect(tmpKmer1, tmpOutputValue);
                     }
-                    succeed = (byte) (succeed & outputValue.getFlag());
+                    succeed = (byte) (succeed & outputValue.getAdjBitMap());
                     outputValue = values.next();
-                    outputKmer.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), tmpKmer1));
+                    if (outputValue.getKmerLength() != 0)
+                        outputKmer.set(kmerFactory.mergeTwoKmer(outputValue.getKmer(), tmpKmer1));
+                    else
+                        outputKmer.set(tmpKmer1);
                     adjBitMap = outputValue.getAdjBitMap();
                     adjBitMap = (byte) (adjBitMap & 0xF0);
-                    adjBitMap = (byte) (adjBitMap | succeed);
+                    adjBitMap = (byte) (adjBitMap | succeed);                    
                     outputFlag = (byte) (0x81 & bitFlag);
-                    outputFlag = (byte) (outputFlag & outputValue.getFlag());
-                    outputValue.set(null, 0, 0, adjBitMap, outputFlag, 0);
+                    outputFlag = (byte) (outputFlag | ((byte) 0x81 & outputValue.getFlag()));
+                    outputValue.set(adjBitMap, outputFlag, null);
                     mos.getCollector("uncomplete" + I_MERGE, reporter).collect(outputKmer, outputValue);
                     break;
             }
         } else {
             byte bitFlag = outputValue.getFlag();
             byte bitStartEnd = (byte) (0x81 & bitFlag);
-            if(bitStartEnd == 0x81) {
+            if (bitStartEnd == (byte) 0x81) {
                 outputKmer.set(key);
                 mos.getCollector("complete" + I_MERGE, reporter).collect(outputKmer, outputValue);
             }
-
         }
+    }
+    public void close() throws IOException {
+        // TODO Auto-generated method stub
+        mos.close();
     }
 }

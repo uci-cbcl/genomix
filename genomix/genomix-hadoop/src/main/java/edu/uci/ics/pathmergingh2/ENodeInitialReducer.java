@@ -16,7 +16,6 @@ public class ENodeInitialReducer extends MapReduceBase implements
     public BytesWritable outputKmer = new BytesWritable();
     public MergePathValueWritable outputAdjList = new MergePathValueWritable();
     
-
     @Override
     public void reduce(BytesWritable key, Iterator<MergePathValueWritable> values,
             OutputCollector<BytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
@@ -27,7 +26,7 @@ public class ENodeInitialReducer extends MapReduceBase implements
             bitFlag = (byte) (bitFlag & 0xFE);
             if (bitFlag == 2) {
                 bitFlag =  (byte) (0x80 | outputAdjList.getFlag());
-                outputAdjList.set(null, 0, 0, outputAdjList.getAdjBitMap(), bitFlag, outputAdjList.getKmerLength());
+                outputAdjList.set(outputAdjList.getAdjBitMap(), bitFlag, null);
                 output.collect(outputKmer, outputAdjList);
 
             } else {
@@ -41,7 +40,7 @@ public class ENodeInitialReducer extends MapReduceBase implements
                 }
                 if (flag == true) {
                     bitFlag =  (byte) (0x80 | outputAdjList.getFlag());
-                    outputAdjList.set(null, 0, 0, outputAdjList.getAdjBitMap(), bitFlag, outputAdjList.getKmerLength());
+                    outputAdjList.set(outputAdjList.getAdjBitMap(), bitFlag, null);
                     output.collect(outputKmer, outputAdjList);
                 }
             }
@@ -50,7 +49,7 @@ public class ENodeInitialReducer extends MapReduceBase implements
             bitFlag = (byte) (bitFlag & 0xFE);
             if (bitFlag == 2) {
                 bitFlag = 0;
-                outputAdjList.set(null, 0, 0, outputAdjList.getAdjBitMap(), bitFlag, outputAdjList.getKmerLength());
+                outputAdjList.set(outputAdjList.getAdjBitMap(), bitFlag, null);
                 output.collect(outputKmer, outputAdjList);
             } 
         }

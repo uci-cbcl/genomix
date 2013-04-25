@@ -100,11 +100,10 @@ public class SNodeInitialMapper extends MapReduceBase implements
             int b = a;
         }
         if (inDegree == false && outDegree == false) {
-
             outputKmer.set(key);
             System.out.println(outputKmer.hashCode());
             bitFlag = (byte) 2;
-            outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, 0);
+            outputAdjList.set(adjBitMap, bitFlag, null);
             output.collect(outputKmer, outputAdjList);
         } else {
             for (int i = 0; i < 4; i++) {
@@ -117,7 +116,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
                     shiftedCode = key.shiftKmerWithPreCode(precurCode);
                     outputKmer.set(key);
                     bitFlag = (byte) 0x80;
-                    outputAdjList.set(null, 0, 0, (byte) 0, bitFlag, 0);
+                    outputAdjList.set((byte) 0, bitFlag, null);
                     output.collect(outputKmer, outputAdjList);
                     key.shiftKmerWithNextCode(shiftedCode);
                 }
@@ -132,7 +131,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
                     shiftedCode = key.shiftKmerWithNextCode(succeedCode);
                     outputKmer.set(key);
                     bitFlag = (byte) 0x01;
-                    outputAdjList.set(null, 0, 0, (byte) 0, bitFlag, 0);
+                    outputAdjList.set((byte) 0, bitFlag, null);
                     output.collect(outputKmer, outputAdjList);
                     key.shiftKmerWithPreCode(shiftedCode);
                 }

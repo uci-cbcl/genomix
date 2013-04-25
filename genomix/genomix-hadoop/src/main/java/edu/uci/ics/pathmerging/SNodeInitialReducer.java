@@ -38,7 +38,7 @@ public class SNodeInitialReducer extends MapReduceBase implements
         if (values.hasNext() == true) {
             if (outputValue.getFlag() == 2) {
                 byte bitFlag = 1;
-                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());///outputValue.getKmerLength()
+                outputValue.set(outputValue.getAdjBitMap(), bitFlag, null);///outputValue.getKmerLength()
                 output.collect(outputKmer, outputValue);
             } else {
                 boolean flag = false;
@@ -51,14 +51,14 @@ public class SNodeInitialReducer extends MapReduceBase implements
                 }
                 if (flag == true) {
                     byte bitFlag = 1;
-                    outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());
+                    outputValue.set(outputValue.getAdjBitMap(), bitFlag, null);
                     output.collect(outputKmer, outputValue);
                 }
             }
         } else {
             if (outputValue.getFlag() == 2) {
                 byte bitFlag = 0;
-                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, outputValue.getKmerLength());
+                outputValue.set(outputValue.getAdjBitMap(), bitFlag, null);
                 output.collect(outputKmer, outputValue);
             }
         }

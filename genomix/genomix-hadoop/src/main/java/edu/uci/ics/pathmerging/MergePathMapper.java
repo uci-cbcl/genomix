@@ -59,7 +59,7 @@ public class MergePathMapper extends MapReduceBase implements
             outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));
             
             tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(key.getKmerLength() - (KMER_SIZE - 1), key));
-            outputValue.set(tmpKmer, adjBitMap, bitFlag);
+            outputValue.set(adjBitMap, bitFlag, tmpKmer);
             output.collect(outputKmer, outputValue);
         } else {
             outputKmer.set(key);

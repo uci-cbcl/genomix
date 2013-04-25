@@ -18,6 +18,7 @@ import org.kohsuke.args4j.Option;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
+
 @SuppressWarnings("deprecation")
 public class MergePathH2Driver {
     
@@ -60,22 +61,21 @@ public class MergePathH2Driver {
         conf.setMapOutputValueClass(MergePathValueWritable.class);
         
         conf.setInputFormat(SequenceFileInputFormat.class);
-        conf.setOutputFormat(TextOutputFormat.class);
+        conf.setOutputFormat(SequenceFileOutputFormat.class);
         
         conf.setOutputKeyClass(VKmerBytesWritable.class);
         conf.setOutputValueClass(MergePathValueWritable.class);
         
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
-        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+        FileOutputFormat.setOutputPath(conf, new Path(inputPath + "-step1"));
         conf.setNumReduceTasks(numReducers);
         FileSystem dfs = FileSystem.get(conf);
-        dfs.delete(new Path(outputPath), true);
+        dfs.delete(new Path(inputPath + "-step1"), true);
         JobClient.runJob(conf);
         int iMerge = 0;
 /*----------------------------------------------------------------------*/
-/*        for(iMerge = 0; iMerge < mergeRound; iMerge ++){
-        
-            conf = new JobConf(MergePathDriver.class);
+        for(iMerge = 0; iMerge < mergeRound; iMerge ++){
+            conf = new JobConf(MergePathH2Driver.class);
             conf.setInt("sizeKmer", sizeKmer);
             conf.setInt("iMerge", iMerge);
             
@@ -84,13 +84,18 @@ public class MergePathH2Driver {
             }
             conf.setJobName("Path Merge");
             
-            conf.setMapperClass(MergePathMapper.class);
-            conf.setReducerClass(MergePathReducer.class);
+            conf.setMapperClass(MergePathH2Mapper.class);
+            conf.setReducerClass(MergePathH2Reducer.class);
             
             conf.setMapOutputKeyClass(VKmerBytesWritable.class);
-            conf.setMapOutputKeyClass(BytesWritable.class);
-
-<<<<<<< Updated upstream
+            conf.setMapOutputValueClass(MergePathValueWritable.class);
+            
+            conf.setInputFormat(SequenceFileInputFormat.class);
+            
+            String uncomplete = "uncomplete" + iMerge;
+            String complete = "complete" + iMerge;
+           
+            MultipleOutputs.addNamedOutput(conf, uncomplete,
                     MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
                     MergePathValueWritable.class);
 
@@ -109,10 +114,8 @@ public class MergePathH2Driver {
             dfs.delete(new Path(inputPath + "-step1"), true);
             dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
             dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
-<<<<<<< Updated upstream
         }
-
-        conf = new JobConf(MergePathDriver.class);
+        conf = new JobConf(MergePathH2Driver.class);
         conf.setInt("sizeKmer", sizeKmer);
         conf.setInt("iMerge", iMerge);
         
@@ -121,8 +124,8 @@ public class MergePathH2Driver {
         }
         conf.setJobName("Path Merge");
         
-        conf.setMapperClass(MergePathMapper.class);
-        conf.setReducerClass(MergePathReducer.class);
+        conf.setMapperClass(MergePathH2Mapper.class);
+        conf.setReducerClass(MergePathH2Reducer.class);
         
         conf.setMapOutputKeyClass(VKmerBytesWritable.class);
         conf.setMapOutputValueClass(MergePathValueWritable.class);
@@ -150,7 +153,7 @@ public class MergePathH2Driver {
         JobClient.runJob(conf);
         dfs.delete(new Path(inputPath + "-step1"), true);
         dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
-        dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));*/
+        dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
     }
 
     public static void main(String[] args) throws Exception {

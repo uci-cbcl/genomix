@@ -109,7 +109,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
         if (inDegree == false && outDegree == false) {
             outputKmer.set(key);
             bitFlag = (byte) 2;
-            outputAdjList.set(null, 0, 0, adjBitMap, bitFlag, KMER_SIZE);///~~~~~kmersize----->0
+            outputAdjList.set(adjBitMap, bitFlag, null);///~~~~~kmersize----->0
             output.collect(outputKmer, outputAdjList);
         }
         else{
@@ -122,7 +122,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
                     byte succeedCode = GeneCode.getGeneCodeFromBitMap(temp);
                     shiftedCode = key.shiftKmerWithNextCode(succeedCode);
                     outputKmer.set(key);
-                    outputAdjList.set(null, 0, 0, (byte)0, bitFlag, KMER_SIZE);
+                    outputAdjList.set((byte)0, bitFlag, null);
                     output.collect(outputKmer, outputAdjList);
                     key.shiftKmerWithPreCode(shiftedCode);
                 }

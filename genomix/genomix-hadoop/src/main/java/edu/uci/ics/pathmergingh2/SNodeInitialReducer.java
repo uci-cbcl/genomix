@@ -66,13 +66,13 @@ public class SNodeInitialReducer extends MapReduceBase implements
                 if(endFlag == (byte) 0x80) {
                     outputFlag = (byte) (outputFlag | endFlag);
                 }
-                outputValue.set(null, 0, 0, targetAdjList, outputFlag, 0);
+                outputValue.set(targetAdjList, outputFlag, null);
                 output.collect(outputKmer, outputValue);
             }
         } else {
             if (outputValue.getFlag() == 2) {
                 byte bitFlag = 0;
-                outputValue.set(null, 0, 0, outputValue.getAdjBitMap(), bitFlag, 0);
+                outputValue.set(outputValue.getAdjBitMap(), bitFlag, null);
                 output.collect(outputKmer, outputValue);
             }
         }
