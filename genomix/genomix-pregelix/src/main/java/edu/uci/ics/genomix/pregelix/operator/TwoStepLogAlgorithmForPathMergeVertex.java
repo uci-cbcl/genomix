@@ -81,7 +81,7 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	}
 	
 	public VKmerBytesWritable getNextDestVertexIdFromBitmap(KmerBytesWritable chainVertexId, byte adjMap){
-		return getDestVertexIdFromChain(chainVertexId, adjMap);//GeneCode.getGeneCodeFromBitMap((byte)(adjMap & 0x0F)
+		return getDestVertexIdFromChain(chainVertexId, adjMap);
 	}
 	
 	public VKmerBytesWritable getDestVertexIdFromChain(KmerBytesWritable chainVertexId, byte adjMap){
@@ -183,7 +183,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		}
 		destVertexId.set(msg.getSourceVertexId());
 		msg.set(null, getVertexValue().getMergeChain(), getVertexValue().getAdjMap(), msg.getMessage());
-		//msg.set(msg.getSourceVertexId(), getVertexValue().getMergeChain(), getVertexValue().getAdjMap(), msg.getMessage(), getVertexValue().getState());
 		setMessageType(msg.getMessage());
 		sendMsg(destVertexId,msg);
 	}
@@ -243,13 +242,11 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	public void startSendMsg(){
 		if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
 			msg.set(null, null, (byte)0, Message.START);
-			//msg.set(getVertexId(), chainVertexId, (byte)0, Message.START, State.NON_VERTEX); //msg.set(null, (byte)0, chainVertexId, Message.START, State.NON_VERTEX);
 			sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
 			voteToHalt();
 		}
 		if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
 			msg.set(null, null, (byte)0, Message.END);
-			//msg.set(getVertexId(), chainVertexId, (byte)0, Message.END, State.NON_VERTEX);
 			sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
 			voteToHalt();
 		}

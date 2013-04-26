@@ -53,7 +53,6 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		chainVertexId.reset(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
 		adjMap = (byte)0;
 		message = 0;
-		//sourceVertexState = 0;
 	}
 
 	public KmerBytesWritable getSourceVertexId() {

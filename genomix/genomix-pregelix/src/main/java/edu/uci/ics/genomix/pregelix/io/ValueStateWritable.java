@@ -82,7 +82,6 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 
 	@Override
 	public int compareTo(ValueStateWritable o) {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 	
