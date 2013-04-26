@@ -63,7 +63,7 @@ public class MergePathH2Reducer extends MapReduceBase implements
                         else
                             tmpKmer2.set(key);
                         byte tmpFlag = (byte) 0x80;
-                        tmpOutputValue.set(outputValue.getAdjBitMap(), outputValue.getFlag(), null);
+                        tmpOutputValue.set(outputValue.getAdjBitMap(), tmpFlag, null);
                         mos.getCollector("uncomplete" + I_MERGE, reporter).collect(tmpKmer2, tmpOutputValue);
                     }
                     if (outputValue.getKmerLength() != 0)

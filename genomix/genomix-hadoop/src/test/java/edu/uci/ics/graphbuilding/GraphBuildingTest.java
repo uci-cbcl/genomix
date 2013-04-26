@@ -46,7 +46,7 @@ public class GraphBuildingTest {
     private static final String COMPARE_DIR = "compare";
     private JobConf conf = new JobConf();
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/BridgePath";
+    private static final String DATA_PATH = "data/webmap/TreePath";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result1";
     private static final String EXPECTED_PATH = "expected/result1";
@@ -103,7 +103,8 @@ public class GraphBuildingTest {
             bw.write(key.toString() + "\t" + value.toString());
             bw.newLine();            
         }
-        bw.close();
+       bw2.close();
+       bw.close();
 
         dumpResult();
 //        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));

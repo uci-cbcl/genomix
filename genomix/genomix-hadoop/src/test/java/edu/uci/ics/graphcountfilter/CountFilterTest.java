@@ -34,7 +34,7 @@ public class CountFilterTest {
     private static final String EXPECTED_PATH = "expected/result2";
     private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH + "/comparesource.txt";
     private static final int COUNT_REDUCER = 4;
-    private static final int SIZE_KMER = 3;
+    private static final int SIZE_KMER = 5;
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
     private FileSystem dfs;

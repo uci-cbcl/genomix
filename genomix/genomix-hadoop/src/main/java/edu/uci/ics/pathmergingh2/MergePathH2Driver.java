@@ -75,6 +75,8 @@ public class MergePathH2Driver {
         int iMerge = 0;
 /*----------------------------------------------------------------------*/
         for(iMerge = 0; iMerge < mergeRound; iMerge ++){
+            if(!dfs.exists(new Path(inputPath + "-step1")))
+                break;
             conf = new JobConf(MergePathH2Driver.class);
             conf.setInt("sizeKmer", sizeKmer);
             conf.setInt("iMerge", iMerge);
@@ -115,7 +117,7 @@ public class MergePathH2Driver {
             dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
             dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
         }
-        conf = new JobConf(MergePathH2Driver.class);
+/*        conf = new JobConf(MergePathH2Driver.class);
         conf.setInt("sizeKmer", sizeKmer);
         conf.setInt("iMerge", iMerge);
         
@@ -153,7 +155,7 @@ public class MergePathH2Driver {
         JobClient.runJob(conf);
         dfs.delete(new Path(inputPath + "-step1"), true);
         dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
-        dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
+        dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));*/
     }
 
     public static void main(String[] args) throws Exception {
