@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.type.KmerCountValue;
 public class GenerateTextFile {
 
 	public static void generateFromPathmergeResult() throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter("text/log_TreePath"));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("text/naive_LongPath"));
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
 		for(int i = 0; i < 2; i++){
@@ -62,7 +62,7 @@ public class GenerateTextFile {
 	 */
 	public static void main(String[] args) throws IOException {
 		generateFromPathmergeResult();
-		generateFromGraphbuildResult();
+		//generateFromGraphbuildResult();
 	}
 
 }

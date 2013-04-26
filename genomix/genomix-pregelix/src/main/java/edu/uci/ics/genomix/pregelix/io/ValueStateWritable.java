@@ -88,7 +88,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	
 	@Override
 	public String toString() {
-		if(mergeChain.getKmerLength() == 0)
+		if(mergeChain.getKmerLength() == -1)
 			return GeneCode.getSymbolFromBitMap(adjMap);
 		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
 				getLengthOfMergeChain() + "\t" +

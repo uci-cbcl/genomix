@@ -35,7 +35,7 @@ public class NaiveAlgorithmForPathMergeOutputFormat extends
             @Override
             public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
-                getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
+        		getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
             }
         }
 }

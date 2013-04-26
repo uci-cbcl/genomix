@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.ThreeStepLogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
@@ -24,8 +24,8 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	private int sourceVertexState;
 	
 	public LogAlgorithmMessageWritable(){
-		sourceVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
+		sourceVertexId = new VKmerBytesWritable(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
+		chainVertexId = new VKmerBytesWritable(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
 	}
 	
 	public void set(KmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, int message, int sourceVertexState){
@@ -37,8 +37,8 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	}
 	
 	public void reset(){
-		//sourceVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
+		//sourceVertexId.reset(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
+		chainVertexId.reset(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
 		adjMap = (byte)0;
 		message = 0;
 		sourceVertexState = 0;

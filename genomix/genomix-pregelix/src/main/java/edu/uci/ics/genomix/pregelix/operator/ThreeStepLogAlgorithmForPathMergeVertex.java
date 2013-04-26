@@ -47,10 +47,10 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
  * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
-public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{	
+public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{	
 	
-	public static final String KMER_SIZE = "LogAlgorithmForPathMergeVertex.kmerSize";
-	public static final String ITERATIONS = "LogAlgorithmForPathMergeVertex.iteration";
+	public static final String KMER_SIZE = "ThreeStepLogAlgorithmForPathMergeVertex.kmerSize";
+	public static final String ITERATIONS = "ThreeStepLogAlgorithmForPathMergeVertex.iteration";
 	public static int kmerSize = -1;
 	private int maxIteration = -1;
 	
@@ -291,7 +291,6 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 		if(msgIterator.hasNext()){
 			msg = msgIterator.next();
 			responseMsgToHeadVertex();
-			//voteToHalt();
 		}
 		else{
 			if(getVertexValue().getState() != State.START_VERTEX 
@@ -343,8 +342,8 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(LogAlgorithmForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(LogAlgorithmForPathMergeVertex.class);
+        PregelixJob job = new PregelixJob(ThreeStepLogAlgorithmForPathMergeVertex.class.getSimpleName());
+        job.setVertexClass(ThreeStepLogAlgorithmForPathMergeVertex.class);
         /**
          * BinaryInput and BinaryOutput~/
          */
