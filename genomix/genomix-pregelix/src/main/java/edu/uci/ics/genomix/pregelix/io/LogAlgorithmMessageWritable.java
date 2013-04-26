@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.operator.ThreeStepLogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
@@ -20,28 +21,39 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	private KmerBytesWritable sourceVertexId;
 	private VKmerBytesWritable chainVertexId;
 	private byte adjMap;
-	private int message;
-	private int sourceVertexState;
+	private byte message;
+	
+	private byte checkMessage;
 	
 	public LogAlgorithmMessageWritable(){
 		sourceVertexId = new VKmerBytesWritable(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
 		chainVertexId = new VKmerBytesWritable(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
+		checkMessage = 0;
 	}
 	
-	public void set(KmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, int message, int sourceVertexState){
-		this.sourceVertexId.set(sourceVertexId);
-		this.chainVertexId.set(chainVertexId);
-		this.adjMap = adjMap;
+	public void set(KmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, byte message){
+		checkMessage = 0;
+		if(sourceVertexId != null){
+			checkMessage |= CheckMessage.SOURCE;
+			this.sourceVertexId.set(sourceVertexId);
+		}
+		if(chainVertexId != null){
+			checkMessage |= CheckMessage.CHAIN;
+			this.chainVertexId.set(chainVertexId);
+		}
+		if(adjMap != 0){
+			checkMessage |= CheckMessage.ADJMAP;
+			this.adjMap = adjMap;
+		}
 		this.message = message;
-		this.sourceVertexState = sourceVertexState;
 	}
 	
 	public void reset(){
-		//sourceVertexId.reset(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
+		checkMessage = 0;
 		chainVertexId.reset(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
 		adjMap = (byte)0;
 		message = 0;
-		sourceVertexState = 0;
+		//sourceVertexState = 0;
 	}
 
 	public KmerBytesWritable getSourceVertexId() {
@@ -49,7 +61,10 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	}
 
 	public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
-		this.sourceVertexId.set(sourceVertexId);
+		if(sourceVertexId != null){
+			checkMessage |= CheckMessage.SOURCE;
+			this.sourceVertexId.set(sourceVertexId);
+		}
 	}
 
 	public byte getAdjMap() {
@@ -68,20 +83,12 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		this.chainVertexId.set(chainVertexId);
 	}
 
-	public int getMessage() {
+	public byte getMessage() {
 		return message;
 	}
 
-	public void setMessage(int message) {
+	public void setMessage(byte message) {
 		this.message = message;
-	}
-
-	public int getSourceVertexState() {
-		return sourceVertexState;
-	}
-
-	public void setSourceVertexState(int sourceVertexState) {
-		this.sourceVertexState = sourceVertexState;
 	}
 
 	public int getLengthOfChain() {
@@ -90,20 +97,26 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	
 	@Override
 	public void write(DataOutput out) throws IOException {
-		sourceVertexId.write(out);
-		chainVertexId.write(out);
-		out.write(adjMap);
-		out.writeInt(message);
-		out.writeInt(sourceVertexState);
+		out.writeByte(checkMessage);
+		if((checkMessage & CheckMessage.SOURCE) != 0)
+			sourceVertexId.write(out);
+		if((checkMessage & CheckMessage.CHAIN) != 0)
+			chainVertexId.write(out);
+		if((checkMessage & CheckMessage.ADJMAP) != 0)
+			out.write(adjMap);
+		out.writeByte(message);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		sourceVertexId.readFields(in);
-		chainVertexId.readFields(in);
-		adjMap = in.readByte();
-		message = in.readInt();
-		sourceVertexState = in.readInt();
+		checkMessage = in.readByte();
+		if((checkMessage & CheckMessage.SOURCE) != 0)
+			sourceVertexId.readFields(in);
+		if((checkMessage & CheckMessage.CHAIN) != 0)
+			chainVertexId.readFields(in);
+		if((checkMessage & CheckMessage.ADJMAP) != 0)
+			adjMap = in.readByte();
+		message = in.readByte();
 	}
 
 	 @Override

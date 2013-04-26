@@ -16,7 +16,7 @@ public class LogAlgorithmLogFormatter extends Formatter {
     private VKmerBytesWritable sourceVertexId = new VKmerBytesWritable(1);
     private VKmerBytesWritable destVertexId = new VKmerBytesWritable(1);
     private LogAlgorithmMessageWritable msg = new LogAlgorithmMessageWritable();
-    private int state;
+    private byte state;
     private VKmerBytesWritable mergeChain = new VKmerBytesWritable(1);;
     //private boolean testDelete = false;
     /** 0: general operation 
@@ -30,7 +30,7 @@ public class LogAlgorithmLogFormatter extends Formatter {
     }
 
     public void set(long step, VKmerBytesWritable sourceVertexId, 
-    		VKmerBytesWritable destVertexId, LogAlgorithmMessageWritable msg, int state){
+    		VKmerBytesWritable destVertexId, LogAlgorithmMessageWritable msg, byte state){
     	this.step = step;
     	this.sourceVertexId.set(sourceVertexId);
     	this.destVertexId.set(destVertexId);

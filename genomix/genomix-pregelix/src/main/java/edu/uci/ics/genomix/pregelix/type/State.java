@@ -1,18 +1,19 @@
 package edu.uci.ics.genomix.pregelix.type;
 
 public class State {
-	public static final int NON_VERTEX = 0;
-	public static final int START_VERTEX = 1;
-	public static final int END_VERTEX = 2;
-	public static final int MID_VERTEX = 3;
-	public static final int TODELETE = 4;
-	public static final int FINAL_VERTEX = 5;
-	public static final int FINAL_DELETE = 6;
-	public static final int KILL_SELF = 7;
+	
+	public static final byte NON_VERTEX = 0;
+	public static final byte START_VERTEX = 1;
+	public static final byte END_VERTEX = 2;
+	public static final byte MID_VERTEX = 3;
+	public static final byte TODELETE = 4;
+	public static final byte FINAL_VERTEX = 5;
+	public static final byte FINAL_DELETE = 6;
+	public static final byte KILL_SELF = 7;
 	
 	public final static class STATE_CONTENT{
 
-		public static String getContentFromCode(int code){
+		public static String getContentFromCode(byte code){
 			String r = "";
 			switch(code){
 			case NON_VERTEX:

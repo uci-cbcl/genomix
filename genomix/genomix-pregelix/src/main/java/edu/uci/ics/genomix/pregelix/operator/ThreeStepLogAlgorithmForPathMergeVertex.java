@@ -178,7 +178,8 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 			getVertexValue().setMergeChain(getVertexId());
 			setVertexValue(getVertexValue());
 		}
-		msg.set(msg.getSourceVertexId(), getVertexValue().getMergeChain(), getVertexValue().getAdjMap(), msg.getMessage(), getVertexValue().getState());
+		msg.set(null, getVertexValue().getMergeChain(), getVertexValue().getAdjMap(), msg.getMessage());
+		//msg.set(msg.getSourceVertexId(), getVertexValue().getMergeChain(), getVertexValue().getAdjMap(), msg.getMessage(), getVertexValue().getState());
 		setMessageType(msg.getMessage());
 		destVertexId.set(msg.getSourceVertexId());
 		sendMsg(destVertexId,msg);
@@ -240,12 +241,14 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 	 */
 	public void startSendMsg(){
 		if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
-			msg.set(getVertexId(), chainVertexId, (byte)0, Message.START, State.NON_VERTEX); //msg.set(null, (byte)0, chainVertexId, Message.START, State.NON_VERTEX);
+			msg.set(null, null, (byte)0, Message.START);
+			//msg.set(getVertexId(), chainVertexId, (byte)0, Message.START, State.NON_VERTEX); //msg.set(null, (byte)0, chainVertexId, Message.START, State.NON_VERTEX);
 			sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
 			voteToHalt();
 		}
 		if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
-			msg.set(getVertexId(), chainVertexId, (byte)0, Message.END, State.NON_VERTEX);
+			msg.set(null, null, (byte)0, Message.END);
+			//msg.set(getVertexId(), chainVertexId, (byte)0, Message.END, State.NON_VERTEX);
 			sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
 			voteToHalt();
 		}

@@ -14,7 +14,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class ValueStateWritable implements WritableComparable<ValueStateWritable> {
 
 	private byte adjMap;
-	private int state;
+	private byte state;
 	private VKmerBytesWritable mergeChain;
 
 	public ValueStateWritable() {
@@ -22,13 +22,13 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		mergeChain = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
 	}
 
-	public ValueStateWritable(byte adjMap, int state, VKmerBytesWritable mergeChain) {
+	public ValueStateWritable(byte adjMap, byte state, VKmerBytesWritable mergeChain) {
 		this.adjMap = adjMap;
 		this.state = state;
 		this.mergeChain.set(mergeChain);
 	}
 	
-	public void set(byte adjMap, int state, VKmerBytesWritable mergeChain){
+	public void set(byte adjMap, byte state, VKmerBytesWritable mergeChain){
 		this.adjMap = adjMap;
 		this.state = state;
 		this.mergeChain.set(mergeChain);
@@ -42,11 +42,11 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		this.adjMap = adjMap;
 	}
 
-	public int getState() {
+	public byte getState() {
 		return state;
 	}
 
-	public void setState(int state) {
+	public void setState(byte state) {
 		this.state = state;
 	}
 
@@ -69,14 +69,14 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		adjMap = in.readByte();
-		state = in.readInt();
+		state = in.readByte();
 		mergeChain.readFields(in);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeByte(adjMap);
-		out.writeInt(state);
+		out.writeByte(state);
 		mergeChain.write(out);
 	}
 

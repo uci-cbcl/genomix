@@ -55,6 +55,7 @@ public class JobGenerator {
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 5);
+        //job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.ITERATIONS, 10);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -73,6 +74,7 @@ public class JobGenerator {
         FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
         FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
         job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.KMER_SIZE, 5);
+        job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.ITERATIONS, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -105,8 +107,8 @@ public class JobGenerator {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		//genLoadGraph();
-		//genMergeGraph();
-		genThreeStepLogAlgorithmForMergeGraph();
+		genMergeGraph();
+		//genThreeStepLogAlgorithmForMergeGraph();
 		//genTwoStepLogAlgorithmForMergeGraph();
 	}
 
