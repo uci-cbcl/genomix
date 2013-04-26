@@ -67,7 +67,7 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		if(kmerSize == -1)
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0) 
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 100);
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 20);
 	}
 	/**
 	 * get destination vertex
@@ -272,9 +272,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	 * head send message to path
 	 */
 	public void sendMsgToPathVertex(Iterator<LogAlgorithmMessageWritable> msgIterator){
-		if(getSuperstep() == 11){
-			System.out.print("hre");
-		}
 		if(getSuperstep() == 3){
 			msg.reset();
 			sendMsgToPathVertex(getVertexId(), getVertexValue().getAdjMap());
@@ -328,6 +325,8 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		else if(getSuperstep()%2 == 0 && getSuperstep() <= maxIteration){
 			responseMsgToHeadVertex(msgIterator);
 		}
+		else
+			voteToHalt();
 	}
 	/**
 	 * @param args

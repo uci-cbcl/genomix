@@ -39,7 +39,7 @@ public class Client {
         public int sizeKmer;
         
         @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
-        public long numIteration = -1;
+        public int numIteration = -1;
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
@@ -65,9 +65,9 @@ public class Client {
         job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         if (options.numIteration > 0){
-            job.getConfiguration().setLong(NaiveAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
-            job.getConfiguration().setLong(TwoStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
-            job.getConfiguration().setLong(ThreeStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
         }
         return options;
     }

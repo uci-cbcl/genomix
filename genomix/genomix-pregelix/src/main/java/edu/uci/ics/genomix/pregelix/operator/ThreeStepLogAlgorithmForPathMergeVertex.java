@@ -67,7 +67,7 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 		if(kmerSize == -1)
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0) 
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 100);
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 20);
 	}
 	/**
 	 * get destination vertex
@@ -337,6 +337,8 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 				mergeChainVertex(msgIterator);
 			}
 		}
+		else
+			voteToHalt();
 	}
 	/**
 	 * @param args
