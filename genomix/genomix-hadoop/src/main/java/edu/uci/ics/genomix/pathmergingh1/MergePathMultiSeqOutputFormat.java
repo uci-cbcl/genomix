@@ -15,7 +15,6 @@
 package edu.uci.ics.genomix.pathmergingh1;
 
 import java.io.File;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 

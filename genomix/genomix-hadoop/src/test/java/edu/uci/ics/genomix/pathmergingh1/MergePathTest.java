@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.genomix.pathmergingh1;
 
 import java.io.BufferedWriter;
@@ -34,7 +48,7 @@ public class MergePathTest {
     
     private static final String RESULT_PATH = "/result3";
     private static final String EXPECTED_PATH = "expected/result3";
-    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH + "/comparesource.txt";
+    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH;
     private static final int COUNT_REDUCER = 1;
     private static final int SIZE_KMER = 3;
 
@@ -50,24 +64,24 @@ public class MergePathTest {
         startHadoop();
 
         MergePathH1Driver tldriver = new MergePathH1Driver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, HDFA_PATH_DATA, COUNT_REDUCER, SIZE_KMER, 1, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, HDFA_PATH_DATA, COUNT_REDUCER, SIZE_KMER, 3, HADOOP_CONF_PATH);
         
-/*        SequenceFile.Reader reader = null;
-        Path path = new Path(RESULT_PATH + "/part-00000");
-//        Path path = new Path(RESULT_PATH + "/uncomplete0" + "/uncomplete0-r-00000");
+        SequenceFile.Reader reader = null;
+        Path path = new Path(HDFA_PATH_DATA + "/complete2" + "/complete2-r-00000");
         reader = new SequenceFile.Reader(dfs, path, conf);
         VKmerBytesWritable key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         MergePathValueWritable value = (MergePathValueWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
         File filePathTo = new File(TEST_SOURCE_DIR);
-        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+        FileUtils.forceMkdir(filePathTo);
+        FileUtils.cleanDirectory(filePathTo);
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File(TEST_SOURCE_DIR + "/comparesource.txt")));
         while (reader.next(key, value)) {
             bw.write(key.toString() + "\t" + value.getAdjBitMap() + "\t" + value.getFlag());
             bw.newLine();
         }
-        bw.close();*/
-        dumpResult();
+        bw.close();
         
-//        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
+        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR + "/comparesource.txt"), new File(EXPECTED_PATH));
 
         cleanupHadoop();
 
@@ -99,7 +113,6 @@ public class MergePathTest {
     }
 
     private void dumpResult() throws IOException {
-//        Path src = new Path(HDFA_PATH_DATA + "/" + "complete2");
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR + "/");
         dfs.copyToLocalFile(src, dest);

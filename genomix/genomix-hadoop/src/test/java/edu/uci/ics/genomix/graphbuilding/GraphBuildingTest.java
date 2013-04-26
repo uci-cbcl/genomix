@@ -1,5 +1,3 @@
-package edu.uci.ics.genomix.graphbuilding;
-
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +12,14 @@ package edu.uci.ics.genomix.graphbuilding;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.genomix.graphbuilding;
+
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,7 +30,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
-
 import edu.uci.ics.genomix.graphbuilding.GenomixDriver;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -47,14 +45,14 @@ public class GraphBuildingTest {
     private static final String COMPARE_DIR = "compare";
     private JobConf conf = new JobConf();
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/TreePath";
+    private static final String DATA_PATH = "data/webmap/Test.txt";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result1";
     private static final String EXPECTED_PATH = "expected/result1";
-    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH + "/comparesource.txt";
+    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH;
     private static final int COUNT_REDUCER = 4;
-    private static final int SIZE_KMER = 5;
-    private static final String GRAPHVIZ = "Graphviz/GenomixSource.txt";
+    private static final int SIZE_KMER = 3;
+    private static final String GRAPHVIZ = "Graphviz";
     
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -74,13 +72,16 @@ public class GraphBuildingTest {
         SequenceFile.Reader reader = null;
         Path path = new Path(RESULT_PATH + "/part-00000");
         reader = new SequenceFile.Reader(dfs, path, conf); 
-//        KmerBytesWritable key = (KmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         KmerBytesWritable key = new KmerBytesWritable(SIZE_KMER);
         KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
         File filePathTo = new File(TEST_SOURCE_DIR);
-        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+        FileUtils.forceMkdir(filePathTo);
+        FileUtils.cleanDirectory(filePathTo);
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File(TEST_SOURCE_DIR + "/comparesource.txt")));
         File GraphViz = new File(GRAPHVIZ);
-        BufferedWriter bw2 = new BufferedWriter(new FileWriter(GraphViz));
+        FileUtils.forceMkdir(GraphViz);
+        FileUtils.cleanDirectory(GraphViz);
+        BufferedWriter bw2 = new BufferedWriter(new FileWriter(new File(GRAPHVIZ + "/GenomixSource.txt")));
         
         while (reader.next(key, value)) {
             byte succeed = (byte) 0x0F;
@@ -108,7 +109,7 @@ public class GraphBuildingTest {
        bw.close();
 
         dumpResult();
-//        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
+        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR + "/comparesource.txt"), new File(EXPECTED_PATH));
 
         cleanupHadoop();
 

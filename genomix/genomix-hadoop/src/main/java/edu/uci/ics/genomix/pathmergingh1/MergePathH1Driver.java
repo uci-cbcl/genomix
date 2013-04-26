@@ -131,7 +131,7 @@ public class MergePathH1Driver {
             dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
         }
         /*----------------------------------------*/
-        conf = new JobConf(MergePathH1Driver.class);
+/*        conf = new JobConf(MergePathH1Driver.class);
         conf.setInt("sizeKmer", sizeKmer);
         conf.setInt("iMerge", iMerge);
         
@@ -169,7 +169,7 @@ public class MergePathH1Driver {
         JobClient.runJob(conf);
         dfs.delete(new Path(inputPath + "-step1"), true);
         dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
-        dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));
+        dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));*/
     }
 
     public static void main(String[] args) throws Exception {

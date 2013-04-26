@@ -17,12 +17,9 @@ package edu.uci.ics.genomix.pathmergingh1;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
-
 import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class MergePathValueWritable extends BinaryComparable implements WritableComparable<BinaryComparable> {

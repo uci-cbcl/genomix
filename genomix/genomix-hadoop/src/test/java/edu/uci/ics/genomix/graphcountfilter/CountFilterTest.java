@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.genomix.graphcountfilter;
 
 import java.io.BufferedWriter;
@@ -6,7 +20,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -18,7 +31,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
-
 import edu.uci.ics.genomix.graphcountfilter.CountFilterDriver;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.utils.TestUtils;
@@ -34,9 +46,8 @@ public class CountFilterTest {
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result2";
     private static final String EXPECTED_PATH = "expected/result2";
-    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH + "/comparesource.txt";
+    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH;
     private static final int COUNT_REDUCER = 4;
-    private static final int SIZE_KMER = 5;
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
     private FileSystem dfs;
@@ -58,7 +69,9 @@ public class CountFilterTest {
         KmerBytesWritable key = (KmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         ByteWritable value = (ByteWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
         File filePathTo = new File(TEST_SOURCE_DIR);
-        BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+        FileUtils.forceMkdir(filePathTo);
+        FileUtils.cleanDirectory(filePathTo);
+        BufferedWriter bw = new BufferedWriter(new FileWriter(new File(TEST_SOURCE_DIR + "/comparesource.txt")));
         while (reader.next(key, value)) {
             bw.write(key.toString() + "\t" + value.toString());
             bw.newLine();
@@ -66,7 +79,7 @@ public class CountFilterTest {
         bw.close();
 
         dumpResult();
-        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR), new File(EXPECTED_PATH));
+        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR + "/comparesource.txt"), new File(EXPECTED_PATH));
 
         cleanupHadoop();
 

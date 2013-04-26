@@ -1,5 +1,3 @@
-package edu.uci.ics.genomix.utils;
-
 /*
  * Copyright 2009-2012 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,8 @@ package edu.uci.ics.genomix.utils;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package edu.uci.ics.genomix.utils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
