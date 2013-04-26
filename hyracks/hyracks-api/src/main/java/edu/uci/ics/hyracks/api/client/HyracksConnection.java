@@ -123,10 +123,12 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     @Override
     public DeploymentId deployBinary(List<String> jars) throws Exception {
+        /** generate a deployment id */
         DeploymentId deploymentId = new DeploymentId(UUID.randomUUID().toString());
         List<URL> binaryURLs = new ArrayList<URL>();
         if (jars != null && jars.size() > 0) {
             HttpClient hc = new DefaultHttpClient();
+            /** upload jars through a http client one-by-one to the CC server */
             for (String jar : jars) {
                 int slashIndex = jar.lastIndexOf('/');
                 String fileName = jar.substring(slashIndex + 1);
@@ -139,11 +141,14 @@ public final class HyracksConnection implements IHyracksClientConnection {
                     response.getEntity().consumeContent();
                 }
                 if (response.getStatusLine().getStatusCode() != 200) {
+                    hci.unDeployBinary(deploymentId);
                     throw new HyracksException(response.getStatusLine().toString());
                 }
+                /** add the uploaded URL address into the URLs of jars to be deployed at NCs */
                 binaryURLs.add(new URL(url));
             }
         }
+        /**deploy the URLs to the CC and NCs*/
         hci.deployBinary(binaryURLs, deploymentId);
         return deploymentId;
     }

@@ -8,7 +8,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
@@ -36,8 +35,7 @@ public class NaiveAlgorithmForPathMergeOutputFormat extends
             @Override
             public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
-            	if(vertex.getVertexValue().getState() != State.NON_EXIST)
-            		getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
+        		getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
             }
         }
 }

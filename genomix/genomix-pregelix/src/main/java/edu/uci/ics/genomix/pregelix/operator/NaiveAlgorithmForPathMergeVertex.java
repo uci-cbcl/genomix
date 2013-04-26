@@ -56,8 +56,6 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
 	public static int kmerSize = -1;
 	private int maxIteration = -1;
-	
-	private ValueStateWritable vertexVal = new ValueStateWritable();
 
 	private NaiveAlgorithmMessageWritable msg = new NaiveAlgorithmMessageWritable();
 
@@ -74,7 +72,6 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0) 
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 100);
-		vertexVal = getVertexValue();
 	}
 	public void findDestination(){
 		destVertexId.set(msg.getSourceVertexId());
@@ -107,11 +104,11 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	public void initChainVertex(){
 		if(!msg.isRear()){
 			findDestination();
-			if(GraphVertexOperation.isPathVertex(vertexVal.getAdjMap())){
+			if(GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
 				chainVertexId.set(getVertexId());
-				msg.set(getVertexId(), chainVertexId, getVertexId(), vertexVal.getAdjMap(), false);
+				msg.set(getVertexId(), chainVertexId, getVertexId(), getVertexValue().getAdjMap(), false);
 				sendMsg(destVertexId,msg);
-			}else if(GraphVertexOperation.isRearVertex(vertexVal.getAdjMap()))
+			}else if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap()))
 				voteToHalt();
 		}
 	}
@@ -133,22 +130,22 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	public void responseMsgToHeadVertex(){
 		if(!msg.isRear()){
 			findDestination();
-			if(GraphVertexOperation.isPathVertex(vertexVal.getAdjMap())){
+			if(GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
 				chainVertexId = kmerFactory.mergeKmerWithNextCode(msg.getChainVertexId(),
 						getVertexId().getGeneCodeAtPosition(kmerSize - 1));
 				deleteVertex(getVertexId());
-				msg.set(getVertexId(), chainVertexId, msg.getHeadVertexId(), vertexVal.getAdjMap(), false);
+				msg.set(getVertexId(), chainVertexId, msg.getHeadVertexId(), getVertexValue().getAdjMap(), false);
 				sendMsg(destVertexId,msg);
 			}
-			else if(GraphVertexOperation.isRearVertex(vertexVal.getAdjMap())){
+			else if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
 				msg.set(getVertexId(), msg.getChainVertexId(), msg.getHeadVertexId(), (byte)0, true);
 				sendMsg(destVertexId,msg);
 			}
 		}else{// is Rear
 			chainVertexId.set(msg.getSourceVertexId());
-			vertexVal.set(GraphVertexOperation.updateRightNeighberByVertexId(vertexVal.getAdjMap(), chainVertexId, kmerSize),
+			getVertexValue().set(GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getAdjMap(), chainVertexId, kmerSize),
 					State.START_VERTEX, msg.getChainVertexId());
-			setVertexValue(vertexVal);
+			setVertexValue(getVertexValue());
 			//String source = msg.getChainVertexId().toString();
 			//System.out.print("");
 		}
@@ -158,9 +155,9 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
 		initVertex();
 		if (getSuperstep() == 1) {
-			if(GraphVertexOperation.isHeadVertex(vertexVal.getAdjMap())){ 
+			if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){ 
 				msg.set(getVertexId(), chainVertexId, getVertexId(), (byte)0, false);
-				sendMsgToAllNextNodes(getVertexId(), vertexVal.getAdjMap());
+				sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
 			}
 		}
 		else if(getSuperstep() == 2){

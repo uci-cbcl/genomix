@@ -21,6 +21,11 @@ import edu.uci.ics.hyracks.control.common.deployment.DeploymentRun;
 import edu.uci.ics.hyracks.control.common.deployment.DeploymentStatus;
 import edu.uci.ics.hyracks.control.common.work.AbstractWork;
 
+/***
+ * This is the work happens on the CC when CC gets a deployment or undeployment notification status message from one NC.
+ * 
+ * @author yingyib
+ */
 public class NotifyDeployBinaryWork extends AbstractWork {
 
     private final ClusterControllerService ccs;
@@ -39,7 +44,7 @@ public class NotifyDeployBinaryWork extends AbstractWork {
 
     @Override
     public void run() {
-        // notify that one NC is deployed
+        /** triggered remotely by a NC to notify that the NC is deployed */
         DeploymentRun dRun = ccs.getDeploymentRun(deploymentId);
         dRun.notifyDeploymentStatus(nodeId, deploymentStatus);
     }
