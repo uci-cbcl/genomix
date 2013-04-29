@@ -275,7 +275,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	 */
 	public void sendMsgToPathVertex(Iterator<LogAlgorithmMessageWritable> msgIterator){
 		if(getSuperstep() == 3){
-			//msg.reset();
 			sendMsgToPathVertex(getVertexId(), getVertexValue().getAdjMap());
 		}
 		else{

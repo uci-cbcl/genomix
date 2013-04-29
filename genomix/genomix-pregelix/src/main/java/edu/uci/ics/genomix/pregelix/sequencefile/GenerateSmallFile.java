@@ -41,8 +41,8 @@ public class GenerateSmallFile {
 		// TODO Auto-generated method stub
 		Path dir = new Path("data");
 		Path inFile = new Path(dir, "part-0");
-		Path outFile = new Path(dir, "part-0-out-5000000");
-		generateNumOfLinesFromBigFile(inFile,outFile,5000000);
+		Path outFile = new Path(dir, "part-0-out-20000000");
+		generateNumOfLinesFromBigFile(inFile,outFile,20000000);
 	}
 
 }

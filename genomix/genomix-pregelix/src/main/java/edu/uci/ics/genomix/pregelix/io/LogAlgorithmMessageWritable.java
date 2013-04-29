@@ -28,6 +28,8 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	public LogAlgorithmMessageWritable(){
 		sourceVertexId = new VKmerBytesWritable(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
 		chainVertexId = new VKmerBytesWritable(ThreeStepLogAlgorithmForPathMergeVertex.kmerSize);
+		adjMap = 0;
+		message = 0;
 		checkMessage = 0;
 	}
 	

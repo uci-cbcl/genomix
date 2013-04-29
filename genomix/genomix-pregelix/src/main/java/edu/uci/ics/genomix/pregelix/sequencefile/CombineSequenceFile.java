@@ -25,7 +25,7 @@ public class CombineSequenceFile {
 		
 		Path p = new Path("output");
 		//Path p2 = new Path("data/result");
-		Path outFile = new Path("output"); 
+		Path outFile = new Path("output2"); 
 		SequenceFile.Reader reader;
 	    SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, KmerBytesWritable.class, KmerCountValue.class, 

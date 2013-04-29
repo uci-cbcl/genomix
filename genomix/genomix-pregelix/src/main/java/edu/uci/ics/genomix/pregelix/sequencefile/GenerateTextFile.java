@@ -10,19 +10,20 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class GenerateTextFile {
 
 	public static void generateFromPathmergeResult() throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter("text/naive_LongPath"));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("output2"));
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
 		for(int i = 0; i < 2; i++){
 			Path path = new Path("output/part-" + i);
 			SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-			KmerBytesWritable key = new KmerBytesWritable(5);
+			KmerBytesWritable key = new KmerBytesWritable(55);
 		    ValueStateWritable value = new ValueStateWritable();
 		    
 		    while(reader.next(key, value)){
@@ -32,6 +33,55 @@ public class GenerateTextFile {
 				bw.write(key.toString()
 						+ "\t" + value.toString());
 				bw.newLine();
+		    }
+		    reader.close();
+		}
+		bw.close();
+	}
+	public static void generateSpecificLengthChainFromNaivePathmergeResult(int maxLength) throws IOException{
+		BufferedWriter bw = new BufferedWriter(new FileWriter("naive_text_" + maxLength));
+		Configuration conf = new Configuration();
+		FileSystem fileSys = FileSystem.get(conf);
+		for(int i = 0; i < 2; i++){
+			Path path = new Path("/home/anbangx/genomix_result/final_naive/part-" + i);
+			SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
+			KmerBytesWritable key = new KmerBytesWritable(55);
+		    ValueStateWritable value = new ValueStateWritable();
+		    
+		    while(reader.next(key, value)){
+				if (key == null || value == null){
+					break;
+				} 
+				if(value.getLengthOfMergeChain() != -1 && value.getLengthOfMergeChain() <= maxLength){
+					bw.write(value.toString());
+					bw.newLine();
+				}
+		    }
+		    reader.close();
+		}
+		bw.close();
+	}
+	
+	public static void generateSpecificLengthChainFromLogPathmergeResult(int maxLength) throws IOException{
+		BufferedWriter bw = new BufferedWriter(new FileWriter("log_text_" + maxLength));
+		Configuration conf = new Configuration();
+		FileSystem fileSys = FileSystem.get(conf);
+		for(int i = 0; i < 2; i++){
+			Path path = new Path("/home/anbangx/genomix_result/improvelog2/part-" + i);
+			SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
+			KmerBytesWritable key = new KmerBytesWritable(55);
+		    ValueStateWritable value = new ValueStateWritable();
+		    
+		    while(reader.next(key, value)){
+				if (key == null || value == null){
+					break;
+				} 
+				if(value.getLengthOfMergeChain() != -1 && value.getLengthOfMergeChain() <= maxLength
+						&& value.getState() == State.FINAL_VERTEX){
+					bw.write(key.toString()
+							+ "\t" + value.toString());
+					bw.newLine();
+				}
 		    }
 		    reader.close();
 		}
@@ -63,6 +113,8 @@ public class GenerateTextFile {
 	public static void main(String[] args) throws IOException {
 		generateFromPathmergeResult();
 		//generateFromGraphbuildResult();
+		//generateSpecificLengthChainFromPathmergeResult(68);
+		//generateSpecificLengthChainFromLogPathmergeResult(68);
 	}
 
 }

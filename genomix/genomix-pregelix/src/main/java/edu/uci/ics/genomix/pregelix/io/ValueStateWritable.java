@@ -91,8 +91,8 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 			return GeneCode.getSymbolFromBitMap(adjMap);
 		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
 				getLengthOfMergeChain() + "\t" +
-				mergeChain.toString() + "\t" +
-				state;
+				mergeChain.toString();
+				//+ "\t" + state;
 	}
 	
 }

@@ -4,18 +4,6 @@ import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class GraphVertexOperation {
-	
-	/**
-	 *  generate the valid data(byte[]) from BytesWritable
-	 */
-	public static byte[] generateValidDataFromBytesWritable(VKmerBytesWritable bw){
-		byte[] wholeBytes = bw.getBytes();
-		int validNum = bw.getLength();
-		byte[] validBytes = new byte[validNum];
-		for(int i = 0; i < validNum; i++)
-			validBytes[i] = wholeBytes[i];
-		return validBytes;
-	}
 	/**
 	 * Single Vertex: in-degree = out-degree = 1
 	 * @param vertexValue 
@@ -49,7 +37,7 @@ public class GraphVertexOperation {
 	public static byte updateRightNeighberByVertexId(byte oldVertexValue, VKmerBytesWritable neighberVertex, int k){
 		byte geneCode = neighberVertex.getGeneCodeAtPosition(k-1);
 		
-		byte newBit = GeneCode.getAdjBit(geneCode);
+		byte newBit = GeneCode.getBitMapFromGeneCode(geneCode); //getAdjBit
 		return (byte) ((byte)(oldVertexValue & 0xF0) | (byte) (newBit & 0x0F));
 	}
 	/**

@@ -14,8 +14,8 @@ public class ProcessFinalResult {
 	 */
 	public static void main(String[] args) throws Exception {
 		DecimalFormat df = new DecimalFormat("0.00");
-		BufferedReader br = new BufferedReader(new FileReader("log2_unfinite"));
-		BufferedWriter bw = new BufferedWriter(new FileWriter("report3"));
+		BufferedReader br = new BufferedReader(new FileReader("log2_unfinite_improve"));
+		BufferedWriter bw = new BufferedWriter(new FileWriter("report4"));
 		String line;
 		int i = 0;
 		double totalTime = 0;

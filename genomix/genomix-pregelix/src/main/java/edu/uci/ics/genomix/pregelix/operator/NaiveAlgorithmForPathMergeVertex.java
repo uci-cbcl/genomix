@@ -118,10 +118,11 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	public void sendMsgToPathVertex(){
 		if(!msg.isRear()){
 			destVertexId.set(getDestVertexIdFromChain(msg.getChainVertexId(), msg.getAdjMap()));
+			msg.set(getVertexId(), msg.getChainVertexId(), msg.getHeadVertexId(), (byte)0, msg.isRear());
 		}else{
 			destVertexId.set(msg.getHeadVertexId());
+			msg.set(msg.getSourceVertexId(), msg.getChainVertexId(), msg.getHeadVertexId(), (byte)0, msg.isRear());
 		}
-		msg.set(getVertexId(), msg.getChainVertexId(), msg.getHeadVertexId(), (byte)0, msg.isRear());
 		sendMsg(destVertexId,msg);
 	}
 	/**
@@ -144,7 +145,7 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 		}else{// is Rear
 			chainVertexId.set(msg.getSourceVertexId());
 			getVertexValue().set(GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getAdjMap(), chainVertexId, kmerSize),
-					State.START_VERTEX, msg.getChainVertexId());
+					State.FINAL_VERTEX, msg.getChainVertexId());
 			setVertexValue(getVertexValue());
 			//String source = msg.getChainVertexId().toString();
 			//System.out.print("");
