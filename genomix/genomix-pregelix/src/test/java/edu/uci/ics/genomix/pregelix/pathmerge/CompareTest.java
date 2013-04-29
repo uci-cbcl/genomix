@@ -4,7 +4,8 @@ import java.io.File;
 
 import org.junit.Test;
 
-import edu.uci.ics.pregelix.core.util.TestUtils;
+import edu.uci.ics.genomix.pregelix.example.util.TestUtils;
+
 
 public class CompareTest {
 	public static final String PATH_TO_TESTSTORE = "testcase/pathmerge";
