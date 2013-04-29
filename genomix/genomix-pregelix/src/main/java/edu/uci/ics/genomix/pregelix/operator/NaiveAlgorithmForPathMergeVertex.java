@@ -143,8 +143,7 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 				sendMsg(destVertexId,msg);
 			}
 		}else{// is Rear
-			chainVertexId.set(msg.getSourceVertexId());
-			getVertexValue().set(GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getAdjMap(), chainVertexId, kmerSize),
+			getVertexValue().set(GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getAdjMap(), msg.getSourceVertexId(), kmerSize),
 					State.FINAL_VERTEX, msg.getChainVertexId());
 			setVertexValue(getVertexValue());
 			//String source = msg.getChainVertexId().toString();

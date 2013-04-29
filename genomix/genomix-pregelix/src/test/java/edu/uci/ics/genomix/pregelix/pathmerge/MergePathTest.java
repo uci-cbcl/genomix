@@ -14,18 +14,19 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class MergePathTest {
 	public static final String PATH_TO_TESTSTORE = "testcase/pathmerge/"; 
-	public static final String NAIVE_DATA_INPUT = "genomix_result/pathmerge/final_naive";
-	public static final String LOG_DATA_INPUT = "genomix_result/pathmerge/final_log";
+	public static final String NAIVE_DATA_INPUT = "genomix_result/pathmerge/final_naive_infinite";
+	public static final String LOG_DATA_INPUT = "genomix_result/pathmerge/final_log_infinite";
 	public static final String TEXT_OUTPUT = PATH_TO_TESTSTORE + "textfile";
 	public static final String CHAIN_OUTPUT = PATH_TO_TESTSTORE + "chain";
 	
 	private static int nc = 4;
 	private static int kmerSize = 55;
-	private static int maxLength = 68; 
+	private static int maxLength = 102; 
 	
 	@Test
 	public void test() throws Exception {
@@ -57,7 +58,8 @@ public class MergePathTest {
 				}
 				if(value.getLengthOfMergeChain() != -1){
 					bw.write(value.getLengthOfMergeChain() + "\t" +
-							value.getMergeChain().toString());
+							value.getMergeChain().toString() + "\t" +
+							GeneCode.getSymbolFromBitMap(value.getAdjMap()));
 					
 					bw.newLine();
 				}
@@ -81,7 +83,8 @@ public class MergePathTest {
 				if (key == null || value == null){
 					break;
 				} 
-				if(value.getLengthOfMergeChain() != -1 && value.getLengthOfMergeChain() <= maxLength){
+				if(value.getLengthOfMergeChain() != -1 && value.getLengthOfMergeChain() <= maxLength
+						&& value.getLengthOfMergeChain() != kmerSize){
 					bw.write(value.getLengthOfMergeChain() + "\t" +
 							value.getMergeChain().toString());
 					bw.newLine();
@@ -96,7 +99,7 @@ public class MergePathTest {
 		BufferedWriter bw = new BufferedWriter(new FileWriter(new File(output + "/log")));
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
-		for(int i = 0; i < nc; i++){
+		for(int i = 0; i < 2; i++){
 			Path path = new Path(input + "/part-" + i);
 			SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
 			KmerBytesWritable key = new KmerBytesWritable(kmerSize);

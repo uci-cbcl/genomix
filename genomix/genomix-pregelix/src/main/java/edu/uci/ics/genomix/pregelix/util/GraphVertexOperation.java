@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.util;
 
 import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class GraphVertexOperation {
@@ -34,7 +35,7 @@ public class GraphVertexOperation {
 	/**
 	 * update right neighber based on next vertexId
 	 */
-	public static byte updateRightNeighberByVertexId(byte oldVertexValue, VKmerBytesWritable neighberVertex, int k){
+	public static byte updateRightNeighberByVertexId(byte oldVertexValue, KmerBytesWritable neighberVertex, int k){
 		byte geneCode = neighberVertex.getGeneCodeAtPosition(k-1);
 		
 		byte newBit = GeneCode.getBitMapFromGeneCode(geneCode); //getAdjBit
