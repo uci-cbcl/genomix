@@ -44,5 +44,7 @@ public class ReportGenerator {
 		generateReportFromLoginfo("naive");
 		generateReportFromLoginfo("log");
 		generateReportFromLoginfo("log_yourkit");
+		generateReportFromLoginfo("naive_36");
+		generateReportFromLoginfo("log_13");
 	}
 }
