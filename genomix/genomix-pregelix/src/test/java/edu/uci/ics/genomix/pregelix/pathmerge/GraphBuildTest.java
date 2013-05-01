@@ -26,7 +26,6 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.driver.Driver;
 import edu.uci.ics.genomix.driver.Driver.Plan;
-import edu.uci.ics.genomix.example.jobrun.TestUtils;
 import edu.uci.ics.genomix.job.GenomixJob;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
