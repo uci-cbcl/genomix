@@ -1,9 +1,12 @@
 package edu.uci.ics.genomix.pregelix.sequencefile;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -16,14 +19,16 @@ import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class GenerateTextFile {
 
-	public static void generateFromPathmergeResult() throws IOException{
-		BufferedWriter bw = new BufferedWriter(new FileWriter("output2"));
+	public static void generateFromPathmergeResult(int kmerSize, String strSrcDir, String outPutDir) throws IOException{
 		Configuration conf = new Configuration();
-		FileSystem fileSys = FileSystem.get(conf);
-		for(int i = 0; i < 2; i++){
-			Path path = new Path("output/part-" + i);
-			SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-			KmerBytesWritable key = new KmerBytesWritable(55);
+		FileSystem fileSys = FileSystem.getLocal(conf);
+		
+		fileSys.create(new Path(outPutDir));
+		BufferedWriter bw = new BufferedWriter(new FileWriter(outPutDir));
+		File srcPath = new File(strSrcDir);
+		for(File f : srcPath.listFiles((FilenameFilter)(new WildcardFileFilter("part*")))){
+			SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
+			KmerBytesWritable key = new KmerBytesWritable(kmerSize);
 		    ValueStateWritable value = new ValueStateWritable();
 		    
 		    while(reader.next(key, value)){
@@ -111,7 +116,7 @@ public class GenerateTextFile {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		generateFromPathmergeResult();
+		//generateFromPathmergeResult();
 		//generateFromGraphbuildResult();
 		//generateSpecificLengthChainFromPathmergeResult(68);
 		//generateSpecificLengthChainFromLogPathmergeResult(68);

@@ -15,8 +15,6 @@
 
 package edu.uci.ics.genomix.pregelix.pathmerge;
 
-import java.io.File;
-
 import junit.framework.TestCase;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -25,101 +23,67 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.pregelix.example.util.TestUtils;
+import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 public class PathMergeSmallTestCase extends TestCase {
-    private static String HDFS_INPUTPATH = "/BridgePath";
-    private static String HDFS_OUTPUTPAH = "/resultBridgePath";
+	private final PregelixJob job;
+	private final String resultFileDir;
+	private final String textFileDir;
+	private final String jobFile;
+	private final Driver driver = new Driver(this.getClass());
+	private final FileSystem dfs;
 
-    /*private static String HDFS_INPUTPATH2 = "/CyclePath";
-    private static String HDFS_OUTPUTPAH2 = "/resultCyclePath";
+	public PathMergeSmallTestCase(String hadoopConfPath, String jobName,
+			String jobFile, FileSystem dfs, String hdfsInput, String resultFile, String textFile)
+			throws Exception {
+		super("test");
+		this.jobFile = jobFile;
+		this.job = new PregelixJob("test");
+		this.job.getConfiguration().addResource(new Path(jobFile));
+		this.job.getConfiguration().addResource(new Path(hadoopConfPath));
+		FileInputFormat.setInputPaths(job, hdfsInput);
+		FileOutputFormat.setOutputPath(job, new Path(hdfsInput + "_result"));
+		this.textFileDir = textFile;
+		job.setJobName(jobName);
+		this.resultFileDir = resultFile;
+		
+		this.dfs = dfs;
+	}
 
-    private static String HDFS_INPUTPATH3 = "/LongPath";
-    private static String HDFS_OUTPUTPAH3 = "/resultLongPath";
+	private void waitawhile() throws InterruptedException {
+		synchronized (this) {
+			this.wait(20);
+		}
+	}
 
-    private static String HDFS_INPUTPATH4 = "/Path";
-    private static String HDFS_OUTPUTPAH4 = "/resultPath";
+	@Test
+	public void test() throws Exception {
+		setUp();
+		Plan[] plans = new Plan[] { Plan.OUTER_JOIN };
+		for (Plan plan : plans) {
+			driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
+					PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT,
+					false);
+		}
+		compareResults();
+		tearDown();
+		waitawhile();
+	}
 
-    private static String HDFS_INPUTPATH5 = "/SimplePath";
-    private static String HDFS_OUTPUTPAH5 = "/resultSimplePath";
-    
-    private static String HDFS_INPUTPATH6 = "/SinglePath";
-    private static String HDFS_OUTPUTPAH6 = "/resultSinglePath";
-    
-    private static String HDFS_INPUTPATH7 = "/TreePath";
-    private static String HDFS_OUTPUTPAH7 = "/resultTreePath";*/
+	private void compareResults() throws Exception {
+		dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(
+				resultFileDir));
+		GenerateTextFile.generateFromPathmergeResult(5, resultFileDir, textFileDir);
+		// TestUtils.compareWithResultDir(new File(expectedFileDir), new
+		// File(resultFileDir));
+	}
 
-    private final PregelixJob job;
-    private final String resultFileDir;
-    private final String jobFile;
-    private final Driver driver = new Driver(this.getClass());
-    private final FileSystem dfs;
+	public String toString() {
+		return jobFile;
+	}
 
-    public PathMergeSmallTestCase(String hadoopConfPath, String jobName, String jobFile, String resultFile,
-            FileSystem dfs) throws Exception {
-        super("test");
-        this.jobFile = jobFile;
-        this.job = new PregelixJob("test");
-        this.job.getConfiguration().addResource(new Path(jobFile));
-        this.job.getConfiguration().addResource(new Path(hadoopConfPath));
-        Path[] inputPaths = FileInputFormat.getInputPaths(job);
-        if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH)) {
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH));
-        } 
-        /*else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH2)) {
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH2);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH2));
-        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH3)) {
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH3);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH3));
-        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH4)) {
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH4);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH4));
-        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH5)) {
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH5);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH5));
-        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH6)) {
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH6);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH6));
-        } else if (inputPaths[0].toString().endsWith(HDFS_INPUTPATH7)) {
-            FileInputFormat.setInputPaths(job, HDFS_INPUTPATH7);
-            FileOutputFormat.setOutputPath(job, new Path(HDFS_OUTPUTPAH7));
-        }*/
-        job.setJobName(jobName);
-        this.resultFileDir = resultFile;
-        this.dfs = dfs;
-    }
-
-    private void waitawhile() throws InterruptedException {
-        synchronized (this) {
-            this.wait(20);
-        }
-    }
-
-    @Test
-    public void test() throws Exception {
-        setUp();
-        Plan[] plans = new Plan[] { Plan.OUTER_JOIN };
-        for (Plan plan : plans) {
-            driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
-                    PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
-        }
-        compareResults();
-        tearDown();
-        waitawhile();
-    }
-
-    private void compareResults() throws Exception {
-        dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(resultFileDir));
-        //TestUtils.compareWithResultDir(new File(expectedFileDir), new File(resultFileDir));
-    }
-
-    public String toString() {
-        return jobFile;
-    }
 }

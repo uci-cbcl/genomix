@@ -23,9 +23,9 @@ public class CombineSequenceFile {
 		Configuration conf = new Configuration();
 		FileSystem fileSys = FileSystem.get(conf);
 		
-		Path p = new Path("output");
+		Path p = new Path("graphbuildresult/CyclePath2_result");
 		//Path p2 = new Path("data/result");
-		Path outFile = new Path("output2"); 
+		Path outFile = new Path("here"); 
 		SequenceFile.Reader reader;
 	    SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf,
 	         outFile, KmerBytesWritable.class, KmerCountValue.class, 
@@ -33,7 +33,7 @@ public class CombineSequenceFile {
 	    KmerBytesWritable key = new KmerBytesWritable(kmerSize);
 	    KmerCountValue value = new KmerCountValue();
 	    
-	    File dir = new File("output");
+	    File dir = new File("graphbuildresult/CyclePath2_result");
 		for(File child : dir.listFiles()){
 			String name = child.getAbsolutePath();
 			Path inFile = new Path(p, name);

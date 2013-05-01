@@ -67,7 +67,7 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		if(kmerSize == -1)
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0) 
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 20);
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
 	}
 	/**
 	 * get destination vertex
@@ -206,7 +206,7 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	/**
 	 *  set vertexValue's state chainVertexId, value
 	 */
-	public void setVertexValueAttributes(){
+	public boolean setVertexValueAttributes(){
 		if(msg.getMessage() == Message.END){
 			if(getVertexValue().getState() != State.START_VERTEX)
 				getVertexValue().setState(State.END_VERTEX);
@@ -220,10 +220,19 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 			chainVertexId.set(getVertexValue().getMergeChain());
 		lastKmer.set(kmerFactory.getLastKmerFromChain(msg.getLengthOfChain() - kmerSize + 1, msg.getChainVertexId()));
 		chainVertexId.set(kmerFactory.mergeTwoKmer(chainVertexId, lastKmer));
-		getVertexValue().setMergeChain(chainVertexId);
+		if(GraphVertexOperation.isCycle(getVertexId(), chainVertexId)){
+			getVertexValue().setMergeChain(null);
+			getVertexValue().setAdjMap(GraphVertexOperation.reverseAdjMap(getVertexValue().getAdjMap(),
+					chainVertexId.getGeneCodeAtPosition(kmerSize)));
+			getVertexValue().setState(State.CYCLE);
+			return false;
+		}
+		else
+			getVertexValue().setMergeChain(chainVertexId);
 		
 		byte tmpVertexValue = GraphVertexOperation.updateRightNeighber(getVertexValue().getAdjMap(), msg.getAdjMap());
 		getVertexValue().setAdjMap(tmpVertexValue);
+		return true;
 	}
 	/**
 	 *  send message to self
@@ -280,8 +289,10 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		else{
 			if(msgIterator.hasNext()){
 				msg = msgIterator.next();
-				mergeChainVertex(msgIterator);
-				sendMsgToPathVertex(getVertexValue().getMergeChain(), getVertexValue().getAdjMap());
+				if(mergeChainVertex(msgIterator))
+					sendMsgToPathVertex(getVertexValue().getMergeChain(), getVertexValue().getAdjMap());
+				else
+					voteToHalt();
 			}
 			if(getVertexValue().getState() == State.END_VERTEX || getVertexValue().getState() == State.FINAL_DELETE){
 				voteToHalt();
@@ -296,7 +307,7 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	 * path response message to head
 	 */
 	public void responseMsgToHeadVertex(Iterator<LogAlgorithmMessageWritable> msgIterator){
-		if(msgIterator.hasNext()){
+		if(msgIterator.hasNext()){		
 			msg = msgIterator.next();
 			responseMsgToHeadVertex();
 		}
@@ -310,8 +321,8 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	/**
 	 * merge chainVertex and store in vertexVal.chainVertexId
 	 */
-	public void mergeChainVertex(Iterator<LogAlgorithmMessageWritable> msgIterator){
-		setVertexValueAttributes();
+	public boolean mergeChainVertex(Iterator<LogAlgorithmMessageWritable> msgIterator){
+		return setVertexValueAttributes();
 	}
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {

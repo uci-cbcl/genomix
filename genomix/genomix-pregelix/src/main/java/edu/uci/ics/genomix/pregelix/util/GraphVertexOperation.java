@@ -47,5 +47,19 @@ public class GraphVertexOperation {
 	public static byte updateRightNeighber(byte oldVertexValue, byte newVertexValue){
 		return (byte) ((byte)(oldVertexValue & 0xF0) | (byte) (newVertexValue & 0x0F));
 	}
-
+	/**
+	 * check if mergeChain is cycle
+	 */
+	public static boolean isCycle(KmerBytesWritable vertexId, VKmerBytesWritable mergeChain){
+		String chain = mergeChain.toString().substring(1);
+		if(chain.contains(vertexId.toString()))
+			return true;
+		return false;
+	}
+	/**
+	 * reverse neighber
+	 */
+	public static byte reverseAdjMap(byte oldAdjMap, byte geneCode){
+		return (byte) ((oldAdjMap & 0xF0) | (GeneCode.getBitMapFromGeneCode(geneCode) & 0x0F));
+	}
 }

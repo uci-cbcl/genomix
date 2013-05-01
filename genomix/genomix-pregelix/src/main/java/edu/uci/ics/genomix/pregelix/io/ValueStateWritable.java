@@ -19,7 +19,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 
 	public ValueStateWritable() {
 		state = State.NON_VERTEX;
-		mergeChain = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
+		mergeChain = new VKmerBytesWritable(-1);
 	}
 
 	public ValueStateWritable(byte adjMap, byte state, VKmerBytesWritable mergeChain) {
@@ -87,7 +87,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	
 	@Override
 	public String toString() {
-		if(mergeChain.getKmerLength() == -1)
+		if(mergeChain.getKmerLength() == -1 || mergeChain.getKmerLength() == 0)
 			return GeneCode.getSymbolFromBitMap(adjMap);
 		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
 				getLengthOfMergeChain() + "\t" +

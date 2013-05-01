@@ -71,7 +71,7 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 		if(kmerSize == -1)
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0) 
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 100);
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
 	}
 	public void findDestination(){
 		destVertexId.set(msg.getSourceVertexId());
@@ -171,12 +171,12 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 		//head node sends message to path node
 		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
 			while (msgIterator.hasNext()){
-				if(getSuperstep() == 3 && GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap()))
-					voteToHalt();
-				else{
-					msg = msgIterator.next();
-					sendMsgToPathVertex();
-				}
+				//if(getSuperstep() == 3 && GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap()))
+				//	voteToHalt();
+				//else{
+				msg = msgIterator.next();
+				sendMsgToPathVertex();
+				//}
 			}
 		}
 		//path node sends message back to head node

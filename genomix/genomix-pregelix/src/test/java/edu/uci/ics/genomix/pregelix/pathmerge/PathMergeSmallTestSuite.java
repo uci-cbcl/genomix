@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -41,195 +43,179 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
 public class PathMergeSmallTestSuite extends TestSuite {
-    private static final Logger LOGGER = Logger.getLogger(PathMergeSmallTestSuite.class.getName());
+	private static final Logger LOGGER = Logger
+			.getLogger(PathMergeSmallTestSuite.class.getName());
 
-    private static final String ACTUAL_RESULT_DIR = "actual";
-    private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
-    private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
-    private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
-    private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
-    private static final String PATH_TO_IGNORE = "src/test/resources/ignore.txt";
-    private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
+	public static final String PreFix = "data/PathTestSet";
+	public static final String[] TestDir = { PreFix + File.separator
+		+ "TwoKmer", PreFix + File.separator
+		+ "ThreeKmer", PreFix + File.separator
+		+ "SinglePath", PreFix + File.separator
+		+ "SimplePath", PreFix + File.separator
+		+ "Path", PreFix + File.separator
+		+ "BridgePath", PreFix + File.separator
+		+ "CyclePath", PreFix + File.separator
+		+ "CyclePath2", PreFix + File.separator
+		+ "LongPath", PreFix + File.separator
+		+ "TreePath"};
+	private static final String ACTUAL_RESULT_DIR = "actual";
+	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
+	private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
+	private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
+	private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
+	private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
 
-    private static final String DATA_PATH = "data/input/BridgePath";
-    private static final String HDFS_PATH = "/BridgePath/";
+	public static final String HDFS_INPUTPATH = "/PathTestSet";
 
-    /*private static final String DATA_PATH2 = "data/sequencefile/CyclePath";
-    private static final String HDFS_PATH2 = "/CyclePath/";
+	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
+			+ File.separator + "conf.xml";
+	private MiniDFSCluster dfsCluster;
 
-    private static final String DATA_PATH3 = "data/sequencefile/LongPath";
-    private static final String HDFS_PATH3 = "/LongPath/";
+	private JobConf conf = new JobConf();
+	private int numberOfNC = 2;
 
-    private static final String DATA_PATH4 = "data/sequencefile/Path";
-    private static final String HDFS_PATH4 = "/Path/";
+	public void setUp() throws Exception {
+		ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
+		ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
+		cleanupStores();
+		PregelixHyracksIntegrationUtil.init("src/test/resources/topology.xml");
+		LOGGER.info("Hyracks mini-cluster started");
+		FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
+		FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
+		startHDFS();
+	}
 
-    private static final String DATA_PATH5 = "data/sequencefile/SimplePath";
-    private static final String HDFS_PATH5 = "/SimplePath/";
-    
-    private static final String DATA_PATH6 = "data/sequencefile/SinglePath";
-    private static final String HDFS_PATH6 = "/SinglePath/";
-    
-    private static final String DATA_PATH7 = "data/sequencefile/TreePath";
-    private static final String HDFS_PATH7 = "/TreePath/";*/
+	private void cleanupStores() throws IOException {
+		FileUtils.forceMkdir(new File("teststore"));
+		FileUtils.forceMkdir(new File("build"));
+		FileUtils.cleanDirectory(new File("teststore"));
+		FileUtils.cleanDirectory(new File("build"));
+	}
 
-    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private MiniDFSCluster dfsCluster;
+	private void startHDFS() throws IOException {
+		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
+		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
+		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
+		FileSystem lfs = FileSystem.getLocal(new Configuration());
+		lfs.delete(new Path("build"), true);
+		System.setProperty("hadoop.log.dir", "logs");
+		dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
+		FileSystem dfs = FileSystem.get(conf);
 
-    private JobConf conf = new JobConf();
-    private int numberOfNC = 1;
+		for (String testDir : TestDir) {
+			File src = new File(testDir);
+			Path dest = new Path(HDFS_INPUTPATH + File.separator + src.getName());
+			dfs.mkdirs(dest);
+			//src.listFiles((FilenameFilter)(new WildcardFileFilter("part*")))
+			for (File f : src.listFiles()){
+				dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);
+			}
+		}
 
-    public void setUp() throws Exception {
-        ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
-        ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
-        cleanupStores();
-        PregelixHyracksIntegrationUtil.init("src/test/resources/topology.xml");
-        LOGGER.info("Hyracks mini-cluster started");
-        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
-        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
-        startHDFS();
-    }
+		DataOutputStream confOutput = new DataOutputStream(
+				new FileOutputStream(new File(HADOOP_CONF_PATH)));
+		conf.writeXml(confOutput);
+		confOutput.flush();
+		confOutput.close();
+	}
 
-    private void cleanupStores() throws IOException {
-        FileUtils.forceMkdir(new File("teststore"));
-        FileUtils.forceMkdir(new File("build"));
-        FileUtils.cleanDirectory(new File("teststore"));
-        FileUtils.cleanDirectory(new File("build"));
-    }
+	/**
+	 * cleanup hdfs cluster
+	 */
+	private void cleanupHDFS() throws Exception {
+		dfsCluster.shutdown();
+	}
 
-    private void startHDFS() throws IOException {
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
-        FileSystem lfs = FileSystem.getLocal(new Configuration());
-        lfs.delete(new Path("build"), true);
-        System.setProperty("hadoop.log.dir", "logs");
-        dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
-        FileSystem dfs = FileSystem.get(conf);
-        Path src = new Path(DATA_PATH);
-        Path dest = new Path(HDFS_PATH);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
+	public void tearDown() throws Exception {
+		PregelixHyracksIntegrationUtil.deinit();
+		LOGGER.info("Hyracks mini-cluster shut down");
+		cleanupHDFS();
+	}
 
-        /*src = new Path(DATA_PATH2);
-        dest = new Path(HDFS_PATH2);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
+	public static Test suite() throws Exception {
+		List<String> onlys = getFileList(PATH_TO_ONLY);
+		File testData = new File(PATH_TO_JOBS);
+		File[] queries = testData.listFiles();
+		PathMergeSmallTestSuite testSuite = new PathMergeSmallTestSuite();
+		testSuite.setUp();
+		boolean onlyEnabled = false;
+		FileSystem dfs = FileSystem.get(testSuite.conf);
 
-        src = new Path(DATA_PATH3);
-        dest = new Path(HDFS_PATH3);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
+		if (onlys.size() > 0) {
+			onlyEnabled = true;
+		}
 
-        src = new Path(DATA_PATH4);
-        dest = new Path(HDFS_PATH4);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
+		for (File qFile : queries) {
+			if (qFile.isFile()) {
+				if (onlyEnabled && !isInList(onlys, qFile.getName())) {
+					continue;
+				} else {
+					for (String testPathStr : TestDir) {
+						File testDir = new File(testPathStr);
+						String resultFileName = ACTUAL_RESULT_DIR
+								+ File.separator
+								+ jobExtToResExt(qFile.getName())
+								+ File.separator + "BinaryOutput"
+								+ File.separator + testDir.getName();
+						String textFileName = ACTUAL_RESULT_DIR
+								+ File.separator
+								+ jobExtToResExt(qFile.getName())
+								+ File.separator + "TextOutput"
+								+ File.separator + testDir.getName();
+						testSuite.addTest(new PathMergeSmallTestCase(
+								HADOOP_CONF_PATH, qFile.getName(), qFile
+										.getAbsolutePath().toString(),
+								 dfs, HDFS_INPUTPATH + File.separator + testDir.getName(),
+								 resultFileName, textFileName));
+					}
+				}
+			}
+		}
+		return testSuite;
+	}
 
-        src = new Path(DATA_PATH5);
-        dest = new Path(HDFS_PATH5);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
-        
-        src = new Path(DATA_PATH6);
-        dest = new Path(HDFS_PATH6);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
-        
-        src = new Path(DATA_PATH7);
-        dest = new Path(HDFS_PATH7);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);*/
+	/**
+	 * Runs the tests and collects their result in a TestResult.
+	 */
+	@Override
+	public void run(TestResult result) {
+		try {
+			int testCount = countTestCases();
+			for (int i = 0; i < testCount; i++) {
+				// cleanupStores();
+				Test each = this.testAt(i);
+				if (result.shouldStop())
+					break;
+				runTest(each, result);
+			}
+			tearDown();
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+	}
 
-        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_PATH)));
-        conf.writeXml(confOutput);
-        confOutput.flush();
-        confOutput.close();
-    }
+	protected static List<String> getFileList(String ignorePath)
+			throws FileNotFoundException, IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(ignorePath));
+		String s = null;
+		List<String> ignores = new ArrayList<String>();
+		while ((s = reader.readLine()) != null) {
+			ignores.add(s);
+		}
+		reader.close();
+		return ignores;
+	}
 
-    /**
-     * cleanup hdfs cluster
-     */
-    private void cleanupHDFS() throws Exception {
-        dfsCluster.shutdown();
-    }
+	private static String jobExtToResExt(String fname) {
+		int dot = fname.lastIndexOf('.');
+		return fname.substring(0, dot);
+	}
 
-    public void tearDown() throws Exception {
-        PregelixHyracksIntegrationUtil.deinit();
-        LOGGER.info("Hyracks mini-cluster shut down");
-        cleanupHDFS();
-    }
-
-    public static Test suite() throws Exception {
-        List<String> ignores = getFileList(PATH_TO_IGNORE);
-        List<String> onlys = getFileList(PATH_TO_ONLY);
-        File testData = new File(PATH_TO_JOBS);
-        File[] queries = testData.listFiles();
-        PathMergeSmallTestSuite testSuite = new PathMergeSmallTestSuite();
-        testSuite.setUp();
-        boolean onlyEnabled = false;
-        FileSystem dfs = FileSystem.get(testSuite.conf);
-
-        if (onlys.size() > 0) {
-            onlyEnabled = true;
-        }
-        for (File qFile : queries) {
-            if (isInList(ignores, qFile.getName()))
-                continue;
-
-            if (qFile.isFile()) {
-                if (onlyEnabled && !isInList(onlys, qFile.getName())) {
-                    continue;
-                } else {
-                    String resultFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName());
-                    testSuite.addTest(new PathMergeSmallTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile.getAbsolutePath()
-                            .toString(), resultFileName, dfs));
-                }
-            }
-        }
-        return testSuite;
-    }
-
-    /**
-     * Runs the tests and collects their result in a TestResult.
-     */
-    @Override
-    public void run(TestResult result) {
-        try {
-            int testCount = countTestCases();
-            for (int i = 0; i < testCount; i++) {
-                // cleanupStores();
-                Test each = this.testAt(i);
-                if (result.shouldStop())
-                    break;
-                runTest(each, result);
-            }
-            tearDown();
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    protected static List<String> getFileList(String ignorePath) throws FileNotFoundException, IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(ignorePath));
-        String s = null;
-        List<String> ignores = new ArrayList<String>();
-        while ((s = reader.readLine()) != null) {
-            ignores.add(s);
-        }
-        reader.close();
-        return ignores;
-    }
-
-    private static String jobExtToResExt(String fname) {
-        int dot = fname.lastIndexOf('.');
-        return fname.substring(0, dot);
-    }
-
-    private static boolean isInList(List<String> onlys, String name) {
-        for (String only : onlys)
-            if (name.indexOf(only) >= 0)
-                return true;
-        return false;
-    }
+	private static boolean isInList(List<String> onlys, String name) {
+		for (String only : onlys)
+			if (name.indexOf(only) >= 0)
+				return true;
+		return false;
+	}
 
 }

@@ -33,156 +33,168 @@ import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class GraphBuildTest {
 	private static final String ACTUAL_RESULT_DIR = "graphbuildresult";
-    private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
+	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_PATH = "data/sequencefile/BridgePath";
-    private static final String HDFS_INPUT_PATH = "/BridgePath";
-    private static final String HDFS_OUTPUT_PATH = "/BridgePath_result";
+	private static final String DATA_PATH = "data/TwoKmer";
+	private static final String HDFS_INPUT_PATH = "/CyclePath2";
+	private static final String HDFS_OUTPUT_PATH = "/CyclePath2_result";
 
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/result.txt";
-    private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
-    private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
-    private static final String EXPECTED_REVERSE_PATH = "src/test/resources/expected/result_reverse";
+	private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR
+			+ HDFS_OUTPUT_PATH + "/result.txt";
+	private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
+	private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
+	private static final String EXPECTED_REVERSE_PATH = "src/test/resources/expected/result_reverse";
 
-    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private MiniDFSCluster dfsCluster;
+	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
+			+ File.separator + "conf.xml";
+	private MiniDFSCluster dfsCluster;
 
-    private JobConf conf = new JobConf();
-    private int numberOfNC = 2;
-    private int numPartitionPerMachine = 1;
+	private JobConf conf = new JobConf();
+	private int numberOfNC = 2;
+	private int numPartitionPerMachine = 1;
 
-    private Driver driver;
+	private Driver driver;
 
-    @Before
-    public void setUp() throws Exception {
-        cleanupStores();
-        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
-        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
-        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
-        startHDFS();
+	@Before
+	public void setUp() throws Exception {
+		cleanupStores();
+		edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
+		FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
+		FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
+		startHDFS();
 
-        FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
-        FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
+		FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
+		FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
-        conf.setInt(GenomixJob.KMER_LENGTH, 5);
-        driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
-                edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
-    }
+		conf.setInt(GenomixJob.KMER_LENGTH, 5);
+		driver = new Driver(
+				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
+				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT,
+				numPartitionPerMachine);
+	}
 
-    private void cleanupStores() throws IOException {
-        FileUtils.forceMkdir(new File("teststore"));
-        FileUtils.forceMkdir(new File("build"));
-        FileUtils.cleanDirectory(new File("teststore"));
-        FileUtils.cleanDirectory(new File("build"));
-    }
+	private void cleanupStores() throws IOException {
+		FileUtils.forceMkdir(new File("teststore"));
+		FileUtils.forceMkdir(new File("build"));
+		FileUtils.cleanDirectory(new File("teststore"));
+		FileUtils.cleanDirectory(new File("build"));
+	}
 
-    private void startHDFS() throws IOException {
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
-        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
+	private void startHDFS() throws IOException {
+		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
+		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
+		conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
 
-        FileSystem lfs = FileSystem.getLocal(new Configuration());
-        lfs.delete(new Path("build"), true);
-        System.setProperty("hadoop.log.dir", "logs");
-        dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
-        FileSystem dfs = FileSystem.get(conf);
-        Path src = new Path(DATA_PATH);
-        Path dest = new Path(HDFS_INPUT_PATH);
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
+		FileSystem lfs = FileSystem.getLocal(new Configuration());
+		lfs.delete(new Path("build"), true);
+		System.setProperty("hadoop.log.dir", "logs");
+		dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
+		FileSystem dfs = FileSystem.get(conf);
+		Path src = new Path(DATA_PATH);
+		Path dest = new Path(HDFS_INPUT_PATH);
+		dfs.mkdirs(dest);
+		dfs.copyFromLocalFile(src, dest);
 
-        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_PATH)));
-        conf.writeXml(confOutput);
-        confOutput.flush();
-        confOutput.close();
-    }
+		DataOutputStream confOutput = new DataOutputStream(
+				new FileOutputStream(new File(HADOOP_CONF_PATH)));
+		conf.writeXml(confOutput);
+		confOutput.flush();
+		confOutput.close();
+	}
 
-    private void cleanUpReEntry() throws IOException {
-        FileSystem lfs = FileSystem.getLocal(new Configuration());
-        if (lfs.exists(new Path(DUMPED_RESULT))) {
-            lfs.delete(new Path(DUMPED_RESULT), true);
-        }
-        FileSystem dfs = FileSystem.get(conf);
-        if (dfs.exists(new Path(HDFS_OUTPUT_PATH))) {
-            dfs.delete(new Path(HDFS_OUTPUT_PATH), true);
-        }
-    }
+	private void cleanUpReEntry() throws IOException {
+		FileSystem lfs = FileSystem.getLocal(new Configuration());
+		if (lfs.exists(new Path(DUMPED_RESULT))) {
+			lfs.delete(new Path(DUMPED_RESULT), true);
+		}
+		FileSystem dfs = FileSystem.get(conf);
+		if (dfs.exists(new Path(HDFS_OUTPUT_PATH))) {
+			dfs.delete(new Path(HDFS_OUTPUT_PATH), true);
+		}
+	}
 
-    @Test
-    public void TestAll() throws Exception {
-        cleanUpReEntry();
-        TestHybridGroupby();
-        cleanUpReEntry();
-        TestPreClusterGroupby();
-    }
+	@Test
+	public void TestAll() throws Exception {
+		cleanUpReEntry();
+		TestHybridGroupby();
+		cleanUpReEntry();
+		TestPreClusterGroupby();
+	}
 
-    public void TestPreClusterGroupby() throws Exception {
-        conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
-        System.err.println("Testing PreClusterGroupBy");
-        driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_PATH));
-    }
-    
-    public void TestHybridGroupby() throws Exception {
-        conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
-        System.err.println("Testing HybridGroupBy");
-        driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_PATH));
-    }
+	public void TestPreClusterGroupby() throws Exception {
+		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
+		System.err.println("Testing PreClusterGroupBy");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
+	}
 
-    private boolean checkResults(String expectedPath) throws Exception {
-        File dumped = null;
-        String format = conf.get(GenomixJob.OUTPUT_FORMAT);
-        if ("text".equalsIgnoreCase(format)) {
-            FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH),
-                    FileSystem.getLocal(new Configuration()), new Path(DUMPED_RESULT), false, conf, null);
-            dumped = new File(DUMPED_RESULT);
-        } else {
+	public void TestHybridGroupby() throws Exception {
+		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
+		System.err.println("Testing HybridGroupBy");
+		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
+	}
 
-            FileSystem.getLocal(new Configuration()).mkdirs(new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH));
-            File filePathTo = new File(CONVERT_RESULT);
-            BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
-            for (int i = 0; i < numPartitionPerMachine * numberOfNC; i++) {
-                String partname = "/part-" + i;
-                				FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH
-                						+ partname), FileSystem.getLocal(new Configuration()),
-                						new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + partname), false, conf);
+	private boolean checkResults(String expectedPath) throws Exception {
+		File dumped = null;
+		String format = conf.get(GenomixJob.OUTPUT_FORMAT);
+		if ("text".equalsIgnoreCase(format)) {
+			FileUtil.copyMerge(FileSystem.get(conf),
+					new Path(HDFS_OUTPUT_PATH), FileSystem
+							.getLocal(new Configuration()), new Path(
+							DUMPED_RESULT), false, conf, null);
+			dumped = new File(DUMPED_RESULT);
+		} else {
 
-                Path path = new Path(HDFS_OUTPUT_PATH + partname);
-                FileSystem dfs = FileSystem.get(conf);
-                if (dfs.getFileStatus(path).getLen() == 0) {
-                    continue;
-                }
-                SequenceFile.Reader reader = new SequenceFile.Reader(dfs, path, conf);
-                KmerBytesWritable key = new KmerBytesWritable(conf.getInt(GenomixJob.KMER_LENGTH,
-                        GenomixJob.DEFAULT_KMER));
-                KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+			FileSystem.getLocal(new Configuration()).mkdirs(
+					new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH));
+			File filePathTo = new File(CONVERT_RESULT);
+			BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
+			for (int i = 0; i < numPartitionPerMachine * numberOfNC; i++) {
+				String partname = "/part-" + i;
+				FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH
+						+ partname), FileSystem.getLocal(new Configuration()),
+						new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH
+								+ partname), false, conf);
 
-                while (reader.next(key, value)) {
-                    if (key == null || value == null) {
-                        break;
-                    }
-                    bw.write(key.toString() + "\t" + value.toString());
-                    System.out.println(key.toString() + "\t" + value.toString());
-                    bw.newLine();
-                }
-                reader.close();
-            }
-            bw.close();
-            dumped = new File(CONVERT_RESULT);
-        }
+				Path path = new Path(HDFS_OUTPUT_PATH + partname);
+				FileSystem dfs = FileSystem.get(conf);
+				if (dfs.getFileStatus(path).getLen() == 0) {
+					continue;
+				}
+				SequenceFile.Reader reader = new SequenceFile.Reader(dfs, path,
+						conf);
+				KmerBytesWritable key = new KmerBytesWritable(conf.getInt(
+						GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER));
+				KmerCountValue value = (KmerCountValue) ReflectionUtils
+						.newInstance(reader.getValueClass(), conf);
 
-        //TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
-        return true;
-    }
+				while (reader.next(key, value)) {
+					if (key == null || value == null) {
+						break;
+					}
+					bw.write(key.toString() + "\t" + value.toString());
+					System.out
+							.println(key.toString() + "\t" + value.toString());
+					bw.newLine();
+				}
+				reader.close();
+			}
+			bw.close();
+			dumped = new File(CONVERT_RESULT);
+		}
 
-    @After
-    public void tearDown() throws Exception {
-        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.deinit();
-        cleanupHDFS();
-    }
+		// TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
+		return true;
+	}
 
-    private void cleanupHDFS() throws Exception {
-        dfsCluster.shutdown();
-    }
+	@After
+	public void tearDown() throws Exception {
+		edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.deinit();
+		cleanupHDFS();
+	}
+
+	private void cleanupHDFS() throws Exception {
+		dfsCluster.shutdown();
+	}
 }

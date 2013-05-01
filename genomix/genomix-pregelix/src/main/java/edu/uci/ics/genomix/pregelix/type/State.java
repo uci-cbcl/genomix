@@ -9,7 +9,7 @@ public class State {
 	public static final byte TODELETE = 4;
 	public static final byte FINAL_VERTEX = 5;
 	public static final byte FINAL_DELETE = 6;
-	public static final byte KILL_SELF = 7;
+	public static final byte CYCLE = 7;
 	
 	public final static class STATE_CONTENT{
 
@@ -37,8 +37,8 @@ public class State {
 			case FINAL_DELETE:
 				r = "FINAL_DELETE";
 				break;
-			case KILL_SELF:
-				r = "KILL_SELF";
+			case CYCLE:
+				r = "CYCLE";
 				break;
 			}
 			return r;

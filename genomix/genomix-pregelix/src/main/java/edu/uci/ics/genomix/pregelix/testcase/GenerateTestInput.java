@@ -56,7 +56,7 @@ public class GenerateTestInput {
 		OutputStreamWriter writer;
 		try {
 			writer = new OutputStreamWriter(new FileOutputStream("graph/55/SinglePath_55"));
-			writer.write(simplePath(55,500,1));
+			writer.write(simplePath(55,320,1));
 			writer.close();
 			/*writer = new OutputStreamWriter(new FileOutputStream("graph/55/SimplePath_55"));
 			writer.write(simplePath(55,60,3));
