@@ -1,7 +1,9 @@
 package edu.uci.ics.genomix.pregelix.sequencefile;
 
+import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,10 +41,12 @@ public class GenerateSmallFile {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		Path dir = new Path("data");
+		Path dir = new Path("data/test8m");
+		Path outDir = new Path("data/input/test");
+		FileUtils.cleanDirectory(new File("data/input/test"));
 		Path inFile = new Path(dir, "part-0");
-		Path outFile = new Path(dir, "part-0-out-20000000");
-		generateNumOfLinesFromBigFile(inFile,outFile,20000000);
+		Path outFile = new Path(outDir, "part-0-out-100");
+		generateNumOfLinesFromBigFile(inFile,outFile,100);
 	}
 
 }

@@ -156,6 +156,10 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	@Override
 	public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
 		initVertex();
+		/*if(getVertexId().toString().equals("TCCTACGAATTAATGCTCTCCCACGCAACATCACCATATCTTCACGGGAGAGCCG"))
+			System.out.println();
+		if(getVertexId().toString().equals("ATCCTACGAATTAATGCTCTCCCACGCAACATCACCATATCTTCACGGGAGAGCC"))
+			System.out.println();*/
 		if (getSuperstep() == 1) {
 			if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){ 
 				msg.set(getVertexId(), chainVertexId, getVertexId(), (byte)0, false);
@@ -171,12 +175,8 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 		//head node sends message to path node
 		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
 			while (msgIterator.hasNext()){
-				//if(getSuperstep() == 3 && GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap()))
-				//	voteToHalt();
-				//else{
 				msg = msgIterator.next();
 				sendMsgToPathVertex();
-				//}
 			}
 		}
 		//path node sends message back to head node

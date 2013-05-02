@@ -4,7 +4,6 @@ import java.io.*;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -19,7 +18,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 
 	public ValueStateWritable() {
 		state = State.NON_VERTEX;
-		mergeChain = new VKmerBytesWritable(-1);
+		mergeChain = new VKmerBytesWritable(0);
 	}
 
 	public ValueStateWritable(byte adjMap, byte state, VKmerBytesWritable mergeChain) {
@@ -53,7 +52,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	public int getLengthOfMergeChain() {
 		return mergeChain.getKmerLength();
 	}
-
+	
 	public VKmerBytesWritable getMergeChain() {
 		return mergeChain;
 	}
@@ -87,8 +86,8 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	
 	@Override
 	public String toString() {
-		if(mergeChain.getKmerLength() == -1 || mergeChain.getKmerLength() == 0)
-			return GeneCode.getSymbolFromBitMap(adjMap);
+		//if(mergeChain.getKmerLength() == -1 || mergeChain.getKmerLength() == 0)
+		//	return GeneCode.getSymbolFromBitMap(adjMap);
 		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
 				getLengthOfMergeChain() + "\t" +
 				mergeChain.toString();

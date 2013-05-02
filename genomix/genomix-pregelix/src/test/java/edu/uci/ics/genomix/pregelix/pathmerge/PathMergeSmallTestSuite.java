@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +30,6 @@ import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -46,18 +44,19 @@ public class PathMergeSmallTestSuite extends TestSuite {
 	private static final Logger LOGGER = Logger
 			.getLogger(PathMergeSmallTestSuite.class.getName());
 
-	public static final String PreFix = "data/PathTestSet";
+	public static final String PreFix = "data/input";
 	public static final String[] TestDir = { PreFix + File.separator
-		+ "TwoKmer", PreFix + File.separator
+		+ "test"};
+		/*+ "TwoKmer", PreFix + File.separator
 		+ "ThreeKmer", PreFix + File.separator
 		+ "SinglePath", PreFix + File.separator
 		+ "SimplePath", PreFix + File.separator
 		+ "Path", PreFix + File.separator
 		+ "BridgePath", PreFix + File.separator
 		+ "CyclePath", PreFix + File.separator
-		+ "CyclePath2", PreFix + File.separator
+		+ "RingPath", PreFix + File.separator
 		+ "LongPath", PreFix + File.separator
-		+ "TreePath"};
+		+ "TreePath"};*/
 	private static final String ACTUAL_RESULT_DIR = "actual";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 	private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

@@ -56,20 +56,20 @@ public class GenerateTestInput {
 		OutputStreamWriter writer;
 		try {
 			writer = new OutputStreamWriter(new FileOutputStream("graph/55/SinglePath_55"));
-			writer.write(simplePath(55,320,1));
+			writer.write(simplePath(55,60,1));
 			writer.close();
-			/*writer = new OutputStreamWriter(new FileOutputStream("graph/55/SimplePath_55"));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/55/SimplePath_55"));
 			writer.write(simplePath(55,60,3));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/TreePath"));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/55/TreePath_55"));
 			writer.write(treePath(55, 5, 5, 3));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/CyclePath"));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/55/CyclePath_55"));
 			writer.write(cyclePath(55,60));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/BridgePath"));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/55/BridgePath_55"));
 			writer.write(bridgePath(55,2));
-			writer.close();*/
+			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

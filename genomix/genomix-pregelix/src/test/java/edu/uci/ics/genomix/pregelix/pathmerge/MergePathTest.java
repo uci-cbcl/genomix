@@ -19,8 +19,10 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class MergePathTest {
 	public static final String PATH_TO_TESTSTORE = "testcase/pathmerge/"; 
-	public static final String NAIVE_DATA_INPUT = "genomix_result/pathmerge/naive_35";
-	public static final String LOG_DATA_INPUT = "genomix_result/pathmerge/log_12";
+	//"genomix_result/pathmerge/new_naive";
+	public static final String NAIVE_DATA_INPUT = "genomix_result/pathmerge/new_naive";//"actual/NaiveAlgorithmForMergeGraph/BinaryOutput/test";
+	//"genomix_result/pathmerge/new_log";
+	public static final String LOG_DATA_INPUT = "genomix_result/pathmerge/new_log";//"actual/TwoStepLogAlgorithmForMergeGraph/BinaryOutput/test";
 	public static final String TEXT_OUTPUT = PATH_TO_TESTSTORE + "textfile";
 	public static final String CHAIN_OUTPUT = PATH_TO_TESTSTORE + "chain";
 	
@@ -56,14 +58,13 @@ public class MergePathTest {
 				if (key == null || value == null){
 					break;
 				}
-				if(value.getLengthOfMergeChain() != -1
-						&& value.getState() == State.FINAL_VERTEX){
-					bw.write(value.getLengthOfMergeChain() + "\t" +
-							value.getMergeChain().toString() + "\t" +
-							GeneCode.getSymbolFromBitMap(value.getAdjMap()));
-					
-					bw.newLine();
-				}
+				/*bw.write(value.getLengthOfMergeChain() + "\t" +
+						value.getMergeChain().toString() + "\t" +
+						GeneCode.getSymbolFromBitMap(value.getAdjMap()) + "\t" +
+						key.toString());*/
+				bw.write(key.toString() + "\t" + 
+						value.toString());
+				bw.newLine();
 		    }
 		    reader.close();
 		}

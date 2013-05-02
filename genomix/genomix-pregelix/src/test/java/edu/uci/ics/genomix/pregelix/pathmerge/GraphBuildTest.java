@@ -34,15 +34,14 @@ public class GraphBuildTest {
 	private static final String ACTUAL_RESULT_DIR = "graphbuildresult";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-	private static final String DATA_PATH = "data/TwoKmer";
-	private static final String HDFS_INPUT_PATH = "/CyclePath2";
-	private static final String HDFS_OUTPUT_PATH = "/CyclePath2_result";
+	private static final String DATA_PATH = "data/TreePath_55";
+	private static final String HDFS_INPUT_PATH = "/test";
+	private static final String HDFS_OUTPUT_PATH = "/result";
 
 	private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR
 			+ HDFS_OUTPUT_PATH + "/result.txt";
-	private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
+	private static final String CONVERT_RESULT = "graph/result.txt.txt";
 	private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
-	private static final String EXPECTED_REVERSE_PATH = "src/test/resources/expected/result_reverse";
 
 	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
 			+ File.separator + "conf.xml";
@@ -65,7 +64,7 @@ public class GraphBuildTest {
 		FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
 		FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
-		conf.setInt(GenomixJob.KMER_LENGTH, 5);
+		conf.setInt(GenomixJob.KMER_LENGTH, 55);
 		driver = new Driver(
 				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
 				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT,
