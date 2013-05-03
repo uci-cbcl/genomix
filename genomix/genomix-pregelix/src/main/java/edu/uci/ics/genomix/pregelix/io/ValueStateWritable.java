@@ -15,10 +15,14 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	private byte adjMap;
 	private byte state;
 	private VKmerBytesWritable mergeChain;
+	
+	//extra - for test
+	//private boolean isOp;
 
 	public ValueStateWritable() {
 		state = State.NON_VERTEX;
 		mergeChain = new VKmerBytesWritable(0);
+		//isOp = false;
 	}
 
 	public ValueStateWritable(byte adjMap, byte state, VKmerBytesWritable mergeChain) {
@@ -65,11 +69,20 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		this.mergeChain.set(mergeChain);
 	}
 
+	/*public boolean isOp() {
+		return isOp;
+	}
+
+	public void setOp(boolean isOp) {
+		this.isOp = isOp;
+	}*/
+
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		adjMap = in.readByte();
 		state = in.readByte();
 		mergeChain.readFields(in);
+		//isOp = in.readBoolean();
 	}
 
 	@Override
@@ -77,6 +90,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		out.writeByte(adjMap);
 		out.writeByte(state);
 		mergeChain.write(out);
+		//out.writeBoolean(isOp);
 	}
 
 	@Override
@@ -86,8 +100,6 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	
 	@Override
 	public String toString() {
-		//if(mergeChain.getKmerLength() == -1 || mergeChain.getKmerLength() == 0)
-		//	return GeneCode.getSymbolFromBitMap(adjMap);
 		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
 				getLengthOfMergeChain() + "\t" +
 				mergeChain.toString();

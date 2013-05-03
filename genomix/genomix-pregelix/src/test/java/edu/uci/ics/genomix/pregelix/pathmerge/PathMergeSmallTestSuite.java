@@ -44,10 +44,23 @@ public class PathMergeSmallTestSuite extends TestSuite {
 	private static final Logger LOGGER = Logger
 			.getLogger(PathMergeSmallTestSuite.class.getName());
 
-	public static final String PreFix = "data/input";
+	public static final String PreFix = "data/7";
 	public static final String[] TestDir = { PreFix + File.separator
-		+ "test"};
-		/*+ "TwoKmer", PreFix + File.separator
+		+ "BridgePath", PreFix + File.separator
+		+ "CyclePath", PreFix + File.separator
+		+ "SimplePath", PreFix + File.separator
+		+ "SinglePath", PreFix + File.separator
+		+ "TreePath"};
+		/*+ "2", PreFix + File.separator
+		+ "3", PreFix + File.separator
+		+ "4", PreFix + File.separator
+		+ "5", PreFix + File.separator
+		+ "6", PreFix + File.separator
+		+ "7", PreFix + File.separator
+		+ "8", PreFix + File.separator
+		+ "9", PreFix + File.separator
+		+ "10"}; , PreFix + File.separator
+		+ "TwoKmer", PreFix + File.separator
 		+ "ThreeKmer", PreFix + File.separator
 		+ "SinglePath", PreFix + File.separator
 		+ "SimplePath", PreFix + File.separator

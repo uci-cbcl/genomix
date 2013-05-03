@@ -10,10 +10,6 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
-import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.NaiveAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
@@ -50,7 +46,7 @@ import edu.uci.ics.genomix.pregelix.util.GraphVertexOperation;
 /**
  * Naive Algorithm for path merge graph
  */
-public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable>{
+public class NaiveFilterVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable>{
 	
 	public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
 	public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
@@ -157,20 +153,31 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
 		initVertex();
 		if (getSuperstep() == 1) {
-			if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){ 
-				msg.set(getVertexId(), chainVertexId, getVertexId(), (byte)0, false);
-				sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
+			if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
+				if(getVertexId().toString().equals("AAGAC")){
+					//getVertexValue().setOp(true);
+					//setVertexValue(getVertexValue());
+					msg.set(getVertexId(), chainVertexId, getVertexId(), (byte)0, false);
+					sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
+				}
+				else
+					voteToHalt();
 			}
 		}
 		else if(getSuperstep() == 2){
 			if(msgIterator.hasNext()){
+				//getVertexValue().setOp(true);
+				//setVertexValue(getVertexValue());
 				msg = msgIterator.next();
 				initChainVertex();
+				
 			}
 		}
 		//head node sends message to path node
 		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
 			while (msgIterator.hasNext()){
+				//getVertexValue().setOp(true);
+				//setVertexValue(getVertexValue());
 				msg = msgIterator.next();
 				sendMsgToPathVertex();
 			}
@@ -178,27 +185,12 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 		//path node sends message back to head node
 		else if(getSuperstep()%2 == 0 && getSuperstep() > 2 && getSuperstep() <= maxIteration){
 			 while(msgIterator.hasNext()){
+				//getVertexValue().setOp(true);
+				//setVertexValue(getVertexValue());
 				msg = msgIterator.next();
 				responseMsgToHeadVertex();
 			}
 		}
 		voteToHalt();
-	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(NaiveAlgorithmForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
-        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class); 
-        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class); 
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
-        Client.run(args, job);
 	}
 }

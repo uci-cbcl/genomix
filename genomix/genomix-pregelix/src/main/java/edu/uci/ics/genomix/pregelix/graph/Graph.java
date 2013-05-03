@@ -50,6 +50,10 @@ public class Graph {
 	public static void main(String[] args) throws Exception
 	{
 		Graph g = new Graph();
-		g.start("result.txt.txt");
+		g.start("BridgePath_7");
+		g.start("CyclePath_7");
+		g.start("SimplePath_7");
+		g.start("SinglePath_7");
+		g.start("TreePath_7");
 	}
 }

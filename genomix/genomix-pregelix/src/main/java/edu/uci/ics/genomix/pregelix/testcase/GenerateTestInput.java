@@ -55,20 +55,20 @@ public class GenerateTestInput {
 		// TODO Auto-generated method stub
 		OutputStreamWriter writer;
 		try {
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/SinglePath_55"));
-			writer.write(simplePath(55,60,1));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/7/SinglePath"));
+			writer.write(simplePath(7,10,1));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/SimplePath_55"));
-			writer.write(simplePath(55,60,3));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/7/SimplePath"));
+			writer.write(simplePath(7,10,3));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/TreePath_55"));
-			writer.write(treePath(55, 5, 5, 3));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/7/TreePath"));
+			writer.write(treePath(7, 7, 7, 7));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/CyclePath_55"));
-			writer.write(cyclePath(55,60));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/7/CyclePath"));
+			writer.write(cyclePath(7,10));
 			writer.close();
-			writer = new OutputStreamWriter(new FileOutputStream("graph/55/BridgePath_55"));
-			writer.write(bridgePath(55,2));
+			writer = new OutputStreamWriter(new FileOutputStream("graph/7/BridgePath"));
+			writer.write(bridgePath(7,2));
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();

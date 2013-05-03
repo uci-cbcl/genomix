@@ -34,13 +34,14 @@ public class GraphBuildTest {
 	private static final String ACTUAL_RESULT_DIR = "graphbuildresult";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-	private static final String DATA_PATH = "data/TreePath_55";
+	private static final String DATA_PATH = "graph/7/TreePath";
 	private static final String HDFS_INPUT_PATH = "/test";
 	private static final String HDFS_OUTPUT_PATH = "/result";
 
 	private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR
 			+ HDFS_OUTPUT_PATH + "/result.txt";
-	private static final String CONVERT_RESULT = "graph/result.txt.txt";
+	private static final String CONVERT_RESULT = ACTUAL_RESULT_DIR
+			+ HDFS_OUTPUT_PATH + "/result.txt.txt";
 	private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
 
 	private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR
@@ -64,7 +65,7 @@ public class GraphBuildTest {
 		FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
 		FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
-		conf.setInt(GenomixJob.KMER_LENGTH, 55);
+		conf.setInt(GenomixJob.KMER_LENGTH, 7);
 		driver = new Driver(
 				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
 				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT,
@@ -114,24 +115,17 @@ public class GraphBuildTest {
 	@Test
 	public void TestAll() throws Exception {
 		cleanUpReEntry();
-		TestHybridGroupby();
-		cleanUpReEntry();
 		TestPreClusterGroupby();
 	}
 
 	public void TestPreClusterGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
+		//conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		System.err.println("Testing PreClusterGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
 	}
 
-	public void TestHybridGroupby() throws Exception {
-		conf.set(GenomixJob.GROUPBY_TYPE, "hybrid");
-		System.err.println("Testing HybridGroupBy");
-		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-		Assert.assertEquals(true, checkResults(EXPECTED_PATH));
-	}
 
 	private boolean checkResults(String expectedPath) throws Exception {
 		File dumped = null;

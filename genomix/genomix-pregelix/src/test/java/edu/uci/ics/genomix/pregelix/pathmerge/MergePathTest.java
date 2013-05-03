@@ -58,13 +58,18 @@ public class MergePathTest {
 				if (key == null || value == null){
 					break;
 				}
-				/*bw.write(value.getLengthOfMergeChain() + "\t" +
-						value.getMergeChain().toString() + "\t" +
-						GeneCode.getSymbolFromBitMap(value.getAdjMap()) + "\t" +
-						key.toString());*/
-				bw.write(key.toString() + "\t" + 
-						value.toString());
-				bw.newLine();
+				if(value.getLengthOfMergeChain() != 0
+						&& value.getLengthOfMergeChain() != -1){
+						//&& value.getState() == State.FINAL_VERTEX){
+					//bw.write(key.toString() + "\t" + 
+					//	value.toString());
+					bw.write(value.getLengthOfMergeChain() + "\t" +
+							value.getMergeChain().toString() + "\t" +
+							GeneCode.getSymbolFromBitMap(value.getAdjMap()) + "\t" +
+							value.getState());
+							//+ "\t" + key.toString());
+					bw.newLine();
+				}
 		    }
 		    reader.close();
 		}

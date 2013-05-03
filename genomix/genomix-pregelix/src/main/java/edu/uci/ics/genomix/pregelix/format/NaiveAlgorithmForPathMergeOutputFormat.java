@@ -14,6 +14,8 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
 
 public class NaiveAlgorithmForPathMergeOutputFormat extends 
 	BinaryVertexOutputFormat<KmerBytesWritable, ValueStateWritable, NullWritable> {
+	
+	
 
         @Override
         public VertexWriter<KmerBytesWritable, ValueStateWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
@@ -31,12 +33,11 @@ public class NaiveAlgorithmForPathMergeOutputFormat extends
             public BinaryLoadGraphVertexWriter(RecordWriter<KmerBytesWritable, ValueStateWritable> lineRecordWriter) {
                 super(lineRecordWriter);
             }
-
             @Override
             public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
-            	//if(vertex.getVertexValue().getLengthOfMergeChain() != NaiveAlgorithmForPathMergeVertex.kmerSize)
-            		getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
+            	//if(vertex.getVertexValue().isOp() == true)
+    			getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
             }
         }
 }

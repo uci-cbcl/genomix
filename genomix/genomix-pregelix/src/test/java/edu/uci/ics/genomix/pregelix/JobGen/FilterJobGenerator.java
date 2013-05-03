@@ -9,46 +9,48 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.operator.LogFilterVertex;
 import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.NaiveFilterVertex;
 import edu.uci.ics.genomix.pregelix.operator.TwoStepLogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 
-public class JobGenerator {
+public class FilterJobGenerator {
 
     public static String outputBase = "src/test/resources/jobs/";
     
-    private static void generateNaiveAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
+    private static void generateNaiveFilterJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
+    	job.setVertexClass(NaiveFilterVertex.class);
     	job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 7);
+        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
-    private static void genNaiveAlgorithmForMergeGraph() throws IOException {
-    	generateNaiveAlgorithmForMergeGraphJob("NaiveAlgorithmForMergeGraph", outputBase + "NaiveAlgorithmForMergeGraph.xml");
+    private static void genNaiveFilter() throws IOException {
+    	generateNaiveFilterJob("NaiveFilterVertex", outputBase + "NaiveFilterVertex.xml");
     }
     
-    private static void generateTwoStepLogAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
+    private static void generateLogFilterJob(String jobName, String outputPath) throws IOException {
     	PregelixJob job = new PregelixJob(jobName);
-    	job.setVertexClass(TwoStepLogAlgorithmForPathMergeVertex.class);
+    	job.setVertexClass(LogFilterVertex.class);
         job.setVertexInputFormatClass(LogAlgorithmForPathMergeInputFormat.class); 
         job.setVertexOutputFormatClass(LogAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.KMER_SIZE, 7);
+        job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
-    private static void genTwoStepLogAlgorithmForMergeGraph() throws IOException {
-    	generateTwoStepLogAlgorithmForMergeGraphJob("TwoStepLogAlgorithmForMergeGraph", outputBase + "TwoStepLogAlgorithmForMergeGraph.xml");
+    private static void genLogFilter() throws IOException {
+    	generateLogFilterJob("LogFilterVertex", outputBase + "LogFilterVertex.xml");
     }
     
 	/**
@@ -56,8 +58,8 @@ public class JobGenerator {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		genNaiveAlgorithmForMergeGraph();
-		genTwoStepLogAlgorithmForMergeGraph();
+		genNaiveFilter();
+		genLogFilter();
 	}
 
 }

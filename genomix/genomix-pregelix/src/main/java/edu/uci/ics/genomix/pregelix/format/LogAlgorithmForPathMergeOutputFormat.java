@@ -34,13 +34,14 @@ public class LogAlgorithmForPathMergeOutputFormat extends
             public BinaryLoadGraphVertexWriter(RecordWriter<KmerBytesWritable, ValueStateWritable> lineRecordWriter) {
                 super(lineRecordWriter);
             }
-
             @Override
             public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
                     InterruptedException {
             	if(vertex.getVertexValue().getState() != State.FINAL_DELETE
-            			&& vertex.getVertexValue().getState() != State.END_VERTEX)
-                    getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
+            			&& vertex.getVertexValue().getState() != State.END_VERTEX){
+            		getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
+            	}
+                    
             }
         }
 }

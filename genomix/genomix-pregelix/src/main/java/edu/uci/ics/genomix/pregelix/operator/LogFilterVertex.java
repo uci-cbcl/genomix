@@ -5,10 +5,6 @@ import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
-import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
@@ -47,7 +43,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
  * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
-public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{	
+public class LogFilterVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{	
 	
 	public static final String KMER_SIZE = "TwoStepLogAlgorithmForPathMergeVertex.kmerSize";
 	public static final String ITERATIONS = "TwoStepLogAlgorithmForPathMergeVertex.iteration";
@@ -324,13 +320,21 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	public boolean mergeChainVertex(Iterator<LogAlgorithmMessageWritable> msgIterator){
 		return setVertexValueAttributes();
 	}
+	
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
 		initVertex();
-		if (getSuperstep() == 1) 
-			startSendMsg();
-		else if(getSuperstep() == 2)
+		if (getSuperstep() == 1){
+			if(getVertexId().toString().equals("AAGAC") 
+					|| getVertexId().toString().equals("AGCAC")){
+				startSendMsg();
+			}
+		}
+		else if(getSuperstep() == 2){
 			initState(msgIterator);
+			if(getVertexValue().getState() == State.NON_VERTEX)
+				voteToHalt();
+		}
 		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
 			sendMsgToPathVertex(msgIterator);
 		}
@@ -339,21 +343,5 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		}
 		else
 			voteToHalt();
-	}
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(TwoStepLogAlgorithmForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(TwoStepLogAlgorithmForPathMergeVertex.class);
-        /**
-         * BinaryInput and BinaryOutput~/
-         */
-        job.setVertexInputFormatClass(LogAlgorithmForPathMergeInputFormat.class); 
-        job.setVertexOutputFormatClass(LogAlgorithmForPathMergeOutputFormat.class); 
-        job.setOutputKeyClass(KmerBytesWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
-        job.setDynamicVertexValueSize(true);
-        Client.run(args, job);
 	}
 }
