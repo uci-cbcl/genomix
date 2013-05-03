@@ -8,7 +8,7 @@ public class State {
 	public static final byte MID_VERTEX = 3;
 	public static final byte TODELETE = 4;
 	public static final byte FINAL_VERTEX = 5;
-	public static final byte FINAL_DELETE = 6;
+	public static final byte FILTER = 6;
 	public static final byte CYCLE = 7;
 	
 	public final static class STATE_CONTENT{
@@ -34,7 +34,7 @@ public class State {
 			case FINAL_VERTEX:
 				r = "FINAL_VERTEX";
 				break;
-			case FINAL_DELETE:
+			case FILTER:
 				r = "FINAL_DELETE";
 				break;
 			case CYCLE:

@@ -29,7 +29,7 @@ public class FilterJobGenerator {
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 5);
+        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 55);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -59,7 +59,7 @@ public class FilterJobGenerator {
 	 */
 	public static void main(String[] args) throws IOException {
 		genNaiveFilter();
-		genLogFilter();
+		//genLogFilter();
 	}
 
 }

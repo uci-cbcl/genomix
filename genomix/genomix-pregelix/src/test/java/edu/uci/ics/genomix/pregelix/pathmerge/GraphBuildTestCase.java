@@ -60,7 +60,6 @@ public class GraphBuildTestCase extends TestCase {
 
 	public void TestPreClusterGroupby() throws Exception {
 		conf.set(GenomixJob.GROUPBY_TYPE, "precluster");
-		//conf.set(GenomixJob.OUTPUT_FORMAT, "text");
 		System.err.println("Testing PreClusterGroupBy");
 		driver.runJob(new GenomixJob(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
 		Assert.assertEquals(true, checkResults());

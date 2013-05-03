@@ -59,8 +59,8 @@ public class MergePathTest {
 					break;
 				}
 				if(value.getLengthOfMergeChain() != 0
-						&& value.getLengthOfMergeChain() != -1){
-						//&& value.getState() == State.FINAL_VERTEX){
+						&& value.getLengthOfMergeChain() != -1
+						&& value.getState() == State.FINAL_VERTEX){
 					//bw.write(key.toString() + "\t" + 
 					//	value.toString());
 					bw.write(value.getLengthOfMergeChain() + "\t" +

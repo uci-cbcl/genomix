@@ -44,14 +44,15 @@ public class PathMergeSmallTestSuite extends TestSuite {
 	private static final Logger LOGGER = Logger
 			.getLogger(PathMergeSmallTestSuite.class.getName());
 
-	public static final String PreFix = "data/PathTestSet";
+	public static final String PreFix = "data";
 	public static final String[] TestDir = { PreFix + File.separator
+		+  "test8m"};
 		/*+ "BridgePath", PreFix + File.separator
 		+ "CyclePath", PreFix + File.separator
 		+ "SimplePath", PreFix + File.separator
 		+ "SinglePath", PreFix + File.separator
 		+ "TreePath"};*/
-		+ "2", PreFix + File.separator
+		/*+ "2", PreFix + File.separator
 		+ "3", PreFix + File.separator
 		+ "4", PreFix + File.separator
 		+ "5", PreFix + File.separator
@@ -69,7 +70,7 @@ public class PathMergeSmallTestSuite extends TestSuite {
 		+ "CyclePath", PreFix + File.separator
 		+ "RingPath", PreFix + File.separator
 		+ "LongPath", PreFix + File.separator
-		+ "TreePath"};
+		+ "TreePath"};*/
 	private static final String ACTUAL_RESULT_DIR = "actual";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 	private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

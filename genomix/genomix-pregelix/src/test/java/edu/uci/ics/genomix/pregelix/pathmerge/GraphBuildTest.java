@@ -34,7 +34,7 @@ public class GraphBuildTest {
 	private static final String ACTUAL_RESULT_DIR = "graphbuildresult";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-	private static final String DATA_PATH = "graph/7/TreePath";
+	private static final String DATA_PATH = "data/shortjump_1.head8M.fastq";
 	private static final String HDFS_INPUT_PATH = "/test";
 	private static final String HDFS_OUTPUT_PATH = "/result";
 
@@ -65,7 +65,7 @@ public class GraphBuildTest {
 		FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
 		FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
-		conf.setInt(GenomixJob.KMER_LENGTH, 7);
+		conf.setInt(GenomixJob.KMER_LENGTH, 55);
 		driver = new Driver(
 				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
 				edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT,

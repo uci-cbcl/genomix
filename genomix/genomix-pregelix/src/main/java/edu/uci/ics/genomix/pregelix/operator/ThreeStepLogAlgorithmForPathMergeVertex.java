@@ -165,7 +165,7 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 			if(getVertexValue().getState() == State.START_VERTEX){
 				sendStartMsgToNextNode();
 			}
-			else if(getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE){
+			else if(getVertexValue().getState() != State.END_VERTEX){
 				sendEndMsgToNextNode();
 			}
 		}
@@ -189,9 +189,9 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 	 */
 	public void setMessageType(int message){
 		//kill Message because it has been merged by the head
-		if(getVertexValue().getState() == State.END_VERTEX || getVertexValue().getState() == State.FINAL_DELETE){
+		if(getVertexValue().getState() == State.END_VERTEX){
 			msg.setMessage(Message.END);
-			getVertexValue().setState(State.FINAL_DELETE);
+			getVertexValue().setState(State.END_VERTEX);
 			setVertexValue(getVertexValue());
 			//deleteVertex(getVertexId());
 		}
@@ -297,7 +297,7 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 		}
 		else{
 			if(getVertexValue().getState() != State.START_VERTEX 
-					&& getVertexValue().getState() != State.END_VERTEX && getVertexValue().getState() != State.FINAL_DELETE){
+					&& getVertexValue().getState() != State.END_VERTEX){
 				deleteVertex(getVertexId());//killSelf because it doesn't receive any message
 			}
 		}
@@ -311,7 +311,7 @@ public class ThreeStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWri
 			setVertexValueAttributes();
 			sendMsgToSelf();
 		}
-		if(getVertexValue().getState() == State.END_VERTEX || getVertexValue().getState() == State.FINAL_DELETE){
+		if(getVertexValue().getState() == State.END_VERTEX){
 			voteToHalt();
 		}
 		if(getVertexValue().getState() == State.FINAL_VERTEX){
