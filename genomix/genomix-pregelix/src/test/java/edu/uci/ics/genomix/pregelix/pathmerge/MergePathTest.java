@@ -20,9 +20,9 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 public class MergePathTest {
 	public static final String PATH_TO_TESTSTORE = "testcase/pathmerge/"; 
 	//"genomix_result/pathmerge/new_naive";
-	public static final String NAIVE_DATA_INPUT = "genomix_result/pathmerge/new_naive";//"actual/NaiveAlgorithmForMergeGraph/BinaryOutput/test";
+	public static final String NAIVE_DATA_INPUT = "genomix_result/pathmerge/naive_newest";//"actual/NaiveAlgorithmForMergeGraph/BinaryOutput/test";
 	//"genomix_result/pathmerge/new_log";
-	public static final String LOG_DATA_INPUT = "genomix_result/pathmerge/new_log";//"actual/TwoStepLogAlgorithmForMergeGraph/BinaryOutput/test";
+	public static final String LOG_DATA_INPUT = "genomix_result/pathmerge/log_newest";//"actual/TwoStepLogAlgorithmForMergeGraph/BinaryOutput/test";
 	public static final String TEXT_OUTPUT = PATH_TO_TESTSTORE + "textfile";
 	public static final String CHAIN_OUTPUT = PATH_TO_TESTSTORE + "chain";
 	

@@ -27,7 +27,7 @@ public class JobGenerator {
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 7);
+        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
@@ -43,7 +43,7 @@ public class JobGenerator {
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.KMER_SIZE, 7);
+        job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
