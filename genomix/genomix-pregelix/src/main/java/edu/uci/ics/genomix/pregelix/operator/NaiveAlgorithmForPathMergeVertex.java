@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.io.NullWritable;
 
@@ -51,6 +52,8 @@ import edu.uci.ics.genomix.pregelix.util.GraphVertexOperation;
  * Naive Algorithm for path merge graph
  */
 public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable>{
+	public static Logger logger = Logger.getLogger(NaiveAlgorithmForPathMergeVertex.class.getName()); 
+
 	
 	public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
 	public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
@@ -161,6 +164,7 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 				msg.set(getVertexId(), chainVertexId, getVertexId(), (byte)0, false);
 				sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
 			}
+			
 		}
 		else if(getSuperstep() == 2){
 			if(msgIterator.hasNext()){
@@ -182,6 +186,12 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 				responseMsgToHeadVertex();
 			}
 		}
+		String log = "Iterator:" + getSuperstep();
+		log += getVertexId().toString() + "\t";
+		log += getVertexValue().getMergeChain().toString() + "\t";
+		log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
+		log += getVertexValue().getState();
+		logger.info(log);
 		voteToHalt();
 	}
 

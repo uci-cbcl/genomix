@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.io.NullWritable;
 
@@ -48,6 +49,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{	
+	public static Logger logger = Logger.getLogger(TwoStepLogAlgorithmForPathMergeVertex.class.getName()); 
 	
 	public static final String KMER_SIZE = "TwoStepLogAlgorithmForPathMergeVertex.kmerSize";
 	public static final String ITERATIONS = "TwoStepLogAlgorithmForPathMergeVertex.iteration";
@@ -339,6 +341,12 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		}
 		else
 			voteToHalt();
+		String log = "Iterator:" + getSuperstep();
+		log += getVertexId().toString() + "\t";
+		log += getVertexValue().getMergeChain().toString() + "\t";
+		log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
+		log += getVertexValue().getState();
+		logger.info(log);
 	}
 	/**
 	 * @param args

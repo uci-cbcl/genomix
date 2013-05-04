@@ -54,8 +54,10 @@ public class NaiveFilterVertex extends Vertex<KmerBytesWritable, ValueStateWrita
 	
 	public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
 	public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
+	public static final String FILTERKMER = "NaiveFilterVertex.filterKmer";
 	public static int kmerSize = -1;
 	private int maxIteration = -1;
+	private String filterKmer = "";
 
 	private NaiveAlgorithmMessageWritable msg = new NaiveAlgorithmMessageWritable();
 
@@ -72,6 +74,8 @@ public class NaiveFilterVertex extends Vertex<KmerBytesWritable, ValueStateWrita
 			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0) 
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+        if(filterKmer.equals(""))
+        	filterKmer = getContext().getConfiguration().get(FILTERKMER, "");
 	}
 	public void findDestination(){
 		destVertexId.set(msg.getSourceVertexId());
@@ -147,8 +151,8 @@ public class NaiveFilterVertex extends Vertex<KmerBytesWritable, ValueStateWrita
 				byte tmp = GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getAdjMap(), msg.getSourceVertexId(), kmerSize);
 				getVertexValue().set(tmp, State.FINAL_VERTEX, msg.getChainVertexId());
 				setVertexValue(getVertexValue());
-				//String source = msg.getChainVertexId().toString();
-				//System.out.print("");
+				String source = msg.getChainVertexId().toString();
+				System.out.print("");
 			}
 		}
 	}
@@ -158,7 +162,7 @@ public class NaiveFilterVertex extends Vertex<KmerBytesWritable, ValueStateWrita
 		initVertex();
 		if (getSuperstep() == 1) {
 			if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
-				if(getVertexId().toString().equals("ACGTTATATGGGACGACGTTATAACGTATTACGTTATATGGGATGTCGTTATAAC")){
+				if(getVertexId().toString().equals(filterKmer)){
 					getVertexValue().setState(State.FILTER);
 					setVertexValue(getVertexValue());
 					msg.set(getVertexId(), chainVertexId, getVertexId(), (byte)0, false);

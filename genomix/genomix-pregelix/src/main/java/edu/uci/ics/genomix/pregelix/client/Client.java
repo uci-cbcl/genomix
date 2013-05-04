@@ -10,6 +10,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.pregelix.operator.NaiveFilterVertex;
 import edu.uci.ics.genomix.pregelix.operator.ThreeStepLogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.TwoStepLogAlgorithmForPathMergeVertex;
@@ -43,6 +44,9 @@ public class Client {
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
+        
+        @Option(name = "-filter-kmer", usage = "whether to do runtime profifling", required = false)
+        public String filterKmer = "";
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -69,6 +73,7 @@ public class Client {
             job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
             job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
         }
+        job.getConfiguration().set(NaiveFilterVertex.FILTERKMER, options.filterKmer);
         return options;
     }
 
