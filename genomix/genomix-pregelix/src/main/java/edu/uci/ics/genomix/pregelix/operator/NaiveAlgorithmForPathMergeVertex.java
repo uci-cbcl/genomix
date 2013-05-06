@@ -52,7 +52,7 @@ import edu.uci.ics.genomix.pregelix.util.GraphVertexOperation;
  * Naive Algorithm for path merge graph
  */
 public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable>{
-	public static Logger logger = Logger.getLogger(NaiveAlgorithmForPathMergeVertex.class.getName()); 
+	//public static Logger logger = Logger.getLogger(NaiveAlgorithmForPathMergeVertex.class.getName()); 
 
 	
 	public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
@@ -186,12 +186,12 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 				responseMsgToHeadVertex();
 			}
 		}
-		String log = "Iterator:" + getSuperstep();
+		/*String log = "Iterator:" + getSuperstep();
 		log += getVertexId().toString() + "\t";
 		log += getVertexValue().getMergeChain().toString() + "\t";
 		log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
 		log += getVertexValue().getState();
-		logger.info(log);
+		logger.info(log);*/
 		voteToHalt();
 	}
 

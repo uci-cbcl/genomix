@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -44,15 +46,15 @@ public class PathMergeSmallTestSuite extends TestSuite {
 	private static final Logger LOGGER = Logger
 			.getLogger(PathMergeSmallTestSuite.class.getName());
 
-	public static final String PreFix = "data";
+	public static final String PreFix = "graphbuildresult"; //"graphbuildresult";
 	public static final String[] TestDir = { PreFix + File.separator
-		+  "test8m"};
+		+  "result"};
 		/*+ "BridgePath", PreFix + File.separator
 		+ "CyclePath", PreFix + File.separator
 		+ "SimplePath", PreFix + File.separator
 		+ "SinglePath", PreFix + File.separator
-		+ "TreePath"};*/
-		/*+ "2", PreFix + File.separator
+		+ "TreePath"};
+		+ "2"}, PreFix + File.separator
 		+ "3", PreFix + File.separator
 		+ "4", PreFix + File.separator
 		+ "5", PreFix + File.separator
@@ -60,7 +62,6 @@ public class PathMergeSmallTestSuite extends TestSuite {
 		+ "7", PreFix + File.separator
 		+ "8", PreFix + File.separator
 		+ "9", PreFix + File.separator
-		+ "10", PreFix + File.separator
 		+ "TwoKmer", PreFix + File.separator
 		+ "ThreeKmer", PreFix + File.separator
 		+ "SinglePath", PreFix + File.separator
@@ -112,6 +113,7 @@ public class PathMergeSmallTestSuite extends TestSuite {
 			File src = new File(testDir);
 			Path dest = new Path(HDFS_INPUTPATH + File.separator + src.getName());
 			dfs.mkdirs(dest);
+			//src.listFiles()
 			//src.listFiles((FilenameFilter)(new WildcardFileFilter("part*")))
 			for (File f : src.listFiles()){
 				dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);

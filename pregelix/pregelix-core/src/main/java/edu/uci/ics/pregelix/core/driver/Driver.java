@@ -130,7 +130,6 @@ public class Driver implements IDriver {
             do {
                 start = System.currentTimeMillis();
                 runLoopBodyIteration(deploymentId, jobGen, i);
-                runHDFSWRite(deploymentId, jobGen);
                 end = System.currentTimeMillis();
                 time = end - start;
                 LOG.info("iteration " + i + " finished " + time + "ms");

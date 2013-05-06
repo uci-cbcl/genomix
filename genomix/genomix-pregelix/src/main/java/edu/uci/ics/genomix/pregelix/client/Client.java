@@ -45,8 +45,8 @@ public class Client {
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
         
-        @Option(name = "-filter-kmer", usage = "whether to do runtime profifling", required = false)
-        public String filterKmer = "";
+        //@Option(name = "-filter-kmer", usage = "whether to do runtime profifling", required = false)
+        //public String filterKmer = "";
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -73,7 +73,7 @@ public class Client {
             job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
             job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
         }
-        job.getConfiguration().set(NaiveFilterVertex.FILTERKMER, options.filterKmer);
+        //job.getConfiguration().set(NaiveFilterVertex.FILTERKMER, options.filterKmer);
         return options;
     }
 
