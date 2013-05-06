@@ -49,7 +49,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{	
-	//public static Logger logger = Logger.getLogger(TwoStepLogAlgorithmForPathMergeVertex.class.getName()); 
+	public static Logger logger = Logger.getLogger(TwoStepLogAlgorithmForPathMergeVertex.class.getName()); 
 	
 	public static final String KMER_SIZE = "TwoStepLogAlgorithmForPathMergeVertex.kmerSize";
 	public static final String ITERATIONS = "TwoStepLogAlgorithmForPathMergeVertex.iteration";
@@ -98,6 +98,13 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 			if((adjMap & (1 << x)) != 0){
 				destVertexId.set(getNextDestVertexId(vertexId, x));
 				sendMsg(destVertexId, msg);
+				String log = "Iterator:" + getSuperstep();
+				log += getVertexId().toString() + "\t";
+				log += getVertexValue().getMergeChain().toString() + "\t";
+				log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
+				log += getVertexValue().getState() + "\t";
+				log += "Dest: " + destVertexId.toString();
+				logger.info(log);
 			}
 		}
 	}
@@ -137,6 +144,15 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		msg.reset();
 		msg.setMessage(Message.START);
 		msg.setSourceVertexId(getVertexId());
+		if(getVertexId().toString().equals("CGGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGG")){
+			String log = "Iterator:" + getSuperstep();
+			log += getVertexId().toString() + "\t";
+			log += getVertexValue().getMergeChain().toString() + "\t";
+			log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
+			log += getVertexValue().getState() + "\t";
+			log += "Dest: " + destVertexId.toString();
+			logger.info(log);
+		}
 		sendMsg(destVertexId, msg);
 		voteToHalt();
 	}
@@ -147,6 +163,15 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		msg.reset();
 		msg.setMessage(Message.END);
 		msg.setSourceVertexId(getVertexId());
+		if(getVertexId().toString().equals("CGGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGG")){
+			String log = "Iterator:" + getSuperstep();
+			log += getVertexId().toString() + "\t";
+			log += getVertexValue().getMergeChain().toString() + "\t";
+			log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
+			log += getVertexValue().getState() + "\t";
+			log += "Dest: " + destVertexId.toString();
+			logger.info(log);
+		}
 		sendMsg(destVertexId, msg);
 		voteToHalt();
 	}
@@ -253,7 +278,9 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	public void startSendMsg(){
 		if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
 			msg.set(null, null, (byte)0, Message.START);
-			sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
+			if(getVertexId().toString().equals("CGGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGG")){
+				sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
+			}
 			voteToHalt();
 		}
 		if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
@@ -271,6 +298,12 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	 */
 	public void initState(Iterator<LogAlgorithmMessageWritable> msgIterator){
 		while(msgIterator.hasNext()){
+			String log = "Iterator:" + getSuperstep();
+			log += getVertexId().toString() + "\t";
+			log += getVertexValue().getMergeChain().toString() + "\t";
+			log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
+			log += getVertexValue().getState();
+			logger.info(log);
 			if(!GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
 				msgIterator.next();
 				voteToHalt();
@@ -341,12 +374,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		}
 		else
 			voteToHalt();
-		/*String log = "Iterator:" + getSuperstep();
-		log += getVertexId().toString() + "\t";
-		log += getVertexValue().getMergeChain().toString() + "\t";
-		log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
-		log += getVertexValue().getState();
-		logger.info(log);*/
 	}
 	/**
 	 * @param args
