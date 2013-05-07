@@ -98,14 +98,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 			if((adjMap & (1 << x)) != 0){
 				destVertexId.set(getNextDestVertexId(vertexId, x));
 				sendMsg(destVertexId, msg);
-				/*String log = "Iterator:" + getSuperstep() + "\t";
-				log += getVertexId().toString() + "\t";
-				log += getVertexValue().getMergeChain().toString() + "\t";
-				log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
-				log += getVertexValue().getState() + "\t";
-				log += "Dest: " + destVertexId.toString();
-				logger.info(log);
-				System.out.println(log);*/
 			}
 		}
 	}
@@ -145,16 +137,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		msg.reset();
 		msg.setMessage(Message.START);
 		msg.setSourceVertexId(getVertexId());
-		/*if(getVertexId().toString().equals("GGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGGC")){
-			String log = "Iterator:" + getSuperstep();
-			log += getVertexId().toString() + "\t";
-			log += getVertexValue().getMergeChain().toString() + "\t";
-			log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
-			log += getVertexValue().getState() + "\t";
-			log += "Dest: " + destVertexId.toString();
-			logger.info(log);
-			System.out.println(log);
-		}*/
 		sendMsg(destVertexId, msg);
 		voteToHalt();
 	}
@@ -165,16 +147,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		msg.reset();
 		msg.setMessage(Message.END);
 		msg.setSourceVertexId(getVertexId());
-		/*if(getVertexId().toString().equals("GGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGGC")){
-			String log = "Iterator:" + getSuperstep();
-			log += getVertexId().toString() + "\t";
-			log += getVertexValue().getMergeChain().toString() + "\t";
-			log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
-			log += getVertexValue().getState() + "\t";
-			log += "Dest: " + destVertexId.toString();
-			logger.info(log);
-			System.out.println(log);
-		}*/
 		sendMsg(destVertexId, msg);
 		voteToHalt();
 	}
@@ -282,8 +254,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
 			msg.set(null, null, (byte)0, Message.START);
 			sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
-			//if(getVertexId().toString().equals("CGGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGG")){
-			//}
 			voteToHalt();
 		}
 		if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
@@ -301,15 +271,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	 */
 	public void initState(Iterator<LogAlgorithmMessageWritable> msgIterator){
 		while(msgIterator.hasNext()){
-			/*if(getVertexId().toString().equals("GGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGGC")){
-			String log = "Iterator:" + getSuperstep();
-			log += getVertexId().toString() + "\t";
-			log += getVertexValue().getMergeChain().toString() + "\t";
-			log += GeneCode.getSymbolFromBitMap(getVertexValue().getAdjMap()) + "\t";
-			log += getVertexValue().getState();
-			logger.info(log);
-			System.out.println(log);
-			}*/
 			if(!GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
 				msgIterator.next();
 				voteToHalt();
@@ -368,22 +329,22 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	@Override
 	public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
 		initVertex();
-		/*if(getVertexId().toString().equals("GGAACGATGGGCAGGCAGAGTGTTCTACCTTTTCTCTGTATTTTACGATGAAGGC")){
-			System.out.println("found");
-			//sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
-		}*/
-		if (getSuperstep() == 1) 
-			startSendMsg();
-		else if(getSuperstep() == 2)
-			initState(msgIterator);
-		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
-			sendMsgToPathVertex(msgIterator);
-		}
-		else if(getSuperstep()%2 == 0 && getSuperstep() <= maxIteration){
-			responseMsgToHeadVertex(msgIterator);
-		}
-		else
+		if(getVertexValue().getState() == State.FINAL_VERTEX)
 			voteToHalt();
+		else{
+			if (getSuperstep() == 1) 
+				startSendMsg();
+			else if(getSuperstep() == 2)
+				initState(msgIterator);
+			else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
+				sendMsgToPathVertex(msgIterator);
+			}
+			else if(getSuperstep()%2 == 0 && getSuperstep() <= maxIteration){
+				responseMsgToHeadVertex(msgIterator);
+			}
+			else
+				voteToHalt();
+		}
 	}
 	/**
 	 * @param args
