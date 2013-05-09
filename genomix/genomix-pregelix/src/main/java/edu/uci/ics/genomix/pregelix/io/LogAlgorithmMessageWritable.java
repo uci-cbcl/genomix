@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.pregelix.operator.TwoStepLogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -26,8 +26,8 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	private byte checkMessage;
 	
 	public LogAlgorithmMessageWritable(){
-		sourceVertexId = new VKmerBytesWritable(TwoStepLogAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId = new VKmerBytesWritable(TwoStepLogAlgorithmForPathMergeVertex.kmerSize);
+		sourceVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
+		chainVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
 		adjMap = 0;
 		message = 0;
 		checkMessage = 0;
@@ -52,7 +52,7 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 	
 	public void reset(){
 		checkMessage = 0;
-		chainVertexId.reset(TwoStepLogAlgorithmForPathMergeVertex.kmerSize);
+		chainVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
 		adjMap = (byte)0;
 		message = 0;
 	}

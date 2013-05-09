@@ -10,8 +10,8 @@ import java.text.DecimalFormat;
 import org.apache.commons.io.FileUtils;
 
 public class ReportGenerator {
-	public static final String PATH_TO_REPORT = "report/";
-	public static final String PATH_TO_LOGINFO = "log/";
+	public static final String PATH_TO_REPORT = "report";
+	public static final String PATH_TO_LOGINFO = "log";
 
 	public static void generateReportFromLoginfo(String fileName) throws Exception {
 		DecimalFormat df = new DecimalFormat("0.00");
@@ -41,10 +41,10 @@ public class ReportGenerator {
 	public static void main(String[] args) throws Exception {
 		FileUtils.forceMkdir(new File(PATH_TO_REPORT));
 		FileUtils.cleanDirectory(new File(PATH_TO_REPORT));
-		generateReportFromLoginfo("naive");
-		generateReportFromLoginfo("log");
-		generateReportFromLoginfo("log_yourkit");
+		generateReportFromLoginfo("naive_converge");
+		generateReportFromLoginfo("log_converge");
 		generateReportFromLoginfo("naive_36");
 		generateReportFromLoginfo("log_13");
+
 	}
 }

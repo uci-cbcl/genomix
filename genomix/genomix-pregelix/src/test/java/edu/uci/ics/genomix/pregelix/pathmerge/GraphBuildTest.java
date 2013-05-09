@@ -30,6 +30,7 @@ import edu.uci.ics.genomix.job.GenomixJob;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
+@SuppressWarnings("deprecation")
 public class GraphBuildTest {
 	private static final String ACTUAL_RESULT_DIR = "graphbuildresult";
 	private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
@@ -128,14 +129,12 @@ public class GraphBuildTest {
 
 
 	private boolean checkResults(String expectedPath) throws Exception {
-		File dumped = null;
 		String format = conf.get(GenomixJob.OUTPUT_FORMAT);
 		if ("text".equalsIgnoreCase(format)) {
 			FileUtil.copyMerge(FileSystem.get(conf),
 					new Path(HDFS_OUTPUT_PATH), FileSystem
 							.getLocal(new Configuration()), new Path(
 							DUMPED_RESULT), false, conf, null);
-			dumped = new File(DUMPED_RESULT);
 		} else {
 
 			FileSystem.getLocal(new Configuration()).mkdirs(
@@ -173,7 +172,6 @@ public class GraphBuildTest {
 				reader.close();
 			}
 			bw.close();
-			dumped = new File(CONVERT_RESULT);
 		}
 
 		// TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
