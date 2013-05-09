@@ -151,8 +151,8 @@ public class NaiveFilterVertex extends Vertex<KmerBytesWritable, ValueStateWrita
 				byte tmp = GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getAdjMap(), msg.getSourceVertexId(), kmerSize);
 				getVertexValue().set(tmp, State.FINAL_VERTEX, msg.getChainVertexId());
 				setVertexValue(getVertexValue());
-				String source = msg.getChainVertexId().toString();
-				System.out.print("");
+				//String source = msg.getChainVertexId().toString();
+				//System.out.print("");
 			}
 		}
 	}

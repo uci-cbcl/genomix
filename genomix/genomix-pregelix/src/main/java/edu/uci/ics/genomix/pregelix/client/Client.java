@@ -10,7 +10,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.pregelix.operator.NaiveFilterVertex;
 import edu.uci.ics.genomix.pregelix.operator.ThreeStepLogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.TwoStepLogAlgorithmForPathMergeVertex;

@@ -19,7 +19,6 @@ import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
-
 /*
  * vertexId: BytesWritable
  * vertexValue: ValueStateWritable
@@ -112,7 +111,6 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 			}
 		}
 	}
-
 	/**
 	 * set vertex state
 	 */
@@ -154,26 +152,28 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 	 * send non message to next node
 	 */
 	public void sendNonMsgToNextNode(){
+		msg.reset();
 		msg.setMessage(Message.NON);
 		msg.setSourceVertexId(getVertexId());
 		sendMsg(destVertexId, msg);
+		voteToHalt();
 	}
 	/**
 	 * head send message to path
 	 */
 	public void sendMsgToPathVertex(KmerBytesWritable chainVertexId, byte adjMap){
-		if(GeneCode.getGeneCodeFromBitMap((byte)(getVertexValue().getAdjMap() & 0x0F)) == -1
-				|| getVertexValue().getState() == State.FINAL_VERTEX) //|| lastKmer == null
-			voteToHalt();
-		else{
+		//if(GeneCode.getGeneCodeFromBitMap((byte)(getVertexValue().getAdjMap() & 0x0F)) == -1
+		//		|| getVertexValue().getState() == State.FINAL_VERTEX) //|| lastKmer == null
+		//	voteToHalt();
+		//else{
 			destVertexId.set(getNextDestVertexIdFromBitmap(chainVertexId, adjMap));
 			if(getVertexValue().getState() == State.START_VERTEX){
 				sendStartMsgToNextNode();
 			}
 			else if(getVertexValue().getState() != State.END_VERTEX){ //FINAL_DELETE
-				sendEndMsgToNextNode();
+				sendNonMsgToNextNode();//sendEndMsgToNextNode();
 			}
-		}
+		//}
 	}
 	/**
 	 * path send message to head 
@@ -254,17 +254,19 @@ public class TwoStepLogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWrita
 		if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
 			msg.set(null, null, (byte)0, Message.START);
 			sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
-			voteToHalt();
+			//voteToHalt();
 		}
 		if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
 			msg.set(null, null, (byte)0, Message.END);
 			sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
-			voteToHalt();
+			//voteToHalt();
 		}
 		if(GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
 			getVertexValue().setState(State.MID_VERTEX);
 			setVertexValue(getVertexValue());
 		}
+		else 
+			voteToHalt();
 	}
 	/**
 	 *  initiate head, rear and path node

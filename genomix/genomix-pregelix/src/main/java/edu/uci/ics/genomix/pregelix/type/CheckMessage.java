@@ -7,6 +7,7 @@ public class CheckMessage {
 	public static final byte ADJMAP = 1 << 2;
 	public static final byte MESSAGE = 1 << 3;
 	public static final byte STATE = 1 << 4;
+	public static final byte LASTGENECODE = 1 << 5;
 	
 	public final static class CheckMessage_CONTENT{
 		
@@ -27,6 +28,9 @@ public class CheckMessage {
 				break;
 			case STATE:
 				r = "STATE";
+				break;
+			case LASTGENECODE:
+				r = "LASTGENECODE";
 				break;
 			}
 			return r;

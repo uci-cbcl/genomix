@@ -6,55 +6,56 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.pregelix.operator.TwoStepLogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
+import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgorithmMessageWritable>{
+public class P1MessageWritable implements WritableComparable<P1MessageWritable>{
 	/**
 	 * sourceVertexId stores source vertexId when headVertex sends the message
 	 * 				  stores neighber vertexValue when pathVertex sends the message
-	 * chainVertexId stores the chains of connected DNA
 	 * file stores the point to the file that stores the chains of connected DNA
 	 */
 	private KmerBytesWritable sourceVertexId;
-	private VKmerBytesWritable chainVertexId;
 	private byte adjMap;
+	private byte lastGeneCode;
 	private byte message;
 	
 	private byte checkMessage;
 	
-	public LogAlgorithmMessageWritable(){
-		sourceVertexId = new VKmerBytesWritable(TwoStepLogAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId = new VKmerBytesWritable(TwoStepLogAlgorithmForPathMergeVertex.kmerSize);
-		adjMap = 0;
-		message = 0;
-		checkMessage = 0;
+	public P1MessageWritable(){
+		sourceVertexId = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
+		adjMap = (byte)0;
+		lastGeneCode = (byte)0;
+		message = Message.NON;
+		checkMessage = (byte)0;
 	}
 	
-	public void set(KmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, byte message){
+	public void set(KmerBytesWritable sourceVertex, byte adjMap, byte lastGeneCode, byte message){
 		checkMessage = 0;
 		if(sourceVertexId != null){
 			checkMessage |= CheckMessage.SOURCE;
 			this.sourceVertexId.set(sourceVertexId);
 		}
-		if(chainVertexId != null){
-			checkMessage |= CheckMessage.CHAIN;
-			this.chainVertexId.set(chainVertexId);
-		}
 		if(adjMap != 0){
 			checkMessage |= CheckMessage.ADJMAP;
 			this.adjMap = adjMap;
+		}
+		if(lastGeneCode != 0){
+			checkMessage |= CheckMessage.LASTGENECODE;
+			this.lastGeneCode = lastGeneCode;
 		}
 		this.message = message;
 	}
 	
 	public void reset(){
 		checkMessage = 0;
-		chainVertexId.reset(TwoStepLogAlgorithmForPathMergeVertex.kmerSize);
+		sourceVertexId = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
 		adjMap = (byte)0;
-		message = 0;
+		lastGeneCode = (byte)0;
+		message = Message.NON;
 	}
 
 	public KmerBytesWritable getSourceVertexId() {
@@ -79,14 +80,14 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		}
 	}
 
-	public VKmerBytesWritable getChainVertexId() {
-		return chainVertexId;
+	public byte getLastGeneCode() {
+		return lastGeneCode;
 	}
 
-	public void setChainVertexId(VKmerBytesWritable chainVertexId) {
-		if(chainVertexId != null){
-			checkMessage |= CheckMessage.CHAIN;
-			this.chainVertexId.set(chainVertexId);
+	public void setLastGeneCode(byte lastGeneCode) {
+		if(lastGeneCode != 0){
+			checkMessage |= CheckMessage.LASTGENECODE;
+			this.lastGeneCode = lastGeneCode;
 		}
 	}
 
@@ -98,20 +99,16 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		this.message = message;
 	}
 
-	public int getLengthOfChain() {
-		return chainVertexId.getKmerLength();
-	}
-	
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeByte(checkMessage);
 		if((checkMessage & CheckMessage.SOURCE) != 0)
 			sourceVertexId.write(out);
-		if((checkMessage & CheckMessage.CHAIN) != 0)
-			chainVertexId.write(out);
 		if((checkMessage & CheckMessage.ADJMAP) != 0)
 			out.write(adjMap);
-		out.writeByte(message);
+		if((checkMessage & CheckMessage.LASTGENECODE) != 0)
+			out.write(lastGeneCode);
+		out.write(message);
 	}
 
 	@Override
@@ -120,34 +117,32 @@ public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgori
 		checkMessage = in.readByte();
 		if((checkMessage & CheckMessage.SOURCE) != 0)
 			sourceVertexId.readFields(in);
-		if((checkMessage & CheckMessage.CHAIN) != 0)
-			chainVertexId.readFields(in);
 		if((checkMessage & CheckMessage.ADJMAP) != 0)
 			adjMap = in.readByte();
+		if((checkMessage & CheckMessage.LASTGENECODE) != 0)
+			lastGeneCode = in.readByte();
 		message = in.readByte();
 	}
 
-	 @Override
+    @Override
     public int hashCode() {
-        return chainVertexId.hashCode();
+        return sourceVertexId.hashCode();
     }
-	 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof LogAlgorithmMessageWritable) {
-        	LogAlgorithmMessageWritable tp = (LogAlgorithmMessageWritable) o;
-            return chainVertexId.equals(tp.chainVertexId);
+        if (o instanceof P1MessageWritable) {
+        	P1MessageWritable tp = (P1MessageWritable) o;
+            return sourceVertexId.equals( tp.sourceVertexId);
         }
         return false;
     }
-    
     @Override
     public String toString() {
-        return chainVertexId.toString();
+        return sourceVertexId.toString();
     }
     
 	@Override
-	public int compareTo(LogAlgorithmMessageWritable tp) {
-		return chainVertexId.compareTo(tp.chainVertexId);
+	public int compareTo(P1MessageWritable tp) {
+		return sourceVertexId.compareTo(tp.sourceVertexId);
 	}
 }
