@@ -51,10 +51,6 @@ public class JobGenerator {
     	generateLogAlgorithmForMergeGraphJob("LogAlgorithmForMergeGraph", outputBase + "LogAlgorithmForMergeGraph.xml");
     }
     
-	/**
-	 * @param args
-	 * @throws IOException 
-	 */
 	public static void main(String[] args) throws IOException {
 		genNaiveAlgorithmForMergeGraph();
 		genLogAlgorithmForMergeGraph();

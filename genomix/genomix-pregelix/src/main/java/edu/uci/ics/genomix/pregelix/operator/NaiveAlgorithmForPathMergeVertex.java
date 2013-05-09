@@ -215,6 +215,8 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 			}
 			voteToHalt();
 		}
+		else
+			voteToHalt();
 	}
 	public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(NaiveAlgorithmForPathMergeVertex.class.getSimpleName());
