@@ -7,8 +7,9 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
 public class VertexUtil {
-	private static VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(
+	public static VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(
 			NaiveAlgorithmForPathMergeVertex.kmerSize);
+	public static VKmerBytesWritable subKmer = new VKmerBytesWritable(0);
 	/**
 	 * Single Vertex: in-degree = out-degree = 1
 	 * @param vertexValue 
@@ -55,8 +56,7 @@ public class VertexUtil {
 	 * check if mergeChain is cycle
 	 */
 	public static boolean isCycle(KmerBytesWritable vertexId, VKmerBytesWritable mergeChain, int kmerSize){
-        VKmerBytesWritable subKmer;
-        for(int istart = 1; istart < mergeChain.getKmerLength() - kmerSize; istart++) {
+        for(int istart = 1; istart < mergeChain.getKmerLength() - kmerSize + 1; istart++) {
         	subKmer = kmerFactory.getSubKmerFromChain(istart, kmerSize, mergeChain);
             if(subKmer.equals(vertexId))
             	return true;
