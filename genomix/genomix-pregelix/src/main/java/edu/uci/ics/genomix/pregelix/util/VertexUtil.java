@@ -1,14 +1,10 @@
 package edu.uci.ics.genomix.pregelix.util;
 
-import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
 public class VertexUtil {
-	public static VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(
-			NaiveAlgorithmForPathMergeVertex.kmerSize);
 	public static VKmerBytesWritable subKmer = new VKmerBytesWritable(0);
 	/**
 	 * Single Vertex: in-degree = out-degree = 1
@@ -56,9 +52,11 @@ public class VertexUtil {
 	 * check if mergeChain is cycle
 	 */
 	public static boolean isCycle(KmerBytesWritable vertexId, VKmerBytesWritable mergeChain, int kmerSize){
-        for(int istart = 1; istart < mergeChain.getKmerLength() - kmerSize + 1; istart++) {
-        	subKmer = kmerFactory.getSubKmerFromChain(istart, kmerSize, mergeChain);
-            if(subKmer.equals(vertexId))
+		subKmer.set(vertexId);
+        for(int istart = 1; istart < mergeChain.getKmerLength() - kmerSize + 1; istart++){
+        	byte nextgene = mergeChain.getGeneCodeAtPosition(istart+kmerSize);
+        	subKmer.shiftKmerWithNextCode(nextgene);
+        	if(subKmer.equals(vertexId))
             	return true;
         }
         return false;

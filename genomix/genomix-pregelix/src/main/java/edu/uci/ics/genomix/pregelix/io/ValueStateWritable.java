@@ -15,9 +15,6 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 	private byte adjMap;
 	private byte state;
 	private VKmerBytesWritable mergeChain;
-	
-	//extra - for test
-	//private boolean isOp;
 
 	public ValueStateWritable() {
 		state = State.NON_VERTEX;
@@ -69,20 +66,11 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		this.mergeChain.set(mergeChain);
 	}
 
-	/*public boolean isOp() {
-		return isOp;
-	}
-
-	public void setOp(boolean isOp) {
-		this.isOp = isOp;
-	}*/
-
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		adjMap = in.readByte();
 		state = in.readByte();
 		mergeChain.readFields(in);
-		//isOp = in.readBoolean();
 	}
 
 	@Override
@@ -90,7 +78,6 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		out.writeByte(adjMap);
 		out.writeByte(state);
 		mergeChain.write(out);
-		//out.writeBoolean(isOp);
 	}
 
 	@Override
@@ -103,7 +90,6 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
 				getLengthOfMergeChain() + "\t" +
 				mergeChain.toString();
-				//+ "\t" + state;
 	}
 	
 }
