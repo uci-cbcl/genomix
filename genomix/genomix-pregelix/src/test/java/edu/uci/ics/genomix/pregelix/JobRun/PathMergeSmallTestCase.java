@@ -78,8 +78,6 @@ public class PathMergeSmallTestCase extends TestCase {
 		dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(
 				resultFileDir));
 		GenerateTextFile.generateFromPathmergeResult(5, resultFileDir, textFileDir);
-		// TestUtils.compareWithResultDir(new File(expectedFileDir), new
-		// File(resultFileDir));
 	}
 
 	public String toString() {

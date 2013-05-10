@@ -17,7 +17,7 @@ import edu.uci.ics.genomix.pregelix.io.NaiveAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.pregelix.util.GraphVertexOperation;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
  * vertexId: BytesWritable
@@ -110,11 +110,11 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	 * start sending message 
 	 */
 	public void startSendMsg(){
-		if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
+		if(VertexUtil.isHeadVertex(getVertexValue().getAdjMap())){
 			outgoingMsg.setMessage(Message.START);
 			sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
 		}
-		if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
+		if(VertexUtil.isRearVertex(getVertexValue().getAdjMap())){
 			outgoingMsg.setMessage(Message.END);
 			sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
 		}
@@ -124,7 +124,7 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 	 */
 	public void initState(Iterator<NaiveAlgorithmMessageWritable> msgIterator){
 		while(msgIterator.hasNext()){
-			if(!GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
+			if(!VertexUtil.isPathVertex(getVertexValue().getAdjMap())){
 				msgIterator.next();
 				voteToHalt();
 			}
@@ -173,7 +173,7 @@ public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, 
 				else{
 					getVertexValue().setMergeChain(kmerFactory.mergeKmerWithNextCode(getVertexValue().getMergeChain(),
 							incomingMsg.getLastGeneCode()));
-					byte adjMap = GraphVertexOperation.updateRightNeighber(getVertexValue().getAdjMap(),
+					byte adjMap = VertexUtil.updateRightNeighber(getVertexValue().getAdjMap(),
 							incomingMsg.getAdjMap());
 					getVertexValue().setAdjMap(adjMap);
 					getVertexValue().setState(State.FINAL_VERTEX);

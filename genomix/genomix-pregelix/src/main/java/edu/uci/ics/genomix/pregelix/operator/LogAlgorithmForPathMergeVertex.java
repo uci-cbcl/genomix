@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.pregelix.util.GraphVertexOperation;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -111,12 +111,12 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 	 * start sending message 
 	 */
 	public void startSendMsg(){
-		if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){
+		if(VertexUtil.isHeadVertex(getVertexValue().getAdjMap())){
 			outgoingMsg.setMessage(Message.START);
 			sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
 			voteToHalt();
 		}
-		if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
+		if(VertexUtil.isRearVertex(getVertexValue().getAdjMap())){
 			outgoingMsg.setMessage(Message.END);
 			sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
 			voteToHalt();
@@ -127,7 +127,7 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 	 */
 	public void initState(Iterator<LogAlgorithmMessageWritable> msgIterator){
 		while(msgIterator.hasNext()){
-			if(!GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
+			if(!VertexUtil.isPathVertex(getVertexValue().getAdjMap())){
 				msgIterator.next();
 				voteToHalt();
 			}
@@ -225,9 +225,9 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 				incomingMsg.getChainVertexId()));
 		chainVertexId.set(kmerFactory.mergeTwoKmer(getVertexValue().getMergeChain(), 
 				lastKmer));
-		if(GraphVertexOperation.isCycle(getVertexId(), chainVertexId)){
+		if(VertexUtil.isCycle(getVertexId(), chainVertexId, kmerSize)){
 			getVertexValue().setMergeChain(null);
-			getVertexValue().setAdjMap(GraphVertexOperation.reverseAdjMap(getVertexValue().getAdjMap(),
+			getVertexValue().setAdjMap(VertexUtil.reverseAdjMap(getVertexValue().getAdjMap(),
 					chainVertexId.getGeneCodeAtPosition(kmerSize)));
 			getVertexValue().setState(State.CYCLE);
 			return false;
@@ -235,7 +235,7 @@ public class LogAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, Va
 		else
 			getVertexValue().setMergeChain(chainVertexId);
 		
-		byte tmpVertexValue = GraphVertexOperation.updateRightNeighber(getVertexValue().getAdjMap(),
+		byte tmpVertexValue = VertexUtil.updateRightNeighber(getVertexValue().getAdjMap(),
 				incomingMsg.getAdjMap());
 		getVertexValue().setAdjMap(tmpVertexValue);
 		return true;

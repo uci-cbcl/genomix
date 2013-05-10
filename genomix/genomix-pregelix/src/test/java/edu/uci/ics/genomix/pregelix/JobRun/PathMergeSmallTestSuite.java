@@ -47,8 +47,8 @@ public class PathMergeSmallTestSuite extends TestSuite {
 	public static final String PreFix = "data/PathTestSet"; //"graphbuildresult";
 	public static final String[] TestDir = { PreFix + File.separator
 		//+  "split.aa"};
-		///+ "split.aa"};/*, PreFix + File.separator
-		/*+ "CyclePath", PreFix + File.separator
+		//+ "split.aa"};/*, PreFix + File.separator
+		/*+ "CyclePath"};, PreFix + File.separator
 		+ "SimplePath", PreFix + File.separator
 		+ "SinglePath", PreFix + File.separator
 		+ "TreePath"};*/

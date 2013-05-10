@@ -19,16 +19,14 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class MergePathTest {
 	public static final String PATH_TO_TESTSTORE = "testcase/pathmerge/"; 
-	//"genomix_result/pathmerge/new_naive";
-	public static final String NAIVE_DATA_INPUT = "genomix_result/P1_nc8";//"actual/NaiveAlgorithmForMergeGraph/BinaryOutput/test";
-	//"genomix_result/pathmerge/new_log";
-	public static final String LOG_DATA_INPUT = "genomix_result/P2_nc8";//"actual/TwoStepLogAlgorithmForMergeGraph/BinaryOutput/test";
+	public static final String NAIVE_DATA_INPUT = "genomix_result/p1_nc8_4vertex";
+	public static final String LOG_DATA_INPUT = "genomix_result/p2_nc8_4vertex";
 	public static final String TEXT_OUTPUT = PATH_TO_TESTSTORE + "textfile";
 	public static final String CHAIN_OUTPUT = PATH_TO_TESTSTORE + "chain";
 	
 	private static int nc = 8;
 	private static int kmerSize = 55;
-	private static int maxLength = 102; 
+	//private static int maxLength = 102; 
 	
 	@Test
 	public void test() throws Exception {
@@ -58,14 +56,14 @@ public class MergePathTest {
 				if (key == null || value == null){
 					break;
 				}
-				//if(value.getState() == State.FINAL_VERTEX){
-					/*bw.write(value.getMergeChain().toString()
+				if(value.getState() == State.FINAL_VERTEX){
+					bw.write(value.getMergeChain().toString()
 							+ "\t" + GeneCode.getSymbolFromBitMap(value.getAdjMap()));
-					bw.newLine();*/
-					bw.write(key.toString()
-							+ "\t" + value.toString());
 					bw.newLine();
-				//}
+					/*bw.write(key.toString()
+							+ "\t" + value.toString());
+					bw.newLine();*/
+				}
 				//if(value.getLengthOfMergeChain() != 0
 				//		&& value.getLengthOfMergeChain() != -1
 				//		&& value.getState() == State.FINAL_VERTEX){
