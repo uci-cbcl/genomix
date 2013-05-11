@@ -22,31 +22,39 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.genomix.hyracks.data.accessors.KmerBinaryHashFunctionFamily;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory;
+import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDNormarlizedComputeFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDPartitionComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
 import edu.uci.ics.genomix.hyracks.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.dataflow.KMerSequenceWriterFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.KMerTextWriterFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.MapKmerPositionToReadOperator;
+import edu.uci.ics.genomix.hyracks.dataflow.NodeSequenceWriterFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.NodeTextWriterFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.aggregators.AggregateKmerAggregateFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.aggregators.AggregateReadIDAggregateFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.aggregators.MergeKmerAggregateFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.aggregators.MergeReadIDAggregateFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
+import edu.uci.ics.hyracks.api.dataflow.IOperatorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
+import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
+import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
@@ -55,7 +63,6 @@ import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.HashSpillableTableFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.group.hybridhash.HybridHashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
@@ -79,7 +86,7 @@ public class JobGenBrujinGraph extends JobGen {
     private Scheduler scheduler;
     private String[] ncNodeNames;
 
-    private int kmers;
+    private int kmerSize;
     private int frameLimits;
     private int frameSize;
     private int tableSize;
@@ -87,17 +94,14 @@ public class JobGenBrujinGraph extends JobGen {
     private OutputFormat outputFormat;
     private boolean bGenerateReversedKmer;
 
-    private AbstractOperatorDescriptor singleGrouper;
-    private IConnectorDescriptor connPartition;
-    private AbstractOperatorDescriptor crossGrouper;
-    private RecordDescriptor readOutputRec;
-    private RecordDescriptor combineOutputRec;
-
     /** works for hybrid hashing */
     private long inputSizeInRawRecords;
     private long inputSizeInUniqueKeys;
     private int recordSizeInBytes;
     private int hashfuncStartLevel;
+    private ExternalGroupOperatorDescriptor readLocalAggregator;
+    private MToNPartitioningConnectorDescriptor readConnPartition;
+    private ExternalGroupOperatorDescriptor readCrossAggregator;
 
     private void logDebug(String status) {
         LOG.debug(status + " nc nodes:" + ncNodeNames.length);
@@ -117,154 +121,154 @@ public class JobGenBrujinGraph extends JobGen {
     }
 
     private ExternalGroupOperatorDescriptor newExternalGroupby(JobSpecification jobSpec, int[] keyFields,
-            IAggregatorDescriptorFactory aggeragater) {
+            IAggregatorDescriptorFactory aggeragater, IAggregatorDescriptorFactory merger,
+            ITuplePartitionComputerFactory partition, INormalizedKeyComputerFactory normalizer,
+            IPointableFactory pointable, RecordDescriptor outRed) {
         return new ExternalGroupOperatorDescriptor(jobSpec, keyFields, frameLimits,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
-                new KmerNormarlizedComputerFactory(), aggeragater, new MergeKmerAggregateFactory(), combineOutputRec,
-                new HashSpillableTableFactory(
-                        new FieldHashPartitionComputerFactory(keyFields,
-                                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                        .of(KmerPointable.FACTORY) }), tableSize), true);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, normalizer,
+                aggeragater, merger, outRed, new HashSpillableTableFactory(new FieldHashPartitionComputerFactory(
+                        keyFields,
+                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(pointable) }),
+                        tableSize), true);
     }
 
-    private HybridHashGroupOperatorDescriptor newHybridGroupby(JobSpecification jobSpec, int[] keyFields,
-            long inputSizeInRawRecords, long inputSizeInUniqueKeys, int recordSizeInBytes, int hashfuncStartLevel,
-            IAggregatorDescriptorFactory aggeragater) throws HyracksDataException {
-        return new HybridHashGroupOperatorDescriptor(jobSpec, keyFields, frameLimits, inputSizeInRawRecords,
-                inputSizeInUniqueKeys, recordSizeInBytes, tableSize,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
-                new IBinaryHashFunctionFamily[] { new KmerBinaryHashFunctionFamily() }, hashfuncStartLevel,
-                new KmerNormarlizedComputerFactory(), aggeragater, new MergeKmerAggregateFactory(), combineOutputRec, true);
-    }
-
-    private void generateKmerAggeragateDescriptorbyType(JobSpecification jobSpec) throws HyracksDataException {
+    private Object[] generateAggeragateDescriptorbyType(JobSpecification jobSpec,
+            IAggregatorDescriptorFactory aggregator, IAggregatorDescriptorFactory merger,
+            ITuplePartitionComputerFactory partition, INormalizedKeyComputerFactory normalizer,
+            IPointableFactory pointable, RecordDescriptor outRed) throws HyracksDataException {
         int[] keyFields = new int[] { 0 }; // the id of grouped key
+        Object[] obj = new Object[3];
 
         switch (groupbyType) {
             case EXTERNAL:
-                singleGrouper = newExternalGroupby(jobSpec, keyFields, new AggregateKmerAggregateFactory());
-                connPartition = new MToNPartitioningConnectorDescriptor(jobSpec, new KmerHashPartitioncomputerFactory());
-                crossGrouper = newExternalGroupby(jobSpec, keyFields, new MergeKmerAggregateFactory());
+                obj[0] = newExternalGroupby(jobSpec, keyFields, aggregator, merger, partition, normalizer, pointable,
+                        outRed);
+                obj[1] = new MToNPartitioningConnectorDescriptor(jobSpec, partition);
+                obj[2] = newExternalGroupby(jobSpec, keyFields, merger, merger, partition, normalizer, pointable,
+                        outRed);
                 break;
             case PRECLUSTER:
             default:
-                singleGrouper = newExternalGroupby(jobSpec, keyFields, new AggregateKmerAggregateFactory());
-                connPartition = new MToNPartitioningMergingConnectorDescriptor(jobSpec,
-                        new KmerHashPartitioncomputerFactory(), keyFields,
-                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) });
-                crossGrouper = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
-                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
-                        new MergeKmerAggregateFactory(), combineOutputRec);
-                break;
-            case HYBRIDHASH:
-                singleGrouper = newHybridGroupby(jobSpec, keyFields, inputSizeInRawRecords, inputSizeInUniqueKeys,
-                        recordSizeInBytes, hashfuncStartLevel, new AggregateKmerAggregateFactory());
-                connPartition = new MToNPartitioningConnectorDescriptor(jobSpec, new KmerHashPartitioncomputerFactory());
-
-                crossGrouper = newHybridGroupby(jobSpec, keyFields, inputSizeInRawRecords, inputSizeInUniqueKeys,
-                        recordSizeInBytes, hashfuncStartLevel, new MergeKmerAggregateFactory());
+                obj[0] = newExternalGroupby(jobSpec, keyFields, aggregator, merger, partition, normalizer, pointable,
+                        outRed);
+                obj[1] = new MToNPartitioningMergingConnectorDescriptor(jobSpec, partition, keyFields,
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) });
+                obj[2] = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, merger,
+                        outRed);
                 break;
         }
+        return obj;
     }
 
-    public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec) throws HyracksDataException {
+    public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec, RecordDescriptor outRec)
+            throws HyracksDataException {
         try {
 
             InputSplit[] splits = job.getInputFormat().getSplits(job, ncNodeNames.length);
 
             LOG.info("HDFS read into " + splits.length + " splits");
             String[] readSchedule = scheduler.getLocationConstraints(splits);
-            return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, job, splits, readSchedule,
-                    new ReadsKeyValueParserFactory(kmers, bGenerateReversedKmer));
+            return new HDFSReadOperatorDescriptor(jobSpec, outRec, job, splits, readSchedule,
+                    new ReadsKeyValueParserFactory(kmerSize, bGenerateReversedKmer));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
     }
 
-    private AbstractOperatorDescriptor newGroupByReadOperator(JobSpecification jobSpec, RecordDescriptor nodeOutputRec) {
-        // TODO Auto-generated method stub
-        return null;
+    private void connectOperators(JobSpecification jobSpec, IOperatorDescriptor preOp, String[] preNodes,
+            IOperatorDescriptor nextOp, String[] nextNodes, IConnectorDescriptor conn) {
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, preOp, preNodes);
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, nextOp, nextNodes);
+        jobSpec.connect(conn, preOp, 0, nextOp, 0);
     }
-    
+
     @Override
     public JobSpecification generateJob() throws HyracksException {
 
         JobSpecification jobSpec = new JobSpecification();
-        readOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
-                null, null});
-        combineOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
+        RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null, null });
+        RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
         jobSpec.setFrameSize(frameSize);
 
         // File input
-        HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
-
         logDebug("ReadKmer Operator");
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, readOperator, ncNodeNames);
+        HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec, readKmerOutputRec);
 
-        generateKmerAggeragateDescriptorbyType(jobSpec);
+        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, new AggregateKmerAggregateFactory(),
+                new MergeKmerAggregateFactory(), new KmerHashPartitioncomputerFactory(),
+                new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec);
+        AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         logDebug("LocalKmerGroupby Operator");
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, singleGrouper, ncNodeNames);
-
-        IConnectorDescriptor readfileConn = new OneToOneConnectorDescriptor(jobSpec);
-        jobSpec.connect(readfileConn, readOperator, 0, singleGrouper, 0);
+        connectOperators(jobSpec, readOperator, ncNodeNames, kmerLocalAggregator, ncNodeNames,
+                new OneToOneConnectorDescriptor(jobSpec));
 
         logDebug("CrossKmerGroupby Operator");
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, crossGrouper, ncNodeNames);
-        jobSpec.connect(connPartition, singleGrouper, 0, crossGrouper, 0);
+        IConnectorDescriptor kmerConnPartition = (IConnectorDescriptor) objs[1];
+        AbstractOperatorDescriptor kmerCrossAggregator = (AbstractOperatorDescriptor) objs[2];
+        connectOperators(jobSpec, kmerLocalAggregator, ncNodeNames, kmerCrossAggregator, ncNodeNames, kmerConnPartition);
 
         logDebug("Map Kmer to Read Operator");
-        //Map (Kmer, {(ReadID,PosInRead),...}) into (ReadID,PosInRead,Kmer,{OtherReadID,...}) 
-        RecordDescriptor mapToReadOutputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                null, null,null, null });
-        AbstractOperatorDescriptor mapKmerToRead = new MapKmerPositionToReadOperator(jobSpec, mapToReadOutputRec);
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, mapKmerToRead, ncNodeNames);
-        IConnectorDescriptor mapReadConn = new OneToOneConnectorDescriptor(jobSpec);
-        jobSpec.connect(mapReadConn, crossGrouper, 0, mapKmerToRead, 0);
+        //Map (Kmer, {(ReadID,PosInRead),...}) into (ReadID,PosInRead,{OtherPosition,...},Kmer) 
+        RecordDescriptor readIDOutputRec = new RecordDescriptor(
+                new ISerializerDeserializer[] { null, null, null, null });
+        AbstractOperatorDescriptor mapKmerToRead = new MapKmerPositionToReadOperator(jobSpec, readIDOutputRec);
+        connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, mapKmerToRead, ncNodeNames,
+                new OneToOneConnectorDescriptor(jobSpec));
 
         logDebug("Group by Read Operator");
-        // (ReadID,PosInRead,Kmer,{OtherReadID,...})
-        RecordDescriptor nodeOutputRec = new RecordDescriptor(new ISerializerDeserializer[] {
-                null, null, null, null });
-        AbstractOperatorDescriptor groupbyReadOperator = newGroupByReadOperator(jobSpec,nodeOutputRec);
-        IConnectorDescriptor readPartition = new MToNPartitioningConnectorDescriptor(jobSpec, new ReadIDPartitionComputerFactory());
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, groupbyReadOperator, ncNodeNames);
-        jobSpec.connect(readPartition, mapKmerToRead, 0, groupbyReadOperator, 0);
+        // (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...} 
+        RecordDescriptor nodeCombineRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
+        objs = generateAggeragateDescriptorbyType(jobSpec, new AggregateReadIDAggregateFactory(),
+                new MergeReadIDAggregateFactory(), new ReadIDPartitionComputerFactory(),
+                new ReadIDNormarlizedComputeFactory(), IntegerPointable.FACTORY, nodeCombineRec);
+        AbstractOperatorDescriptor readLocalAggregator = (AbstractOperatorDescriptor) objs[0];
+        connectOperators(jobSpec, mapKmerToRead, ncNodeNames, readLocalAggregator, ncNodeNames,
+                new OneToOneConnectorDescriptor(jobSpec));
 
-        // Output
-        ITupleWriterFactory writer = null;
+        IConnectorDescriptor readconn = (IConnectorDescriptor) objs[1];
+        AbstractOperatorDescriptor readCrossAggregator = (AbstractOperatorDescriptor) objs[2];
+        connectOperators(jobSpec, readLocalAggregator, ncNodeNames, readCrossAggregator, ncNodeNames, readconn);
+
+        // Output Kmer
+        ITupleWriterFactory kmerWriter = null;
+        ITupleWriterFactory nodeWriter = null;
         switch (outputFormat) {
             case TEXT:
-                writer = new KMerTextWriterFactory(kmers);
+                kmerWriter = new KMerTextWriterFactory(kmerSize);
+                nodeWriter = new NodeTextWriterFactory();
                 break;
             case BINARY:
             default:
-                writer = new KMerSequenceWriterFactory(job);
+                kmerWriter = new KMerSequenceWriterFactory(job);
+                nodeWriter = new NodeSequenceWriterFactory(job);
                 break;
         }
-        HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(jobSpec, job, writer);
-
         logDebug("WriteOperator");
-        PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, writeOperator, ncNodeNames);
+        HDFSWriteOperatorDescriptor writeKmerOperator = new HDFSWriteOperatorDescriptor(jobSpec, job, kmerWriter);
+        connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, writeKmerOperator, ncNodeNames,
+                new OneToOneConnectorDescriptor(jobSpec));
+        jobSpec.addRoot(writeKmerOperator);
 
-        IConnectorDescriptor printConn = new OneToOneConnectorDescriptor(jobSpec);
-        jobSpec.connect(printConn, groupbyReadOperator, 0, writeOperator, 0);
-        jobSpec.addRoot(writeOperator);
-
+        // Output Node
+        HDFSWriteOperatorDescriptor writeNodeOperator = new HDFSWriteOperatorDescriptor(jobSpec, job, nodeWriter);
+        connectOperators(jobSpec, readCrossAggregator, ncNodeNames, writeNodeOperator, ncNodeNames,
+                new OneToOneConnectorDescriptor(jobSpec));
+        jobSpec.addRoot(writeNodeOperator);
+        
         if (groupbyType == GroupbyType.PRECLUSTER) {
             jobSpec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         }
         return jobSpec;
     }
 
- 
-
     @Override
     protected void initJobConfiguration() {
 
-        kmers = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
-        if (kmers % 2 == 0) {
-            kmers--;
-            conf.setInt(GenomixJob.KMER_LENGTH, kmers);
+        kmerSize = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
+        if (kmerSize % 2 == 0) {
+            kmerSize--;
+            conf.setInt(GenomixJob.KMER_LENGTH, kmerSize);
         }
         frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, GenomixJob.DEFAULT_FRAME_LIMIT);
         tableSize = conf.getInt(GenomixJob.TABLE_SIZE, GenomixJob.DEFAULT_TABLE_SIZE);
@@ -300,7 +304,7 @@ public class JobGenBrujinGraph extends JobGen {
         }
         job = new JobConf(conf);
         LOG.info("Genomix Graph Build Configuration");
-        LOG.info("Kmer:" + kmers);
+        LOG.info("Kmer:" + kmerSize);
         LOG.info("Groupby type:" + type);
         LOG.info("Output format:" + output);
         LOG.info("Frame limit" + frameLimits);

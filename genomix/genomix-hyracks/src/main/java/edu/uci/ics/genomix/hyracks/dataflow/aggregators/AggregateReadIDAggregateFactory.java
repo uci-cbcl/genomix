@@ -9,7 +9,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-public class AggerateReadIDAggregateFactory implements IAggregatorDescriptorFactory{
+public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFactory{
 
     /**
      * 
