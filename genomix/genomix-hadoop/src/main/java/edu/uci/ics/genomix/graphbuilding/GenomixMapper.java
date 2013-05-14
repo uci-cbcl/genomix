@@ -38,14 +38,9 @@ import edu.uci.ics.genomix.type.KmerCountValue;
 public class GenomixMapper extends MapReduceBase implements
         Mapper<LongWritable, Text, KmerBytesWritable, KmerCountValue> {
 
-    public class CurrenByte {
-        public byte curByte;
-        public byte preMarker;
-    }
-
     public static int KMER_SIZE;
-    public KmerCountValue outputAdjList; 
-    public KmerBytesWritable outputKmer; 
+    public KmerCountValue outputAdjList;
+    public KmerBytesWritable outputKmer;
 
     @Override
     public void configure(JobConf job) {
@@ -79,7 +74,7 @@ public class GenomixMapper extends MapReduceBase implements
             /** first kmer */
             byte count = 1;
             byte[] array = geneLine.getBytes();
-            outputKmer.setByRead( array, 0);
+            outputKmer.setByRead(array, 0);
             byte pre = 0;
             byte next = GeneCode.getAdjBit(array[KMER_SIZE]);
             byte adj = GeneCode.mergePreNextAdj(pre, next);
