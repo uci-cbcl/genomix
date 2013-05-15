@@ -9,9 +9,9 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import edu.uci.ics.genomix.experiment.KmerVertexID;
+import edu.uci.ics.genomix.experiment.Position;
 import edu.uci.ics.genomix.experiment.VertexAdjacentWritable;
-import edu.uci.ics.genomix.experiment.VertexIDList;
+import edu.uci.ics.genomix.experiment.PositionList;
 import edu.uci.ics.genomix.experiment.VertexIDListWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -19,20 +19,20 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 
 @SuppressWarnings("deprecation")
 public class DeepGraphBuildingReducer extends MapReduceBase implements
-        Reducer<IntWritable, LineBasedmappingWritable, KmerVertexID, VertexAdjacentWritable> {
+        Reducer<IntWritable, LineBasedmappingWritable, Position, VertexAdjacentWritable> {
 
     public ArrayList<LineBasedmappingWritable> lineElementsSet = new ArrayList<LineBasedmappingWritable>();
-    public KmerVertexID outputVerID = new KmerVertexID();
+    public Position outputVerID = new Position();
     public VertexAdjacentWritable outputAdjacentList = new VertexAdjacentWritable();
-    public VertexIDList srcVtexAdjList = new VertexIDList();
-    public VertexIDList desVtexAdjList = new VertexIDList();
+    public PositionList srcVtexAdjList = new PositionList();
+    public PositionList desVtexAdjList = new PositionList();
     public VertexIDListWritable srcAdjListWritable = new VertexIDListWritable();
     public VKmerBytesWritable desKmer = new VKmerBytesWritable(1);
     public VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(1);
     public VKmerBytesWritable srcKmer = new VKmerBytesWritable(1);
     @Override
     public void reduce(IntWritable key, Iterator<LineBasedmappingWritable> values,
-            OutputCollector<KmerVertexID, VertexAdjacentWritable> output, Reporter reporter) throws IOException {
+            OutputCollector<Position, VertexAdjacentWritable> output, Reporter reporter) throws IOException {
         while (values.hasNext()) {
             lineElementsSet.add(values.next());
         }

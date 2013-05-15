@@ -19,7 +19,7 @@ public class VertexAdjacentWritable implements Writable {
         this(null, 0, EMPTY_BYTES);
     }
 
-    public VertexAdjacentWritable(VertexIDList right, int kmerSize, byte[] bytes) {
+    public VertexAdjacentWritable(PositionList right, int kmerSize, byte[] bytes) {
         if (right != null)
             this.adjVertexList = new VertexIDListWritable(right);
         else

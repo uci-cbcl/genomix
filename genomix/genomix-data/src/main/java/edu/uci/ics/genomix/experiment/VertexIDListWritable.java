@@ -7,26 +7,26 @@ import org.apache.hadoop.io.Writable;
 
 public class VertexIDListWritable implements Writable {
 
-    private VertexIDList vertexIDList;
+    private PositionList vertexIDList;
     private int[] tempReadIDList = null;
     private byte[] tempPosInReadList = null;
     
     public VertexIDListWritable() {
-        this.vertexIDList = new VertexIDList();
+        this.vertexIDList = new PositionList();
     }
     
-    public VertexIDListWritable(VertexIDList right) {
-        this.vertexIDList = new VertexIDList(right);
+    public VertexIDListWritable(PositionList right) {
+        this.vertexIDList = new PositionList(right);
     }
 
     public VertexIDListWritable(int length) {
-        this.vertexIDList = new VertexIDList(length);
+        this.vertexIDList = new PositionList(length);
     }
     
     public void set(VertexIDListWritable right) {
         set(right.get());
     }
-    public void set(VertexIDList right) {
+    public void set(PositionList right) {
         this.vertexIDList.set(right);
     }
 
@@ -46,8 +46,13 @@ public class VertexIDListWritable implements Writable {
         }
     }
 
+//    Position [] pos  = new Position();
     @Override
     public void write(DataOutput out) throws IOException {
+//        out.writeInt(length);
+//        for ( int i: length){
+//            pos[i].write(out);
+//        }
         // TODO Auto-generated method stub
         out.writeInt(vertexIDList.getArraySize());
         out.writeInt(vertexIDList.getUsedSize());
@@ -60,7 +65,7 @@ public class VertexIDListWritable implements Writable {
         }
     }
     
-    public VertexIDList get() {
+    public PositionList get() {
         return vertexIDList;
     }
 }
