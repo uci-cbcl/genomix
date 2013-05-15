@@ -15,16 +15,16 @@
 package edu.uci.ics.genomix.hadoop.pathmergingh2;
 
 import java.io.IOException;
-import java.util.Arrays;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
+
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
 
 @SuppressWarnings("deprecation")
 public class MergePathH2Mapper extends MapReduceBase implements
