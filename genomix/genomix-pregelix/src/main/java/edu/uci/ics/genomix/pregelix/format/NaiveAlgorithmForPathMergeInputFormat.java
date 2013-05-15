@@ -18,22 +18,22 @@ import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat.BinaryVertexReader;
 
 public class NaiveAlgorithmForPathMergeInputFormat extends
-	BinaryVertexInputFormat<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable>{
-	/**
-	 * Format INPUT
-	 */
+        BinaryVertexInputFormat<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> {
+    /**
+     * Format INPUT
+     */
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public VertexReader<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
-    }	
+    }
 }
 
 @SuppressWarnings("rawtypes")
 class BinaryLoadGraphReader extends
         BinaryVertexReader<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> {
-	private Vertex vertex;
+    private Vertex vertex;
     private KmerBytesWritable vertexId = null;
     private ValueStateWritable vertexValue = new ValueStateWritable();
 
@@ -48,31 +48,31 @@ class BinaryLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> getCurrentVertex() throws IOException,
-            InterruptedException {
+    public Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> getCurrentVertex()
+            throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
 
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
-        
+
         vertex.reset();
-        if(getRecordReader() != null){
+        if (getRecordReader() != null) {
             /**
              * set the src vertex id
              */
-        	if(vertexId == null)
-        		vertexId = new KmerBytesWritable(getRecordReader().getCurrentKey().getKmerLength());
-    		vertexId.set(getRecordReader().getCurrentKey());
-    		vertex.setVertexId(vertexId);
+            if (vertexId == null)
+                vertexId = new KmerBytesWritable(getRecordReader().getCurrentKey().getKmerLength());
+            vertexId.set(getRecordReader().getCurrentKey());
+            vertex.setVertexId(vertexId);
             /**
              * set the vertex value
              */
             KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
-            vertexValue.setAdjMap(kmerCountValue.getAdjBitMap()); 
+            vertexValue.setAdjMap(kmerCountValue.getAdjBitMap());
             vertex.setVertexValue(vertexValue);
         }
-        
+
         return vertex;
     }
 }

@@ -11,143 +11,143 @@ import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgorithmMessageWritable>{
-	/**
-	 * sourceVertexId stores source vertexId when headVertex sends the message
-	 * 				  stores neighber vertexValue when pathVertex sends the message
-	 * chainVertexId stores the chains of connected DNA
-	 * file stores the point to the file that stores the chains of connected DNA
-	 */
-	private KmerBytesWritable sourceVertexId;
-	private VKmerBytesWritable chainVertexId;
-	private byte adjMap;
-	private byte message;
-	
-	private byte checkMessage;
-	
-	public LogAlgorithmMessageWritable(){
-		sourceVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
-		adjMap = 0;
-		message = 0;
-		checkMessage = 0;
-	}
-	
-	public void set(KmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, byte message){
-		checkMessage = 0;
-		if(sourceVertexId != null){
-			checkMessage |= CheckMessage.SOURCE;
-			this.sourceVertexId.set(sourceVertexId);
-		}
-		if(chainVertexId != null){
-			checkMessage |= CheckMessage.CHAIN;
-			this.chainVertexId.set(chainVertexId);
-		}
-		if(adjMap != 0){
-			checkMessage |= CheckMessage.ADJMAP;
-			this.adjMap = adjMap;
-		}
-		this.message = message;
-	}
-	
-	public void reset(){
-		checkMessage = 0;
-		chainVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
-		adjMap = (byte)0;
-		message = 0;
-	}
+public class LogAlgorithmMessageWritable implements WritableComparable<LogAlgorithmMessageWritable> {
+    /**
+     * sourceVertexId stores source vertexId when headVertex sends the message
+     * stores neighber vertexValue when pathVertex sends the message
+     * chainVertexId stores the chains of connected DNA
+     * file stores the point to the file that stores the chains of connected DNA
+     */
+    private KmerBytesWritable sourceVertexId;
+    private VKmerBytesWritable chainVertexId;
+    private byte adjMap;
+    private byte message;
 
-	public KmerBytesWritable getSourceVertexId() {
-		return sourceVertexId;
-	}
+    private byte checkMessage;
 
-	public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
-		if(sourceVertexId != null){
-			checkMessage |= CheckMessage.SOURCE;
-			this.sourceVertexId.set(sourceVertexId);
-		}
-	}
+    public LogAlgorithmMessageWritable() {
+        sourceVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
+        chainVertexId = new VKmerBytesWritable(LogAlgorithmForPathMergeVertex.kmerSize);
+        adjMap = 0;
+        message = 0;
+        checkMessage = 0;
+    }
 
-	public byte getAdjMap() {
-		return adjMap;
-	}
+    public void set(KmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, byte adjMap, byte message) {
+        checkMessage = 0;
+        if (sourceVertexId != null) {
+            checkMessage |= CheckMessage.SOURCE;
+            this.sourceVertexId.set(sourceVertexId);
+        }
+        if (chainVertexId != null) {
+            checkMessage |= CheckMessage.CHAIN;
+            this.chainVertexId.set(chainVertexId);
+        }
+        if (adjMap != 0) {
+            checkMessage |= CheckMessage.ADJMAP;
+            this.adjMap = adjMap;
+        }
+        this.message = message;
+    }
 
-	public void setAdjMap(byte adjMap) {
-		if(adjMap != 0){
-			checkMessage |= CheckMessage.ADJMAP;
-			this.adjMap = adjMap;
-		}
-	}
+    public void reset() {
+        checkMessage = 0;
+        chainVertexId.reset(LogAlgorithmForPathMergeVertex.kmerSize);
+        adjMap = (byte) 0;
+        message = 0;
+    }
 
-	public VKmerBytesWritable getChainVertexId() {
-		return chainVertexId;
-	}
+    public KmerBytesWritable getSourceVertexId() {
+        return sourceVertexId;
+    }
 
-	public void setChainVertexId(VKmerBytesWritable chainVertexId) {
-		if(chainVertexId != null){
-			checkMessage |= CheckMessage.CHAIN;
-			this.chainVertexId.set(chainVertexId);
-		}
-	}
+    public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
+        if (sourceVertexId != null) {
+            checkMessage |= CheckMessage.SOURCE;
+            this.sourceVertexId.set(sourceVertexId);
+        }
+    }
 
-	public byte getMessage() {
-		return message;
-	}
+    public byte getAdjMap() {
+        return adjMap;
+    }
 
-	public void setMessage(byte message) {
-		this.message = message;
-	}
+    public void setAdjMap(byte adjMap) {
+        if (adjMap != 0) {
+            checkMessage |= CheckMessage.ADJMAP;
+            this.adjMap = adjMap;
+        }
+    }
 
-	public int getLengthOfChain() {
-		return chainVertexId.getKmerLength();
-	}
-	
-	@Override
-	public void write(DataOutput out) throws IOException {
-		out.writeByte(checkMessage);
-		if((checkMessage & CheckMessage.SOURCE) != 0)
-			sourceVertexId.write(out);
-		if((checkMessage & CheckMessage.CHAIN) != 0)
-			chainVertexId.write(out);
-		if((checkMessage & CheckMessage.ADJMAP) != 0)
-			out.write(adjMap);
-		out.writeByte(message);
-	}
+    public VKmerBytesWritable getChainVertexId() {
+        return chainVertexId;
+    }
 
-	@Override
-	public void readFields(DataInput in) throws IOException {
-		this.reset();
-		checkMessage = in.readByte();
-		if((checkMessage & CheckMessage.SOURCE) != 0)
-			sourceVertexId.readFields(in);
-		if((checkMessage & CheckMessage.CHAIN) != 0)
-			chainVertexId.readFields(in);
-		if((checkMessage & CheckMessage.ADJMAP) != 0)
-			adjMap = in.readByte();
-		message = in.readByte();
-	}
+    public void setChainVertexId(VKmerBytesWritable chainVertexId) {
+        if (chainVertexId != null) {
+            checkMessage |= CheckMessage.CHAIN;
+            this.chainVertexId.set(chainVertexId);
+        }
+    }
 
-	 @Override
+    public byte getMessage() {
+        return message;
+    }
+
+    public void setMessage(byte message) {
+        this.message = message;
+    }
+
+    public int getLengthOfChain() {
+        return chainVertexId.getKmerLength();
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeByte(checkMessage);
+        if ((checkMessage & CheckMessage.SOURCE) != 0)
+            sourceVertexId.write(out);
+        if ((checkMessage & CheckMessage.CHAIN) != 0)
+            chainVertexId.write(out);
+        if ((checkMessage & CheckMessage.ADJMAP) != 0)
+            out.write(adjMap);
+        out.writeByte(message);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        this.reset();
+        checkMessage = in.readByte();
+        if ((checkMessage & CheckMessage.SOURCE) != 0)
+            sourceVertexId.readFields(in);
+        if ((checkMessage & CheckMessage.CHAIN) != 0)
+            chainVertexId.readFields(in);
+        if ((checkMessage & CheckMessage.ADJMAP) != 0)
+            adjMap = in.readByte();
+        message = in.readByte();
+    }
+
+    @Override
     public int hashCode() {
         return chainVertexId.hashCode();
     }
-	 
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof LogAlgorithmMessageWritable) {
-        	LogAlgorithmMessageWritable tp = (LogAlgorithmMessageWritable) o;
+            LogAlgorithmMessageWritable tp = (LogAlgorithmMessageWritable) o;
             return chainVertexId.equals(tp.chainVertexId);
         }
         return false;
     }
-    
+
     @Override
     public String toString() {
         return chainVertexId.toString();
     }
-    
-	@Override
-	public int compareTo(LogAlgorithmMessageWritable tp) {
-		return chainVertexId.compareTo(tp.chainVertexId);
-	}
+
+    @Override
+    public int compareTo(LogAlgorithmMessageWritable tp) {
+        return chainVertexId.compareTo(tp.chainVertexId);
+    }
 }

@@ -30,58 +30,55 @@ import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 public class PathMergeSmallTestCase extends TestCase {
-	private final PregelixJob job;
-	private final String resultFileDir;
-	private final String textFileDir;
-	private final String jobFile;
-	private final Driver driver = new Driver(this.getClass());
-	private final FileSystem dfs;
+    private final PregelixJob job;
+    private final String resultFileDir;
+    private final String textFileDir;
+    private final String jobFile;
+    private final Driver driver = new Driver(this.getClass());
+    private final FileSystem dfs;
 
-	public PathMergeSmallTestCase(String hadoopConfPath, String jobName,
-			String jobFile, FileSystem dfs, String hdfsInput, String resultFile, String textFile)
-			throws Exception {
-		super("test");
-		this.jobFile = jobFile;
-		this.job = new PregelixJob("test");
-		this.job.getConfiguration().addResource(new Path(jobFile));
-		this.job.getConfiguration().addResource(new Path(hadoopConfPath));
-		FileInputFormat.setInputPaths(job, hdfsInput);
-		FileOutputFormat.setOutputPath(job, new Path(hdfsInput + "_result"));
-		this.textFileDir = textFile;
-		job.setJobName(jobName);
-		this.resultFileDir = resultFile;
-		
-		this.dfs = dfs;
-	}
+    public PathMergeSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs,
+            String hdfsInput, String resultFile, String textFile) throws Exception {
+        super("test");
+        this.jobFile = jobFile;
+        this.job = new PregelixJob("test");
+        this.job.getConfiguration().addResource(new Path(jobFile));
+        this.job.getConfiguration().addResource(new Path(hadoopConfPath));
+        FileInputFormat.setInputPaths(job, hdfsInput);
+        FileOutputFormat.setOutputPath(job, new Path(hdfsInput + "_result"));
+        this.textFileDir = textFile;
+        job.setJobName(jobName);
+        this.resultFileDir = resultFile;
 
-	private void waitawhile() throws InterruptedException {
-		synchronized (this) {
-			this.wait(20);
-		}
-	}
+        this.dfs = dfs;
+    }
 
-	@Test
-	public void test() throws Exception {
-		setUp();
-		Plan[] plans = new Plan[] { Plan.OUTER_JOIN };
-		for (Plan plan : plans) {
-			driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
-					PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT,
-					false);
-		}
-		compareResults();
-		tearDown();
-		waitawhile();
-	}
+    private void waitawhile() throws InterruptedException {
+        synchronized (this) {
+            this.wait(20);
+        }
+    }
 
-	private void compareResults() throws Exception {
-		dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(
-				resultFileDir));
-		GenerateTextFile.generateFromPathmergeResult(5, resultFileDir, textFileDir);
-	}
+    @Test
+    public void test() throws Exception {
+        setUp();
+        Plan[] plans = new Plan[] { Plan.OUTER_JOIN };
+        for (Plan plan : plans) {
+            driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
+                    PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
+        }
+        compareResults();
+        tearDown();
+        waitawhile();
+    }
 
-	public String toString() {
-		return jobFile;
-	}
+    private void compareResults() throws Exception {
+        dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(resultFileDir));
+        GenerateTextFile.generateFromPathmergeResult(5, resultFileDir, textFileDir);
+    }
+
+    public String toString() {
+        return jobFile;
+    }
 
 }

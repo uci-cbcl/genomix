@@ -1,4 +1,3 @@
-
 package edu.uci.ics.genomix.pregelix.client;
 
 import java.io.IOException;
@@ -33,10 +32,10 @@ public class Client {
 
         @Option(name = "-plan", usage = "query plan choice", required = false)
         public Plan planChoice = Plan.OUTER_JOIN;
-        
+
         @Option(name = "-kmer-size", usage = "the size of kmer", required = false)
         public int sizeKmer;
-        
+
         @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
         public int numIteration = -1;
 
@@ -62,7 +61,7 @@ public class Client {
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
         job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
-        if (options.numIteration > 0){
+        if (options.numIteration > 0) {
             job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
             job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
         }
