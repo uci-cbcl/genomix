@@ -26,7 +26,6 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.hyracks.job.GenomixJob;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -54,7 +53,6 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
         ConfFactory cf;
         Writer writer = null;
 
-        KmerCountValue reEnterCount = new KmerCountValue();
         KmerBytesWritable reEnterKey = new KmerBytesWritable(kmerlength);
 
         /**
@@ -66,12 +64,15 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
                 byte[] kmer = tuple.getFieldData(0);
                 int keyStart = tuple.getFieldStart(0);
                 int keyLength = tuple.getFieldLength(0);
+                if (reEnterKey.getLength() > keyLength){
+                    throw new IllegalArgumentException("Not enough kmer bytes");
+                }
 
                 byte bitmap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
                 byte count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
-                reEnterCount.set(bitmap, count);
-                reEnterKey.set(kmer, keyStart, keyLength);
-                writer.append(reEnterKey, reEnterCount);
+//                reEnterCount.set(bitmap, count);
+                reEnterKey.set(kmer, keyStart);
+                writer.append(reEnterKey, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -81,7 +82,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
         public void open(DataOutput output) throws HyracksDataException {
             try {
                 writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, KmerBytesWritable.class,
-                        KmerCountValue.class, CompressionType.NONE, null);
+                        null, CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }

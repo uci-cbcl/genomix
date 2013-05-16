@@ -21,12 +21,12 @@ import org.junit.Test;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
+import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
 
 public class VKmerBytesWritableFactoryTest {
     static byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
 
-    VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(8);
+    KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(8);
 
     @Test
     public void TestDegree() {

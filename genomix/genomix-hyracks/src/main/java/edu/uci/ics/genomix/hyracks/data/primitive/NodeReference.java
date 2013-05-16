@@ -1,17 +1,21 @@
 package edu.uci.ics.genomix.hyracks.data.primitive;
 
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+
 
 public class NodeReference {
     private PositionReference nodeID;
     private int countOfKmer;
     private PositionListReference incomingList;
     private PositionListReference outgoingList;
+    private KmerBytesWritable kmer;
 
-    public NodeReference() {
+    public NodeReference(int kmerSize) {
         nodeID = new PositionReference();
         countOfKmer = 0;
         incomingList = new PositionListReference();
         outgoingList = new PositionListReference();
+        kmer = new KmerBytesWritable(kmerSize);
     }
     
     public int getCount(){
@@ -56,12 +60,15 @@ public class NodeReference {
     public PositionReference getNodeID() {
         return nodeID;
     }
+    
+    public KmerBytesWritable getKmer(){
+        return kmer;
+    }
 
     public void mergeNextWithinOneRead(NodeReference nextNodeEntry) {
-        this.countOfKmer += nextNodeEntry.countOfKmer;
-        for(PositionReference pos : nextNodeEntry.getOutgoingList()){
-            this.outgoingList.append(pos);
-        }
+        this.countOfKmer += 1;
+        this.outgoingList.set(nextNodeEntry.outgoingList);
+        kmer.mergeKmerWithNextCode(nextNodeEntry.kmer.getGeneCodeAtPosition(nextNodeEntry.kmer.getKmerLength()-1));
     }
 
     public void set(NodeReference node) {
@@ -69,6 +76,7 @@ public class NodeReference {
         this.countOfKmer = node.countOfKmer;
         this.incomingList.set(node.getIncomingList());
         this.outgoingList.set(node.getOutgoingList());
+        this.kmer.set(node.kmer);
     }
 
 }

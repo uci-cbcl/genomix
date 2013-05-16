@@ -22,7 +22,6 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import edu.uci.ics.genomix.hyracks.data.accessors.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.hyracks.util.ByteComparatorFactory;
 import edu.uci.ics.genomix.hyracks.util.StatCountAggregateFactory;
-import edu.uci.ics.genomix.hyracks.util.StatReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.util.StatSumAggregateFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
@@ -107,7 +106,7 @@ public class JobGenStatistic extends JobGen {
 
             String[] readSchedule = scheduler.getLocationConstraints(splits);
             return new HDFSReadOperatorDescriptor(jobSpec, readOutputRec, hadoopjob, splits, readSchedule,
-                    new StatReadsKeyValueParserFactory());
+                    null); //new StatReadsKeyValueParserFactory());
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

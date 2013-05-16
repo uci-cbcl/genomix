@@ -23,17 +23,11 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
         this.valueCount = 0;
         this.offset = 0;
     }
-    
-    public PositionListReference(int count, byte [] data, int offset){
+
+    public PositionListReference(int count, byte[] data, int offset) {
         setNewReference(count, data, offset);
     }
 
-    public void setNewReference(int count, byte[] data, int offset){
-        this.valueCount = count;
-        this.storage = data;
-        this.offset = offset;
-    }
-    
     protected void setSize(int size) {
         if (size > getCapacity()) {
             setCapacity((size * 3 / 2));
@@ -48,7 +42,7 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
         if (new_cap > getCapacity()) {
             byte[] new_data = new byte[new_cap];
             if (storage.length - offset > 0) {
-                System.arraycopy(storage, offset, new_data, 0, storage.length-offset);
+                System.arraycopy(storage, offset, new_data, 0, storage.length - offset);
             }
             storage = new_data;
             offset = 0;
@@ -75,7 +69,7 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
         posIter.setNewReference(storage, offset + i * PositionReference.LENGTH);
         return posIter;
     }
-    
+
     @Override
     public Iterator<PositionReference> iterator() {
         Iterator<PositionReference> it = new Iterator<PositionReference>() {
@@ -100,6 +94,12 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
         return it;
     }
 
+    public void setNewReference(int count, byte[] data, int offset) {
+        this.valueCount = count;
+        this.storage = data;
+        this.offset = offset;
+    }
+
     public void set(PositionListReference list2) {
         set(list2.valueCount, list2.storage, list2.offset);
     }
@@ -118,8 +118,8 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
 
     public void append(PositionReference pos) {
         setSize((1 + valueCount) * PositionReference.LENGTH);
-        System.arraycopy(pos.getByteArray(), pos.getStartOffset(), storage, offset + valueCount * PositionReference.LENGTH,
-                pos.getLength());
+        System.arraycopy(pos.getByteArray(), pos.getStartOffset(), storage, offset + valueCount
+                * PositionReference.LENGTH, pos.getLength());
         valueCount += 1;
     }
 
@@ -146,7 +146,7 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
 
     @Override
     public int getLength() {
-        return valueCount * PositionReference.LENGTH ;
+        return valueCount * PositionReference.LENGTH;
     }
 
 }
