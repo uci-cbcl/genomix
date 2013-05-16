@@ -1,20 +1,36 @@
 package edu.uci.ics.genomix.type;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
-public class NodeWritable {
+import org.apache.hadoop.io.WritableComparable;
+
+public class NodeWritable implements WritableComparable<NodeWritable> {
     private PositionWritable nodeID;
     private int countOfKmer;
     private PositionListWritable incomingList;
     private PositionListWritable outgoingList;
-
-    public NodeWritable() {
+    private KmerBytesWritable kmer;
+    
+    @SuppressWarnings("deprecation")
+    public NodeWritable(){
         nodeID = new PositionWritable();
         countOfKmer = 0;
         incomingList = new PositionListWritable();
         outgoingList = new PositionListWritable();
+        kmer = new KmerBytesWritable();
     }
-    
-    public int getCount(){
+
+    public NodeWritable(int kmerSize) {
+        nodeID = new PositionWritable();
+        countOfKmer = 0;
+        incomingList = new PositionListWritable();
+        outgoingList = new PositionListWritable();
+        kmer = new KmerBytesWritable(kmerSize);
+    }
+
+    public int getCount() {
         return countOfKmer;
     }
 
@@ -57,11 +73,14 @@ public class NodeWritable {
         return nodeID;
     }
 
+    public KmerBytesWritable getKmer() {
+        return kmer;
+    }
+
     public void mergeNextWithinOneRead(NodeWritable nextNodeEntry) {
-        this.countOfKmer += nextNodeEntry.countOfKmer;
-        for(PositionWritable pos : nextNodeEntry.getOutgoingList()){
-            this.outgoingList.append(pos);
-        }
+        this.countOfKmer += 1;
+        this.outgoingList.set(nextNodeEntry.outgoingList);
+        kmer.mergeKmerWithNextCode(nextNodeEntry.kmer.getGeneCodeAtPosition(nextNodeEntry.kmer.getKmerLength() - 1));
     }
 
     public void set(NodeWritable node) {
@@ -69,6 +88,35 @@ public class NodeWritable {
         this.countOfKmer = node.countOfKmer;
         this.incomingList.set(node.getIncomingList());
         this.outgoingList.set(node.getOutgoingList());
+        this.kmer.set(node.kmer);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        this.nodeID.readFields(in);
+        this.countOfKmer = in.readInt();
+        this.incomingList.readFields(in);
+        this.outgoingList.readFields(in);
+        this.kmer.readFields(in);
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException {
+        this.nodeID.write(out);
+        out.writeInt(this.countOfKmer);
+        this.incomingList.write(out);
+        this.outgoingList.write(out);
+        this.kmer.write(out);
+    }
+
+    @Override
+    public int compareTo(NodeWritable other) {
+        return this.nodeID.compareTo(other.nodeID);
+    }
+
+    @Override
+    public int hashCode() {
+        return nodeID.hashCode();
     }
 
 }

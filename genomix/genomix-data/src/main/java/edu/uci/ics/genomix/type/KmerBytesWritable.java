@@ -24,6 +24,8 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
+import edu.uci.ics.genomix.data.KmerUtil;
+
 /**
  * Variable kmer length byteswritable
  * It was used to generate the graph in which phase the kmer length doesn't change.

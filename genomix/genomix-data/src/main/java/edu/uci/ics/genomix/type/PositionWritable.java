@@ -3,11 +3,15 @@ package edu.uci.ics.genomix.type;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import org.apache.hadoop.io.Writable;
 
-public class PositionWritable implements Writable {
-    private byte[] storage;
-    private int offset;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableComparator;
+
+import edu.uci.ics.genomix.data.Marshal;
+
+public class PositionWritable implements WritableComparable<PositionWritable> {
+    protected byte[] storage;
+    protected int offset;
     public static final int LENGTH = 5;
     public static final int INTBYTES = 4;
 
@@ -31,12 +35,12 @@ public class PositionWritable implements Writable {
     }
     
     public void set(int readID, byte posInRead) {
-        putInt(readID, storage, offset);
+        Marshal.putInt(readID, storage, offset);
         storage[offset + INTBYTES] = posInRead;
     }
 
     public int getReadID() {
-        return getInt(storage, offset);
+        return Marshal.getInt(storage, offset);
     }
 
     public byte getPosInRead() {
@@ -54,7 +58,7 @@ public class PositionWritable implements Writable {
     public int getLength() {
         return LENGTH;
     }
-    
+
     @Override
     public void readFields(DataInput in) throws IOException {
         in.readFully(storage, offset, LENGTH);
@@ -65,16 +69,51 @@ public class PositionWritable implements Writable {
         out.write(storage, offset, LENGTH);
     }
     
-    public static int getInt(byte[] bytes, int offset) {
-        return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8)
-                + ((bytes[offset + 3] & 0xff) << 0);
-    }
-    
-    public static void putInt(int val, byte[] bytes, int offset) {
-        bytes[offset] = (byte)((val >>> 24) & 0xFF);        
-        bytes[offset + 1] = (byte)((val >>> 16) & 0xFF);
-        bytes[offset + 2] = (byte)((val >>>  8) & 0xFF);
-        bytes[offset + 3] = (byte)((val >>>  0) & 0xFF);
+    @Override
+    public int hashCode() {
+        return this.getReadID();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PositionWritable))
+            return false;
+        PositionWritable other = (PositionWritable) o;
+        return this.getReadID() == other.getReadID() && this.getPosInRead() == other.getPosInRead();
+    }
+
+    @Override
+    public int compareTo(PositionWritable other) {
+        int diff = this.getReadID() - other.getReadID();
+        if (diff == 0) {
+            return this.getPosInRead() - other.getPosInRead();
+        }
+        return diff;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + Integer.toString(getReadID()) + "," + Integer.toString((int) getPosInRead()) + ")";
+    }
+
+    /** A Comparator optimized for IntWritable. */
+    public static class Comparator extends WritableComparator {
+        public Comparator() {
+            super(PositionWritable.class);
+        }
+
+        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+            int thisValue = Marshal.getInt(b1, s1);
+            int thatValue = Marshal.getInt(b2, s2);
+            int diff = thisValue - thatValue;
+            if (diff == 0) {
+                return b1[s1 + INTBYTES] - b2[s2 + INTBYTES];
+            }
+            return diff;
+        }
+    }
+
+    static { // register this comparator
+        WritableComparator.define(PositionWritable.class, new Comparator());
+    }
 }

@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.genomix.hyracks.data.primitive.NodeReference;
-import edu.uci.ics.genomix.hyracks.data.primitive.PositionListReference;
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -172,11 +172,11 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             }
         }
 
-        private void setPositionList(PositionListReference list, int count, byte[] array, int offset, boolean byRef) {
+        private void setPositionList(PositionListWritable positionListWritable, int count, byte[] array, int offset, boolean byRef) {
             if (byRef) {
-                list.setNewReference(count, array, offset);
+                positionListWritable.setNewReference(count, array, offset);
             } else {
-                list.set(count, array, offset);
+                positionListWritable.set(count, array, offset);
             }
         }
 

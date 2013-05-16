@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.type;
+package edu.uci.ics.genomix.data;
+
+import edu.uci.ics.genomix.type.GeneCode;
 
 public class KmerUtil {
     public static final String empty = "";
