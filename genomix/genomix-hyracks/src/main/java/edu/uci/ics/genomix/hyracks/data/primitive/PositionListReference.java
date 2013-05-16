@@ -49,19 +49,6 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
         }
     }
 
-    @Override
-    public void readFields(DataInput in) throws IOException {
-        this.valueCount = in.readInt();
-        setSize(valueCount * PositionReference.LENGTH);
-        in.readFully(storage, offset, valueCount * PositionReference.LENGTH);
-    }
-
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeInt(valueCount);
-        out.write(storage, offset, valueCount * PositionReference.LENGTH);
-    }
-
     public PositionReference getPosition(int i) {
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
@@ -147,6 +134,19 @@ public class PositionListReference implements Writable, Iterable<PositionReferen
     @Override
     public int getLength() {
         return valueCount * PositionReference.LENGTH;
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        this.valueCount = in.readInt();
+        setSize(valueCount * PositionReference.LENGTH);
+        in.readFully(storage, offset, valueCount * PositionReference.LENGTH);
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeInt(valueCount);
+        out.write(storage, offset, valueCount * PositionReference.LENGTH);
     }
 
 }

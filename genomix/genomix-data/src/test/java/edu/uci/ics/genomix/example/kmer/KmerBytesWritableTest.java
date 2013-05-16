@@ -90,4 +90,21 @@ public class KmerBytesWritableTest {
         }
     }
 
+    @Test
+    public void TestMergeNext() {
+        KmerBytesWritable kmer = new KmerBytesWritable(9);
+        byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G' };
+        kmer.setByRead(array, 0);
+        Assert.assertEquals("AGCTGACCG", kmer.toString());
+
+        String text = "AGCTGACCG";
+        for (int i = 0; i < 10; i++) {
+            for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
+                kmer.mergeKmerWithNextCode(x);
+                text = text + (char) GeneCode.GENE_SYMBOL[x];
+                Assert.assertEquals(text, kmer.toString());
+            }
+        }
+    }
+
 }

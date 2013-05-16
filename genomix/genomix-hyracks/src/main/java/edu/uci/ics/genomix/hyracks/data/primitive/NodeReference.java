@@ -1,9 +1,14 @@
 package edu.uci.ics.genomix.hyracks.data.primitive;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
+import org.apache.hadoop.io.WritableComparable;
+
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
-
-public class NodeReference {
+public class NodeReference implements WritableComparable<NodeReference> {
     private PositionReference nodeID;
     private int countOfKmer;
     private PositionListReference incomingList;
@@ -17,8 +22,8 @@ public class NodeReference {
         outgoingList = new PositionListReference();
         kmer = new KmerBytesWritable(kmerSize);
     }
-    
-    public int getCount(){
+
+    public int getCount() {
         return countOfKmer;
     }
 
@@ -60,15 +65,15 @@ public class NodeReference {
     public PositionReference getNodeID() {
         return nodeID;
     }
-    
-    public KmerBytesWritable getKmer(){
+
+    public KmerBytesWritable getKmer() {
         return kmer;
     }
 
     public void mergeNextWithinOneRead(NodeReference nextNodeEntry) {
         this.countOfKmer += 1;
         this.outgoingList.set(nextNodeEntry.outgoingList);
-        kmer.mergeKmerWithNextCode(nextNodeEntry.kmer.getGeneCodeAtPosition(nextNodeEntry.kmer.getKmerLength()-1));
+        kmer.mergeKmerWithNextCode(nextNodeEntry.kmer.getGeneCodeAtPosition(nextNodeEntry.kmer.getKmerLength() - 1));
     }
 
     public void set(NodeReference node) {
@@ -79,4 +84,31 @@ public class NodeReference {
         this.kmer.set(node.kmer);
     }
 
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        this.nodeID.readFields(in);
+        this.countOfKmer = in.readInt();
+        this.incomingList.readFields(in);
+        this.outgoingList.readFields(in);
+        this.kmer.readFields(in);
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException {
+        this.nodeID.write(out);
+        out.writeInt(this.countOfKmer);
+        this.incomingList.write(out);
+        this.outgoingList.write(out);
+        this.kmer.write(out);
+    }
+
+    @Override
+    public int compareTo(NodeReference other) {
+        return this.nodeID.compareTo(other.nodeID);
+    }
+
+    @Override
+    public int hashCode() {
+        return nodeID.hashCode();
+    }
 }

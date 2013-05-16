@@ -68,6 +68,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     }
 
     public KmerBytesWritable(KmerBytesWritable right) {
+        this(right.kmerlength);
         set(right);
     }
 
@@ -196,6 +197,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
     }
 
+    public void setByRead(int k, byte[] array, int start) {
+        reset(k);
+        setByRead(array, start);
+    }
+
     /**
      * Compress Reversed Kmer into bytes array AATAG will compress as
      * [0x000A,0xATAG]
@@ -222,6 +228,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         if (bcount >= 0) {
             bytes[offset] = l;
         }
+    }
+
+    public void setByReadReverse(int k, byte[] array, int start) {
+        reset(k);
+        setByReadReverse(array, start);
     }
 
     /**
@@ -297,15 +308,15 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @return the merged Kmer, this K of this Kmer is k+1
      */
     public void mergeKmerWithNextCode(byte nextCode) {
-        this.kmerlength +=1;
+        this.kmerlength += 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
-        for(int i = getLength()-1; i>0; i--){
-            bytes[offset + i] = bytes[offset + i-1];
-        }
-        if (kmerlength % 4 == 1) { 
-            getBytes()[offset] = (byte) (nextCode & 0x3);
+        if (kmerlength % 4 == 1) {
+            for (int i = getLength() - 1; i > 0; i--) {
+                bytes[offset + i] = bytes[offset + i - 1];
+            }
+            bytes[offset] = (byte) (nextCode & 0x3);
         } else {
-            getBytes()[offset] = (byte) (getBytes()[offset] | ((nextCode & 0x3) << ((getKmerLength() % 4) << 1)));
+            bytes[offset] = (byte) (bytes[offset] | ((nextCode & 0x3) << (((kmerlength-1) % 4) << 1)));
         }
         clearLeadBit();
     }
@@ -378,5 +389,4 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     static { // register this comparator
         WritableComparator.define(KmerBytesWritable.class, new Comparator());
     }
-
 }
