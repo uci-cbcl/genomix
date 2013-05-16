@@ -12,13 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hadoop.pathmergingh1;
+package edu.uci.ics.genomix.hadoop.pmcommon;
 
 import java.io.File;
 import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
-
 public class MergePathMultiSeqOutputFormat extends MultipleSequenceFileOutputFormat<VKmerBytesWritable, MergePathValueWritable>{
     @Override
     protected String generateLeafFileName(String name) {

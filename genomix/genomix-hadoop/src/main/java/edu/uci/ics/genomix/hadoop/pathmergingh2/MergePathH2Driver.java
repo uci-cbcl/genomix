@@ -30,14 +30,12 @@ import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.hadoop.pathmergingh1.MergePathH1Driver;
-import edu.uci.ics.genomix.hadoop.pathmergingh1.MergePathH1Mapper;
-import edu.uci.ics.genomix.hadoop.pathmergingh1.MergePathH1Reducer;
-import edu.uci.ics.genomix.hadoop.pathmergingh1.MergePathMultiSeqOutputFormat;
-//import edu.uci.ics.genomix.pathmergingh1.MergePathValueWritable;
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathMultiSeqOutputFormat;
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
+import edu.uci.ics.genomix.hadoop.pmcommon.SNodeInitialMapper;
+import edu.uci.ics.genomix.hadoop.pmcommon.SNodeInitialReducer;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
 @SuppressWarnings("deprecation")
 public class MergePathH2Driver {
 

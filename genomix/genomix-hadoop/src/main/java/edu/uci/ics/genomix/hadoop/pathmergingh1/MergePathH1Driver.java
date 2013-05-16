@@ -30,12 +30,13 @@ import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.hadoop.pathmergingh2.MergePathH2Driver;
-import edu.uci.ics.genomix.hadoop.pathmergingh2.SNodeInitialMapper;
-import edu.uci.ics.genomix.hadoop.pathmergingh2.SNodeInitialReducer;
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
+import edu.uci.ics.genomix.hadoop.pmcommon.SNodeInitialMapper;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathMultiSeqOutputFormat;
+import edu.uci.ics.genomix.hadoop.pmcommon.SNodeInitialMapper;
+import edu.uci.ics.genomix.hadoop.pmcommon.SNodeInitialReducer;
 
 @SuppressWarnings("deprecation")
 public class MergePathH1Driver {
@@ -64,7 +65,7 @@ public class MergePathH1Driver {
     public void run(String inputPath, String outputPath, String mergeResultPath, int numReducers, int sizeKmer,
             int mergeRound, String defaultConfPath) throws IOException {
 
-        JobConf conf = new JobConf(MergePathH2Driver.class);
+        JobConf conf = new JobConf(MergePathH1Driver.class);
         conf.setInt("sizeKmer", sizeKmer);
 
         if (defaultConfPath != null) {
@@ -98,7 +99,7 @@ public class MergePathH1Driver {
                 + singlePointPath));
         int iMerge = 0;
         /*----------------------------------------------------------------------*/
-        for (iMerge = 0; iMerge < mergeRound; iMerge++) {
+        for (iMerge = 1; iMerge <= mergeRound; iMerge++) {
 //            if (!dfs.exists(new Path(inputPath + "-step1")))
 //                break;
             conf = new JobConf(MergePathH1Driver.class);
@@ -144,46 +145,6 @@ public class MergePathH1Driver {
             dfs.rename(new Path(outputPath + "/" + comSinglePath), new Path(mergeResultPath + "/" + comSinglePath));
             dfs.rename(new Path(outputPath + "/" + comCircle), new Path(mergeResultPath + "/" + comCircle));
         }
-        /*----------------------------------------*/
-        /*        conf = new JobConf(MergePathH1Driver.class);
-                conf.setInt("sizeKmer", sizeKmer);
-                conf.setInt("iMerge", iMerge);
-                
-                if (defaultConfPath != null) {
-                    conf.addResource(new Path(defaultConfPath));
-                }
-                conf.setJobName("Path Merge");
-                
-                conf.setMapperClass(MergePathH1Mapper.class);
-                conf.setReducerClass(MergePathH1Reducer.class);
-                
-                conf.setMapOutputKeyClass(VKmerBytesWritable.class);
-                conf.setMapOutputValueClass(MergePathValueWritable.class);
-                
-                conf.setInputFormat(SequenceFileInputFormat.class);
-                
-                String uncomplete = "uncomplete" + iMerge;
-                String complete = "complete" + iMerge;
-               
-                MultipleOutputs.addNamedOutput(conf, uncomplete,
-                        MergePathMultiSeqOutputFormat.class, VKmerBytesWritable.class,
-                        MergePathValueWritable.class);
-
-                MultipleOutputs.addNamedOutput(conf, complete,
-                        MergePathMultiTextOutputFormat.class, VKmerBytesWritable.class,
-                        MergePathValueWritable.class);
-                
-                conf.setOutputKeyClass(VKmerBytesWritable.class);
-                conf.setOutputValueClass(MergePathValueWritable.class);
-                
-                FileInputFormat.setInputPaths(conf, new Path(inputPath + "-step1"));
-                FileOutputFormat.setOutputPath(conf, new Path(outputPath));
-                conf.setNumReduceTasks(numReducers);
-                dfs.delete(new Path(outputPath), true);
-                JobClient.runJob(conf);
-                dfs.delete(new Path(inputPath + "-step1"), true);
-                dfs.rename(new Path(outputPath + "/" + uncomplete), new Path(inputPath + "-step1"));
-                dfs.rename(new Path(outputPath + "/" + complete), new Path(mergeResultPath + "/" + complete));*/
     }
 
     public static void main(String[] args) throws Exception {

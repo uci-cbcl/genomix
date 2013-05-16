@@ -20,10 +20,11 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
+
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
 
 @SuppressWarnings("deprecation")
 public class MergePathH1Mapper extends MapReduceBase implements
@@ -61,12 +62,11 @@ public class MergePathH1Mapper extends MapReduceBase implements
              */
             byte succeedCode = GeneCode.getGeneCodeFromBitMap(succeed);
             tmpKmer.set(outputKmerFactory.getLastKmerFromChain(KMER_SIZE, key));
-            //TODO remove tmpKmer!!!!
             outputKmer.set(outputKmerFactory.shiftKmerWithNextCode(tmpKmer, succeedCode));
             tmpKmer.set(outputKmerFactory.getFirstKmerFromChain(key.getKmerLength() - (KMER_SIZE - 1), key));
             outputValue.set(adjBitMap, bitFlag, tmpKmer);
             output.collect(outputKmer, outputValue);
-        } else {//!!!!Make comments
+        } else {
             output.collect(key, value);
         }
     }

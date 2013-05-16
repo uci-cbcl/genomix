@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hadoop.pathmergingh1;
+package edu.uci.ics.genomix.hadoop.pmcommon;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -26,7 +26,6 @@ import org.apache.hadoop.mapred.lib.MultipleOutputs;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
 
 @SuppressWarnings("deprecation")
 public class SNodeInitialReducer extends MapReduceBase implements
@@ -54,8 +53,10 @@ public class SNodeInitialReducer extends MapReduceBase implements
         byte targetAdjList = 0x00;
         //if we find the start or end point, we will use outputFlag to mark them
         byte outputFlag = 0x00;
+        
         if (values.hasNext() == true) {
             //find startPointFlag, endPointFlag, targetPointFlag
+
             switch (outputValue.getFlag()) {
                 case (byte) 0x01:
                     startPointFlag = (byte) 0x01;

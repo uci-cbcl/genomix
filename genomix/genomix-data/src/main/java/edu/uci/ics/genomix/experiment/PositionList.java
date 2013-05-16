@@ -1,6 +1,6 @@
 package edu.uci.ics.genomix.experiment;
 
-public class VertexIDList {
+public class PositionList {
 
     private int[] readIDList;
     private byte[] posInReadList;
@@ -10,11 +10,11 @@ public class VertexIDList {
     private int usedSize;
     private int arraySize;
 
-    public VertexIDList() {
+    public PositionList() {
         this(0, 0, EMPTY_INTS, EMPTY_BYTES);
     }
 
-    public VertexIDList(int usedSize, int arraySize, int[] rList, byte[] pList) {
+    public PositionList(int usedSize, int arraySize, int[] rList, byte[] pList) {
         this.usedSize = usedSize;
         this.arraySize = arraySize;
         if (arraySize > 0) {
@@ -34,7 +34,7 @@ public class VertexIDList {
         }
     }
 
-    public VertexIDList(int arraySize) {
+    public PositionList(int arraySize) {
         this.arraySize = arraySize;
         this.usedSize = 0;
         if (arraySize > 0) {
@@ -46,7 +46,7 @@ public class VertexIDList {
         }
     }
 
-    public VertexIDList(VertexIDList right) {
+    public PositionList(PositionList right) {
         if (right != null) {
             this.usedSize = right.usedSize;
             this.arraySize = right.arraySize;
@@ -67,7 +67,7 @@ public class VertexIDList {
         }
     }
 
-    public void set(VertexIDList newData) {
+    public void set(PositionList newData) {
         set(newData.readIDList, 0, newData.posInReadList, 0, newData.usedSize);
     }
 

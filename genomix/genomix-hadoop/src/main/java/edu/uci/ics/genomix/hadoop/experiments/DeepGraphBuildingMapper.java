@@ -6,7 +6,7 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import edu.uci.ics.genomix.experiment.VertexIDList;
+import edu.uci.ics.genomix.experiment.PositionList;
 import edu.uci.ics.genomix.experiment.VertexIDListWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
@@ -14,7 +14,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 public class DeepGraphBuildingMapper extends MapReduceBase implements
         Mapper<KmerBytesWritable, VertexIDListWritable, IntWritable, LineBasedmappingWritable> {
     IntWritable  numLine = new IntWritable();
-    VertexIDList vertexList = new VertexIDList(1);
+    PositionList vertexList = new PositionList(1);
     LineBasedmappingWritable lineBasedWriter = new LineBasedmappingWritable();
     @Override
     public void map(KmerBytesWritable key, VertexIDListWritable value, OutputCollector<IntWritable, LineBasedmappingWritable> output,

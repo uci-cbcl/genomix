@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.type;
+package edu.uci.ics.genomix.hadoop.pmcommon;
 
 import java.io.DataInput;
 import java.io.DataOutput;

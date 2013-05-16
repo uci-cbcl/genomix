@@ -23,10 +23,10 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
 
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
 
 @SuppressWarnings("deprecation")
 public class MergePathH1Reducer extends MapReduceBase implements

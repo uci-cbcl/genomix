@@ -30,29 +30,29 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
-
 import edu.uci.ics.genomix.hadoop.pathmergingh1.MergePathH1Driver;
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
 import edu.uci.ics.genomix.hadoop.utils.TestUtils;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
 
 @SuppressWarnings("deprecation")
-public class MergePathTest {
+public class MergePathH1Test {
     private static final String ACTUAL_RESULT_DIR = "actual3";
     private static final String COMPARE_DIR = "compare";
     private JobConf conf = new JobConf();
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String DATA_PATH = "actual2" + "/result2" + "/part-00000";
-    private static final String HDFS_PATH = "/webmap";
-    private static final String HDFA_PATH_DATA = "/webmapdata";
+    private static final String HDFS_PATH = "/hdfsdata";
+    private static final String HDFS_PATH_MERGED = "/pathmerged";
     
     private static final String RESULT_PATH = "/result3";
-    private static final String EXPECTED_PATH = "expected/result3";
+//    private static final String EXPECTED_PATH = "expected/result3";
     private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH;
+    
     private static final int COUNT_REDUCER = 1;
     private static final int SIZE_KMER = 3;
-
+    private static final int MERGE_ROUND = 2;
+    
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
     private FileSystem dfs;
@@ -65,10 +65,10 @@ public class MergePathTest {
         startHadoop();
 
         MergePathH1Driver tldriver = new MergePathH1Driver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, HDFA_PATH_DATA, COUNT_REDUCER, SIZE_KMER, 3, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, HDFS_PATH_MERGED, COUNT_REDUCER, SIZE_KMER, MERGE_ROUND, HADOOP_CONF_PATH);
         
         SequenceFile.Reader reader = null;
-        Path path = new Path(HDFA_PATH_DATA + "/complete2" + "/complete2-r-00000");
+        Path path = new Path(HDFS_PATH_MERGED + "/comSinglePath2" + "/comSinglePath2-r-00000");
         reader = new SequenceFile.Reader(dfs, path, conf);
         VKmerBytesWritable key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
         MergePathValueWritable value = (MergePathValueWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
@@ -82,8 +82,6 @@ public class MergePathTest {
         }
         bw.close();
         
-        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR + "/comparesource.txt"), new File(EXPECTED_PATH));
-
         cleanupHadoop();
 
     }
@@ -99,7 +97,7 @@ public class MergePathTest {
         Path dest = new Path(HDFS_PATH + "/");
         dfs.mkdirs(dest);
         dfs.copyFromLocalFile(src, dest);
-        Path data = new Path(HDFA_PATH_DATA + "/");
+        Path data = new Path(HDFS_PATH_MERGED + "/");
         dfs.mkdirs(data);
    
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_PATH)));

@@ -10,26 +10,26 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import edu.uci.ics.genomix.experiment.KmerVertexID;
+import edu.uci.ics.genomix.experiment.Position;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class GraphKmerInvertedIndexMapper extends MapReduceBase implements
-        Mapper<LongWritable, Text, KmerBytesWritable, KmerVertexID> {
+        Mapper<LongWritable, Text, KmerBytesWritable, Position> {
     
     public static int KMER_SIZE;
-    public KmerVertexID outputVertexID;
+    public Position outputVertexID;
     public KmerBytesWritable outputKmer;
 
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
-        outputVertexID = new KmerVertexID();
+        outputVertexID = new Position();
         outputKmer = new KmerBytesWritable(KMER_SIZE);
     }
     @Override
-    public void map(LongWritable key, Text value, OutputCollector<KmerBytesWritable, KmerVertexID> output,
+    public void map(LongWritable key, Text value, OutputCollector<KmerBytesWritable, Position> output,
             Reporter reporter) throws IOException {
         
         String geneLine = value.toString();

@@ -12,35 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hadoop.pathmergingh2;
+package edu.uci.ics.genomix.hadoop.pmcommon;
 
 import java.io.IOException;
+
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.lib.MultipleOutputs;
 
-import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.MergePathValueWritable;
-
+import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
 @SuppressWarnings("deprecation")
 public class SNodeInitialMapper extends MapReduceBase implements
         Mapper<KmerBytesWritable, ByteWritable, KmerBytesWritable, MergePathValueWritable> {
 
-    private int KMER_SIZE;
-    private KmerBytesWritable outputKmer;
-    private MergePathValueWritable outputAdjList;
+    public int KMER_SIZE;
+    public KmerBytesWritable outputKmer;
+    public MergePathValueWritable outputAdjList;
 
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
         outputKmer = new KmerBytesWritable(KMER_SIZE);
         outputAdjList = new MergePathValueWritable();
     }
-
+    
     /**
      * @param adjacent the high 4 bits are useless, we just use the lower 4 bits
      * @return if the degree == 1 then return false, else return true
@@ -103,6 +102,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
     @Override
     public void map(KmerBytesWritable key, ByteWritable value,
             OutputCollector<KmerBytesWritable, MergePathValueWritable> output, Reporter reporter) throws IOException {
+        //TODO clean this code piece, use the genomix-data function
         byte precursor = (byte) 0xF0;
         byte succeed = (byte) 0x0F;
         byte adjBitMap = value.get();
@@ -121,14 +121,15 @@ public class SNodeInitialMapper extends MapReduceBase implements
         } else {
             // other records maps its precursor neighbors
             /**
-             * eg. ACT  CTA|CA, it maps CAC, TAC, ACA, all the 3 pairs marked  0x80
+             * eg. ACT  CTA|CA, it maps CAC, TAC, AAC, all the 3 pairs marked  0x80
              */
             for (int i = 0; i < 4; i++) {
                 byte temp = (byte) 0x01;
                 byte shiftedCode = 0;
                 temp = (byte) (temp << i);
-                temp = (byte) (precursor & temp);
+                temp = (byte) (precursor & temp);   
                 if (temp != 0) {
+                    //TODO use the genomix-data factory function
                     byte precurCode = GeneCode.getGeneCodeFromBitMap(temp);
                     shiftedCode = key.shiftKmerWithPreCode(precurCode);
                     outputKmer.set(key);
@@ -140,7 +141,7 @@ public class SNodeInitialMapper extends MapReduceBase implements
             }
             //and also maps its succeeding neighbors
             /**
-             * eg. kmer:ACT  bitMap: CTA|CA, it maps CTC, CTA, all the 2 pairs marked 0x01
+             * eg. ACT  CTA|CA, it maps CTC, CTA, all the 2 pairs marked 0x01
              */
             for (int i = 0; i < 4; i++) {
                 byte temp = (byte) 0x01;

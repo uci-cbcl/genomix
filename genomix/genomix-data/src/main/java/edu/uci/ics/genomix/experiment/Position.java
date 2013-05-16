@@ -20,15 +20,15 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-public class KmerVertexID implements Writable {
+public class Position implements Writable {
     private int readID;
     private byte posInRead;
 
-    public KmerVertexID(int readID, byte posInRead) {
+    public Position(int readID, byte posInRead) {
         set(readID, posInRead);
     }
 
-    public KmerVertexID() {
+    public Position() {
         readID = -1;
         posInRead = -1;
     }

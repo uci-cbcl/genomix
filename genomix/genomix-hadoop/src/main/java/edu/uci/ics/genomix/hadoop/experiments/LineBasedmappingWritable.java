@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.experiment.VertexAdjacentWritable;
-import edu.uci.ics.genomix.experiment.VertexIDList;
+import edu.uci.ics.genomix.experiment.PositionList;
 import edu.uci.ics.genomix.experiment.VertexIDListWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -18,7 +18,7 @@ public class LineBasedmappingWritable extends VertexAdjacentWritable{
         this.posInInvertedIndex = -1;        
     }
 
-    public LineBasedmappingWritable(int posInInvertedIndex, VertexIDList right, int kmerSize, byte[] bytes) {       
+    public LineBasedmappingWritable(int posInInvertedIndex, PositionList right, int kmerSize, byte[] bytes) {       
         super(right, kmerSize, bytes);
         this.posInInvertedIndex = posInInvertedIndex;
     }
