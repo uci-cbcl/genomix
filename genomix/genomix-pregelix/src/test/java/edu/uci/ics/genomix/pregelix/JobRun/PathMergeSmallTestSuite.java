@@ -50,7 +50,7 @@ public class PathMergeSmallTestSuite extends TestSuite {
             + "SimplePath", PreFix + File.separator
             + "SinglePath", PreFix + File.separator
             + "TreePath"};*/
-            /*+ "2", PreFix + File.separator + "3", PreFix + File.separator + "4", PreFix + File.separator + "5",
+           /* + "2", PreFix + File.separator + "3", PreFix + File.separator + "4", PreFix + File.separator + "5",
             PreFix + File.separator + "6", PreFix + File.separator + "7", PreFix + File.separator + "8",
             PreFix + File.separator + "9", PreFix + File.separator + "TwoKmer", PreFix + File.separator + "ThreeKmer",
             PreFix + File.separator + "SinglePath", PreFix + File.separator + "SimplePath",
