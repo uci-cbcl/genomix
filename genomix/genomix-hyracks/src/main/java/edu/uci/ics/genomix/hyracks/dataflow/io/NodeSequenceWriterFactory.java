@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hyracks.dataflow;
+package edu.uci.ics.genomix.hyracks.dataflow.io;
 
 import org.apache.hadoop.mapred.JobConf;
 

@@ -65,7 +65,7 @@ public class JobGenStatistic extends JobGen {
     @Override
     protected void initJobConfiguration() {
         // TODO Auto-generated method stub
-        kmers = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
+        kmers = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMERLEN);
         hadoopjob = new JobConf(conf);
         hadoopjob.setInputFormat(SequenceFileInputFormat.class);
     }

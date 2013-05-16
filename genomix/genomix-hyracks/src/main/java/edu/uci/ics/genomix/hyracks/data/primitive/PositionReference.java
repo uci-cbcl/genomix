@@ -21,13 +21,12 @@ public class PositionReference implements IValueReference,Writable {
     }
 
     public PositionReference(byte[] storage, int offset) {
-        setNewSpace(storage, offset);
+        setNewReference(storage, offset);
     }
 
     public PositionReference(int readID, byte posInRead) {
         this();
-        IntegerSerializerDeserializer.putInt(readID, storage, offset);
-        storage[offset + INTBYTES] = posInRead;
+        set(readID, posInRead);
     }
 
     public void set(int readID, byte posInRead) {
@@ -35,7 +34,7 @@ public class PositionReference implements IValueReference,Writable {
         storage[offset + INTBYTES] = posInRead;
     }
 
-    public void setNewSpace(byte[] storage, int offset) {
+    public void setNewReference(byte[] storage, int offset) {
         this.storage = storage;
         this.offset = offset;
     }

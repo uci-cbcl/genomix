@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.dataflow;
+package edu.uci.ics.genomix.hyracks.dataflow.io;
 
 import java.io.DataOutput;
 import java.io.IOException;

@@ -25,9 +25,16 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
     }
 
     private static final long serialVersionUID = 1L;
+    public static final int InputKmerField = 0;
+    public static final int InputPosListField = 1;
+
+    public static final int OutputReadIDField = 0;
+    public static final int OutputPosInReadField = 1;
+    public static final int OutputOtherReadIDListField = 2;
+    public static final int OutputKmerField = 3; // may not needed
 
     /**
-     * Map (Kmer, {(ReadID,PosInRead),...}) into (ReadID,PosInRead,*Kmer*,{OtherReadID,...})
+     * Map (Kmer, {(ReadID,PosInRead),...}) into (ReadID,PosInRead,{OtherReadID,...},*Kmer*)
      * OtherReadID appears only when otherReadID.otherPos==0
      */
     public class MapKmerPositionToReadNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
@@ -39,14 +46,6 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
         private ByteBuffer writeBuffer;
         private ArrayTupleBuilder builder;
         private FrameTupleAppender appender;
-
-        public static final int InputKmerField = 0;
-        public static final int InputPosListField = 1;
-
-        public static final int OutputReadIDField = 0;
-        public static final int OutputPosInReadField = 1;
-        public static final int OutputOtherReadIDListField = 2;
-        public static final int OutputKmerField = 3; // may not needed
 
         private PositionReference positionEntry;
         private ArrayBackedValueStorage posListEntry;
@@ -81,7 +80,7 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
             int tupleCount = accessor.getTupleCount();
             for (int i = 0; i < tupleCount; i++) {
                 scanPosition(i, zeroPositionCollection, noneZeroPositionCollection);
-                writeTuple(i, zeroPositionCollection, noneZeroPositionCollection, builder);
+                scanAgainToOutputTuple(i, zeroPositionCollection, noneZeroPositionCollection, builder);
             }
         }
 
@@ -90,12 +89,10 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
             zeroPositionCollection2.reset();
             noneZeroPositionCollection2.reset();
             byte[] data = accessor.getBuffer().array();
-            //Kmer, {(ReadID,PosInRead),...}
-            //  to ReadID, PosInRead, Kmer, {OtherReadID}
             int offsetPoslist = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
                     + accessor.getFieldStartOffset(tIndex, InputPosListField);
             for (int i = 0; i < accessor.getFieldLength(tIndex, InputPosListField); i += PositionReference.LENGTH) {
-                positionEntry.setNewSpace(data, offsetPoslist + i);
+                positionEntry.setNewReference(data, offsetPoslist + i);
                 if (positionEntry.getPosInRead() == 0) {
                     zeroPositionCollection2.append(positionEntry);
                 } else {
@@ -105,13 +102,13 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
 
         }
 
-        private void writeTuple(int tIndex, ArrayBackedValueStorage zeroPositionCollection,
+        private void scanAgainToOutputTuple(int tIndex, ArrayBackedValueStorage zeroPositionCollection,
                 ArrayBackedValueStorage noneZeroPositionCollection, ArrayTupleBuilder builder2) {
             byte[] data = accessor.getBuffer().array();
             int offsetPoslist = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
                     + accessor.getFieldStartOffset(tIndex, InputPosListField);
             for (int i = 0; i < accessor.getFieldLength(tIndex, InputPosListField); i += PositionReference.LENGTH) {
-                positionEntry.setNewSpace(data, offsetPoslist + i);
+                positionEntry.setNewReference(data, offsetPoslist + i);
                 if (positionEntry.getPosInRead() != 0) {
                     appendNodeToBuilder(tIndex, positionEntry, zeroPositionCollection, builder2);
                 } else {
@@ -136,7 +133,7 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
                 int offsetKmer = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
                         + accessor.getFieldStartOffset(tIndex, InputKmerField);
                 builder2.addField(data, offsetKmer, accessor.getFieldLength(tIndex, InputKmerField));
-                
+
                 if (!appender.append(builder2.getFieldEndOffsets(), builder2.getByteArray(), 0, builder2.getSize())) {
                     FrameUtils.flushFrame(writeBuffer, writer);
                     appender.reset(writeBuffer, true);

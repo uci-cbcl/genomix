@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hyracks.dataflow;
+package edu.uci.ics.genomix.hyracks.dataflow.io;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;

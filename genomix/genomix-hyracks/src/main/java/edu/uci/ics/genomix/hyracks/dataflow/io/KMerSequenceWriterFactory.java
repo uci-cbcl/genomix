@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.dataflow;
+package edu.uci.ics.genomix.hyracks.dataflow.io;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
 
     public KMerSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
-        this.kmerlength = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
+        this.kmerlength = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMERLEN);
     }
 
     public class TupleWriter implements ITupleWriter {

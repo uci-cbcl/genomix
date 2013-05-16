@@ -28,16 +28,17 @@ import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDNormarlizedComputeFactor
 import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDPartitionComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
 import edu.uci.ics.genomix.hyracks.dataflow.ConnectorPolicyAssignmentPolicy;
-import edu.uci.ics.genomix.hyracks.dataflow.KMerSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.KMerTextWriterFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.MapKmerPositionToReadOperator;
-import edu.uci.ics.genomix.hyracks.dataflow.NodeSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.NodeTextWriterFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.MapReadToNodeOperator;
 import edu.uci.ics.genomix.hyracks.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.aggregators.AggregateKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.aggregators.AggregateReadIDAggregateFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.aggregators.MergeReadIDAggregateFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.io.KMerSequenceWriterFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.io.KMerTextWriterFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.io.NodeSequenceWriterFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.io.NodeTextWriterFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -86,6 +87,7 @@ public class JobGenBrujinGraph extends JobGen {
     private Scheduler scheduler;
     private String[] ncNodeNames;
 
+    private int readLength;
     private int kmerSize;
     private int frameLimits;
     private int frameSize;
@@ -93,15 +95,6 @@ public class JobGenBrujinGraph extends JobGen {
     private GroupbyType groupbyType;
     private OutputFormat outputFormat;
     private boolean bGenerateReversedKmer;
-
-    /** works for hybrid hashing */
-    private long inputSizeInRawRecords;
-    private long inputSizeInUniqueKeys;
-    private int recordSizeInBytes;
-    private int hashfuncStartLevel;
-    private ExternalGroupOperatorDescriptor readLocalAggregator;
-    private MToNPartitioningConnectorDescriptor readConnPartition;
-    private ExternalGroupOperatorDescriptor readCrossAggregator;
 
     private void logDebug(String status) {
         LOG.debug(status + " nc nodes:" + ncNodeNames.length);
@@ -135,27 +128,28 @@ public class JobGenBrujinGraph extends JobGen {
     private Object[] generateAggeragateDescriptorbyType(JobSpecification jobSpec,
             IAggregatorDescriptorFactory aggregator, IAggregatorDescriptorFactory merger,
             ITuplePartitionComputerFactory partition, INormalizedKeyComputerFactory normalizer,
-            IPointableFactory pointable, RecordDescriptor outRed) throws HyracksDataException {
+            IPointableFactory pointable, RecordDescriptor combineRed, RecordDescriptor finalRec)
+            throws HyracksDataException {
         int[] keyFields = new int[] { 0 }; // the id of grouped key
         Object[] obj = new Object[3];
 
         switch (groupbyType) {
             case EXTERNAL:
                 obj[0] = newExternalGroupby(jobSpec, keyFields, aggregator, merger, partition, normalizer, pointable,
-                        outRed);
+                        combineRed);
                 obj[1] = new MToNPartitioningConnectorDescriptor(jobSpec, partition);
                 obj[2] = newExternalGroupby(jobSpec, keyFields, merger, merger, partition, normalizer, pointable,
-                        outRed);
+                        finalRec);
                 break;
             case PRECLUSTER:
             default:
                 obj[0] = newExternalGroupby(jobSpec, keyFields, aggregator, merger, partition, normalizer, pointable,
-                        outRed);
+                        combineRed);
                 obj[1] = new MToNPartitioningMergingConnectorDescriptor(jobSpec, partition, keyFields,
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) });
                 obj[2] = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, merger,
-                        outRed);
+                        finalRec);
                 break;
         }
         return obj;
@@ -197,7 +191,7 @@ public class JobGenBrujinGraph extends JobGen {
 
         Object[] objs = generateAggeragateDescriptorbyType(jobSpec, new AggregateKmerAggregateFactory(),
                 new MergeKmerAggregateFactory(), new KmerHashPartitioncomputerFactory(),
-                new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec);
+                new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         logDebug("LocalKmerGroupby Operator");
         connectOperators(jobSpec, readOperator, ncNodeNames, kmerLocalAggregator, ncNodeNames,
@@ -218,17 +212,27 @@ public class JobGenBrujinGraph extends JobGen {
 
         logDebug("Group by Read Operator");
         // (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...} 
-        RecordDescriptor nodeCombineRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
+        RecordDescriptor readIDCombineRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
+        RecordDescriptor readIDFinalRec = new RecordDescriptor(
+                new ISerializerDeserializer[MergeReadIDAggregateFactory.getPositionCount(readLength, kmerSize)]);
         objs = generateAggeragateDescriptorbyType(jobSpec, new AggregateReadIDAggregateFactory(),
-                new MergeReadIDAggregateFactory(), new ReadIDPartitionComputerFactory(),
-                new ReadIDNormarlizedComputeFactory(), IntegerPointable.FACTORY, nodeCombineRec);
+                new MergeReadIDAggregateFactory(readLength, kmerSize), new ReadIDPartitionComputerFactory(),
+                new ReadIDNormarlizedComputeFactory(), IntegerPointable.FACTORY, readIDCombineRec, readIDFinalRec);
         AbstractOperatorDescriptor readLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         connectOperators(jobSpec, mapKmerToRead, ncNodeNames, readLocalAggregator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
 
+        logDebug("Group by ReadID merger");
         IConnectorDescriptor readconn = (IConnectorDescriptor) objs[1];
         AbstractOperatorDescriptor readCrossAggregator = (AbstractOperatorDescriptor) objs[2];
         connectOperators(jobSpec, readLocalAggregator, ncNodeNames, readCrossAggregator, ncNodeNames, readconn);
+
+        logDebug("Map ReadInfo to Node");
+        //Map (ReadID, [(Poslist,Kmer) ... ]) to (Node, IncomingList, OutgoingList, Kmer)
+        RecordDescriptor nodeRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null, null, null });
+        AbstractOperatorDescriptor mapEachReadToNode = new MapReadToNodeOperator(jobSpec, nodeRec);
+        connectOperators(jobSpec, readCrossAggregator, ncNodeNames, mapEachReadToNode, ncNodeNames,
+                new OneToOneConnectorDescriptor(jobSpec));
 
         // Output Kmer
         ITupleWriterFactory kmerWriter = null;
@@ -252,10 +256,10 @@ public class JobGenBrujinGraph extends JobGen {
 
         // Output Node
         HDFSWriteOperatorDescriptor writeNodeOperator = new HDFSWriteOperatorDescriptor(jobSpec, job, nodeWriter);
-        connectOperators(jobSpec, readCrossAggregator, ncNodeNames, writeNodeOperator, ncNodeNames,
+        connectOperators(jobSpec, mapEachReadToNode, ncNodeNames, writeNodeOperator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
         jobSpec.addRoot(writeNodeOperator);
-        
+
         if (groupbyType == GroupbyType.PRECLUSTER) {
             jobSpec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         }
@@ -264,8 +268,8 @@ public class JobGenBrujinGraph extends JobGen {
 
     @Override
     protected void initJobConfiguration() {
-
-        kmerSize = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMER);
+        readLength = conf.getInt(GenomixJob.READ_LENGTH, GenomixJob.DEFAULT_READLEN);
+        kmerSize = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMERLEN);
         if (kmerSize % 2 == 0) {
             kmerSize--;
             conf.setInt(GenomixJob.KMER_LENGTH, kmerSize);
@@ -273,17 +277,6 @@ public class JobGenBrujinGraph extends JobGen {
         frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, GenomixJob.DEFAULT_FRAME_LIMIT);
         tableSize = conf.getInt(GenomixJob.TABLE_SIZE, GenomixJob.DEFAULT_TABLE_SIZE);
         frameSize = conf.getInt(GenomixJob.FRAME_SIZE, GenomixJob.DEFAULT_FRAME_SIZE);
-        inputSizeInRawRecords = conf.getLong(GenomixJob.GROUPBY_HYBRID_INPUTSIZE,
-                GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTSIZE);
-        inputSizeInUniqueKeys = conf.getLong(GenomixJob.GROUPBY_HYBRID_INPUTKEYS,
-                GenomixJob.DEFAULT_GROUPBY_HYBRID_INPUTKEYS);
-        recordSizeInBytes = conf.getInt(GenomixJob.GROUPBY_HYBRID_RECORDSIZE_SINGLE,
-                GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE);
-        hashfuncStartLevel = conf.getInt(GenomixJob.GROUPBY_HYBRID_HASHLEVEL,
-                GenomixJob.DEFAULT_GROUPBY_HYBRID_HASHLEVEL);
-        /** here read the different recordSize why ? */
-        recordSizeInBytes = conf.getInt(GenomixJob.GROUPBY_HYBRID_RECORDSIZE_CROSS,
-                GenomixJob.DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS);
 
         bGenerateReversedKmer = conf.getBoolean(GenomixJob.REVERSED_KMER, GenomixJob.DEFAULT_REVERSED);
 

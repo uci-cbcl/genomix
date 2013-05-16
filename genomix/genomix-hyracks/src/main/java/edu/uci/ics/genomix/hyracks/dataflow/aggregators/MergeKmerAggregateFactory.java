@@ -38,7 +38,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             throws HyracksDataException {
         return new IAggregatorDescriptor (){
 
-            private PositionReference position = new PositionReference();
+            private PositionReference positionReEntry = new PositionReference();
 
             @Override
             public AggregateState createAggregateStates() {
@@ -52,8 +52,8 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 inputVal.reset();
                 int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
                 for( int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex, 1); offset += PositionReference.LENGTH){
-                    position.setNewSpace(accessor.getBuffer().array(), leadOffset + offset);
-                    inputVal.append(position);
+                    positionReEntry.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
+                    inputVal.append(positionReEntry);
                 }
             }
 
@@ -69,8 +69,8 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage)state.state;
                 int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
                 for( int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex, 1); offset += PositionReference.LENGTH){
-                    position.setNewSpace(accessor.getBuffer().array(), leadOffset + offset);
-                    inputVal.append(position);
+                    positionReEntry.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
+                    inputVal.append(positionReEntry);
                 }
             }
 

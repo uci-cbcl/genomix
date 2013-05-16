@@ -212,7 +212,7 @@ public class JobRunTest {
 
                 //                KmerBytesWritable key = (KmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                 KmerBytesWritable key = new KmerBytesWritable(conf.getInt(GenomixJob.KMER_LENGTH,
-                        GenomixJob.DEFAULT_KMER));
+                        GenomixJob.DEFAULT_KMERLEN));
                 KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
 
                 while (reader.next(key, value)) {
