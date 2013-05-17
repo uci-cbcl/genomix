@@ -68,15 +68,18 @@ public class Client {
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
         job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         if (options.numIteration > 0) {
             job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
             job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
             job.getConfiguration().setInt(P3ForPathMergeVertex.ITERATIONS, options.numIteration);
         }
+        
         if (options.pseudoRate > 0 && options.pseudoRate <= 1)
             job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
         if (options.maxRound > 0)
             job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
         return options;
+        
     }
 }

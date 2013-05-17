@@ -2,11 +2,13 @@ package edu.uci.ics.genomix.pregelix.sequencefile;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -46,15 +48,15 @@ public class GenerateSmallFile {
     }
 
     public static void main(String[] args) throws IOException {
-        /*Path dir = new Path("data/test8m");
-        Path outDir = new Path("data/input/test");
-        FileUtils.cleanDirectory(new File("data/input/test"));
+        Path dir = new Path("data/split.aa");
+        Path outDir = new Path("data/input");
+        FileUtils.cleanDirectory(new File("data/input"));
         Path inFile = new Path(dir, "part-0");
-        Path outFile = new Path(outDir, "part-0-out-100");
-        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 100);*/
-        String inFile = "data/shortjump_1.head8M.fastq";
+        Path outFile = new Path(outDir, "part-0-out-1000");
+        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 1000);
+      /*  String inFile = "data/shortjump_1.head8M.fastq";
         String outFile = "data/testGeneFile";
-        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 100000);
+        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 100000);*/
     }
 
     public static String readTextFile(String fileName, int numOfLines) {

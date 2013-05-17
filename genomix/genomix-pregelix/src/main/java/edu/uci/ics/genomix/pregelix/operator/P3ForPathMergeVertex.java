@@ -79,7 +79,7 @@ public class P3ForPathMergeVertex extends
         if(pseudoRate < 0)
             pseudoRate = getContext().getConfiguration().getFloat(PSEUDORATE, 0.2f);
         if (maxRound < 0)
-            maxRound = getContext().getConfiguration().getInt(MAXROUND, 4);
+            maxRound = getContext().getConfiguration().getInt(MAXROUND, 2);
         outgoingMsg.reset();
     }
 

@@ -61,6 +61,8 @@ public class JobGenerator {
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, 5);
+        job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, 0.4f);
+        job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, 1);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
