@@ -43,7 +43,6 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     protected int offset;
     protected int kmerlength;
 
-    @Deprecated
     public KmerBytesWritable() {
         this(0, EMPTY_BYTES, 0);
     }

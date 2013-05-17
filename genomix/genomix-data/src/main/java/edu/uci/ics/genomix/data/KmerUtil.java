@@ -36,7 +36,7 @@ public class KmerUtil {
     public static String recoverKmerFrom(int k, byte[] keyData, int keyStart, int keyLength) {
         StringBuilder strKmer = new StringBuilder();
         int byteId = keyStart + keyLength - 1;
-        if (byteId < 0) {
+        if (byteId < 0 || k < 1) {
             return empty;
         }
         byte currentbyte = keyData[byteId];

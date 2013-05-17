@@ -75,7 +75,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
 
             @Override
             public PositionWritable next() {
-                return getPosition(currentIndex);
+                return getPosition(currentIndex++);
             }
 
             @Override
@@ -153,7 +153,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             sbuilder.append(pos.toString());
             sbuilder.append(',');
         }
-        sbuilder.replace(getLength()-1, getLength(), "]");
+        sbuilder.setCharAt(sbuilder.length()-1, ']');
         return sbuilder.toString();
     }
 }

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.example.kmer;
+package edu.uci.ics.genomix.data.test;
 
 import junit.framework.Assert;
 

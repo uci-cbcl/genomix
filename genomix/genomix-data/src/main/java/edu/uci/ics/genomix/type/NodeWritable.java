@@ -13,7 +13,6 @@ public class NodeWritable implements WritableComparable<NodeWritable> {
     private PositionListWritable outgoingList;
     private KmerBytesWritable kmer;
     
-    @SuppressWarnings("deprecation")
     public NodeWritable(){
         nodeID = new PositionWritable();
         countOfKmer = 0;
@@ -123,8 +122,8 @@ public class NodeWritable implements WritableComparable<NodeWritable> {
     public String toString(){
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('(');
-        sbuilder.append(nodeID.toString());
-        sbuilder.append(',').append(countOfKmer).append(',');
+        sbuilder.append(nodeID.toString()).append(',');
+        sbuilder.append(countOfKmer).append(',');
         sbuilder.append(incomingList.toString()).append(',');
         sbuilder.append(incomingList.toString()).append(',');
         sbuilder.append(kmer.toString()).append(')');
