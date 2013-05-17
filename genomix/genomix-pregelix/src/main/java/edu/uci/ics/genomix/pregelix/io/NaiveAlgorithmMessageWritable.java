@@ -21,19 +21,21 @@ public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAl
     private KmerBytesWritable sourceVertexId;
     private byte adjMap;
     private byte lastGeneCode;
+    private VKmerBytesWritable chainVertexId;
     private byte message;
 
     private byte checkMessage;
 
     public NaiveAlgorithmMessageWritable() {
         sourceVertexId = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
+        chainVertexId = new VKmerBytesWritable(1);
         adjMap = (byte) 0;
-        lastGeneCode = (byte) 0;
+        lastGeneCode = (byte) -1;
         message = Message.NON;
         checkMessage = (byte) 0;
     }
 
-    public void set(KmerBytesWritable sourceVertex, byte adjMap, byte lastGeneCode, byte message) {
+    public void set(KmerBytesWritable sourceVertex, byte adjMap, byte lastGeneCode, VKmerBytesWritable chainVertexId, byte message) {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
@@ -47,13 +49,18 @@ public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAl
             checkMessage |= CheckMessage.LASTGENECODE;
             this.lastGeneCode = lastGeneCode;
         }
+        if (chainVertexId != null) {
+            checkMessage |= CheckMessage.CHAIN;
+            this.chainVertexId.set(chainVertexId);
+        }
         this.message = message;
     }
 
     public void reset() {
         checkMessage = 0;
         adjMap = (byte) 0;
-        lastGeneCode = (byte) 0;
+        lastGeneCode = (byte) -1;
+        chainVertexId.reset(1);
         message = Message.NON;
     }
 
@@ -84,10 +91,25 @@ public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAl
     }
 
     public void setLastGeneCode(byte lastGeneCode) {
-        if (lastGeneCode != 0) {
+        if (lastGeneCode != -1) {
             checkMessage |= CheckMessage.LASTGENECODE;
             this.lastGeneCode = lastGeneCode;
         }
+    }
+
+    public VKmerBytesWritable getChainVertexId() {
+        return chainVertexId;
+    }
+
+    public void setChainVertexId(VKmerBytesWritable chainVertexId) {
+        if (chainVertexId != null) {
+            checkMessage |= CheckMessage.CHAIN;
+            this.chainVertexId.set(chainVertexId);
+        }
+    }
+    
+    public int getLengthOfChain() {
+        return chainVertexId.getKmerLength();
     }
 
     public byte getMessage() {
@@ -98,6 +120,10 @@ public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAl
         this.message = message;
     }
 
+    public boolean isGeneCode(){
+        return ((checkMessage & CheckMessage.LASTGENECODE) != 0); 
+    }
+    
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeByte(checkMessage);
@@ -107,6 +133,8 @@ public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAl
             out.write(adjMap);
         if ((checkMessage & CheckMessage.LASTGENECODE) != 0)
             out.write(lastGeneCode);
+        if ((checkMessage & CheckMessage.CHAIN) != 0)
+            chainVertexId.write(out);
         out.write(message);
     }
 
@@ -120,6 +148,8 @@ public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAl
             adjMap = in.readByte();
         if ((checkMessage & CheckMessage.LASTGENECODE) != 0)
             lastGeneCode = in.readByte();
+        if ((checkMessage & CheckMessage.CHAIN) != 0)
+            chainVertexId.readFields(in);
         message = in.readByte();
     }
 

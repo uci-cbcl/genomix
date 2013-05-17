@@ -5,7 +5,7 @@ public class State {
     public static final byte NON_VERTEX = 0;
     public static final byte START_VERTEX = 1;
     public static final byte END_VERTEX = 2;
-    public static final byte MID_VERTEX = 3;
+    public static final byte START_HALT = 3;
     public static final byte PSEUDOHEAD = 4;
     public static final byte PSEUDOREAR = 5;
     public static final byte FINAL_VERTEX = 6;
@@ -25,8 +25,8 @@ public class State {
                 case END_VERTEX:
                     r = "END_VERTEX";
                     break;
-                case MID_VERTEX:
-                    r = "MID_VERTEX";
+                case START_HALT:
+                    r = "START_HALT";
                     break;
                 case PSEUDOHEAD:
                     r = "PSEUDOHEAD";
