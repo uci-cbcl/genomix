@@ -240,7 +240,7 @@ public class JobGenBrujinGraph extends JobGen {
         switch (outputFormat) {
             case TEXT:
                 kmerWriter = new KMerTextWriterFactory(kmerSize);
-                nodeWriter = new NodeTextWriterFactory();
+                nodeWriter = new NodeTextWriterFactory(kmerSize);
                 break;
             case BINARY:
             default:

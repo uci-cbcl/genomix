@@ -118,5 +118,17 @@ public class NodeWritable implements WritableComparable<NodeWritable> {
     public int hashCode() {
         return nodeID.hashCode();
     }
+    
+    @Override
+    public String toString(){
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append('(');
+        sbuilder.append(nodeID.toString());
+        sbuilder.append(',').append(countOfKmer).append(',');
+        sbuilder.append(incomingList.toString()).append(',');
+        sbuilder.append(incomingList.toString()).append(',');
+        sbuilder.append(kmer.toString()).append(')');
+        return sbuilder.toString();
+    }
 
 }

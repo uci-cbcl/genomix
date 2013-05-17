@@ -18,7 +18,6 @@ package edu.uci.ics.genomix.hyracks.dataflow.io;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;

@@ -145,4 +145,15 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         out.write(storage, offset, valueCount * PositionWritable.LENGTH);
     }
 
+    @Override
+    public String toString(){
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append('[');
+        for(PositionWritable pos : this){
+            sbuilder.append(pos.toString());
+            sbuilder.append(',');
+        }
+        sbuilder.replace(getLength()-1, getLength(), "]");
+        return sbuilder.toString();
+    }
 }
