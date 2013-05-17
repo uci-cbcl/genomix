@@ -16,13 +16,13 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerCountValue;
 
-public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
-	extends VertexInputFormat<I, V, E, M>{
-	
+public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
+        extends VertexInputFormat<I, V, E, M> {
+
     /** Uses the SequenceFileInputFormat to do everything */
-	@SuppressWarnings("rawtypes")
-	protected SequenceFileInputFormat binaryInputFormat = new SequenceFileInputFormat();
-    
+    @SuppressWarnings("rawtypes")
+    protected SequenceFileInputFormat binaryInputFormat = new SequenceFileInputFormat();
+
     /**
      * Abstract class to be implemented by the user based on their specific
      * vertex input. Easiest to ignore the key value separator and only use key
@@ -38,7 +38,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends
     public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<KmerBytesWritable,KmerCountValue> lineRecordReader;
+        private final RecordReader<KmerBytesWritable, KmerCountValue> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -74,7 +74,7 @@ public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<KmerBytesWritable,KmerCountValue> getRecordReader() {
+        protected RecordReader<KmerBytesWritable, KmerCountValue> getRecordReader() {
             return lineRecordReader;
         }
 
@@ -89,21 +89,17 @@ public class BinaryVertexInputFormat <I extends WritableComparable<?>, V extends
     }
 
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public List<InputSplit> getSplits(JobContext context, int numWorkers) throws IOException, InterruptedException {
         // Ignore the hint of numWorkers here since we are using SequenceFileInputFormat
         // to do this for us
         return binaryInputFormat.getSplits(context);
     }
 
-	@Override
-	public VertexReader<I, V, E, M> createVertexReader(InputSplit split,
-			TaskAttemptContext context) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
-
+    @Override
+    public VertexReader<I, V, E, M> createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

@@ -13,35 +13,35 @@ import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
-public class LogAlgorithmForPathMergeOutputFormat extends 
-	BinaryVertexOutputFormat<KmerBytesWritable, ValueStateWritable, NullWritable> {
+public class LogAlgorithmForPathMergeOutputFormat extends
+        BinaryVertexOutputFormat<KmerBytesWritable, ValueStateWritable, NullWritable> {
 
-		
+    @Override
+    public VertexWriter<KmerBytesWritable, ValueStateWritable, NullWritable> createVertexWriter(
+            TaskAttemptContext context) throws IOException, InterruptedException {
+        @SuppressWarnings("unchecked")
+        RecordWriter<KmerBytesWritable, ValueStateWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
+        return new BinaryLoadGraphVertexWriter(recordWriter);
+    }
+
+    /**
+     * Simple VertexWriter that supports {@link BinaryLoadGraphVertex}
+     */
+    public static class BinaryLoadGraphVertexWriter extends
+            BinaryVertexWriter<KmerBytesWritable, ValueStateWritable, NullWritable> {
+
+        public BinaryLoadGraphVertexWriter(RecordWriter<KmerBytesWritable, ValueStateWritable> lineRecordWriter) {
+            super(lineRecordWriter);
+        }
+
         @Override
-        public VertexWriter<KmerBytesWritable, ValueStateWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
+        public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex)
                 throws IOException, InterruptedException {
-            @SuppressWarnings("unchecked")
-			RecordWriter<KmerBytesWritable, ValueStateWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
-            return new BinaryLoadGraphVertexWriter(recordWriter);
-        }
-        
-        /**
-         * Simple VertexWriter that supports {@link BinaryLoadGraphVertex}
-         */
-        public static class BinaryLoadGraphVertexWriter extends
-                BinaryVertexWriter<KmerBytesWritable, ValueStateWritable, NullWritable> {
-        	
-            public BinaryLoadGraphVertexWriter(RecordWriter<KmerBytesWritable, ValueStateWritable> lineRecordWriter) {
-                super(lineRecordWriter);
+            if (vertex.getVertexValue().getState() != State.END_VERTEX
+                    && vertex.getVertexValue().getState() != State.MID_VERTEX) {
+                getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
             }
-            @Override
-            public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex) throws IOException,
-                    InterruptedException {
-            	if(vertex.getVertexValue().getState() != State.END_VERTEX
-            			&& vertex.getVertexValue().getState() != State.MID_VERTEX){
-            		getRecordWriter().write(vertex.getVertexId(),vertex.getVertexValue());
-            	}
-                    
-            }
+
         }
+    }
 }

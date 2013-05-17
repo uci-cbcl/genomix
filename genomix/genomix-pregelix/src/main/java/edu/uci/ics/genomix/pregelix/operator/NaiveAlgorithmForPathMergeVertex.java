@@ -15,8 +15,9 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.NaiveAlgorithmMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.pregelix.util.GraphVertexOperation;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
  * vertexId: BytesWritable
@@ -49,155 +50,190 @@ import edu.uci.ics.genomix.pregelix.util.GraphVertexOperation;
 /**
  * Naive Algorithm for path merge graph
  */
-public class NaiveAlgorithmForPathMergeVertex extends Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable>{
-	public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
-	public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
-	public static int kmerSize = -1;
-	private int maxIteration = -1;
+public class NaiveAlgorithmForPathMergeVertex extends
+        Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> {
+    public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
+    public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
+    public static int kmerSize = -1;
+    private int maxIteration = -1;
 
-	private NaiveAlgorithmMessageWritable msg = new NaiveAlgorithmMessageWritable();
+    private NaiveAlgorithmMessageWritable incomingMsg = new NaiveAlgorithmMessageWritable();
+    private NaiveAlgorithmMessageWritable outgoingMsg = new NaiveAlgorithmMessageWritable();
 
-	private VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(1);
-	private VKmerBytesWritable destVertexId = new VKmerBytesWritable(1); 
-	private VKmerBytesWritable chainVertexId = new VKmerBytesWritable(1);
-	private VKmerBytesWritable lastKmer = new VKmerBytesWritable(1);
+    private VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(1);
+    private VKmerBytesWritable destVertexId = new VKmerBytesWritable(1);
 
-	/**
-	 * initiate kmerSize, maxIteration
-	 */
-	public void initVertex(){
-		if(kmerSize == -1)
-			kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
-        if (maxIteration < 0) 
+    /**
+     * initiate kmerSize, maxIteration
+     */
+    public void initVertex() {
+        if (kmerSize == -1)
+            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+        if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
-	}
-	public void findDestination(){
-		destVertexId.set(msg.getSourceVertexId());
-	}
-	/**
-	 * get destination vertex
-	 */
-	public VKmerBytesWritable getDestVertexId(KmerBytesWritable vertexId, byte geneCode){
-		return kmerFactory.shiftKmerWithNextCode(vertexId, geneCode);
-	}
+        outgoingMsg.reset();
+    }
 
-	public VKmerBytesWritable getDestVertexIdFromChain(VKmerBytesWritable chainVertexId, byte adjMap){
-		lastKmer.set(kmerFactory.getLastKmerFromChain(kmerSize, chainVertexId));
-		return getDestVertexId(lastKmer, GeneCode.getGeneCodeFromBitMap((byte)(adjMap & 0x0F)));
-	}
-	/**
-	 * head send message to all next nodes
-	 */
-	public void sendMsgToAllNextNodes(KmerBytesWritable vertexId, byte adjMap){
-		for(byte x = GeneCode.A; x<= GeneCode.T ; x++){
-			if((adjMap & (1 << x)) != 0){
-				destVertexId.set(getDestVertexId(vertexId, x));
-				sendMsg(destVertexId, msg);
-			}
-		}
-	}
-	/**
-	 * initiate chain vertex
-	 */
-	public void initChainVertex(){
-		if(!msg.isRear()){
-			findDestination();
-			if(GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
-				chainVertexId.set(getVertexId());
-				msg.set(getVertexId(), chainVertexId, getVertexId(), getVertexValue().getAdjMap(), false);
-				sendMsg(destVertexId,msg);
-			}else if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap()))
-				voteToHalt();
-		}
-	}
-	/**
-	 * head node sends message to path node
-	 */
-	public void sendMsgToPathVertex(){
-		if(!msg.isRear()){
-			destVertexId.set(getDestVertexIdFromChain(msg.getChainVertexId(), msg.getAdjMap()));
-			msg.set(getVertexId(), msg.getChainVertexId(), msg.getHeadVertexId(), (byte)0, msg.isRear());
-		}else{
-			destVertexId.set(msg.getHeadVertexId());
-			msg.set(msg.getSourceVertexId(), msg.getChainVertexId(), msg.getHeadVertexId(), (byte)0, msg.isRear());
-		}
-		sendMsg(destVertexId,msg);
-	}
-	/**
-	 * path node sends message back to head node
-	 */
-	public void responseMsgToHeadVertex(){
-		if(!msg.isRear()){
-			findDestination();
-			if(GraphVertexOperation.isPathVertex(getVertexValue().getAdjMap())){
-				chainVertexId = kmerFactory.mergeKmerWithNextCode(msg.getChainVertexId(),
-						getVertexId().getGeneCodeAtPosition(kmerSize - 1));
-				deleteVertex(getVertexId());
-				msg.set(getVertexId(), chainVertexId, msg.getHeadVertexId(), getVertexValue().getAdjMap(), false);
-				sendMsg(destVertexId,msg);
-			}
-			else if(GraphVertexOperation.isRearVertex(getVertexValue().getAdjMap())){
-				msg.set(getVertexId(), msg.getChainVertexId(), msg.getHeadVertexId(), (byte)0, true);
-				sendMsg(destVertexId,msg);
-			}
-		}else{// is Rear
-			if(msg.getLengthOfChain() > kmerSize){
-				byte tmp = GraphVertexOperation.updateRightNeighberByVertexId(getVertexValue().getAdjMap(), msg.getSourceVertexId(), kmerSize);
-				getVertexValue().set(tmp, State.FINAL_VERTEX, msg.getChainVertexId());
-				setVertexValue(getVertexValue());
-				//String source = msg.getChainVertexId().toString();
-				//System.out.print("");
-			}
-		}
-	}
-	
-	@Override
-	public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
-		initVertex();
-		if (getSuperstep() == 1) {
-			if(GraphVertexOperation.isHeadVertex(getVertexValue().getAdjMap())){ 
-				msg.set(getVertexId(), chainVertexId, getVertexId(), (byte)0, false);
-				sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
-			}
-			
-		}
-		else if(getSuperstep() == 2){
-			if(msgIterator.hasNext()){
-				msg = msgIterator.next();
-				initChainVertex();
-			}
-		}
-		//head node sends message to path node
-		else if(getSuperstep()%2 == 1 && getSuperstep() <= maxIteration){
-			while (msgIterator.hasNext()){
-				msg = msgIterator.next();
-				sendMsgToPathVertex();
-			}
-		}
-		//path node sends message back to head node
-		else if(getSuperstep()%2 == 0 && getSuperstep() > 2 && getSuperstep() <= maxIteration){
-			 while(msgIterator.hasNext()){
-				msg = msgIterator.next();
-				responseMsgToHeadVertex();
-			}
-		}
-		voteToHalt();
-	}
+    /**
+     * get destination vertex
+     */
+    public VKmerBytesWritable getDestVertexId(KmerBytesWritable vertexId, byte geneCode) {
+        return kmerFactory.shiftKmerWithNextCode(vertexId, geneCode);
+    }
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
+    public VKmerBytesWritable getPreDestVertexId(KmerBytesWritable vertexId, byte geneCode) {
+        return kmerFactory.shiftKmerWithPreCode(vertexId, geneCode);
+    }
+
+    public VKmerBytesWritable getDestVertexIdFromChain(VKmerBytesWritable chainVertexId, byte adjMap) {
+        VKmerBytesWritable lastKmer = kmerFactory.getLastKmerFromChain(kmerSize, chainVertexId);
+        return getDestVertexId(lastKmer, GeneCode.getGeneCodeFromBitMap((byte) (adjMap & 0x0F)));
+    }
+
+    /**
+     * head send message to all next nodes
+     */
+    public void sendMsgToAllNextNodes(KmerBytesWritable vertexId, byte adjMap) {
+        for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
+            if ((adjMap & (1 << x)) != 0) {
+                destVertexId.set(getDestVertexId(vertexId, x));
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
+
+    /**
+     * head send message to all previous nodes
+     */
+    public void sendMsgToAllPreviousNodes(KmerBytesWritable vertexId, byte adjMap) {
+        for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
+            if (((adjMap >> 4) & (1 << x)) != 0) {
+                destVertexId.set(getPreDestVertexId(vertexId, x));
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
+
+    /**
+     * start sending message
+     */
+    public void startSendMsg() {
+        if (VertexUtil.isHeadVertex(getVertexValue().getAdjMap())) {
+            outgoingMsg.setMessage(Message.START);
+            sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
+        }
+        if (VertexUtil.isRearVertex(getVertexValue().getAdjMap())) {
+            outgoingMsg.setMessage(Message.END);
+            sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
+        }
+    }
+
+    /**
+     * initiate head, rear and path node
+     */
+    public void initState(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
+        while (msgIterator.hasNext()) {
+            if (!VertexUtil.isPathVertex(getVertexValue().getAdjMap())) {
+                msgIterator.next();
+                voteToHalt();
+            } else {
+                incomingMsg = msgIterator.next();
+                setState();
+            }
+        }
+    }
+
+    /**
+     * set vertex state
+     */
+    public void setState() {
+        if (incomingMsg.getMessage() == Message.START) {
+            getVertexValue().setState(State.START_VERTEX);
+        } else if (incomingMsg.getMessage() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
+            getVertexValue().setState(State.END_VERTEX);
+            voteToHalt();
+        } else
+            voteToHalt();
+    }
+
+    /**
+     * head node sends message to path node
+     */
+    public void sendMsgToPathVertex(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
+        if (getSuperstep() == 3) {
+            getVertexValue().setMergeChain(getVertexId());
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(getDestVertexIdFromChain(getVertexValue().getMergeChain(), getVertexValue().getAdjMap()));
+            sendMsg(destVertexId, outgoingMsg);
+        } else {
+            while (msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                if (incomingMsg.getMessage() != Message.STOP) {
+                    getVertexValue().setMergeChain(
+                            kmerFactory.mergeKmerWithNextCode(getVertexValue().getMergeChain(),
+                                    incomingMsg.getLastGeneCode()));
+                    outgoingMsg.setSourceVertexId(getVertexId());
+                    destVertexId
+                            .set(getDestVertexIdFromChain(getVertexValue().getMergeChain(), incomingMsg.getAdjMap()));
+                    sendMsg(destVertexId, outgoingMsg);
+                } else {
+                    getVertexValue().setMergeChain(
+                            kmerFactory.mergeKmerWithNextCode(getVertexValue().getMergeChain(),
+                                    incomingMsg.getLastGeneCode()));
+                    byte adjMap = VertexUtil.updateRightNeighber(getVertexValue().getAdjMap(), incomingMsg.getAdjMap());
+                    getVertexValue().setAdjMap(adjMap);
+                    getVertexValue().setState(State.FINAL_VERTEX);
+                    //String source = getVertexValue().getMergeChain().toString();
+                    //System.out.println();
+                }
+            }
+        }
+    }
+
+    /**
+     * path node sends message back to head node
+     */
+    public void responseMsgToHeadVertex() {
+        deleteVertex(getVertexId());
+        outgoingMsg.setAdjMap(getVertexValue().getAdjMap());
+        outgoingMsg.setLastGeneCode(getVertexId().getGeneCodeAtPosition(kmerSize - 1));
+        if (getVertexValue().getState() == State.END_VERTEX)
+            outgoingMsg.setMessage(Message.STOP);
+        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+    }
+
+    @Override
+    public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
+        initVertex();
+        if (getSuperstep() == 1) {
+            startSendMsg();
+            voteToHalt();
+        } else if (getSuperstep() == 2)
+            initState(msgIterator);
+        else if (getSuperstep() % 2 == 1 && getSuperstep() <= maxIteration) {
+            sendMsgToPathVertex(msgIterator);
+            voteToHalt();
+        } else if (getSuperstep() % 2 == 0 && getSuperstep() > 2 && getSuperstep() <= maxIteration) {
+            while (msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                responseMsgToHeadVertex();
+            }
+            voteToHalt();
+        } else
+            voteToHalt();
+    }
+
+    public static void main(String[] args) throws Exception {
         PregelixJob job = new PregelixJob(NaiveAlgorithmForPathMergeVertex.class.getSimpleName());
         job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class); 
-        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class); 
+        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
+        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         Client.run(args, job);
-	}
+    }
 }

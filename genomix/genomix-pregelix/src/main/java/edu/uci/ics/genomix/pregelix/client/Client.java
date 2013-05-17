@@ -1,4 +1,3 @@
-
 package edu.uci.ics.genomix.pregelix.client;
 
 import java.io.IOException;
@@ -10,10 +9,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.pregelix.operator.NaiveFilterVertex;
-import edu.uci.ics.genomix.pregelix.operator.ThreeStepLogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.TwoStepLogAlgorithmForPathMergeVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
@@ -35,18 +32,15 @@ public class Client {
 
         @Option(name = "-plan", usage = "query plan choice", required = false)
         public Plan planChoice = Plan.OUTER_JOIN;
-        
+
         @Option(name = "-kmer-size", usage = "the size of kmer", required = false)
         public int sizeKmer;
-        
+
         @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
         public int numIteration = -1;
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
-        
-        //@Option(name = "-filter-kmer", usage = "whether to do runtime profifling", required = false)
-        //public String filterKmer = "";
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -66,15 +60,11 @@ public class Client {
             FileInputFormat.addInputPaths(job, inputs[0]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
         job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
-        job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
-        job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
-        if (options.numIteration > 0){
+        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
+        if (options.numIteration > 0) {
             job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
-            job.getConfiguration().setInt(TwoStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
-            job.getConfiguration().setInt(ThreeStepLogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
         }
-        //job.getConfiguration().set(NaiveFilterVertex.FILTERKMER, options.filterKmer);
         return options;
     }
-
 }

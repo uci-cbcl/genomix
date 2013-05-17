@@ -30,7 +30,7 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
 public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable>
         extends VertexOutputFormat<I, V, E> {
     /** Uses the SequenceFileOutputFormat to do everything */
-	protected SequenceFileOutputFormat binaryOutputFormat = new SequenceFileOutputFormat();
+    protected SequenceFileOutputFormat binaryOutputFormat = new SequenceFileOutputFormat();
 
     /**
      * Abstract class to be implemented by the user based on their specific
@@ -92,7 +92,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
 
     @Override
     public void checkOutputSpecs(JobContext context) throws IOException, InterruptedException {
-    	binaryOutputFormat.checkOutputSpecs(context);
+        binaryOutputFormat.checkOutputSpecs(context);
     }
 
     @Override

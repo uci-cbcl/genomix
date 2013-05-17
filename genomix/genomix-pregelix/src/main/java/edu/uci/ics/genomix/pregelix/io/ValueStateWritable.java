@@ -9,101 +9,84 @@ import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-
 public class ValueStateWritable implements WritableComparable<ValueStateWritable> {
 
-	private byte adjMap;
-	private byte state;
-	private VKmerBytesWritable mergeChain;
-	
-	//extra - for test
-	//private boolean isOp;
+    private byte adjMap;
+    private byte state;
+    private VKmerBytesWritable mergeChain;
 
-	public ValueStateWritable() {
-		state = State.NON_VERTEX;
-		mergeChain = new VKmerBytesWritable(0);
-		//isOp = false;
-	}
+    public ValueStateWritable() {
+        state = State.NON_VERTEX;
+        mergeChain = new VKmerBytesWritable(0);
+        //isOp = false;
+    }
 
-	public ValueStateWritable(byte adjMap, byte state, VKmerBytesWritable mergeChain) {
-		this.adjMap = adjMap;
-		this.state = state;
-		this.mergeChain.set(mergeChain);
-	}
-	
-	public void set(byte adjMap, byte state, VKmerBytesWritable mergeChain){
-		this.adjMap = adjMap;
-		this.state = state;
-		this.mergeChain.set(mergeChain);
-	}
+    public ValueStateWritable(byte adjMap, byte state, VKmerBytesWritable mergeChain) {
+        this.adjMap = adjMap;
+        this.state = state;
+        this.mergeChain.set(mergeChain);
+    }
 
-	public byte getAdjMap() {
-		return adjMap;
-	}
+    public void set(byte adjMap, byte state, VKmerBytesWritable mergeChain) {
+        this.adjMap = adjMap;
+        this.state = state;
+        this.mergeChain.set(mergeChain);
+    }
 
-	public void setAdjMap(byte adjMap) {
-		this.adjMap = adjMap;
-	}
+    public byte getAdjMap() {
+        return adjMap;
+    }
 
-	public byte getState() {
-		return state;
-	}
+    public void setAdjMap(byte adjMap) {
+        this.adjMap = adjMap;
+    }
 
-	public void setState(byte state) {
-		this.state = state;
-	}
+    public byte getState() {
+        return state;
+    }
 
-	public int getLengthOfMergeChain() {
-		return mergeChain.getKmerLength();
-	}
-	
-	public VKmerBytesWritable getMergeChain() {
-		return mergeChain;
-	}
+    public void setState(byte state) {
+        this.state = state;
+    }
 
-	public void setMergeChain(KmerBytesWritable mergeChain) {
-		this.mergeChain.set(mergeChain);
-	}
-	
-	public void setMergeChain(VKmerBytesWritable mergeChain) {
-		this.mergeChain.set(mergeChain);
-	}
+    public int getLengthOfMergeChain() {
+        return mergeChain.getKmerLength();
+    }
 
-	/*public boolean isOp() {
-		return isOp;
-	}
+    public VKmerBytesWritable getMergeChain() {
+        return mergeChain;
+    }
 
-	public void setOp(boolean isOp) {
-		this.isOp = isOp;
-	}*/
+    public void setMergeChain(KmerBytesWritable mergeChain) {
+        this.mergeChain.set(mergeChain);
+    }
 
-	@Override
-	public void readFields(DataInput in) throws IOException {
-		adjMap = in.readByte();
-		state = in.readByte();
-		mergeChain.readFields(in);
-		//isOp = in.readBoolean();
-	}
+    public void setMergeChain(VKmerBytesWritable mergeChain) {
+        this.mergeChain.set(mergeChain);
+    }
 
-	@Override
-	public void write(DataOutput out) throws IOException {
-		out.writeByte(adjMap);
-		out.writeByte(state);
-		mergeChain.write(out);
-		//out.writeBoolean(isOp);
-	}
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        adjMap = in.readByte();
+        state = in.readByte();
+        mergeChain.readFields(in);
+    }
 
-	@Override
-	public int compareTo(ValueStateWritable o) {
-		return 0;
-	}
-	
-	@Override
-	public String toString() {
-		return 	GeneCode.getSymbolFromBitMap(adjMap) + "\t" +
-				getLengthOfMergeChain() + "\t" +
-				mergeChain.toString();
-				//+ "\t" + state;
-	}
-	
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeByte(adjMap);
+        out.writeByte(state);
+        mergeChain.write(out);
+    }
+
+    @Override
+    public int compareTo(ValueStateWritable o) {
+        return 0;
+    }
+
+    @Override
+    public String toString() {
+        return GeneCode.getSymbolFromBitMap(adjMap) + "\t" + getLengthOfMergeChain() + "\t" + mergeChain.toString();
+    }
+
 }

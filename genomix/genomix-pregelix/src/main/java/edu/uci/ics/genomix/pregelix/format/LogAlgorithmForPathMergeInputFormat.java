@@ -18,17 +18,17 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class LogAlgorithmForPathMergeInputFormat extends
-	BinaryVertexInputFormat<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable>{
-	/**
-	 * Format INPUT
-	 */
+        BinaryVertexInputFormat<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> {
+    /**
+     * Format INPUT
+     */
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public VertexReader<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
-    
+
     @SuppressWarnings("rawtypes")
     class BinaryLoadGraphReader extends
             BinaryVertexReader<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> {
@@ -36,7 +36,7 @@ public class LogAlgorithmForPathMergeInputFormat extends
         private KmerBytesWritable vertexId = null;
         private ValueStateWritable vertexValue = new ValueStateWritable();
 
-        public BinaryLoadGraphReader(RecordReader<KmerBytesWritable,KmerCountValue> recordReader) {
+        public BinaryLoadGraphReader(RecordReader<KmerBytesWritable, KmerCountValue> recordReader) {
             super(recordReader);
         }
 
@@ -47,33 +47,33 @@ public class LogAlgorithmForPathMergeInputFormat extends
 
         @SuppressWarnings("unchecked")
         @Override
-        public Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> getCurrentVertex() throws IOException,
-                InterruptedException {
+        public Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> getCurrentVertex()
+                throws IOException, InterruptedException {
             if (vertex == null)
                 vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
 
             vertex.getMsgList().clear();
             vertex.getEdges().clear();
-            
-            if(getRecordReader() != null){
-	            /**
-	             * set the src vertex id
-	             */
-            	if(vertexId == null)
-            		vertexId = new KmerBytesWritable(getRecordReader().getCurrentKey().getKmerLength());
-        		vertexId.set(getRecordReader().getCurrentKey());
-        		vertex.setVertexId(vertexId);
-	            /**
-	             * set the vertex value
-	             */
-	            KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
-	            vertexValue.setAdjMap(kmerCountValue.getAdjBitMap()); 
-	            vertexValue.setState(State.NON_VERTEX);
-	            vertex.setVertexValue(vertexValue);
+
+            if (getRecordReader() != null) {
+                /**
+                 * set the src vertex id
+                 */
+                if (vertexId == null)
+                    vertexId = new KmerBytesWritable(getRecordReader().getCurrentKey().getKmerLength());
+                vertexId.set(getRecordReader().getCurrentKey());
+                vertex.setVertexId(vertexId);
+                /**
+                 * set the vertex value
+                 */
+                KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
+                vertexValue.setAdjMap(kmerCountValue.getAdjBitMap());
+                vertexValue.setState(State.NON_VERTEX);
+                vertex.setVertexValue(vertexValue);
             }
-            
+
             return vertex;
         }
     }
-	
+
 }

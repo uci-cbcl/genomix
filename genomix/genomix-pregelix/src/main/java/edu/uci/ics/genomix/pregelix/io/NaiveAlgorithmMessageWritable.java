@@ -7,119 +7,143 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.type.CheckMessage;
+import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAlgorithmMessageWritable>{
-	/**
-	 * sourceVertexId stores source vertexId when headVertex sends the message
-	 * 				  stores neighber vertexValue when pathVertex sends the message
-	 * chainVertexId stores the chains of connected DNA
-	 * file stores the point to the file that stores the chains of connected DNA
-	 */
-	private KmerBytesWritable sourceVertexId;
-	private VKmerBytesWritable chainVertexId;
-	private KmerBytesWritable headVertexId;
-	private byte adjMap;
-	private boolean isRear;
-	
-	public NaiveAlgorithmMessageWritable(){
-		sourceVertexId = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
-		chainVertexId = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
-		headVertexId = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
-	}
-	
-	public void set(KmerBytesWritable sourceVertex, VKmerBytesWritable chainVertex, KmerBytesWritable headVertex , byte adjMap, boolean isRear){
-		this.sourceVertexId.set(sourceVertex);
-		this.chainVertexId.set(chainVertex);
-		this.headVertexId.set(headVertex);
-		this.adjMap = adjMap;
-		this.isRear = isRear;
-	}
+public class NaiveAlgorithmMessageWritable implements WritableComparable<NaiveAlgorithmMessageWritable> {
+    /**
+     * sourceVertexId stores source vertexId when headVertex sends the message
+     * stores neighber vertexValue when pathVertex sends the message
+     * file stores the point to the file that stores the chains of connected DNA
+     */
+    private KmerBytesWritable sourceVertexId;
+    private byte adjMap;
+    private byte lastGeneCode;
+    private byte message;
 
-	public KmerBytesWritable getSourceVertexId() {
-		return sourceVertexId;
-	}
+    private byte checkMessage;
 
-	public void setSourceVertexId(KmerBytesWritable source) {
-		this.sourceVertexId.set(source);
-	}
+    public NaiveAlgorithmMessageWritable() {
+        sourceVertexId = new VKmerBytesWritable(NaiveAlgorithmForPathMergeVertex.kmerSize);
+        adjMap = (byte) 0;
+        lastGeneCode = (byte) 0;
+        message = Message.NON;
+        checkMessage = (byte) 0;
+    }
 
-	public byte getAdjMap() {
-		return adjMap;
-	}
+    public void set(KmerBytesWritable sourceVertex, byte adjMap, byte lastGeneCode, byte message) {
+        checkMessage = 0;
+        if (sourceVertexId != null) {
+            checkMessage |= CheckMessage.SOURCE;
+            this.sourceVertexId.set(sourceVertexId);
+        }
+        if (adjMap != 0) {
+            checkMessage |= CheckMessage.ADJMAP;
+            this.adjMap = adjMap;
+        }
+        if (lastGeneCode != 0) {
+            checkMessage |= CheckMessage.LASTGENECODE;
+            this.lastGeneCode = lastGeneCode;
+        }
+        this.message = message;
+    }
 
-	public void setAdjMap(byte adjMap) {
-		this.adjMap = adjMap;
-	}
+    public void reset() {
+        checkMessage = 0;
+        adjMap = (byte) 0;
+        lastGeneCode = (byte) 0;
+        message = Message.NON;
+    }
 
-	public void setChainVertexId(VKmerBytesWritable chainVertex) {
-		this.chainVertexId.set(chainVertex);
-	}
+    public KmerBytesWritable getSourceVertexId() {
+        return sourceVertexId;
+    }
 
-	public VKmerBytesWritable getChainVertexId() {
-		return chainVertexId;
-	}
+    public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
+        if (sourceVertexId != null) {
+            checkMessage |= CheckMessage.SOURCE;
+            this.sourceVertexId.set(sourceVertexId);
+        }
+    }
 
-	public boolean isRear() {
-		return isRear;
-	}
+    public byte getAdjMap() {
+        return adjMap;
+    }
 
-	public void setRear(boolean isRear) {
-		this.isRear = isRear;
-	}
+    public void setAdjMap(byte adjMap) {
+        if (adjMap != 0) {
+            checkMessage |= CheckMessage.ADJMAP;
+            this.adjMap = adjMap;
+        }
+    }
 
-	public int getLengthOfChain() {
-		return this.chainVertexId.getKmerLength();
-	}
-	
-	
-	public KmerBytesWritable getHeadVertexId() {
-		return headVertexId;
-	}
+    public byte getLastGeneCode() {
+        return lastGeneCode;
+    }
 
-	public void setHeadVertexId(KmerBytesWritable headVertexId) {
-		this.headVertexId.set(headVertexId);
-	}
+    public void setLastGeneCode(byte lastGeneCode) {
+        if (lastGeneCode != 0) {
+            checkMessage |= CheckMessage.LASTGENECODE;
+            this.lastGeneCode = lastGeneCode;
+        }
+    }
 
-	@Override
-	public void write(DataOutput out) throws IOException {
-		sourceVertexId.write(out);
-		headVertexId.write(out);
-		chainVertexId.write(out);
-		out.write(adjMap);
-		out.writeBoolean(isRear);
-	}
+    public byte getMessage() {
+        return message;
+    }
 
-	@Override
-	public void readFields(DataInput in) throws IOException {
-		sourceVertexId.readFields(in);
-		headVertexId.readFields(in);
-		chainVertexId.readFields(in);
-		adjMap = in.readByte();
-		isRear = in.readBoolean();
-	}
+    public void setMessage(byte message) {
+        this.message = message;
+    }
+
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeByte(checkMessage);
+        if ((checkMessage & CheckMessage.SOURCE) != 0)
+            sourceVertexId.write(out);
+        if ((checkMessage & CheckMessage.ADJMAP) != 0)
+            out.write(adjMap);
+        if ((checkMessage & CheckMessage.LASTGENECODE) != 0)
+            out.write(lastGeneCode);
+        out.write(message);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        this.reset();
+        checkMessage = in.readByte();
+        if ((checkMessage & CheckMessage.SOURCE) != 0)
+            sourceVertexId.readFields(in);
+        if ((checkMessage & CheckMessage.ADJMAP) != 0)
+            adjMap = in.readByte();
+        if ((checkMessage & CheckMessage.LASTGENECODE) != 0)
+            lastGeneCode = in.readByte();
+        message = in.readByte();
+    }
 
     @Override
     public int hashCode() {
-        return chainVertexId.hashCode();
+        return sourceVertexId.hashCode();
     }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof NaiveAlgorithmMessageWritable) {
-        	NaiveAlgorithmMessageWritable tp = (NaiveAlgorithmMessageWritable) o;
-            return chainVertexId.equals( tp.chainVertexId);
+            NaiveAlgorithmMessageWritable tp = (NaiveAlgorithmMessageWritable) o;
+            return sourceVertexId.equals(tp.sourceVertexId);
         }
         return false;
     }
+
     @Override
     public String toString() {
-        return chainVertexId.toString();
+        return sourceVertexId.toString();
     }
-    
-	@Override
-	public int compareTo(NaiveAlgorithmMessageWritable tp) {
-		return chainVertexId.compareTo(tp.chainVertexId);
-	}
 
+    @Override
+    public int compareTo(NaiveAlgorithmMessageWritable tp) {
+        return sourceVertexId.compareTo(tp.sourceVertexId);
+    }
 }
