@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.valvetgraphbuilding;
+package edu.uci.ics.genomix.hadoop.valvetgraphbuilding;
 
 import java.io.IOException;
 import java.util.Iterator;
