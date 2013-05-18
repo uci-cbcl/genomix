@@ -15,26 +15,31 @@
 
 package edu.uci.ics.genomix.hyracks.job;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
+import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
-public abstract class JobGen {
+public abstract class JobGen implements Serializable{
 
-    protected final Configuration conf;
-    protected final GenomixJob genomixJob;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    protected final ConfFactory confFactory;
     protected String jobId = new UUID(System.currentTimeMillis(), System.nanoTime()).toString();
 
-    public JobGen(GenomixJob job) {
-        this.conf = job;
-        this.genomixJob = job;
+    public JobGen(GenomixJob job) throws HyracksDataException {
+        this.confFactory = new ConfFactory(job);
         this.initJobConfiguration();
     }
 
-    protected abstract void initJobConfiguration();
+    protected abstract void initJobConfiguration()throws HyracksDataException ;
 
     public abstract JobSpecification generateJob() throws HyracksException;
 

@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import junit.framework.Assert;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,23 +21,28 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import edu.uci.ics.genomix.hyracks.driver.Driver;
+import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.job.GenomixJob;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
 public class JobRunStepByStepTest {
+    private static final int KmerSize = 5;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_PATH = "src/test/resources/data/webmap/text.txt";
+    private static final String DATA_INPUT_PATH = "src/test/resources/data/webmap/text.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
+    
+    private static final String EXPECTED_DIR = "src/test/resources/expected/";
+    private static final String EXPECTED_READER_RESULT = EXPECTED_DIR + "result_after_initial_read";
 
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
     private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
-    private static final String EXPECTED_PATH = "src/test/resources/expected/result2";
-    private static final String EXPECTED_REVERSE_PATH = "src/test/resources/expected/result_reverse";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
 
@@ -44,6 +51,18 @@ public class JobRunStepByStepTest {
     private int numPartitionPerMachine = 1;
 
     private Driver driver;
+    
+    @Test
+    public void TestAll() throws Exception {
+        TestReader();
+    }
+    
+    public void TestReader() throws Exception{
+        conf.set(GenomixJob.GROUPBY_TYPE, "external");
+        System.err.println("Testing ExternalGroupBy");
+        driver.runJob(new GenomixJob(conf), Plan.CHECK_KMERREADER, true);
+        Assert.assertEquals(true, checkResults(EXPECTED_READER_RESULT));
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -56,7 +75,7 @@ public class JobRunStepByStepTest {
         FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
-        conf.setInt(GenomixJob.KMER_LENGTH, 5);
+        conf.setInt(GenomixJob.KMER_LENGTH, KmerSize);
         driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
                 edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
@@ -77,7 +96,7 @@ public class JobRunStepByStepTest {
         System.setProperty("hadoop.log.dir", "logs");
         dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
         FileSystem dfs = FileSystem.get(conf);
-        Path src = new Path(DATA_PATH);
+        Path src = new Path(DATA_INPUT_PATH);
         Path dest = new Path(HDFS_INPUT_PATH);
         dfs.mkdirs(dest);
         //dfs.mkdirs(result);

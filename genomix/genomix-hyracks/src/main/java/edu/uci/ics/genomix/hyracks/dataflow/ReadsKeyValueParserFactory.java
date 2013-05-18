@@ -24,27 +24,37 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import edu.uci.ics.genomix.hyracks.data.accessors.ByteSerializerDeserializer;
+import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
     private static final Log LOG = LogFactory.getLog(ReadsKeyValueParserFactory.class);
+    
+    public static final int OutputKmerField = 0;
+    public static final int OutputPosition = 1;
+    
     private KmerBytesWritable kmer;
+    private PositionReference pos;
     private boolean bReversed;
+
+    public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
+            null });
 
     public ReadsKeyValueParserFactory(int k, boolean bGenerateReversed) {
         bReversed = bGenerateReversed;
         kmer = new KmerBytesWritable(k);
+        pos = new PositionReference();
     }
 
     @Override
@@ -107,13 +117,13 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             private void InsertToFrame(KmerBytesWritable kmer, int readID, int posInRead, IFrameWriter writer) {
                 try {
-                    if (posInRead > 127){
-                        throw new IllegalArgumentException ("Position id is beyond 127 at " + readID);
+                    if (posInRead > 127) {
+                        throw new IllegalArgumentException("Position id is beyond 127 at " + readID);
                     }
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), 0, kmer.getLength());
-                    tupleBuilder.addField(IntegerSerializerDeserializer.INSTANCE, readID);
-                    tupleBuilder.addField(ByteSerializerDeserializer.INSTANCE, (byte)posInRead);
+                    pos.set(readID, (byte) posInRead);
+                    tupleBuilder.addField(pos.getByteArray(), pos.getStartOffset(), pos.getLength());
 
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {

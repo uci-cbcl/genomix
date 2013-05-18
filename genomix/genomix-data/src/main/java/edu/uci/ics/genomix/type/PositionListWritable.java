@@ -3,13 +3,18 @@ package edu.uci.ics.genomix.type;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class PositionListWritable implements Writable, Iterable<PositionWritable> {
+public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable{
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
     protected int valueCount;

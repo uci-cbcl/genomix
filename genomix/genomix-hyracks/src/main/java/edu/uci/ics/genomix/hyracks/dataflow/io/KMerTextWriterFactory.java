@@ -19,6 +19,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -32,21 +34,31 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 	 */
     private static final long serialVersionUID = 1L;
     private KmerBytesWritable kmer;
+    private PositionListWritable plist;
 
     public KMerTextWriterFactory(int k) {
         kmer = new KmerBytesWritable(k);
+        plist = new PositionListWritable();
     }
 
     public class TupleWriter implements ITupleWriter {
         @Override
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
             try {
-                kmer.set(tuple.getFieldData(0), tuple.getFieldStart(0));
+                if (kmer.getLength() > tuple.getFieldLength(KMerSequenceWriterFactory.InputKmerField)) {
+                    throw new IllegalArgumentException("Not enough kmer bytes");
+                }
+                kmer.setNewReference(tuple.getFieldData(KMerSequenceWriterFactory.InputKmerField), tuple.getFieldStart(KMerSequenceWriterFactory.InputKmerField));
+                int countOfPos = tuple.getFieldLength(KMerSequenceWriterFactory.InputPositionListField);
+                if (countOfPos % PositionWritable.LENGTH != 0) {
+                    throw new IllegalArgumentException("Invalid count of position byte");
+                }
+                plist.setNewReference(countOfPos, tuple.getFieldData(KMerSequenceWriterFactory.InputPositionListField),
+                        tuple.getFieldStart(KMerSequenceWriterFactory.InputPositionListField));
+
                 output.write(kmer.toString().getBytes());
                 output.writeByte('\t');
-//                output.write(GeneCode.getSymbolFromBitMap(tuple.getFieldData(1)[tuple.getFieldStart(1)]).getBytes());
-                output.writeByte('\t');
-                output.write(String.valueOf((int) tuple.getFieldData(2)[tuple.getFieldStart(2)]).getBytes());
+                output.write(plist.toString().getBytes());
                 output.writeByte('\n');
             } catch (IOException e) {
                 throw new HyracksDataException(e);

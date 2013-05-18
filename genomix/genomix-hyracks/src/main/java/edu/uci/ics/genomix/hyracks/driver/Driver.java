@@ -27,6 +27,10 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import edu.uci.ics.genomix.hyracks.job.GenomixJob;
 import edu.uci.ics.genomix.hyracks.job.JobGen;
 import edu.uci.ics.genomix.hyracks.job.JobGenBrujinGraph;
+import edu.uci.ics.genomix.hyracks.job.JobGenCheckReader;
+import edu.uci.ics.genomix.hyracks.job.JobGenCreateKmerInfo;
+import edu.uci.ics.genomix.hyracks.job.JobGenGroupbyReadID;
+import edu.uci.ics.genomix.hyracks.job.JobGenMapKmerToRead;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -38,9 +42,11 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 public class Driver {
     public static enum Plan {
+        CHECK_KMERREADER,
+        OUTPUT_KMERHASHTABLE,
+        OUTPUT_MAP_KMER_TO_READ,
+        OUTPUT_GROUPBY_READID,
         BUILD_DEBRUJIN_GRAPH,
-        GRAPH_CLEANNING,
-        CONTIGS_GENERATION,
     }
 
     private static final String IS_PROFILING = "genomix.driver.profiling";
@@ -91,10 +97,18 @@ public class Driver {
                 default:
                     jobGen = new JobGenBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
+                case OUTPUT_KMERHASHTABLE:
+                    jobGen = new JobGenCreateKmerInfo(job, scheduler, ncMap, numPartitionPerMachine);
+                case OUTPUT_MAP_KMER_TO_READ:
+                    jobGen = new JobGenMapKmerToRead(job,scheduler, ncMap, numPartitionPerMachine);
+                case OUTPUT_GROUPBY_READID:
+                    jobGen = new JobGenGroupbyReadID(job, scheduler, ncMap, numPartitionPerMachine);
+                case CHECK_KMERREADER:
+                    jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
             }
 
             start = System.currentTimeMillis();
-            runCreate(jobGen);
+            run(jobGen);
             end = System.currentTimeMillis();
             time = end - start;
             LOG.info("result writing finished " + time + "ms");
@@ -104,7 +118,7 @@ public class Driver {
         }
     }
 
-    private void runCreate(JobGen jobGen) throws Exception {
+    private void run(JobGen jobGen) throws Exception {
         try {
             JobSpecification createJob = jobGen.generateJob();
             execute(createJob);
@@ -134,6 +148,7 @@ public class Driver {
         boolean bProfiling = jobConf.getBoolean(IS_PROFILING, true);
         // FileInputFormat.setInputPaths(job, otherArgs[2]);
         {
+            @SuppressWarnings("deprecation")
             Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[2]);
             jobConf.set("mapred.input.dir", path.toString());
 

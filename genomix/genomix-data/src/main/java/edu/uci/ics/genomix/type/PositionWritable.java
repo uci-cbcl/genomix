@@ -3,13 +3,18 @@ package edu.uci.ics.genomix.type;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class PositionWritable implements WritableComparable<PositionWritable> {
+public class PositionWritable implements WritableComparable<PositionWritable> , Serializable{
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
     public static final int LENGTH = 5;

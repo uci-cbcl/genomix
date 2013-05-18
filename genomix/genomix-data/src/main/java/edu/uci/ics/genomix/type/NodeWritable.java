@@ -3,10 +3,15 @@ package edu.uci.ics.genomix.type;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
 import org.apache.hadoop.io.WritableComparable;
 
-public class NodeWritable implements WritableComparable<NodeWritable> {
+public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private PositionWritable nodeID;
     private int countOfKmer;
     private PositionListWritable incomingList;

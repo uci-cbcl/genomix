@@ -26,6 +26,8 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.hyracks.job.GenomixJob;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -39,6 +41,9 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
     private ConfFactory confFactory;
     private final int kmerlength;
+
+    public static final int InputKmerField = 0;
+    public static final int InputPositionListField = 1;
 
     public KMerSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
@@ -54,6 +59,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
         Writer writer = null;
 
         KmerBytesWritable reEnterKey = new KmerBytesWritable(kmerlength);
+        PositionListWritable plist = new PositionListWritable();
 
         /**
          * assumption is that output never change source!
@@ -61,18 +67,18 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
         @Override
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
             try {
-                byte[] kmer = tuple.getFieldData(0);
-                int keyStart = tuple.getFieldStart(0);
-                int keyLength = tuple.getFieldLength(0);
-                if (reEnterKey.getLength() > keyLength){
+                if (reEnterKey.getLength() > tuple.getFieldLength(InputKmerField)) {
                     throw new IllegalArgumentException("Not enough kmer bytes");
                 }
+                reEnterKey.setNewReference(tuple.getFieldData(InputKmerField), tuple.getFieldStart(InputKmerField));
+                int countOfPos = tuple.getFieldLength(InputPositionListField);
+                if (countOfPos % PositionWritable.LENGTH != 0) {
+                    throw new IllegalArgumentException("Invalid count of position byte");
+                }
+                plist.setNewReference(countOfPos, tuple.getFieldData(InputPositionListField),
+                        tuple.getFieldStart(InputPositionListField));
 
-                byte bitmap = tuple.getFieldData(1)[tuple.getFieldStart(1)];
-                byte count = tuple.getFieldData(2)[tuple.getFieldStart(2)];
-//                reEnterCount.set(bitmap, count);
-                reEnterKey.set(kmer, keyStart);
-                writer.append(reEnterKey, null);
+                writer.append(reEnterKey, plist);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -82,7 +88,7 @@ public class KMerSequenceWriterFactory implements ITupleWriterFactory {
         public void open(DataOutput output) throws HyracksDataException {
             try {
                 writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, KmerBytesWritable.class,
-                        null, CompressionType.NONE, null);
+                        PositionListWritable.class, CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
