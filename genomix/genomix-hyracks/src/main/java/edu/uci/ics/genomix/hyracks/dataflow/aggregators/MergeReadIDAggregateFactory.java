@@ -4,8 +4,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -16,39 +14,57 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory {
+public class MergeReadIDAggregateFactory implements
+		IAggregatorDescriptorFactory {
 
-    /**
+	/**
      * 
      */
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private final int ValidPosCount;
+	private final int ValidPosCount;
 
-    public MergeReadIDAggregateFactory(int readLength, int kmerLength) {
-        ValidPosCount = getPositionCount(readLength, kmerLength);
-    }
+	public MergeReadIDAggregateFactory(int readLength, int kmerLength) {
+		ValidPosCount = getPositionCount(readLength, kmerLength);
+	}
 
-    public static int getPositionCount(int readLength, int kmerLength){
-        return readLength - kmerLength + 1;
-    }
-    public static final int InputReadIDField = AggregateReadIDAggregateFactory.OutputReadIDField;
-    public static final int InputPositionListField = AggregateReadIDAggregateFactory.OutputPositionListField;
+	public static int getPositionCount(int readLength, int kmerLength) {
+		return readLength - kmerLength + 1;
+	}
 
-    public static final int BYTE_SIZE = 1;
-    public static final int INTEGER_SIZE = 4;
+	public static final int InputReadIDField = AggregateReadIDAggregateFactory.OutputReadIDField;
+	public static final int InputPositionListField = AggregateReadIDAggregateFactory.OutputPositionListField;
 
-    /**
-     * (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...} to
-     * Aggregate as 
-     * (ReadID, Storage[posInRead]={PositionList,Kmer})
-     * 
-     */
-    @Override
+	public static final int BYTE_SIZE = 1;
+	public static final int INTEGER_SIZE = 4;
+
+	/**
+	 * (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...} to Aggregate as
+	 * (ReadID, Storage[posInRead]={PositionList,Kmer})
+	 * 
+	 */
+	@Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
         return new IAggregatorDescriptor() {
+        	
+        	class PositionArray{
+        		public ArrayBackedValueStorage[] storages;
+        		public int count;
+        		
+        		public PositionArray(ArrayBackedValueStorage[] storages2, int i){
+        			storages = storages2;
+        			count = i;
+        		}
+        		
+        		public void reset(){
+        			for (ArrayBackedValueStorage each : storages) {
+                        each.reset();
+                    }
+                    count = 0;
+        		}
+        	}
 
             @Override
             public AggregateState createAggregateStates() {
@@ -56,19 +72,15 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                 for (int i = 0; i < storages.length; i++) {
                     storages[i] = new ArrayBackedValueStorage();
                 }
-                return new AggregateState(Pair.of(storages, 0));
+                return new AggregateState(new PositionArray(storages,0));
             }
 
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                @SuppressWarnings("unchecked")
-                Pair<ArrayBackedValueStorage[], Integer> pair = (Pair<ArrayBackedValueStorage[], Integer>) state.state;
-                ArrayBackedValueStorage[] storages = pair.getLeft();
-                for (ArrayBackedValueStorage each : storages) {
-                    each.reset();
-                }
-                int count = 0;
+                PositionArray positionArray = (PositionArray) state.state;
+                positionArray.reset();
+                ArrayBackedValueStorage[] storages = positionArray.storages;
 
                 int fieldOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
                         + accessor.getFieldStartOffset(tIndex, InputPositionListField);
@@ -84,9 +96,8 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
                     // read Kmer
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
-                    count++;
+                    positionArray.count++;
                 }
-                pair.setValue(count);
             }
 
             private int writeBytesToStorage(ArrayBackedValueStorage storage, ByteBuffer fieldBuffer, int fieldOffset)
@@ -111,10 +122,8 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                @SuppressWarnings("unchecked")
-                Pair<ArrayBackedValueStorage[], Integer> pair = (Pair<ArrayBackedValueStorage[], Integer>) state.state;
-                ArrayBackedValueStorage[] storages = pair.getLeft();
-                int count = pair.getRight();
+                PositionArray positionArray = (PositionArray) state.state;
+                ArrayBackedValueStorage[] storages = positionArray.storages;
 
                 int fieldOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
                         + accessor.getFieldStartOffset(tIndex, InputPositionListField);
@@ -130,9 +139,8 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
                     // read Kmer
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
-                    count++;
+                    positionArray.count++;
                 }
-                pair.setValue(count);
             }
 
             @Override
@@ -144,11 +152,9 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
             @Override
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                @SuppressWarnings("unchecked")
-                Pair<ArrayBackedValueStorage[], Integer> pair = (Pair<ArrayBackedValueStorage[], Integer>) state.state;
-                ArrayBackedValueStorage[] storages = pair.getLeft();
-                int count = pair.getRight();
-                if (count != storages.length) {
+            	PositionArray positionArray = (PositionArray) state.state;
+                ArrayBackedValueStorage[] storages = positionArray.storages;
+                if (positionArray.count != storages.length) {
                     throw new IllegalStateException("Final aggregate position number is invalid");
                 }
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();

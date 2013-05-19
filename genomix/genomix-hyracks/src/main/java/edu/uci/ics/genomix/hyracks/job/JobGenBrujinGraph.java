@@ -15,6 +15,7 @@
 
 package edu.uci.ics.genomix.hyracks.job;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -91,8 +92,8 @@ public class JobGenBrujinGraph extends JobGen {
 
     protected ConfFactory hadoopJobConfFactory;
     protected static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
-    protected Scheduler scheduler;
     protected String[] ncNodeNames;
+    protected String[] readSchedule;
 
     protected int readLength;
     protected int kmerSize;
@@ -107,17 +108,16 @@ public class JobGenBrujinGraph extends JobGen {
         LOG.debug(status + " nc nodes:" + ncNodeNames.length);
     }
 
-    public JobGenBrujinGraph(GenomixJob job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
+    public JobGenBrujinGraph(GenomixJobConf job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job);
-        this.scheduler = scheduler;
         String[] nodes = new String[ncMap.size()];
         ncMap.keySet().toArray(nodes);
         ncNodeNames = new String[nodes.length * numPartitionPerMachine];
         for (int i = 0; i < numPartitionPerMachine; i++) {
             System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length, nodes.length);
         }
-        logDebug("initialize");
+        initJobConfiguration(scheduler);
     }
 
     private ExternalGroupOperatorDescriptor newExternalGroupby(JobSpecification jobSpec, int[] keyFields,
@@ -165,12 +165,9 @@ public class JobGenBrujinGraph extends JobGen {
 
     public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec) throws HyracksDataException {
         try {
-
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
 
-            LOG.info("HDFS read into " + splits.length + " splits");
-            String[] readSchedule = scheduler.getLocationConstraints(splits);
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
                     hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize,
                             bGenerateReversedKmer));
@@ -209,10 +206,11 @@ public class JobGenBrujinGraph extends JobGen {
 
     public AbstractOperatorDescriptor generateMapperFromKmerToRead(JobSpecification jobSpec,
             AbstractOperatorDescriptor kmerCrossAggregator) {
-        //Map (Kmer, {(ReadID,PosInRead),...}) into (ReadID,PosInRead,{OtherPosition,...},Kmer) 
-        RecordDescriptor readIDOutputRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { null, null, null, null });
-        AbstractOperatorDescriptor mapKmerToRead = new MapKmerPositionToReadOperator(jobSpec, readIDOutputRec);
+        // Map (Kmer, {(ReadID,PosInRead),...}) into
+        // (ReadID,PosInRead,{OtherPosition,...},Kmer)
+
+        AbstractOperatorDescriptor mapKmerToRead = new MapKmerPositionToReadOperator(jobSpec,
+                MapKmerPositionToReadOperator.readIDOutputRec);
         connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, mapKmerToRead, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
         return mapKmerToRead;
@@ -220,7 +218,7 @@ public class JobGenBrujinGraph extends JobGen {
 
     public AbstractOperatorDescriptor generateGroupbyReadJob(JobSpecification jobSpec,
             AbstractOperatorDescriptor mapKmerToRead) throws HyracksDataException {
-        // (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...} 
+        // (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...}
         RecordDescriptor readIDCombineRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
         RecordDescriptor readIDFinalRec = new RecordDescriptor(
                 new ISerializerDeserializer[MergeReadIDAggregateFactory.getPositionCount(readLength, kmerSize)]);
@@ -240,7 +238,8 @@ public class JobGenBrujinGraph extends JobGen {
 
     public AbstractOperatorDescriptor generateMapperFromReadToNode(JobSpecification jobSpec,
             AbstractOperatorDescriptor readCrossAggregator) {
-        //Map (ReadID, [(Poslist,Kmer) ... ]) to (Node, IncomingList, OutgoingList, Kmer)
+        // Map (ReadID, [(Poslist,Kmer) ... ]) to (Node, IncomingList,
+        // OutgoingList, Kmer)
         RecordDescriptor nodeRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null, null, null });
         AbstractOperatorDescriptor mapEachReadToNode = new MapReadToNodeOperator(jobSpec, nodeRec, kmerSize);
         connectOperators(jobSpec, readCrossAggregator, ncNodeNames, mapEachReadToNode, ncNodeNames,
@@ -248,7 +247,7 @@ public class JobGenBrujinGraph extends JobGen {
         return mapEachReadToNode;
     }
 
-    public AbstractOperatorDescriptor generateRootByWriteKmerGroupbyResult(JobSpecification jobSpec,
+    public AbstractOperatorDescriptor generateKmerWritorOperator(JobSpecification jobSpec,
             AbstractOperatorDescriptor kmerCrossAggregator) throws HyracksException {
         // Output Kmer
         ITupleWriterFactory kmerWriter = null;
@@ -266,11 +265,11 @@ public class JobGenBrujinGraph extends JobGen {
                 hadoopJobConfFactory.getConf(), kmerWriter);
         connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, writeKmerOperator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
-        jobSpec.addRoot(writeKmerOperator);
+        // jobSpec.addRoot(writeKmerOperator);
         return writeKmerOperator;
     }
 
-    public AbstractOperatorDescriptor generateRootByWriteNodeResult(JobSpecification jobSpec,
+    public AbstractOperatorDescriptor generateNodeWriterOpertator(JobSpecification jobSpec,
             AbstractOperatorDescriptor mapEachReadToNode) throws HyracksException {
         ITupleWriterFactory nodeWriter = null;
         switch (outputFormat) {
@@ -288,7 +287,6 @@ public class JobGenBrujinGraph extends JobGen {
                 hadoopJobConfFactory.getConf(), nodeWriter);
         connectOperators(jobSpec, mapEachReadToNode, ncNodeNames, writeNodeOperator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
-        jobSpec.addRoot(writeNodeOperator);
         return writeNodeOperator;
     }
 
@@ -303,8 +301,8 @@ public class JobGenBrujinGraph extends JobGen {
         logDebug("Group by Kmer");
         AbstractOperatorDescriptor lastOperator = generateGroupbyKmerJob(jobSpec, readOperator);
 
-        logDebug("Write kmer to result");
-        generateRootByWriteKmerGroupbyResult(jobSpec, lastOperator);
+        // logDebug("Write kmer to result");
+        // generateRootByWriteKmerGroupbyResult(jobSpec, lastOperator);
 
         logDebug("Map Kmer to Read Operator");
         lastOperator = generateMapperFromKmerToRead(jobSpec, lastOperator);
@@ -316,28 +314,27 @@ public class JobGenBrujinGraph extends JobGen {
         lastOperator = generateMapperFromReadToNode(jobSpec, lastOperator);
 
         logDebug("Write node to result");
-        generateRootByWriteNodeResult(jobSpec, lastOperator);
+        lastOperator = generateNodeWriterOpertator(jobSpec, lastOperator);
 
+        jobSpec.addRoot(lastOperator);
         return jobSpec;
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    protected void initJobConfiguration() throws HyracksDataException {
+    protected void initJobConfiguration(Scheduler scheduler) throws HyracksDataException {
         Configuration conf = confFactory.getConf();
-        readLength = conf.getInt(GenomixJob.READ_LENGTH, GenomixJob.DEFAULT_READLEN);
-        kmerSize = conf.getInt(GenomixJob.KMER_LENGTH, GenomixJob.DEFAULT_KMERLEN);
+        readLength = conf.getInt(GenomixJobConf.READ_LENGTH, GenomixJobConf.DEFAULT_READLEN);
+        kmerSize = conf.getInt(GenomixJobConf.KMER_LENGTH, GenomixJobConf.DEFAULT_KMERLEN);
         if (kmerSize % 2 == 0) {
             kmerSize--;
-            conf.setInt(GenomixJob.KMER_LENGTH, kmerSize);
+            conf.setInt(GenomixJobConf.KMER_LENGTH, kmerSize);
         }
-        frameLimits = conf.getInt(GenomixJob.FRAME_LIMIT, GenomixJob.DEFAULT_FRAME_LIMIT);
-        tableSize = conf.getInt(GenomixJob.TABLE_SIZE, GenomixJob.DEFAULT_TABLE_SIZE);
-        frameSize = conf.getInt(GenomixJob.FRAME_SIZE, GenomixJob.DEFAULT_FRAME_SIZE);
+        frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, GenomixJobConf.DEFAULT_FRAME_LIMIT);
+        tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
+        frameSize = conf.getInt(GenomixJobConf.FRAME_SIZE, GenomixJobConf.DEFAULT_FRAME_SIZE);
 
-        bGenerateReversedKmer = conf.getBoolean(GenomixJob.REVERSED_KMER, GenomixJob.DEFAULT_REVERSED);
+        bGenerateReversedKmer = conf.getBoolean(GenomixJobConf.REVERSED_KMER, GenomixJobConf.DEFAULT_REVERSED);
 
-        String type = conf.get(GenomixJob.GROUPBY_TYPE, GenomixJob.DEFAULT_GROUPBY_TYPE);
+        String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         if (type.equalsIgnoreCase("external")) {
             groupbyType = GroupbyType.EXTERNAL;
         } else if (type.equalsIgnoreCase("precluster")) {
@@ -346,13 +343,22 @@ public class JobGenBrujinGraph extends JobGen {
             groupbyType = GroupbyType.HYBRIDHASH;
         }
 
-        String output = conf.get(GenomixJob.OUTPUT_FORMAT, GenomixJob.DEFAULT_OUTPUT_FORMAT);
+        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         if (output.equalsIgnoreCase("text")) {
             outputFormat = OutputFormat.TEXT;
         } else {
             outputFormat = OutputFormat.BINARY;
         }
-        hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
+        try {
+            hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
+            @SuppressWarnings("deprecation")
+            InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
+                    .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
+            readSchedule = scheduler.getLocationConstraints(splits);
+        } catch (IOException ex) {
+            throw new HyracksDataException(ex);
+        }
+
         LOG.info("Genomix Graph Build Configuration");
         LOG.info("Kmer:" + kmerSize);
         LOG.info("Groupby type:" + type);

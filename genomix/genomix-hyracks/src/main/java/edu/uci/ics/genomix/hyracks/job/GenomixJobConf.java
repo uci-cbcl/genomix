@@ -20,7 +20,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 
-public class GenomixJob extends JobConf {
+public class GenomixJobConf extends JobConf {
 
     public static final String JOB_NAME = "genomix";
 
@@ -61,14 +61,21 @@ public class GenomixJob extends JobConf {
 
     public static final boolean DEFAULT_REVERSED = false;
 
-    public static final String DEFAULT_GROUPBY_TYPE = "hybrid";
-    public static final String DEFAULT_OUTPUT_FORMAT = "binary";
+    public static final String JOB_PLAN_GRAPHBUILD = "graphbuild";
+    public static final String JOB_PLAN_GRAPHSTAT  = "graphstat";
+    
+    public static final String GROUPBY_TYPE_HYBRID = "hybrid";
+    public static final String GROUPBY_TYPE_EXTERNAL = "external";
+    public static final String GROUPBY_TYPE_PRECLUSTER = "precluster";
+    public static final String OUTPUT_FORMAT_BINARY = "binary";
+    public static final String OUTPUT_FORMAT_TEXT = "text";
 
-    public GenomixJob() throws IOException {
+
+    public GenomixJobConf() throws IOException {
         super(new Configuration());
     }
 
-    public GenomixJob(Configuration conf) throws IOException {
+    public GenomixJobConf(Configuration conf) throws IOException {
         super(conf);
     }
 

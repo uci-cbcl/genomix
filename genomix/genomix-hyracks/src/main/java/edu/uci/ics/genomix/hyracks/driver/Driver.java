@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import edu.uci.ics.genomix.hyracks.job.GenomixJob;
+import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.job.JobGen;
 import edu.uci.ics.genomix.hyracks.job.JobGenBrujinGraph;
 import edu.uci.ics.genomix.hyracks.job.JobGenCheckReader;
@@ -70,11 +70,11 @@ public class Driver {
         this.numPartitionPerMachine = numPartitionPerMachine;
     }
 
-    public void runJob(GenomixJob job) throws HyracksException {
+    public void runJob(GenomixJobConf job) throws HyracksException {
         runJob(job, Plan.BUILD_DEBRUJIN_GRAPH, false);
     }
 
-    public void runJob(GenomixJob job, Plan planChoice, boolean profiling) throws HyracksException {
+    public void runJob(GenomixJobConf job, Plan planChoice, boolean profiling) throws HyracksException {
         /** add hadoop configurations */
         URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
         job.addResource(hadoopCore);
@@ -99,12 +99,16 @@ public class Driver {
                     break;
                 case OUTPUT_KMERHASHTABLE:
                     jobGen = new JobGenCreateKmerInfo(job, scheduler, ncMap, numPartitionPerMachine);
+                    break;
                 case OUTPUT_MAP_KMER_TO_READ:
                     jobGen = new JobGenMapKmerToRead(job,scheduler, ncMap, numPartitionPerMachine);
+                    break;
                 case OUTPUT_GROUPBY_READID:
                     jobGen = new JobGenGroupbyReadID(job, scheduler, ncMap, numPartitionPerMachine);
+                    break;
                 case CHECK_KMERREADER:
                     jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
+                    break;
             }
 
             start = System.currentTimeMillis();
@@ -136,7 +140,7 @@ public class Driver {
     }
 
     public static void main(String[] args) throws Exception {
-        GenomixJob jobConf = new GenomixJob();
+        GenomixJobConf jobConf = new GenomixJobConf();
         String[] otherArgs = new GenericOptionsParser(jobConf, args).getRemainingArgs();
         if (otherArgs.length < 4) {
             System.err.println("Need <serverIP> <port> <input> <output>");
@@ -152,6 +156,7 @@ public class Driver {
             Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[2]);
             jobConf.set("mapred.input.dir", path.toString());
 
+            @SuppressWarnings("deprecation")
             Path outputDir = new Path(jobConf.getWorkingDirectory(), otherArgs[3]);
             jobConf.set("mapred.output.dir", outputDir.toString());
         }

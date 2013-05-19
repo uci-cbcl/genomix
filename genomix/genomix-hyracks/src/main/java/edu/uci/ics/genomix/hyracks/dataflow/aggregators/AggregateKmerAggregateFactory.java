@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.hyracks.dataflow.aggregators;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.hyracks.data.accessors.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -11,7 +10,6 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
@@ -37,16 +35,6 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 return offset;
             }
 
-            protected byte readByteField(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
-                return ByteSerializerDeserializer.getByte(accessor.getBuffer().array(),
-                        getOffSet(accessor, tIndex, fieldId));
-            }
-
-            protected int readIntField(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
-                return IntegerSerializerDeserializer.getInt(accessor.getBuffer().array(),
-                        getOffSet(accessor, tIndex, fieldId));
-            }
-
             @Override
             public void reset() {
             }
@@ -67,7 +55,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                     AggregateState state) throws HyracksDataException {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 inputVal.reset();
-                position.set(readIntField(accessor, tIndex, 1), readByteField(accessor, tIndex, 2));
+                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor,tIndex,1));
                 inputVal.append(position);
             }
 
@@ -75,7 +63,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
-                position.set(readIntField(accessor, tIndex, 1), readByteField(accessor, tIndex, 2));
+                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor,tIndex,1));
                 inputVal.append(position);
             }
 

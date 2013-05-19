@@ -28,7 +28,7 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
      */
     private static final long serialVersionUID = 1L;
 
-    public JobGenCheckReader(GenomixJob job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
+    public JobGenCheckReader(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job, scheduler, ncMap, numPartitionPerMachine);
         // TODO Auto-generated constructor stub

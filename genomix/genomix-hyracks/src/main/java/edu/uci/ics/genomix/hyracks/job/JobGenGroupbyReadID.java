@@ -21,7 +21,7 @@ public class JobGenGroupbyReadID extends JobGenBrujinGraph {
      */
     private static final long serialVersionUID = 1L;
 
-    public JobGenGroupbyReadID(GenomixJob job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
+    public JobGenGroupbyReadID(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job, scheduler, ncMap, numPartitionPerMachine);
         // TODO Auto-generated constructor stub
@@ -37,8 +37,8 @@ public class JobGenGroupbyReadID extends JobGenBrujinGraph {
         logDebug("Group by Kmer");
         AbstractOperatorDescriptor lastOperator = generateGroupbyKmerJob(jobSpec, readOperator);
 
-        logDebug("Write kmer to result");
-        generateRootByWriteKmerGroupbyResult(jobSpec, lastOperator);
+        //logDebug("Write kmer to result");
+        //generateRootByWriteKmerGroupbyResult(jobSpec, lastOperator);
 
         logDebug("Map Kmer to Read Operator");
         lastOperator = generateMapperFromKmerToRead(jobSpec, lastOperator);

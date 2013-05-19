@@ -5,4 +5,9 @@ import edu.uci.ics.hyracks.data.std.api.IValueReference;
 
 public class PositionReference extends PositionWritable implements IValueReference {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 }

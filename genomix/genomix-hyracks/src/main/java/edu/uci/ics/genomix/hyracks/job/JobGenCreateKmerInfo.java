@@ -17,7 +17,7 @@ public class JobGenCreateKmerInfo extends JobGenBrujinGraph {
      */
     private static final long serialVersionUID = 1L;
 
-    public JobGenCreateKmerInfo(GenomixJob job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
+    public JobGenCreateKmerInfo(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job, scheduler, ncMap, numPartitionPerMachine);
         // TODO Auto-generated constructor stub
@@ -34,7 +34,8 @@ public class JobGenCreateKmerInfo extends JobGenBrujinGraph {
         AbstractOperatorDescriptor lastOperator = generateGroupbyKmerJob(jobSpec, readOperator);
 
         logDebug("Write kmer to result");
-        generateRootByWriteKmerGroupbyResult(jobSpec, lastOperator);
+        lastOperator = generateKmerWritorOperator(jobSpec, lastOperator);
+        jobSpec.addRoot(lastOperator);
 
         return jobSpec;
     }
