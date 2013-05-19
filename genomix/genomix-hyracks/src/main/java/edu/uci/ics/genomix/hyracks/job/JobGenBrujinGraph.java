@@ -173,7 +173,7 @@ public class JobGenBrujinGraph extends JobGen {
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
-                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize,
+                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(readLength, kmerSize,
                             bGenerateReversedKmer));
         } catch (Exception e) {
             throw new HyracksDataException(e);
@@ -232,16 +232,16 @@ public class JobGenBrujinGraph extends JobGen {
         int[] keyFields = new int[] { 0 }; // the id of grouped key
         // (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...}
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(jobSpec, frameLimits, keyFields,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
-                ReadsKeyValueParserFactory.readKmerOutputRec);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                MapKmerPositionToReadOperator.readIDOutputRec);
         connectOperators(jobSpec, mapKmerToRead, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
                 jobSpec));
-        RecordDescriptor readIDCombineRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
+
         RecordDescriptor readIDFinalRec = new RecordDescriptor(
                 new ISerializerDeserializer[MergeReadIDAggregateFactory.getPositionCount(readLength, kmerSize)]);
         Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateReadIDAggregateFactory(),
-                new MergeReadIDAggregateFactory(readLength, kmerSize), new ReadIDPartitionComputerFactory(),
-                new ReadIDNormarlizedComputeFactory(), IntegerPointable.FACTORY, readIDCombineRec, readIDFinalRec);
+                new MergeReadIDAggregateFactory(readLength, kmerSize), new ReadIDPartitionComputerFactory(), null,
+                IntegerPointable.FACTORY, AggregateReadIDAggregateFactory.readIDAggregateRec, readIDFinalRec);
         AbstractOperatorDescriptor readLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         connectOperators(jobSpec, sorter, ncNodeNames, readLocalAggregator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
@@ -327,9 +327,6 @@ public class JobGenBrujinGraph extends JobGen {
         logDebug("Group by Read Operator");
         lastOperator = generateGroupbyReadJob(jobSpec, lastOperator);
 
-        logDebug("Map ReadInfo to Node");
-        lastOperator = generateMapperFromReadToNode(jobSpec, lastOperator);
-
         logDebug("Write node to result");
         lastOperator = generateNodeWriterOpertator(jobSpec, lastOperator);
 
@@ -352,9 +349,9 @@ public class JobGenBrujinGraph extends JobGen {
         bGenerateReversedKmer = conf.getBoolean(GenomixJobConf.REVERSED_KMER, GenomixJobConf.DEFAULT_REVERSED);
 
         String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        if (type.equalsIgnoreCase("external")) {
+        if (type.equalsIgnoreCase(GenomixJobConf.GROUPBY_TYPE_EXTERNAL)) {
             groupbyType = GroupbyType.EXTERNAL;
-        } else if (type.equalsIgnoreCase("precluster")) {
+        } else if (type.equalsIgnoreCase(GenomixJobConf.GROUPBY_TYPE_PRECLUSTER)) {
             groupbyType = GroupbyType.PRECLUSTER;
         } else {
             groupbyType = GroupbyType.HYBRIDHASH;

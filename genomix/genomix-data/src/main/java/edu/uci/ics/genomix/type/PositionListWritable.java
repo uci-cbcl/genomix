@@ -10,7 +10,7 @@ import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable{
+public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable {
     /**
      * 
      */
@@ -121,6 +121,13 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         valueCount += 1;
     }
 
+    public static int getCountByDataLength(int length) {
+        if (length % PositionWritable.LENGTH != 0) {
+            throw new IllegalArgumentException("Length of positionlist is invalid");
+        }
+        return length / PositionWritable.LENGTH;
+    }
+
     public int getCountOfPosition() {
         return valueCount;
     }
@@ -151,14 +158,18 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('[');
-        for(PositionWritable pos : this){
+        for (PositionWritable pos : this) {
             sbuilder.append(pos.toString());
             sbuilder.append(',');
         }
-        sbuilder.setCharAt(sbuilder.length()-1, ']');
+        if (valueCount > 0) {
+            sbuilder.setCharAt(sbuilder.length() - 1, ']');
+        } else {
+            sbuilder.append(']');
+        }
         return sbuilder.toString();
     }
 }

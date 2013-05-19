@@ -47,14 +47,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private KmerBytesWritable kmer;
     private PositionReference pos;
     private boolean bReversed;
+    private final int readLength;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
             null });
 
-    public ReadsKeyValueParserFactory(int k, boolean bGenerateReversed) {
+    public ReadsKeyValueParserFactory(int readlength, int k, boolean bGenerateReversed) {
         bReversed = bGenerateReversed;
         kmer = new KmerBytesWritable(k);
         pos = new PositionReference();
+        this.readLength = readlength;
     }
 
     @Override
@@ -76,7 +78,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 try {
                     readID = Integer.parseInt(geneLine[0]);
                 } catch (NumberFormatException e) {
-                    LOG.warn("Invalid data");
+                    LOG.warn("Invalid data " );
                     return;
                 }
 
@@ -84,6 +86,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 Matcher geneMatcher = genePattern.matcher(geneLine[1]);
                 boolean isValid = geneMatcher.matches();
                 if (isValid) {
+                    if (geneLine[1].length() != readLength){
+                        LOG.warn("Invalid readlength at: " + readID );
+                        return;
+                    }
                     SplitReads(readID, geneLine[1].getBytes(), writer);
                 }
             }

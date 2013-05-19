@@ -31,6 +31,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 @SuppressWarnings("deprecation")
 public class JobRunStepByStepTest {
     private static final int KmerSize = 5;
+    private static final int ReadLength = 8;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
@@ -41,6 +42,8 @@ public class JobRunStepByStepTest {
     private static final String EXPECTED_DIR = "src/test/resources/expected/";
     private static final String EXPECTED_READER_RESULT = EXPECTED_DIR + "result_after_initial_read";
     private static final String EXPECTED_OUPUT_KMER = EXPECTED_DIR + "result_after_kmerAggregate";
+    private static final String EXPECTED_KMER_TO_READID = EXPECTED_DIR + "result_after_kmer2readId";
+    private static final String EXPECTED_GROUPBYREADID = EXPECTED_DIR + "result_after_readIDAggreage";
 
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
     private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
@@ -56,36 +59,40 @@ public class JobRunStepByStepTest {
     @Test
     public void TestAll() throws Exception {
         //TestReader();
-        TestGroupbyKmer();
-        // TestMapKmerToRead();
-        // TestGroupByReadID();
+        //TestGroupbyKmer();
+        //TestMapKmerToRead();
+        TestGroupByReadID();
         // TestEndToEnd();
     }
 
     public void TestReader() throws Exception {
+        cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         driver.runJob(new GenomixJobConf(conf), Plan.CHECK_KMERREADER, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_READER_RESULT, false));
+        Assert.assertEquals(true, checkResults(EXPECTED_READER_RESULT, -1));
     }
 
     public void TestGroupbyKmer() throws Exception {
+        cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_KMERHASHTABLE, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, true));
+        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, 1));
     }
 
     public void TestMapKmerToRead() throws Exception {
+        cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_MAP_KMER_TO_READ, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER,false));
+        Assert.assertEquals(true, checkResults(EXPECTED_KMER_TO_READID, 2));
     }
 
     public void TestGroupByReadID() throws Exception {
+        cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
-        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_EXTERNAL);
+        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_GROUPBY_READID, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER,false));
+        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, -1));
     }
 
     public void TestEndToEnd() throws Exception {
@@ -93,11 +100,11 @@ public class JobRunStepByStepTest {
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_EXTERNAL);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER,false));
+        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, -1));
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER,false));
+        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, -1));
     }
 
     @Before
@@ -112,6 +119,7 @@ public class JobRunStepByStepTest {
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
         conf.setInt(GenomixJobConf.KMER_LENGTH, KmerSize);
+        conf.setInt(GenomixJobConf.READ_LENGTH, ReadLength);
         driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
                 edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
@@ -156,7 +164,7 @@ public class JobRunStepByStepTest {
         }
     }
 
-    private boolean checkResults(String expectedPath, boolean checkPos) throws Exception {
+    private boolean checkResults(String expectedPath, int poslistField) throws Exception {
         File dumped = null;
         String format = conf.get(GenomixJobConf.OUTPUT_FORMAT);
         if (GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(format)) {
@@ -202,8 +210,8 @@ public class JobRunStepByStepTest {
             dumped = new File(CONVERT_RESULT);
         }
 
-        if (checkPos) {
-            TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped);
+        if (poslistField > 0) {
+            TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
         } else {
             TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
         }

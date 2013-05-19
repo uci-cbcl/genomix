@@ -47,7 +47,6 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
             @Override
             public AggregateState createAggregateStates() {
-                System.out.println("CreateState");
                 return new AggregateState(new ArrayBackedValueStorage());
             }
 

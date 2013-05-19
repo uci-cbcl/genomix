@@ -14,57 +14,55 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-public class MergeReadIDAggregateFactory implements
-		IAggregatorDescriptorFactory {
+public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory {
 
-	/**
+    /**
      * 
      */
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private final int ValidPosCount;
+    private final int ValidPosCount;
 
-	public MergeReadIDAggregateFactory(int readLength, int kmerLength) {
-		ValidPosCount = getPositionCount(readLength, kmerLength);
-	}
+    public MergeReadIDAggregateFactory(int readLength, int kmerLength) {
+        ValidPosCount = getPositionCount(readLength, kmerLength);
+    }
 
-	public static int getPositionCount(int readLength, int kmerLength) {
-		return readLength - kmerLength + 1;
-	}
+    public static int getPositionCount(int readLength, int kmerLength) {
+        return readLength - kmerLength + 1;
+    }
 
-	public static final int InputReadIDField = AggregateReadIDAggregateFactory.OutputReadIDField;
-	public static final int InputPositionListField = AggregateReadIDAggregateFactory.OutputPositionListField;
+    public static final int InputReadIDField = AggregateReadIDAggregateFactory.OutputReadIDField;
+    public static final int InputPositionListField = AggregateReadIDAggregateFactory.OutputPositionListField;
 
-	public static final int BYTE_SIZE = 1;
-	public static final int INTEGER_SIZE = 4;
+    public static final int BYTE_SIZE = 1;
+    public static final int INTEGER_SIZE = 4;
 
-	/**
-	 * (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...} to Aggregate as
-	 * (ReadID, Storage[posInRead]={PositionList,Kmer})
-	 * 
-	 */
-	@Override
+    /**
+     * (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...} to Aggregate as
+     * (ReadID, Storage[posInRead]={PositionList,Kmer})
+     */
+    @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
         return new IAggregatorDescriptor() {
-        	
-        	class PositionArray{
-        		public ArrayBackedValueStorage[] storages;
-        		public int count;
-        		
-        		public PositionArray(ArrayBackedValueStorage[] storages2, int i){
-        			storages = storages2;
-        			count = i;
-        		}
-        		
-        		public void reset(){
-        			for (ArrayBackedValueStorage each : storages) {
+
+            class PositionArray {
+                public ArrayBackedValueStorage[] storages;
+                public int count;
+
+                public PositionArray(ArrayBackedValueStorage[] storages2, int i) {
+                    storages = storages2;
+                    count = i;
+                }
+
+                public void reset() {
+                    for (ArrayBackedValueStorage each : storages) {
                         each.reset();
                     }
                     count = 0;
-        		}
-        	}
+                }
+            }
 
             @Override
             public AggregateState createAggregateStates() {
@@ -72,7 +70,7 @@ public class MergeReadIDAggregateFactory implements
                 for (int i = 0; i < storages.length; i++) {
                     storages[i] = new ArrayBackedValueStorage();
                 }
-                return new AggregateState(new PositionArray(storages,0));
+                return new AggregateState(new PositionArray(storages, 0));
             }
 
             @Override
@@ -97,6 +95,10 @@ public class MergeReadIDAggregateFactory implements
                     // read Kmer
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
                     positionArray.count++;
+                }
+                // make fake fields
+                for (int i = 0; i < ValidPosCount; i++) {
+                    tupleBuilder.addFieldEndOffset();
                 }
             }
 
@@ -152,7 +154,7 @@ public class MergeReadIDAggregateFactory implements
             @Override
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-            	PositionArray positionArray = (PositionArray) state.state;
+                PositionArray positionArray = (PositionArray) state.state;
                 ArrayBackedValueStorage[] storages = positionArray.storages;
                 if (positionArray.count != storages.length) {
                     throw new IllegalStateException("Final aggregate position number is invalid");
@@ -160,7 +162,8 @@ public class MergeReadIDAggregateFactory implements
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 try {
                     for (int i = 0; i < storages.length; i++) {
-                        fieldOutput.write(storages[i].getByteArray(), storages[i].getStartOffset(), storages[i].getLength());
+                        fieldOutput.write(storages[i].getByteArray(), storages[i].getStartOffset(),
+                                storages[i].getLength());
                         tupleBuilder.addFieldEndOffset();
                     }
                 } catch (IOException e) {

@@ -61,7 +61,8 @@ public class TestUtils {
         }
     }
 
-    public static void compareWithUnSortedPosition(File expectedFile, File actualFile) throws Exception {
+    public static void compareWithUnSortedPosition(File expectedFile, File actualFile, int poslistField)
+            throws Exception {
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         ArrayList<String> actualLines = new ArrayList<String>();
@@ -77,7 +78,7 @@ public class TestUtils {
                 if (lineExpected == null) {
                     throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
                 }
-                if (!containStrings(lineExpected, actualLine)) {
+                if (!containStrings(lineExpected, actualLine, poslistField)) {
                     throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + actualLine);
                 }
@@ -162,24 +163,32 @@ public class TestUtils {
         return true;
     }
 
-    private static boolean containStrings(String lineExpected, String actualLine) {
-        String keyExp = lineExpected.split("\\\t")[0];
-        String keyAct = actualLine.split("\\\t")[0];
-        if (!keyAct.equals(keyExp)) {
+    private static boolean containStrings(String lineExpected, String actualLine, int poslistField) {
+        String[] fieldsExp = lineExpected.split("\\\t");
+        String[] fieldsAct = actualLine.split("\\\t");
+        if (fieldsAct.length != fieldsExp.length) {
             return false;
+        }
+        for (int i = 0; i < fieldsAct.length; i++) {
+            if (i == poslistField) {
+                continue;
+            }
+            if (!fieldsAct[i].equals(fieldsExp[i])) {
+                return false;
+            }
         }
 
         ArrayList<String> posExp = new ArrayList<String>();
         ArrayList<String> posAct = new ArrayList<String>();
 
-        String valueExp = lineExpected.split("\\\t")[1];
+        String valueExp = lineExpected.split("\\\t")[poslistField];
         String[] valuesExp = valueExp.substring(1, valueExp.length() - 1).split(",");
 
         for (String str : valuesExp) {
             posExp.add(str);
         }
 
-        String valueAct = actualLine.split("\\\t")[1];
+        String valueAct = actualLine.split("\\\t")[poslistField];
         String[] valuesAct = valueAct.substring(1, valueAct.length() - 1).split(",");
 
         for (String str : valuesAct) {

@@ -7,6 +7,7 @@ import edu.uci.ics.genomix.hyracks.data.accessors.ByteSerializerDeserializer;
 import edu.uci.ics.genomix.hyracks.dataflow.MapKmerPositionToReadOperator;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -21,6 +22,7 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
      * 
      */
     private static final long serialVersionUID = 1L;
+
     public static final int InputReadIDField = MapKmerPositionToReadOperator.OutputReadIDField;
     public static final int InputPosInReadField = MapKmerPositionToReadOperator.OutputPosInReadField;
     public static final int InputPositionListField = MapKmerPositionToReadOperator.OutputOtherReadIDListField;
@@ -28,6 +30,9 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
 
     public static final int OutputReadIDField = 0;
     public static final int OutputPositionListField = 1;
+
+    public static final RecordDescriptor readIDAggregateRec = new RecordDescriptor(new ISerializerDeserializer[] {
+            null, null });
 
     public AggregateReadIDAggregateFactory() {
     }
@@ -65,7 +70,7 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
                 ArrayBackedValueStorage storage = (ArrayBackedValueStorage) state.state;
                 storage.reset();
                 DataOutput out = storage.getDataOutput();
-                byte posInRead = readByteField(accessor, tIndex, InputPositionListField);
+                byte posInRead = readByteField(accessor, tIndex, InputPosInReadField);
 
                 try {
                     out.writeByte(posInRead);
@@ -74,7 +79,8 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
                 } catch (IOException e) {
                     throw new HyracksDataException("Failed to write into temporary storage");
                 }
-
+                // make fake feild
+                tupleBuilder.addFieldEndOffset();
             }
 
             private void writeBytesToStorage(DataOutput out, IFrameTupleAccessor accessor, int tIndex, int idField)
@@ -95,7 +101,7 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 ArrayBackedValueStorage storage = (ArrayBackedValueStorage) state.state;
                 DataOutput out = storage.getDataOutput();
-                byte posInRead = readByteField(accessor, tIndex, InputPositionListField);
+                byte posInRead = readByteField(accessor, tIndex, InputPosInReadField);
 
                 try {
                     out.writeByte(posInRead);

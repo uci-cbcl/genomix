@@ -1,8 +1,8 @@
 package edu.uci.ics.genomix.hyracks.data.accessors;
 
+import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
 public class ReadIDNormarlizedComputeFactory implements INormalizedKeyComputerFactory{
 
@@ -17,7 +17,7 @@ public class ReadIDNormarlizedComputeFactory implements INormalizedKeyComputerFa
 
             @Override
             public int normalize(byte[] bytes, int start, int length) {
-                return IntegerSerializerDeserializer.getInt(bytes, start);
+                return Marshal.getInt(bytes, start);
             }
             
         };
