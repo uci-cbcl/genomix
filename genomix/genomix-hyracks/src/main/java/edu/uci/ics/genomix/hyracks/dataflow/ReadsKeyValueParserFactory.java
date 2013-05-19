@@ -121,7 +121,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                         throw new IllegalArgumentException("Position id is beyond 127 at " + readID);
                     }
                     tupleBuilder.reset();
-                    tupleBuilder.addField(kmer.getBytes(), 0, kmer.getLength());
+                    tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
                     pos.set(readID, (byte) posInRead);
                     tupleBuilder.addField(pos.getByteArray(), pos.getStartOffset(), pos.getLength());
 

@@ -47,6 +47,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
             @Override
             public AggregateState createAggregateStates() {
+                System.out.println("CreateState");
                 return new AggregateState(new ArrayBackedValueStorage());
             }
 
@@ -55,15 +56,18 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                     AggregateState state) throws HyracksDataException {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 inputVal.reset();
-                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor,tIndex,1));
+                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 inputVal.append(position);
+
+                // make an empty field
+                tupleBuilder.addFieldEndOffset();
             }
 
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
-                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor,tIndex,1));
+                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 inputVal.append(position);
             }
 
@@ -80,6 +84,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 try {
                     fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
+
                     tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");

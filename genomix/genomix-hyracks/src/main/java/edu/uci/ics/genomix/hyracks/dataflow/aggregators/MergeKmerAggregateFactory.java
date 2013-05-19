@@ -36,9 +36,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
-        return new IAggregatorDescriptor (){
+        return new IAggregatorDescriptor() {
 
-            private PositionReference positionReEntry = new PositionReference();
+            private PositionReference position = new PositionReference();
 
             @Override
             public AggregateState createAggregateStates() {
@@ -46,31 +46,35 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             }
 
             @Override
-            public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex, AggregateState state)
-                    throws HyracksDataException {
-                ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage)state.state;
+            public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+                    AggregateState state) throws HyracksDataException {
+                ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 inputVal.reset();
                 int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
-                for( int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex, 1); offset += PositionReference.LENGTH){
-                    positionReEntry.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
-                    inputVal.append(positionReEntry);
+                for (int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex,
+                        1); offset += PositionReference.LENGTH) {
+                    position.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
+                    inputVal.append(position);
                 }
+                //make a fake feild to cheat caller
+                tupleBuilder.addFieldEndOffset();
             }
 
             @Override
             public void reset() {
                 // TODO Auto-generated method stub
-                
+
             }
 
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage)state.state;
+                ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
-                for( int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex, 1); offset += PositionReference.LENGTH){
-                    positionReEntry.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
-                    inputVal.append(positionReEntry);
+                for (int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex,
+                        1); offset += PositionReference.LENGTH) {
+                    position.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
+                    inputVal.append(position);
                 }
             }
 
@@ -88,6 +92,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 try {
                     fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
                     tupleBuilder.addFieldEndOffset();
+
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
@@ -96,10 +101,10 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             @Override
             public void close() {
                 // TODO Auto-generated method stub
-                
+
             }
-            
+
         };
-        
+
     }
 }

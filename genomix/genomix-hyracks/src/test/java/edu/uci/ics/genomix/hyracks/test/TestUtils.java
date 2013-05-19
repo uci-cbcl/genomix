@@ -61,6 +61,38 @@ public class TestUtils {
         }
     }
 
+    public static void compareWithUnSortedPosition(File expectedFile, File actualFile) throws Exception {
+        BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
+        BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
+        ArrayList<String> actualLines = new ArrayList<String>();
+        String lineExpected, lineActual;
+        try {
+            while ((lineActual = readerActual.readLine()) != null) {
+                actualLines.add(lineActual);
+            }
+            Collections.sort(actualLines);
+            int num = 1;
+            for (String actualLine : actualLines) {
+                lineExpected = readerExpected.readLine();
+                if (lineExpected == null) {
+                    throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
+                }
+                if (!containStrings(lineExpected, actualLine)) {
+                    throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
+                            + actualLine);
+                }
+                ++num;
+            }
+            lineExpected = readerExpected.readLine();
+            if (lineExpected != null) {
+                throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineExpected);
+            }
+        } finally {
+            readerActual.close();
+            readerExpected.close();
+        }
+    }
+
     public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
@@ -130,4 +162,40 @@ public class TestUtils {
         return true;
     }
 
+    private static boolean containStrings(String lineExpected, String actualLine) {
+        String keyExp = lineExpected.split("\\\t")[0];
+        String keyAct = actualLine.split("\\\t")[0];
+        if (!keyAct.equals(keyExp)) {
+            return false;
+        }
+
+        ArrayList<String> posExp = new ArrayList<String>();
+        ArrayList<String> posAct = new ArrayList<String>();
+
+        String valueExp = lineExpected.split("\\\t")[1];
+        String[] valuesExp = valueExp.substring(1, valueExp.length() - 1).split(",");
+
+        for (String str : valuesExp) {
+            posExp.add(str);
+        }
+
+        String valueAct = actualLine.split("\\\t")[1];
+        String[] valuesAct = valueAct.substring(1, valueAct.length() - 1).split(",");
+
+        for (String str : valuesAct) {
+            posAct.add(str);
+        }
+
+        if (posExp.size() != posAct.size()) {
+            return false;
+        }
+        Collections.sort(posExp);
+        Collections.sort(posAct);
+        for (int i = 0; i < posExp.size(); i++) {
+            if (!posExp.get(i).equals(posAct.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
