@@ -84,8 +84,10 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
                                             tuple.getFieldData(MapKmerPositionToReadOperator.OutputKmerField),
                                             tuple.getFieldStart(MapKmerPositionToReadOperator.OutputKmerField));
 
-                                    String out = readID + "\t" + (int) posInRead + "\t";
-                                    output.write(out.getBytes());
+                                    output.write(Integer.toString(readID).getBytes());
+                                    output.writeByte('\t');
+                                    output.write(Integer.toString(posInRead).getBytes());
+                                    output.writeByte('\t');
                                     output.write(plist.toString().getBytes());
                                     output.writeByte('\t');
                                     output.write(kmer.toString().getBytes());

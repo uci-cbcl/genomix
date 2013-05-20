@@ -1,8 +1,12 @@
 package edu.uci.ics.genomix.hyracks.job;
 
 import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Map;
 
+import edu.uci.ics.genomix.data.Marshal;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -70,6 +74,9 @@ public class JobGenGroupbyReadID extends JobGenBrujinGraph {
                         // TODO Auto-generated method stub
                         return new ITupleWriter() {
 
+                            private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
+                            private PositionListWritable plist = new PositionListWritable();
+
                             @Override
                             public void open(DataOutput output) throws HyracksDataException {
                                 // TODO Auto-generated method stub
@@ -78,8 +85,40 @@ public class JobGenGroupbyReadID extends JobGenBrujinGraph {
 
                             @Override
                             public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
-                                // TODO Auto-generated method stub
+                                int readId = Marshal.getInt(tuple.getFieldData(0), tuple.getFieldStart(0));
+                                try {
+                                    output.write((Integer.toString(readId) + "\t").getBytes());
+                                    for (int i = 1; i < tuple.getFieldCount(); i++) {
+                                        int fieldOffset = tuple.getFieldStart(i);
+                                        while (fieldOffset < tuple.getFieldStart(i) + tuple.getFieldLength(i)) {
+                                            byte[] buffer = tuple.getFieldData(i);
+                                            // read poslist
+                                            int posCount = PositionListWritable.getCountByDataLength(Marshal.getInt(
+                                                    buffer, fieldOffset));
+                                            fieldOffset += 4;
+                                            plist.setNewReference(posCount, buffer, fieldOffset);
+                                            fieldOffset += plist.getLength();
 
+                                            int kmerbytes = Marshal.getInt(buffer, fieldOffset);
+                                            if (kmer.getLength() != kmerbytes) {
+                                                throw new IllegalArgumentException("kmerlength is invalid");
+                                            }
+                                            fieldOffset += 4;
+                                            kmer.setNewReference(buffer, fieldOffset);
+                                            fieldOffset += kmer.getLength();
+
+                                            output.write(Integer.toString(i - 1).getBytes());
+                                            output.writeByte(' ');
+                                            output.write(plist.toString().getBytes());
+                                            output.writeByte(' ');
+                                            output.write(kmer.toString().getBytes());
+                                            output.writeByte('\t');
+                                        }
+                                    }
+                                    output.writeByte('\n');
+                                } catch (IOException e) {
+                                    throw new HyracksDataException(e);
+                                }
                             }
 
                             @Override

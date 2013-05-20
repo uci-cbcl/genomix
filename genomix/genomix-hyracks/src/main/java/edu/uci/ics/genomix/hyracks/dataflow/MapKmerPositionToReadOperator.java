@@ -99,6 +99,7 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
             for (int i = 0; i < accessor.getFieldLength(tIndex, InputPosListField); i += PositionReference.LENGTH) {
                 positionEntry.setNewReference(data, offsetPoslist + i);
                 if (positionEntry.getPosInRead() == 0) {
+                    //TODO remove the pos of the same readID
                     zeroPositionCollection2.append(positionEntry);
                 } else {
                     noneZeroPositionCollection2.append(positionEntry);

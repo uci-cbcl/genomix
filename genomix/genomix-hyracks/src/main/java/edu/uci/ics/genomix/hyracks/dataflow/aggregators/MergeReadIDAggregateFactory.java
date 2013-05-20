@@ -78,28 +78,37 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                     AggregateState state) throws HyracksDataException {
                 PositionArray positionArray = (PositionArray) state.state;
                 positionArray.reset();
-                ArrayBackedValueStorage[] storages = positionArray.storages;
 
-                int fieldOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
-                        + accessor.getFieldStartOffset(tIndex, InputPositionListField);
+                pushIntoStorage(accessor, tIndex, positionArray);
+
+                // make fake fields
+                for (int i = 0; i < ValidPosCount; i++) {
+                    tupleBuilder.addFieldEndOffset();
+                }
+            }
+
+            private void pushIntoStorage(IFrameTupleAccessor accessor, int tIndex, PositionArray positionArray)
+                    throws HyracksDataException {
+                ArrayBackedValueStorage[] storages = positionArray.storages;
+                int leadbyte = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
+                int fieldOffset = leadbyte + accessor.getFieldStartOffset(tIndex, InputPositionListField);
                 ByteBuffer fieldBuffer = accessor.getBuffer();
 
-                while (fieldOffset < accessor.getFieldEndOffset(tIndex, InputPositionListField)) {
+                while (fieldOffset < leadbyte + accessor.getFieldEndOffset(tIndex, InputPositionListField)) {
                     byte posInRead = fieldBuffer.get(fieldOffset);
                     if (storages[posInRead].getLength() > 0) {
                         throw new IllegalArgumentException("Reentering into an exist storage");
                     }
                     fieldOffset += BYTE_SIZE;
+
                     // read poslist
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
                     // read Kmer
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
-                    positionArray.count++;
+
+                    positionArray.count += 1;
                 }
-                // make fake fields
-                for (int i = 0; i < ValidPosCount; i++) {
-                    tupleBuilder.addFieldEndOffset();
-                }
+
             }
 
             private int writeBytesToStorage(ArrayBackedValueStorage storage, ByteBuffer fieldBuffer, int fieldOffset)
@@ -108,7 +117,9 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                 try {
                     storage.getDataOutput().writeInt(lengthPosList);
                     fieldOffset += INTEGER_SIZE;
-                    storage.getDataOutput().write(fieldBuffer.array(), fieldOffset, lengthPosList);
+                    if (lengthPosList > 0) {
+                        storage.getDataOutput().write(fieldBuffer.array(), fieldOffset, lengthPosList);
+                    }
                 } catch (IOException e) {
                     throw new HyracksDataException("Failed to write into temporary storage");
                 }
@@ -125,24 +136,7 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 PositionArray positionArray = (PositionArray) state.state;
-                ArrayBackedValueStorage[] storages = positionArray.storages;
-
-                int fieldOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength()
-                        + accessor.getFieldStartOffset(tIndex, InputPositionListField);
-                ByteBuffer fieldBuffer = accessor.getBuffer();
-
-                while (fieldOffset < accessor.getFieldEndOffset(tIndex, InputPositionListField)) {
-                    byte posInRead = fieldBuffer.get(fieldOffset);
-                    if (storages[posInRead].getLength() > 0) {
-                        throw new IllegalArgumentException("Reentering into an exist storage");
-                    }
-                    fieldOffset += BYTE_SIZE;
-                    // read poslist
-                    fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
-                    // read Kmer
-                    fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
-                    positionArray.count++;
-                }
+                pushIntoStorage(accessor, tIndex, positionArray);
             }
 
             @Override

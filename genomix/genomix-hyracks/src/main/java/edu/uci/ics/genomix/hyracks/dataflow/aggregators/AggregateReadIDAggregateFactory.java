@@ -87,7 +87,9 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
                     throws IOException {
                 int len = accessor.getFieldLength(tIndex, idField);
                 out.writeInt(len);
-                out.write(accessor.getBuffer().array(), getOffSet(accessor, tIndex, idField), len);
+                if (len > 0) {
+                    out.write(accessor.getBuffer().array(), getOffSet(accessor, tIndex, idField), len);
+                }
             }
 
             @Override
@@ -126,6 +128,7 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
                 try {
                     fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
                     tupleBuilder.addFieldEndOffset();
+
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
