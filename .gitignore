@@ -15,3 +15,4 @@ hadoop-conf-tmp
 metastore_db
 teststore
 .DS_Store
+bin
