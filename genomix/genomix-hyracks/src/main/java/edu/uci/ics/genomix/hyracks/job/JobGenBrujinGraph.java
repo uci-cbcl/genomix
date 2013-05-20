@@ -257,8 +257,9 @@ public class JobGenBrujinGraph extends JobGen {
             AbstractOperatorDescriptor readCrossAggregator) {
         // Map (ReadID, [(Poslist,Kmer) ... ]) to (Node, IncomingList,
         // OutgoingList, Kmer)
-        RecordDescriptor nodeRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null, null, null });
-        AbstractOperatorDescriptor mapEachReadToNode = new MapReadToNodeOperator(jobSpec, nodeRec, kmerSize);
+
+        AbstractOperatorDescriptor mapEachReadToNode = new MapReadToNodeOperator(jobSpec,
+                MapReadToNodeOperator.nodeOutputRec, kmerSize);
         connectOperators(jobSpec, readCrossAggregator, ncNodeNames, mapEachReadToNode, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
         return mapEachReadToNode;
@@ -327,6 +328,8 @@ public class JobGenBrujinGraph extends JobGen {
         logDebug("Group by Read Operator");
         lastOperator = generateGroupbyReadJob(jobSpec, lastOperator);
 
+        logDebug("Generate final node");
+        lastOperator = generateMapperFromReadToNode(jobSpec, lastOperator);
         logDebug("Write node to result");
         lastOperator = generateNodeWriterOpertator(jobSpec, lastOperator);
 

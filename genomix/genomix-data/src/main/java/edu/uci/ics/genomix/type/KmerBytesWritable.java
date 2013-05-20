@@ -77,13 +77,13 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         if (newData == null) {
             this.set(0, EMPTY_BYTES, 0);
         } else {
-            this.set(newData.kmerlength, newData.bytes, 0);
+            this.set(newData.kmerlength, newData.bytes, newData.getOffset());
         }
     }
 
     public void set(byte[] newData, int offset) {
         if (kmerlength > 0) {
-            System.arraycopy(newData, offset, bytes, offset, size);
+            System.arraycopy(newData, offset, bytes, this.offset, size);
         }
     }
 

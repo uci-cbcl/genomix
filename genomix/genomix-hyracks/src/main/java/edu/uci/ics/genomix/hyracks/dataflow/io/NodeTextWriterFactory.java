@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -39,22 +39,25 @@ public class NodeTextWriterFactory implements ITupleWriterFactory {
             public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
                 node.getNodeID().setNewReference(tuple.getFieldData(NodeSequenceWriterFactory.InputNodeIDField),
                         tuple.getFieldStart(NodeSequenceWriterFactory.InputNodeIDField));
-                node.setCount(Marshal.getInt(tuple.getFieldData(NodeSequenceWriterFactory.InputCountOfKmerField),
-                        tuple.getFieldStart(NodeSequenceWriterFactory.InputCountOfKmerField)));
                 node.getIncomingList().setNewReference(
-                        tuple.getFieldLength(NodeSequenceWriterFactory.InputIncomingField) / PositionWritable.LENGTH,
+                        PositionListWritable.getCountByDataLength(tuple
+                                .getFieldLength(NodeSequenceWriterFactory.InputIncomingField)),
                         tuple.getFieldData(NodeSequenceWriterFactory.InputIncomingField),
                         tuple.getFieldStart(NodeSequenceWriterFactory.InputIncomingField));
                 node.getOutgoingList().setNewReference(
-                        tuple.getFieldLength(NodeSequenceWriterFactory.InputOutgoingField) / PositionWritable.LENGTH,
+                        PositionListWritable.getCountByDataLength(tuple
+                                .getFieldLength(NodeSequenceWriterFactory.InputOutgoingField)),
                         tuple.getFieldData(NodeSequenceWriterFactory.InputOutgoingField),
                         tuple.getFieldStart(NodeSequenceWriterFactory.InputOutgoingField));
 
-                node.getKmer().setNewReference(node.getCount() + initialKmerSize - 1,
+                node.getKmer().setNewReference(
+                        Marshal.getInt(tuple.getFieldData(NodeSequenceWriterFactory.InputCountOfKmerField),
+                                tuple.getFieldStart(NodeSequenceWriterFactory.InputCountOfKmerField)),
                         tuple.getFieldData(NodeSequenceWriterFactory.InputKmerBytesField),
                         tuple.getFieldStart(NodeSequenceWriterFactory.InputKmerBytesField));
                 try {
                     output.write(node.toString().getBytes());
+                    output.writeByte('\n');
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
                 }

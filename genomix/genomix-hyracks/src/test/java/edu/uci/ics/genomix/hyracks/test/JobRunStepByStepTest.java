@@ -44,6 +44,7 @@ public class JobRunStepByStepTest {
     private static final String EXPECTED_OUPUT_KMER = EXPECTED_DIR + "result_after_kmerAggregate";
     private static final String EXPECTED_KMER_TO_READID = EXPECTED_DIR + "result_after_kmer2readId";
     private static final String EXPECTED_GROUPBYREADID = EXPECTED_DIR + "result_after_readIDAggreage";
+    private static final String EXPECTED_OUPUT_NODE = EXPECTED_DIR + "result_after_generateNode";
 
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
     private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
@@ -58,18 +59,18 @@ public class JobRunStepByStepTest {
 
     @Test
     public void TestAll() throws Exception {
-        //TestReader();
-        //TestGroupbyKmer();
-        //TestMapKmerToRead();
+        TestReader();
+        TestGroupbyKmer();
+        TestMapKmerToRead();
         TestGroupByReadID();
-        // TestEndToEnd();
+        TestEndToEnd();
     }
 
     public void TestReader() throws Exception {
         cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         driver.runJob(new GenomixJobConf(conf), Plan.CHECK_KMERREADER, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_READER_RESULT, -1));
+        Assert.assertEquals(true, checkResults(EXPECTED_READER_RESULT, null));
     }
 
     public void TestGroupbyKmer() throws Exception {
@@ -77,14 +78,14 @@ public class JobRunStepByStepTest {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_KMERHASHTABLE, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, 1));
+        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, new int[] { 1 }));
     }
 
     public void TestMapKmerToRead() throws Exception {
         cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_MAP_KMER_TO_READ, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_KMER_TO_READID, 2));
+        Assert.assertEquals(true, checkResults(EXPECTED_KMER_TO_READID, new int[] { 2 }));
     }
 
     public void TestGroupByReadID() throws Exception {
@@ -92,19 +93,15 @@ public class JobRunStepByStepTest {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_GROUPBY_READID, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, -1));
+        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, null));
     }
 
     public void TestEndToEnd() throws Exception {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
-        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_EXTERNAL);
-        driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, -1));
-        cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_KMER, -1));
+        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_NODE, new int[] {1,2}));
     }
 
     @Before
@@ -164,7 +161,7 @@ public class JobRunStepByStepTest {
         }
     }
 
-    private boolean checkResults(String expectedPath, int poslistField) throws Exception {
+    private boolean checkResults(String expectedPath, int[] poslistField) throws Exception {
         File dumped = null;
         String format = conf.get(GenomixJobConf.OUTPUT_FORMAT);
         if (GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(format)) {
@@ -210,7 +207,7 @@ public class JobRunStepByStepTest {
             dumped = new File(CONVERT_RESULT);
         }
 
-        if (poslistField > 0) {
+        if (poslistField != null) {
             TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
         } else {
             TestUtils.compareWithSortedResult(new File(expectedPath), dumped);

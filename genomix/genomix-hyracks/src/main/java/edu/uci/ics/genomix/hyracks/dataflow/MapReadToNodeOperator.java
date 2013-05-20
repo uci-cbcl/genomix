@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.genomix.hyracks.data.primitive.NodeReference;
-import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -43,6 +43,9 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
     public static final int OutputOutgoingField = 3;
     public static final int OutputKmerBytesField = 4;
 
+    public static final RecordDescriptor nodeOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
+            null, null, null, null });
+
     /**
      * (ReadID, Storage[posInRead]={len, PositionList, len, Kmer})
      * to (Position, LengthCount, InComingPosList, OutgoingPosList, Kmer)
@@ -62,7 +65,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
         private NodeReference nextNodeEntry;
 
         public MapReadToNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
-                RecordDescriptor outputRecDesc, int kmerSize) {
+                RecordDescriptor outputRecDesc) {
             this.ctx = ctx;
             this.inputRecDesc = inputRecDesc;
             this.outputRecDesc = outputRecDesc;
@@ -78,7 +81,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             appender = new FrameTupleAppender(ctx.getFrameSize());
             appender.reset(writeBuffer, true);
             writer.open();
-            curNodeEntry.reset();
+            curNodeEntry.reset(kmerSize);
         }
 
         @Override
@@ -113,6 +116,44 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             outputNode(curNodeEntry);
         }
 
+        private void resetNode(NodeReference node, int readID, byte posInRead, int offset, boolean byRef) {
+            node.reset(kmerSize);
+            node.setNodeID(readID, posInRead);
+
+            ByteBuffer buffer = accessor.getBuffer();
+            int lengthPos = buffer.getInt(offset);
+            int countPosition = PositionListWritable.getCountByDataLength(lengthPos);
+            offset += INT_LENGTH;
+            if (posInRead == 0) {
+                setPositionList(node.getIncomingList(), countPosition, buffer.array(), offset, byRef);
+            } else {
+                setPositionList(node.getOutgoingList(), countPosition, buffer.array(), offset, byRef);
+            }
+            offset += lengthPos;
+            int lengthKmer = buffer.getInt(offset);
+            if (node.getKmer().getLength() != lengthKmer) {
+                throw new IllegalStateException("Size of Kmer is invalid ");
+            }
+            setKmer(node.getKmer(), buffer.array(), offset + INT_LENGTH, byRef);
+        }
+
+        private void setKmer(KmerBytesWritable kmer, byte[] array, int offset, boolean byRef) {
+            if (byRef) {
+                kmer.setNewReference(array, offset);
+            } else {
+                kmer.set(array, offset);
+            }
+        }
+
+        private void setPositionList(PositionListWritable positionListWritable, int count, byte[] array, int offset,
+                boolean byRef) {
+            if (byRef) {
+                positionListWritable.setNewReference(count, array, offset);
+            } else {
+                positionListWritable.set(count, array, offset);
+            }
+        }
+
         private void outputNode(NodeReference node) throws HyracksDataException {
             try {
                 builder.addField(node.getNodeID().getByteArray(), node.getNodeID().getStartOffset(), node.getNodeID()
@@ -138,48 +179,6 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             }
         }
 
-        private void resetNode(NodeReference node, int readID, byte posInRead, int offset, boolean byRef) {
-            node.reset();
-            node.setNodeID(readID, posInRead);
-
-            ByteBuffer buffer = accessor.getBuffer();
-            int lengthOfPosition = buffer.getInt(offset);
-            if (lengthOfPosition % PositionReference.LENGTH != 0) {
-                throw new IllegalStateException("Size of PositionList is invalid ");
-            }
-            offset += INT_LENGTH;
-            if (posInRead == 0) {
-                setPositionList(node.getIncomingList(), lengthOfPosition / PositionReference.LENGTH, buffer.array(),
-                        offset, byRef);
-            } else {
-                setPositionList(node.getOutgoingList(), lengthOfPosition / PositionReference.LENGTH, buffer.array(),
-                        offset, byRef);
-            }
-            offset += lengthOfPosition;
-            int lengthKmer = buffer.getInt(offset);
-            if (node.getKmer().getLength() != lengthKmer) {
-                throw new IllegalStateException("Size of Kmer is invalid ");
-            }
-            setKmer(node.getKmer(), buffer.array(), offset + INT_LENGTH, byRef);
-            node.setCount(1);
-        }
-
-        private void setKmer(KmerBytesWritable kmer, byte[] array, int offset, boolean byRef) {
-            if (byRef) {
-                kmer.setNewReference(array, offset);
-            } else {
-                kmer.set(array, offset);
-            }
-        }
-
-        private void setPositionList(PositionListWritable positionListWritable, int count, byte[] array, int offset, boolean byRef) {
-            if (byRef) {
-                positionListWritable.setNewReference(count, array, offset);
-            } else {
-                positionListWritable.set(count, array, offset);
-            }
-        }
-
         @Override
         public void fail() throws HyracksDataException {
             writer.fail();
@@ -200,7 +199,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         // TODO Auto-generated method stub
         return new MapReadToNodePushable(ctx, recordDescProvider.getInputRecordDescriptor(getActivityId(), 0),
-                recordDescriptors[0], kmerSize);
+                recordDescriptors[0]);
     }
 
 }

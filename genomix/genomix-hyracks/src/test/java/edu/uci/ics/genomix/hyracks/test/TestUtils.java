@@ -61,7 +61,7 @@ public class TestUtils {
         }
     }
 
-    public static void compareWithUnSortedPosition(File expectedFile, File actualFile, int poslistField)
+    public static void compareWithUnSortedPosition(File expectedFile, File actualFile, int[] poslistField)
             throws Exception {
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
@@ -162,15 +162,22 @@ public class TestUtils {
         }
         return true;
     }
-
-    private static boolean containStrings(String lineExpected, String actualLine, int poslistField) {
+    
+    private static boolean containStrings(String lineExpected, String actualLine, int[] poslistField) {
         String[] fieldsExp = lineExpected.split("\\\t");
         String[] fieldsAct = actualLine.split("\\\t");
         if (fieldsAct.length != fieldsExp.length) {
             return false;
         }
         for (int i = 0; i < fieldsAct.length; i++) {
-            if (i == poslistField) {
+            boolean cont = false;
+            for (int x : poslistField) {
+                if (i == x) {
+                    cont = true;
+                    break;
+                }
+            }
+            if (cont){
                 continue;
             }
             if (!fieldsAct[i].equals(fieldsExp[i])) {
@@ -181,28 +188,43 @@ public class TestUtils {
         ArrayList<String> posExp = new ArrayList<String>();
         ArrayList<String> posAct = new ArrayList<String>();
 
-        String valueExp = lineExpected.split("\\\t")[poslistField];
-        String[] valuesExp = valueExp.substring(1, valueExp.length() - 1).split(",");
+        for (int x : poslistField) {
+            String valueExp = lineExpected.split("\\\t")[x];
+            for (int i = 1; i < valueExp.length() - 1;) {
+                if (valueExp.charAt(i) == '(') {
+                    String str = "";
+                    i++;
+                    while (i < valueExp.length() - 1 && valueExp.charAt(i) != ')') {
+                        str += valueExp.charAt(i);
+                        i++;
+                    }
+                    posExp.add(str);
+                }
+                i++;
+            }
+            String valueAct = actualLine.split("\\\t")[x];
+            for (int i = 1; i < valueAct.length() - 1;) {
+                if (valueAct.charAt(i) == '(') {
+                    String str = "";
+                    i++;
+                    while (i < valueAct.length() - 1 && valueAct.charAt(i) != ')') {
+                        str += valueAct.charAt(i);
+                        i++;
+                    }
+                    posAct.add(str);
+                }
+                i++;
+            }
 
-        for (String str : valuesExp) {
-            posExp.add(str);
-        }
-
-        String valueAct = actualLine.split("\\\t")[poslistField];
-        String[] valuesAct = valueAct.substring(1, valueAct.length() - 1).split(",");
-
-        for (String str : valuesAct) {
-            posAct.add(str);
-        }
-
-        if (posExp.size() != posAct.size()) {
-            return false;
-        }
-        Collections.sort(posExp);
-        Collections.sort(posAct);
-        for (int i = 0; i < posExp.size(); i++) {
-            if (!posExp.get(i).equals(posAct.get(i))) {
+            if (posExp.size() != posAct.size()) {
                 return false;
+            }
+            Collections.sort(posExp);
+            Collections.sort(posAct);
+            for (int i = 0; i < posExp.size(); i++) {
+                if (!posExp.get(i).equals(posAct.get(i))) {
+                    return false;
+                }
             }
         }
         return true;

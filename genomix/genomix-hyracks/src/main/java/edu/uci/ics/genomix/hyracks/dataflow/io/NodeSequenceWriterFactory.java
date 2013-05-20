@@ -67,15 +67,15 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
             node.getNodeID().setNewReference(tuple.getFieldData(InputNodeIDField),
                     tuple.getFieldStart(InputNodeIDField));
-            node.setCount(Marshal.getInt(tuple.getFieldData(InputCountOfKmerField),
-                    tuple.getFieldStart(InputCountOfKmerField)));
             node.getIncomingList().setNewReference(tuple.getFieldLength(InputIncomingField) / PositionWritable.LENGTH,
                     tuple.getFieldData(InputIncomingField), tuple.getFieldStart(InputIncomingField));
             node.getOutgoingList().setNewReference(tuple.getFieldLength(InputOutgoingField) / PositionWritable.LENGTH,
                     tuple.getFieldData(InputOutgoingField), tuple.getFieldStart(InputOutgoingField));
 
-            node.getKmer().setNewReference(node.getCount() + kmerlength - 1, tuple.getFieldData(InputKmerBytesField),
-                    tuple.getFieldStart(InputKmerBytesField));
+            node.getKmer().setNewReference(
+                    Marshal.getInt(tuple.getFieldData(NodeSequenceWriterFactory.InputCountOfKmerField),
+                            tuple.getFieldStart(NodeSequenceWriterFactory.InputCountOfKmerField)),
+                    tuple.getFieldData(InputKmerBytesField), tuple.getFieldStart(InputKmerBytesField));
 
             try {
                 writer.append(node, null);
