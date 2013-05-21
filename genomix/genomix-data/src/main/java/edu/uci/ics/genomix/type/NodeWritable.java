@@ -131,5 +131,12 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         sbuilder.append(kmer.toString()).append(')');
         return sbuilder.toString();
     }
+    
+    /*
+     * Return if this node is a "path" compressible node, that is, it has an in-degree and out-degree of 1 
+     */
+    public boolean isPathNode() {
+        return incomingList.getCountOfPosition() == 1 && outgoingList.getCountOfPosition() == 1;
+    }
 
 }
