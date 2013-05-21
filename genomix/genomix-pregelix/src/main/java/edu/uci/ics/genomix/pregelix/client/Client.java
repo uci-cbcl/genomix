@@ -17,7 +17,7 @@ import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 
 public class Client {
-
+	//test rebase
     private static class Options {
         @Option(name = "-inputpaths", usage = "comma seprated input paths", required = true)
         public String inputPaths;
