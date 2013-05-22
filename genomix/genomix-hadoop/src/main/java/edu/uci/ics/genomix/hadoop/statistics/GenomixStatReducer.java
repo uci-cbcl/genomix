@@ -22,8 +22,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.KmerCountValue;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 @SuppressWarnings("deprecation")
 public class GenomixStatReducer extends MapReduceBase implements
         Reducer<BytesWritable, KmerCountValue, BytesWritable, KmerCountValue> {

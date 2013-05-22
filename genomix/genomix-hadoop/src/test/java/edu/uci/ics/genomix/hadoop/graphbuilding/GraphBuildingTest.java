@@ -33,9 +33,7 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.hadoop.graphbuilding.GenomixDriver;
 import edu.uci.ics.genomix.hadoop.utils.TestUtils;
-import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 /**
  * This class test the correctness of graphbuilding program
  */

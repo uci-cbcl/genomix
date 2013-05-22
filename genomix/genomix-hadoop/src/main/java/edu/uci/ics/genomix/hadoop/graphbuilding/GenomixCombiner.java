@@ -23,9 +23,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 /**
  * This class implement the combiner operator of Mapreduce model
  */
