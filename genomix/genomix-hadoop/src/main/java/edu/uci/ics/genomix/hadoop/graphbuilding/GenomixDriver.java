@@ -28,9 +28,7 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 /**
  * This class implement driver which start the mapreduce program for graphbuilding
  */

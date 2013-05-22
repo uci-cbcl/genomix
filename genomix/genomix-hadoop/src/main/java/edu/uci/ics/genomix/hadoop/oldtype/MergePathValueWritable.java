@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hadoop.pmcommon;
+package edu.uci.ics.genomix.hadoop.oldtype;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -22,6 +22,7 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.hadoop.oldtype.*;
+
 public class MergePathValueWritable extends BinaryComparable implements WritableComparable<BinaryComparable> {
 
     private static final byte[] EMPTY_BYTES = {};

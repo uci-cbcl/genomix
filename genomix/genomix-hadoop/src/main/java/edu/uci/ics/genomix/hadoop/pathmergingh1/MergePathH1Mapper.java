@@ -22,10 +22,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
-import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 @SuppressWarnings("deprecation")
 public class MergePathH1Mapper extends MapReduceBase implements
         Mapper<VKmerBytesWritable, MergePathValueWritable, VKmerBytesWritable, MergePathValueWritable> {

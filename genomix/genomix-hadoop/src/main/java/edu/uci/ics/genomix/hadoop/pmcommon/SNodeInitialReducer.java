@@ -24,9 +24,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 @SuppressWarnings("deprecation")
 public class SNodeInitialReducer extends MapReduceBase implements
         Reducer<KmerBytesWritable, MergePathValueWritable, VKmerBytesWritable, MergePathValueWritable> {
