@@ -15,7 +15,6 @@ import org.apache.hadoop.io.SequenceFile;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class GenerateTextFile {
 
@@ -99,10 +98,9 @@ public class GenerateTextFile {
         Path path = new Path("data/input/part-0-out-3000000");
         SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
         KmerBytesWritable key = new KmerBytesWritable(55);
-        KmerCountValue value = new KmerCountValue();
 
-        while (reader.next(key, value)) {
-            if (key == null || value == null) {
+        while (reader.next(key, null)) {
+            if (key == null) {
                 break;
             }
             bw.write(key.toString());

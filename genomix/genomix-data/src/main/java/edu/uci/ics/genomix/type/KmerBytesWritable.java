@@ -317,7 +317,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
             }
             bytes[offset] = (byte) (nextCode & 0x3);
         } else {
-            bytes[offset] = (byte) (bytes[offset] | ((nextCode & 0x3) << (((kmerlength-1) % 4) << 1)));
+            bytes[offset] = (byte) (bytes[offset] | ((nextCode & 0x3) << (((kmerlength - 1) % 4) << 1)));
         }
         clearLeadBit();
     }

@@ -2,7 +2,7 @@ package edu.uci.ics.genomix.pregelix.log;
 
 import java.util.logging.*;
 
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class NaiveAlgorithmLogFormatter extends Formatter {
     //
@@ -10,10 +10,10 @@ public class NaiveAlgorithmLogFormatter extends Formatter {
     //
     //private static final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
     private long step;
-    private VKmerBytesWritable sourceVertexId;
-    private VKmerBytesWritable destVertexId;
+    private KmerBytesWritable sourceVertexId;
+    private KmerBytesWritable destVertexId;
 
-    public void set(long step, VKmerBytesWritable sourceVertexId, VKmerBytesWritable destVertexId) {
+    public void set(long step, KmerBytesWritable sourceVertexId, KmerBytesWritable destVertexId) {
         this.step = step;
         this.sourceVertexId.set(sourceVertexId);
         this.destVertexId.set(destVertexId);

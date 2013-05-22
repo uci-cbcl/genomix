@@ -14,7 +14,6 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class MergePathTest {
@@ -98,10 +97,10 @@ public class MergePathTest {
                 if (key == null || value == null) {
                     break;
                 }
-                if (value.getLengthOfMergeChain() <= maxLength && value.getLengthOfMergeChain() != kmerSize) {
+                /*if (value.getLengthOfMergeChain() <= maxLength && value.getLengthOfMergeChain() != kmerSize) {
                     bw.write(value.getLengthOfMergeChain() + "\t" + value.getMergeChain().toString());
                     bw.newLine();
-                }
+                }*/
             }
             reader.close();
         }
@@ -123,10 +122,10 @@ public class MergePathTest {
                 if (key == null || value == null) {
                     break;
                 }
-                if (value.getLengthOfMergeChain() <= maxLength && value.getState() == State.FINAL_VERTEX) {
+               /* if (value.getLengthOfMergeChain() <= maxLength && value.getState() == State.FINAL_VERTEX) {
                     bw.write(value.getLengthOfMergeChain() + "\t" + value.getMergeChain().toString());
                     bw.newLine();
-                }
+                }*/
             }
             reader.close();
         }

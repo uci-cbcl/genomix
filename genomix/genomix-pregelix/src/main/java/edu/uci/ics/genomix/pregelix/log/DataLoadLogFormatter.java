@@ -4,22 +4,19 @@ import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-import edu.uci.ics.genomix.type.KmerCountValue;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 
 public class DataLoadLogFormatter extends Formatter {
-    private VKmerBytesWritable key;
-    private KmerCountValue value;
+    private NodeWritable key;
 
-    public void set(VKmerBytesWritable key, KmerCountValue value) {
+    public void set(NodeWritable key) {
         this.key.set(key);
-        this.value = value;
     }
 
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder(1000);
 
-        builder.append(key.toString() + "\t" + value.toString() + "\r\n");
+        builder.append(key.toString() + "\r\n");
 
         if (!formatMessage(record).equals(""))
             builder.append(formatMessage(record) + "\r\n");

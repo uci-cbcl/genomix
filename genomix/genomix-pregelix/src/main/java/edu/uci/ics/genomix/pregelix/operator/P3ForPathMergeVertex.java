@@ -3,17 +3,16 @@ package edu.uci.ics.genomix.pregelix.operator;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
+import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
+import edu.uci.ics.genomix.type.PositionWritable;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.NaiveAlgorithmMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
@@ -23,7 +22,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * vertexId: BytesWritable
  * vertexValue: ByteWritable
  * edgeValue: NullWritable
- * message: NaiveAlgorithmMessageWritable
+ * message: MessageWritable
  * 
  * DNA:
  * A: 00
@@ -51,7 +50,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class P3ForPathMergeVertex extends
-        Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> {
+        Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "P3ForPathMergeVertex.kmerSize";
     public static final String ITERATIONS = "P3ForPathMergeVertex.iteration";
     public static final String PSEUDORATE = "P3ForPathMergeVertex.pseudoRate";
@@ -61,13 +60,14 @@ public class P3ForPathMergeVertex extends
     public static float pseudoRate = -1;
     public static int maxRound = -1;
 
-    private NaiveAlgorithmMessageWritable incomingMsg = new NaiveAlgorithmMessageWritable();
-    private NaiveAlgorithmMessageWritable outgoingMsg = new NaiveAlgorithmMessageWritable();
+    private MessageWritable incomingMsg = new MessageWritable();
+    private MessageWritable outgoingMsg = new MessageWritable();
 
-    private VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(1);
-    private VKmerBytesWritable lastKmer = new VKmerBytesWritable(1);
-    private VKmerBytesWritable destVertexId = new VKmerBytesWritable(1);
+    private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
+    private KmerBytesWritable lastKmer = new KmerBytesWritable(1);
 
+    private PositionWritable destVertexId = new PositionWritable();
+    private Iterator<PositionWritable> posIterator;
     /**
      * initiate kmerSize, maxIteration
      */
@@ -86,40 +86,35 @@ public class P3ForPathMergeVertex extends
     /**
      * get destination vertex
      */
-    public VKmerBytesWritable getDestVertexId(KmerBytesWritable vertexId, byte geneCode) {
-        return kmerFactory.shiftKmerWithNextCode(vertexId, geneCode);
+    public PositionWritable getNextDestVertexId(ValueStateWritable value) {
+        posIterator = value.getOutgoingList().iterator();
+        return posIterator.next();
     }
 
-    public VKmerBytesWritable getPreDestVertexId(KmerBytesWritable vertexId, byte geneCode) {
-        return kmerFactory.shiftKmerWithPreCode(vertexId, geneCode);
-    }
-
-    public VKmerBytesWritable getDestVertexIdFromChain(VKmerBytesWritable chainVertexId, byte adjMap) {
-        VKmerBytesWritable lastKmer = kmerFactory.getLastKmerFromChain(kmerSize, chainVertexId);
-        return getDestVertexId(lastKmer, GeneCode.getGeneCodeFromBitMap((byte) (adjMap & 0x0F)));
+    public PositionWritable getPreDestVertexId(ValueStateWritable value) {
+        posIterator = value.getIncomingList().iterator();
+        return posIterator.next();
     }
 
     /**
      * head send message to all next nodes
      */
-    public void sendMsgToAllNextNodes(KmerBytesWritable vertexId, byte adjMap) {
-        for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
-            if ((adjMap & (1 << x)) != 0) {
-                destVertexId.set(getDestVertexId(vertexId, x));
-                sendMsg(destVertexId, outgoingMsg);
-            }
+    public void sendMsgToAllNextNodes(ValueStateWritable value) {
+        posIterator = value.getOutgoingList().iterator();
+        while(posIterator.hasNext()){
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
         }
     }
 
     /**
      * head send message to all previous nodes
      */
-    public void sendMsgToAllPreviousNodes(KmerBytesWritable vertexId, byte adjMap) {
-        for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
-            if (((adjMap >> 4) & (1 << x)) != 0) {
-                destVertexId.set(getPreDestVertexId(vertexId, x));
-                sendMsg(destVertexId, outgoingMsg);
-            }
+    public void sendMsgToAllPreviousNodes(ValueStateWritable value) {
+        posIterator = value.getIncomingList().iterator();
+        while(posIterator.hasNext()){
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
         }
     }
 
@@ -127,25 +122,23 @@ public class P3ForPathMergeVertex extends
      * start sending message
      */
     public void startSendMsg() {
-        if (VertexUtil.isHeadVertex(getVertexValue().getAdjMap())) {
+        if (VertexUtil.isHeadVertex(getVertexValue())) {
             outgoingMsg.setMessage(Message.START);
-            sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
-            voteToHalt();
+            sendMsgToAllNextNodes(getVertexValue());
         }
-        if (VertexUtil.isRearVertex(getVertexValue().getAdjMap())) {
+        if (VertexUtil.isRearVertex(getVertexValue())) {
             outgoingMsg.setMessage(Message.END);
-            sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
-            voteToHalt();
+            sendMsgToAllPreviousNodes(getVertexValue());
         }
     }
-
+    
     /**
      * initiate head, rear and path node
      */
-    public void initState(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
+    public void initState(Iterator<MessageWritable> msgIterator) {
         if (msgIterator.hasNext()) {
             do {
-                if (!VertexUtil.isPathVertex(getVertexValue().getAdjMap())) {
+                if (!VertexUtil.isPathVertex(getVertexValue())) {
                     msgIterator.next();
                     voteToHalt();
                 } else {
@@ -167,7 +160,20 @@ public class P3ForPathMergeVertex extends
                 voteToHalt();*/
         }
     }
-
+    
+    /**
+     * set vertex state
+     */
+    public void setState() {
+        if (incomingMsg.getMessage() == Message.START) {
+            getVertexValue().setState(State.START_VERTEX);
+        } else if (incomingMsg.getMessage() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
+            getVertexValue().setState(State.END_VERTEX);
+            voteToHalt();
+        } else
+            voteToHalt();
+    }
+   
     /**
      * mark the pseudoHead
      */
@@ -175,8 +181,7 @@ public class P3ForPathMergeVertex extends
         getVertexValue().setState(State.PSEUDOHEAD);
         outgoingMsg.setMessage(Message.FROMPSEUDOHEAD);
         destVertexId
-                .set(getPreDestVertexId(getVertexId(), 
-                        GeneCode.getGeneCodeFromBitMap((byte) ((getVertexValue().getAdjMap() >> 4) & 0x0F))));
+                .set(getPreDestVertexId(getVertexValue()));
         sendMsg(destVertexId, outgoingMsg);
     }
 
@@ -194,45 +199,26 @@ public class P3ForPathMergeVertex extends
             getVertexValue().setState(State.START_HALT);
         }
     }
-
-    /**
-     * set vertex state
-     */
-    public void setState() {
-        if (incomingMsg.getMessage() == Message.START) {
-            getVertexValue().setState(State.START_VERTEX);
-        } else if (incomingMsg.getMessage() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
-            getVertexValue().setState(State.END_VERTEX);
-            voteToHalt();
-        } else
-            voteToHalt();
-    }
-    
+ 
     /**
      * merge chain vertex
      */
     public void mergeChainVertex(){
-        if(incomingMsg.isGeneCode() == true){
-            getVertexValue().setMergeChain(
-                    kmerFactory.mergeKmerWithNextCode(getVertexValue().getMergeChain(),
-                            incomingMsg.getLastGeneCode()));
-        }
-        else{
-            lastKmer.set(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
-                    incomingMsg.getChainVertexId()));
-            getVertexValue().setMergeChain(
-                    kmerFactory.mergeTwoKmer(getVertexValue().getMergeChain(), 
-                            lastKmer));
-        }
+        lastKmer.set(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
+                incomingMsg.getChainVertexId()));
+        getVertexValue().setMergeChain(
+                kmerFactory.mergeTwoKmer(getVertexValue().getMergeChain(), 
+                        lastKmer));
+        getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
     }
     
     /**
      * head node sends message to path node
      */
-    public void sendMsgToPathVertexMergePhase(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
+    public void sendMsgToPathVertexMergePhase(Iterator<MessageWritable> msgIterator) {
         if (getSuperstep() == 3 + 2 * maxRound + 2) {
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(getDestVertexIdFromChain(getVertexValue().getMergeChain(), getVertexValue().getAdjMap()));
+            destVertexId.set(getNextDestVertexId(getVertexValue()));
             sendMsg(destVertexId, outgoingMsg);
         } else {
             while (msgIterator.hasNext()) {
@@ -241,12 +227,10 @@ public class P3ForPathMergeVertex extends
                     mergeChainVertex();
                     outgoingMsg.setSourceVertexId(getVertexId());
                     destVertexId
-                            .set(getDestVertexIdFromChain(getVertexValue().getMergeChain(), incomingMsg.getAdjMap()));
+                            .set(getNextDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 } else {
                     mergeChainVertex();
-                    byte adjMap = VertexUtil.updateRightNeighber(getVertexValue().getAdjMap(), incomingMsg.getAdjMap());
-                    getVertexValue().setAdjMap(adjMap);
                     getVertexValue().setState(State.FINAL_VERTEX);
                     //String source = getVertexValue().getMergeChain().toString();
                     //System.out.println();
@@ -260,11 +244,8 @@ public class P3ForPathMergeVertex extends
      */
     public void responseMsgToHeadVertexMergePhase() {
         deleteVertex(getVertexId());
-        outgoingMsg.setAdjMap(getVertexValue().getAdjMap());
-        if(getVertexValue().getLengthOfMergeChain() == 0)
-            outgoingMsg.setLastGeneCode(getVertexId().getGeneCodeAtPosition(kmerSize - 1));
-        else
-            outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
+        outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
+        outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
         if (getVertexValue().getState() == State.END_VERTEX)
             outgoingMsg.setMessage(Message.STOP);
         sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
@@ -273,12 +254,11 @@ public class P3ForPathMergeVertex extends
     /**
      * head node sends message to path node in partition phase
      */
-    public void sendMsgToPathVertexPartitionPhase(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
+    public void sendMsgToPathVertexPartitionPhase(Iterator<MessageWritable> msgIterator) {
         if (getSuperstep() == 4) {
-            getVertexValue().setMergeChain(getVertexId());
             if(getVertexValue().getState() != State.START_HALT){
                 outgoingMsg.setSourceVertexId(getVertexId());
-                destVertexId.set(getDestVertexIdFromChain(getVertexValue().getMergeChain(), getVertexValue().getAdjMap()));
+                destVertexId.set(getNextDestVertexId(getVertexValue()));
                 sendMsg(destVertexId, outgoingMsg);
                 voteToHalt();
             }
@@ -288,13 +268,10 @@ public class P3ForPathMergeVertex extends
                 //if from pseudoHead, voteToHalt(), otherwise ...
                 if (incomingMsg.getMessage() != Message.FROMPSEUDOHEAD){
                     mergeChainVertex();
-                    byte adjMap = VertexUtil.updateRightNeighber(getVertexValue().getAdjMap(), incomingMsg.getAdjMap());
-                    getVertexValue().setAdjMap(adjMap);
                     if (incomingMsg.getMessage() != Message.STOP 
                             && incomingMsg.getMessage() != Message.FROMPSEUDOREAR) {
                         outgoingMsg.setSourceVertexId(getVertexId());
-                        destVertexId.set(getDestVertexIdFromChain(getVertexValue().getMergeChain(),
-                                incomingMsg.getAdjMap()));
+                        destVertexId.set(getNextDestVertexId(getVertexValue()));
                         sendMsg(destVertexId, outgoingMsg);
                         voteToHalt();
                     } else {
@@ -321,11 +298,8 @@ public class P3ForPathMergeVertex extends
             outgoingMsg.setMessage(Message.FROMPSEUDOHEAD);
         else {
             deleteVertex(getVertexId());
-            outgoingMsg.setAdjMap(getVertexValue().getAdjMap());
-            if(getVertexValue().getLengthOfMergeChain() == 0)
-                outgoingMsg.setLastGeneCode(getVertexId().getGeneCodeAtPosition(kmerSize - 1));
-            else
-                outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
+            outgoingMsg.setNeighberNode(incomingMsg.getNeighberNode());
+            outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
             if (getVertexValue().getState() == State.PSEUDOREAR)
                 outgoingMsg.setMessage(Message.FROMPSEUDOREAR);
             else if (getVertexValue().getState() == State.END_VERTEX)
@@ -338,12 +312,11 @@ public class P3ForPathMergeVertex extends
     /**
      * final process the result of partition phase
      */
-    public void finalProcessPartitionPhase(Iterator<NaiveAlgorithmMessageWritable> msgIterator){
+    public void finalProcessPartitionPhase(Iterator<MessageWritable> msgIterator){
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             mergeChainVertex();
-            byte adjMap = VertexUtil.updateRightNeighber(getVertexValue().getAdjMap(), incomingMsg.getAdjMap());
-            getVertexValue().setAdjMap(adjMap);
+            getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
             //check head or pseudoHead
             if (getVertexValue().getState() == State.START_VERTEX
                     && incomingMsg.getMessage() == Message.STOP) {
@@ -367,7 +340,7 @@ public class P3ForPathMergeVertex extends
     }
 
     @Override
-    public void compute(Iterator<NaiveAlgorithmMessageWritable> msgIterator) {
+    public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1)
             startSendMsg();
@@ -411,7 +384,7 @@ public class P3ForPathMergeVertex extends
         job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         Client.run(args, job);
     }

@@ -10,7 +10,7 @@ import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class PositionWritable implements WritableComparable<PositionWritable> , Serializable{
+public class PositionWritable implements WritableComparable<PositionWritable>, Serializable {
     /**
      * 
      */
@@ -33,10 +33,14 @@ public class PositionWritable implements WritableComparable<PositionWritable> , 
     public PositionWritable(byte[] storage, int offset) {
         setNewReference(storage, offset);
     }
-    
+
     public void setNewReference(byte[] storage, int offset) {
         this.storage = storage;
         this.offset = offset;
+    }
+
+    public void set(PositionWritable pos) {
+        set(pos.getReadID(), pos.getPosInRead());
     }
     
     public void set(int readID, byte posInRead) {
@@ -73,7 +77,7 @@ public class PositionWritable implements WritableComparable<PositionWritable> , 
     public void write(DataOutput out) throws IOException {
         out.write(storage, offset, LENGTH);
     }
-    
+
     @Override
     public int hashCode() {
         return this.getReadID();

@@ -11,16 +11,16 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 
 public class LogAlgorithmForPathMergeOutputFormat extends
-        BinaryVertexOutputFormat<KmerBytesWritable, ValueStateWritable, NullWritable> {
+        BinaryVertexOutputFormat<PositionWritable, ValueStateWritable, NullWritable> {
 
     @Override
-    public VertexWriter<KmerBytesWritable, ValueStateWritable, NullWritable> createVertexWriter(
+    public VertexWriter<PositionWritable, ValueStateWritable, NullWritable> createVertexWriter(
             TaskAttemptContext context) throws IOException, InterruptedException {
         @SuppressWarnings("unchecked")
-        RecordWriter<KmerBytesWritable, ValueStateWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
+        RecordWriter<PositionWritable, ValueStateWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
         return new BinaryLoadGraphVertexWriter(recordWriter);
     }
 
@@ -28,20 +28,18 @@ public class LogAlgorithmForPathMergeOutputFormat extends
      * Simple VertexWriter that supports {@link BinaryLoadGraphVertex}
      */
     public static class BinaryLoadGraphVertexWriter extends
-            BinaryVertexWriter<KmerBytesWritable, ValueStateWritable, NullWritable> {
+            BinaryVertexWriter<PositionWritable, ValueStateWritable, NullWritable> {
 
-        public BinaryLoadGraphVertexWriter(RecordWriter<KmerBytesWritable, ValueStateWritable> lineRecordWriter) {
+        public BinaryLoadGraphVertexWriter(RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter) {
             super(lineRecordWriter);
         }
 
         @Override
-        public void writeVertex(Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, ?> vertex)
+        public void writeVertex(Vertex<PositionWritable, ValueStateWritable, NullWritable, ?> vertex)
                 throws IOException, InterruptedException {
-            //&& vertex.getVertexValue().getState() != State.MID_VERTEX
             if (vertex.getVertexValue().getState() != State.END_VERTEX) {
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
             }
-
         }
     }
 }
