@@ -8,6 +8,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -22,6 +23,7 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
@@ -52,20 +54,18 @@ public class MergePathsH3 extends Configured implements Tool {
     }
 
     /*
-     * Mapper class: Partition the graph according  pseudoheads send themselves to their 
-     * successors, and all others map themselves.
+     * Common functionality for the two mapper types needed.  See javadoc for MergePathsH3MapperSubsequent.
      */
-    private static class MergePathsH3Mapper extends MapReduceBase implements
-            Mapper<PositionWritable, MessageWritableH3, PositionWritable, MessageWritableH3> {
+    private static class MergePathsH3MapperBase extends MapReduceBase {
 
-        private static long randSeed;
-        private Random randGenerator;
-        private float probBeingRandomHead;
+        protected static long randSeed;
+        protected Random randGenerator;
+        protected float probBeingRandomHead;
 
-        private int KMER_SIZE;
-        private PositionWritable outputKey;
-        private MessageWritableH3 outputValue;
-        private NodeWritable curNode;
+        protected int KMER_SIZE;
+        protected PositionWritable outputKey;
+        protected MessageWritableNodeWithFlag outputValue;
+        protected NodeWritable curNode;
 
         public void configure(JobConf conf) {
             randSeed = conf.getLong("randomSeed", 0);
@@ -73,27 +73,35 @@ public class MergePathsH3 extends Configured implements Tool {
             probBeingRandomHead = conf.getFloat("probBeingRandomHead", 0.5f);
 
             KMER_SIZE = conf.getInt("sizeKmer", 0);
-            outputValue = new MessageWritableH3(KMER_SIZE);
+            outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
             outputKey = new PositionWritable();
             curNode = new NodeWritable(KMER_SIZE);
         }
 
-        private boolean isNodeRandomHead(PositionWritable nodeID) {
+        protected boolean isNodeRandomHead(PositionWritable nodeID) {
             // "deterministically random", based on node id
             randGenerator.setSeed(randSeed ^ nodeID.hashCode());
             return randGenerator.nextFloat() < probBeingRandomHead;
         }
+    }
 
+    /*
+     * Mapper class: Partition the graph using random pseudoheads.
+     * Heads send themselves to their successors, and all others map themselves.
+     */
+    private static class MergePathsH3MapperSubsequent extends MergePathsH3MapperBase implements
+            Mapper<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
         @Override
-        public void map(PositionWritable key, MessageWritableH3 value,
-                OutputCollector<PositionWritable, MessageWritableH3> output, Reporter reporter) throws IOException {
+        public void map(PositionWritable key, MessageWritableNodeWithFlag value,
+                OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
+                throws IOException {
             curNode = value.getNode();
             // Map all path vertices; tail nodes are sent to their predecessors
             if (curNode.isPathNode()) {
                 boolean isHead = (value.getFlag() & MessageFlag.IS_HEAD) == MessageFlag.IS_HEAD;
                 if (isHead || isNodeRandomHead(curNode.getNodeID())) {
                     // head nodes send themselves to their successor
-                    outputKey = curNode.getOutgoingList().getPosition(0); // TODO: does this need to be a .set call?
+                    outputKey.set(curNode.getOutgoingList().getPosition(0));
                     outputValue.set((byte) (MessageFlag.FROM_PREDECESSOR | MessageFlag.IS_HEAD), curNode);
                     output.collect(outputKey, outputValue);
                 } else {
@@ -106,28 +114,55 @@ public class MergePathsH3 extends Configured implements Tool {
     }
 
     /*
+     * Mapper used for the first iteration.  See javadoc for MergePathsH3MapperSubsequent.
+     */
+    private static class MergePathsH3MapperInitial extends MergePathsH3MapperBase implements
+            Mapper<NodeWritable, NullWritable, PositionWritable, MessageWritableNodeWithFlag> {
+        @Override
+        public void map(NodeWritable key, NullWritable value,
+                OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
+                throws IOException {
+            curNode = key;
+            // Map all path vertices; tail nodes are sent to their predecessors
+            if (curNode.isPathNode()) {
+                if (isNodeRandomHead(curNode.getNodeID())) {
+                    // head nodes send themselves to their successor
+                    outputKey.set(curNode.getOutgoingList().getPosition(0));
+                    outputValue.set((byte) (MessageFlag.FROM_PREDECESSOR | MessageFlag.IS_HEAD), curNode);
+                    output.collect(outputKey, outputValue);
+                } else {
+                    // tail nodes map themselves
+                    outputValue.set(MessageFlag.FROM_SELF, curNode);
+                    output.collect(key.getNodeID(), outputValue);
+                }
+            }
+        }
+    }
+
+    /*
      * Reducer class: merge nodes that co-occur; for singletons, remap the original nodes 
      */
     private static class MergePathsH3Reducer extends MapReduceBase implements
-            Reducer<PositionWritable, MessageWritableH3, PositionWritable, MessageWritableH3> {
+            Reducer<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
 
         private int KMER_SIZE;
-        private MessageWritableH3 inputValue;
-        private MessageWritableH3 outputValue;
+        private MessageWritableNodeWithFlag inputValue;
+        private MessageWritableNodeWithFlag outputValue;
         private NodeWritable headNode;
         private NodeWritable tailNode;
         private int count;
 
         public void configure(JobConf conf) {
             KMER_SIZE = conf.getInt("sizeKmer", 0);
-            outputValue = new MessageWritableH3(KMER_SIZE);
+            outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
             headNode = new NodeWritable(KMER_SIZE);
             tailNode = new NodeWritable(KMER_SIZE);
         }
 
         @Override
-        public void reduce(PositionWritable key, Iterator<MessageWritableH3> values,
-                OutputCollector<PositionWritable, MessageWritableH3> output, Reporter reporter) throws IOException {
+        public void reduce(PositionWritable key, Iterator<MessageWritableNodeWithFlag> values,
+                OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
+                throws IOException {
 
             inputValue = values.next();
             if (!values.hasNext()) {
@@ -142,20 +177,25 @@ public class MergePathsH3 extends Configured implements Tool {
             } else {
                 // multiple inputs => a merge will take place. Aggregate both, then collect the merged path
                 count = 0;
-                do {
+                while (true) { // process values; break when no more
+                    count++;
                     if ((inputValue.getFlag() & MessageFlag.FROM_PREDECESSOR) == MessageFlag.FROM_PREDECESSOR) {
                         headNode.set(inputValue.getNode());
                     } else {
                         tailNode.set(inputValue.getNode());
                     }
-                    count++;
-                } while (values.hasNext());
+                    if (!values.hasNext()) {
+                        break;
+                    } else {
+                        inputValue = values.next();
+                    }
+                }
                 if (count != 2) {
                     throw new IOException("Expected two nodes in MergePathsH3 reduce; saw " + String.valueOf(count));
                 }
-                // merge the head and tail as saved output
-                tailNode.mergePreviousWithinOneRead(headNode);
-                outputValue.set(inputValue.getFlag(), tailNode);
+                // merge the head and tail as saved output, this merged node is now a head 
+                headNode.mergeNext(tailNode, KMER_SIZE);
+                outputValue.set(MessageFlag.IS_HEAD, headNode);
                 output.collect(key, outputValue);
             }
         }
@@ -171,17 +211,21 @@ public class MergePathsH3 extends Configured implements Tool {
 
         FileInputFormat.addInputPath(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
-        
 
-        //TODO: verify input format
         conf.setInputFormat(SequenceFileInputFormat.class);
 
         conf.setMapOutputKeyClass(PositionWritable.class);
-        conf.setMapOutputValueClass(MessageWritableH3.class);
+        conf.setMapOutputValueClass(MessageWritableNodeWithFlag.class);
         conf.setOutputKeyClass(PositionWritable.class);
-        conf.setOutputValueClass(MessageWritableH3.class);
+        conf.setOutputValueClass(MessageWritableNodeWithFlag.class);
 
-        conf.setMapperClass(MergePathsH3Mapper.class);
+        // on the first iteration, we have to transform from a node-oriented graph 
+        // to a Position-oriented graph
+        if (conf.getInt("iMerge", 1) == 1) {
+            conf.setMapperClass(MergePathsH3MapperInitial.class);
+        } else {
+            conf.setMapperClass(MergePathsH3MapperSubsequent.class);
+        }
         conf.setReducerClass(MergePathsH3Reducer.class);
 
         FileSystem.get(conf).delete(new Path(outputPath), true);

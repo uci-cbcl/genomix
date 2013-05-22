@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3;
+package edu.uci.ics.genomix.hadoop.pmcommon;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -9,21 +9,21 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.NodeWritable;
 
-public class MessageWritableH3 extends BinaryComparable implements WritableComparable<BinaryComparable> {
+public class MessageWritableNodeWithFlag extends BinaryComparable implements WritableComparable<BinaryComparable> {
     private byte flag;
     private NodeWritable node;
 
-    public MessageWritableH3(int k) {
+    public MessageWritableNodeWithFlag(int k) {
         this.flag = 0;
         this.node = new NodeWritable(k);
     }
 
-    public MessageWritableH3(byte flag, int kmerSize) {
+    public MessageWritableNodeWithFlag(byte flag, int kmerSize) {
         this.flag = flag;
         this.node = new NodeWritable(kmerSize);
     }
 
-    public void set(MessageWritableH3 right) {
+    public void set(MessageWritableNodeWithFlag right) {
         set(right.getFlag(), right.getNode());
     }
 

@@ -58,6 +58,7 @@ public class MergePathsH3Driver {
 
         String tmpOutputPath = "NO_JOBS_DONE";
         for (int iMerge = 1; iMerge <= mergeRound; iMerge++) {
+            baseConf.setInt("iMerge", iMerge);
             MergePathsH3 merger = new MergePathsH3();
             tmpOutputPath = inputPath + ".mergepathsH3." + String.valueOf(iMerge);
             merger.run(prevOutput, tmpOutputPath, baseConf);
