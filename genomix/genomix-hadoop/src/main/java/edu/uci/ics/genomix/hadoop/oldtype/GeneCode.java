@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.type;
+package edu.uci.ics.genomix.hadoop.oldtype;
 
 public class GeneCode {
     public final static byte[] GENE_SYMBOL = { 'A', 'C', 'G', 'T' };

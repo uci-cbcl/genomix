@@ -34,8 +34,7 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.hadoop.graphcountfilter.CountFilterDriver;
 import edu.uci.ics.genomix.hadoop.utils.TestUtils;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 
 @SuppressWarnings("deprecation")
 public class CountFilterTest {

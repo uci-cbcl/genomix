@@ -16,7 +16,7 @@ package edu.uci.ics.genomix.hadoop.pmcommon;
 
 import java.io.File;
 import org.apache.hadoop.mapred.lib.MultipleSequenceFileOutputFormat;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 public class MergePathMultiSeqOutputFormat extends MultipleSequenceFileOutputFormat<VKmerBytesWritable, MergePathValueWritable>{
     @Override
     protected String generateLeafFileName(String name) {

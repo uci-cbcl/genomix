@@ -33,8 +33,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hadoop.pathmergingh1.MergePathH1Driver;
 import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
 import edu.uci.ics.genomix.hadoop.utils.TestUtils;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 @SuppressWarnings("deprecation")
 public class MergePathH1Test {
     private static final String ACTUAL_RESULT_DIR = "actual3";

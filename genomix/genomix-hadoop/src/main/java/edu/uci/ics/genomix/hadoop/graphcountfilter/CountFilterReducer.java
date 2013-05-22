@@ -22,8 +22,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 @SuppressWarnings("deprecation")
 public class CountFilterReducer extends MapReduceBase implements
         Reducer<KmerBytesWritable, ByteWritable, KmerBytesWritable, ByteWritable> {
