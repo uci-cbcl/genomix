@@ -115,7 +115,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
                 if (nextNodeEntry.getOutgoingList().getCountOfPosition() == 0) {
                     if (pNextNext == null || pNextNext.getOutgoingList().getCountOfPosition() == 0) {
-                        curNodeEntry.mergeNextWithinOneRead(nextNodeEntry);
+                        curNodeEntry.mergeNext(nextNodeEntry, kmerSize);
                     } else {
                         curNodeEntry.getOutgoingList().reset();
                         curNodeEntry.getOutgoingList().append(nextNodeEntry.getNodeID());

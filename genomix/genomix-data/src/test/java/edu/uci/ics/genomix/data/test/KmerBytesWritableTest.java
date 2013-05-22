@@ -59,7 +59,7 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
         kmer.setByReadReverse(array, 1);
-        Assert.assertEquals(kmer.toString(), "GAAGATA");
+        Assert.assertEquals(kmer.toString(), "CTTCTAT");
     }
 
     @Test
@@ -100,11 +100,35 @@ public class KmerBytesWritableTest {
         String text = "AGCTGACCG";
         for (int i = 0; i < 10; i++) {
             for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
-                kmer.mergeKmerWithNextCode(x);
+                kmer.mergeNextCode(x);
                 text = text + (char) GeneCode.GENE_SYMBOL[x];
                 Assert.assertEquals(text, kmer.toString());
             }
         }
+    }
+    
+    @Test
+    public void TestMergeNextKmer(){
+        byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
+        KmerBytesWritable kmer1 = new KmerBytesWritable(9);
+        kmer1.setByRead(array, 0);
+        String text1 = "AGCTGACCG";
+        KmerBytesWritable kmer2 = new KmerBytesWritable(9);
+        kmer2.setByRead(array, 1);
+        String text2 = "GCTGACCGT";
+        Assert.assertEquals(text1, kmer1.toString());
+        Assert.assertEquals(text2, kmer2.toString());
+
+        KmerBytesWritable merged = new KmerBytesWritable(kmer1);
+        merged.mergeNextKmer(9, kmer2);
+        Assert.assertEquals("AGCTGACCGT", merged);
+
+        KmerBytesWritable kmer3 = new KmerBytesWritable(3);
+        kmer3.setByRead(array, 1);
+        String text3 = "GCT";
+        Assert.assertEquals(text3, kmer3.toString());
+        merged.mergeNextKmer(1, kmer3);
+        Assert.assertEquals(text1 + text3, merged.toString());
     }
 
 }

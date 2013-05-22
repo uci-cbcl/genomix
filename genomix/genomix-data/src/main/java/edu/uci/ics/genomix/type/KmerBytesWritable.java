@@ -309,7 +309,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      *            : next neighbor in gene-code format
      * @return the merged Kmer, this K of this Kmer is k+1
      */
-    public void mergeKmerWithNextCode(byte nextCode) {
+    public void mergeNextCode(byte nextCode) {
         this.kmerlength += 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
         if (kmerlength % 4 == 1) {
@@ -318,7 +318,48 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
             }
             bytes[offset] = (byte) (nextCode & 0x3);
         } else {
-            bytes[offset] = (byte) (bytes[offset] | ((nextCode & 0x3) << (((kmerlength-1) % 4) << 1)));
+            bytes[offset] = (byte) (bytes[offset] | ((nextCode & 0x3) << (((kmerlength - 1) % 4) << 1)));
+        }
+        clearLeadBit();
+    }
+
+    /**
+     * Merge Kmer with the next connected Kmer
+     * e.g. AAGCTAA merge with AACAACC, if the initial kmerSize = 3
+     * then it will return AAGCTAACAACC
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param kmer
+     */
+    @SuppressWarnings("unchecked")
+    public void mergeNextKmer(int initialKmerSize, KmerBytesWritable kmer) {
+        if (kmer.getKmerLength() == initialKmerSize){
+            mergeNextCode(kmer.getGeneCodeAtPosition(kmer.getKmerLength()-1));
+            return;
+        }
+        int preKmerLength = kmerlength;
+        int preSize = size;
+        this.kmerlength += kmer.kmerlength - initialKmerSize + 1;
+        setSize(KmerUtil.getByteNumFromK(kmerlength));
+        int i = 1;
+        for (; i <= preSize; i++) {
+            bytes[offset + size - i] = bytes[offset + preSize - i];
+        }
+        if (i > 1) {
+            i--;
+        }
+        if (preKmerLength % 4 == 0) {
+            for (int j = 1; j <= kmer.getLength() && offset + size >= i + j; j++) {
+                bytes[offset + size - i - j] = kmer.getBytes()[kmer.getOffset() + kmer.getLength() - j];
+            }
+        } else {
+            int posNeedToMove = ((preKmerLength % 4) << 1);
+            bytes[offset + size - i] |= kmer.getBytes()[kmer.getOffset() + kmer.getLength() - 1] << posNeedToMove;
+            for (int j = 1; j <= kmer.getLength() && offset + size - i - j >= 0; j++) {
+                bytes[offset + size - i - j] = (byte) (((kmer.getBytes()[kmer.getOffset() + kmer.getLength() - j] & 0xff) >> (8 - posNeedToMove)) | (kmer
+                        .getBytes()[kmer.getOffset() + kmer.getLength() - j - 1] << posNeedToMove));
+            }
         }
         clearLeadBit();
     }
@@ -391,4 +432,5 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     static { // register this comparator
         WritableComparator.define(KmerBytesWritable.class, new Comparator());
     }
+
 }

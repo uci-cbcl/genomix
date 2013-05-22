@@ -16,8 +16,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private PositionListWritable incomingList;
     private PositionListWritable outgoingList;
     private KmerBytesWritable kmer;
-    
-    public NodeWritable(){
+
+    public NodeWritable() {
         nodeID = new PositionWritable();
         incomingList = new PositionListWritable();
         outgoingList = new PositionListWritable();
@@ -29,10 +29,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         incomingList = new PositionListWritable();
         outgoingList = new PositionListWritable();
         kmer = new KmerBytesWritable(kmerSize);
-    }
-
-    public int getCount() {
-        return kmer.getKmerLength();
     }
 
     public void setNodeID(PositionWritable ref) {
@@ -74,9 +70,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return kmer;
     }
 
-    public void mergeNextWithinOneRead(NodeWritable nextNodeEntry) {
-        this.outgoingList.set(nextNodeEntry.outgoingList);
-        kmer.mergeKmerWithNextCode(nextNodeEntry.kmer.getGeneCodeAtPosition(nextNodeEntry.getCount() - 1));
+    public int getCount() {
+        return kmer.getKmerLength();
+    }
+
+    public void mergeNext(NodeWritable nextNode, int initialKmerSize) {
+        this.outgoingList.set(nextNode.outgoingList);
+        kmer.mergeNextKmer(initialKmerSize, nextNode.getKmer());
     }
 
     public void set(NodeWritable node) {
@@ -111,9 +111,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public int hashCode() {
         return nodeID.hashCode();
     }
-    
+
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('(');
         sbuilder.append(nodeID.toString()).append('\t');
