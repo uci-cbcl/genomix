@@ -11,7 +11,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
@@ -49,7 +49,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
         /** Context passed to initialize */
         private TaskAttemptContext context;
         /** Internal line record writer */
-        private final RecordWriter<KmerBytesWritable, ValueStateWritable> lineRecordWriter;
+        private final RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter;
 
         /**
          * Initialize with the LineRecordWriter.
@@ -57,7 +57,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
          * @param lineRecordWriter
          *            Line record writer from SequenceFileOutputFormat
          */
-        public BinaryVertexWriter(RecordWriter<KmerBytesWritable, ValueStateWritable> lineRecordWriter) {
+        public BinaryVertexWriter(RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter) {
             this.lineRecordWriter = lineRecordWriter;
         }
 
@@ -76,7 +76,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
          * 
          * @return Record writer to be used for writing.
          */
-        public RecordWriter<KmerBytesWritable, ValueStateWritable> getRecordWriter() {
+        public RecordWriter<PositionWritable, ValueStateWritable> getRecordWriter() {
             return lineRecordWriter;
         }
 

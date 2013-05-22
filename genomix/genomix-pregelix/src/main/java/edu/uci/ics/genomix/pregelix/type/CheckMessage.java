@@ -4,7 +4,7 @@ public class CheckMessage {
 
     public static final byte SOURCE = 1 << 0;
     public static final byte CHAIN = 1 << 1;
-    public static final byte ADJMAP = 1 << 2;
+    public static final byte NEIGHBER = 1 << 2;
     public static final byte MESSAGE = 1 << 3;
     public static final byte STATE = 1 << 4;
     public static final byte LASTGENECODE = 1 << 5;
@@ -20,8 +20,8 @@ public class CheckMessage {
                 case CHAIN:
                     r = "CHAIN";
                     break;
-                case ADJMAP:
-                    r = "ADJMAP";
+                case NEIGHBER:
+                    r = "NEIGHBER";
                     break;
                 case MESSAGE:
                     r = "MESSAGE";

@@ -2,22 +2,21 @@ package edu.uci.ics.genomix.pregelix.log;
 
 import java.util.logging.*;
 
-import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class LogAlgorithmLogFormatter extends Formatter {
     //
     // Create a DateFormat to format the logger timestamp.
     //
-    //private static final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
     private long step;
-    private VKmerBytesWritable sourceVertexId = new VKmerBytesWritable(1);
-    private VKmerBytesWritable destVertexId = new VKmerBytesWritable(1);
-    private LogAlgorithmMessageWritable msg = new LogAlgorithmMessageWritable();
+    private KmerBytesWritable sourceVertexId = new KmerBytesWritable(1);
+    private KmerBytesWritable destVertexId = new KmerBytesWritable(1);
+    private MessageWritable msg = new MessageWritable();
     private byte state;
-    private VKmerBytesWritable mergeChain = new VKmerBytesWritable(1);;
+    private KmerBytesWritable mergeChain = new KmerBytesWritable(1);;
     //private boolean testDelete = false;
     /**
      * 0: general operation
@@ -30,8 +29,8 @@ public class LogAlgorithmLogFormatter extends Formatter {
     public LogAlgorithmLogFormatter() {
     }
 
-    public void set(long step, VKmerBytesWritable sourceVertexId, VKmerBytesWritable destVertexId,
-            LogAlgorithmMessageWritable msg, byte state) {
+    public void set(long step, KmerBytesWritable sourceVertexId, KmerBytesWritable destVertexId,
+            MessageWritable msg, byte state) {
         this.step = step;
         this.sourceVertexId.set(sourceVertexId);
         this.destVertexId.set(destVertexId);
@@ -40,7 +39,7 @@ public class LogAlgorithmLogFormatter extends Formatter {
         this.operation = 0;
     }
 
-    public void setMergeChain(long step, VKmerBytesWritable sourceVertexId, VKmerBytesWritable mergeChain) {
+    public void setMergeChain(long step, KmerBytesWritable sourceVertexId, KmerBytesWritable mergeChain) {
         this.reset();
         this.step = step;
         this.sourceVertexId.set(sourceVertexId);
@@ -48,7 +47,7 @@ public class LogAlgorithmLogFormatter extends Formatter {
         this.operation = 2;
     }
 
-    public void setVotoToHalt(long step, VKmerBytesWritable sourceVertexId) {
+    public void setVotoToHalt(long step, KmerBytesWritable sourceVertexId) {
         this.reset();
         this.step = step;
         this.sourceVertexId.set(sourceVertexId);
@@ -56,11 +55,11 @@ public class LogAlgorithmLogFormatter extends Formatter {
     }
 
     public void reset() {
-        this.sourceVertexId = new VKmerBytesWritable(1);
-        this.destVertexId = new VKmerBytesWritable(1);
-        this.msg = new LogAlgorithmMessageWritable();
+        this.sourceVertexId = new KmerBytesWritable(1);
+        this.destVertexId = new KmerBytesWritable(1);
+        this.msg = new MessageWritable();
         this.state = 0;
-        this.mergeChain = new VKmerBytesWritable(1);
+        this.mergeChain = new KmerBytesWritable(1);
     }
 
     public String format(LogRecord record) {

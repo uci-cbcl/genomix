@@ -17,7 +17,7 @@ import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 
 public class Client {
-
+	//test rebase
     private static class Options {
         @Option(name = "-inputpaths", usage = "comma seprated input paths", required = true)
         public String inputPaths;
@@ -76,7 +76,7 @@ public class Client {
         }
         
         if (options.pseudoRate > 0 && options.pseudoRate <= 1)
-            job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
+           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
         if (options.maxRound > 0)
             job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
         return options;

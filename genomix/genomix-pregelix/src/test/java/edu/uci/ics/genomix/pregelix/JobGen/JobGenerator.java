@@ -4,15 +4,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.LogAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.P3ForPathMergeVertex;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class JobGenerator {
@@ -25,7 +25,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -42,7 +42,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(LogAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(LogAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -58,7 +58,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, 0.4f);
@@ -72,8 +72,8 @@ public class JobGenerator {
     }
 
     public static void main(String[] args) throws IOException {
-        //genNaiveAlgorithmForMergeGraph();
-        //genLogAlgorithmForMergeGraph();
+        genNaiveAlgorithmForMergeGraph();
+        genLogAlgorithmForMergeGraph();
         genP3ForMergeGraph();
     }
 

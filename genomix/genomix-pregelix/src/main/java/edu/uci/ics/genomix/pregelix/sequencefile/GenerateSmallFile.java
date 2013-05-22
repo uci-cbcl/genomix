@@ -12,11 +12,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
 
 public class GenerateSmallFile {
 
@@ -27,15 +27,14 @@ public class GenerateSmallFile {
 
         SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
         SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf, outFile, KmerBytesWritable.class,
-                KmerCountValue.class, CompressionType.NONE);
+                NullWritable.class, CompressionType.NONE);
         KmerBytesWritable outKey = new KmerBytesWritable(55);
-        KmerCountValue outValue = new KmerCountValue();
         int i = 0;
 
         for (i = 0; i < numOfLines; i++) {
             // System.out.println(i);
-            reader.next(outKey, outValue);
-            writer.append(outKey, outValue);
+            reader.next(outKey, null);
+            writer.append(outKey, null);
         }
         writer.close();
         reader.close();
@@ -45,18 +44,6 @@ public class GenerateSmallFile {
             throws IOException {
         String lines = readTextFile(inFile, numOfLines);
         writeTextFile(outFile, lines);
-    }
-
-    public static void main(String[] args) throws IOException {
-        Path dir = new Path("data/split.aa");
-        Path outDir = new Path("data/input");
-        FileUtils.cleanDirectory(new File("data/input"));
-        Path inFile = new Path(dir, "part-0");
-        Path outFile = new Path(outDir, "part-0-out-1000");
-        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 1000);
-      /*  String inFile = "data/shortjump_1.head8M.fastq";
-        String outFile = "data/testGeneFile";
-        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 100000);*/
     }
 
     public static String readTextFile(String fileName, int numOfLines) {
@@ -93,6 +80,17 @@ public class GenerateSmallFile {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+    }
+    
+    public static void main(String[] args) throws IOException {
+        Path dir = new Path("data/split.aa");
+        Path outDir = new Path("data/input");
+        FileUtils.cleanDirectory(new File("data/input"));
+        Path inFile = new Path(dir, "part-0");
+        Path outFile = new Path(outDir, "part-0-out-1000");
+        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 1000);
+      /*  String inFile = "data/shortjump_1.head8M.fastq";
+        String outFile = "data/testGeneFile";
+        generateNumOfLinesFromGraphBuildResuiltBigFile(inFile, outFile, 100000);*/
     }
 }

@@ -37,12 +37,12 @@ public class GraphInvertedIndexBuildingMapper extends MapReduceBase implements
         output.collect(outputKmer, outputVertexID);
         /** middle kmer */
         for (int i = KMER_SIZE; i < array.length - 1; i++) {
-            GeneCode.getBitMapFromGeneCode(outputKmer.shiftKmerWithNextChar(array[i]));
+            outputKmer.shiftKmerWithNextChar(array[i]);
             outputVertexID.set((int)key.get(), (byte)(i - KMER_SIZE + 1));
             output.collect(outputKmer, outputVertexID);
         }
         /** last kmer */
-        GeneCode.getBitMapFromGeneCode(outputKmer.shiftKmerWithNextChar(array[array.length - 1]));
+        outputKmer.shiftKmerWithNextChar(array[array.length - 1]);
         outputVertexID.set((int)key.get(), (byte)(array.length - 1 + 1));
         output.collect(outputKmer, outputVertexID);
     }

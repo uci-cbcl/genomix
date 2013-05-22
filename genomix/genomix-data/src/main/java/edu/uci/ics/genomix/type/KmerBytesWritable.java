@@ -322,6 +322,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
         clearLeadBit();
     }
+    
+    public void mergePreCode(byte preCode) {
+        //TODO
+        return;
+    }
 
     /**
      * Merge Kmer with the next connected Kmer
@@ -362,6 +367,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
             }
         }
         clearLeadBit();
+    }
+    
+    public void mergePreKmer(int initialKmerSize, KmerBytesWritable kmer){
+        //TODO
+        return;
     }
 
     protected void clearLeadBit() {

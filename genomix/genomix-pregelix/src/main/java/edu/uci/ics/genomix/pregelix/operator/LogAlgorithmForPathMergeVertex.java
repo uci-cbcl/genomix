@@ -9,21 +9,19 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.LogAlgorithmMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
-import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
-
+import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
+import edu.uci.ics.genomix.type.PositionWritable;
 /*
  * vertexId: BytesWritable
  * vertexValue: ValueStateWritable
  * edgeValue: NullWritable
- * message: LogAlgorithmMessageWritable
+ * message: MessageWritable
  * 
  * DNA:
  * A: 00
@@ -48,19 +46,20 @@ import edu.uci.ics.genomix.type.VKmerBytesWritableFactory;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class LogAlgorithmForPathMergeVertex extends
-        Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, LogAlgorithmMessageWritable> {
+        Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "LogAlgorithmForPathMergeVertex.kmerSize";
     public static final String ITERATIONS = "LogAlgorithmForPathMergeVertex.iteration";
     public static int kmerSize = -1;
     private int maxIteration = -1;
 
-    private LogAlgorithmMessageWritable incomingMsg = new LogAlgorithmMessageWritable();
-    private LogAlgorithmMessageWritable outgoingMsg = new LogAlgorithmMessageWritable();
+    private MessageWritable incomingMsg = new MessageWritable();
+    private MessageWritable outgoingMsg = new MessageWritable();
 
-    private VKmerBytesWritableFactory kmerFactory = new VKmerBytesWritableFactory(1);
-    private VKmerBytesWritable chainVertexId = new VKmerBytesWritable(1);
-    private VKmerBytesWritable lastKmer = new VKmerBytesWritable(1);
+    private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
+    private KmerBytesWritable lastKmer = new KmerBytesWritable(1);
 
+    private PositionWritable destVertexId = new PositionWritable();
+    private Iterator<PositionWritable> posIterator;
     /**
      * initiate kmerSize, maxIteration
      */
@@ -75,42 +74,35 @@ public class LogAlgorithmForPathMergeVertex extends
     /**
      * get destination vertex
      */
-    public VKmerBytesWritable getNextDestVertexId(KmerBytesWritable vertexId, byte geneCode) {
-        return kmerFactory.shiftKmerWithNextCode(vertexId, geneCode);
+    public PositionWritable getNextDestVertexId(ValueStateWritable value) {
+        posIterator = value.getOutgoingList().iterator();
+        return posIterator.next();
     }
 
-    public VKmerBytesWritable getPreDestVertexId(KmerBytesWritable vertexId, byte geneCode) {
-        return kmerFactory.shiftKmerWithPreCode(vertexId, geneCode);
-    }
-
-    public VKmerBytesWritable getNextDestVertexIdFromBitmap(KmerBytesWritable chainVertexId, byte adjMap) {
-        return getDestVertexIdFromChain(chainVertexId, adjMap);
-    }
-
-    public VKmerBytesWritable getDestVertexIdFromChain(KmerBytesWritable chainVertexId, byte adjMap) {
-        VKmerBytesWritable lastKmer = kmerFactory.getLastKmerFromChain(kmerSize, chainVertexId);
-        return getNextDestVertexId(lastKmer, GeneCode.getGeneCodeFromBitMap((byte) (adjMap & 0x0F)));
+    public PositionWritable getPreDestVertexId(ValueStateWritable value) {
+        posIterator = value.getIncomingList().iterator();
+        return posIterator.next();
     }
 
     /**
      * head send message to all next nodes
      */
-    public void sendMsgToAllNextNodes(KmerBytesWritable vertexId, byte adjMap) {
-        for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
-            if ((adjMap & (1 << x)) != 0) {
-                sendMsg(getNextDestVertexId(vertexId, x), outgoingMsg);
-            }
+    public void sendMsgToAllNextNodes(ValueStateWritable value) {
+        posIterator = value.getOutgoingList().iterator();
+        while(posIterator.hasNext()){
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
         }
     }
 
     /**
      * head send message to all previous nodes
      */
-    public void sendMsgToAllPreviousNodes(KmerBytesWritable vertexId, byte adjMap) {
-        for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
-            if (((adjMap >> 4) & (1 << x)) != 0) {
-                sendMsg(getPreDestVertexId(vertexId, x), outgoingMsg);
-            }
+    public void sendMsgToAllPreviousNodes(ValueStateWritable value) {
+        posIterator = value.getIncomingList().iterator();
+        while(posIterator.hasNext()){
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
         }
     }
 
@@ -118,14 +110,14 @@ public class LogAlgorithmForPathMergeVertex extends
      * start sending message
      */
     public void startSendMsg() {
-        if (VertexUtil.isHeadVertex(getVertexValue().getAdjMap())) {
+        if (VertexUtil.isHeadVertex(getVertexValue())) {
             outgoingMsg.setMessage(Message.START);
-            sendMsgToAllNextNodes(getVertexId(), getVertexValue().getAdjMap());
+            sendMsgToAllNextNodes(getVertexValue());
             voteToHalt();
         }
-        if (VertexUtil.isRearVertex(getVertexValue().getAdjMap())) {
+        if (VertexUtil.isRearVertex(getVertexValue())) {
             outgoingMsg.setMessage(Message.END);
-            sendMsgToAllPreviousNodes(getVertexId(), getVertexValue().getAdjMap());
+            sendMsgToAllPreviousNodes(getVertexValue());
             voteToHalt();
         }
     }
@@ -133,9 +125,9 @@ public class LogAlgorithmForPathMergeVertex extends
     /**
      * initiate head, rear and path node
      */
-    public void initState(Iterator<LogAlgorithmMessageWritable> msgIterator) {
+    public void initState(Iterator<MessageWritable> msgIterator) {
         while (msgIterator.hasNext()) {
-            if (!VertexUtil.isPathVertex(getVertexValue().getAdjMap())) {
+            if (!VertexUtil.isPathVertex(getVertexValue())) {
                 msgIterator.next();
                 voteToHalt();
             } else {
@@ -154,7 +146,7 @@ public class LogAlgorithmForPathMergeVertex extends
             getVertexValue().setMergeChain(null);
         } else if (incomingMsg.getMessage() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
             getVertexValue().setState(State.END_VERTEX);
-            getVertexValue().setMergeChain(getVertexId());
+            getVertexValue().setMergeChain(getVertexValue().getMergeChain());
             voteToHalt();
         } else
             voteToHalt();
@@ -163,29 +155,29 @@ public class LogAlgorithmForPathMergeVertex extends
     /**
      * head send message to path
      */
-    public void sendOutMsg(KmerBytesWritable chainVertexId, byte adjMap) {
+    public void sendOutMsg() {
         if (getVertexValue().getState() == State.START_VERTEX) {
             outgoingMsg.setMessage(Message.START);
             outgoingMsg.setSourceVertexId(getVertexId());
-            sendMsg(getNextDestVertexIdFromBitmap(chainVertexId, adjMap), outgoingMsg);
+            sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
         } else if (getVertexValue().getState() != State.END_VERTEX) {
             outgoingMsg.setMessage(Message.NON);
             outgoingMsg.setSourceVertexId(getVertexId());
-            sendMsg(getNextDestVertexIdFromBitmap(chainVertexId, adjMap), outgoingMsg);
+            sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
         }
     }
 
     /**
      * head send message to path
      */
-    public void sendMsgToPathVertex(Iterator<LogAlgorithmMessageWritable> msgIterator) {
+    public void sendMsgToPathVertex(Iterator<MessageWritable> msgIterator) {
         if (getSuperstep() == 3) {
-            getVertexValue().setMergeChain(getVertexId());
-            sendOutMsg(getVertexId(), getVertexValue().getAdjMap());
+            getVertexValue().setMergeChain(getVertexValue().getMergeChain());
+            sendOutMsg();
         } else {
             if (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if (mergeChainVertex(msgIterator)) {
+                if (mergeChainVertex()) {
                     if (incomingMsg.getMessage() == Message.END) {
                         if (getVertexValue().getState() == State.START_VERTEX) {
                             getVertexValue().setState(State.FINAL_VERTEX);
@@ -194,7 +186,7 @@ public class LogAlgorithmForPathMergeVertex extends
                         } else
                             getVertexValue().setState(State.END_VERTEX);
                     } else
-                        sendOutMsg(getVertexValue().getMergeChain(), getVertexValue().getAdjMap());
+                        sendOutMsg();
                 }
             }
         }
@@ -203,11 +195,11 @@ public class LogAlgorithmForPathMergeVertex extends
     /**
      * path response message to head
      */
-    public void responseMsgToHeadVertex(Iterator<LogAlgorithmMessageWritable> msgIterator) {
+    public void responseMsgToHeadVertex(Iterator<MessageWritable> msgIterator) {
         if (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
-            outgoingMsg.setAdjMap(getVertexValue().getAdjMap());
+            outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
             if (getVertexValue().getState() == State.END_VERTEX)
                 outgoingMsg.setMessage(Message.END);
             sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
@@ -223,28 +215,23 @@ public class LogAlgorithmForPathMergeVertex extends
     /**
      * merge chainVertex and store in vertexVal.chainVertexId
      */
-    public boolean mergeChainVertex(Iterator<LogAlgorithmMessageWritable> msgIterator) {
+    public boolean mergeChainVertex() {
         //merge chain
         lastKmer.set(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
                 incomingMsg.getChainVertexId()));
-        chainVertexId.set(kmerFactory.mergeTwoKmer(getVertexValue().getMergeChain(), lastKmer));
-        if (VertexUtil.isCycle(getVertexId(), chainVertexId, kmerSize)) {
-            getVertexValue().setMergeChain(null);
-            getVertexValue().setAdjMap(
-                    VertexUtil.reverseAdjMap(getVertexValue().getAdjMap(),
-                            chainVertexId.getGeneCodeAtPosition(kmerSize)));
+        KmerBytesWritable chainVertexId = kmerFactory.mergeTwoKmer(getVertexValue().getMergeChain(), lastKmer);
+        getVertexValue().setMergeChain(chainVertexId);
+        getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
+        if (VertexUtil.isCycle(kmerFactory.getFirstKmerFromChain(kmerSize, getVertexValue().getMergeChain()),
+                chainVertexId, kmerSize)) {
             getVertexValue().setState(State.CYCLE);
             return false;
-        } else
-            getVertexValue().setMergeChain(chainVertexId);
-
-        byte tmpVertexValue = VertexUtil.updateRightNeighber(getVertexValue().getAdjMap(), incomingMsg.getAdjMap());
-        getVertexValue().setAdjMap(tmpVertexValue);
+        } 
         return true;
     }
 
     @Override
-    public void compute(Iterator<LogAlgorithmMessageWritable> msgIterator) {
+    public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1)
             startSendMsg();
@@ -268,7 +255,7 @@ public class LogAlgorithmForPathMergeVertex extends
          */
         job.setVertexInputFormatClass(LogAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(LogAlgorithmForPathMergeOutputFormat.class);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
         job.setDynamicVertexValueSize(true);
         Client.run(args, job);

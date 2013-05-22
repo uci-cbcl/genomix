@@ -7,24 +7,25 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerCountValue;
+import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.genomix.pregelix.io.NaiveAlgorithmMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat.BinaryVertexReader;
 
 public class NaiveAlgorithmForPathMergeInputFormat extends
-        BinaryVertexInputFormat<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> {
+        BinaryVertexInputFormat<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> createVertexReader(
+    public VertexReader<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
@@ -32,12 +33,13 @@ public class NaiveAlgorithmForPathMergeInputFormat extends
 
 @SuppressWarnings("rawtypes")
 class BinaryLoadGraphReader extends
-        BinaryVertexReader<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> {
+        BinaryVertexReader<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
     private Vertex vertex;
-    private KmerBytesWritable vertexId = null;
+    private NodeWritable node = new NodeWritable();
+    private PositionWritable vertexId = new PositionWritable();
     private ValueStateWritable vertexValue = new ValueStateWritable();
 
-    public BinaryLoadGraphReader(RecordReader<KmerBytesWritable, KmerCountValue> recordReader) {
+    public BinaryLoadGraphReader(RecordReader<NodeWritable, NullWritable> recordReader) {
         super(recordReader);
     }
 
@@ -48,7 +50,7 @@ class BinaryLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<KmerBytesWritable, ValueStateWritable, NullWritable, NaiveAlgorithmMessageWritable> getCurrentVertex()
+    public Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> getCurrentVertex()
             throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -61,15 +63,16 @@ class BinaryLoadGraphReader extends
             /**
              * set the src vertex id
              */
-            if (vertexId == null)
-                vertexId = new KmerBytesWritable(getRecordReader().getCurrentKey().getKmerLength());
-            vertexId.set(getRecordReader().getCurrentKey());
+            node = getRecordReader().getCurrentKey();
+            vertexId.set(node.getNodeID());
             vertex.setVertexId(vertexId);
             /**
              * set the vertex value
              */
-            KmerCountValue kmerCountValue = getRecordReader().getCurrentValue();
-            vertexValue.setAdjMap(kmerCountValue.getAdjBitMap());
+            vertexValue.setIncomingList(node.getIncomingList());
+            vertexValue.setOutgoingList(node.getOutgoingList());
+            vertexValue.setMergeChain(node.getKmer());
+            vertexValue.setState(State.NON_VERTEX);
             vertex.setVertexValue(vertexValue);
         }
 

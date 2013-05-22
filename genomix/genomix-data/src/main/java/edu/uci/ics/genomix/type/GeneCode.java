@@ -61,10 +61,9 @@ public class GeneCode {
     }
 
     public static byte getSymbolFromCode(byte code) {
-        if (code > 3 || code < 0) {
-            throw new IllegalArgumentException("Not such gene code");
+        if (code > 3 || code < 0 ) {
+            throw new IllegalArgumentException("Invalid genecode");
         }
         return GENE_SYMBOL[code];
     }
-
 }

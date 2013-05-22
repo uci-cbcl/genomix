@@ -27,8 +27,7 @@ import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-
+import edu.uci.ics.genomix.hadoop.oldtype.*;
 @SuppressWarnings("deprecation")
 public class CountFilterDriver {
     private static class Options {
