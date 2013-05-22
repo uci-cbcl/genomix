@@ -51,6 +51,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         outgoingList.set(outgoing);
     }
 
+    public void setKmer(KmerBytesWritable right) {
+        this.kmer.set(right);
+    }
     public void reset(int kmerSize) {
         nodeID.set(0, (byte) 0);
         incomingList.reset();
@@ -122,5 +125,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         sbuilder.append(kmer.toString()).append(')');
         return sbuilder.toString();
     }
-
+    
+    public boolean existsInSinglePath(){
+        if(this.incomingList.getCountOfPosition() == 1 & this.outgoingList.getCountOfPosition() == 1)
+            return true;
+        else
+            return false;
+    }
 }

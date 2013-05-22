@@ -44,6 +44,9 @@ public class PositionWritable implements WritableComparable<PositionWritable> , 
         storage[offset + INTBYTES] = posInRead;
     }
 
+    public void set(PositionWritable right) {
+        this.set(right.getReadID(), right.getPosInRead());
+    }
     public int getReadID() {
         return Marshal.getInt(storage, offset);
     }
@@ -118,6 +121,19 @@ public class PositionWritable implements WritableComparable<PositionWritable> , 
         }
     }
 
+    public static class FirstComparator extends WritableComparator {
+        public FirstComparator() {
+            super(PositionWritable.class);
+        }
+
+        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+            int thisValue = Marshal.getInt(b1, s1);
+            int thatValue = Marshal.getInt(b2, s2);
+            int diff = thisValue - thatValue;
+            return diff;
+        }
+    }
+    
     static { // register this comparator
         WritableComparator.define(PositionWritable.class, new Comparator());
     }

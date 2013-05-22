@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.valvetgraphbuilding;
+package edu.uci.ics.genomix.hadoop.velvetgraphbuilding;
 
 import java.io.IOException;
 import org.apache.hadoop.io.LongWritable;
@@ -33,17 +33,17 @@ public class GraphInvertedIndexBuildingMapper extends MapReduceBase implements
         /** first kmer */
         byte[] array = geneLine.getBytes();
         outputKmer.setByRead(array, 0);
+        System.out.println(key.get());
         outputVertexID.set((int)key.get(), (byte)0);
         output.collect(outputKmer, outputVertexID);
         /** middle kmer */
-        for (int i = KMER_SIZE; i < array.length - 1; i++) {
-            GeneCode.getBitMapFromGeneCode(outputKmer.shiftKmerWithNextChar(array[i]));
+        int i = 0; 
+        for (i = KMER_SIZE; i < array.length; i++) {
+            outputKmer.shiftKmerWithNextChar(array[i]);
+            System.out.println((int)key.get());
             outputVertexID.set((int)key.get(), (byte)(i - KMER_SIZE + 1));
             output.collect(outputKmer, outputVertexID);
         }
         /** last kmer */
-        GeneCode.getBitMapFromGeneCode(outputKmer.shiftKmerWithNextChar(array[array.length - 1]));
-        outputVertexID.set((int)key.get(), (byte)(array.length - 1 + 1));
-        output.collect(outputKmer, outputVertexID);
     }
 }

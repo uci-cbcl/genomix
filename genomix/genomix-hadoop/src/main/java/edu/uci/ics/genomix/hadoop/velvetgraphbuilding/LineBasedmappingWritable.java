@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.valvetgraphbuilding;
+package edu.uci.ics.genomix.hadoop.velvetgraphbuilding;
 
 import java.io.DataInput;
 import java.io.DataOutput;
