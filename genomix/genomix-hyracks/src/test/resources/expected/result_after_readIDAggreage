@@ -3,4 +3,4 @@
 3	0 [] AATAG	1 [] ATAGA	2 [] TAGAA	3 [(6,0)] AGAAG	
 4	0 [] AATAG	1 [] ATAGA	2 [] TAGAA	3 [(6,0)] AGAAG	
 5	0 [] AATAG	1 [] ATAGA	2 [] TAGAA	3 [(6,0)] AGAAG	
-6	0 [(1,3),(2,3),(3,3),(5,3),(6,3),(4,3)] AGAAG	1 [] GAAGA	2 [] AAGAA	3 [(6,0)] AGAAG	
+6	0 [(1,3),(2,3),(3,3),(5,3),(4,3)] AGAAG	1 [] GAAGA	2 [] AAGAA	3 [] AGAAG	

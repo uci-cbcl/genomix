@@ -25,6 +25,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
+import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -115,7 +116,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     InsertToFrame(kmer, -readID, array.length - k, writer);
                     /** middle kmer */
                     for (int i = k; i < array.length; i++) {
-                        kmer.shiftKmerWithPreChar(array[i]);
+                        kmer.shiftKmerWithPreCode(GeneCode.getPairedCodeFromSymbol(array[i]));
                         InsertToFrame(kmer, -readID, array.length - i - 1, writer);
                     }
                 }

@@ -48,6 +48,17 @@ public class GeneCode {
         }
         return r;
     }
+    
+    public static byte getPairedGeneCode(byte genecode){
+        if ( genecode < 0 || genecode > 3){
+            throw new IllegalArgumentException("Invalid genecode");
+        }
+        return (byte) (3- genecode);
+    }
+    
+    public static byte getPairedCodeFromSymbol(byte ch){
+        return getPairedGeneCode(getCodeFromSymbol(ch));
+    }
 
     public static byte getSymbolFromCode(byte code) {
         if (code > 3 || code < 0) {

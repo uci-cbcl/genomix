@@ -63,7 +63,11 @@ public class PositionWritable implements WritableComparable<PositionWritable> , 
     public int getLength() {
         return LENGTH;
     }
-
+    
+    public boolean isSameReadID(PositionWritable other){
+        return getReadID() == other.getReadID();
+    }
+    
     @Override
     public void readFields(DataInput in) throws IOException {
         in.readFully(storage, offset, LENGTH);
@@ -76,7 +80,7 @@ public class PositionWritable implements WritableComparable<PositionWritable> , 
     
     @Override
     public int hashCode() {
-        return this.getReadID();
+        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
     }
 
     @Override

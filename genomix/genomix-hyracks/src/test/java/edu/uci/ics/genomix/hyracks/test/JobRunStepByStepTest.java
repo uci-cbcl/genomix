@@ -93,7 +93,7 @@ public class JobRunStepByStepTest {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_GROUPBY_READID, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, null));
+        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, new int [] {2}));
     }
 
     public void TestEndToEnd() throws Exception {

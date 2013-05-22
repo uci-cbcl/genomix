@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import edu.uci.ics.genomix.hyracks.data.primitive.NodeReference;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -63,6 +64,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private NodeReference curNodeEntry;
         private NodeReference nextNodeEntry;
+        private NodeReference nextNextNodeEntry;
 
         public MapReadToNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
                 RecordDescriptor outputRecDesc) {
@@ -71,6 +73,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             this.outputRecDesc = outputRecDesc;
             curNodeEntry = new NodeReference(kmerSize);
             nextNodeEntry = new NodeReference(kmerSize);
+            nextNextNodeEntry = new NodeReference(0);
         }
 
         @Override
@@ -98,25 +101,58 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             int readID = accessor.getBuffer().getInt(
                     offsetPoslist + accessor.getFieldStartOffset(tIndex, InputReadIDField));
             resetNode(curNodeEntry, readID, (byte) 0,
-                    offsetPoslist + accessor.getFieldStartOffset(tIndex, InputInfoFieldStart), false);
+                    offsetPoslist + accessor.getFieldStartOffset(tIndex, InputInfoFieldStart), true);
 
             for (int i = InputInfoFieldStart + 1; i < accessor.getFieldCount(); i++) {
                 resetNode(nextNodeEntry, readID, (byte) (i - InputInfoFieldStart),
                         offsetPoslist + accessor.getFieldStartOffset(tIndex, i), true);
+                NodeReference pNextNext = null;
+                if (i + 1 < accessor.getFieldCount()) {
+                    resetNode(nextNextNodeEntry, readID, (byte) (i - InputInfoFieldStart + 1),
+                            offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 1), false);
+                    pNextNext = nextNextNodeEntry;
+                }
+
                 if (nextNodeEntry.getOutgoingList().getCountOfPosition() == 0) {
-                    curNodeEntry.mergeNextWithinOneRead(nextNodeEntry);
-                } else {
-                    curNodeEntry.setOutgoingList(nextNodeEntry.getOutgoingList());
+                    if (pNextNext == null || pNextNext.getOutgoingList().getCountOfPosition() == 0) {
+                        curNodeEntry.mergeNextWithinOneRead(nextNodeEntry);
+                    } else {
+                        curNodeEntry.getOutgoingList().reset();
+                        curNodeEntry.getOutgoingList().append(nextNodeEntry.getNodeID());
+                        outputNode(curNodeEntry);
+
+                        nextNodeEntry.getIncomingList().append(curNodeEntry.getNodeID());
+                        curNodeEntry.set(nextNodeEntry);
+                    }
+                } else { // nextNode entry outgoing > 0
+                    curNodeEntry.getOutgoingList().set(nextNodeEntry.getOutgoingList());
                     curNodeEntry.getOutgoingList().append(nextNodeEntry.getNodeID());
-                    outputNode(curNodeEntry);
                     nextNodeEntry.getIncomingList().append(curNodeEntry.getNodeID());
+                    outputNode(curNodeEntry);
                     curNodeEntry.set(nextNodeEntry);
+                    curNodeEntry.getOutgoingList().reset();
                 }
             }
             outputNode(curNodeEntry);
         }
 
-        private void resetNode(NodeReference node, int readID, byte posInRead, int offset, boolean byRef) {
+        /**
+         * The neighbor list is store in the next next node
+         * (3,2) [(1,0),(2,0)] will become the outgoing list of node (3,1)
+         * (3,1) [(1,0),(2,0)]
+         * 
+         * @param curNodeEntry2
+         * @param nextNodeEntry2
+         */
+        //        private void setOutgoingByNext(NodeReference curNodeEntry2, NodeReference nextNodeEntry2) {
+        //            if (nextNodeEntry2 == null) {
+        //                curNodeEntry2.getOutgoingList().reset();
+        //            } else {
+        //                curNodeEntry2.setOutgoingList(nextNodeEntry2.getOutgoingList());
+        //            }
+        //        }
+
+        private void resetNode(NodeReference node, int readID, byte posInRead, int offset, boolean isInitial) {
             node.reset(kmerSize);
             node.setNodeID(readID, posInRead);
 
@@ -125,32 +161,39 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             int countPosition = PositionListWritable.getCountByDataLength(lengthPos);
             offset += INT_LENGTH;
             if (posInRead == 0) {
-                setPositionList(node.getIncomingList(), countPosition, buffer.array(), offset, byRef);
+                setPositionList(node.getIncomingList(), countPosition, buffer.array(), offset, true);
+                // minus 1 position of the incoming list to get the correct predecessor
+                for (PositionWritable pos : node.getIncomingList()) {
+                    if (pos.getPosInRead() == 0) {
+                        throw new IllegalArgumentException("The incoming position list contain invalid posInRead");
+                    }
+                    pos.set(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
+                }
             } else {
-                setPositionList(node.getOutgoingList(), countPosition, buffer.array(), offset, byRef);
+                setPositionList(node.getOutgoingList(), countPosition, buffer.array(), offset, isInitial);
             }
             offset += lengthPos;
             int lengthKmer = buffer.getInt(offset);
             if (node.getKmer().getLength() != lengthKmer) {
                 throw new IllegalStateException("Size of Kmer is invalid ");
             }
-            setKmer(node.getKmer(), buffer.array(), offset + INT_LENGTH, byRef);
+            setKmer(node.getKmer(), buffer.array(), offset + INT_LENGTH, isInitial);
         }
 
-        private void setKmer(KmerBytesWritable kmer, byte[] array, int offset, boolean byRef) {
-            if (byRef) {
-                kmer.setNewReference(array, offset);
-            } else {
+        private void setKmer(KmerBytesWritable kmer, byte[] array, int offset, boolean isInitial) {
+            if (isInitial) {
                 kmer.set(array, offset);
+            } else {
+                kmer.setNewReference(array, offset);
             }
         }
 
         private void setPositionList(PositionListWritable positionListWritable, int count, byte[] array, int offset,
-                boolean byRef) {
-            if (byRef) {
-                positionListWritable.setNewReference(count, array, offset);
-            } else {
+                boolean isInitial) {
+            if (isInitial) {
                 positionListWritable.set(count, array, offset);
+            } else {
+                positionListWritable.setNewReference(count, array, offset);
             }
         }
 

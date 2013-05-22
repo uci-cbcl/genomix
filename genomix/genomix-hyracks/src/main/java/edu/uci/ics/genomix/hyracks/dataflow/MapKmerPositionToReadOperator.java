@@ -1,8 +1,12 @@
 package edu.uci.ics.genomix.hyracks.dataflow;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
+import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -99,7 +103,6 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
             for (int i = 0; i < accessor.getFieldLength(tIndex, InputPosListField); i += PositionReference.LENGTH) {
                 positionEntry.setNewReference(data, offsetPoslist + i);
                 if (positionEntry.getPosInRead() == 0) {
-                    //TODO remove the pos of the same readID
                     zeroPositionCollection2.append(positionEntry);
                 } else {
                     noneZeroPositionCollection2.append(positionEntry);
@@ -131,7 +134,8 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
                 if (posList2 == null) {
                     builder2.addFieldEndOffset();
                 } else {
-                    builder2.addField(posList2.getByteArray(), posList2.getStartOffset(), posList2.getLength());
+                    writePosToFieldAndSkipSameReadID(pos, builder2.getDataOutput(), posList2);
+                    builder2.addFieldEndOffset();
                 }
                 // set kmer, may not useful
                 byte[] data = accessor.getBuffer().array();
@@ -150,6 +154,22 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
             } catch (HyracksDataException e) {
                 throw new IllegalStateException(
                         "Failed to Add a field to the tuple by copying the data bytes from a byte array.");
+            }
+        }
+
+        private void writePosToFieldAndSkipSameReadID(PositionReference pos, DataOutput ds,
+                ArrayBackedValueStorage posList2) throws HyracksDataException {
+
+            PositionListWritable plist = new PositionListWritable(PositionListWritable.getCountByDataLength(posList2
+                    .getLength()), posList2.getByteArray(), posList2.getStartOffset());
+            for (PositionWritable p : plist) {
+                if (!pos.isSameReadID(p)) {
+                    try {
+                        ds.write(p.getByteArray(), p.getStartOffset(), p.getLength());
+                    } catch (IOException e) {
+                        throw new HyracksDataException(e);
+                    }
+                }
             }
         }
 

@@ -204,8 +204,9 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     }
 
     /**
-     * Compress Reversed Kmer into bytes array AATAG will compress as
-     * [0x000A,0xATAG]
+     * Compress Reversed read into bytes array
+     * e.g. AATAG will paired to CTATT, and then compress as
+     * [0x000T,0xTATC]
      * 
      * @param input
      *            array
@@ -217,7 +218,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         int bytecount = 0;
         int bcount = size - 1;
         for (int i = start + kmerlength - 1; i >= 0 && i < array.length; i--) {
-            byte code = GeneCode.getCodeFromSymbol(array[i]);
+            byte code = GeneCode.getPairedCodeFromSymbol(array[i]);
             l |= (byte) (code << bytecount);
             bytecount += 2;
             if (bytecount == 8) {
