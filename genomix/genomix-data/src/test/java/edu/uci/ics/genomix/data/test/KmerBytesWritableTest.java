@@ -106,29 +106,111 @@ public class KmerBytesWritableTest {
             }
         }
     }
-    
+
     @Test
-    public void TestMergeNextKmer(){
+    public void TestGetOneByteFromKmer() {
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
-        KmerBytesWritable kmer1 = new KmerBytesWritable(9);
+        String string = "AGCTGACCGT";
+        for (int k = 3; k <= 10; k++) {
+            KmerBytesWritable kmer = new KmerBytesWritable(k);
+            KmerBytesWritable kmerAppend = new KmerBytesWritable(k);
+            kmer.setByRead(array, 0);
+            Assert.assertEquals(string.substring(0, k), kmer.toString());
+            for (int b = 0; b < k; b++) {
+                byte byteActual = KmerBytesWritable.getOneByteFromKmerAtPosition(b, kmer.getBytes(), kmer.getOffset(),
+                        kmer.getLength());
+                byte byteExpect = GeneCode.getCodeFromSymbol(array[b]);
+                for (int i = 1; i < 4 && b + i < k; i++) {
+                    byteExpect += GeneCode.getCodeFromSymbol(array[b + i]) << (i * 2);
+                }
+                Assert.assertEquals(byteActual, byteExpect);
+                KmerBytesWritable.appendOneByteAtPosition(b, byteActual, kmerAppend.getBytes(), kmerAppend.getOffset(),
+                        kmerAppend.getLength());
+            }
+            Assert.assertEquals(kmer.toString(), kmerAppend.toString());
+        }
+    }
+
+    @Test
+    public void TestMergeNextKmer() {
+        byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
+        String text = "AGCTGACCGT";
+        KmerBytesWritable kmer1 = new KmerBytesWritable(8);
         kmer1.setByRead(array, 0);
-        String text1 = "AGCTGACCG";
-        KmerBytesWritable kmer2 = new KmerBytesWritable(9);
+        String text1 = "AGCTGACC";
+        KmerBytesWritable kmer2 = new KmerBytesWritable(8);
         kmer2.setByRead(array, 1);
-        String text2 = "GCTGACCGT";
-        Assert.assertEquals(text1, kmer1.toString());
+        String text2 = "GCTGACCG";
         Assert.assertEquals(text2, kmer2.toString());
+        KmerBytesWritable merge = new KmerBytesWritable(kmer1);
+        int kmerSize = 8;
+        merge.mergeNextKmer(kmerSize, kmer2);
+        Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
 
-        KmerBytesWritable merged = new KmerBytesWritable(kmer1);
-        merged.mergeNextKmer(9, kmer2);
-        Assert.assertEquals("AGCTGACCGT", merged);
+        for (int i = 1; i < 8; i++) {
+            merge.set(kmer1);
+            merge.mergeNextKmer(i, kmer2);
+            Assert.assertEquals(text1 + text2.substring(i - 1), merge.toString());
+        }
 
-        KmerBytesWritable kmer3 = new KmerBytesWritable(3);
-        kmer3.setByRead(array, 1);
-        String text3 = "GCT";
-        Assert.assertEquals(text3, kmer3.toString());
-        merged.mergeNextKmer(1, kmer3);
-        Assert.assertEquals(text1 + text3, merged.toString());
+        for (int ik = 1; ik <= 10; ik++) {
+            for (int jk = 1; jk <= 10; jk++) {
+                kmer1 = new KmerBytesWritable(ik);
+                kmer2 = new KmerBytesWritable(jk);
+                kmer1.setByRead(array, 0);
+                kmer2.setByRead(array, 0);
+                text1 = text.substring(0, ik);
+                text2 = text.substring(0, jk);
+                Assert.assertEquals(text1, kmer1.toString());
+                Assert.assertEquals(text2, kmer2.toString());
+                for (int x = 1; x < jk; x++) {
+                    merge.set(kmer1);
+                    merge.mergeNextKmer(x, kmer2);
+                    Assert.assertEquals(text1 + text2.substring(x - 1), merge.toString());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void TestMergePreKmer() {
+        byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
+        String text = "AGCTGACCGT";
+        KmerBytesWritable kmer1 = new KmerBytesWritable(8);
+        kmer1.setByRead(array, 0);
+        String text1 = "AGCTGACC";
+        KmerBytesWritable kmer2 = new KmerBytesWritable(8);
+        kmer2.setByRead(array, 1);
+        String text2 = "GCTGACCG";
+        Assert.assertEquals(text2, kmer2.toString());
+        KmerBytesWritable merge = new KmerBytesWritable(kmer2);
+        int kmerSize = 8;
+        merge.mergePreKmer(kmerSize, kmer1);
+        Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
+
+        for (int i = 1; i < 8; i++) {
+            merge.set(kmer2);
+            merge.mergePreKmer(i, kmer1);
+            Assert.assertEquals(text1.substring(0, text1.length() - i + 1) + text2, merge.toString());
+        }
+
+        for (int ik = 1; ik <= 10; ik++) {
+            for (int jk = 1; jk <= 10; jk++) {
+                kmer1 = new KmerBytesWritable(ik);
+                kmer2 = new KmerBytesWritable(jk);
+                kmer1.setByRead(array, 0);
+                kmer2.setByRead(array, 0);
+                text1 = text.substring(0, ik);
+                text2 = text.substring(0, jk);
+                Assert.assertEquals(text1, kmer1.toString());
+                Assert.assertEquals(text2, kmer2.toString());
+                for (int x = 1; x < ik; x++) {
+                    merge.set(kmer2);
+                    merge.mergePreKmer(x, kmer1);
+                    Assert.assertEquals(text1.substring(0, text1.length() - x + 1) + text2, merge.toString());
+                }
+            }
+        }
     }
 
 }
