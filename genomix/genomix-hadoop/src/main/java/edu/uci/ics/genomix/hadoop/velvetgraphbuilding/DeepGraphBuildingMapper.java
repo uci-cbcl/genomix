@@ -43,7 +43,7 @@ public class DeepGraphBuildingMapper extends MapReduceBase implements
         }
         for(int i = 0; i < listPosZeroInRead.getCountOfPosition(); i++) {
             VertexID.set(listPosZeroInRead.getPosition(i));
-            outputListAndKmer.set(listPosNonZeroInRead, key);
+            outputListAndKmer.set(listPosNonZeroInRead, key);//you suo bianhua1. -1 2. qudiao tongyihangde 
             output.collect(VertexID, outputListAndKmer);
         }
         for(int i = 0; i < listPosNonZeroInRead.getCountOfPosition(); i++) {
