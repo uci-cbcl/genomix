@@ -16,14 +16,18 @@ public class DeepGraphBuildingMapper extends MapReduceBase implements
         Mapper<KmerBytesWritable, PositionListWritable, PositionWritable, PositionListAndKmerWritable> {
     
     public PositionWritable VertexID;
+    public PositionWritable tempVertex;
     public PositionListWritable listPosZeroInRead;
     public PositionListWritable listPosNonZeroInRead;
+    public PositionListWritable tempPosList;
     public PositionListAndKmerWritable outputListAndKmer;
     @Override
     public void configure(JobConf job) {
         VertexID = new PositionWritable();
+        tempVertex = new PositionWritable();
         listPosZeroInRead = new PositionListWritable();
         listPosNonZeroInRead = new PositionListWritable();
+        tempPosList = new PositionListWritable();
         outputListAndKmer = new PositionListAndKmerWritable();
     }
     @Override
@@ -43,12 +47,29 @@ public class DeepGraphBuildingMapper extends MapReduceBase implements
         }
         for(int i = 0; i < listPosZeroInRead.getCountOfPosition(); i++) {
             VertexID.set(listPosZeroInRead.getPosition(i));
-            outputListAndKmer.set(listPosNonZeroInRead, key);//you suo bianhua1. -1 2. qudiao tongyihangde 
+            tempPosList.reset();
+            for (int j = 0; j < listPosNonZeroInRead.getCountOfPosition(); j++) {
+                tempVertex.set(listPosNonZeroInRead.getPosition(i));
+                if(tempVertex.getReadID() != VertexID.getReadID()) {
+                    int tempReadID = tempVertex.getReadID();
+                    byte tempPosInRead = (byte) (tempVertex.getPosInRead() - 1);
+                    tempVertex.set(tempReadID, tempPosInRead);
+                    tempPosList.append(tempVertex);
+                }
+            }
+            outputListAndKmer.set(tempPosList, key);
             output.collect(VertexID, outputListAndKmer);
         }
         for(int i = 0; i < listPosNonZeroInRead.getCountOfPosition(); i++) {
             VertexID.set(listPosNonZeroInRead.getPosition(i));
-            outputListAndKmer.set(listPosZeroInRead, key);
+            tempPosList.reset();
+            for (int j = 0; j < listPosZeroInRead.getCountOfPosition(); j++) {
+                tempVertex.set(listPosNonZeroInRead.getPosition(i));
+                if(tempVertex.getReadID() != VertexID.getReadID()) {
+                    tempPosList.append(tempVertex);
+                }
+            }
+            outputListAndKmer.set(tempPosList, key);
             output.collect(VertexID, outputListAndKmer);
         }
     }

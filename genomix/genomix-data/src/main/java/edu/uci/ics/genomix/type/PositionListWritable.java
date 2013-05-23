@@ -19,7 +19,8 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     protected int offset;
     protected int valueCount;
     protected static final byte[] EMPTY = {};
-
+    public static final int INTBYTES = 4;
+    
     protected PositionWritable posIter = new PositionWritable();
 
     public PositionListWritable() {
@@ -67,6 +68,14 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         return posIter;
     }
 
+    public void resetPosition(int i, int readID, byte posInRead) {
+        if (i >= valueCount) {
+            throw new ArrayIndexOutOfBoundsException("No such positions");
+        }
+        Marshal.putInt(readID, storage, offset + i * PositionWritable.LENGTH);
+        storage[offset + INTBYTES] = posInRead;
+    }
+    
     @Override
     public Iterator<PositionWritable> iterator() {
         Iterator<PositionWritable> it = new Iterator<PositionWritable>() {
@@ -120,7 +129,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         storage[offset + valueCount * PositionWritable.LENGTH + PositionWritable.INTBYTES] = posInRead;
         valueCount += 1;
     }
-
+    
     public static int getCountByDataLength(int length) {
         if (length % PositionWritable.LENGTH != 0) {
             throw new IllegalArgumentException("Length of positionlist is invalid");
