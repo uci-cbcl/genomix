@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.valvetgraphbuilding;
+package edu.uci.ics.genomix.hadoop.velvetgraphbuilding;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -18,6 +18,7 @@ public class GraphInvertedIndexBuildingReducer extends MapReduceBase implements
     @Override
     public void reduce(KmerBytesWritable key, Iterator<PositionWritable> values,
             OutputCollector<KmerBytesWritable, PositionListWritable> output, Reporter reporter) throws IOException {
+        outputlist.reset();
         while (values.hasNext()) {
             outputlist.append(values.next());
         }

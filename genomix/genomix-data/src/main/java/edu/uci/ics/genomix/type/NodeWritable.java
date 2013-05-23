@@ -43,14 +43,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         incomingList.set(incoming);
     }
 
-    public void setKmer(KmerBytesWritable kmer) {
-        this.kmer = kmer;
-    }
 
     public void setOutgoingList(PositionListWritable outgoing) {
         outgoingList.set(outgoing);
     }
 
+    public void setKmer(KmerBytesWritable right) {
+        this.kmer.set(right);
+    }
+    
     public void reset(int kmerSize) {
         nodeID.set(0, (byte) 0);
         incomingList.reset();
