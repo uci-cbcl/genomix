@@ -73,6 +73,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         set(right);
     }
 
+    /**
+     * Deep copy of the given kmer
+     * 
+     * @param newData
+     */
     public void set(KmerBytesWritable newData) {
         if (newData == null) {
             this.set(0, EMPTY_BYTES, 0);
@@ -81,12 +86,29 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
     }
 
+    /**
+     * Deep copy of the given bytes data
+     * It will not change the kmerlength
+     * 
+     * @param newData
+     * @param offset
+     */
     public void set(byte[] newData, int offset) {
         if (kmerlength > 0) {
             System.arraycopy(newData, offset, bytes, this.offset, size);
         }
     }
 
+    /**
+     * Deep copy of the given data, and also set to new kmerlength
+     * 
+     * @param k
+     *            : new kmer length
+     * @param newData
+     *            : data storage
+     * @param offset
+     *            : start offset
+     */
     public void set(int k, byte[] newData, int offset) {
         reset(k);
         if (k > 0) {
@@ -105,6 +127,14 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         clearLeadBit();
     }
 
+    /**
+     * Point this datablock to the given bytes array
+     * It works like the pointer to new datablock.
+     * kmerlength will not change
+     * 
+     * @param newData
+     * @param offset
+     */
     public void setNewReference(byte[] newData, int offset) {
         this.bytes = newData;
         this.offset = offset;
@@ -113,6 +143,15 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
     }
 
+    /**
+     * Point this datablock to the given bytes array
+     * It works like the pointer to new datablock.
+     * It also set the new kmerlength
+     * 
+     * @param k
+     * @param newData
+     * @param offset
+     */
     public void setNewReference(int k, byte[] newData, int offset) {
         this.kmerlength = k;
         this.size = KmerUtil.getByteNumFromK(k);
@@ -144,6 +183,13 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
     }
 
+    /**
+     * Get one genecode (A|G|C|T) from the given kmer index
+     * e.g. Get the 4th gene of the kmer ACGTA will return T
+     * 
+     * @param pos
+     * @return
+     */
     public byte getGeneCodeAtPosition(int pos) {
         if (pos >= kmerlength) {
             throw new IllegalArgumentException("gene position out of bound");
@@ -299,28 +345,6 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     }
 
     /**
-     * Merge kmer with next neighbor in gene-code format.
-     * The k of new kmer will increase by 1
-     * e.g. AAGCT merge with A => AAGCTA
-     * 
-     * @param nextCode
-     *            : next neighbor in gene-code format
-     */
-    public void mergeNextCode(byte nextCode) {
-        this.kmerlength += 1;
-        setSize(KmerUtil.getByteNumFromK(kmerlength));
-        if (kmerlength % 4 == 1) {
-            for (int i = getLength() - 1; i > 0; i--) {
-                bytes[offset + i] = bytes[offset + i - 1];
-            }
-            bytes[offset] = (byte) (nextCode & 0x3);
-        } else {
-            bytes[offset] = (byte) (bytes[offset] | ((nextCode & 0x3) << (((kmerlength - 1) % 4) << 1)));
-        }
-        clearLeadBit();
-    }
-
-    /**
      * Merge Kmer with the next connected Kmer
      * e.g. AAGCTAA merge with AACAACC, if the initial kmerSize = 3
      * then it will return AAGCTAACAACC
@@ -328,6 +352,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param initialKmerSize
      *            : the initial kmerSize
      * @param kmer
+     *            : the next kmer
      */
     public void mergeNextKmer(int initialKmerSize, KmerBytesWritable kmer) {
         int preKmerLength = kmerlength;
@@ -344,6 +369,16 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         clearLeadBit();
     }
 
+    /**
+     * Merge Kmer with the previous connected Kmer
+     * e.g. AACAACC merge with AAGCTAA, if the initial kmerSize = 3
+     * then it will return AAGCTAACAACC
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param preKmer
+     *            : the previous kmer
+     */
     public void mergePreKmer(int initialKmerSize, KmerBytesWritable preKmer) {
         int preKmerLength = kmerlength;
         int preSize = size;
@@ -385,7 +420,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public static byte getOneByteFromKmerAtPosition(int k, byte[] buffer, int start, int length) {
         int position = start + length - 1 - k / 4;
         if (position < start) {
-            throw new IllegalArgumentException("Buffer for kmer storage is invalid");
+            throw new IllegalArgumentException("Buffer of kmer storage is invalid");
         }
         int shift = (k % 4) << 1;
         byte data = (byte) (((0xff) & buffer[position]) >> shift);
@@ -401,10 +436,6 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
     }
 
-    /**
-     * Don't read the kmerlength from datastream,
-     * Read it from configuration
-     */
     @Override
     public void readFields(DataInput in) throws IOException {
         this.kmerlength = in.readInt();
