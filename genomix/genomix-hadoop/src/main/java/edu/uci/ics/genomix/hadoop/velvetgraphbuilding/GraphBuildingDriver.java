@@ -51,7 +51,7 @@ public class GraphBuildingDriver {
         if (onlyTest1stJob == true) {
             runfirstjob(inputPath, numReducers, sizeKmer, seqOutput, defaultConfPath);
         } else {
-            runfirstjob(inputPath, numReducers, sizeKmer, false, defaultConfPath);
+            runfirstjob(inputPath, numReducers, sizeKmer, true, defaultConfPath);
             runsecondjob(inputPath, outputPath, numReducers, sizeKmer, seqOutput, defaultConfPath);
         }
     }
@@ -100,8 +100,10 @@ public class GraphBuildingDriver {
         conf.setMapperClass(DeepGraphBuildingMapper.class);
         conf.setReducerClass(DeepGraphBuildingReducer.class);
 
+
         conf.setMapOutputKeyClass(PositionWritable.class);
         conf.setMapOutputValueClass(PositionListAndKmerWritable.class);
+            
 
         conf.setPartitionerClass(ReadIDPartitioner.class);
 
@@ -113,13 +115,18 @@ public class GraphBuildingDriver {
             conf.setOutputFormat(SequenceFileOutputFormat.class);
         else
             conf.setOutputFormat(TextOutputFormat.class);
-
+        if(numReducers != 0){
         conf.setOutputKeyClass(NodeWritable.class);
         conf.setOutputValueClass(NullWritable.class);
+        }
+        else {
+            conf.setOutputKeyClass(PositionWritable.class);
+            conf.setOutputValueClass(PositionListAndKmerWritable.class);
+        }
 
         FileInputFormat.setInputPaths(conf, new Path(inputPath + "-step1"));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
-        conf.setNumReduceTasks(1);
+        conf.setNumReduceTasks(numReducers);
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(outputPath), true);
         JobClient.runJob(conf);

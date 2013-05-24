@@ -17,21 +17,21 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
+
+import edu.uci.ics.genomix.hadoop.utils.TestUtils;
 @SuppressWarnings("deprecation")
 
 public class NewGraphBuildingTest {
     
     private JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual1";
-    private static final String COMPARE_DIR = "compare";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/Test.txt";
+    private static final String DATA_PATH = "data/webmap/text.txt";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result1";
-    private static final String EXPECTED_PATH = "expected/result1";
-    private static final String TEST_SOURCE_DIR = COMPARE_DIR + RESULT_PATH;
-    private static final int COUNT_REDUCER = 4;
-    private static final int SIZE_KMER = 3;
+    private static final String EXPECTED_PATH = "expected/result_after_kmerAggregate";
+    private static final int COUNT_REDUCER = 0;
+    private static final int SIZE_KMER = 5;
     private static final String GRAPHVIZ = "Graphviz";
     
     private MiniDFSCluster dfsCluster;
@@ -41,8 +41,11 @@ public class NewGraphBuildingTest {
     @SuppressWarnings("resource")
     @Test
     public void test() throws Exception {
+        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
+        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
-        TestGroupbyKmer();      
+//        TestGroupbyKmer();
+        TestMapKmerToRead();
 
 /*        SequenceFile.Reader reader = null;
         Path path = new Path(RESULT_PATH + "/part-00000");
@@ -83,27 +86,27 @@ public class NewGraphBuildingTest {
        bw2.close();
        bw.close();*/
 
-        
-//        TestUtils.compareWithResult(new File(TEST_SOURCE_DIR + "/comparesource.txt"), new File(EXPECTED_PATH));
         cleanupHadoop();
 
     }
 
     public void TestGroupbyKmer() throws Exception {
-        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
-        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         GraphBuildingDriver tldriver = new GraphBuildingDriver();
         tldriver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, true, false, HADOOP_CONF_PATH);
-        dumpResult();
+        dumpGroupByKmerResult();
+        TestUtils.compareWithResult(new File(ACTUAL_RESULT_DIR + HDFS_PATH + "-step1" + "/part-00000"), new File(EXPECTED_PATH));
     }
 
     public void TestMapKmerToRead() throws Exception {
-        
+        GraphBuildingDriver tldriver = new GraphBuildingDriver();
+        tldriver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, false, false, HADOOP_CONF_PATH);
+        dumpResult();
     }
 
     public void TestGroupByReadID() throws Exception {
         
     }
+    
     private void startHadoop() throws IOException {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
@@ -128,6 +131,12 @@ public class NewGraphBuildingTest {
         dfsCluster.shutdown();
     }
 
+    private void dumpGroupByKmerResult() throws IOException {
+        Path src = new Path(HDFS_PATH + "-step1");
+        Path dest = new Path(ACTUAL_RESULT_DIR);
+        dfs.copyToLocalFile(src, dest);
+    }
+    
     private void dumpResult() throws IOException {
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR);
