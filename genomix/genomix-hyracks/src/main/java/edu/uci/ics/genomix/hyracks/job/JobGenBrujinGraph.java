@@ -220,7 +220,7 @@ public class JobGenBrujinGraph extends JobGen {
         // (ReadID,PosInRead,{OtherPosition,...},Kmer)
 
         AbstractOperatorDescriptor mapKmerToRead = new MapKmerPositionToReadOperator(jobSpec,
-                MapKmerPositionToReadOperator.readIDOutputRec);
+                MapKmerPositionToReadOperator.readIDOutputRec, readLength, kmerSize);
         connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, mapKmerToRead, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
         return mapKmerToRead;
@@ -237,7 +237,7 @@ public class JobGenBrujinGraph extends JobGen {
                 jobSpec));
 
         RecordDescriptor readIDFinalRec = new RecordDescriptor(
-                new ISerializerDeserializer[1 + MergeReadIDAggregateFactory.getPositionCount(readLength, kmerSize)]);
+                new ISerializerDeserializer[1 + 2 * MergeReadIDAggregateFactory.getPositionCount(readLength, kmerSize)]);
         Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateReadIDAggregateFactory(),
                 new MergeReadIDAggregateFactory(readLength, kmerSize), new ReadIDPartitionComputerFactory(),
                 new ReadIDNormarlizedComputeFactory(), ReadIDPointable.FACTORY,
@@ -283,7 +283,6 @@ public class JobGenBrujinGraph extends JobGen {
                 hadoopJobConfFactory.getConf(), kmerWriter);
         connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, writeKmerOperator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
-        // jobSpec.addRoot(writeKmerOperator);
         return writeKmerOperator;
     }
 

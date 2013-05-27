@@ -75,7 +75,9 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
                 try {
                     out.writeByte(posInRead);
                     writeBytesToStorage(out, accessor, tIndex, InputPositionListField);
-                    writeBytesToStorage(out, accessor, tIndex, InputKmerField);
+                    if (posInRead > 0) {
+                        writeBytesToStorage(out, accessor, tIndex, InputKmerField);
+                    }
                 } catch (IOException e) {
                     throw new HyracksDataException("Failed to write into temporary storage");
                 }
@@ -108,7 +110,9 @@ public class AggregateReadIDAggregateFactory implements IAggregatorDescriptorFac
                 try {
                     out.writeByte(posInRead);
                     writeBytesToStorage(out, accessor, tIndex, InputPositionListField);
-                    writeBytesToStorage(out, accessor, tIndex, InputKmerField);
+                    if (posInRead > 0) {
+                        writeBytesToStorage(out, accessor, tIndex, InputKmerField);
+                    }
                 } catch (IOException e) {
                     throw new HyracksDataException("Failed to write into temporary storage");
                 }

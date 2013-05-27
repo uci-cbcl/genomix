@@ -59,7 +59,7 @@ public class GenomixJobConf extends JobConf {
     public static final int DEFAULT_GROUPBY_HYBRID_HASHLEVEL = 1;
     public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS = 13;
 
-    public static final boolean DEFAULT_REVERSED = false;
+    public static final boolean DEFAULT_REVERSED = true;
 
     public static final String JOB_PLAN_GRAPHBUILD = "graphbuild";
     public static final String JOB_PLAN_GRAPHSTAT  = "graphstat";

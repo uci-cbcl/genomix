@@ -60,10 +60,10 @@ public class JobRunStepByStepTest {
     @Test
     public void TestAll() throws Exception {
         TestReader();
-        TestGroupbyKmer();
-        TestMapKmerToRead();
-        TestGroupByReadID();
-        TestEndToEnd();
+//        TestGroupbyKmer();
+//        TestMapKmerToRead();
+//        TestGroupByReadID();
+//        TestEndToEnd();
     }
 
     public void TestReader() throws Exception {
