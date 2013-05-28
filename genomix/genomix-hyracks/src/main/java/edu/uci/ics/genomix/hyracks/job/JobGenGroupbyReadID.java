@@ -99,19 +99,27 @@ public class JobGenGroupbyReadID extends JobGenBrujinGraph {
                                             plist.setNewReference(posCount, buffer, fieldOffset);
                                             fieldOffset += plist.getLength();
 
-                                            int kmerbytes = Marshal.getInt(buffer, fieldOffset);
-                                            if (kmer.getLength() != kmerbytes) {
-                                                throw new IllegalArgumentException("kmerlength is invalid");
+                                            int posInRead = (i + 1) / 2;
+                                            if (i % 2 == 0) {
+                                                posInRead = -posInRead;
                                             }
-                                            fieldOffset += 4;
-                                            kmer.setNewReference(buffer, fieldOffset);
-                                            fieldOffset += kmer.getLength();
+                                            String kmerString = "";
+                                            if (posInRead > 0) {
+                                                int kmerbytes = Marshal.getInt(buffer, fieldOffset);
+                                                if (kmer.getLength() != kmerbytes) {
+                                                    throw new IllegalArgumentException("kmerlength is invalid");
+                                                }
+                                                fieldOffset += 4;
+                                                kmer.setNewReference(buffer, fieldOffset);
+                                                fieldOffset += kmer.getLength();
+                                                kmerString = kmer.toString();
+                                            }
 
-                                            output.write(Integer.toString(i - 1).getBytes());
-                                            output.writeByte(' ');
+                                            output.write(Integer.toString(posInRead).getBytes());
+                                            output.writeByte('\t');
                                             output.write(plist.toString().getBytes());
-                                            output.writeByte(' ');
-                                            output.write(kmer.toString().getBytes());
+                                            output.writeByte('\t');
+                                            output.write(kmerString.getBytes());
                                             output.writeByte('\t');
                                         }
                                     }

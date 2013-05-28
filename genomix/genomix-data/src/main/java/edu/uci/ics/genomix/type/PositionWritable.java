@@ -42,7 +42,7 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     public void set(PositionWritable pos) {
         set(pos.getReadID(), pos.getPosInRead());
     }
-    
+
     public void set(int readID, byte posInRead) {
         Marshal.putInt(readID, storage, offset);
         storage[offset + INTBYTES] = posInRead;
@@ -67,11 +67,11 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     public int getLength() {
         return LENGTH;
     }
-    
-    public boolean isSameReadID(PositionWritable other){
+
+    public boolean isSameReadID(PositionWritable other) {
         return getReadID() == other.getReadID();
     }
-    
+
     @Override
     public void readFields(DataInput in) throws IOException {
         in.readFully(storage, offset, LENGTH);
@@ -138,7 +138,7 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
             return diff;
         }
     }
-    
+
     static { // register this comparator
         WritableComparator.define(PositionWritable.class, new Comparator());
     }
