@@ -80,7 +80,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             nextNodeEntry = new NodeReference(kmerSize);
             nextNextNodeEntry = new NodeReference(0);
             cachePositionList = new PositionListWritable();
-            LAST_POSITION_ID = inputRecDesc.getFieldCount() - InputInfoFieldStart;
+            LAST_POSITION_ID = (inputRecDesc.getFieldCount() - InputInfoFieldStart) / 2;
         }
 
         @Override
@@ -119,45 +119,43 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                 setReverseIncomingList(curNodeEntry,
                         offsetPoslist + accessor.getFieldStartOffset(tIndex, InputInfoFieldStart + 1));
             }
-            for (int i = InputInfoFieldStart + 2; i < accessor.getFieldCount(); i += 2) {
-                // next Node
-                if (i + 2 < accessor.getFieldCount()) {
-                    setForwardOutgoingList(curNodeEntry, offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 2));
-                    resetNode(nextNodeEntry, readID, (byte) (1 + (i - InputInfoFieldStart) / 2));
-                    setKmer(nextNodeEntry.getKmer(), offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 2));
-                    setReverseOutgoingList(nextNodeEntry, offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 1));
-                    if (nextNodeEntry.getNodeID().getPosInRead() == LAST_POSITION_ID) {
-                        setReverseIncomingList(nextNodeEntry,
-                                offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 3));
-                    }
-                } else {
-                    resetNode(nextNodeEntry, readID, (byte) 0);
-                }
-                // nextNext node
-                if (i + 4 < accessor.getFieldCount()) {
-                    setForwardOutgoingList(nextNodeEntry, offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 4));
-                    resetNode(nextNextNodeEntry, readID, (byte) (2 + (i - InputInfoFieldStart) / 2));
-                    setReverseOutgoingList(nextNextNodeEntry,
-                            offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 3));
-                    if (nextNextNodeEntry.getNodeID().getPosInRead() == LAST_POSITION_ID) {
-                        setReverseIncomingList(nextNextNodeEntry,
-                                offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 5));
-                    }
-                } else {
-                    resetNode(nextNextNodeEntry, readID, (byte) 0);
-                }
 
-                if (curNodeEntry.inDegree() > 1 || curNodeEntry.outDegree() > 1 || nextNodeEntry.inDegree() > 1
-                        || nextNodeEntry.outDegree() > 1 || nextNextNodeEntry.inDegree() > 1
-                        || nextNextNodeEntry.outDegree() > 1) {
+            // next Node
+            readNodesInfo(tIndex, readID, curNodeEntry, nextNodeEntry, InputInfoFieldStart);
+
+            for (int i = InputInfoFieldStart + 2; i < accessor.getFieldCount(); i += 2) {
+                readNodesInfo(tIndex, readID, nextNodeEntry, nextNextNodeEntry, i);
+
+                if (curNodeEntry.inDegree() > 1 || curNodeEntry.outDegree() > 0 || nextNodeEntry.inDegree() > 0
+                        || nextNodeEntry.outDegree() > 0 || nextNextNodeEntry.inDegree() > 0
+                        || nextNextNodeEntry.outDegree() > 0) {
                     connect(curNodeEntry, nextNodeEntry);
                     outputNode(curNodeEntry);
                     curNodeEntry.set(nextNodeEntry);
+                    nextNodeEntry.set(nextNextNodeEntry);
                     continue;
                 }
                 curNodeEntry.mergeForwadNext(nextNodeEntry, kmerSize);
+                nextNodeEntry.set(nextNextNodeEntry);
             }
             outputNode(curNodeEntry);
+        }
+
+        private void readNodesInfo(int tIndex, int readID, NodeReference curNode, NodeReference nextNode, int curFieldID) {
+            // nextNext node
+            int offsetPoslist = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
+            if (curFieldID + 2 < accessor.getFieldCount()) {
+                setForwardOutgoingList(curNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 2));
+                resetNode(nextNode, readID, (byte) (1 + (curFieldID + 2 - InputInfoFieldStart) / 2));
+                setKmer(nextNode.getKmer(), offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 2));
+                setReverseOutgoingList(nextNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 1));
+                if (nextNode.getNodeID().getPosInRead() == LAST_POSITION_ID) {
+                    setReverseIncomingList(nextNode,
+                            offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 3));
+                }
+            } else {
+                resetNode(nextNode, readID, (byte) 0);
+            }
         }
 
         private void setKmer(KmerBytesWritable kmer, int offset) {
