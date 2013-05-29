@@ -108,9 +108,9 @@ public class JobGenGroupbyReadID extends JobGenBrujinGraph {
                                             fieldOffset += kmer.getLength();
 
                                             output.write(Integer.toString(i - 1).getBytes());
-                                            output.writeByte(' ');
+                                            output.writeByte('\t');
                                             output.write(plist.toString().getBytes());
-                                            output.writeByte(' ');
+                                            output.writeByte('\t');
                                             output.write(kmer.toString().getBytes());
                                             output.writeByte('\t');
                                         }
