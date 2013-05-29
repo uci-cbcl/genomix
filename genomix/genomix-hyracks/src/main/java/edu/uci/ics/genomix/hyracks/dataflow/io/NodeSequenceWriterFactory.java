@@ -4,6 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Writer;
@@ -59,7 +60,7 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
         @Override
         public void open(DataOutput output) throws HyracksDataException {
             try {
-                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, NodeWritable.class, null,
+                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, NodeWritable.class, NullWritable.class,
                         CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
@@ -85,7 +86,7 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
                     tuple.getFieldData(InputKmerBytesField), tuple.getFieldStart(InputKmerBytesField));
 
             try {
-                writer.append(node, null);
+                writer.append(node, NullWritable.get());
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -93,8 +94,6 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
 
         @Override
         public void close(DataOutput output) throws HyracksDataException {
-            // TODO Auto-generated method stub
-
         }
 
     }

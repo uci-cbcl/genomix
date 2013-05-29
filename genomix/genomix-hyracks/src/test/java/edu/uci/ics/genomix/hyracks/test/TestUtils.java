@@ -164,6 +164,9 @@ public class TestUtils {
     }
     
     private static boolean containStrings(String lineExpected, String actualLine, int[] poslistField) {
+//        if (lineExpected.equals(actualLine)){
+//            return true;
+//        }
         String[] fieldsExp = lineExpected.split("\\\t");
         String[] fieldsAct = actualLine.split("\\\t");
         if (fieldsAct.length != fieldsExp.length) {
