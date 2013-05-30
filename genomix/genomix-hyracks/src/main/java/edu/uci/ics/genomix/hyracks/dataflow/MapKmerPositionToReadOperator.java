@@ -129,8 +129,10 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
         private void appendNodeToBuilder(int tIndex, PositionReference pos, ArrayBackedValueStorage posList2,
                 ArrayTupleBuilder builder2) {
             try {
+                builder2.reset();
                 builder2.addField(pos.getByteArray(), pos.getStartOffset(), PositionReference.INTBYTES);
                 builder2.addField(pos.getByteArray(), pos.getStartOffset() + PositionReference.INTBYTES, 1);
+                
                 if (posList2 == null) {
                     builder2.addFieldEndOffset();
                 } else {
@@ -150,7 +152,6 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
                         throw new IllegalStateException();
                     }
                 }
-                builder2.reset();
             } catch (HyracksDataException e) {
                 throw new IllegalStateException(
                         "Failed to Add a field to the tuple by copying the data bytes from a byte array.");
