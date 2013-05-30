@@ -40,12 +40,13 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
     public static final int OutputNodeIDField = 0;
     public static final int OutputCountOfKmerField = 1;
-    public static final int OutputIncomingField = 2;
-    public static final int OutputOutgoingField = 3;
-    public static final int OutputKmerBytesField = 4;
+    public static final int OutputForwardForwardField = 2;
+    public static final int OutputForwardReverseField = 3;
+    public static final int OutputReverseForwardField = 4;
+    public static final int OutputReverseReverseField = 5;
+    public static final int OutputKmerBytesField = 6;
 
-    public static final RecordDescriptor nodeOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
-            null, null, null, null });
+    public static final RecordDescriptor nodeOutputRec = new RecordDescriptor(new ISerializerDeserializer[7]);
 
     /**
      * (ReadID, Storage[posInRead]={len, PositionList, len, Kmer})
@@ -57,6 +58,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
         private final RecordDescriptor inputRecDesc;
         private final RecordDescriptor outputRecDesc;
 
+        private final int LAST_POSITION_ID;
+
         private FrameTupleAccessor accessor;
         private ByteBuffer writeBuffer;
         private ArrayTupleBuilder builder;
@@ -66,6 +69,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
         private NodeReference nextNodeEntry;
         private NodeReference nextNextNodeEntry;
 
+        private PositionListWritable cachePositionList;
+
         public MapReadToNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
                 RecordDescriptor outputRecDesc) {
             this.ctx = ctx;
@@ -74,6 +79,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             curNodeEntry = new NodeReference(kmerSize);
             nextNodeEntry = new NodeReference(kmerSize);
             nextNextNodeEntry = new NodeReference(0);
+            cachePositionList = new PositionListWritable();
+            LAST_POSITION_ID = (inputRecDesc.getFieldCount() - InputInfoFieldStart) / 2;
         }
 
         @Override
@@ -100,113 +107,159 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             int offsetPoslist = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
             int readID = accessor.getBuffer().getInt(
                     offsetPoslist + accessor.getFieldStartOffset(tIndex, InputReadIDField));
-            resetNode(curNodeEntry, readID, (byte) 0,
-                    offsetPoslist + accessor.getFieldStartOffset(tIndex, InputInfoFieldStart), true);
+            if ((accessor.getFieldCount() - InputInfoFieldStart) % 2 != 0) {
+                throw new IllegalArgumentException("field length is odd");
+            }
 
-            for (int i = InputInfoFieldStart + 1; i < accessor.getFieldCount(); i++) {
-                resetNode(nextNodeEntry, readID, (byte) (i - InputInfoFieldStart),
-                        offsetPoslist + accessor.getFieldStartOffset(tIndex, i), true);
-                NodeReference pNextNext = null;
-                if (i + 1 < accessor.getFieldCount()) {
-                    resetNode(nextNextNodeEntry, readID, (byte) (i - InputInfoFieldStart + 1),
-                            offsetPoslist + accessor.getFieldStartOffset(tIndex, i + 1), false);
-                    pNextNext = nextNextNodeEntry;
-                }
+            resetNode(curNodeEntry, readID, (byte) (1));
+            setForwardIncomingList(curNodeEntry,
+                    offsetPoslist + accessor.getFieldStartOffset(tIndex, InputInfoFieldStart));
+            setKmer(curNodeEntry.getKmer(), offsetPoslist + accessor.getFieldStartOffset(tIndex, InputInfoFieldStart));
+            if (curNodeEntry.getNodeID().getPosInRead() == LAST_POSITION_ID) {
+                setReverseIncomingList(curNodeEntry,
+                        offsetPoslist + accessor.getFieldStartOffset(tIndex, InputInfoFieldStart + 1));
+            }
 
-                if (nextNodeEntry.getOutgoingList().getCountOfPosition() == 0) {
-                    if (pNextNext == null || pNextNext.getOutgoingList().getCountOfPosition() == 0) {
-                        curNodeEntry.mergeNext(nextNodeEntry, kmerSize);
-                    } else {
-                        curNodeEntry.getOutgoingList().reset();
-                        curNodeEntry.getOutgoingList().append(nextNodeEntry.getNodeID());
-                        outputNode(curNodeEntry);
+            // next Node
+            readNodesInfo(tIndex, readID, curNodeEntry, nextNodeEntry, InputInfoFieldStart);
 
-                        nextNodeEntry.getIncomingList().append(curNodeEntry.getNodeID());
-                        curNodeEntry.set(nextNodeEntry);
-                    }
-                } else { // nextNode entry outgoing > 0
-                    curNodeEntry.getOutgoingList().set(nextNodeEntry.getOutgoingList());
-                    curNodeEntry.getOutgoingList().append(nextNodeEntry.getNodeID());
-                    nextNodeEntry.getIncomingList().append(curNodeEntry.getNodeID());
+            for (int i = InputInfoFieldStart + 2; i < accessor.getFieldCount(); i += 2) {
+                readNodesInfo(tIndex, readID, nextNodeEntry, nextNextNodeEntry, i);
+
+                if (curNodeEntry.inDegree() > 1 || curNodeEntry.outDegree() > 0 || nextNodeEntry.inDegree() > 0
+                        || nextNodeEntry.outDegree() > 0 || nextNextNodeEntry.inDegree() > 0
+                        || nextNextNodeEntry.outDegree() > 0) {
+                    connect(curNodeEntry, nextNodeEntry);
                     outputNode(curNodeEntry);
                     curNodeEntry.set(nextNodeEntry);
-                    curNodeEntry.getOutgoingList().reset();
+                    nextNodeEntry.set(nextNextNodeEntry);
+                    continue;
                 }
+                curNodeEntry.mergeForwadNext(nextNodeEntry, kmerSize);
+                nextNodeEntry.set(nextNextNodeEntry);
             }
             outputNode(curNodeEntry);
         }
 
-        /**
-         * The neighbor list is store in the next next node
-         * (3,2) [(1,0),(2,0)] will become the outgoing list of node (3,1)
-         * (3,1) [(1,0),(2,0)]
-         * 
-         * @param curNodeEntry2
-         * @param nextNodeEntry2
-         */
-        //        private void setOutgoingByNext(NodeReference curNodeEntry2, NodeReference nextNodeEntry2) {
-        //            if (nextNodeEntry2 == null) {
-        //                curNodeEntry2.getOutgoingList().reset();
-        //            } else {
-        //                curNodeEntry2.setOutgoingList(nextNodeEntry2.getOutgoingList());
-        //            }
-        //        }
-
-        private void resetNode(NodeReference node, int readID, byte posInRead, int offset, boolean isInitial) {
-            node.reset(kmerSize);
-            node.setNodeID(readID, posInRead);
-
-            ByteBuffer buffer = accessor.getBuffer();
-            int lengthPos = buffer.getInt(offset);
-            int countPosition = PositionListWritable.getCountByDataLength(lengthPos);
-            offset += INT_LENGTH;
-            if (posInRead == 0) {
-                setPositionList(node.getIncomingList(), countPosition, buffer.array(), offset, true);
-                // minus 1 position of the incoming list to get the correct predecessor
-                for (PositionWritable pos : node.getIncomingList()) {
-                    if (pos.getPosInRead() == 0) {
-                        throw new IllegalArgumentException("The incoming position list contain invalid posInRead");
-                    }
-                    pos.set(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
+        private void readNodesInfo(int tIndex, int readID, NodeReference curNode, NodeReference nextNode, int curFieldID) {
+            // nextNext node
+            int offsetPoslist = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
+            if (curFieldID + 2 < accessor.getFieldCount()) {
+                setForwardOutgoingList(curNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 2));
+                resetNode(nextNode, readID, (byte) (1 + (curFieldID + 2 - InputInfoFieldStart) / 2));
+                setKmer(nextNode.getKmer(), offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 2));
+                setReverseOutgoingList(nextNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 1));
+                if (nextNode.getNodeID().getPosInRead() == LAST_POSITION_ID) {
+                    setReverseIncomingList(nextNode,
+                            offsetPoslist + accessor.getFieldStartOffset(tIndex, curFieldID + 3));
                 }
             } else {
-                setPositionList(node.getOutgoingList(), countPosition, buffer.array(), offset, isInitial);
-            }
-            offset += lengthPos;
-            int lengthKmer = buffer.getInt(offset);
-            if (node.getKmer().getLength() != lengthKmer) {
-                throw new IllegalStateException("Size of Kmer is invalid ");
-            }
-            setKmer(node.getKmer(), buffer.array(), offset + INT_LENGTH, isInitial);
-        }
-
-        private void setKmer(KmerBytesWritable kmer, byte[] array, int offset, boolean isInitial) {
-            if (isInitial) {
-                kmer.set(array, offset);
-            } else {
-                kmer.setNewReference(array, offset);
+                resetNode(nextNode, readID, (byte) 0);
             }
         }
 
-        private void setPositionList(PositionListWritable positionListWritable, int count, byte[] array, int offset,
-                boolean isInitial) {
-            if (isInitial) {
-                positionListWritable.set(count, array, offset);
-            } else {
-                positionListWritable.setNewReference(count, array, offset);
+        private void setKmer(KmerBytesWritable kmer, int offset) {
+            ByteBuffer buffer = accessor.getBuffer();
+            int length = buffer.getInt(offset);
+            offset += INT_LENGTH + length;
+            length = buffer.getInt(offset);
+            if (kmer.getLength() != length) {
+                throw new IllegalArgumentException("kmer size is invalid");
+            }
+            offset += INT_LENGTH;
+            kmer.set(buffer.array(), offset);
+        }
+
+        private void connect(NodeReference curNode, NodeReference nextNode) {
+            curNode.getFFList().append(nextNode.getNodeID());
+            nextNode.getRRList().append(curNode.getNodeID());
+        }
+
+        private void setCachList(int offset) {
+            ByteBuffer buffer = accessor.getBuffer();
+            int count = PositionListWritable.getCountByDataLength(buffer.getInt(offset));
+            cachePositionList.set(count, buffer.array(), offset + INT_LENGTH);
+        }
+
+        private void resetNode(NodeReference node, int readID, byte posInRead) {
+            node.reset(kmerSize);
+            node.setNodeID(readID, posInRead);
+        }
+
+        private void setReverseOutgoingList(NodeReference node, int offset) {
+            setCachList(offset);
+            for (PositionWritable pos : cachePositionList) {
+                if (pos.getPosInRead() > 0) {
+                    node.getRFList().append(pos);
+                } else {
+                    node.getRRList().append(pos.getReadID(), (byte) -pos.getPosInRead());
+                }
+            }
+        }
+
+        private void setReverseIncomingList(NodeReference node, int offset) {
+            setCachList(offset);
+            for (PositionWritable pos : cachePositionList) {
+                if (pos.getPosInRead() > 0) {
+                    if (pos.getPosInRead() > 1) {
+                        node.getFRList().append(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
+                    } else {
+                        throw new IllegalArgumentException("Invalid position");
+                    }
+                } else {
+                    if (pos.getPosInRead() > -LAST_POSITION_ID) {
+                        node.getFFList().append(pos.getReadID(), (byte) -(pos.getPosInRead() - 1));
+                    }
+                }
+            }
+        }
+
+        private void setForwardOutgoingList(NodeReference node, int offset) {
+            setCachList(offset);
+            for (PositionWritable pos : cachePositionList) {
+                if (pos.getPosInRead() > 0) {
+                    node.getFFList().append(pos);
+                } else {
+                    node.getFRList().append(pos.getReadID(), (byte) -pos.getPosInRead());
+                }
+            }
+        }
+
+        private void setForwardIncomingList(NodeReference node, int offset) {
+            setCachList(offset);
+            for (PositionWritable pos : cachePositionList) {
+                if (pos.getPosInRead() > 0) {
+                    if (pos.getPosInRead() > 1) {
+                        node.getRRList().append(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
+                    } else {
+                        throw new IllegalArgumentException("position id is invalid");
+                    }
+                } else {
+                    if (pos.getPosInRead() > -LAST_POSITION_ID) {
+                        node.getRFList().append(pos.getReadID(), (byte) -(pos.getPosInRead() - 1));
+                    }
+                }
             }
         }
 
         private void outputNode(NodeReference node) throws HyracksDataException {
+            if (node.getNodeID().getPosInRead() == 0) {
+                return;
+            }
             try {
+                builder.reset();
                 builder.addField(node.getNodeID().getByteArray(), node.getNodeID().getStartOffset(), node.getNodeID()
                         .getLength());
                 builder.getDataOutput().writeInt(node.getCount());
                 builder.addFieldEndOffset();
-                builder.addField(node.getIncomingList().getByteArray(), node.getIncomingList().getStartOffset(), node
-                        .getIncomingList().getLength());
-                builder.addField(node.getOutgoingList().getByteArray(), node.getOutgoingList().getStartOffset(), node
-                        .getOutgoingList().getLength());
+                builder.addField(node.getFFList().getByteArray(), node.getFFList().getStartOffset(), node.getFFList()
+                        .getLength());
+                builder.addField(node.getFRList().getByteArray(), node.getFRList().getStartOffset(), node.getFRList()
+                        .getLength());
+                builder.addField(node.getRFList().getByteArray(), node.getRFList().getStartOffset(), node.getRFList()
+                        .getLength());
+                builder.addField(node.getRRList().getByteArray(), node.getRRList().getStartOffset(), node.getRRList()
+                        .getLength());
                 builder.addField(node.getKmer().getBytes(), node.getKmer().getOffset(), node.getKmer().getLength());
 
                 if (!appender.append(builder.getFieldEndOffsets(), builder.getByteArray(), 0, builder.getSize())) {
@@ -216,7 +269,6 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                         throw new IllegalStateException("Failed to append tuplebuilder to frame");
                     }
                 }
-                builder.reset();
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to Add a field to the tupleBuilder.");
             }
@@ -240,7 +292,6 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        // TODO Auto-generated method stub
         return new MapReadToNodePushable(ctx, recordDescProvider.getInputRecordDescriptor(getActivityId(), 0),
                 recordDescriptors[0]);
     }

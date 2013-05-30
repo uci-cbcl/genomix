@@ -13,5 +13,7 @@ public class NodeReference extends NodeWritable {
         super(kmerSize);
         // TODO Auto-generated constructor stub
     }
+
+
  
 }

@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -26,7 +27,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hyracks.driver.Driver;
 import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 
 @SuppressWarnings("deprecation")
 public class JobRunStepByStepTest {
@@ -93,15 +94,16 @@ public class JobRunStepByStepTest {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_GROUPBY_READID, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, new int [] {2}));
+        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, new int [] {2,5,8,11,14,17,20,23}));
     }
 
     public void TestEndToEnd() throws Exception {
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
+        //conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_NODE, new int[] {1,2}));
+        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_NODE, new int[] {1,2,3,4}));
     }
 
     @Before
@@ -187,18 +189,14 @@ public class JobRunStepByStepTest {
                 }
                 SequenceFile.Reader reader = new SequenceFile.Reader(dfs, path, conf);
 
-                // KmerBytesWritable key = (KmerBytesWritable)
-                // ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-                KmerBytesWritable key = new KmerBytesWritable(conf.getInt(GenomixJobConf.KMER_LENGTH, KmerSize));
-                // KmerCountValue value = (KmerCountValue)
-                // ReflectionUtils.newInstance(reader.getValueClass(), conf);
-                KmerBytesWritable value = null;
-                while (reader.next(key, value)) {
-                    if (key == null || value == null) {
+                NodeWritable node = new NodeWritable(conf.getInt(GenomixJobConf.KMER_LENGTH, KmerSize));
+                NullWritable value = NullWritable.get();
+                while (reader.next(node, value)) {
+                    if (node == null) {
                         break;
                     }
-                    bw.write(key.toString() + "\t" + value.toString());
-                    System.out.println(key.toString() + "\t" + value.toString());
+                    bw.write(node.toString() );
+                    System.out.println(node.toString());
                     bw.newLine();
                 }
                 reader.close();

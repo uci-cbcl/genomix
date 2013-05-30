@@ -41,10 +41,10 @@ import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
     private static final Log LOG = LogFactory.getLog(ReadsKeyValueParserFactory.class);
-    
+
     public static final int OutputKmerField = 0;
     public static final int OutputPosition = 1;
-    
+
     private KmerBytesWritable kmer;
     private PositionReference pos;
     private boolean bReversed;
@@ -79,7 +79,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 try {
                     readID = Integer.parseInt(geneLine[0]);
                 } catch (NumberFormatException e) {
-                    LOG.warn("Invalid data " );
+                    LOG.warn("Invalid data ");
                     return;
                 }
 
@@ -87,8 +87,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 Matcher geneMatcher = genePattern.matcher(geneLine[1]);
                 boolean isValid = geneMatcher.matches();
                 if (isValid) {
-                    if (geneLine[1].length() != readLength){
-                        LOG.warn("Invalid readlength at: " + readID );
+                    if (geneLine[1].length() != readLength) {
+                        LOG.warn("Invalid readlength at: " + readID);
                         return;
                     }
                     SplitReads(readID, geneLine[1].getBytes(), writer);
@@ -102,29 +102,29 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     return;
                 }
                 kmer.setByRead(array, 0);
-                InsertToFrame(kmer, readID, 0, writer);
+                InsertToFrame(kmer, readID, 1, writer);
 
                 /** middle kmer */
                 for (int i = k; i < array.length; i++) {
                     kmer.shiftKmerWithNextChar(array[i]);
-                    InsertToFrame(kmer, readID, i - k + 1, writer);
+                    InsertToFrame(kmer, readID, i - k + 2, writer);
                 }
 
                 if (bReversed) {
                     /** first kmer */
                     kmer.setByReadReverse(array, 0);
-                    InsertToFrame(kmer, -readID, array.length - k, writer);
+                    InsertToFrame(kmer, readID, -1, writer);
                     /** middle kmer */
                     for (int i = k; i < array.length; i++) {
                         kmer.shiftKmerWithPreCode(GeneCode.getPairedCodeFromSymbol(array[i]));
-                        InsertToFrame(kmer, -readID, array.length - i - 1, writer);
+                        InsertToFrame(kmer, readID, -(i - k + 2), writer);
                     }
                 }
             }
 
             private void InsertToFrame(KmerBytesWritable kmer, int readID, int posInRead, IFrameWriter writer) {
                 try {
-                    if (posInRead > 127) {
+                    if (Math.abs(posInRead) > 127) {
                         throw new IllegalArgumentException("Position id is beyond 127 at " + readID);
                     }
                     tupleBuilder.reset();

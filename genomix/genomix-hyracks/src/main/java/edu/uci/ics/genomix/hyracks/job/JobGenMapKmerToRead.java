@@ -76,13 +76,18 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
                                             tuple.getFieldData(MapKmerPositionToReadOperator.OutputOtherReadIDListField),
                                             tuple.getFieldStart(MapKmerPositionToReadOperator.OutputOtherReadIDListField));
 
-                                    if (kmer.getLength() > tuple
-                                            .getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
-                                        throw new IllegalArgumentException("Not enough kmer bytes");
+
+                                    String kmerString = "";
+                                    if (posInRead > 0) {
+                                        if (kmer.getLength() > tuple
+                                                .getFieldLength(MapKmerPositionToReadOperator.OutputKmerField)) {
+                                            throw new IllegalArgumentException("Not enough kmer bytes");
+                                        }
+                                        kmer.setNewReference(
+                                                tuple.getFieldData(MapKmerPositionToReadOperator.OutputKmerField),
+                                                tuple.getFieldStart(MapKmerPositionToReadOperator.OutputKmerField));
+                                        kmerString = kmer.toString();
                                     }
-                                    kmer.setNewReference(
-                                            tuple.getFieldData(MapKmerPositionToReadOperator.OutputKmerField),
-                                            tuple.getFieldStart(MapKmerPositionToReadOperator.OutputKmerField));
 
                                     output.write(Integer.toString(readID).getBytes());
                                     output.writeByte('\t');
@@ -90,7 +95,7 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
                                     output.writeByte('\t');
                                     output.write(plist.toString().getBytes());
                                     output.writeByte('\t');
-                                    output.write(kmer.toString().getBytes());
+                                    output.write(kmerString.getBytes());
                                     output.writeByte('\n');
                                 } catch (IOException e) {
                                     throw new HyracksDataException(e);

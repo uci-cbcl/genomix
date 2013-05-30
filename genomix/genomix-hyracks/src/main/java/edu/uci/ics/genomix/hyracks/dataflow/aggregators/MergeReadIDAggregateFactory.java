@@ -48,17 +48,24 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
         return new IAggregatorDescriptor() {
 
             class PositionArray {
-                public ArrayBackedValueStorage[] storages;
+                public ArrayBackedValueStorage[] forwardStorages;
+                public ArrayBackedValueStorage[] reverseStorages;
                 public int count;
 
-                public PositionArray(ArrayBackedValueStorage[] storages2, int i) {
-                    storages = storages2;
-                    count = i;
+                public PositionArray() {
+                    forwardStorages = new ArrayBackedValueStorage[ValidPosCount];
+                    reverseStorages = new ArrayBackedValueStorage[ValidPosCount];
+                    for (int i = 0; i < ValidPosCount; i++) {
+                        forwardStorages[i] = new ArrayBackedValueStorage();
+                        reverseStorages[i] = new ArrayBackedValueStorage();
+                    }
+                    count = 0;
                 }
 
                 public void reset() {
-                    for (ArrayBackedValueStorage each : storages) {
-                        each.reset();
+                    for (int i = 0; i < ValidPosCount; i++) {
+                        forwardStorages[i].reset();
+                        reverseStorages[i].reset();
                     }
                     count = 0;
                 }
@@ -66,11 +73,8 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
 
             @Override
             public AggregateState createAggregateStates() {
-                ArrayBackedValueStorage[] storages = new ArrayBackedValueStorage[ValidPosCount];
-                for (int i = 0; i < storages.length; i++) {
-                    storages[i] = new ArrayBackedValueStorage();
-                }
-                return new AggregateState(new PositionArray(storages, 0));
+
+                return new AggregateState(new PositionArray());
             }
 
             @Override
@@ -82,29 +86,38 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                 pushIntoStorage(accessor, tIndex, positionArray);
 
                 // make fake fields
-                for (int i = 0; i < ValidPosCount; i++) {
+                for (int i = 0; i < ValidPosCount * 2; i++) {
                     tupleBuilder.addFieldEndOffset();
                 }
             }
 
             private void pushIntoStorage(IFrameTupleAccessor accessor, int tIndex, PositionArray positionArray)
                     throws HyracksDataException {
-                ArrayBackedValueStorage[] storages = positionArray.storages;
                 int leadbyte = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
                 int fieldOffset = leadbyte + accessor.getFieldStartOffset(tIndex, InputPositionListField);
                 ByteBuffer fieldBuffer = accessor.getBuffer();
 
                 while (fieldOffset < leadbyte + accessor.getFieldEndOffset(tIndex, InputPositionListField)) {
                     byte posInRead = fieldBuffer.get(fieldOffset);
-                    if (storages[posInRead].getLength() > 0) {
+
+                    ArrayBackedValueStorage[] storage = positionArray.forwardStorages;
+                    boolean hasKmer = true;
+                    if (posInRead < 0) {
+                        storage = positionArray.reverseStorages;
+                        posInRead = (byte) -posInRead;
+                        hasKmer = false;
+                    }
+                    if (storage[posInRead - 1].getLength() > 0) {
                         throw new IllegalArgumentException("Reentering into an exist storage");
                     }
                     fieldOffset += BYTE_SIZE;
 
                     // read poslist
-                    fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
+                    fieldOffset += writeBytesToStorage(storage[posInRead - 1], fieldBuffer, fieldOffset);
                     // read Kmer
-                    fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
+                    if (hasKmer) {
+                        fieldOffset += writeBytesToStorage(storage[posInRead - 1], fieldBuffer, fieldOffset);
+                    }
 
                     positionArray.count += 1;
                 }
@@ -149,15 +162,21 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 PositionArray positionArray = (PositionArray) state.state;
-                ArrayBackedValueStorage[] storages = positionArray.storages;
-                if (positionArray.count != storages.length) {
+
+                if (positionArray.count != ValidPosCount * 2) {
                     throw new IllegalStateException("Final aggregate position number is invalid");
                 }
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 try {
-                    for (int i = 0; i < storages.length; i++) {
-                        fieldOutput.write(storages[i].getByteArray(), storages[i].getStartOffset(),
-                                storages[i].getLength());
+                    for (int i = 0; i < ValidPosCount; i++) {
+                        fieldOutput.write(positionArray.forwardStorages[i].getByteArray(),
+                                positionArray.forwardStorages[i].getStartOffset(),
+                                positionArray.forwardStorages[i].getLength());
+                        tupleBuilder.addFieldEndOffset();
+
+                        fieldOutput.write(positionArray.reverseStorages[i].getByteArray(),
+                                positionArray.reverseStorages[i].getStartOffset(),
+                                positionArray.reverseStorages[i].getLength());
                         tupleBuilder.addFieldEndOffset();
                     }
                 } catch (IOException e) {
