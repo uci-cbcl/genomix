@@ -32,10 +32,15 @@ public class DeepGraphBuildingMapper extends MapReduceBase implements
     @Override
     public void map(KmerBytesWritable key, PositionListWritable value, OutputCollector<PositionWritable, PositionListAndKmerWritable> output,
             Reporter reporter) throws IOException {
+        if(key.toString().equals("AGAAG")) {
+            int y = 4;
+            int x = y;
+        }
         listPosZeroInRead.reset();
         listPosNonZeroInRead.reset();
         outputListAndKmer.reset();
-        for(int i = 0; i < value.getLength(); i++) {
+        System.out.println(value.getLength());
+        for(int i = 0; i < value.getCountOfPosition(); i++) {
             VertexID.set(value.getPosition(i));
             if(VertexID.getPosInRead() == 0) {
                 listPosZeroInRead.append(VertexID);

@@ -82,7 +82,8 @@ public class GraphBuildingDriver {
 
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(inputPath + "-step1"));
-        conf.setNumReduceTasks(numReducers);
+        if(numReducers == 0)
+        conf.setNumReduceTasks(numReducers + 2);
 
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(inputPath + "-step1"), true);
@@ -100,26 +101,24 @@ public class GraphBuildingDriver {
         conf.setMapperClass(DeepGraphBuildingMapper.class);
         conf.setReducerClass(DeepGraphBuildingReducer.class);
 
-
         conf.setMapOutputKeyClass(PositionWritable.class);
         conf.setMapOutputValueClass(PositionListAndKmerWritable.class);
-            
 
         conf.setPartitionerClass(ReadIDPartitioner.class);
 
-        conf.setOutputKeyComparatorClass(PositionWritable.Comparator.class);
-        conf.setOutputValueGroupingComparator(PositionWritable.FirstComparator.class);
+ //       conf.setOutputKeyComparatorClass(PositionWritable.Comparator.class);
+ //       conf.setOutputValueGroupingComparator(PositionWritable.FirstComparator.class);
 
         conf.setInputFormat(SequenceFileInputFormat.class);
         if (seqOutput == true)
             conf.setOutputFormat(SequenceFileOutputFormat.class);
         else
             conf.setOutputFormat(TextOutputFormat.class);
-        if(numReducers != 0){
-        conf.setOutputKeyClass(NodeWritable.class);
-        conf.setOutputValueClass(NullWritable.class);
-        }
-        else {
+        
+        if (numReducers != 0) {
+            conf.setOutputKeyClass(NodeWritable.class);
+            conf.setOutputValueClass(NullWritable.class);
+        } else {
             conf.setOutputKeyClass(PositionWritable.class);
             conf.setOutputValueClass(PositionListAndKmerWritable.class);
         }
