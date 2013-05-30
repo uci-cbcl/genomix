@@ -76,10 +76,11 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
                                             tuple.getFieldData(MapKmerPositionToReadOperator.OutputOtherReadIDListField),
                                             tuple.getFieldStart(MapKmerPositionToReadOperator.OutputOtherReadIDListField));
 
+
                                     String kmerString = "";
                                     if (posInRead > 0) {
                                         if (kmer.getLength() > tuple
-                                                .getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
+                                                .getFieldLength(MapKmerPositionToReadOperator.OutputKmerField)) {
                                             throw new IllegalArgumentException("Not enough kmer bytes");
                                         }
                                         kmer.setNewReference(

@@ -247,6 +247,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                 return;
             }
             try {
+                builder.reset();
                 builder.addField(node.getNodeID().getByteArray(), node.getNodeID().getStartOffset(), node.getNodeID()
                         .getLength());
                 builder.getDataOutput().writeInt(node.getCount());
@@ -268,7 +269,6 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                         throw new IllegalStateException("Failed to append tuplebuilder to frame");
                     }
                 }
-                builder.reset();
             } catch (IOException e) {
                 throw new IllegalStateException("Failed to Add a field to the tupleBuilder.");
             }
