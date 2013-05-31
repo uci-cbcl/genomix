@@ -4,6 +4,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import edu.uci.ics.genomix.data.KmerUtil;
+import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -22,9 +24,11 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
     private static final long serialVersionUID = 1L;
 
     private final int ValidPosCount;
+    private final int kmerLength;
 
     public MergeReadIDAggregateFactory(int readLength, int kmerLength) {
         ValidPosCount = getPositionCount(readLength, kmerLength);
+        this.kmerLength = kmerLength;
     }
 
     public static int getPositionCount(int readLength, int kmerLength) {
@@ -102,8 +106,14 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                     fieldOffset += BYTE_SIZE;
 
                     // read poslist
+                    int lengthPosList = fieldBuffer.getInt(fieldOffset);
+                    PositionListWritable.getCountByDataLength(lengthPosList);
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
                     // read Kmer
+                    lengthPosList = fieldBuffer.getInt(fieldOffset);
+                    if (lengthPosList != KmerUtil.getByteNumFromK(kmerLength)){
+                        throw new IllegalStateException("Size of Kmer is invalid "); 
+                    }
                     fieldOffset += writeBytesToStorage(storages[posInRead], fieldBuffer, fieldOffset);
 
                     positionArray.count += 1;

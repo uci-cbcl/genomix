@@ -132,6 +132,9 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     
     public static int getCountByDataLength(int length) {
         if (length % PositionWritable.LENGTH != 0) {
+            for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+                System.out.println(ste);
+            }
             throw new IllegalArgumentException("Length of positionlist is invalid");
         }
         return length / PositionWritable.LENGTH;

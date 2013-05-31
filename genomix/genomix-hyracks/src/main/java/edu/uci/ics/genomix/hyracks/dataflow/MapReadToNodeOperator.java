@@ -149,6 +149,9 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                 // minus 1 position of the incoming list to get the correct predecessor
                 for (PositionWritable pos : node.getIncomingList()) {
                     if (pos.getPosInRead() == 0) {
+                        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+                            System.out.println(ste);
+                        }
                         throw new IllegalArgumentException("The incoming position list contain invalid posInRead");
                     }
                     pos.set(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
@@ -159,6 +162,9 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             offset += lengthPos;
             int lengthKmer = buffer.getInt(offset);
             if (node.getKmer().getLength() != lengthKmer) {
+                for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+                    System.out.println(ste);
+                }
                 throw new IllegalStateException("Size of Kmer is invalid ");
             }
             setKmer(node.getKmer(), buffer.array(), offset + INT_LENGTH, isInitial);
