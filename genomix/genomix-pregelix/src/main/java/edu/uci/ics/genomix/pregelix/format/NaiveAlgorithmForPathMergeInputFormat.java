@@ -69,8 +69,10 @@ class BinaryLoadGraphReader extends
             /**
              * set the vertex value
              */
-            vertexValue.setIncomingList(node.getIncomingList());
-            vertexValue.setOutgoingList(node.getOutgoingList());
+            vertexValue.setFFList(node.getFFList());
+            vertexValue.setFRList(node.getFRList());
+            vertexValue.setRFList(node.getRFList());
+            vertexValue.setRRList(node.getRRList());
             vertexValue.setMergeChain(node.getKmer());
             vertexValue.setState(State.NON_VERTEX);
             vertex.setVertexValue(vertexValue);
