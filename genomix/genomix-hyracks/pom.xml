@@ -38,15 +38,15 @@
 									<mainClass>edu.uci.ics.genomix.hyracks.driver.Driver</mainClass>
 									<name>genomix</name>
 								</program>
-                                <program>
-                                     <mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
-                                     <name>genomixcc</name>
-                                </program>
-                                <program>
-                                     <mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
-                                     <name>genomixnc</name>
-                                </program>
-                            </programs>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+									<name>genomixcc</name>
+								</program>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+									<name>genomixnc</name>
+								</program>
+							</programs>
 							<repositoryLayout>flat</repositoryLayout>
 							<repositoryName>lib</repositoryName>
 						</configuration>
@@ -261,6 +261,6 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		
+
 	</dependencies>
 </project>

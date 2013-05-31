@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.genomix.hyracks.test;
 
 import java.io.BufferedWriter;
@@ -94,7 +108,7 @@ public class JobRunStepByStepTest {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.OUTPUT_GROUPBY_READID, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, new int [] {2,5,8,11,14,17,20,23}));
+        Assert.assertEquals(true, checkResults(EXPECTED_GROUPBYREADID, new int[] { 2, 5, 8, 11, 14, 17, 20, 23 }));
     }
 
     public void TestEndToEnd() throws Exception {
@@ -103,7 +117,7 @@ public class JobRunStepByStepTest {
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_NODE, new int[] {1,2,3,4}));
+        Assert.assertEquals(true, checkResults(EXPECTED_OUPUT_NODE, new int[] { 1, 2, 3, 4 }));
     }
 
     @Before
@@ -195,7 +209,7 @@ public class JobRunStepByStepTest {
                     if (node == null) {
                         break;
                     }
-                    bw.write(node.toString() );
+                    bw.write(node.toString());
                     System.out.println(node.toString());
                     bw.newLine();
                 }

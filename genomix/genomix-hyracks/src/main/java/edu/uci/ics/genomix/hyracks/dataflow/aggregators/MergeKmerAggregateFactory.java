@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -35,6 +35,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
     private static final Log LOG = LogFactory.getLog(MergeKmerAggregateFactory.class);
+
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
@@ -66,7 +67,6 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
             @Override
             public void reset() {
-                // TODO Auto-generated method stub
 
             }
 
@@ -94,7 +94,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 try {
-                    if (inputVal.getLength() > frameSize/2){
+                    if (inputVal.getLength() > frameSize / 2) {
                         LOG.warn("MergeKmer: output data size is too big: " + inputVal.getLength());
                     }
                     fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
@@ -107,7 +107,6 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
             @Override
             public void close() {
-                // TODO Auto-generated method stub
 
             }
 

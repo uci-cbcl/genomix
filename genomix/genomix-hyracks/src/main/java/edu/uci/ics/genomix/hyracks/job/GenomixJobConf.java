@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 
+@SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
 
     public static final String JOB_NAME = "genomix";
@@ -50,7 +51,7 @@ public class GenomixJobConf extends JobConf {
 
     public static final int DEFAULT_KMERLEN = 21;
     public static final int DEFAULT_READLEN = 124;
-    public static final int DEFAULT_FRAME_SIZE = 128*1024;
+    public static final int DEFAULT_FRAME_SIZE = 128 * 1024;
     public static final int DEFAULT_FRAME_LIMIT = 4096;
     public static final int DEFAULT_TABLE_SIZE = 10485767;
     public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
@@ -62,14 +63,13 @@ public class GenomixJobConf extends JobConf {
     public static final boolean DEFAULT_REVERSED = true;
 
     public static final String JOB_PLAN_GRAPHBUILD = "graphbuild";
-    public static final String JOB_PLAN_GRAPHSTAT  = "graphstat";
-    
+    public static final String JOB_PLAN_GRAPHSTAT = "graphstat";
+
     public static final String GROUPBY_TYPE_HYBRID = "hybrid";
     public static final String GROUPBY_TYPE_EXTERNAL = "external";
     public static final String GROUPBY_TYPE_PRECLUSTER = "precluster";
     public static final String OUTPUT_FORMAT_BINARY = "binary";
     public static final String OUTPUT_FORMAT_TEXT = "text";
-
 
     public GenomixJobConf() throws IOException {
         super(new Configuration());

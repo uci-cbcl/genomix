@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -162,11 +162,11 @@ public class TestUtils {
         }
         return true;
     }
-    
+
     private static boolean containStrings(String lineExpected, String actualLine, int[] poslistField) {
-//        if (lineExpected.equals(actualLine)){
-//            return true;
-//        }
+        if (lineExpected.equals(actualLine)) {
+            return true;
+        }
         String[] fieldsExp = lineExpected.split("\\\t");
         String[] fieldsAct = actualLine.split("\\\t");
         if (fieldsAct.length != fieldsExp.length) {
@@ -180,7 +180,7 @@ public class TestUtils {
                     break;
                 }
             }
-            if (cont){
+            if (cont) {
                 continue;
             }
             if (!fieldsAct[i].equals(fieldsExp[i])) {

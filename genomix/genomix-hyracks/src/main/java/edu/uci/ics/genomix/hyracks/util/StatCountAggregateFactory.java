@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.uci.ics.genomix.hyracks.util;
 
 import java.io.DataOutput;
@@ -44,7 +43,6 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
 
         @Override
         public AggregateState createAggregateStates() {
-            // TODO Auto-generated method stub
             return null;
         }
 
@@ -63,7 +61,6 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
 
         @Override
         public void reset() {
-            // TODO Auto-generated method stub
 
         }
 
@@ -112,7 +109,6 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
 
         @Override
         public void close() {
-            // TODO Auto-generated method stub
 
         }
 
@@ -122,7 +118,6 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
-        // TODO Auto-generated method stub
         return new CountAggregator(keyFields);
     }
 

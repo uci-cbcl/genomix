@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.genomix.hyracks.job;
 
 import java.io.DataOutput;
@@ -6,7 +20,6 @@ import java.util.Map;
 
 import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.hyracks.dataflow.MapKmerPositionToReadOperator;
-import edu.uci.ics.genomix.hyracks.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -33,7 +46,6 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
     public JobGenMapKmerToRead(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job, scheduler, ncMap, numPartitionPerMachine);
-        // TODO Auto-generated constructor stub
     }
 
     public AbstractOperatorDescriptor generateRootByWriteMapperFromKmerToReadID(JobSpecification jobSpec,
@@ -56,7 +68,6 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
 
                             @Override
                             public void open(DataOutput output) throws HyracksDataException {
-                                // TODO Auto-generated method stub
 
                             }
 
@@ -75,7 +86,6 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
                                             posCount,
                                             tuple.getFieldData(MapKmerPositionToReadOperator.OutputOtherReadIDListField),
                                             tuple.getFieldStart(MapKmerPositionToReadOperator.OutputOtherReadIDListField));
-
 
                                     String kmerString = "";
                                     if (posInRead > 0) {
@@ -105,7 +115,6 @@ public class JobGenMapKmerToRead extends JobGenBrujinGraph {
 
                             @Override
                             public void close(DataOutput output) throws HyracksDataException {
-                                // TODO Auto-generated method stub
 
                             }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -26,10 +26,8 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory;
-import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDNormarlizedComputeFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDPartitionComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
-import edu.uci.ics.genomix.hyracks.data.primitive.ReadIDPointable;
 import edu.uci.ics.genomix.hyracks.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.dataflow.MapKmerPositionToReadOperator;
 import edu.uci.ics.genomix.hyracks.dataflow.MapReadToNodeOperator;
@@ -58,6 +56,7 @@ import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import edu.uci.ics.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import edu.uci.ics.hyracks.data.std.api.IPointableFactory;
+import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
@@ -74,6 +73,7 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
+@SuppressWarnings("deprecation")
 public class JobGenBrujinGraph extends JobGen {
     /**
      * 
@@ -231,7 +231,7 @@ public class JobGenBrujinGraph extends JobGen {
         int[] keyFields = new int[] { 0 }; // the id of grouped key
         // (ReadID, {(PosInRead,{OtherPositoin..},Kmer) ...}
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(jobSpec, frameLimits, keyFields,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(ReadIDPointable.FACTORY) },
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                 MapKmerPositionToReadOperator.readIDOutputRec);
         connectOperators(jobSpec, mapKmerToRead, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
                 jobSpec));
@@ -239,9 +239,8 @@ public class JobGenBrujinGraph extends JobGen {
         RecordDescriptor readIDFinalRec = new RecordDescriptor(
                 new ISerializerDeserializer[1 + 2 * MergeReadIDAggregateFactory.getPositionCount(readLength, kmerSize)]);
         Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateReadIDAggregateFactory(),
-                new MergeReadIDAggregateFactory(readLength, kmerSize), new ReadIDPartitionComputerFactory(),
-                new ReadIDNormarlizedComputeFactory(), ReadIDPointable.FACTORY,
-                AggregateReadIDAggregateFactory.readIDAggregateRec, readIDFinalRec);
+                new MergeReadIDAggregateFactory(readLength, kmerSize), new ReadIDPartitionComputerFactory(), null,
+                IntegerPointable.FACTORY, AggregateReadIDAggregateFactory.readIDAggregateRec, readIDFinalRec);
         AbstractOperatorDescriptor readLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         connectOperators(jobSpec, sorter, ncNodeNames, readLocalAggregator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
@@ -367,7 +366,6 @@ public class JobGenBrujinGraph extends JobGen {
         }
         try {
             hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
-            @SuppressWarnings("deprecation")
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
             readSchedule = scheduler.getLocationConstraints(splits);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package edu.uci.ics.genomix.hyracks.dataflow.io;
 
 import java.io.DataOutput;
@@ -33,15 +32,17 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 	 * 
 	 */
     private static final long serialVersionUID = 1L;
-    
+
     private final int kmerSize;
+
     public KMerTextWriterFactory(int k) {
-        kmerSize =k;
+        kmerSize = k;
     }
 
     public class TupleWriter implements ITupleWriter {
         private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
         private PositionListWritable plist = new PositionListWritable();
+
         @Override
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
             try {
@@ -69,19 +70,16 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 
         @Override
         public void open(DataOutput output) throws HyracksDataException {
-            // TODO Auto-generated method stub
 
         }
 
         @Override
         public void close(DataOutput output) throws HyracksDataException {
-            // TODO Auto-generated method stub
         }
     }
 
     @Override
     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) throws HyracksDataException {
-        // TODO Auto-generated method stub
         return new TupleWriter();
     }
 
