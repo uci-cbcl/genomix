@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.hadoop.velvetgraphbuilding;
 
 import java.io.IOException;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;

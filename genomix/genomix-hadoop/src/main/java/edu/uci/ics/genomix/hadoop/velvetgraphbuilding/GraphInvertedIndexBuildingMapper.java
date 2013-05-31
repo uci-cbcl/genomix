@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.type.PositionWritable;
 @SuppressWarnings("deprecation")
 public class GraphInvertedIndexBuildingMapper extends MapReduceBase implements
         Mapper<LongWritable, Text, KmerBytesWritable, PositionWritable> {
-    
+
     public static int KMER_SIZE;
     public PositionWritable outputVertexID;
     public KmerBytesWritable outputKmer;
@@ -26,22 +26,26 @@ public class GraphInvertedIndexBuildingMapper extends MapReduceBase implements
         outputVertexID = new PositionWritable();
         outputKmer = new KmerBytesWritable(KMER_SIZE);
     }
+
     @Override
     public void map(LongWritable key, Text value, OutputCollector<KmerBytesWritable, PositionWritable> output,
             Reporter reporter) throws IOException {
-        String geneLine = value.toString();
         /** first kmer */
+        String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
+        if (rawLine.length != 2) {
+            throw new IOException("invalid data");
+        }
+        int readID = 0;
+        readID = Integer.parseInt(rawLine[0]);
+        String geneLine = rawLine[1];
         byte[] array = geneLine.getBytes();
         outputKmer.setByRead(array, 0);
-        System.out.println(key.get());
-        outputVertexID.set((int)key.get(), (byte)0);
+        outputVertexID.set(readID, (byte) 0);
         output.collect(outputKmer, outputVertexID);
         /** middle kmer */
-        int i = 0; 
-        for (i = KMER_SIZE; i < array.length; i++) {
+        for (int i = KMER_SIZE; i < array.length; i++) {
             outputKmer.shiftKmerWithNextChar(array[i]);
-            System.out.println((int)key.get());
-            outputVertexID.set((int)key.get(), (byte)(i - KMER_SIZE + 1));
+            outputVertexID.set(readID, (byte) (i - KMER_SIZE + 1));
             output.collect(outputKmer, outputVertexID);
         }
     }
