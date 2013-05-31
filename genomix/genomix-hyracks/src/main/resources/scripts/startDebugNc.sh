@@ -12,11 +12,11 @@ CCHOST=`ssh ${CCHOST_NAME} "cd ${CURRENT_PATH}; bin/getip.sh"`
 #Clean up temp dir
 
 #rm -rf $NCTMP_DIR2
-mkdir $NCTMP_DIR2
+mkdir -p $NCTMP_DIR2
 
 #Clean up log dir
 #rm -rf $NCLOGS_DIR2
-mkdir $NCLOGS_DIR2
+mkdir -p $NCLOGS_DIR2
 
 
 #Clean up I/O working dir
@@ -35,16 +35,14 @@ IPADDR=`bin/getip.sh`
 
 #Get node ID
 NODEID=`hostname | cut -d '.' -f 1`
-NODEID=${NODEID}2
 
 #Set JAVA_OPTS
 export JAVA_OPTS=$NCJAVA_OPTS2
 
-cd $HYRACKS_HOME
-HYRACKS_HOME=`pwd`
+GENOMIX_HOME=`pwd`
 
 #Enter the temp dir
 cd $NCTMP_DIR2
 
 #Launch hyracks nc
-$HYRACKS_HOME/hyracks-server/target/appassembler/bin/hyracksnc -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS2}" &> $NCLOGS_DIR2/$NODEID.log &
+${GENOMIX_HOME}/bin/genomixnc -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> $NCLOGS_DIR/$NODEID.log &
