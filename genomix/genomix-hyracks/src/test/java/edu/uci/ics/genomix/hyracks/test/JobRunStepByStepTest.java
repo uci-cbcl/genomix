@@ -54,7 +54,7 @@ public class JobRunStepByStepTest {
 
     private JobConf conf = new JobConf();
     private int numberOfNC = 2;
-    private int numPartitionPerMachine = 1;
+    private int numPartitionPerMachine = 2;
 
     private Driver driver;
 

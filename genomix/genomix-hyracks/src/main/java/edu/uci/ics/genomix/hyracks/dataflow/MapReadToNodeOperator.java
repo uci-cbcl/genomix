@@ -136,22 +136,6 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             outputNode(curNodeEntry);
         }
 
-        /**
-         * The neighbor list is store in the next next node
-         * (3,2) [(1,0),(2,0)] will become the outgoing list of node (3,1)
-         * (3,1) [(1,0),(2,0)]
-         * 
-         * @param curNodeEntry2
-         * @param nextNodeEntry2
-         */
-        //        private void setOutgoingByNext(NodeReference curNodeEntry2, NodeReference nextNodeEntry2) {
-        //            if (nextNodeEntry2 == null) {
-        //                curNodeEntry2.getOutgoingList().reset();
-        //            } else {
-        //                curNodeEntry2.setOutgoingList(nextNodeEntry2.getOutgoingList());
-        //            }
-        //        }
-
         private void resetNode(NodeReference node, int readID, byte posInRead, int offset, boolean isInitial) {
             node.reset(kmerSize);
             node.setNodeID(readID, posInRead);

@@ -45,19 +45,18 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     public static final int OutputKmerField = 0;
     public static final int OutputPosition = 1;
     
-    private KmerBytesWritable kmer;
-    private PositionReference pos;
-    private boolean bReversed;
+
+    private final boolean bReversed;
     private final int readLength;
+    private final int kmerSize;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
             null });
 
     public ReadsKeyValueParserFactory(int readlength, int k, boolean bGenerateReversed) {
         bReversed = bGenerateReversed;
-        kmer = new KmerBytesWritable(k);
-        pos = new PositionReference();
         this.readLength = readlength;
+        this.kmerSize = k;
     }
 
     @Override
@@ -69,6 +68,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
         return new IKeyValueParser<LongWritable, Text>() {
 
+            private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
+            private PositionReference pos = new PositionReference();
+            
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer) throws HyracksDataException {
                 String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
@@ -97,25 +99,24 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             private void SplitReads(int readID, byte[] array, IFrameWriter writer) {
                 /** first kmer */
-                int k = kmer.getKmerLength();
-                if (k >= array.length) {
+                if (kmerSize >= array.length) {
                     return;
                 }
                 kmer.setByRead(array, 0);
                 InsertToFrame(kmer, readID, 0, writer);
 
                 /** middle kmer */
-                for (int i = k; i < array.length; i++) {
+                for (int i = kmerSize; i < array.length; i++) {
                     kmer.shiftKmerWithNextChar(array[i]);
-                    InsertToFrame(kmer, readID, i - k + 1, writer);
+                    InsertToFrame(kmer, readID, i - kmerSize + 1, writer);
                 }
 
                 if (bReversed) {
                     /** first kmer */
                     kmer.setByReadReverse(array, 0);
-                    InsertToFrame(kmer, -readID, array.length - k, writer);
+                    InsertToFrame(kmer, -readID, array.length - kmerSize, writer);
                     /** middle kmer */
-                    for (int i = k; i < array.length; i++) {
+                    for (int i = kmerSize; i < array.length; i++) {
                         kmer.shiftKmerWithPreCode(GeneCode.getPairedCodeFromSymbol(array[i]));
                         InsertToFrame(kmer, -readID, array.length - i - 1, writer);
                     }
@@ -149,8 +150,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             @Override
             public void open(IFrameWriter writer) throws HyracksDataException {
-                // TODO Auto-generated method stub
-
             }
 
             @Override
