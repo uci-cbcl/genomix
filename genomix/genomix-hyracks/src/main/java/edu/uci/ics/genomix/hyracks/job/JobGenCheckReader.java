@@ -56,13 +56,15 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
              * 
              */
             private static final long serialVersionUID = 1L;
-            private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
-            private PositionWritable pos = new PositionWritable();
+            
 
             @Override
             public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new ITupleWriter(){
 
+                    private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
+                    private PositionWritable pos = new PositionWritable();
+                    
                     @Override
                     public void open(DataOutput output) throws HyracksDataException {
                         // TODO Auto-generated method stub
