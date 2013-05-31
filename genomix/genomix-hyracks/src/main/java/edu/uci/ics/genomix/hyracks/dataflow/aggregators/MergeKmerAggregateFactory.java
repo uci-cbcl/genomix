@@ -18,6 +18,9 @@ package edu.uci.ics.genomix.hyracks.dataflow.aggregators;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -31,11 +34,12 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
-
+    private static final Log LOG = LogFactory.getLog(MergeKmerAggregateFactory.class);
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
+        final int frameSize = ctx.getFrameSize();
         return new IAggregatorDescriptor() {
 
             private PositionReference position = new PositionReference();
@@ -90,6 +94,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 try {
+                    if (inputVal.getLength() > frameSize/2){
+                        LOG.warn("MergeKmer: output data size is too big: " + inputVal.getLength());
+                    }
                     fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
                     tupleBuilder.addFieldEndOffset();
 
