@@ -33,15 +33,15 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
 	 * 
 	 */
     private static final long serialVersionUID = 1L;
-    private KmerBytesWritable kmer;
-    private PositionListWritable plist;
-
+    
+    private final int kmerSize;
     public KMerTextWriterFactory(int k) {
-        kmer = new KmerBytesWritable(k);
-        plist = new PositionListWritable();
+        kmerSize =k;
     }
 
     public class TupleWriter implements ITupleWriter {
+        private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
+        private PositionListWritable plist = new PositionListWritable();
         @Override
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
             try {
