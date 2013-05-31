@@ -75,12 +75,18 @@ public class LogAlgorithmForPathMergeVertex extends
      * get destination vertex
      */
     public PositionWritable getNextDestVertexId(ValueStateWritable value) {
-        posIterator = value.getOutgoingList().iterator();
+        if(value.getFFList().getCountOfPosition() > 0) // #FFList() > 0
+            posIterator = value.getFFList().iterator();
+        else // #FRList() > 0
+            posIterator = value.getFRList().iterator();
         return posIterator.next();
     }
 
     public PositionWritable getPreDestVertexId(ValueStateWritable value) {
-        posIterator = value.getIncomingList().iterator();
+        if(value.getRFList().getCountOfPosition() > 0) // #RFList() > 0
+            posIterator = value.getRFList().iterator();
+        else // #RRList() > 0
+            posIterator = value.getRRList().iterator();
         return posIterator.next();
     }
 
@@ -88,7 +94,12 @@ public class LogAlgorithmForPathMergeVertex extends
      * head send message to all next nodes
      */
     public void sendMsgToAllNextNodes(ValueStateWritable value) {
-        posIterator = value.getOutgoingList().iterator();
+        posIterator = value.getFFList().iterator(); // FFList
+        while(posIterator.hasNext()){
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        posIterator = value.getFRList().iterator(); // FRList
         while(posIterator.hasNext()){
             destVertexId.set(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
@@ -99,7 +110,12 @@ public class LogAlgorithmForPathMergeVertex extends
      * head send message to all previous nodes
      */
     public void sendMsgToAllPreviousNodes(ValueStateWritable value) {
-        posIterator = value.getIncomingList().iterator();
+        posIterator = value.getRFList().iterator(); // RFList
+        while(posIterator.hasNext()){
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        posIterator = value.getRRList().iterator(); // RRList
         while(posIterator.hasNext()){
             destVertexId.set(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);

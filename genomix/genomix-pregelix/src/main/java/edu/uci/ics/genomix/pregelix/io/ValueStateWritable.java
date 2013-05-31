@@ -10,44 +10,82 @@ import edu.uci.ics.genomix.type.PositionListWritable;
 
 public class ValueStateWritable implements WritableComparable<ValueStateWritable> {
 
-    private PositionListWritable incomingList;
-    private PositionListWritable outgoingList;
+    private AdjacencyListWritable incomingList;
+    private AdjacencyListWritable outgoingList;
     private byte state;
     private KmerBytesWritable mergeChain;
 
     public ValueStateWritable() {
-        incomingList = new PositionListWritable();
-        outgoingList = new PositionListWritable();
+        incomingList = new AdjacencyListWritable();
+        outgoingList = new AdjacencyListWritable();
         state = State.NON_VERTEX;
         mergeChain = new KmerBytesWritable(0);
     }
 
-    public ValueStateWritable(PositionListWritable incomingList, PositionListWritable outgoingList, 
+    public ValueStateWritable(PositionListWritable forwardForwardList, PositionListWritable forwardReverseList,
+            PositionListWritable reverseForwardList, PositionListWritable reverseReverseList,
             byte state, KmerBytesWritable mergeChain) {
-        set(incomingList, outgoingList, state, mergeChain);
+        set(forwardForwardList, forwardReverseList, 
+                reverseForwardList, reverseReverseList,
+                state, mergeChain);
     }
 
-    public void set(PositionListWritable incomingList, PositionListWritable outgoingList, 
+    public void set(PositionListWritable forwardForwardList, PositionListWritable forwardReverseList,
+            PositionListWritable reverseForwardList, PositionListWritable reverseReverseList, 
             byte state, KmerBytesWritable mergeChain) {
-        this.incomingList.set(incomingList);
-        this.outgoingList.set(outgoingList);
+        this.incomingList.setForwardList(reverseForwardList);
+        this.incomingList.setReverseList(reverseReverseList);
+        this.outgoingList.setForwardList(forwardForwardList);
+        this.outgoingList.setReverseList(forwardReverseList);
         this.state = state;
         this.mergeChain.set(mergeChain);
     }
     
-    public PositionListWritable getIncomingList() {
+    public PositionListWritable getFFList() {
+        return outgoingList.getForwardList();
+    }
+
+    public PositionListWritable getFRList() {
+        return outgoingList.getReverseList();
+    }
+
+    public PositionListWritable getRFList() {
+        return incomingList.getForwardList();
+    }
+
+    public PositionListWritable getRRList() {
+        return incomingList.getReverseList();
+    }
+    
+    public void setFFList(PositionListWritable forwardForwardList){
+        outgoingList.setForwardList(forwardForwardList);
+    }
+    
+    public void setFRList(PositionListWritable forwardReverseList){
+        outgoingList.setReverseList(forwardReverseList);
+    }
+    
+    public void setRFList(PositionListWritable reverseForwardList){
+        incomingList.setForwardList(reverseForwardList);
+    }
+
+    public void setRRList(PositionListWritable reverseReverseList){
+        incomingList.setReverseList(reverseReverseList);
+    }
+    
+    public AdjacencyListWritable getIncomingList() {
         return incomingList;
     }
 
-    public void setIncomingList(PositionListWritable incomingList) {
+    public void setIncomingList(AdjacencyListWritable incomingList) {
         this.incomingList = incomingList;
     }
 
-    public PositionListWritable getOutgoingList() {
+    public AdjacencyListWritable getOutgoingList() {
         return outgoingList;
     }
 
-    public void setOutgoingList(PositionListWritable outgoingList) {
+    public void setOutgoingList(AdjacencyListWritable outgoingList) {
         this.outgoingList = outgoingList;
     }
 
@@ -94,14 +132,21 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
 
     @Override
     public String toString() {
-        return state + "\t" + getLengthOfMergeChain() + "\t" + mergeChain.toString();
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append('(');
+        sbuilder.append(outgoingList.getForwardList().toString()).append('\t');
+        sbuilder.append(outgoingList.getReverseList().toString()).append('\t');
+        sbuilder.append(incomingList.getForwardList().toString()).append('\t');
+        sbuilder.append(incomingList.getReverseList().toString()).append('\t');
+        sbuilder.append(mergeChain.toString()).append(')');
+        return sbuilder.toString();
     }
     
-    public int inDegree() {
-        return incomingList.getCountOfPosition();
+    public int inDegree(){
+        return incomingList.getForwardList().getCountOfPosition() + incomingList.getReverseList().getCountOfPosition();
     }
-
-    public int outDegree() {
-        return outgoingList.getCountOfPosition();
+    
+    public int outDegree(){
+        return outgoingList.getForwardList().getCountOfPosition() + outgoingList.getReverseList().getCountOfPosition();
     }
 }
