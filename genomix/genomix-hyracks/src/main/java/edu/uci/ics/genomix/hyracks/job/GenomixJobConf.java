@@ -50,7 +50,7 @@ public class GenomixJobConf extends JobConf {
 
     public static final int DEFAULT_KMERLEN = 21;
     public static final int DEFAULT_READLEN = 124;
-    public static final int DEFAULT_FRAME_SIZE = 32768;
+    public static final int DEFAULT_FRAME_SIZE = 128*1024;
     public static final int DEFAULT_FRAME_LIMIT = 4096;
     public static final int DEFAULT_TABLE_SIZE = 10485767;
     public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;

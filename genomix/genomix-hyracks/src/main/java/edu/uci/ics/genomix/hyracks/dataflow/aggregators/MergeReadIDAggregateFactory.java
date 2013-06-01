@@ -4,6 +4,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -22,6 +25,7 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
     private static final long serialVersionUID = 1L;
 
     private final int ValidPosCount;
+    private static final Log LOG = LogFactory.getLog(MergeReadIDAggregateFactory.class);
 
     public MergeReadIDAggregateFactory(int readLength, int kmerLength) {
         ValidPosCount = getPositionCount(readLength, kmerLength);
@@ -45,6 +49,7 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
+        final int frameSize = ctx.getFrameSize();
         return new IAggregatorDescriptor() {
 
             class PositionArray {
@@ -168,6 +173,7 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                 }
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 try {
+                    int totalSize = 0;
                     for (int i = 0; i < ValidPosCount; i++) {
                         fieldOutput.write(positionArray.forwardStorages[i].getByteArray(),
                                 positionArray.forwardStorages[i].getStartOffset(),
@@ -178,6 +184,22 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                                 positionArray.reverseStorages[i].getStartOffset(),
                                 positionArray.reverseStorages[i].getLength());
                         tupleBuilder.addFieldEndOffset();
+
+                        totalSize += positionArray.forwardStorages[i].getLength()
+                                + positionArray.reverseStorages[i].getLength();
+                    }
+                    if (totalSize > frameSize / 2) {
+                        int leadbyte = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
+                        int readID = accessor.getBuffer().getInt(
+                                leadbyte + accessor.getFieldStartOffset(tIndex, InputReadIDField));
+                        LOG.warn("MergeReadID on read:" + readID + " is of size: " + totalSize + ", current frameSize:"
+                                + frameSize + "\n Recommendate to enlarge the FrameSize");
+                    }
+                    if (totalSize > frameSize){
+                        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+                            System.out.println(ste);
+                        }
+                        throw new HyracksDataException("Data is too long");
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");

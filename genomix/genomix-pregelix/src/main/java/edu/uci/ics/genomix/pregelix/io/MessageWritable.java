@@ -9,7 +9,6 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
 public class MessageWritable implements WritableComparable<MessageWritable> {
@@ -20,7 +19,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
      */
     private PositionWritable sourceVertexId;
     private KmerBytesWritable chainVertexId;
-    private PositionListWritable neighberNode; //incoming or outgoing
+    private AdjacencyListWritable neighberNode; //incoming or outgoing
     private byte message;
 
     private byte checkMessage;
@@ -28,12 +27,12 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     public MessageWritable() {
         sourceVertexId = new PositionWritable();
         chainVertexId = new KmerBytesWritable(0);
-        neighberNode = new PositionListWritable();
+        neighberNode = new AdjacencyListWritable();
         message = Message.NON;
         checkMessage = (byte) 0;
     }
 
-    public void set(PositionWritable sourceVertexId, KmerBytesWritable chainVertexId, PositionListWritable neighberNode, byte message) {
+    public void set(PositionWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
@@ -79,11 +78,11 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
     }
     
-    public PositionListWritable getNeighberNode() {
+    public AdjacencyListWritable getNeighberNode() {
         return neighberNode;
     }
 
-    public void setNeighberNode(PositionListWritable neighberNode) {
+    public void setNeighberNode(AdjacencyListWritable neighberNode) {
         if(neighberNode != null){
             checkMessage |= CheckMessage.NEIGHBER;
             this.neighberNode.set(neighberNode);
