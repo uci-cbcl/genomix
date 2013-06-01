@@ -43,9 +43,9 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class PathMergeSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(PathMergeSmallTestSuite.class.getName());
 
-    public static final String PreFix = "data/PathTestSet"; //"graphbuildresult";
+    public static final String PreFix = "data/input"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "LongPath"};/*, PreFix + File.separator
+    + "test"};/*, PreFix + File.separator
             /*+ "CyclePath"};, PreFix + File.separator
             + "SimplePath", PreFix + File.separator
             + "SinglePath", PreFix + File.separator
