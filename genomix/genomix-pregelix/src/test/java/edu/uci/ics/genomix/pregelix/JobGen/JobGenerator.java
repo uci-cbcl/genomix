@@ -73,8 +73,8 @@ public class JobGenerator {
 
     public static void main(String[] args) throws IOException {
         genNaiveAlgorithmForMergeGraph();
-        genLogAlgorithmForMergeGraph();
-        genP3ForMergeGraph();
+        //genLogAlgorithmForMergeGraph();
+        //genP3ForMergeGraph();
     }
 
 }
