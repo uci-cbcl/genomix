@@ -39,13 +39,25 @@ public class GraphInvertedIndexBuildingMapper extends MapReduceBase implements
         readID = Integer.parseInt(rawLine[0]);
         String geneLine = rawLine[1];
         byte[] array = geneLine.getBytes();
+        if (KMER_SIZE >= array.length) {
+            throw new IOException("short read");
+        }
         outputKmer.setByRead(array, 0);
-        outputVertexID.set(readID, (byte) 0);
+        outputVertexID.set(readID, (byte) 1);
         output.collect(outputKmer, outputVertexID);
         /** middle kmer */
         for (int i = KMER_SIZE; i < array.length; i++) {
             outputKmer.shiftKmerWithNextChar(array[i]);
-            outputVertexID.set(readID, (byte) (i - KMER_SIZE + 1));
+            outputVertexID.set(readID, (byte) (i - KMER_SIZE + 2));
+            output.collect(outputKmer, outputVertexID);
+        }
+        /** reverse first kmer */
+        outputKmer.setByReadReverse(array, 0);
+        outputVertexID.set(readID, (byte) -1);
+        /** reverse middle kmer */
+        for (int i = KMER_SIZE; i < array.length; i++) {
+            outputKmer.shiftKmerWithPreCode(GeneCode.getPairedCodeFromSymbol(array[i]));
+            outputVertexID.set(readID, (byte) (-2 + KMER_SIZE - i));
             output.collect(outputKmer, outputVertexID);
         }
     }

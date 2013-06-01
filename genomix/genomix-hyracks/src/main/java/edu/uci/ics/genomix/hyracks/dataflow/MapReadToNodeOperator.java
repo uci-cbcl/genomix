@@ -80,7 +80,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             nextNodeEntry = new NodeReference(kmerSize);
             nextNextNodeEntry = new NodeReference(0);
             cachePositionList = new PositionListWritable();
-            LAST_POSITION_ID = (inputRecDesc.getFieldCount() - InputInfoFieldStart) / 2;
+            LAST_POSITION_ID = (inputRecDesc.getFieldCount() - InputInfoFieldStart) / 2; //?????????正负
         }
 
         @Override

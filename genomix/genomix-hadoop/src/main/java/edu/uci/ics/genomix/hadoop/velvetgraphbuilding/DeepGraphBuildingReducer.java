@@ -44,96 +44,160 @@ public class DeepGraphBuildingReducer extends MapReduceBase implements
         }
     }
 
-    private PositionListAndKmerWritable nodeListAndKmer = new PositionListAndKmerWritable();
-    private PositionListAndKmerWritable nodeSuccListAndKmer = new PositionListAndKmerWritable();
-    private NodeWritable startNodeInRead = new NodeWritable();
-    private NodeWritable nodeToMerge = new NodeWritable();
-    private NodeWritable nodeToBeMerged = new NodeWritable();
+    private PositionListAndKmerWritable curNodePosiListAndKmer = new PositionListAndKmerWritable();
+    private PositionListAndKmerWritable curNodeNegaListAndKmer = new PositionListAndKmerWritable();
+    private PositionListAndKmerWritable nextNodePosiListAndKmer = new PositionListAndKmerWritable();
+    private PositionListAndKmerWritable nextNodeNegaListAndKmer = new PositionListAndKmerWritable();
+
+    private NodeWritable curNode = new NodeWritable();
+    private NodeWritable nextNode = new NodeWritable();
+    private NodeWritable nextNextNode = new NodeWritable();
     private PositionListWritable incomingList = new PositionListWritable();
     private PositionListWritable outgoingList = new PositionListWritable();
     private NullWritable nullWritable = NullWritable.get();
-    private nodeToMergeState state = new nodeToMergeState();
     private int KMER_SIZE;
+    private int LAST_POSID;
+    private int READ_LENGTH;
+
     public void configure(JobConf job) {
-        KMER_SIZE = job.getInt("sizeKmer", 0);
+        KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
+        READ_LENGTH = Integer.parseInt(job.get("readLength"));
+        LAST_POSID = READ_LENGTH - KMER_SIZE + 1;
     }
+
     @Override
     public void reduce(PositionWritable key, Iterator<PositionListAndKmerWritable> values,
             OutputCollector<NodeWritable, NullWritable> output, Reporter reporter) throws IOException {
         int readID = key.getReadID();
         byte posInRead = 0;
-        assembleNodeInitialization(readID, posInRead, values);
-        posInRead = (byte) (posInRead + 2);
-        //----LOOP
-        while (values.hasNext()) {
-            assembleNodeFromValues(readID, posInRead, values);
-            posInRead = (byte) (posInRead + 1);
-            if (nodeToMerge.isPathNode() == true && nodeToBeMerged.isPathNode() == true) {
-                nodeToMerge.mergeNext(nodeToBeMerged, KMER_SIZE);
-                state.setToNotUpdate();
+        assembleFirstTwoNodesInRead(readID, posInRead, curNode, nextNode, values);
+        assembleNodeFromValues(readID, posInRead, curNode, nextNode, values);
+        posInRead ++;
+        while(values.hasNext()){
+            assembleNodeFromValues(readID, posInRead, curNode, nextNextNode, values);
+
+            if (curNode.inDegree() > 1 || curNode.outDegree() > 0 || nextNode.inDegree() > 0
+                    || nextNode.outDegree() > 0 || nextNextNode.inDegree() > 0
+                    || nextNextNode.outDegree() > 0) {
+                connect(curNode, nextNextNode);
+                output.collect(curNode, nullWritable);
+                curNode.set(nextNode);
+                nextNode.set(nextNode);
+                continue;
+            }
+            curNode.mergeForwadNext(nextNode, KMER_SIZE);
+            nextNode.set(nextNextNode);
+        }
+    }
+
+    public void assembleNodeFromValues(int readID, byte posInRead, NodeWritable curNode, NodeWritable nextNode, Iterator<PositionListAndKmerWritable> values)
+            throws IOException {
+        curNodePosiListAndKmer.set(nextNodePosiListAndKmer);
+        curNodeNegaListAndKmer.set(nextNodeNegaListAndKmer);
+        if (values.hasNext()) {
+            nextNodePosiListAndKmer.set(values.next());
+            if(values.hasNext()) {
+                nextNodeNegaListAndKmer.set(values.next());
             }
             else {
-                state.setToAssignedByRightNode();
-                output.collect(nodeToMerge, nullWritable);
+                throw new IOException("lose the paired kmer");
+            }
+        }
+        
+        outgoingList.reset();
+        outgoingList.set(nextNodePosiListAndKmer.getVertexIDList());
+        setForwardOutgoingList(curNode, outgoingList);
+        
+        nextNode.setNodeID(readID, (byte)(posInRead + 1));
+        nextNode.setKmer(nextNodePosiListAndKmer.getKmer());
+        
+        outgoingList.reset();
+        outgoingList.set(curNodeNegaListAndKmer.getVertexIDList());
+        setReverseOutgoingList(nextNode, outgoingList);
+        
+        if (nextNode.getNodeID().getPosInRead() == LAST_POSID) {
+            incomingList.reset();
+            incomingList.set(nextNodeNegaListAndKmer.getVertexIDList());
+            setReverseIncomingList(nextNode, incomingList);
+        }
+    }
+
+    public void assembleFirstTwoNodesInRead(int readID, byte posInRead, NodeWritable curNode, NodeWritable nextNode, Iterator<PositionListAndKmerWritable> values)
+            throws IOException {
+        nextNodePosiListAndKmer.set(values.next());
+        if (values.hasNext()) {
+            nextNodeNegaListAndKmer.set(values.next());
+        } else {
+            throw new IOException("lose the paired kmer");
+        }
+        
+        if (curNode.getNodeID().getPosInRead() == LAST_POSID) {
+            incomingList.reset();
+            incomingList.set(nextNodeNegaListAndKmer.getVertexIDList());
+            setReverseIncomingList(curNode, incomingList);
+        }
+        incomingList.reset();
+        incomingList.set(nextNodePosiListAndKmer.getVertexIDList());
+        
+        curNode.setNodeID(readID, posInRead);
+        curNode.setKmer(curNodePosiListAndKmer.getKmer());
+        setForwardIncomingList(curNode, incomingList);
+    }
+
+    private void setForwardOutgoingList(NodeWritable node, PositionListWritable posList) {
+        for (PositionWritable pos : posList) {
+            if (pos.getPosInRead() > 0) {
+                node.getFFList().append(pos);
+            } else {
+                node.getFRList().append(pos.getReadID(), (byte) -pos.getPosInRead());
             }
         }
     }
 
-    public void assembleNodeFromValues(int readID, byte posInRead, Iterator<PositionListAndKmerWritable> values)
-            throws IOException {
-        if (values.hasNext()) {
-            nodeListAndKmer.set(values.next());
-        } else {
-            throw new IOException("the size of values emerge bug!");
+    private void setForwardIncomingList(NodeWritable node, PositionListWritable posList) {
+        for (PositionWritable pos : posList) {
+            if (pos.getPosInRead() > 0) {
+                if (pos.getPosInRead() > 1) {
+                    node.getRRList().append(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
+                } else {
+                    throw new IllegalArgumentException("position id is invalid");
+                }
+            } else {
+                if (pos.getPosInRead() > -LAST_POSID) {
+                    node.getRFList().append(pos.getReadID(), (byte) -(pos.getPosInRead() - 1));
+                }
+            }
         }
-        if (state.getState().equals("ASSIGNED_BY_RIGHTNODE")) {
-            nodeToMerge.set(nodeToBeMerged);
-        }
-        incomingList.reset();
-        incomingList.append(readID, (byte) (posInRead - 1));
-        if (nodeSuccListAndKmer.getVertexIDList() != null)
-            outgoingList.set(nodeSuccListAndKmer.getVertexIDList());
-        outgoingList.append(readID, (byte) (posInRead + 1));
-        nodeToBeMerged.setNodeID(readID, (byte) posInRead);
-        nodeToBeMerged.setIncomingList(incomingList);
-        nodeToBeMerged.setOutgoingList(outgoingList);
-        nodeToBeMerged.setKmer(nodeListAndKmer.getKmer());
     }
 
-    public void assembleNodeInitialization(int readID, byte posInRead, Iterator<PositionListAndKmerWritable> values)
-            throws IOException {
-        if (values.hasNext()) {
-            nodeListAndKmer.set(values.next());
-        } else {
-            throw new IOException("the size of values emerge bug!");
+    private void setReverseOutgoingList(NodeWritable node, PositionListWritable posList) {
+        for (PositionWritable pos : posList) {
+            if (pos.getPosInRead() > 0) {
+                node.getRFList().append(pos);
+            } else {
+                node.getRRList().append(pos.getReadID(), (byte) -pos.getPosInRead());
+            }
         }
-        if (values.hasNext()) {
-            nodeSuccListAndKmer.set(values.next());
+    }
+
+    private void setReverseIncomingList(NodeWritable node, PositionListWritable posList) {
+        for (PositionWritable pos : posList) {
+            if (pos.getPosInRead() > 0) {
+                if (pos.getPosInRead() > 1) {
+                    node.getFRList().append(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
+                } else {
+                    throw new IllegalArgumentException("Invalid position");
+                }
+            } else {
+                if (pos.getPosInRead() > -LAST_POSID) {
+                    node.getFFList().append(pos.getReadID(), (byte) -(pos.getPosInRead() - 1));
+                }
+            }
         }
-        incomingList.reset();
-        incomingList.set(nodeSuccListAndKmer.getVertexIDList());
-        outgoingList.reset();
-        if (nodeSuccListAndKmer.getVertexIDList() != null)
-            outgoingList.set(nodeSuccListAndKmer.getVertexIDList());
-        outgoingList.append(readID, (byte) (posInRead + 1));
-        startNodeInRead.setNodeID(readID, posInRead);
-        startNodeInRead.setIncomingList(incomingList);
-        startNodeInRead.setOutgoingList(outgoingList);
-        startNodeInRead.setKmer(nodeListAndKmer.getKmer());
-        //---------
-        nodeListAndKmer.set(nodeSuccListAndKmer);
-        incomingList.reset();
-        incomingList.append(readID, posInRead);
-        if (values.hasNext()) {
-            nodeSuccListAndKmer.set(values.next());
-            if (nodeSuccListAndKmer.getVertexIDList() != null)
-                outgoingList.set(nodeSuccListAndKmer.getVertexIDList());
-        }
-        outgoingList.append(readID, (byte) (posInRead + 2));
-        nodeToMerge.setNodeID(readID, (byte) posInRead);
-        nodeToMerge.setIncomingList(incomingList);
-        nodeToMerge.setOutgoingList(outgoingList);
-        nodeToMerge.setKmer(nodeListAndKmer.getKmer());
-        state.setToNotUpdate();
+    }
+    
+    private void connect(NodeWritable curNode, NodeWritable nextNode) {
+        curNode.getFFList().append(nextNode.getNodeID());
+        nextNode.getRRList().append(curNode.getNodeID());
     }
 }

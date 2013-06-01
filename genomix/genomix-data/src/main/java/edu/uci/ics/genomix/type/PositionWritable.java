@@ -119,8 +119,17 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
             int thisValue = Marshal.getInt(b1, s1);
             int thatValue = Marshal.getInt(b2, s2);
             int diff = thisValue - thatValue;
+            int src = 0;
+            int des = 0;
             if (diff == 0) {
-                return b1[s1 + INTBYTES] - b2[s2 + INTBYTES];
+                if(b1[s1 + INTBYTES] < 0) {
+                    src = - b1[s1 + INTBYTES];}
+                if(b2[s2 + INTBYTES] < 0){
+                    des = - b2[s2 + INTBYTES];}
+                if(src == des) {
+                    return b1[s1 + INTBYTES] - b2[s2 + INTBYTES];
+                }
+                return src - des;
             }
             return diff;
         }
