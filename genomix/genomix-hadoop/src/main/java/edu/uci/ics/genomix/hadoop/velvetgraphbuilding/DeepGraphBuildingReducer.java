@@ -16,34 +16,6 @@ import edu.uci.ics.genomix.type.PositionWritable;
 @SuppressWarnings("deprecation")
 public class DeepGraphBuildingReducer extends MapReduceBase implements
         Reducer<PositionWritable, PositionListAndKmerWritable, NodeWritable, NullWritable> {
-    public class nodeToMergeState {
-        public static final byte NOT_UPDATE = 0;
-        public static final byte ASSIGNED_BY_RIGHTNODE = 1;
-        private byte state;
-
-        public nodeToMergeState() {
-            state = NOT_UPDATE;
-        }
-
-        public void setToNotUpdate() {
-            state = NOT_UPDATE;
-        }
-
-        public void setToAssignedByRightNode() {
-            state = ASSIGNED_BY_RIGHTNODE;
-        }
-
-        public String getState() {
-            switch (state) {
-                case NOT_UPDATE:
-                    return "NOT_UPDATE";
-                case ASSIGNED_BY_RIGHTNODE:
-                    return "ASSIGNED_BY_RIGHTNODE";
-            }
-            return "ERROR_STATE";
-        }
-    }
-
     private PositionListAndKmerWritable curNodePosiListAndKmer = new PositionListAndKmerWritable();
     private PositionListAndKmerWritable curNodeNegaListAndKmer = new PositionListAndKmerWritable();
     private PositionListAndKmerWritable nextNodePosiListAndKmer = new PositionListAndKmerWritable();
@@ -72,6 +44,14 @@ public class DeepGraphBuildingReducer extends MapReduceBase implements
     public void reduce(PositionWritable key, Iterator<PositionListAndKmerWritable> values,
             OutputCollector<NodeWritable, NullWritable> output, Reporter reporter) throws IOException {
         int readID = key.getReadID();
+        if(readID == 1) {
+            int x = 4;
+            int y =x ;
+            System.out.println((int)key.getPosInRead());
+        }
+/*        while(values.hasNext()) {
+            System.out.println(values.next().getKmer().toString());
+        }*/
         byte posInRead = (byte) 1;
         resetNode(curNode, readID, posInRead);
         assembleFirstTwoNodesInRead(curNodePosiListAndKmer, nextNodePosiListAndKmer, nextNodeNegaListAndKmer,
@@ -80,67 +60,75 @@ public class DeepGraphBuildingReducer extends MapReduceBase implements
         assembleNodeFromValues(readID, posInRead, curNodePosiListAndKmer, curNodeNegaListAndKmer,
                 nextNodePosiListAndKmer, nextNodeNegaListAndKmer, incomingList, outgoingList, curNode, nextNode, values);
         posInRead++;
-        while (values.hasNext()) {
-            assembleNodeFromValues(readID, posInRead, curNodePosiListAndKmer, curNodeNegaListAndKmer,
-                    nextNodePosiListAndKmer, nextNodeNegaListAndKmer, incomingList, outgoingList, curNode, nextNextNode, values);
+        boolean flag = true;
+        while (flag) {
+            flag = assembleNodeFromValues(readID, posInRead, curNodePosiListAndKmer, curNodeNegaListAndKmer,
+                    nextNodePosiListAndKmer, nextNodeNegaListAndKmer, incomingList, outgoingList, nextNode,
+                    nextNextNode, values);
             posInRead++;
             if (curNode.inDegree() > 1 || curNode.outDegree() > 0 || nextNode.inDegree() > 0
                     || nextNode.outDegree() > 0 || nextNextNode.inDegree() > 0 || nextNextNode.outDegree() > 0) {
-                connect(curNode, nextNextNode);
+                connect(curNode, nextNode);
                 output.collect(curNode, nullWritable);
                 curNode.set(nextNode);
-                nextNode.set(nextNode);
+                nextNode.set(nextNextNode);
                 continue;
             }
             curNode.mergeForwadNext(nextNode, KMER_SIZE);
             nextNode.set(nextNextNode);
         }
+        output.collect(curNode, nullWritable);
     }
 
-    public void assembleNodeFromValues(int readID, byte posInRead, PositionListAndKmerWritable curNodePosiListAndKmer,
+    public boolean assembleNodeFromValues(int readID, byte posInRead, PositionListAndKmerWritable curNodePosiListAndKmer,
             PositionListAndKmerWritable curNodeNegaListAndKmer, PositionListAndKmerWritable nextNodePosiListAndKmer,
             PositionListAndKmerWritable nextNodeNegaListAndKmer, PositionListWritable outgoingList,
             PositionListWritable incomingList, NodeWritable curNode, NodeWritable nextNode,
             Iterator<PositionListAndKmerWritable> values) throws IOException {
-
+        boolean flag = true;
         curNodePosiListAndKmer.set(nextNodePosiListAndKmer);
         curNodeNegaListAndKmer.set(nextNodeNegaListAndKmer);
         if (values.hasNext()) {
-            nextNodePosiListAndKmer.set(values.next());
+            nextNodeNegaListAndKmer.set(values.next());
             if (values.hasNext()) {
-                nextNodeNegaListAndKmer.set(values.next());
+                nextNodePosiListAndKmer.set(values.next());
             } else {
-                throw new IOException("lose the paired kmer");
+                throw new IOException("lose the paired kmer from values");
+            }
+            outgoingList.reset();
+            outgoingList.set(nextNodePosiListAndKmer.getVertexIDList());
+            setForwardOutgoingList(curNode, outgoingList);
+
+            resetNode(nextNode, readID, posInRead);
+            nextNode.setKmer(nextNodePosiListAndKmer.getKmer());
+
+            outgoingList.reset();
+            outgoingList.set(curNodeNegaListAndKmer.getVertexIDList());
+            setReverseOutgoingList(nextNode, outgoingList);
+
+            if (nextNode.getNodeID().getPosInRead() == LAST_POSID) {
+                incomingList.reset();
+                incomingList.set(nextNodeNegaListAndKmer.getVertexIDList());
+                setReverseIncomingList(nextNode, incomingList);
             }
         }
-
-        outgoingList.reset();
-        outgoingList.set(nextNodePosiListAndKmer.getVertexIDList());
-        setForwardOutgoingList(curNode, outgoingList);
-
-        resetNode(nextNode, readID, posInRead);
-        nextNode.setKmer(nextNodePosiListAndKmer.getKmer());
-
-        outgoingList.reset();
-        outgoingList.set(curNodeNegaListAndKmer.getVertexIDList());
-        setReverseOutgoingList(nextNode, outgoingList);
-
-        if (nextNode.getNodeID().getPosInRead() == LAST_POSID) {
-            incomingList.reset();
-            incomingList.set(nextNodeNegaListAndKmer.getVertexIDList());
-            setReverseIncomingList(nextNode, incomingList);
+        else{
+            flag = false;
+            resetNode(nextNode, readID, (byte)0);
         }
+        return flag;
     }
 
     public void assembleFirstTwoNodesInRead(PositionListAndKmerWritable curNodePosiListAndKmer,
             PositionListAndKmerWritable nextNodePosiListAndKmer, PositionListAndKmerWritable nextNodeNegaListAndKmer,
             PositionListWritable outgoingList, PositionListWritable incomingList, NodeWritable curNode,
             NodeWritable nextNode, Iterator<PositionListAndKmerWritable> values) throws IOException {
-        nextNodePosiListAndKmer.set(values.next());
+        nextNodeNegaListAndKmer.set(values.next());
         if (values.hasNext()) {
-            nextNodeNegaListAndKmer.set(values.next());
+            nextNodePosiListAndKmer.set(values.next());
         } else {
-            throw new IOException("lose the paired kmer");
+            System.out.println(curNode.getNodeID().getReadID());
+            throw new IOException("lose the paired kmer from first two nodes");
         }
 
         if (curNode.getNodeID().getPosInRead() == LAST_POSID) {
@@ -151,7 +139,8 @@ public class DeepGraphBuildingReducer extends MapReduceBase implements
         incomingList.reset();
         incomingList.set(nextNodePosiListAndKmer.getVertexIDList());
 
-        curNode.setKmer(curNodePosiListAndKmer.getKmer());
+        
+        curNode.setKmer(nextNodePosiListAndKmer.getKmer());
         setForwardIncomingList(curNode, incomingList);
     }
 

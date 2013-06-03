@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
@@ -97,11 +98,15 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
 
     @Override
     public int compareTo(PositionWritable other) {
-        int diff = this.getReadID() - other.getReadID();
-        if (diff == 0) {
-            return this.getPosInRead() - other.getPosInRead();
+        int diff1 = this.getReadID() - other.getReadID();
+        if (diff1 == 0) {
+            int diff2 = Math.abs((int) this.getPosInRead()) - Math.abs((int) other.getPosInRead());
+            if (diff2 == 0) {
+                return this.getPosInRead() - other.getPosInRead();
+            }
+            return diff2;
         }
-        return diff;
+        return diff1;
     }
 
     @Override
@@ -118,33 +123,30 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
             int thisValue = Marshal.getInt(b1, s1);
             int thatValue = Marshal.getInt(b2, s2);
-            int diff = thisValue - thatValue;
-            int src = 0;
-            int des = 0;
-            if (diff == 0) {
-                if(b1[s1 + INTBYTES] < 0) {
-                    src = - b1[s1 + INTBYTES];}
-                if(b2[s2 + INTBYTES] < 0){
-                    des = - b2[s2 + INTBYTES];}
-                if(src == des) {
+            int diff1 = thisValue - thatValue;
+            if (diff1 == 0) {
+                int diff2 = Math.abs((int) b1[s1 + INTBYTES]) - Math.abs((int) b2[s2 + INTBYTES]);
+                if (diff2 == 0) {
                     return b1[s1 + INTBYTES] - b2[s2 + INTBYTES];
                 }
-                return src - des;
+                return diff2;
             }
-            return diff;
+            return diff1;
+            //            return compareBytes(b1, s1, l1, b2, s2, l2);
         }
     }
 
-    public static class FirstComparator extends WritableComparator {
-        public FirstComparator() {
-            super(PositionWritable.class);
+    public static class FirstComparator implements RawComparator<PositionWritable> {
+        @Override
+        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+            return WritableComparator.compareBytes(b1, s1, l1 - 1, b2, s2, l2 - 1);
         }
 
-        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-            int thisValue = Marshal.getInt(b1, s1);
-            int thatValue = Marshal.getInt(b2, s2);
-            int diff = thisValue - thatValue;
-            return diff;
+        @Override
+        public int compare(PositionWritable o1, PositionWritable o2) {
+            int l = o1.getReadID();
+            int r = o2.getReadID();
+            return l == r ? 0 : (l < r ? -1 : 1);
         }
     }
 

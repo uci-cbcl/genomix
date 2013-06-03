@@ -23,7 +23,6 @@ public class DeepGraphBuildingMapper extends MapReduceBase implements
     private static int LAST_POSID;
     private static int KMER_SIZE;
     private static int READ_LENGTH;
-
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
@@ -71,13 +70,15 @@ public class DeepGraphBuildingMapper extends MapReduceBase implements
             positionEntry.set(outputListInRead.getPosition(i));
             tempPosList.reset();
             for (int j = 0; j < attriListInRead.getCountOfPosition(); j++) {
-                tempVertex.set(attriListInRead.getPosition(i));
+                tempVertex.set(attriListInRead.getPosition(j));
                 if (tempVertex.getReadID() != positionEntry.getReadID()) {
                     tempPosList.append(tempVertex);
                 }
             }
             outputListAndKmer.set(tempPosList, kmer);
-            output.collect(positionEntry, outputListAndKmer);
+//            if(positionEntry.getReadID() == 1){
+                output.collect(positionEntry, outputListAndKmer);
+//            }
         }
     }
 }

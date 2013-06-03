@@ -19,6 +19,10 @@ public class GraphInvertedIndexBuildingReducer extends MapReduceBase implements
     public void reduce(KmerBytesWritable key, Iterator<PositionWritable> values,
             OutputCollector<KmerBytesWritable, PositionListWritable> output, Reporter reporter) throws IOException {
         outputlist.reset();
+        if(key.toString().equals("CTTCT")) {
+            int x = 4;
+            int y = x;
+        }
         while (values.hasNext()) {
             outputlist.append(values.next());
         }

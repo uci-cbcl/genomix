@@ -29,10 +29,12 @@ public class NewGraphBuildingTest {
     private static final String DATA_PATH = "data/webmap/text.txt";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result1";
-    private static final String EXPECTED_PATH = "expected/result_after_kmerAggregate";
-    private static final int COUNT_REDUCER = 0;
+    private static final String EXPECTED_PATH = "expected/";
+    private static final int COUNT_REDUCER = 2;
     private static final int SIZE_KMER = 5;
+    private static final int READ_LENGTH = 8;
     private static final String GRAPHVIZ = "Graphviz";
+    private static final String EXPECTED_OUPUT_KMER = EXPECTED_PATH + "result_after_kmerAggregate";
     
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -45,8 +47,8 @@ public class NewGraphBuildingTest {
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
 //        TestGroupbyKmer();
-        TestMapKmerToRead();
-
+//        TestMapKmerToRead();
+        TestGroupByReadID();
 /*        SequenceFile.Reader reader = null;
         Path path = new Path(RESULT_PATH + "/part-00000");
         reader = new SequenceFile.Reader(dfs, path, conf); 
@@ -92,19 +94,21 @@ public class NewGraphBuildingTest {
 
     public void TestGroupbyKmer() throws Exception {
         GraphBuildingDriver tldriver = new GraphBuildingDriver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, true, false, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, READ_LENGTH, true, false, HADOOP_CONF_PATH);
         dumpGroupByKmerResult();
-        TestUtils.compareWithResult(new File(ACTUAL_RESULT_DIR + HDFS_PATH + "-step1" + "/part-00000"), new File(EXPECTED_PATH));
+//        TestUtils.compareWithResult(new File(ACTUAL_RESULT_DIR + HDFS_PATH + "-step1" + "/part-00000"), new File(EXPECTED_OUPUT_KMER));
     }
 
     public void TestMapKmerToRead() throws Exception {
         GraphBuildingDriver tldriver = new GraphBuildingDriver();
-        tldriver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, false, false, HADOOP_CONF_PATH);
+        tldriver.run(HDFS_PATH, RESULT_PATH, 0, SIZE_KMER, READ_LENGTH, false, false, HADOOP_CONF_PATH);
         dumpResult();
     }
 
     public void TestGroupByReadID() throws Exception {
-        
+        GraphBuildingDriver tldriver = new GraphBuildingDriver();
+        tldriver.run(HDFS_PATH, RESULT_PATH, 2, SIZE_KMER, READ_LENGTH, false, false, HADOOP_CONF_PATH);
+        dumpResult();
     }
     
     private void startHadoop() throws IOException {
