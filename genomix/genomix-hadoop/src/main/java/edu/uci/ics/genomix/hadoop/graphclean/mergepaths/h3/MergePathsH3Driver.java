@@ -47,9 +47,9 @@ public class MergePathsH3Driver {
 
     }
 
-    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int mergeRound, String defaultConfPath, JobConf defaultConf)
-            throws IOException {
-        JobConf baseConf = defaultConf == null ? new JobConf() : defaultConf;        
+    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int mergeRound,
+            String defaultConfPath, JobConf defaultConf) throws IOException {
+        JobConf baseConf = defaultConf == null ? new JobConf() : defaultConf;
         if (defaultConfPath != null) {
             baseConf.addResource(new Path(defaultConfPath));
         }
@@ -81,12 +81,22 @@ public class MergePathsH3Driver {
         dfs.rename(new Path(tmpOutputPath), new Path(outputPath)); // save final results
     }
 
+    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int mergeRound,
+            String defaultConfPath) throws IOException {
+        run(inputPath, outputPath, numReducers, sizeKmer, mergeRound, defaultConfPath, null);
+    }
+
+    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int mergeRound,
+            JobConf defaultConf) throws IOException {
+        run(inputPath, outputPath, numReducers, sizeKmer, mergeRound, null, defaultConf);
+    }
+
     public static void main(String[] args) throws Exception {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         MergePathsH3Driver driver = new MergePathsH3Driver();
-        driver.run(options.inputPath, options.outputPath, options.numReducers, 
-                options.sizeKmer, options.mergeRound, null, null);
+        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, options.mergeRound,
+                null, null);
     }
 }

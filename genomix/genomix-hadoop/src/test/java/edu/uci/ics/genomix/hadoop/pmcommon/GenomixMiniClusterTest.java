@@ -37,15 +37,15 @@ import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
 public class GenomixMiniClusterTest {
     protected int KMER_LENGTH = 5;
     protected int READ_LENGTH = 8;
-    
+
     // subclass should modify this to include the HDFS directories that should be cleaned up
     protected ArrayList<String> HDFS_PATHS = new ArrayList<String>();
 
     protected static String EXPECTED_ROOT = "src/test/resources/expected/";
     protected static String ACTUAL_ROOT = "src/test/resources/actual/";
-    
+
     protected static String HADOOP_CONF_ROOT = "src/test/resources/hadoop/conf/";
-    
+
     protected static MiniDFSCluster dfsCluster;
     protected static MiniMRCluster mrCluster;
     private static FileSystem dfs;
@@ -61,42 +61,41 @@ public class GenomixMiniClusterTest {
         HyracksUtils.init();
         FileUtils.forceMkdir(new File(ACTUAL_ROOT));
         FileUtils.cleanDirectory(new File(ACTUAL_ROOT));
-        driver = new Driver(HyracksUtils.CC_HOST,
-                HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
+        driver = new Driver(HyracksUtils.CC_HOST, HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
-    
+
     /*
      * Merge and copy a DFS directory to a local destination, converting to text if necessary. 
      * Also locally store the binary-formatted result if available.
      */
-    protected static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText, Configuration conf) throws IOException {
+    protected static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
+            Configuration conf) throws IOException {
         if (resultsAreText) {
             // for text files, just concatenate them together
-            FileUtil.copyMerge(FileSystem.get(conf), new Path(hdfsSrcDir),
-                    FileSystem.getLocal(new Configuration()), new Path(localDestFile),
-                    false, conf, null);
+            FileUtil.copyMerge(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
+                    new Path(localDestFile), false, conf, null);
         } else {
             // file is binary
             // save the entire binary output dir
-            FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir),
-                    FileSystem.getLocal(new Configuration()), new Path(localDestFile + ".bindir"),
-                    false, conf);
-            
+            FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
+                    new Path(localDestFile + ".bindir"), false, conf);
+
             // also load the Nodes and write them out as text locally. 
             FileSystem lfs = FileSystem.getLocal(new Configuration());
             lfs.mkdirs(new Path(localDestFile).getParent());
             File filePathTo = new File(localDestFile);
             BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
-            
+
             FileStatus[] files = dfs.globStatus(new Path(hdfsSrcDir + "*"));
             SequenceFile.Reader reader = new SequenceFile.Reader(dfs, files[0].getPath(), conf);
-            SequenceFile.Writer writer = new SequenceFile.Writer(lfs, new JobConf(), new Path(localDestFile + ".binmerge"), reader.getKeyClass(), reader.getValueClass());
-            
+            SequenceFile.Writer writer = new SequenceFile.Writer(lfs, new JobConf(), new Path(localDestFile
+                    + ".binmerge"), reader.getKeyClass(), reader.getValueClass());
+
             Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-            
+
             for (FileStatus f : files) {
-                if(f.getLen() == 0) {
+                if (f.getLen() == 0) {
                     continue;
                 }
                 reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
@@ -108,7 +107,7 @@ public class GenomixMiniClusterTest {
                     System.out.println(key.toString() + "\t" + value.toString());
                     bw.newLine();
                     writer.append(key, value);
-                    
+
                 }
                 reader.close();
             }
@@ -117,9 +116,9 @@ public class GenomixMiniClusterTest {
         }
 
     }
-    
+
     protected static boolean checkResults(String expectedPath, String actualPath, int[] poslistField) throws Exception {
-        File dumped = new File(actualPath); 
+        File dumped = new File(actualPath);
         if (poslistField != null) {
             TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
         } else {
@@ -137,7 +136,7 @@ public class GenomixMiniClusterTest {
 
     protected static void startHDFS() throws IOException {
         conf.addResource(new Path(HADOOP_CONF_ROOT + "core-site.xml"));
-//        conf.addResource(new Path(HADOOP_CONF_ROOT + "mapred-site.xml"));
+        //        conf.addResource(new Path(HADOOP_CONF_ROOT + "mapred-site.xml"));
         conf.addResource(new Path(HADOOP_CONF_ROOT + "hdfs-site.xml"));
 
         FileSystem lfs = FileSystem.getLocal(new Configuration());
@@ -148,17 +147,18 @@ public class GenomixMiniClusterTest {
         mrCluster = new MiniMRCluster(4, dfs.getUri().toString(), 2);
         System.out.println(dfs.getUri().toString());
 
-        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_ROOT + "conf.xml")));
+        DataOutputStream confOutput = new DataOutputStream(
+                new FileOutputStream(new File(HADOOP_CONF_ROOT + "conf.xml")));
         conf.writeXml(confOutput);
         confOutput.close();
     }
-    
+
     protected static void copyLocalToDFS(String localSrc, String hdfsDest) throws IOException {
         Path dest = new Path(hdfsDest);
         dfs.mkdirs(dest);
         dfs.copyFromLocalFile(new Path(localSrc), dest);
     }
-    
+
     /*
      * Remove the local "actual" folder and any hdfs folders in use by this test
      */

@@ -57,9 +57,9 @@ public class PathNodeInitial extends Configured implements Tool {
         private int inDegree;
         private int outDegree;
         private NodeWritable emptyNode;
-        
+
         public PathNodeInitialMapper() {
-            
+
         }
 
         public void configure(JobConf conf) {
@@ -98,8 +98,7 @@ public class PathNodeInitial extends Configured implements Tool {
                     outputKey.set(key.getRFList().getPosition(0));
                 }
                 output.collect(outputKey, outputValue);
-            }
-            else {
+            } else {
                 // TODO: all other nodes will not participate-- should they be collected in a "complete" output?
             }
         }

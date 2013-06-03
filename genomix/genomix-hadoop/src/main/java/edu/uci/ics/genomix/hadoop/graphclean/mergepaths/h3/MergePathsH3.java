@@ -105,7 +105,7 @@ public class MergePathsH3 extends Configured implements Tool {
             if (!finalMerge) {
                 headFlag |= (MessageFlag.IS_PSEUDOHEAD & value.getFlag());
             }
-            
+
             outFlag = (byte) (headFlag | (MessageFlag.IS_TAIL & value.getFlag()));
             if (headFlag != 0 || isNodeRandomHead(curNode.getNodeID())) {
                 // head nodes send themselves to their successor
@@ -114,7 +114,7 @@ public class MergePathsH3 extends Configured implements Tool {
                     headFlag |= (MessageFlag.IS_PSEUDOHEAD & value.getFlag());
                 }
                 outFlag |= MessageFlag.FROM_PREDECESSOR;
-                
+
                 outputValue.set(outFlag, curNode);
                 output.collect(outputKey, outputValue);
             } else {
@@ -186,7 +186,7 @@ public class MergePathsH3 extends Configured implements Tool {
                 // merge the head and tail as saved output, this merged node is now a head
                 //headNode.mergeNext(tailNode, KMER_SIZE);
                 outputValue.set(outFlag, headNode);
-                
+
                 if ((outFlag & MessageFlag.IS_TAIL) == MessageFlag.IS_TAIL) {
                     // Pseudoheads merging with tails don't become heads.
                     // Reset the IS_PSEUDOHEAD flag
