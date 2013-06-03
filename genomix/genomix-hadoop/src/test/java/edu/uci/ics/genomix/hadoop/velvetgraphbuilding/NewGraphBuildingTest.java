@@ -15,7 +15,6 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
 
 @SuppressWarnings("deprecation")
@@ -32,8 +31,6 @@ public class NewGraphBuildingTest {
     private static final int COUNT_REDUCER = 2;
     private static final int SIZE_KMER = 5;
     private static final int READ_LENGTH = 8;
-    private static final String GRAPHVIZ = "Graphviz";
-    private static final String EXPECTED_OUPUT_KMER = EXPECTED_PATH + "result_after_kmerAggregate";
     
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -45,57 +42,15 @@ public class NewGraphBuildingTest {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
-//        TestGroupbyKmer();
-//        TestMapKmerToRead();
-        TestGroupByReadID();
-/*        SequenceFile.Reader reader = null;
-        Path path = new Path(RESULT_PATH + "/part-00000");
-        reader = new SequenceFile.Reader(dfs, path, conf); 
-        KmerBytesWritable key = new KmerBytesWritable(SIZE_KMER);
-        KmerCountValue value = (KmerCountValue) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-        File filePathTo = new File(TEST_SOURCE_DIR);
-        FileUtils.forceMkdir(filePathTo);
-        FileUtils.cleanDirectory(filePathTo);
-        BufferedWriter bw = new BufferedWriter(new FileWriter(new File(TEST_SOURCE_DIR + "/comparesource.txt")));
-        File GraphViz = new File(GRAPHVIZ);
-        FileUtils.forceMkdir(GraphViz);
-        FileUtils.cleanDirectory(GraphViz);
-        BufferedWriter bw2 = new BufferedWriter(new FileWriter(new File(GRAPHVIZ + "/GenomixSource.txt")));
-        
-        while (reader.next(key, value)) {
-            byte succeed = (byte) 0x0F;
-            byte adjBitMap = value.getAdjBitMap();
-            succeed = (byte) (succeed & adjBitMap);
-            byte shiftedCode = 0;
-            for(int i = 0 ; i < 4; i ++){
-                byte temp = 0x01;
-                temp  = (byte)(temp << i);
-                temp = (byte) (succeed & temp);
-                if(temp != 0 ){
-                    bw2.write(key.toString());
-                    bw2.newLine();                    
-                    byte succeedCode = GeneCode.getGeneCodeFromBitMap(temp);
-                    shiftedCode = key.shiftKmerWithNextCode(succeedCode);
-                    bw2.write(key.toString());
-                    bw2.newLine();
-                    key.shiftKmerWithPreCode(shiftedCode);
-                }
-            }
-            bw.write(key.toString() + "\t" + value.toString());
-            bw.newLine();            
-        }
-       bw2.close();
-       bw.close();*/
-
+        TestGroupbyKmer();
+        TestMapKmerToRead();
         cleanupHadoop();
-
     }
 
     public void TestGroupbyKmer() throws Exception {
         GraphBuildingDriver tldriver = new GraphBuildingDriver();
         tldriver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, READ_LENGTH, true, false, HADOOP_CONF_PATH);
         dumpGroupByKmerResult();
-//        TestUtils.compareWithResult(new File(ACTUAL_RESULT_DIR + HDFS_PATH + "-step1" + "/part-00000"), new File(EXPECTED_OUPUT_KMER));
     }
 
     public void TestMapKmerToRead() throws Exception {

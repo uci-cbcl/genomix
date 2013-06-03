@@ -1,6 +1,9 @@
 package edu.uci.ics.genomix.hadoop.velvetgraphbuilding;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
@@ -37,33 +40,34 @@ public class GraphInvertedIndexBuildingMapper extends MapReduceBase implements
         }
         int readID = 0;
         readID = Integer.parseInt(rawLine[0]);
-        if(readID == 6) {
-            int  x = 4;
-            int y = x;
-        }
         String geneLine = rawLine[1];
-        byte[] array = geneLine.getBytes();
-        if (KMER_SIZE >= array.length) {
-            throw new IOException("short read");
-        }
-        outputKmer.setByRead(array, 0);
-        outputVertexID.set(readID, (byte) 1);
-        output.collect(outputKmer, outputVertexID);
-        /** middle kmer */
-        for (int i = KMER_SIZE; i < array.length; i++) {
-            outputKmer.shiftKmerWithNextChar(array[i]);
-            outputVertexID.set(readID, (byte) (i - KMER_SIZE + 2));
+        Pattern genePattern = Pattern.compile("[AGCT]+");
+        Matcher geneMatcher = genePattern.matcher(geneLine);
+        boolean isValid = geneMatcher.matches();
+        if (isValid == true) {
+            byte[] array = geneLine.getBytes();
+            if (KMER_SIZE >= array.length) {
+                throw new IOException("short read");
+            }
+            outputKmer.setByRead(array, 0);
+            outputVertexID.set(readID, (byte) 1);
             output.collect(outputKmer, outputVertexID);
-        }
-        /** reverse first kmer */
-        outputKmer.setByReadReverse(array, 0);
-        outputVertexID.set(readID, (byte) -1);
-        output.collect(outputKmer, outputVertexID);
-        /** reverse middle kmer */
-        for (int i = KMER_SIZE; i < array.length; i++) {
-            outputKmer.shiftKmerWithPreCode(GeneCode.getPairedCodeFromSymbol(array[i]));
-            outputVertexID.set(readID, (byte)(KMER_SIZE - i - 2));
+            /** middle kmer */
+            for (int i = KMER_SIZE; i < array.length; i++) {
+                outputKmer.shiftKmerWithNextChar(array[i]);
+                outputVertexID.set(readID, (byte) (i - KMER_SIZE + 2));
+                output.collect(outputKmer, outputVertexID);
+            }
+            /** reverse first kmer */
+            outputKmer.setByReadReverse(array, 0);
+            outputVertexID.set(readID, (byte) -1);
             output.collect(outputKmer, outputVertexID);
+            /** reverse middle kmer */
+            for (int i = KMER_SIZE; i < array.length; i++) {
+                outputKmer.shiftKmerWithPreCode(GeneCode.getPairedCodeFromSymbol(array[i]));
+                outputVertexID.set(readID, (byte) (KMER_SIZE - i - 2));
+                output.collect(outputKmer, outputVertexID);
+            }
         }
     }
 }

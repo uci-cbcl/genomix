@@ -76,9 +76,7 @@ public class DeepGraphBuildingMapper extends MapReduceBase implements
                 }
             }
             outputListAndKmer.set(tempPosList, kmer);
-//            if(positionEntry.getReadID() == 1){
                 output.collect(positionEntry, outputListAndKmer);
-//            }
         }
     }
 }

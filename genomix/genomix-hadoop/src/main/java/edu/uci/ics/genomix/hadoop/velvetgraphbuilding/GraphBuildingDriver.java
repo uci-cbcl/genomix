@@ -38,29 +38,29 @@ public class GraphBuildingDriver {
 
         @Option(name = "-kmer-size", usage = "the size of kmer", required = true)
         public int sizeKmer;
-        
+
         @Option(name = "-read-length", usage = "the length of read", required = true)
         public int readLength;
 
         @Option(name = "-onlytest1stjob", usage = "test", required = true)
-        public boolean onlyTest1stJob;
+        public String onlyTest1stJob;
 
         @Option(name = "-seq-output", usage = "sequence ouput format", required = true)
-        public boolean seqOutput;
+        public String seqOutput;
     }
 
-    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength, boolean onlyTest1stJob,
-            boolean seqOutput, String defaultConfPath) throws IOException {
+    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength,
+            boolean onlyTest1stJob, boolean seqOutput, String defaultConfPath) throws IOException {
         if (onlyTest1stJob == true) {
             runfirstjob(inputPath, numReducers, sizeKmer, readLength, seqOutput, defaultConfPath);
         } else {
-            runfirstjob(inputPath, 2, sizeKmer, readLength, true, defaultConfPath);
+            runfirstjob(inputPath, numReducers, sizeKmer, readLength, true, defaultConfPath);
             runsecondjob(inputPath, outputPath, numReducers, sizeKmer, readLength, seqOutput, defaultConfPath);
         }
     }
 
-    public void runfirstjob(String inputPath, int numReducers, int sizeKmer, int readLength, boolean seqOutput, String defaultConfPath)
-            throws IOException {
+    public void runfirstjob(String inputPath, int numReducers, int sizeKmer, int readLength, boolean seqOutput,
+            String defaultConfPath) throws IOException {
         JobConf conf = new JobConf(GraphBuildingDriver.class);
         conf.setInt("sizeKmer", sizeKmer);
         if (defaultConfPath != null) {
@@ -85,16 +85,18 @@ public class GraphBuildingDriver {
 
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(inputPath + "-step1"));
-        if(numReducers == 0)
-        conf.setNumReduceTasks(numReducers + 2);
+        if (numReducers == 0)
+            conf.setNumReduceTasks(numReducers + 2);
+        else
+            conf.setNumReduceTasks(numReducers);
 
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(inputPath + "-step1"), true);
         JobClient.runJob(conf);
     }
 
-    public void runsecondjob(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength, boolean seqOutput,
-            String defaultConfPath) throws IOException {
+    public void runsecondjob(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength,
+            boolean seqOutput, String defaultConfPath) throws IOException {
         JobConf conf = new JobConf(GraphBuildingDriver.class);
         if (defaultConfPath != null) {
             conf.addResource(new Path(defaultConfPath));
@@ -102,7 +104,7 @@ public class GraphBuildingDriver {
         conf.setJobName("deep build");
         conf.setInt("sizeKmer", sizeKmer);
         conf.setInt("readLength", readLength);
-        
+
         conf.setMapperClass(DeepGraphBuildingMapper.class);
         conf.setReducerClass(DeepGraphBuildingReducer.class);
 
@@ -113,13 +115,13 @@ public class GraphBuildingDriver {
 
         conf.setOutputKeyComparatorClass(PositionWritable.Comparator.class);
         conf.setOutputValueGroupingComparator(PositionWritable.FirstComparator.class);
-        
+
         conf.setInputFormat(SequenceFileInputFormat.class);
         if (seqOutput == true)
             conf.setOutputFormat(SequenceFileOutputFormat.class);
         else
             conf.setOutputFormat(TextOutputFormat.class);
-        
+
         if (numReducers != 0) {
             conf.setOutputKeyClass(NodeWritable.class);
             conf.setOutputValueClass(NullWritable.class);
@@ -141,7 +143,17 @@ public class GraphBuildingDriver {
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         GraphBuildingDriver driver = new GraphBuildingDriver();
+        boolean onlyTest1stJob = true;
+        boolean seqOutput = true;
+        if (options.onlyTest1stJob.equals("true"))
+            onlyTest1stJob = true;
+        else
+            onlyTest1stJob = false;
+        if (options.seqOutput.equals("true"))
+            seqOutput = true;
+        else
+            seqOutput = false;
         driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, options.readLength,
-                options.onlyTest1stJob, options.seqOutput, null);
+                onlyTest1stJob, seqOutput, null);
     }
 }

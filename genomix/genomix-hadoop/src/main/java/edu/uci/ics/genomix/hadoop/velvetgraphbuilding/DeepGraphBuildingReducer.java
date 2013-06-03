@@ -8,7 +8,6 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -44,14 +43,6 @@ public class DeepGraphBuildingReducer extends MapReduceBase implements
     public void reduce(PositionWritable key, Iterator<PositionListAndKmerWritable> values,
             OutputCollector<NodeWritable, NullWritable> output, Reporter reporter) throws IOException {
         int readID = key.getReadID();
-        if(readID == 1) {
-            int x = 4;
-            int y =x ;
-            System.out.println((int)key.getPosInRead());
-        }
-/*        while(values.hasNext()) {
-            System.out.println(values.next().getKmer().toString());
-        }*/
         byte posInRead = (byte) 1;
         resetNode(curNode, readID, posInRead);
         assembleFirstTwoNodesInRead(curNodePosiListAndKmer, nextNodePosiListAndKmer, nextNodeNegaListAndKmer,
