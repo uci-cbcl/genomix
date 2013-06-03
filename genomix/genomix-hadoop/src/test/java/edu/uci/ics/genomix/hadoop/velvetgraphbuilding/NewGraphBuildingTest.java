@@ -18,7 +18,6 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.hadoop.utils.TestUtils;
 @SuppressWarnings("deprecation")
 
 public class NewGraphBuildingTest {
