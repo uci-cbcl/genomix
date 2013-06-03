@@ -79,6 +79,7 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
         private ArrayBackedValueStorage posListEntry;
         private ArrayBackedValueStorage zeroPositionCollection;
         private ArrayBackedValueStorage noneZeroPositionCollection;
+        private PositionListWritable plistEntry;
 
         public MapKmerPositionToReadNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
                 RecordDescriptor outputRecDesc) {
@@ -89,6 +90,7 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
             this.posListEntry = new ArrayBackedValueStorage();
             this.zeroPositionCollection = new ArrayBackedValueStorage();
             this.noneZeroPositionCollection = new ArrayBackedValueStorage();
+            this.plistEntry = new PositionListWritable();
         }
 
         @Override
@@ -189,9 +191,10 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
         private void writePosToFieldAndSkipSameReadID(PositionReference pos, DataOutput ds,
                 ArrayBackedValueStorage posList2) throws HyracksDataException {
 
-            PositionListWritable plist = new PositionListWritable(PositionListWritable.getCountByDataLength(posList2
+            plistEntry.setNewReference(PositionListWritable.getCountByDataLength(posList2
                     .getLength()), posList2.getByteArray(), posList2.getStartOffset());
-            for (PositionWritable p : plist) {
+            for (int i = 0;i < plistEntry.getCountOfPosition(); i++) {
+                PositionWritable p = plistEntry.getPosition(i);
                 if (!pos.isSameReadID(p)) {
                     try {
                         ds.write(p.getByteArray(), p.getStartOffset(), p.getLength());
