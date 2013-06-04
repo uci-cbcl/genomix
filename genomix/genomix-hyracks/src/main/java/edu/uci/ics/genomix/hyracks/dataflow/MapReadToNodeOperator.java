@@ -203,7 +203,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setReverseOutgoingList(NodeReference node, int offset) {
             setCachList(offset);
-            for (PositionWritable pos : cachePositionList) {
+            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+                PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     node.getRFList().append(pos);
                 } else {
@@ -214,7 +215,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setReverseIncomingList(NodeReference node, int offset) {
             setCachList(offset);
-            for (PositionWritable pos : cachePositionList) {
+            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+                PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     if (pos.getPosInRead() > 1) {
                         node.getFRList().append(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
@@ -231,7 +233,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setForwardOutgoingList(NodeReference node, int offset) {
             setCachList(offset);
-            for (PositionWritable pos : cachePositionList) {
+            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+                PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     node.getFFList().append(pos);
                 } else {
@@ -242,7 +245,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setForwardIncomingList(NodeReference node, int offset) {
             setCachList(offset);
-            for (PositionWritable pos : cachePositionList) {
+            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+                PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     if (pos.getPosInRead() > 1) {
                         node.getRRList().append(pos.getReadID(), (byte) (pos.getPosInRead() - 1));
