@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3;
+package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,13 +9,14 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3Driver;
 import edu.uci.ics.genomix.hadoop.pmcommon.GenomixMiniClusterTest;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial;
 import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 
 @SuppressWarnings("deprecation")
-public class TestPathMergeH3 extends GenomixMiniClusterTest {
+public class TestPathMergeH4 extends GenomixMiniClusterTest {
     protected String LOCAL_SEQUENCE_FILE = "src/test/resources/data/webmap/text.txt";
     protected String HDFS_SEQUENCE = "/00-sequence/";
     protected String HDFS_GRAPHBUILD = "/01-graphbuild/";
@@ -24,7 +25,7 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
     
     protected String GRAPHBUILD_FILE = "graphbuild.result";
     protected String PATHMARKS_FILE = "markpaths.result";
-    protected String PATHMERGE_FILE = "mergepath.result";
+    protected String PATHMERGE_FILE = "h4.mergepath.result";
     protected boolean regenerateGraph = true;
     
     {
@@ -33,13 +34,6 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
         HDFS_PATHS = new ArrayList<String>(Arrays.asList(HDFS_SEQUENCE, HDFS_GRAPHBUILD, HDFS_MARKPATHS, HDFS_MERGED));
         conf.setInt(GenomixJobConf.KMER_LENGTH, KMER_LENGTH);
         conf.setInt(GenomixJobConf.READ_LENGTH, READ_LENGTH);
-    }
-
-    @Test
-    public void TestBuildGraph() throws Exception {
-        cleanUpOutput();
-        copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
-        buildGraph();
     }
 
     @Test
@@ -53,12 +47,12 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
             copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD_FILE + ".binmerge", HDFS_GRAPHBUILD);
         }
         
-        PathNodeInitial inith3 = new PathNodeInitial();
-        inith3.run(HDFS_GRAPHBUILD, HDFS_MARKPATHS, conf);
+        PathNodeInitial inith4 = new PathNodeInitial();
+        inith4.run(HDFS_GRAPHBUILD, HDFS_MARKPATHS, conf);
         copyResultsToLocal(HDFS_MARKPATHS, ACTUAL_ROOT + PATHMARKS_FILE, false, conf);
 
-        MergePathsH3Driver h3 = new MergePathsH3Driver();
-        h3.run(HDFS_MARKPATHS, HDFS_MERGED, 2, KMER_LENGTH, 1, conf);
+        MergePathsH4Driver h4 = new MergePathsH4Driver();
+        h4.run(HDFS_MARKPATHS, HDFS_MERGED, 2, KMER_LENGTH, 1, conf);
         copyResultsToLocal(HDFS_MERGED, ACTUAL_ROOT + PATHMERGE_FILE, false, conf);
     }
 

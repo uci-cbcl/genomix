@@ -9,10 +9,18 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.NodeWritable;
 
+/*
+ * Simple "Message" class, allowing a NodeWritable to be sent, along with a message flag.
+ * This class is used as the value in several MapReduce algorithms.
+ */
 public class MessageWritableNodeWithFlag extends BinaryComparable implements WritableComparable<BinaryComparable> {
     private byte flag;
     private NodeWritable node;
 
+    public MessageWritableNodeWithFlag() {
+        this(0);
+    }
+    
     public MessageWritableNodeWithFlag(int k) {
         this.flag = 0;
         this.node = new NodeWritable(k);

@@ -10,9 +10,7 @@ public class VertexUtil {
      * @param vertexValue
      */
     public static boolean isPathVertex(ValueStateWritable value) {
-        if (value.inDegree() == 1 && value.outDegree() == 1)
-            return true;
-        return false;
+        return value.inDegree() == 1 && value.outDegree() == 1;
     }
 
     /**
@@ -21,9 +19,7 @@ public class VertexUtil {
      * @param vertexValue
      */
     public static boolean isHeadVertex(ValueStateWritable value) {
-        if (value.outDegree() > 0 && !isPathVertex(value))
-            return true;
-        return false;
+        return value.outDegree() > 0 && !isPathVertex(value);
     }
 
     /**
@@ -32,9 +28,7 @@ public class VertexUtil {
      * @param vertexValue
      */
     public static boolean isRearVertex(ValueStateWritable value) {
-        if (value.inDegree() > 0 && !isPathVertex(value))
-            return true;
-        return false;
+        return value.inDegree() > 0 && !isPathVertex(value);
     }
 
     /**
@@ -42,9 +36,7 @@ public class VertexUtil {
      */
     public static boolean isCycle(KmerBytesWritable kmer, KmerBytesWritable mergeChain, int kmerSize) {
         String chain = mergeChain.toString().substring(1);
-        if (chain.contains(kmer.toString()))
-            return true;
-        return false;
+        return chain.contains(kmer.toString());
 
         /*subKmer.set(vertexId);
         for(int istart = 1; istart < mergeChain.getKmerLength() - kmerSize + 1; istart++){

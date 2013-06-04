@@ -60,6 +60,7 @@ public class PositionListAndKmerWritable implements WritableComparable<PositionL
         this.vertexIDList.set(list);
         this.kmer.set(kmer);
     }
+    
     @Override
     public void readFields(DataInput in) throws IOException {
         this.countOfKmer = in.readInt();
@@ -77,5 +78,9 @@ public class PositionListAndKmerWritable implements WritableComparable<PositionL
     @Override
     public int compareTo(PositionListAndKmerWritable o) {
         return 0;
+    }
+    
+    public String toString() {
+        return vertexIDList.toString() + "\t" + kmer.toString();
     }
 }

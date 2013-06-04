@@ -95,7 +95,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             nextNodeEntry = new NodeReference(kmerSize);
             nextNextNodeEntry = new NodeReference(0);
             cachePositionList = new PositionListWritable();
-            LAST_POSITION_ID = (inputRecDesc.getFieldCount() - InputInfoFieldStart) / 2;
+            LAST_POSITION_ID = (inputRecDesc.getFieldCount() - InputInfoFieldStart) / 2; //?????????正负
         }
 
         @Override
@@ -150,7 +150,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                     nextNodeEntry.set(nextNextNodeEntry);
                     continue;
                 }
-                curNodeEntry.mergeForwadNext(nextNodeEntry, kmerSize);
+                curNodeEntry.mergeForwardNext(nextNodeEntry, kmerSize);
                 nextNodeEntry.set(nextNextNodeEntry);
             }
             outputNode(curNodeEntry);

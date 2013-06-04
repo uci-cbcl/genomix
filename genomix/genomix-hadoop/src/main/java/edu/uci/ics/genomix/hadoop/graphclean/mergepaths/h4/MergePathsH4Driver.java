@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3;
+package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4;
 
 import java.io.IOException;
 
@@ -24,7 +24,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 @SuppressWarnings("deprecation")
-public class MergePathsH3Driver {
+public class MergePathsH4Driver {
 
     private static class Options {
         @Option(name = "-inputpath", usage = "the input path", required = true)
@@ -68,7 +68,7 @@ public class MergePathsH3Driver {
         for (int iMerge = 1; iMerge <= mergeRound; iMerge++) {
             baseConf.setInt("iMerge", iMerge);
             baseConf.setBoolean("finalMerge", finalMerge);
-            MergePathsH3 merger = new MergePathsH3();
+            MergePathsH4 merger = new MergePathsH4();
             tmpOutputPath = inputPath + ".mergepathsH3." + String.valueOf(iMerge);
             RunningJob job = merger.run(prevOutput, tmpOutputPath, baseConf);
             if (job.getCounters().findCounter("genomix", "num_merged").getValue() == 0) {
@@ -98,7 +98,7 @@ public class MergePathsH3Driver {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-        MergePathsH3Driver driver = new MergePathsH3Driver();
+        MergePathsH4Driver driver = new MergePathsH4Driver();
         driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, options.mergeRound,
                 null, null);
     }

@@ -13,63 +13,70 @@ import edu.uci.ics.genomix.type.PositionWritable;
 @SuppressWarnings("deprecation")
 public class DeepGraphBuildingMapper extends MapReduceBase implements
         Mapper<KmerBytesWritable, PositionListWritable, PositionWritable, PositionListAndKmerWritable> {
-    
-    public PositionWritable VertexID;
-    public PositionWritable tempVertex;
-    public PositionListWritable listPosZeroInRead;
-    public PositionListWritable listPosNonZeroInRead;
-    public PositionListWritable tempPosList;
-    public PositionListAndKmerWritable outputListAndKmer;
+
+    private PositionWritable positionEntry;
+    private PositionWritable tempVertex;
+    private PositionListWritable listPosZeroInRead;
+    private PositionListWritable listPosNonZeroInRead;
+    private PositionListWritable tempPosList;
+    private PositionListAndKmerWritable outputListAndKmer;
+    private static int LAST_POSID;
+    private static int KMER_SIZE;
+    private static int READ_LENGTH;
     @Override
     public void configure(JobConf job) {
-        VertexID = new PositionWritable();
+        KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
+        READ_LENGTH = Integer.parseInt(job.get("readLength"));
+        positionEntry = new PositionWritable();
         tempVertex = new PositionWritable();
         listPosZeroInRead = new PositionListWritable();
         listPosNonZeroInRead = new PositionListWritable();
         tempPosList = new PositionListWritable();
         outputListAndKmer = new PositionListAndKmerWritable();
+        LAST_POSID = READ_LENGTH - KMER_SIZE + 1;
     }
+
+    private boolean isStart(byte posInRead) {
+        return posInRead == 1 || posInRead == -LAST_POSID;
+    }
+
     @Override
-    public void map(KmerBytesWritable key, PositionListWritable value, OutputCollector<PositionWritable, PositionListAndKmerWritable> output,
-            Reporter reporter) throws IOException {
+    public void map(KmerBytesWritable key, PositionListWritable value,
+            OutputCollector<PositionWritable, PositionListAndKmerWritable> output, Reporter reporter)
+            throws IOException {
+        outputListAndKmer.reset();
+        int tupleCount = value.getCountOfPosition();
+        scanPosition(tupleCount, value);
+        scanAgainAndOutput(listPosZeroInRead, listPosNonZeroInRead, key, output);
+        scanAgainAndOutput(listPosNonZeroInRead, listPosZeroInRead, key, output);
+    }
+
+    public void scanPosition(int tupleCount, PositionListWritable value) {
         listPosZeroInRead.reset();
         listPosNonZeroInRead.reset();
-        outputListAndKmer.reset();
-        for(int i = 0; i < value.getLength(); i++) {
-            VertexID.set(value.getPosition(i));
-            if(VertexID.getPosInRead() == 0) {
-                listPosZeroInRead.append(VertexID);
-            }
-            else {
-                listPosNonZeroInRead.append(VertexID);
+        for (int i = 0; i < tupleCount; i++) {
+            positionEntry.set(value.getPosition(i));
+            if (isStart(positionEntry.getPosInRead())) {
+                listPosZeroInRead.append(positionEntry);
+            } else {
+                listPosNonZeroInRead.append(positionEntry);
             }
         }
-        for(int i = 0; i < listPosZeroInRead.getCountOfPosition(); i++) {
-            VertexID.set(listPosZeroInRead.getPosition(i));
+    }
+
+    public void scanAgainAndOutput(PositionListWritable outputListInRead, PositionListWritable attriListInRead,
+            KmerBytesWritable kmer, OutputCollector<PositionWritable, PositionListAndKmerWritable> output) throws IOException {
+        for (int i = 0; i < outputListInRead.getCountOfPosition(); i++) {
+            positionEntry.set(outputListInRead.getPosition(i));
             tempPosList.reset();
-            for (int j = 0; j < listPosNonZeroInRead.getCountOfPosition(); j++) {
-                tempVertex.set(listPosNonZeroInRead.getPosition(i));
-                if(tempVertex.getReadID() != VertexID.getReadID()) {
-                    int tempReadID = tempVertex.getReadID();
-                    byte tempPosInRead = (byte) (tempVertex.getPosInRead() - 1);
-                    tempVertex.set(tempReadID, tempPosInRead);
+            for (int j = 0; j < attriListInRead.getCountOfPosition(); j++) {
+                tempVertex.set(attriListInRead.getPosition(j));
+                if (tempVertex.getReadID() != positionEntry.getReadID()) {
                     tempPosList.append(tempVertex);
                 }
             }
-            outputListAndKmer.set(tempPosList, key);
-            output.collect(VertexID, outputListAndKmer);
-        }
-        for(int i = 0; i < listPosNonZeroInRead.getCountOfPosition(); i++) {
-            VertexID.set(listPosNonZeroInRead.getPosition(i));
-            tempPosList.reset();
-            for (int j = 0; j < listPosZeroInRead.getCountOfPosition(); j++) {
-                tempVertex.set(listPosNonZeroInRead.getPosition(i));
-                if(tempVertex.getReadID() != VertexID.getReadID()) {
-                    tempPosList.append(tempVertex);
-                }
-            }
-            outputListAndKmer.set(tempPosList, key);
-            output.collect(VertexID, outputListAndKmer);
+            outputListAndKmer.set(tempPosList, kmer);
+                output.collect(positionEntry, outputListAndKmer);
         }
     }
 }
