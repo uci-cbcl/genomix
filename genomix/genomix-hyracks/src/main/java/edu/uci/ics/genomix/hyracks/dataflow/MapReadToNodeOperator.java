@@ -135,7 +135,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                     nextNodeEntry.set(nextNextNodeEntry);
                     continue;
                 }
-                curNodeEntry.mergeForwadNext(nextNodeEntry, kmerSize);
+                curNodeEntry.mergeForwardNext(nextNodeEntry, kmerSize);
                 nextNodeEntry.set(nextNextNodeEntry);
             }
             outputNode(curNodeEntry);

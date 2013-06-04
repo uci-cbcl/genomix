@@ -65,7 +65,7 @@ public class DeepGraphBuildingReducer extends MapReduceBase implements
                 nextNode.set(nextNextNode);
                 continue;
             }
-            curNode.mergeForwadNext(nextNode, KMER_SIZE);
+            curNode.mergeForwardNext(nextNode, KMER_SIZE);
             nextNode.set(nextNextNode);
         }
         output.collect(curNode, nullWritable);
