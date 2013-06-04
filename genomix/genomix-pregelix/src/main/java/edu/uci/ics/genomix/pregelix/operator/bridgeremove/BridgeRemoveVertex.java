@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.tipremove;
+package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;

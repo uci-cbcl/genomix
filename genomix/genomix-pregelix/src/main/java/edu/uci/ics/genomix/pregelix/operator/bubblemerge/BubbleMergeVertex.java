@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.tipremove;
+package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
