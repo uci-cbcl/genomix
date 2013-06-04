@@ -13,7 +13,6 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
