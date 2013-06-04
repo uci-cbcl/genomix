@@ -11,6 +11,8 @@ import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.type.Message;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
  * vertexId: BytesWritable
@@ -50,6 +52,9 @@ public class TipRemoveVertex extends
     public static int kmerSize = -1;
     private int length = -1;
 
+    private MessageWritable incomingMsg = new MessageWritable();
+    private MessageWritable outgoingMsg = new MessageWritable();
+    
     /**
      * initiate kmerSize, length
      */
@@ -58,14 +63,33 @@ public class TipRemoveVertex extends
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if(length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
+        outgoingMsg.reset();
     }
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); //getVertexValue().getLengthOfMergeChain() < length
         if(getSuperstep() == 1){
-            
+            if(VertexUtil.isIncomingTipVertex(getVertexValue())){
+            	if(getVertexValue().getLengthOfMergeChain() > length){
+            		if(getVertexValue().getOutgoingList().getCountOfPosition() != 0){
+	            		if(getVertexValue().getFFList().getCountOfPosition() > 0)
+	            			outgoingMsg.setMessage(Message.TOFORWARD);
+	            		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
+	            			outgoingMsg.setMessage(Message.TOREVERSE);
+	            		outgoingMsg.setSourceVertexId(getVertexId());
+            		}
+            	}
+            	
+            }
+            else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
+            	
+            }
         }
+        else if(getSuperstep() == 2){
+        	
+        }
+        voteToHalt();
     }
 
     public static void main(String[] args) throws Exception {

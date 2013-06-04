@@ -27,6 +27,10 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
         reverseList.reset();
     }
     
+    public int getCountOfPosition(){
+    	return forwardList.getCountOfPosition() + reverseList.getCountOfPosition();
+    }
+    
     public PositionListWritable getForwardList() {
         return forwardList;
     }
