@@ -19,6 +19,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -38,6 +41,9 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperatorDescriptor {
+
+    private static final Log LOG = LogFactory.getLog(MapKmerPositionToReadOperator.class);
+    public static int WARNSIZE = 100 * 1000 * 5;
 
     public MapKmerPositionToReadOperator(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc, int readlength,
             int kmerSize) {
@@ -161,6 +167,9 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
                 if (posList2 == null) {
                     builder2.addFieldEndOffset();
                 } else {
+                    if (posList2.getLength() > WARNSIZE){
+                        LOG.warn("Hot overlap @" + pos.toString() + " :" + posList2.getLength());
+                    }
                     writePosToFieldAndSkipSameReadID(pos, builder2.getDataOutput(), posList2);
                     builder2.addFieldEndOffset();
                 }
@@ -179,21 +188,22 @@ public class MapKmerPositionToReadOperator extends AbstractSingleActivityOperato
                     FrameUtils.flushFrame(writeBuffer, writer);
                     appender.reset(writeBuffer, true);
                     if (!appender.append(builder2.getFieldEndOffsets(), builder2.getByteArray(), 0, builder2.getSize())) {
-                        throw new IllegalStateException();
+                        throw new IllegalStateException("length:" + builder2.getSize() );
                     }
                 }
             } catch (HyracksDataException e) {
                 throw new IllegalStateException(
-                        "Failed to Add a field to the tuple by copying the data bytes from a byte array.");
+                        "Failed to Add a field to the tuple by copying the data bytes from a byte array."
+                                + e.getMessage());
             }
         }
 
         private void writePosToFieldAndSkipSameReadID(PositionReference pos, DataOutput ds,
                 ArrayBackedValueStorage posList2) throws HyracksDataException {
 
-            plistEntry.setNewReference(PositionListWritable.getCountByDataLength(posList2
-                    .getLength()), posList2.getByteArray(), posList2.getStartOffset());
-            for (int i = 0;i < plistEntry.getCountOfPosition(); i++) {
+            plistEntry.setNewReference(PositionListWritable.getCountByDataLength(posList2.getLength()),
+                    posList2.getByteArray(), posList2.getStartOffset());
+            for (int i = 0; i < plistEntry.getCountOfPosition(); i++) {
                 PositionWritable p = plistEntry.getPosition(i);
                 if (!pos.isSameReadID(p)) {
                     try {
