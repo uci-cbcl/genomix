@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator;
+package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
