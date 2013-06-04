@@ -22,10 +22,10 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
     protected String HDFS_MARKPATHS = "/02-pathmark/";
     protected String HDFS_MERGED = "/03-pathmerge/";
     
-    protected String GRAPHBUILD_FILE = "result.graphbuild.txt";
-    protected String PATHMARKS_FILE = "result.markpaths.txt";
-    protected String PATHMERGE_FILE = "result.mergepath.txt";
-    protected boolean regenerateGraph = false;
+    protected String GRAPHBUILD_FILE = "graphbuild.result";
+    protected String PATHMARKS_FILE = "markpaths.result";
+    protected String PATHMERGE_FILE = "mergepath.result";
+    protected boolean regenerateGraph = true;
     
     {
         KMER_LENGTH = 5;
@@ -58,8 +58,7 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
         copyResultsToLocal(HDFS_MARKPATHS, ACTUAL_ROOT + PATHMARKS_FILE, false, conf);
 
         MergePathsH3Driver h3 = new MergePathsH3Driver();
-        h3.run(HDFS_MARKPATHS, HDFS_MERGED, 2, KMER_LENGTH, 10, null, conf);
-//        h3.run(HDFS_MARKPATHS, HDFS_MERGED, 2, KMER_LENGTH, 10, HADOOP_CONF_ROOT + "conf.xml", null);
+        h3.run(HDFS_MARKPATHS, HDFS_MERGED, 2, KMER_LENGTH, 1, conf);
         copyResultsToLocal(HDFS_MERGED, ACTUAL_ROOT + PATHMERGE_FILE, false, conf);
     }
 

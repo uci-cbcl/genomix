@@ -42,8 +42,11 @@ public class MergePathsH3Driver {
         @Option(name = "-kmer-size", usage = "the size of kmer", required = true)
         public int sizeKmer;
 
-        @Option(name = "-merge-rounds", usage = "the while rounds of merging", required = true)
+        @Option(name = "-merge-rounds", usage = "the maximum number of rounds to merge", required = false)
         public int mergeRound;
+        
+        @Option(name = "-hadoop-conf", usage = "an (optional) hadoop configuration xml", required = false)
+        public String hadoopConf;
 
     }
 
