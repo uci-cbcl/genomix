@@ -40,6 +40,7 @@ public class MergePathsH3 extends Configured implements Tool {
         public static final byte IS_HEAD = 1 << 3;
         public static final byte IS_TAIL = 1 << 4;
         public static final byte IS_PSEUDOHEAD = 1 << 5;
+        public static final byte IS_COMPLETE = 1 << 6;
 
         public static String getFlagAsString(byte code) {
             // TODO: allow multiple flags to be set
