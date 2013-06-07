@@ -11,7 +11,7 @@ import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
-public class MessageWritable implements WritableComparable<MessageWritable> {
+public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbleMessageWritable> {
     /**
      * sourceVertexId stores source vertexId when headVertex sends the message
      * stores neighber vertexValue when pathVertex sends the message
@@ -21,14 +21,16 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private KmerBytesWritable chainVertexId;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private byte message;
+    private PositionWritable startVertexId;
 
     private byte checkMessage;
 
-    public MessageWritable() {
+    public MergeBubbleMessageWritable() {
         sourceVertexId = new PositionWritable();
         chainVertexId = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
         message = Message.NON;
+        startVertexId = new PositionWritable();
         checkMessage = (byte) 0;
     }
     
@@ -110,6 +112,17 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         return chainVertexId.getKmerLength();
     }
 
+    public PositionWritable getStartVertexId() {
+        return startVertexId;
+    }
+
+    public void setStartVertexId(PositionWritable startVertexId) {
+        if(startVertexId != null){
+            checkMessage |= CheckMessage.START;
+            this.startVertexId.set(startVertexId);
+        }
+    }
+
     public byte getMessage() {
         return message;
     }
@@ -127,6 +140,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             chainVertexId.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
+        if ((checkMessage & CheckMessage.START) != 0)
+            startVertexId.write(out);
         out.write(message);
     }
 
@@ -140,6 +155,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             chainVertexId.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
+        if ((checkMessage & CheckMessage.START) != 0)
+            startVertexId.readFields(in);
         message = in.readByte();
     }
 
@@ -150,8 +167,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof MessageWritable) {
-            MessageWritable tp = (MessageWritable) o;
+        if (o instanceof MergeBubbleMessageWritable) {
+            MergeBubbleMessageWritable tp = (MergeBubbleMessageWritable) o;
             return sourceVertexId.equals(tp.sourceVertexId);
         }
         return false;
@@ -162,8 +179,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         return sourceVertexId.toString();
     }
 
-    @Override
-    public int compareTo(MessageWritable tp) {
+    public int compareTo(MergeBubbleMessageWritable tp) {
         return sourceVertexId.compareTo(tp.sourceVertexId);
     }
 }

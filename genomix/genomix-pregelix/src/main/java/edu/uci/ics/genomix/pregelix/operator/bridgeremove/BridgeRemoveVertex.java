@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
@@ -11,6 +12,8 @@ import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.type.AdjMessage;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
  * vertexId: BytesWritable
@@ -46,31 +49,137 @@ import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 public class BridgeRemoveVertex extends
         Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "BridgeRemoveVertex.kmerSize";
-    public static final String ITERATIONS = "BridgeRemoveVertex.iteration";
+    public static final String LENGTH = "BridgeRemoveVertex.length";
     public static int kmerSize = -1;
-    private int maxIteration = -1;
+    private int length = -1;
 
     private MessageWritable incomingMsg = new MessageWritable();
     private MessageWritable outgoingMsg = new MessageWritable();
-
+    private ArrayList<MessageWritable> receivedMsg = new ArrayList<MessageWritable>();
     
+    private PositionWritable destVertexId = new PositionWritable();
+    private Iterator<PositionWritable> posIterator;
     /**
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
-        if (maxIteration < 0)
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+        if(length == -1)
+            length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
         outgoingMsg.reset();
+        receivedMsg.clear();
+    }
+    
+    /**
+     * head send message to all next nodes
+     */
+    public void sendMsgToAllNextNodes(ValueStateWritable value) {
+        posIterator = value.getFFList().iterator(); // FFList
+        while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMFF);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        posIterator = value.getFRList().iterator(); // FRList
+        while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMFR);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+    }
+
+    /**
+     * head send message to all previous nodes
+     */
+    public void sendMsgToAllPreviousNodes(ValueStateWritable value) {
+        posIterator = value.getRFList().iterator(); // RFList
+        while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMRF);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        posIterator = value.getRRList().iterator(); // RRList
+        while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMRR);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
     }
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
-          
-        } 
+            if(VertexUtil.isUpBridgeVertex(getVertexValue())){
+                sendMsgToAllNextNodes(getVertexValue());
+            }
+           else if(VertexUtil.isUpBridgeVertex(getVertexValue())){
+                sendMsgToAllPreviousNodes(getVertexValue());
+           }
+        }
+        else if (getSuperstep() == 2){
+            int i = 0;
+            while (msgIterator.hasNext()) {
+                if(i == 3)
+                    break;
+                receivedMsg.add(msgIterator.next());
+                i++;
+            }
+            if(receivedMsg.size() == 2){
+                if(getVertexValue().getLengthOfMergeChain() > length){
+                    outgoingMsg.setSourceVertexId(getVertexId());
+                    if(receivedMsg.get(0).getMessage() == AdjMessage.FROMFF 
+                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRR){
+                        outgoingMsg.setMessage(AdjMessage.FROMRR);
+                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
+                        outgoingMsg.setMessage(AdjMessage.FROMFF);
+                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
+                        deleteVertex(getVertexId());
+                    } else if (receivedMsg.get(0).getMessage() == AdjMessage.FROMFF 
+                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRF) {
+                        outgoingMsg.setMessage(AdjMessage.FROMRR);
+                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
+                        outgoingMsg.setMessage(AdjMessage.FROMFR);
+                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
+                        deleteVertex(getVertexId());
+                    } else if (receivedMsg.get(0).getMessage() == AdjMessage.FROMFR 
+                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRR) {
+                        outgoingMsg.setMessage(AdjMessage.FROMRF);
+                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
+                        outgoingMsg.setMessage(AdjMessage.FROMFF);
+                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
+                        deleteVertex(getVertexId());
+                    } else if (receivedMsg.get(0).getMessage() == AdjMessage.FROMFR 
+                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRF) {
+                        outgoingMsg.setMessage(AdjMessage.FROMRF);
+                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
+                        outgoingMsg.setMessage(AdjMessage.FROMFR);
+                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
+                        deleteVertex(getVertexId());
+                    }
+                }
+            }
+        }
+        else if(getSuperstep() == 3){
+            while (msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                if(incomingMsg.getMessage() == AdjMessage.FROMFF){
+                    //remove incomingMsg.getSourceId from RR positionList
+                } else if(incomingMsg.getMessage() == AdjMessage.FROMFR){
+                  //remove incomingMsg.getSourceId from RF positionList
+                } else if(incomingMsg.getMessage() == AdjMessage.FROMRF){
+                  //remove incomingMsg.getSourceId from FR positionList
+                } else{ //incomingMsg.getMessage() == AdjMessage.FROMRR
+                  //remove incomingMsg.getSourceId from FF positionList
+                }
+            }
+        }
+        voteToHalt();
     }
 
     public static void main(String[] args) throws Exception {

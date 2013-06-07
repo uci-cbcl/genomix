@@ -8,6 +8,7 @@ public class CheckMessage {
     public static final byte MESSAGE = 1 << 3;
     public static final byte STATE = 1 << 4;
     public static final byte LASTGENECODE = 1 << 5;
+    public static final byte START = 1 << 6;
 
     public final static class CheckMessage_CONTENT {
 
@@ -31,6 +32,9 @@ public class CheckMessage {
                     break;
                 case LASTGENECODE:
                     r = "LASTGENECODE";
+                    break;
+                case START:
+                    r = "START";
                     break;
             }
             return r;

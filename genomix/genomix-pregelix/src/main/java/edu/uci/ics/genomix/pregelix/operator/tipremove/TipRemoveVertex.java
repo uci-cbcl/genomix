@@ -11,7 +11,7 @@ import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
-import edu.uci.ics.genomix.pregelix.type.Message;
+import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
@@ -68,26 +68,46 @@ public class TipRemoveVertex extends
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        initVertex(); //getVertexValue().getLengthOfMergeChain() < length
+        initVertex(); 
         if(getSuperstep() == 1){
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
             	if(getVertexValue().getLengthOfMergeChain() > length){
-            		if(getVertexValue().getOutgoingList().getCountOfPosition() != 0){
-	            		if(getVertexValue().getFFList().getCountOfPosition() > 0)
-	            			outgoingMsg.setMessage(Message.TOFORWARD);
-	            		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
-	            			outgoingMsg.setMessage(Message.TOREVERSE);
-	            		outgoingMsg.setSourceVertexId(getVertexId());
-            		}
+            		if(getVertexValue().getFFList().getCountOfPosition() > 0)
+            			outgoingMsg.setMessage(AdjMessage.FROMFF);
+            		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
+            			outgoingMsg.setMessage(AdjMessage.FROMFR);
+            		outgoingMsg.setSourceVertexId(getVertexId());
+            		deleteVertex(getVertexId());
             	}
-            	
             }
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
-            	
+                if(getVertexValue().getLengthOfMergeChain() > length){
+                    if(getVertexValue().getRFList().getCountOfPosition() > 0)
+                        outgoingMsg.setMessage(AdjMessage.FROMRF);
+                    else if(getVertexValue().getRRList().getCountOfPosition() > 0)
+                        outgoingMsg.setMessage(AdjMessage.FROMRR);
+                    outgoingMsg.setSourceVertexId(getVertexId());
+                    deleteVertex(getVertexId());
+                }
+            }
+            else if(VertexUtil.isSingleVertex(getVertexValue())){
+                if(getVertexValue().getLengthOfMergeChain() > length)
+                    deleteVertex(getVertexId());
             }
         }
         else if(getSuperstep() == 2){
-        	
+            while (msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                if(incomingMsg.getMessage() == AdjMessage.FROMFF){
+                    //remove incomingMsg.getSourceId from RR positionList
+                } else if(incomingMsg.getMessage() == AdjMessage.FROMFR){
+                  //remove incomingMsg.getSourceId from RF positionList
+                } else if(incomingMsg.getMessage() == AdjMessage.FROMRF){
+                  //remove incomingMsg.getSourceId from FR positionList
+                } else{ //incomingMsg.getMessage() == AdjMessage.FROMRR
+                  //remove incomingMsg.getSourceId from FF positionList
+                }
+            }
         }
         voteToHalt();
     }
