@@ -50,6 +50,10 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public KmerBytesWritable(int k, byte[] storage, int offset) {
         setNewReference(k, storage, offset);
     }
+    
+    public KmerBytesWritable(int k, String kmer) {
+        setNewReference(kmer.length(), kmer.getBytes(), 0);
+    }
 
     /**
      * Initial Kmer space by kmerlength

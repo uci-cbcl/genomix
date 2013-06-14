@@ -132,7 +132,6 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
                 return diff2;
             }
             return diff1;
-            //            return compareBytes(b1, s1, l1, b2, s2, l2);
         }
     }
 
