@@ -60,10 +60,6 @@ public class PathNodeInitial extends Configured implements Tool {
         private NodeWritable emptyNode;
         private Iterator<PositionWritable> posIterator;
 
-        public PathNodeInitialMapper() {
-
-        }
-
         public void configure(JobConf conf) {
             KMER_SIZE = conf.getInt("sizeKmer", 0);
             outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);

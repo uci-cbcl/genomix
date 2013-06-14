@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 
 /*
@@ -20,7 +21,7 @@ public class MessageWritableNodeWithFlag extends BinaryComparable implements Wri
     public MessageWritableNodeWithFlag() {
         this(0);
     }
-    
+
     public MessageWritableNodeWithFlag(int k) {
         this.flag = 0;
         this.node = new NodeWritable(k);
@@ -29,6 +30,11 @@ public class MessageWritableNodeWithFlag extends BinaryComparable implements Wri
     public MessageWritableNodeWithFlag(byte flag, int kmerSize) {
         this.flag = flag;
         this.node = new NodeWritable(kmerSize);
+    }
+    
+    public MessageWritableNodeWithFlag(byte flag, NodeWritable node) {
+        this(node.getKmer().getKmerLength());
+        set(flag, node);
     }
 
     public void set(MessageWritableNodeWithFlag right) {
@@ -78,5 +84,20 @@ public class MessageWritableNodeWithFlag extends BinaryComparable implements Wri
     @Override
     public int getLength() {
         return node.getCount();
+    }
+
+    @Override
+    public int hashCode() {
+//        return super.hashCode() + flag + node.hashCode();
+        return flag + node.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object rightObj) {
+        if (rightObj instanceof MessageWritableNodeWithFlag) {
+            MessageWritableNodeWithFlag rightMessage = (MessageWritableNodeWithFlag) rightObj;
+            return (this.flag == rightMessage.flag && this.node.equals(rightMessage.node));
+        }
+        return false;
     }
 }

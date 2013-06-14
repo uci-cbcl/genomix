@@ -36,7 +36,7 @@ public class MergePathsH4 extends Configured implements Tool {
      * Mapper class: Partition the graph using random pseudoheads.
      * Heads send themselves to their successors, and all others map themselves.
      */
-    private static class MergePathsH4Mapper extends MapReduceBase implements
+    public static class MergePathsH4Mapper extends MapReduceBase implements
             Mapper<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
         private static long randSeed;
         private Random randGenerator;
@@ -200,6 +200,10 @@ public class MergePathsH4 extends Configured implements Tool {
                 outputValue.set(outFlag, curNode);
                 output.collect(curID, outputValue);
             }
+            else {
+                // TODO send update to this node's neighbors
+                //mos.getCollector(UPDATES_OUTPUT, reporter).collect(key, outputValue);
+            }
         }
     }
 
@@ -210,6 +214,7 @@ public class MergePathsH4 extends Configured implements Tool {
             Reducer<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
         private MultipleOutputs mos;
         public static final String COMPLETE_OUTPUT = "complete";
+        public static final String UPDATES_OUTPUT = "update";
         
         private int KMER_SIZE;
         private MessageWritableNodeWithFlag inputValue;
@@ -304,7 +309,6 @@ public class MergePathsH4 extends Configured implements Tool {
                 if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
                     // True heads meeting tails => merge is complete for this node
                     mos.getCollector(COMPLETE_OUTPUT, reporter).collect(key, outputValue);
-                    // TODO send update to this node's neighbors
                 } else {
                     output.collect(key, outputValue);
                 }
