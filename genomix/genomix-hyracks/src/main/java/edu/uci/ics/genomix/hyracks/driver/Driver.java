@@ -31,6 +31,7 @@ import edu.uci.ics.genomix.hyracks.job.JobGenCheckReader;
 import edu.uci.ics.genomix.hyracks.job.JobGenCreateKmerInfo;
 import edu.uci.ics.genomix.hyracks.job.JobGenGroupbyReadID;
 import edu.uci.ics.genomix.hyracks.job.JobGenMapKmerToRead;
+import edu.uci.ics.genomix.hyracks.job.JobGenUnMerged;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -47,6 +48,7 @@ public class Driver {
         OUTPUT_MAP_KMER_TO_READ,
         OUTPUT_GROUPBY_READID,
         BUILD_DEBRUJIN_GRAPH,
+        BUILD_UNMERGED_GRAPH,
     }
 
     private static final String IS_PROFILING = "genomix.driver.profiling";
@@ -109,6 +111,8 @@ public class Driver {
                 case CHECK_KMERREADER:
                     jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
+                case BUILD_UNMERGED_GRAPH:
+                    jobGen = new JobGenUnMerged(job, scheduler, ncMap, numPartitionPerMachine);
             }
 
             start = System.currentTimeMillis();

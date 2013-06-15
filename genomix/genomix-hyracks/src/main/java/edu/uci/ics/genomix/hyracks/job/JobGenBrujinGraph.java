@@ -258,7 +258,7 @@ public class JobGenBrujinGraph extends JobGen {
         // OutgoingList, Kmer)
 
         AbstractOperatorDescriptor mapEachReadToNode = new MapReadToNodeOperator(jobSpec,
-                MapReadToNodeOperator.nodeOutputRec, kmerSize);
+                MapReadToNodeOperator.nodeOutputRec, kmerSize, true);
         connectOperators(jobSpec, readCrossAggregator, ncNodeNames, mapEachReadToNode, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
         return mapEachReadToNode;

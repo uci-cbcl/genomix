@@ -38,10 +38,12 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperat
 
 public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescriptor {
 
-    public MapReadToNodeOperator(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc, int kmerSize) {
+    public MapReadToNodeOperator(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc, int kmerSize,
+            boolean bMergeNode) {
         super(spec, 1, 1);
         recordDescriptors[0] = outRecDesc;
         this.kmerSize = kmerSize;
+        this.DoMergeNodeInRead = bMergeNode;
     }
 
     /**
@@ -60,6 +62,8 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
     public static final int OutputReverseForwardField = 4;
     public static final int OutputReverseReverseField = 5;
     public static final int OutputKmerBytesField = 6;
+
+    public final boolean DoMergeNodeInRead;
 
     public static final RecordDescriptor nodeOutputRec = new RecordDescriptor(new ISerializerDeserializer[7]);
 
@@ -141,9 +145,9 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             for (int i = InputInfoFieldStart + 2; i < accessor.getFieldCount(); i += 2) {
                 readNodesInfo(tIndex, readID, nextNodeEntry, nextNextNodeEntry, i);
 
-                if (curNodeEntry.inDegree() > 1 || curNodeEntry.outDegree() > 0 || nextNodeEntry.inDegree() > 0
-                        || nextNodeEntry.outDegree() > 0 || nextNextNodeEntry.inDegree() > 0
-                        || nextNextNodeEntry.outDegree() > 0) {
+                if (!DoMergeNodeInRead || curNodeEntry.inDegree() > 1 || curNodeEntry.outDegree() > 0
+                        || nextNodeEntry.inDegree() > 0 || nextNodeEntry.outDegree() > 0
+                        || nextNextNodeEntry.inDegree() > 0 || nextNextNodeEntry.outDegree() > 0) {
                     connect(curNodeEntry, nextNodeEntry);
                     outputNode(curNodeEntry);
                     curNodeEntry.set(nextNodeEntry);
@@ -203,7 +207,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setReverseOutgoingList(NodeReference node, int offset) {
             setCachList(offset);
-            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+            for (int i = 0; i < cachePositionList.getCountOfPosition(); i++) {
                 PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     node.getRFList().append(pos);
@@ -215,7 +219,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setReverseIncomingList(NodeReference node, int offset) {
             setCachList(offset);
-            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+            for (int i = 0; i < cachePositionList.getCountOfPosition(); i++) {
                 PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     if (pos.getPosInRead() > 1) {
@@ -233,7 +237,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setForwardOutgoingList(NodeReference node, int offset) {
             setCachList(offset);
-            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+            for (int i = 0; i < cachePositionList.getCountOfPosition(); i++) {
                 PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     node.getFFList().append(pos);
@@ -245,7 +249,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
 
         private void setForwardIncomingList(NodeReference node, int offset) {
             setCachList(offset);
-            for(int i = 0; i < cachePositionList.getCountOfPosition(); i++){
+            for (int i = 0; i < cachePositionList.getCountOfPosition(); i++) {
                 PositionWritable pos = cachePositionList.getPosition(i);
                 if (pos.getPosInRead() > 0) {
                     if (pos.getPosInRead() > 1) {

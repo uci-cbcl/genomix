@@ -60,6 +60,7 @@ public class JobRunStepByStepTest {
     private static final String EXPECTED_KMER_TO_READID = EXPECTED_DIR + "result_after_kmer2readId";
     private static final String EXPECTED_GROUPBYREADID = EXPECTED_DIR + "result_after_readIDAggreage";
     private static final String EXPECTED_OUPUT_NODE = EXPECTED_DIR + "result_after_generateNode";
+    private static final String EXPECTED_UNMERGED = EXPECTED_DIR + "result_unmerged";
 
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
     private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
@@ -79,6 +80,15 @@ public class JobRunStepByStepTest {
         TestMapKmerToRead();
         TestGroupByReadID();
         TestEndToEnd();
+        TestUnMergedNode();
+    }
+
+    public void TestUnMergedNode() throws Exception {
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
+        cleanUpReEntry();
+        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
+        driver.runJob(new GenomixJobConf(conf), Plan.BUILD_UNMERGED_GRAPH, true);
+        Assert.assertEquals(true, checkResults(EXPECTED_UNMERGED, new int[] { 1, 2, 3, 4 }));
     }
 
     public void TestReader() throws Exception {
