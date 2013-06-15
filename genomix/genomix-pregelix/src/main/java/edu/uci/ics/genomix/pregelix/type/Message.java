@@ -8,7 +8,8 @@ public class Message {
     public static final byte STOP = 3;
     public static final byte FROMPSEUDOHEAD = 4;
     public static final byte FROMPSEUDOREAR = 5;
-    public static final byte FROMSELF = 6;
+    public static final byte IN = 6;
+    public static final byte OUT = 7;
 
     public final static class MESSAGE_CONTENT {
 
@@ -33,8 +34,11 @@ public class Message {
                 case FROMPSEUDOREAR:
                     r = "FROMPSEUDOREAR";
                     break;
-                case FROMSELF:
-                    r = "FROMSELF";
+                case IN:
+                    r = "IN";
+                    break;
+                case OUT:
+                    r = "OUT";
                     break;
             }
             return r;

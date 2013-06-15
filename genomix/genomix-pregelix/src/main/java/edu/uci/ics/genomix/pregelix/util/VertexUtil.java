@@ -47,4 +47,36 @@ public class VertexUtil {
         }
         return false;*/
     }
+    
+    /**
+     * check if vertex is a tip
+     */
+    public static boolean isIncomingTipVertex(ValueStateWritable value){
+    	return value.inDegree() == 0 && value.outDegree() == 1;
+    }
+    
+    public static boolean isOutgoingTipVertex(ValueStateWritable value){
+    	return value.inDegree() == 1 && value.outDegree() == 0;
+    }
+    
+    /**
+     * check if vertex is single
+     */
+    public static boolean isSingleVertex(ValueStateWritable value){
+        return value.inDegree() == 0 && value.outDegree() == 0;
+    }
+    
+    /**
+     * check if vertex is upbridge
+     */
+    public static boolean isUpBridgeVertex(ValueStateWritable value){
+        return value.inDegree() == 1 && value.outDegree() > 1;
+    }
+    
+    /**
+     * check if vertex is downbridge
+     */
+    public static boolean isDownBridgeVertex(ValueStateWritable value){
+        return value.inDegree() > 1 && value.outDegree() == 1;
+    }
 }

@@ -34,6 +34,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -57,10 +58,7 @@ public class PathNodeInitial extends Configured implements Tool {
         private int inDegree;
         private int outDegree;
         private NodeWritable emptyNode;
-
-        public PathNodeInitialMapper() {
-
-        }
+        private Iterator<PositionWritable> posIterator;
 
         public void configure(JobConf conf) {
             KMER_SIZE = conf.getInt("sizeKmer", 0);
@@ -80,47 +78,79 @@ public class PathNodeInitial extends Configured implements Tool {
                 outputValue.set(MessageFlag.FROM_SELF, key);
                 output.collect(key.getNodeID(), outputValue);
                 reporter.incrCounter("genomix", "path_nodes", 1);
-            } else if (outDegree == 1) {
-                // Not a path myself, but my successor might be one. Map forward successor
+            } else if (inDegree == 0 && outDegree == 1) {
+                // start of a tip.  needs to merge & be marked as head
+                outputValue.set(MessageFlag.FROM_SELF, key);
+                output.collect(key.getNodeID(), outputValue);
+                reporter.incrCounter("genomix", "path_nodes", 1);
+
                 outputValue.set(MessageFlag.FROM_PREDECESSOR, emptyNode);
-                if (key.getFFList().getCountOfPosition() > 0) {
-                    outputKey.set(key.getFFList().getPosition(0));
-                } else {
-                    outputKey.set(key.getFRList().getPosition(0));
-                }
-                output.collect(outputKey, outputValue);
-            } else if (inDegree == 1) {
-                // Not a path myself, but my predecessor might be one.
+                output.collect(key.getNodeID(), outputValue);
+            } else if (inDegree == 1 && outDegree == 0) {
+                // end of a tip.  needs to merge & be marked as tail
+                outputValue.set(MessageFlag.FROM_SELF, key);
+                output.collect(key.getNodeID(), outputValue);
+                reporter.incrCounter("genomix", "path_nodes", 1);
+
                 outputValue.set(MessageFlag.FROM_SUCCESSOR, emptyNode);
-                if (key.getRRList().getCountOfPosition() > 0) {
-                    outputKey.set(key.getRRList().getPosition(0));
-                } else {
-                    outputKey.set(key.getRFList().getPosition(0));
-                }
-                output.collect(outputKey, outputValue);
+                output.collect(key.getNodeID(), outputValue);
             } else {
-                // TODO: all other nodes will not participate-- should they be collected in a "complete" output?
+                if (outDegree > 0) {
+                    // Not a path myself, but my successor might be one. Map forward successor to find heads
+                    outputValue.set(MessageFlag.FROM_PREDECESSOR, emptyNode);
+                    posIterator = key.getFFList().iterator();
+                    while (posIterator.hasNext()) {
+                        outputKey.set(posIterator.next());
+                        output.collect(outputKey, outputValue);
+                    }
+                    posIterator = key.getFRList().iterator();
+                    while (posIterator.hasNext()) {
+                        outputKey.set(posIterator.next());
+                        output.collect(outputKey, outputValue);
+                    }
+                }
+                if (inDegree > 0) {
+                    // Not a path myself, but my predecessor might be one. map predecessor to find tails 
+                    outputValue.set(MessageFlag.FROM_SUCCESSOR, emptyNode);
+                    posIterator = key.getRRList().iterator();
+                    while (posIterator.hasNext()) {
+                        outputKey.set(posIterator.next());
+                        output.collect(outputKey, outputValue);
+                    }
+                    posIterator = key.getRFList().iterator();
+                    while (posIterator.hasNext()) {
+                        outputKey.set(posIterator.next());
+                        output.collect(outputKey, outputValue);
+                    }
+                }
+                // push this non-path node to the "complete" output
+                outputValue.set((byte) (MessageFlag.FROM_SELF | MessageFlag.IS_COMPLETE), key);
+                output.collect(key.getNodeID(), outputValue);
             }
         }
     }
 
     public static class PathNodeInitialReducer extends MapReduceBase implements
             Reducer<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
-
+        private MultipleOutputs mos;
+        private static final String COMPLETE_OUTPUT = "complete";
         private int KMER_SIZE;
         private MessageWritableNodeWithFlag inputValue;
         private MessageWritableNodeWithFlag outputValue;
         private NodeWritable nodeToKeep;
         private int count;
         private byte flag;
+        private boolean isComplete;
 
         public void configure(JobConf conf) {
+            mos = new MultipleOutputs(conf);
             KMER_SIZE = conf.getInt("sizeKmer", 0);
             inputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
             outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
             nodeToKeep = new NodeWritable(KMER_SIZE);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void reduce(PositionWritable key, Iterator<MessageWritableNodeWithFlag> values,
                 OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
@@ -128,41 +158,63 @@ public class PathNodeInitial extends Configured implements Tool {
 
             inputValue.set(values.next());
             if (!values.hasNext()) {
-                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) == MessageFlag.FROM_SELF) {
-                    // FROM_SELF => need to keep this PATH node
-                    output.collect(key, inputValue);
+                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
+                    if ((inputValue.getFlag() & MessageFlag.IS_COMPLETE) > 0) {
+                        // non-path node.  Store in "complete" output
+                        mos.getCollector(COMPLETE_OUTPUT, reporter).collect(key, inputValue);
+                    } else {
+                        // FROM_SELF => need to keep this PATH node
+                        output.collect(key, inputValue);
+                    }
                 }
             } else {
                 // multiple inputs => possible HEAD or TAIL to a path node. note if HEAD or TAIL node 
                 count = 0;
                 flag = MessageFlag.EMPTY_MESSAGE;
+                isComplete = false;
                 while (true) { // process values; break when no more
                     count++;
-                    if ((inputValue.getFlag() & MessageFlag.FROM_SELF) == MessageFlag.FROM_SELF) {
+                    if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
                         // SELF -> keep this node
+                        flag |= MessageFlag.FROM_SELF;
                         nodeToKeep.set(inputValue.getNode());
-                    } else if ((inputValue.getFlag() & MessageFlag.FROM_SUCCESSOR) == MessageFlag.FROM_SUCCESSOR) {
+                        if ((inputValue.getFlag() & MessageFlag.IS_COMPLETE) > 0) {
+                            isComplete = true;
+                        }
+                    } else if ((inputValue.getFlag() & MessageFlag.FROM_SUCCESSOR) > 0) {
                         flag |= MessageFlag.IS_TAIL;
-                        reporter.incrCounter("genomix", "path_nodes_tails", 1);
-                    } else if ((inputValue.getFlag() & MessageFlag.FROM_PREDECESSOR) == MessageFlag.FROM_PREDECESSOR) {
+                    } else if ((inputValue.getFlag() & MessageFlag.FROM_PREDECESSOR) > 0) {
                         flag |= MessageFlag.IS_HEAD;
-                        reporter.incrCounter("genomix", "path_nodes_heads", 1);
                     }
                     if (!values.hasNext()) {
                         break;
                     } else {
-                        inputValue = values.next();
+                        inputValue.set(values.next());
                     }
                 }
                 if (count < 2) {
                     throw new IOException("Expected at least two nodes in PathNodeInitial reduce; saw "
                             + String.valueOf(count));
                 }
-                if ((flag & MessageFlag.FROM_SELF) == MessageFlag.FROM_SELF) {
-                    // only map simple path nodes
-                    outputValue.set(flag, nodeToKeep);
-                    output.collect(key, outputValue);
-                    reporter.incrCounter("genomix", "path_nodes", 1);
+                if ((flag & MessageFlag.FROM_SELF) > 0) {
+                    if ((flag & MessageFlag.IS_COMPLETE) > 0) {
+                        // non-path node.  Store in "complete" output
+                        mos.getCollector(COMPLETE_OUTPUT, reporter).collect(key, inputValue);
+                    } else {
+                        // only keep simple path nodes
+                        outputValue.set(flag, nodeToKeep);
+                        output.collect(key, outputValue);
+
+                        reporter.incrCounter("genomix", "path_nodes", 1);
+                        if ((flag & MessageFlag.IS_HEAD) > 0) {
+                            reporter.incrCounter("genomix", "path_nodes_heads", 1);
+                        }
+                        if ((flag & MessageFlag.IS_TAIL) > 0) {
+                            reporter.incrCounter("genomix", "path_nodes_tails", 1);
+                        }
+                    }
+                } else {
+                    throw new IOException("No SELF node recieved in reduce! key=" + key.toString() + " flag=" + flag);
                 }
             }
         }

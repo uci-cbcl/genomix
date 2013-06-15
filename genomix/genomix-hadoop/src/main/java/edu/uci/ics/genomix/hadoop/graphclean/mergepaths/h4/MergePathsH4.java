@@ -20,6 +20,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -35,7 +36,7 @@ public class MergePathsH4 extends Configured implements Tool {
      * Mapper class: Partition the graph using random pseudoheads.
      * Heads send themselves to their successors, and all others map themselves.
      */
-    private static class MergePathsH4Mapper extends MapReduceBase implements
+    public static class MergePathsH4Mapper extends MapReduceBase implements
             Mapper<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
         private static long randSeed;
         private Random randGenerator;
@@ -59,6 +60,7 @@ public class MergePathsH4 extends Configured implements Tool {
         private byte outFlag;
 
         public void configure(JobConf conf) {
+            
             randSeed = conf.getLong("randomSeed", 0);
             randGenerator = new Random(randSeed);
             probBeingRandomHead = conf.getFloat("probBeingRandomHead", 0.5f);
@@ -116,24 +118,35 @@ public class MergePathsH4 extends Configured implements Tool {
         public void map(PositionWritable key, MessageWritableNodeWithFlag value,
                 OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
                 throws IOException {
+            // Node may be marked as head b/c it's a real head or a real tail
+            headFlag = (byte) (MessageFlag.IS_HEAD & value.getFlag());
+            tailFlag = (byte) (MessageFlag.IS_TAIL & value.getFlag());
+            outFlag = (byte) (headFlag | tailFlag);
+            
             // only PATH vertices are present. Find the ID's for my neighbors
             curNode.set(value.getNode());
             curID.set(curNode.getNodeID());
+            
             curHead = isNodeRandomHead(curID);
-            hasNext = setNextInfo(curNode);
-            hasPrev = setPrevInfo(curNode);
+            // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
+            // We prevent merging towards non-path nodes
+            hasNext = setNextInfo(curNode) && tailFlag == 0;
+            hasPrev = setPrevInfo(curNode) && headFlag == 0;
             willMerge = false;
             
             reporter.setStatus("CHECK ME OUT");
-            System.out.println("mapping node" + curNode.toString() + " next:" + String.valueOf(hasNext) + " prev:" + String.valueOf(hasPrev));
+            System.err.println("mapping node" + curNode.toString() + " next:" + String.valueOf(hasNext) + " prev:" + String.valueOf(hasPrev));
 
             // TODO: need to update edges in neighboring nodes
-
+            
+            if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
+                // true HEAD met true TAIL. this path is complete
+                outFlag |= MessageFlag.FROM_SELF;
+                outputValue.set(outFlag, curNode);
+                output.collect(curID, outputValue);
+                return;
+            }
             if (hasNext || hasPrev) {
-                // Node may be marked as head b/c it's a real head or a real tail
-                headFlag = (byte) (MessageFlag.IS_HEAD & value.getFlag());
-                tailFlag = (byte) (MessageFlag.IS_TAIL & value.getFlag());
-                outFlag = (byte) (headFlag | tailFlag);
                 if (curHead) {
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
@@ -181,11 +194,15 @@ public class MergePathsH4 extends Configured implements Tool {
                 }
             }
 
-            // if we didn't send ourselves to some other node, remap ourselves
+            // if we didn't send ourselves to some other node, remap ourselves for the next round
             if (!willMerge) {
                 outFlag |= MessageFlag.FROM_SELF;
                 outputValue.set(outFlag, curNode);
                 output.collect(curID, outputValue);
+            }
+            else {
+                // TODO send update to this node's neighbors
+                //mos.getCollector(UPDATES_OUTPUT, reporter).collect(key, outputValue);
             }
         }
     }
@@ -195,7 +212,10 @@ public class MergePathsH4 extends Configured implements Tool {
      */
     private static class MergePathsH4Reducer extends MapReduceBase implements
             Reducer<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
-
+        private MultipleOutputs mos;
+        public static final String COMPLETE_OUTPUT = "complete";
+        public static final String UPDATES_OUTPUT = "update";
+        
         private int KMER_SIZE;
         private MessageWritableNodeWithFlag inputValue;
         private MessageWritableNodeWithFlag outputValue;
@@ -209,13 +229,16 @@ public class MergePathsH4 extends Configured implements Tool {
         private byte outFlag;
 
         public void configure(JobConf conf) {
+            mos = new MultipleOutputs(conf);
             KMER_SIZE = conf.getInt("sizeKmer", 0);
+            inputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
             outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
             curNode = new NodeWritable(KMER_SIZE);
             prevNode = new NodeWritable(KMER_SIZE);
             nextNode = new NodeWritable(KMER_SIZE);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void reduce(PositionWritable key, Iterator<MessageWritableNodeWithFlag> values,
                 OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
@@ -223,10 +246,14 @@ public class MergePathsH4 extends Configured implements Tool {
 
             inputValue.set(values.next());
             if (!values.hasNext()) {
-                // all single nodes must be remapped
-                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) == MessageFlag.FROM_SELF) {
-                    // FROM_SELF => remap self
-                    output.collect(key, inputValue);
+                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
+                    if ((inputValue.getFlag() & MessageFlag.IS_HEAD) > 0 && (inputValue.getFlag() & MessageFlag.IS_TAIL) > 0) {
+                        // complete path (H & T meet in this node)
+                        mos.getCollector(COMPLETE_OUTPUT, reporter).collect(key, inputValue);
+                    } else { 
+                        // FROM_SELF => no merging this round. remap self
+                        output.collect(key, inputValue);
+                    }
                 } else if ((inputValue.getFlag() & (MessageFlag.FROM_PREDECESSOR | MessageFlag.FROM_SUCCESSOR)) > 0) {
                     // FROM_PREDECESSOR | FROM_SUCCESSOR, but singleton?  error here!
                     throw new IOException("Only one value recieved in merge, but it wasn't from self!");
@@ -246,10 +273,12 @@ public class MergePathsH4 extends Configured implements Tool {
                         sawPrevNode = true;
                     } else if ((inputValue.getFlag() & MessageFlag.FROM_SUCCESSOR) > 0) {
                         nextNode.set(inputValue.getNode());
-                        sawNextNode = false;
-                    } else {
+                        sawNextNode = true;
+                    } else if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
                         curNode.set(inputValue.getNode());
                         sawCurNode = true;
+                    } else {
+                        throw new IOException("Unknown origin for merging node");
                     }
                     if (!values.hasNext()) {
                         break;
@@ -279,7 +308,7 @@ public class MergePathsH4 extends Configured implements Tool {
                 outputValue.set(outFlag, curNode);
                 if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
                     // True heads meeting tails => merge is complete for this node
-                    // TODO: send to the "complete" collector
+                    mos.getCollector(COMPLETE_OUTPUT, reporter).collect(key, outputValue);
                 } else {
                     output.collect(key, outputValue);
                 }

@@ -19,7 +19,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.hadoop.io.Writable;
 
@@ -46,6 +48,13 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
 
     public PositionListWritable(int count, byte[] data, int offset) {
         setNewReference(count, data, offset);
+    }
+    
+    public PositionListWritable(List<PositionWritable> posns) {
+        this();
+        for (PositionWritable p : posns) {
+            append(p);
+        }
     }
 
     public void setNewReference(int count, byte[] data, int offset) {
@@ -197,5 +206,24 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             sbuilder.append(']');
         }
         return sbuilder.toString();
+    }
+    
+    @Override
+    public int hashCode() {
+        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PositionListWritable))
+            return false;
+        PositionListWritable other = (PositionListWritable) o;
+        if (this.valueCount != other.valueCount)
+            return false;
+        for (int i=0; i < this.valueCount; i++) {
+                if (!this.getPosition(i).equals(other.getPosition(i)))
+                    return false;
+        }
+        return true;
     }
 }

@@ -52,6 +52,7 @@ public class GraphBuildingDriver {
     public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength,
             boolean onlyTest1stJob, boolean seqOutput, String defaultConfPath) throws IOException {
         if (onlyTest1stJob == true) {
+            
             runfirstjob(inputPath, numReducers, sizeKmer, readLength, seqOutput, defaultConfPath);
         } else {
             runfirstjob(inputPath, numReducers, sizeKmer, readLength, true, defaultConfPath);
@@ -113,6 +114,7 @@ public class GraphBuildingDriver {
 
         conf.setPartitionerClass(ReadIDPartitioner.class);
 
+        // grouping is done on the readID only; sorting is based on the (readID, abs(posn)) 
         conf.setOutputKeyComparatorClass(PositionWritable.Comparator.class);
         conf.setOutputValueGroupingComparator(PositionWritable.FirstComparator.class);
 

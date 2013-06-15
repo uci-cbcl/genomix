@@ -29,7 +29,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
                 reverseForwardList, reverseReverseList,
                 state, mergeChain);
     }
-
+    
     public void set(PositionListWritable forwardForwardList, PositionListWritable forwardReverseList,
             PositionListWritable reverseForwardList, PositionListWritable reverseReverseList, 
             byte state, KmerBytesWritable mergeChain) {
@@ -39,6 +39,11 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
         this.outgoingList.setReverseList(forwardReverseList);
         this.state = state;
         this.mergeChain.set(mergeChain);
+    }
+    
+    public void set(ValueStateWritable value) {
+        set(value.getFFList(),value.getFRList(),value.getRFList(),value.getRRList(),value.getState(),
+                value.getMergeChain());
     }
     
     public PositionListWritable getFFList() {
@@ -78,7 +83,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
     }
 
     public void setIncomingList(AdjacencyListWritable incomingList) {
-        this.incomingList = incomingList;
+        this.incomingList.set(incomingList);
     }
 
     public AdjacencyListWritable getOutgoingList() {
@@ -86,7 +91,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
     }
 
     public void setOutgoingList(AdjacencyListWritable outgoingList) {
-        this.outgoingList = outgoingList;
+        this.outgoingList.set(outgoingList);
     }
 
     public byte getState() {
