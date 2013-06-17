@@ -7,9 +7,9 @@
   <version>0.2.6-SNAPSHOT</version>
   <name>genomix-pregelix</name>
 
-  <properties>
-    <jvm.extraargs/>
-  </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
   <profiles>
     <profile>
@@ -220,6 +220,13 @@
                 <dependency>
                 	<groupId>edu.uci.ics.hyracks</groupId>
                 	<artifactId>genomix-hyracks</artifactId>
+                	<version>0.2.6-SNAPSHOT</version>
+                	<type>jar</type>
+                	<scope>compile</scope>
+                </dependency>
+                <dependency>
+                	<groupId>edu.uci.ics.hyracks</groupId>
+                	<artifactId>genomix-hadoop</artifactId>
                 	<version>0.2.6-SNAPSHOT</version>
                 	<type>jar</type>
                 	<scope>compile</scope>
