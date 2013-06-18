@@ -1,5 +1,7 @@
 package edu.uci.ics.genomix.data.test;
 
+import java.util.Iterator;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -36,4 +38,53 @@ public class PositionListWritableTest {
         }
     }
     
+    @Test
+    public void TestRemove() {
+        PositionListWritable plist = new PositionListWritable();
+        Assert.assertEquals(plist.getCountOfPosition(), 0);
+        
+        for (int i = 0; i < 5; i++) {
+            plist.append(i, (byte) i);
+            Assert.assertEquals(i, plist.getPosition(i).getReadID());
+            Assert.assertEquals((byte) i, plist.getPosition(i).getPosInRead());
+            Assert.assertEquals(i + 1, plist.getCountOfPosition());
+        }
+        int i = 0;
+        for (PositionWritable pos : plist) {
+            Assert.assertEquals(i, pos.getReadID());
+            Assert.assertEquals((byte) i, pos.getPosInRead());
+            i++;
+        }
+        
+        i = 0;
+        PositionWritable pos = new PositionWritable();
+        Iterator<PositionWritable> iterator = plist.iterator();
+        
+        PositionWritable deletePos = new PositionWritable();
+        deletePos.set(2, (byte)2);
+        while(iterator.hasNext()){
+            pos = iterator.next();
+            if(pos.equals(deletePos)){
+                iterator.remove();
+                break;
+            }
+        }
+        Assert.assertEquals(4, plist.getCountOfPosition());
+        
+        while(iterator.hasNext()){
+            pos = iterator.next();
+            Assert.assertTrue(pos.getReadID() != deletePos.getReadID());
+            Assert.assertTrue(pos.getPosInRead() != deletePos.getPosInRead());
+            i++;
+        }
+        
+        i = 0;
+        iterator = plist.iterator();
+        while(iterator.hasNext()){
+            pos = iterator.next();
+            iterator.remove();
+        }
+        
+        Assert.assertEquals(0, plist.getCountOfPosition());
+    }
 }

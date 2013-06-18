@@ -118,6 +118,16 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
 
             @Override
             public void remove() {
+//                for(int cursor = currentIndex; cursor < valueCount; cursor++){
+//                    System.arraycopy(storage, offset + cursor * PositionWritable.LENGTH, 
+//                            storage, offset + (cursor-1) * PositionWritable.LENGTH, PositionWritable.LENGTH);
+//                }
+                if(currentIndex < valueCount - 1)
+                    System.arraycopy(storage, offset + currentIndex * PositionWritable.LENGTH, 
+                          storage, offset + (currentIndex - 1) * PositionWritable.LENGTH, 
+                          (valueCount - currentIndex) * PositionWritable.LENGTH);
+                valueCount--;
+                currentIndex--;
             }
         };
         return it;
