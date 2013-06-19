@@ -11,27 +11,25 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3Driver;
 import edu.uci.ics.genomix.hadoop.pmcommon.GenomixMiniClusterTest;
+import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial;
+import edu.uci.ics.genomix.hadoop.velvetgraphbuilding.GraphBuildingDriver;
 import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 
 @SuppressWarnings("deprecation")
-public class TestPathMergeH4 extends GenomixMiniClusterTest {
-    protected String LOCAL_SEQUENCE_FILE = "src/test/resources/data/webmap/text.txt";
-    protected String HDFS_SEQUENCE = "/00-sequence/";
-    protected String HDFS_GRAPHBUILD = "/01-graphbuild/";
-    protected String HDFS_MARKPATHS = "/02-pathmark/";
-    protected String HDFS_MERGED = "/03-pathmerge/";
+public class TestPathMergeH4 extends HadoopMiniClusterTest {
+    protected final String LOCAL_SEQUENCE_FILE = "src/test/resources/data/webmap/text.txt";
+    protected final  String SEQUENCE = "/00-sequence/";
+    protected final String GRAPHBUILD = "/01-graphbuild/";
+    protected final String MERGED = "/02-pathmerge/";
     
-    protected String GRAPHBUILD_FILE = "graphbuild.result";
-    protected String PATHMARKS_FILE = "markpaths.result";
-    protected String PATHMERGE_FILE = "h4.mergepath.result";
-    protected boolean regenerateGraph = true;
+    protected final boolean regenerateGraph = true;
     
     {
         KMER_LENGTH = 5;
         READ_LENGTH = 8;
-        HDFS_PATHS = new ArrayList<String>(Arrays.asList(HDFS_SEQUENCE, HDFS_GRAPHBUILD, HDFS_MARKPATHS, HDFS_MERGED));
+        HDFS_PATHS = new ArrayList<String>(Arrays.asList(SEQUENCE, GRAPHBUILD, MERGED));
         conf.setInt(GenomixJobConf.KMER_LENGTH, KMER_LENGTH);
         conf.setInt(GenomixJobConf.READ_LENGTH, READ_LENGTH);
     }
@@ -40,33 +38,29 @@ public class TestPathMergeH4 extends GenomixMiniClusterTest {
     public void TestMergeOneIteration() throws Exception {
         cleanUpOutput();
         if (regenerateGraph) {
-            copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
+            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
             buildGraph();
-            copyLocalToDFS(ACTUAL_ROOT + GRAPHBUILD_FILE + ".binmerge", HDFS_GRAPHBUILD);
+            copyLocalToDFS(ACTUAL_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
         } else {
-            copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD_FILE + ".binmerge", HDFS_GRAPHBUILD);
+            copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
         }
         
-        PathNodeInitial inith4 = new PathNodeInitial();
-        inith4.run(HDFS_GRAPHBUILD, HDFS_MARKPATHS, conf);
-        copyResultsToLocal(HDFS_MARKPATHS, ACTUAL_ROOT + PATHMARKS_FILE, false, conf);
-
         MergePathsH4Driver h4 = new MergePathsH4Driver();
-        h4.run(HDFS_MARKPATHS, HDFS_MERGED, 2, KMER_LENGTH, 1, conf);
-        copyResultsToLocal(HDFS_MERGED, ACTUAL_ROOT + PATHMERGE_FILE, false, conf);
+        h4.run(GRAPHBUILD, MERGED, 2, KMER_LENGTH, 1, conf);
+        copyResultsToLocal(MERGED, ACTUAL_ROOT + MERGED, false, conf);
     }
 
 
 
     public void buildGraph() throws Exception {
         JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 
-        FileInputFormat.setInputPaths(buildConf, HDFS_SEQUENCE);
-        FileOutputFormat.setOutputPath(buildConf, new Path(HDFS_GRAPHBUILD));
-        buildConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
-        buildConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(new GenomixJobConf(buildConf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        String fileFormat = buildConf.get(GenomixJobConf.OUTPUT_FORMAT);
-        boolean resultsAreText = GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(fileFormat);
-        copyResultsToLocal(HDFS_GRAPHBUILD, ACTUAL_ROOT + GRAPHBUILD_FILE, resultsAreText, buildConf);
+        FileInputFormat.setInputPaths(buildConf, SEQUENCE);
+        FileOutputFormat.setOutputPath(buildConf, new Path(GRAPHBUILD));
+        
+        GraphBuildingDriver tldriver = new GraphBuildingDriver();
+        tldriver.run(SEQUENCE, GRAPHBUILD, 2, KMER_LENGTH, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
+        
+        boolean resultsAreText = false;
+        copyResultsToLocal(GRAPHBUILD, ACTUAL_ROOT + GRAPHBUILD, resultsAreText, buildConf);
     }
 }
