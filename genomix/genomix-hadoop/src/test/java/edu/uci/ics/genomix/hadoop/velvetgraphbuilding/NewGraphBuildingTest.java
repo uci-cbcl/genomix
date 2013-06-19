@@ -42,15 +42,16 @@ public class NewGraphBuildingTest {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
-        TestGroupbyKmer();
-        TestMapKmerToRead();
+//        TestGroupbyKmer();
+//        TestMapKmerToRead();
+        TestGroupByReadID();
         cleanupHadoop();
     }
 
     public void TestGroupbyKmer() throws Exception {
         GraphBuildingDriver tldriver = new GraphBuildingDriver();
         tldriver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, READ_LENGTH, true, false, HADOOP_CONF_PATH);
-        dumpGroupByKmerResult();
+        dumpResult();
     }
 
     public void TestMapKmerToRead() throws Exception {
@@ -89,11 +90,6 @@ public class NewGraphBuildingTest {
         dfsCluster.shutdown();
     }
 
-    private void dumpGroupByKmerResult() throws IOException {
-        Path src = new Path(HDFS_PATH + "-step1");
-        Path dest = new Path(ACTUAL_RESULT_DIR);
-        dfs.copyToLocalFile(src, dest);
-    }
     
     private void dumpResult() throws IOException {
         Path src = new Path(RESULT_PATH);
