@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
@@ -21,10 +22,15 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
+import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import edu.uci.ics.genomix.hadoop.oldtype.VKmerBytesWritable;
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathMultiSeqOutputFormat;
+import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
+import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial.PathNodeInitialReducer;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MessageFlag;
@@ -213,8 +219,12 @@ public class MergePathsH4 extends Configured implements Tool {
     private static class MergePathsH4Reducer extends MapReduceBase implements
             Reducer<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
         private MultipleOutputs mos;
-        public static final String COMPLETE_OUTPUT = "complete";
-        public static final String UPDATES_OUTPUT = "update";
+        private static final String TO_MERGE_OUTPUT = "toMerge";
+        private static final String COMPLETE_OUTPUT = "complete";
+        private static final String UPDATES_OUTPUT = "update";
+        private OutputCollector<PositionWritable, MessageWritableNodeWithFlag> toMergeCollector;
+        private OutputCollector<PositionWritable, MessageWritableNodeWithFlag> completeCollector;
+        private OutputCollector<PositionWritable, MessageWritableNodeWithFlag> updatesCollector;
         
         private int KMER_SIZE;
         private MessageWritableNodeWithFlag inputValue;
@@ -243,16 +253,19 @@ public class MergePathsH4 extends Configured implements Tool {
         public void reduce(PositionWritable key, Iterator<MessageWritableNodeWithFlag> values,
                 OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
                 throws IOException {
+        	toMergeCollector = mos.getCollector(TO_MERGE_OUTPUT, reporter);
+        	completeCollector = mos.getCollector(COMPLETE_OUTPUT, reporter);
+        	updatesCollector = mos.getCollector(UPDATES_OUTPUT, reporter);
 
             inputValue.set(values.next());
             if (!values.hasNext()) {
                 if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
                     if ((inputValue.getFlag() & MessageFlag.IS_HEAD) > 0 && (inputValue.getFlag() & MessageFlag.IS_TAIL) > 0) {
                         // complete path (H & T meet in this node)
-                        mos.getCollector(COMPLETE_OUTPUT, reporter).collect(key, inputValue);
+                        completeCollector.collect(key, inputValue);
                     } else { 
                         // FROM_SELF => no merging this round. remap self
-                        output.collect(key, inputValue);
+                        toMergeCollector.collect(key, inputValue);
                     }
                 } else if ((inputValue.getFlag() & (MessageFlag.FROM_PREDECESSOR | MessageFlag.FROM_SUCCESSOR)) > 0) {
                     // FROM_PREDECESSOR | FROM_SUCCESSOR, but singleton?  error here!
@@ -308,9 +321,9 @@ public class MergePathsH4 extends Configured implements Tool {
                 outputValue.set(outFlag, curNode);
                 if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
                     // True heads meeting tails => merge is complete for this node
-                    mos.getCollector(COMPLETE_OUTPUT, reporter).collect(key, outputValue);
+                    completeCollector.collect(key, outputValue);
                 } else {
-                    output.collect(key, outputValue);
+                    toMergeCollector.collect(key, outputValue);
                 }
             }
         }
@@ -319,16 +332,17 @@ public class MergePathsH4 extends Configured implements Tool {
     /*
      * Run one iteration of the mergePaths algorithm
      */
-    public RunningJob run(String inputPath, String outputPath, JobConf baseConf) throws IOException {
+    public RunningJob run(String inputPath, String toMergeOutput, String completeOutput, String updatesOutput, JobConf baseConf) throws IOException {
         JobConf conf = new JobConf(baseConf);
         conf.setJarByClass(MergePathsH4.class);
         conf.setJobName("MergePathsH4 " + inputPath);
 
-        FileInputFormat.addInputPath(conf, new Path(inputPath));
-        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+        FileInputFormat.addInputPaths(conf, inputPath);
+        Path outputPath = new Path(inputPath + ".h4merge.tmp");
+        FileOutputFormat.setOutputPath(conf, outputPath);
 
         conf.setInputFormat(SequenceFileInputFormat.class);
-        conf.setOutputFormat(SequenceFileOutputFormat.class);
+        conf.setOutputFormat(NullOutputFormat.class);
 
         conf.setMapOutputKeyClass(PositionWritable.class);
         conf.setMapOutputValueClass(MessageWritableNodeWithFlag.class);
@@ -337,10 +351,24 @@ public class MergePathsH4 extends Configured implements Tool {
 
         conf.setMapperClass(MergePathsH4Mapper.class);
         conf.setReducerClass(MergePathsH4Reducer.class);
-
-        FileSystem.get(conf).delete(new Path(outputPath), true);
-
-        return JobClient.runJob(conf);
+        
+        MultipleOutputs.addNamedOutput(conf, MergePathsH4Reducer.TO_MERGE_OUTPUT, MergePathMultiSeqOutputFormat.class,
+        		PositionWritable.class, MessageWritableNodeWithFlag.class);
+        MultipleOutputs.addNamedOutput(conf, MergePathsH4Reducer.COMPLETE_OUTPUT, MergePathMultiSeqOutputFormat.class,
+        		PositionWritable.class, MessageWritableNodeWithFlag.class);
+        MultipleOutputs.addNamedOutput(conf, MergePathsH4Reducer.UPDATES_OUTPUT, MergePathMultiSeqOutputFormat.class,
+        		PositionWritable.class, MessageWritableNodeWithFlag.class);
+        
+        FileSystem dfs = FileSystem.get(conf); 
+        dfs.delete(outputPath, true); // clean output dir
+        RunningJob job = JobClient.runJob(conf);
+        
+        // move the tmp outputs to the arg-spec'ed dirs
+        dfs.rename(new Path(outputPath + File.pathSeparator +  MergePathsH4Reducer.TO_MERGE_OUTPUT), new Path(toMergeOutput));
+        dfs.rename(new Path(outputPath + File.pathSeparator +  MergePathsH4Reducer.COMPLETE_OUTPUT), new Path(completeOutput));
+        dfs.rename(new Path(outputPath + File.pathSeparator +  MergePathsH4Reducer.UPDATES_OUTPUT), new Path(updatesOutput));
+        
+        return job;
     }
 
     @Override
