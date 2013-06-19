@@ -6,14 +6,14 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexOutputFormat;
+import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryDataCleanVertexOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
 public class DataCleanOutputFormat extends
-        BinaryVertexOutputFormat<PositionWritable, ValueStateWritable, NullWritable> {
+    BinaryDataCleanVertexOutputFormat<PositionWritable, ValueStateWritable, NullWritable> {
 
     @Override
     public VertexWriter<PositionWritable, ValueStateWritable, NullWritable> createVertexWriter(

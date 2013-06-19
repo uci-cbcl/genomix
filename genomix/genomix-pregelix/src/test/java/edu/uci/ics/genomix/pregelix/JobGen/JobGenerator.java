@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
@@ -12,6 +14,8 @@ import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.LogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P3ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -22,12 +26,12 @@ public class JobGenerator {
     private static void generateNaiveAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
-        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
+        job.setVertexInputFormatClass(DataCleanInputFormat.class); //NaiveAlgorithmForPathMergeInputFormat
+        job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 5);
+        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -44,7 +48,7 @@ public class JobGenerator {
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, 5);
+        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -70,11 +74,47 @@ public class JobGenerator {
         generateP3ForMergeGraphJob("P3ForMergeGraph", outputBase
                 + "P3ForMergeGraph.xml");
     }
+    
+    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TipAddVertex.class);
+        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
+        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(PositionWritable.class);
+        job.setOutputValueClass(ValueStateWritable.class);
+        job.getConfiguration().setInt(TipAddVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genTipAddGraph() throws IOException {
+        generateTipAddGraphJob("TipAddGraph", outputBase
+                + "TipAddGraph.xml");
+    }
+    
+    private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TipRemoveVertex.class);
+        job.setVertexInputFormatClass(DataCleanInputFormat.class);
+        job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(PositionWritable.class);
+        job.setOutputValueClass(ValueStateWritable.class);
+        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genTipRemoveGraph() throws IOException {
+        generateTipRemoveGraphJob("TipRemoveGraph", outputBase
+                + "TipRemoveGraph.xml");
+    }
 
     public static void main(String[] args) throws IOException {
         genNaiveAlgorithmForMergeGraph();
         //genLogAlgorithmForMergeGraph();
         //genP3ForMergeGraph();
+        //genTipAddGraph();
+        //genTipRemoveGraph();
     }
 
 }

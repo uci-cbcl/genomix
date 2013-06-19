@@ -57,6 +57,16 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         reverseReverseList.set(RRList);
         kmer.set(kmer);
     }
+    
+    public void set(PositionWritable nodeID, PositionListWritable FFList, PositionListWritable FRList,
+            PositionListWritable RFList, PositionListWritable RRList, KmerBytesWritable kmer){
+        this.nodeID.set(nodeID);
+        this.forwardForwardList.set(FFList);
+        this.forwardReverseList.set(FRList);
+        this.reverseForwardList.set(RFList);
+        this.reverseReverseList.set(RRList);
+        this.kmer.set(kmer);
+    }
 
     public void setNodeID(PositionWritable ref) {
         this.setNodeID(ref.getReadID(), ref.getPosInRead());

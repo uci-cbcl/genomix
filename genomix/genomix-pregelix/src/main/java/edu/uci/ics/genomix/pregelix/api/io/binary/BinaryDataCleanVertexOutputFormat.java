@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.pregelix.api.io.binary;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -11,7 +10,8 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
@@ -27,7 +27,7 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
  *            Edge value
  */
 @SuppressWarnings("rawtypes")
-public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable>
+public abstract class BinaryDataCleanVertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable>
         extends VertexOutputFormat<I, V, E> {
     /** Uses the SequenceFileOutputFormat to do everything */
     protected SequenceFileOutputFormat binaryOutputFormat = new SequenceFileOutputFormat();
@@ -49,7 +49,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
         /** Context passed to initialize */
         private TaskAttemptContext context;
         /** Internal line record writer */
-        private final RecordWriter<NodeWritable, NullWritable> lineRecordWriter;
+        private final RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter;
 
         /**
          * Initialize with the LineRecordWriter.
@@ -57,7 +57,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
          * @param lineRecordWriter
          *            Line record writer from SequenceFileOutputFormat
          */
-        public BinaryVertexWriter(RecordWriter<NodeWritable, NullWritable> lineRecordWriter) {
+        public BinaryVertexWriter(RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter) {
             this.lineRecordWriter = lineRecordWriter;
         }
 
@@ -76,7 +76,7 @@ public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V e
          * 
          * @return Record writer to be used for writing.
          */
-        public RecordWriter<NodeWritable, NullWritable> getRecordWriter() {
+        public RecordWriter<PositionWritable, ValueStateWritable> getRecordWriter() {
             return lineRecordWriter;
         }
 

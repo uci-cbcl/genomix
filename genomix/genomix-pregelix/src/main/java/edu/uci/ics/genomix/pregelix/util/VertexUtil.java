@@ -19,7 +19,7 @@ public class VertexUtil {
      * @param vertexValue
      */
     public static boolean isHeadVertex(ValueStateWritable value) {
-        return value.outDegree() > 0 && !isPathVertex(value);
+        return value.outDegree() > 0 && !isPathVertex(value) && !isHeadWithoutIndegree(value);
     }
 
     /**
@@ -28,9 +28,23 @@ public class VertexUtil {
      * @param vertexValue
      */
     public static boolean isRearVertex(ValueStateWritable value) {
-        return value.inDegree() > 0 && !isPathVertex(value);
+        return value.inDegree() > 0 && !isPathVertex(value) && !isRearWithoutOutdegree(value);
     }
 
+    /**
+     * Head Vertex without indegree: indegree = 0, outdegree = 1
+     */
+    public static boolean isHeadWithoutIndegree(ValueStateWritable value){
+        return value.inDegree() == 0 && value.outDegree() == 1;
+    }
+    
+    /**
+     * Rear Vertex without outdegree: indegree = 1, outdegree = 0
+     */
+    public static boolean isRearWithoutOutdegree(ValueStateWritable value){
+        return value.inDegree() == 1 && value.outDegree() == 0;
+    }
+    
     /**
      * check if mergeChain is cycle
      */

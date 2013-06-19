@@ -8,6 +8,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
@@ -19,7 +20,7 @@ public class NaiveAlgorithmForPathMergeOutputFormat extends
     public VertexWriter<PositionWritable, ValueStateWritable, NullWritable> createVertexWriter(
             TaskAttemptContext context) throws IOException, InterruptedException {
         @SuppressWarnings("unchecked")
-        RecordWriter<PositionWritable, ValueStateWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
+        RecordWriter<NodeWritable, NullWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
         return new BinaryLoadGraphVertexWriter(recordWriter);
     }
 
@@ -28,14 +29,20 @@ public class NaiveAlgorithmForPathMergeOutputFormat extends
      */
     public static class BinaryLoadGraphVertexWriter extends
             BinaryVertexWriter<PositionWritable, ValueStateWritable, NullWritable> {
-        public BinaryLoadGraphVertexWriter(RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter) {
+        private NodeWritable node = new NodeWritable();
+        private NullWritable nullWritable = NullWritable.get();
+        
+        public BinaryLoadGraphVertexWriter(RecordWriter<NodeWritable, NullWritable> lineRecordWriter) {
             super(lineRecordWriter);
         }
 
         @Override
         public void writeVertex(Vertex<PositionWritable, ValueStateWritable, NullWritable, ?> vertex)
                 throws IOException, InterruptedException {
-            getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
+            node.set(vertex.getVertexId(), vertex.getVertexValue().getFFList(),
+                    vertex.getVertexValue().getFRList(), vertex.getVertexValue().getRFList(),
+                    vertex.getVertexValue().getRRList(), vertex.getVertexValue().getMergeChain());
+            getRecordWriter().write(node, nullWritable);
         }
     }
 }
