@@ -53,14 +53,14 @@ public class GraphBuildingDriver {
             boolean onlyTest1stJob, boolean seqOutput, String defaultConfPath) throws IOException {
         if (onlyTest1stJob == true) {
             
-            runfirstjob(inputPath, numReducers, sizeKmer, readLength, seqOutput, defaultConfPath);
+            runfirstjob(inputPath, outputPath, numReducers, sizeKmer, readLength, seqOutput, defaultConfPath);
         } else {
-            runfirstjob(inputPath, numReducers, sizeKmer, readLength, true, defaultConfPath);
-            runsecondjob(inputPath, outputPath, numReducers, sizeKmer, readLength, seqOutput, defaultConfPath);
+            runfirstjob(inputPath, inputPath + "-tmp", numReducers, sizeKmer, readLength, true, defaultConfPath);
+            runsecondjob(inputPath + "-tmp", outputPath, numReducers, sizeKmer, readLength, seqOutput, defaultConfPath);
         }
     }
 
-    public void runfirstjob(String inputPath, int numReducers, int sizeKmer, int readLength, boolean seqOutput,
+    public void runfirstjob(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength, boolean seqOutput,
             String defaultConfPath) throws IOException {
         JobConf conf = new JobConf(GraphBuildingDriver.class);
         conf.setInt("sizeKmer", sizeKmer);
@@ -85,14 +85,14 @@ public class GraphBuildingDriver {
         conf.setOutputValueClass(PositionListWritable.class);
 
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
-        FileOutputFormat.setOutputPath(conf, new Path(inputPath + "-step1"));
+        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         if (numReducers == 0)
             conf.setNumReduceTasks(numReducers + 2);
         else
             conf.setNumReduceTasks(numReducers);
 
         FileSystem dfs = FileSystem.get(conf);
-        dfs.delete(new Path(inputPath + "-step1"), true);
+        dfs.delete(new Path(outputPath), true);
         JobClient.runJob(conf);
     }
 
@@ -132,7 +132,7 @@ public class GraphBuildingDriver {
             conf.setOutputValueClass(PositionListAndKmerWritable.class);
         }
 
-        FileInputFormat.setInputPaths(conf, new Path(inputPath + "-step1"));
+        FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         conf.setNumReduceTasks(numReducers);
         FileSystem dfs = FileSystem.get(conf);
