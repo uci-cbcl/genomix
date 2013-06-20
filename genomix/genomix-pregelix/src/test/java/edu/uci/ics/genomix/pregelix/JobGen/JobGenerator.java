@@ -30,7 +30,7 @@ public class JobGenerator {
     private static void generateNaiveAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
-        job.setVertexInputFormatClass(DataCleanInputFormat.class); //NaiveAlgorithmForPathMergeInputFormat
+        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class); //DataCleanInputFormat
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
@@ -48,7 +48,7 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(LogAlgorithmForPathMergeVertex.class);
         job.setVertexInputFormatClass(LogAlgorithmForPathMergeInputFormat.class);
-        job.setVertexOutputFormatClass(LogAlgorithmForPathMergeOutputFormat.class);
+        job.setVertexOutputFormatClass(DataCleanOutputFormat.class); //LogAlgorithmForPathMergeOutputFormat
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
@@ -64,13 +64,13 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(P3ForPathMergeVertex.class);
         job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-        job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
+        job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(ValueStateWritable.class);
-        job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, 5);
-        job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, 0.4f);
-        job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, 1);
+        job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, 0.3f);
+        job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, 2);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -183,8 +183,8 @@ public class JobGenerator {
     
     public static void main(String[] args) throws IOException {
         //genNaiveAlgorithmForMergeGraph();
-        genLogAlgorithmForMergeGraph();
-        //genP3ForMergeGraph();
+        //genLogAlgorithmForMergeGraph();
+        genP3ForMergeGraph();
         //genTipAddGraph();
         //genTipRemoveGraph();
         //genBridgeAddGraph();

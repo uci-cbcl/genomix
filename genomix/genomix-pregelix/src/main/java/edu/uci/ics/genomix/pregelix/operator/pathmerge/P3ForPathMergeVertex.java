@@ -146,6 +146,14 @@ public class P3ForPathMergeVertex extends
             outgoingMsg.setMessage(Message.END);
             sendMsgToAllPreviousNodes(getVertexValue());
         }
+        if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
+            outgoingMsg.setMessage(Message.START);
+            sendMsg(getVertexId(), outgoingMsg); //send to itself
+        }
+        if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
+            outgoingMsg.setMessage(Message.END);
+            sendMsg(getVertexId(), outgoingMsg); //send to itself
+        }
     }
     
     /**
@@ -154,7 +162,9 @@ public class P3ForPathMergeVertex extends
     public void initState(Iterator<MessageWritable> msgIterator) {
         if (msgIterator.hasNext()) {
             do {
-                if (!VertexUtil.isPathVertex(getVertexValue())) {
+                if (!VertexUtil.isPathVertex(getVertexValue())
+                        && !VertexUtil.isHeadWithoutIndegree(getVertexValue())
+                        && !VertexUtil.isRearWithoutOutdegree(getVertexValue())) {
                     msgIterator.next();
                     voteToHalt();
                 } else {
@@ -314,7 +324,7 @@ public class P3ForPathMergeVertex extends
             outgoingMsg.setMessage(Message.FROMPSEUDOHEAD);
         else {
             deleteVertex(getVertexId());
-            outgoingMsg.setNeighberNode(incomingMsg.getNeighberNode());
+            outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList()); //incomingMsg.getNeighberNode()
             outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
             if (getVertexValue().getState() == State.PSEUDOREAR)
                 outgoingMsg.setMessage(Message.FROMPSEUDOREAR);

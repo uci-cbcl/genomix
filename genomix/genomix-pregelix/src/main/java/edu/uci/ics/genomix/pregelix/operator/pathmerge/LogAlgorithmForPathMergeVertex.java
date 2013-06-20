@@ -169,7 +169,7 @@ public class LogAlgorithmForPathMergeVertex extends
     public void setState() {
         if (incomingMsg.getMessage() == Message.START) {
             getVertexValue().setState(State.START_VERTEX);
-            getVertexValue().setMergeChain(null);
+            //getVertexValue().setMergeChain(null);
         } else if (incomingMsg.getMessage() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
             getVertexValue().setState(State.END_VERTEX);
             getVertexValue().setMergeChain(getVertexValue().getMergeChain());
@@ -198,7 +198,6 @@ public class LogAlgorithmForPathMergeVertex extends
      */
     public void sendMsgToPathVertex(Iterator<MessageWritable> msgIterator) {
         if (getSuperstep() == 3) {
-            getVertexValue().setMergeChain(getVertexValue().getMergeChain());
             sendOutMsg();
         } else {
             if (msgIterator.hasNext()) {
