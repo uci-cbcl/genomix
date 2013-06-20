@@ -33,7 +33,7 @@ import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial.PathNodeInitialReducer;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MessageFlag;
+import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MergeMessageFlag;
 
 @SuppressWarnings("deprecation")
 public class MergePathsH4 extends Configured implements Tool {
@@ -125,8 +125,8 @@ public class MergePathsH4 extends Configured implements Tool {
                 OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
                 throws IOException {
             // Node may be marked as head b/c it's a real head or a real tail
-            headFlag = (byte) (MessageFlag.IS_HEAD & value.getFlag());
-            tailFlag = (byte) (MessageFlag.IS_TAIL & value.getFlag());
+            headFlag = (byte) (MergeMessageFlag.IS_HEAD & value.getFlag());
+            tailFlag = (byte) (MergeMessageFlag.IS_TAIL & value.getFlag());
             outFlag = (byte) (headFlag | tailFlag);
             
             // only PATH vertices are present. Find the ID's for my neighbors
@@ -145,9 +145,9 @@ public class MergePathsH4 extends Configured implements Tool {
 
             // TODO: need to update edges in neighboring nodes
             
-            if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
+            if ((outFlag & MergeMessageFlag.IS_HEAD) > 0 && (outFlag & MergeMessageFlag.IS_TAIL) > 0) {
                 // true HEAD met true TAIL. this path is complete
-                outFlag |= MessageFlag.FROM_SELF;
+                outFlag |= MergeMessageFlag.FROM_SELF;
                 outputValue.set(outFlag, curNode);
                 output.collect(curID, outputValue);
                 return;
@@ -156,13 +156,13 @@ public class MergePathsH4 extends Configured implements Tool {
                 if (curHead) {
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
-                        outFlag |= MessageFlag.FROM_PREDECESSOR;
+                        outFlag |= MergeMessageFlag.FROM_PREDECESSOR;
                         outputValue.set(outFlag, curNode);
                         output.collect(nextID, outputValue);
                         willMerge = true;
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
-                        outFlag |= MessageFlag.FROM_SUCCESSOR;
+                        outFlag |= MergeMessageFlag.FROM_SUCCESSOR;
                         outputValue.set(outFlag, curNode);
                         output.collect(prevID, outputValue);
                         willMerge = true;
@@ -173,7 +173,7 @@ public class MergePathsH4 extends Configured implements Tool {
                         if ((!nextHead && !prevHead) && (curID.compareTo(nextID) < 0 && curID.compareTo(prevID) < 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
-                            outFlag |= MessageFlag.FROM_PREDECESSOR;
+                            outFlag |= MergeMessageFlag.FROM_PREDECESSOR;
                             outputValue.set(outFlag, curNode);
                             output.collect(nextID, outputValue);
                             willMerge = true;
@@ -182,7 +182,7 @@ public class MergePathsH4 extends Configured implements Tool {
                         // no previous node
                         if (!nextHead && curID.compareTo(nextID) < 0) {
                             // merge towards tail in forward dir
-                            outFlag |= MessageFlag.FROM_PREDECESSOR;
+                            outFlag |= MergeMessageFlag.FROM_PREDECESSOR;
                             outputValue.set(outFlag, curNode);
                             output.collect(nextID, outputValue);
                             willMerge = true;
@@ -191,7 +191,7 @@ public class MergePathsH4 extends Configured implements Tool {
                         // no next node
                         if (!prevHead && curID.compareTo(prevID) < 0) {
                             // merge towards tail in reverse dir
-                            outFlag |= MessageFlag.FROM_SUCCESSOR;
+                            outFlag |= MergeMessageFlag.FROM_SUCCESSOR;
                             outputValue.set(outFlag, curNode);
                             output.collect(prevID, outputValue);
                             willMerge = true;
@@ -202,7 +202,7 @@ public class MergePathsH4 extends Configured implements Tool {
 
             // if we didn't send ourselves to some other node, remap ourselves for the next round
             if (!willMerge) {
-                outFlag |= MessageFlag.FROM_SELF;
+                outFlag |= MergeMessageFlag.FROM_SELF;
                 outputValue.set(outFlag, curNode);
                 output.collect(curID, outputValue);
             }
@@ -259,35 +259,35 @@ public class MergePathsH4 extends Configured implements Tool {
 
             inputValue.set(values.next());
             if (!values.hasNext()) {
-                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
-                    if ((inputValue.getFlag() & MessageFlag.IS_HEAD) > 0 && (inputValue.getFlag() & MessageFlag.IS_TAIL) > 0) {
+                if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) > 0) {
+                    if ((inputValue.getFlag() & MergeMessageFlag.IS_HEAD) > 0 && (inputValue.getFlag() & MergeMessageFlag.IS_TAIL) > 0) {
                         // complete path (H & T meet in this node)
                         completeCollector.collect(key, inputValue);
                     } else { 
                         // FROM_SELF => no merging this round. remap self
                         toMergeCollector.collect(key, inputValue);
                     }
-                } else if ((inputValue.getFlag() & (MessageFlag.FROM_PREDECESSOR | MessageFlag.FROM_SUCCESSOR)) > 0) {
+                } else if ((inputValue.getFlag() & (MergeMessageFlag.FROM_PREDECESSOR | MergeMessageFlag.FROM_SUCCESSOR)) > 0) {
                     // FROM_PREDECESSOR | FROM_SUCCESSOR, but singleton?  error here!
                     throw new IOException("Only one value recieved in merge, but it wasn't from self!");
                 }
             } else {
                 // multiple inputs => a merge will take place. Aggregate all, then collect the merged path
                 count = 0;
-                outFlag = MessageFlag.EMPTY_MESSAGE;
+                outFlag = MergeMessageFlag.EMPTY_MESSAGE;
                 sawCurNode = false;
                 sawPrevNode = false;
                 sawNextNode = false;
                 while (true) { // process values; break when no more
                     count++;
-                    outFlag |= (inputValue.getFlag() & (MessageFlag.IS_HEAD | MessageFlag.IS_TAIL)); // merged node may become HEAD or TAIL
-                    if ((inputValue.getFlag() & MessageFlag.FROM_PREDECESSOR) > 0) {
+                    outFlag |= (inputValue.getFlag() & (MergeMessageFlag.IS_HEAD | MergeMessageFlag.IS_TAIL)); // merged node may become HEAD or TAIL
+                    if ((inputValue.getFlag() & MergeMessageFlag.FROM_PREDECESSOR) > 0) {
                         prevNode.set(inputValue.getNode());
                         sawPrevNode = true;
-                    } else if ((inputValue.getFlag() & MessageFlag.FROM_SUCCESSOR) > 0) {
+                    } else if ((inputValue.getFlag() & MergeMessageFlag.FROM_SUCCESSOR) > 0) {
                         nextNode.set(inputValue.getNode());
                         sawNextNode = true;
-                    } else if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
+                    } else if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) > 0) {
                         curNode.set(inputValue.getNode());
                         sawCurNode = true;
                     } else {
@@ -319,7 +319,7 @@ public class MergePathsH4 extends Configured implements Tool {
                 }
                 
                 outputValue.set(outFlag, curNode);
-                if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
+                if ((outFlag & MergeMessageFlag.IS_HEAD) > 0 && (outFlag & MergeMessageFlag.IS_TAIL) > 0) {
                     // True heads meeting tails => merge is complete for this node
                     completeCollector.collect(key, outputValue);
                 } else {

@@ -39,7 +39,7 @@ import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MessageFlag;
+import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MergeMessageFlag;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
@@ -80,29 +80,29 @@ public class PathNodeInitial extends Configured implements Tool {
             outDegree = key.outDegree();
             if (inDegree == 1 && outDegree == 1) {
                 // simple path nodes map themselves
-                outputValue.set(MessageFlag.FROM_SELF, key);
+                outputValue.set(MergeMessageFlag.FROM_SELF, key);
                 output.collect(key.getNodeID(), outputValue);
                 reporter.incrCounter("genomix", "path_nodes", 1);
             } else if (inDegree == 0 && outDegree == 1) {
                 // start of a tip.  needs to merge & be marked as head
-                outputValue.set(MessageFlag.FROM_SELF, key);
+                outputValue.set(MergeMessageFlag.FROM_SELF, key);
                 output.collect(key.getNodeID(), outputValue);
                 reporter.incrCounter("genomix", "path_nodes", 1);
 
-                outputValue.set(MessageFlag.FROM_PREDECESSOR, emptyNode);
+                outputValue.set(MergeMessageFlag.FROM_PREDECESSOR, emptyNode);
                 output.collect(key.getNodeID(), outputValue);
             } else if (inDegree == 1 && outDegree == 0) {
                 // end of a tip.  needs to merge & be marked as tail
-                outputValue.set(MessageFlag.FROM_SELF, key);
+                outputValue.set(MergeMessageFlag.FROM_SELF, key);
                 output.collect(key.getNodeID(), outputValue);
                 reporter.incrCounter("genomix", "path_nodes", 1);
 
-                outputValue.set(MessageFlag.FROM_SUCCESSOR, emptyNode);
+                outputValue.set(MergeMessageFlag.FROM_SUCCESSOR, emptyNode);
                 output.collect(key.getNodeID(), outputValue);
             } else {
                 if (outDegree > 0) {
                     // Not a path myself, but my successor might be one. Map forward successor to find heads
-                    outputValue.set(MessageFlag.FROM_PREDECESSOR, emptyNode);
+                    outputValue.set(MergeMessageFlag.FROM_PREDECESSOR, emptyNode);
                     posIterator = key.getFFList().iterator();
                     while (posIterator.hasNext()) {
                         outputKey.set(posIterator.next());
@@ -116,7 +116,7 @@ public class PathNodeInitial extends Configured implements Tool {
                 }
                 if (inDegree > 0) {
                     // Not a path myself, but my predecessor might be one. map predecessor to find tails 
-                    outputValue.set(MessageFlag.FROM_SUCCESSOR, emptyNode);
+                    outputValue.set(MergeMessageFlag.FROM_SUCCESSOR, emptyNode);
                     posIterator = key.getRRList().iterator();
                     while (posIterator.hasNext()) {
                         outputKey.set(posIterator.next());
@@ -129,7 +129,7 @@ public class PathNodeInitial extends Configured implements Tool {
                     }
                 }
                 // push this non-path node to the "complete" output
-                outputValue.set((byte) (MessageFlag.FROM_SELF | MessageFlag.IS_COMPLETE), key);
+                outputValue.set((byte) (MergeMessageFlag.FROM_SELF | MergeMessageFlag.IS_COMPLETE), key);
                 output.collect(key.getNodeID(), outputValue);
             }
         }
@@ -166,8 +166,8 @@ public class PathNodeInitial extends Configured implements Tool {
         	
             inputValue.set(values.next());
             if (!values.hasNext()) {
-                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
-                    if ((inputValue.getFlag() & MessageFlag.IS_COMPLETE) > 0) {
+                if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) > 0) {
+                    if ((inputValue.getFlag() & MergeMessageFlag.IS_COMPLETE) > 0) {
                         // non-path node.  Store in "complete" output
                     	completeCollector.collect(key, inputValue);
                     } else {
@@ -178,20 +178,20 @@ public class PathNodeInitial extends Configured implements Tool {
             } else {
                 // multiple inputs => possible HEAD or TAIL to a path node. note if HEAD or TAIL node 
                 count = 0;
-                flag = MessageFlag.EMPTY_MESSAGE;
+                flag = MergeMessageFlag.EMPTY_MESSAGE;
                 while (true) { // process values; break when no more
                     count++;
-                    if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
+                    if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) > 0) {
                         // SELF -> keep this node
-                        flag |= MessageFlag.FROM_SELF;
+                        flag |= MergeMessageFlag.FROM_SELF;
                         nodeToKeep.set(inputValue.getNode());
-                        if ((inputValue.getFlag() & MessageFlag.IS_COMPLETE) > 0) {
-                            flag |= MessageFlag.IS_COMPLETE;
+                        if ((inputValue.getFlag() & MergeMessageFlag.IS_COMPLETE) > 0) {
+                            flag |= MergeMessageFlag.IS_COMPLETE;
                         }
-                    } else if ((inputValue.getFlag() & MessageFlag.FROM_SUCCESSOR) > 0) {
-                        flag |= MessageFlag.IS_TAIL;
-                    } else if ((inputValue.getFlag() & MessageFlag.FROM_PREDECESSOR) > 0) {
-                        flag |= MessageFlag.IS_HEAD;
+                    } else if ((inputValue.getFlag() & MergeMessageFlag.FROM_SUCCESSOR) > 0) {
+                        flag |= MergeMessageFlag.IS_TAIL;
+                    } else if ((inputValue.getFlag() & MergeMessageFlag.FROM_PREDECESSOR) > 0) {
+                        flag |= MergeMessageFlag.IS_HEAD;
                     }
                     if (!values.hasNext()) {
                         break;
@@ -203,8 +203,8 @@ public class PathNodeInitial extends Configured implements Tool {
                     throw new IOException("Expected at least two nodes in PathNodeInitial reduce; saw "
                             + String.valueOf(count));
                 }
-                if ((flag & MessageFlag.FROM_SELF) > 0) {
-                    if ((flag & MessageFlag.IS_COMPLETE) > 0) {
+                if ((flag & MergeMessageFlag.FROM_SELF) > 0) {
+                    if ((flag & MergeMessageFlag.IS_COMPLETE) > 0) {
                         // non-path node.  Store in "complete" output
                     	completeCollector.collect(key, inputValue);
                     } else {
@@ -213,10 +213,10 @@ public class PathNodeInitial extends Configured implements Tool {
                         toMergeCollector.collect(key, outputValue);
 
                         reporter.incrCounter("genomix", "path_nodes", 1);
-                        if ((flag & MessageFlag.IS_HEAD) > 0) {
+                        if ((flag & MergeMessageFlag.IS_HEAD) > 0) {
                             reporter.incrCounter("genomix", "path_nodes_heads", 1);
                         }
-                        if ((flag & MessageFlag.IS_TAIL) > 0) {
+                        if ((flag & MergeMessageFlag.IS_TAIL) > 0) {
                             reporter.incrCounter("genomix", "path_nodes_tails", 1);
                         }
                     }

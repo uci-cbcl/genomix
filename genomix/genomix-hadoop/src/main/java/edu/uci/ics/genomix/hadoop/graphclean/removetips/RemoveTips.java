@@ -23,7 +23,7 @@ import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MessageFlag;
+import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MergeMessageFlag;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4.MergePathsH4Mapper;
 import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
@@ -60,7 +60,7 @@ public class RemoveTips extends Configured implements Tool {
                 // kill this node by NOT mapping it.  Update my neighbors with a suicide note
                 //TODO: update neighbors by removing me from its list
             } else {
-                outputValue.set(MessageFlag.FROM_SELF, curNode);
+                outputValue.set(MergeMessageFlag.FROM_SELF, curNode);
                 output.collect(key, value);
             }
         }
@@ -99,7 +99,7 @@ public class RemoveTips extends Configured implements Tool {
 
             inputValue.set(values.next());
             if (!values.hasNext()) {
-                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) > 0) {
+                if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) > 0) {
                     // FROM_SELF => keep self
                     output.collect(key, inputValue);
                 } else {

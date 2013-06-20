@@ -32,7 +32,7 @@ public class MergePathsH3 extends Configured implements Tool {
     /*
      * Flags used when sending messages
      */
-    public static class MessageFlag {
+    public static class MergeMessageFlag {
         public static final byte EMPTY_MESSAGE = 0;
         public static final byte FROM_SELF = 1;
         public static final byte FROM_SUCCESSOR = 1 << 1;
@@ -101,26 +101,26 @@ public class MergePathsH3 extends Configured implements Tool {
             // NOTE: all mapping nodes are already simple paths
 
             // Node may be marked as head b/c it's a real head, it's a previously merged head, or the node appears as a random head
-            headFlag = (byte) (MessageFlag.IS_HEAD & value.getFlag());
+            headFlag = (byte) (MergeMessageFlag.IS_HEAD & value.getFlag());
             // remove all pseudoheads on the last iteration
             if (!finalMerge) {
-                headFlag |= (MessageFlag.IS_PSEUDOHEAD & value.getFlag());
+                headFlag |= (MergeMessageFlag.IS_PSEUDOHEAD & value.getFlag());
             }
 
-            outFlag = (byte) (headFlag | (MessageFlag.IS_TAIL & value.getFlag()));
+            outFlag = (byte) (headFlag | (MergeMessageFlag.IS_TAIL & value.getFlag()));
             if (headFlag != 0 || isNodeRandomHead(curNode.getNodeID())) {
                 // head nodes send themselves to their successor
                 //outputKey.set(curNode.getOutgoingList().getPosition(0));
                 if (!finalMerge) {
-                    headFlag |= (MessageFlag.IS_PSEUDOHEAD & value.getFlag());
+                    headFlag |= (MergeMessageFlag.IS_PSEUDOHEAD & value.getFlag());
                 }
-                outFlag |= MessageFlag.FROM_PREDECESSOR;
+                outFlag |= MergeMessageFlag.FROM_PREDECESSOR;
 
                 outputValue.set(outFlag, curNode);
                 output.collect(outputKey, outputValue);
             } else {
                 // tail nodes map themselves
-                outFlag |= MessageFlag.FROM_SELF;
+                outFlag |= MergeMessageFlag.FROM_SELF;
                 outputValue.set(outFlag, curNode);
                 output.collect(key, outputValue);
             }
@@ -156,7 +156,7 @@ public class MergePathsH3 extends Configured implements Tool {
             inputValue = values.next();
             if (!values.hasNext()) {
                 // all single nodes must be remapped
-                if ((inputValue.getFlag() & MessageFlag.FROM_SELF) == MessageFlag.FROM_SELF) {
+                if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) == MergeMessageFlag.FROM_SELF) {
                     // FROM_SELF => remap self
                     output.collect(key, inputValue);
                 } else {
@@ -166,11 +166,11 @@ public class MergePathsH3 extends Configured implements Tool {
             } else {
                 // multiple inputs => a merge will take place. Aggregate both, then collect the merged path
                 count = 0;
-                outFlag = MessageFlag.EMPTY_MESSAGE;
+                outFlag = MergeMessageFlag.EMPTY_MESSAGE;
                 while (true) { // process values; break when no more
                     count++;
-                    outFlag |= (inputValue.getFlag() & (MessageFlag.IS_HEAD | MessageFlag.IS_PSEUDOHEAD | MessageFlag.IS_TAIL));
-                    if ((inputValue.getFlag() & MessageFlag.FROM_PREDECESSOR) == MessageFlag.FROM_PREDECESSOR) {
+                    outFlag |= (inputValue.getFlag() & (MergeMessageFlag.IS_HEAD | MergeMessageFlag.IS_PSEUDOHEAD | MergeMessageFlag.IS_TAIL));
+                    if ((inputValue.getFlag() & MergeMessageFlag.FROM_PREDECESSOR) == MergeMessageFlag.FROM_PREDECESSOR) {
                         headNode.set(inputValue.getNode());
                     } else {
                         tailNode.set(inputValue.getNode());
@@ -188,12 +188,12 @@ public class MergePathsH3 extends Configured implements Tool {
                 //headNode.mergeNext(tailNode, KMER_SIZE);
                 outputValue.set(outFlag, headNode);
 
-                if ((outFlag & MessageFlag.IS_TAIL) == MessageFlag.IS_TAIL) {
+                if ((outFlag & MergeMessageFlag.IS_TAIL) == MergeMessageFlag.IS_TAIL) {
                     // Pseudoheads merging with tails don't become heads.
                     // Reset the IS_PSEUDOHEAD flag
-                    outFlag &= ~MessageFlag.IS_PSEUDOHEAD;
+                    outFlag &= ~MergeMessageFlag.IS_PSEUDOHEAD;
 
-                    if ((outFlag & MessageFlag.IS_HEAD) == MessageFlag.IS_HEAD) {
+                    if ((outFlag & MergeMessageFlag.IS_HEAD) == MergeMessageFlag.IS_HEAD) {
                         // True heads meeting tails => merge is complete for this node
                         // TODO: send to the "complete" collector
                     }
