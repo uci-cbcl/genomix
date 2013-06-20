@@ -29,12 +29,12 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         sourceVertexId = new PositionWritable();
         chainVertexId = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
-        message = Message.NON;
         startVertexId = new PositionWritable();
+        message = Message.NON;
         checkMessage = (byte) 0;
     }
     
-    public void set(MessageWritable msg) {
+    public void set(MergeBubbleMessageWritable msg) {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
@@ -48,10 +48,14 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
             checkMessage |= CheckMessage.NEIGHBER;
             this.neighberNode.set(msg.getNeighberNode());
         }
+        if (startVertexId != null) {
+            checkMessage |= CheckMessage.START;
+            this.startVertexId.set(msg.getStartVertexId());
+        }
         this.message = msg.getMessage();
     }
 
-    public void set(PositionWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
+    public void set(PositionWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, PositionWritable startVertexId, byte message) {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
@@ -64,6 +68,10 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
             this.neighberNode.set(neighberNode);
+        }
+        if (startVertexId != null) {
+            checkMessage |= CheckMessage.START;
+            this.startVertexId.set(startVertexId);
         }
         this.message = message;
     }

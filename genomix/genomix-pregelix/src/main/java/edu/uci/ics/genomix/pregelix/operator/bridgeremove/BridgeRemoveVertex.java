@@ -55,8 +55,10 @@ public class BridgeRemoveVertex extends
 
     private MessageWritable incomingMsg = new MessageWritable();
     private MessageWritable outgoingMsg = new MessageWritable();
-    private ArrayList<MessageWritable> receivedMsg = new ArrayList<MessageWritable>();
+    private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
     
+    private Iterator<PositionWritable> iterator;
+    private PositionWritable pos = new PositionWritable();
     private PositionWritable destVertexId = new PositionWritable();
     private Iterator<PositionWritable> posIterator;
     /**
@@ -68,7 +70,7 @@ public class BridgeRemoveVertex extends
         if(length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
         outgoingMsg.reset();
-        receivedMsg.clear();
+        receivedMsgList.clear();
     }
     
     /**
@@ -110,6 +112,121 @@ public class BridgeRemoveVertex extends
             sendMsg(destVertexId, outgoingMsg);
         }
     }
+    
+    /**
+     * broadcast kill self to all neighbers 
+     */
+    public void broadcaseKillself(){
+        outgoingMsg.setSourceVertexId(getVertexId());
+        if(receivedMsgList.get(0).getMessage() == AdjMessage.FROMFF 
+                && receivedMsgList.get(1).getMessage() == AdjMessage.FROMRR){
+            outgoingMsg.setMessage(AdjMessage.FROMRR);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFF);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        } else if (receivedMsgList.get(0).getMessage() == AdjMessage.FROMFF 
+                && receivedMsgList.get(1).getMessage() == AdjMessage.FROMRF) {
+            outgoingMsg.setMessage(AdjMessage.FROMRR);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFR);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        } else if (receivedMsgList.get(0).getMessage() == AdjMessage.FROMFR 
+                && receivedMsgList.get(1).getMessage() == AdjMessage.FROMRR) {
+            outgoingMsg.setMessage(AdjMessage.FROMRF);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFF);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        } else if (receivedMsgList.get(0).getMessage() == AdjMessage.FROMFR 
+                && receivedMsgList.get(1).getMessage() == AdjMessage.FROMRF) {
+            outgoingMsg.setMessage(AdjMessage.FROMRF);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFR);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        } // RR
+        else if(receivedMsgList.get(1).getMessage() == AdjMessage.FROMFF 
+                && receivedMsgList.get(0).getMessage() == AdjMessage.FROMRR){
+            outgoingMsg.setMessage(AdjMessage.FROMRR);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFF);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        } else if (receivedMsgList.get(1).getMessage() == AdjMessage.FROMFF 
+                && receivedMsgList.get(0).getMessage() == AdjMessage.FROMRF) {
+            outgoingMsg.setMessage(AdjMessage.FROMRR);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFR);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        } else if (receivedMsgList.get(1).getMessage() == AdjMessage.FROMFR 
+                && receivedMsgList.get(0).getMessage() == AdjMessage.FROMRR) {
+            outgoingMsg.setMessage(AdjMessage.FROMRF);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFF);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        } else if (receivedMsgList.get(1).getMessage() == AdjMessage.FROMFR 
+                && receivedMsgList.get(0).getMessage() == AdjMessage.FROMRF) {
+            outgoingMsg.setMessage(AdjMessage.FROMRF);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setMessage(AdjMessage.FROMFR);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            deleteVertex(getVertexId());
+        }
+    }
+    
+    /**
+     * do some remove operations on adjMap after receiving the info about dead Vertex
+     */
+    public void responseToDeadVertex(Iterator<MessageWritable> msgIterator){
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if(incomingMsg.getMessage() == AdjMessage.FROMFF){
+                //remove incomingMsg.getSourceId from RR positionList
+                iterator = getVertexValue().getRRList().iterator();
+                while(iterator.hasNext()){
+                    pos = iterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        iterator.remove();
+                        break;
+                    }
+                }
+            } else if(incomingMsg.getMessage() == AdjMessage.FROMFR){
+                //remove incomingMsg.getSourceId from RF positionList
+                iterator = getVertexValue().getRFList().iterator();
+                while(iterator.hasNext()){
+                    pos = iterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        iterator.remove();
+                        break;
+                    }
+                }
+            } else if(incomingMsg.getMessage() == AdjMessage.FROMRF){
+                //remove incomingMsg.getSourceId from FR positionList
+                iterator = getVertexValue().getFRList().iterator();
+                while(iterator.hasNext()){
+                    pos = iterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        iterator.remove();
+                        break;
+                    }
+                }
+            } else{ //incomingMsg.getMessage() == AdjMessage.FROMRR
+                //remove incomingMsg.getSourceId from FF positionList
+                iterator = getVertexValue().getFFList().iterator();
+                while(iterator.hasNext()){
+                    pos = iterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        iterator.remove();
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
@@ -118,7 +235,7 @@ public class BridgeRemoveVertex extends
             if(VertexUtil.isUpBridgeVertex(getVertexValue())){
                 sendMsgToAllNextNodes(getVertexValue());
             }
-           else if(VertexUtil.isUpBridgeVertex(getVertexValue())){
+           else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
                 sendMsgToAllPreviousNodes(getVertexValue());
            }
         }
@@ -127,57 +244,17 @@ public class BridgeRemoveVertex extends
             while (msgIterator.hasNext()) {
                 if(i == 3)
                     break;
-                receivedMsg.add(msgIterator.next());
+                receivedMsgList.add(msgIterator.next());
                 i++;
             }
-            if(receivedMsg.size() == 2){
-                if(getVertexValue().getLengthOfMergeChain() > length){
-                    outgoingMsg.setSourceVertexId(getVertexId());
-                    if(receivedMsg.get(0).getMessage() == AdjMessage.FROMFF 
-                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRR){
-                        outgoingMsg.setMessage(AdjMessage.FROMRR);
-                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
-                        outgoingMsg.setMessage(AdjMessage.FROMFF);
-                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
-                        deleteVertex(getVertexId());
-                    } else if (receivedMsg.get(0).getMessage() == AdjMessage.FROMFF 
-                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRF) {
-                        outgoingMsg.setMessage(AdjMessage.FROMRR);
-                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
-                        outgoingMsg.setMessage(AdjMessage.FROMFR);
-                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
-                        deleteVertex(getVertexId());
-                    } else if (receivedMsg.get(0).getMessage() == AdjMessage.FROMFR 
-                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRR) {
-                        outgoingMsg.setMessage(AdjMessage.FROMRF);
-                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
-                        outgoingMsg.setMessage(AdjMessage.FROMFF);
-                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
-                        deleteVertex(getVertexId());
-                    } else if (receivedMsg.get(0).getMessage() == AdjMessage.FROMFR 
-                            && receivedMsg.get(1).getMessage() == AdjMessage.FROMRF) {
-                        outgoingMsg.setMessage(AdjMessage.FROMRF);
-                        sendMsg(receivedMsg.get(0).getSourceVertexId(), outgoingMsg);
-                        outgoingMsg.setMessage(AdjMessage.FROMFR);
-                        sendMsg(receivedMsg.get(1).getSourceVertexId(), outgoingMsg);
-                        deleteVertex(getVertexId());
-                    }
+            if(receivedMsgList.size() == 2){
+                if(getVertexValue().getLengthOfMergeChain() <= length){
+                    broadcaseKillself();
                 }
             }
         }
         else if(getSuperstep() == 3){
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                if(incomingMsg.getMessage() == AdjMessage.FROMFF){
-                    //remove incomingMsg.getSourceId from RR positionList
-                } else if(incomingMsg.getMessage() == AdjMessage.FROMFR){
-                  //remove incomingMsg.getSourceId from RF positionList
-                } else if(incomingMsg.getMessage() == AdjMessage.FROMRF){
-                  //remove incomingMsg.getSourceId from FR positionList
-                } else{ //incomingMsg.getMessage() == AdjMessage.FROMRR
-                  //remove incomingMsg.getSourceId from FF positionList
-                }
-            }
+            responseToDeadVertex(msgIterator);
         }
         voteToHalt();
     }

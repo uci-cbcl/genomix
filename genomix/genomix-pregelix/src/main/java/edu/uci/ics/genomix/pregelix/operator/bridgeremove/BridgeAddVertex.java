@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.tipremove;
+package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
@@ -44,30 +44,34 @@ import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 /**
- *  Remove tip or single node when l > constant
+ * Naive Algorithm for path merge graph
  */
-public class TipAddVertex extends
+public class BridgeAddVertex extends
         Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "TipAddVertex.kmerSize";
+    public static final String KMER_SIZE = "BridgeRemoveVertex.kmerSize";
+    public static final String LENGTH = "BridgeRemoveVertex.length";
     public static int kmerSize = -1;
-   
+    private int length = -1;
+    
     /**
-     * initiate kmerSize, length
+     * initiate kmerSize, maxIteration
      */
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+        if(length == -1)
+            length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        initVertex(); 
+        initVertex();
         if(getSuperstep() == 1){
-            if(getVertexId().getReadID() == 1 && getVertexId().getPosInRead() == 4){
-                getVertexValue().getFFList().append(2, (byte)1);
+            if(getVertexId().getReadID() == 1 && getVertexId().getPosInRead() == 2){
+                getVertexValue().getFFList().append(3, (byte)1);
                 
-                //add tip vertex
+                //add bridge vertex
                 @SuppressWarnings("rawtypes")
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
                 vertex.getMsgList().clear();
@@ -77,29 +81,34 @@ public class TipAddVertex extends
                 /**
                  * set the src vertex id
                  */
-                vertexId.set(2, (byte)1);
+                vertexId.set(3, (byte)1);
                 vertex.setVertexId(vertexId);
                 /**
                  * set the vertex value
                  */
-                byte[] array = { 'G', 'A', 'A'};
+                byte[] array = { 'T', 'A', 'G', 'C', 'C', 'T'};
                 KmerBytesWritable kmer = new KmerBytesWritable(array.length);
                 kmer.setByRead(array, 0);
                 vertexValue.setMergeChain(kmer);
                 PositionListWritable plist = new PositionListWritable();
-                plist.append(new PositionWritable(1, (byte)4));
+                plist.append(new PositionWritable(1, (byte)2));
                 vertexValue.setRRList(plist);
+                PositionListWritable plist2 = new PositionListWritable();
+                plist2.append(new PositionWritable(2, (byte)2));
+                vertexValue.setFFList(plist2);
                 vertex.setVertexValue(vertexValue);
                 
                 addVertex(vertexId, vertex);
             }
+            if(getVertexId().getReadID() == 2 && getVertexId().getPosInRead() == 2)
+                getVertexValue().getRRList().append(3, (byte)1);
         }
         voteToHalt();
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(TipAddVertex.class.getSimpleName());
-        job.setVertexClass(TipAddVertex.class);
+        PregelixJob job = new PregelixJob(BridgeAddVertex.class.getSimpleName());
+        job.setVertexClass(BridgeAddVertex.class);
         /**
          * BinaryInput and BinaryOutput
          */

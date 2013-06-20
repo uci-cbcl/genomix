@@ -155,8 +155,8 @@ public class NaiveAlgorithmForPathMergeVertex extends
     public void initState(Iterator<MessageWritable> msgIterator) {
         while (msgIterator.hasNext()) {
             if (!VertexUtil.isPathVertex(getVertexValue()) 
-                    || !VertexUtil.isHeadWithoutIndegree(getVertexValue())
-                    || !VertexUtil.isRearWithoutOutdegree(getVertexValue())) {
+                    && !VertexUtil.isHeadWithoutIndegree(getVertexValue())
+                    && !VertexUtil.isRearWithoutOutdegree(getVertexValue())) {
                 msgIterator.next();
                 voteToHalt();
             } else {
