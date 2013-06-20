@@ -364,9 +364,15 @@ public class MergePathsH4 extends Configured implements Tool {
         RunningJob job = JobClient.runJob(conf);
         
         // move the tmp outputs to the arg-spec'ed dirs
-        dfs.rename(new Path(outputPath + File.pathSeparator +  MergePathsH4Reducer.TO_MERGE_OUTPUT), new Path(toMergeOutput));
-        dfs.rename(new Path(outputPath + File.pathSeparator +  MergePathsH4Reducer.COMPLETE_OUTPUT), new Path(completeOutput));
-        dfs.rename(new Path(outputPath + File.pathSeparator +  MergePathsH4Reducer.UPDATES_OUTPUT), new Path(updatesOutput));
+        if (!dfs.rename(new Path(outputPath + File.separator +  MergePathsH4Reducer.TO_MERGE_OUTPUT), new Path(toMergeOutput))) {
+            dfs.mkdirs(new Path(toMergeOutput));
+        }
+        if (!dfs.rename(new Path(outputPath + File.separator +  MergePathsH4Reducer.COMPLETE_OUTPUT), new Path(completeOutput))) {
+            dfs.mkdirs(new Path(completeOutput));
+        }
+        if (!dfs.rename(new Path(outputPath + File.separator +  MergePathsH4Reducer.UPDATES_OUTPUT), new Path(updatesOutput))) {
+            dfs.mkdirs(new Path(updatesOutput));
+        }
         
         return job;
     }

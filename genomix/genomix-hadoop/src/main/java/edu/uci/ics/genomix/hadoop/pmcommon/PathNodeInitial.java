@@ -240,7 +240,7 @@ public class PathNodeInitial extends Configured implements Tool {
         conf.setJobName("PathNodeInitial " + inputPath);
 
         FileInputFormat.addInputPaths(conf, inputPath);
-        Path outputPath = new Path(inputPath + ".initialMerge.tmp");
+        Path outputPath = new Path(inputPath.replaceAll("/$",  "") + ".initialMerge.tmp");
         FileOutputFormat.setOutputPath(conf, outputPath);
 
         conf.setInputFormat(SequenceFileInputFormat.class);
@@ -264,8 +264,8 @@ public class PathNodeInitial extends Configured implements Tool {
         RunningJob job = JobClient.runJob(conf);
         
         // move the tmp outputs to the arg-spec'ed dirs
-        dfs.rename(new Path(outputPath + File.pathSeparator +  TO_MERGE_OUTPUT), new Path(toMergeOutput));
-        dfs.rename(new Path(outputPath + File.pathSeparator +  COMPLETE_OUTPUT), new Path(completeOutput));
+        dfs.rename(new Path(outputPath + File.separator +  TO_MERGE_OUTPUT), new Path(toMergeOutput));
+        dfs.rename(new Path(outputPath + File.separator +  COMPLETE_OUTPUT), new Path(completeOutput));
         
         return job;
     }
