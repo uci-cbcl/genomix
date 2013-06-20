@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -24,6 +25,8 @@ public class TestPathMergeH4 extends HadoopMiniClusterTest {
     protected final String GRAPHBUILD = "/01-graphbuild/";
     protected final String MERGED = "/02-pathmerge/";
     
+    protected final String ACTUAL = "src/test/resources/actual/";
+    
     protected final boolean regenerateGraph = true;
     
     {
@@ -37,22 +40,27 @@ public class TestPathMergeH4 extends HadoopMiniClusterTest {
     @Test
     public void TestMergeOneIteration() throws Exception {
         cleanUpOutput();
-        if (regenerateGraph) {
-            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
-            buildGraph();
-            copyLocalToDFS(ACTUAL_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
-        } else {
-            copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
-        }
+        prepareGraph();
         
         MergePathsH4Driver h4 = new MergePathsH4Driver();
-        h4.run(GRAPHBUILD, MERGED, 2, KMER_LENGTH, 1, conf);
+        h4.run(GRAPHBUILD, MERGED, 2, KMER_LENGTH, 5, conf);
         copyResultsToLocal(MERGED, ACTUAL_ROOT + MERGED, false, conf);
     }
 
+//    @Test
+    public void testPathNode() throws IOException {
+        cleanUpOutput();
+        prepareGraph();
+
+        // identify head and tail nodes with pathnode initial
+        PathNodeInitial inith4 = new PathNodeInitial();
+        inith4.run(GRAPHBUILD, "/toMerge", "/completed", conf);
+    }
+    
+    
 
 
-    public void buildGraph() throws Exception {
+    public void buildGraph() throws IOException {
         JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 
         FileInputFormat.setInputPaths(buildConf, SEQUENCE);
         FileOutputFormat.setOutputPath(buildConf, new Path(GRAPHBUILD));
@@ -62,5 +70,15 @@ public class TestPathMergeH4 extends HadoopMiniClusterTest {
         
         boolean resultsAreText = false;
         copyResultsToLocal(GRAPHBUILD, ACTUAL_ROOT + GRAPHBUILD, resultsAreText, buildConf);
+    }
+    
+    private void prepareGraph() throws IOException {
+        if (regenerateGraph) {
+            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
+            buildGraph();
+            copyLocalToDFS(ACTUAL_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
+        } else {
+            copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
+        }
     }
 }

@@ -327,6 +327,10 @@ public class MergePathsH4 extends Configured implements Tool {
                 }
             }
         }
+
+        public void close() throws IOException {
+            mos.close();
+        }
     }
 
     /*
@@ -360,10 +364,15 @@ public class MergePathsH4 extends Configured implements Tool {
         		PositionWritable.class, MessageWritableNodeWithFlag.class);
         
         FileSystem dfs = FileSystem.get(conf); 
-        dfs.delete(outputPath, true); // clean output dir
+        // clean output dirs
+        dfs.delete(outputPath, true);
+        dfs.delete(new Path(toMergeOutput), true);
+        dfs.delete(new Path(completeOutput), true);
+        dfs.delete(new Path(updatesOutput), true);
+
         RunningJob job = JobClient.runJob(conf);
         
-        // move the tmp outputs to the arg-spec'ed dirs
+        // move the tmp outputs to the arg-spec'ed dirs. If there is no such dir, create an empty one to simplify downstream processing
         if (!dfs.rename(new Path(outputPath + File.separator +  MergePathsH4Reducer.TO_MERGE_OUTPUT), new Path(toMergeOutput))) {
             dfs.mkdirs(new Path(toMergeOutput));
         }
@@ -378,14 +387,13 @@ public class MergePathsH4 extends Configured implements Tool {
     }
 
     @Override
-    public int run(String[] arg0) throws Exception {
-        // TODO Auto-generated method stub
-        return 0;
+    public int run(String[] args) throws Exception {
+        int res = ToolRunner.run(new Configuration(), new MergePathsH4(), args);
+        return res;
     }
 
     public static void main(String[] args) throws Exception {
         int res = ToolRunner.run(new Configuration(), new MergePathsH4(), args);
-        System.out.println("Ran the job fine!");
         System.exit(res);
     }
 }

@@ -94,6 +94,9 @@ public class HadoopMiniClusterTest {
             FileSystem lfs = FileSystem.getLocal(new Configuration());
             lfs.mkdirs(new Path(localDestFile).getParent());
             File filePathTo = new File(localDestFile);
+            if (filePathTo.exists() && filePathTo.isDirectory()) {
+                filePathTo = new File(localDestFile + "/data");
+            }
             BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
             SequenceFile.Reader reader = new SequenceFile.Reader(dfs, validFile.getPath(), conf);
             SequenceFile.Writer writer = new SequenceFile.Writer(lfs, new JobConf(), new Path(localDestFile
