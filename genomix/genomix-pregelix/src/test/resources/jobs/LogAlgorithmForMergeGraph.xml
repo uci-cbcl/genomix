@@ -3,7 +3,6 @@
 <property><name>mapred.queue.default.acl-administer-jobs</name><value>*</value></property>
 <property><name>mapred.skip.map.auto.incr.proc.count</name><value>true</value></property>
 <property><name>mapred.jobtracker.instrumentation</name><value>org.apache.hadoop.mapred.JobTrackerMetricsInst</value></property>
-<property><name>NaiveAlgorithmForPathMergeVertex.kmerSize</name><value>3</value></property>
 <property><name>mapred.skip.reduce.auto.incr.proc.count</name><value>true</value></property>
 <property><name>fs.hsftp.impl</name><value>org.apache.hadoop.hdfs.HsftpFileSystem</value></property>
 <property><name>mapred.submit.replication</name><value>10</value></property>
@@ -36,7 +35,7 @@
 <property><name>mapred.reduce.parallel.copies</name><value>5</value></property>
 <property><name>fs.checkpoint.size</name><value>67108864</value></property>
 <property><name>mapred.job.reduce.input.buffer.percent</name><value>0.0</value></property>
-<property><name>mapred.job.name</name><value>NaiveAlgorithmForMergeGraph</value></property>
+<property><name>mapred.job.name</name><value>LogAlgorithmForMergeGraph</value></property>
 <property><name>local.cache.size</name><value>10737418240</value></property>
 <property><name>fs.s3n.impl</name><value>org.apache.hadoop.fs.s3native.NativeS3FileSystem</value></property>
 <property><name>mapred.userlog.limit.kb</name><value>0</value></property>
@@ -65,7 +64,7 @@
 <property><name>hadoop.rpc.socket.factory.class.default</name><value>org.apache.hadoop.net.StandardSocketFactory</value></property>
 <property><name>mapred.reduce.tasks</name><value>1</value></property>
 <property><name>topology.node.switch.mapping.impl</name><value>org.apache.hadoop.net.ScriptBasedMapping</value></property>
-<property><name>pregelix.vertexClass</name><value>edu.uci.ics.genomix.pregelix.operator.pathmerge.NaiveAlgorithmForPathMergeVertex</value></property>
+<property><name>pregelix.vertexClass</name><value>edu.uci.ics.genomix.pregelix.operator.pathmerge.LogAlgorithmForPathMergeVertex</value></property>
 <property><name>mapred.skip.reduce.max.skip.groups</name><value>0</value></property>
 <property><name>io.file.buffer.size</name><value>4096</value></property>
 <property><name>mapred.jobtracker.maxtasks.per.job</name><value>-1</value></property>
@@ -104,6 +103,7 @@
 <property><name>mapred.task.profile.reduces</name><value>0-2</value></property>
 <property><name>webinterface.private.actions</name><value>false</value></property>
 <property><name>hadoop.tmp.dir</name><value>/tmp/hadoop-${user.name}</value></property>
+<property><name>LogAlgorithmForPathMergeVertex.kmerSize</name><value>3</value></property>
 <property><name>mapred.output.compression.codec</name><value>org.apache.hadoop.io.compress.DefaultCodec</value></property>
 <property><name>mapred.skip.attempts.to.start.skipping</name><value>2</value></property>
 <property><name>mapred.temp.dir</name><value>${hadoop.tmp.dir}/mapred/temp</value></property>
@@ -117,12 +117,12 @@
 <property><name>mapred.line.input.format.linespermap</name><value>1</value></property>
 <property><name>job.end.retry.attempts</name><value>0</value></property>
 <property><name>ipc.client.idlethreshold</name><value>4000</value></property>
-<property><name>pregelix.vertexOutputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat</value></property>
+<property><name>pregelix.vertexOutputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat</value></property>
 <property><name>mapred.reduce.copy.backoff</name><value>300</value></property>
 <property><name>mapred.map.tasks.speculative.execution</name><value>true</value></property>
 <property><name>mapred.inmem.merge.threshold</name><value>1000</value></property>
 <property><name>hadoop.logfile.size</name><value>10000000</value></property>
-<property><name>pregelix.vertexInputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat</value></property>
+<property><name>pregelix.vertexInputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat</value></property>
 <property><name>mapred.job.queue.name</name><value>default</value></property>
 <property><name>mapred.job.tracker.persist.jobstatus.active</name><value>false</value></property>
 <property><name>pregelix.incStateLength</name><value>true</value></property>

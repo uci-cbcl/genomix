@@ -56,28 +56,33 @@ public class PositionListWritableTest {
             i++;
         }
         
+        //delete one element each time
         i = 0;
+        PositionListWritable copyList = new PositionListWritable();
+        copyList.set(plist);
         PositionWritable pos = new PositionWritable();
-        Iterator<PositionWritable> iterator = plist.iterator();
-        
-        PositionWritable deletePos = new PositionWritable();
-        deletePos.set(2, (byte)2);
-        while(iterator.hasNext()){
-            pos = iterator.next();
-            if(pos.equals(deletePos)){
-                iterator.remove();
-                break;
+        Iterator<PositionWritable> iterator;
+        for(int j = 0; j < 5; j++){
+            iterator = copyList.iterator();
+            PositionWritable deletePos = new PositionWritable();
+            deletePos.set(j, (byte)j);
+            while(iterator.hasNext()){
+                pos = iterator.next();
+                if(pos.equals(deletePos)){
+                    iterator.remove();
+                    break;
+                }
+            }
+            Assert.assertEquals(5 - 1 - j, copyList.getCountOfPosition());
+            while(iterator.hasNext()){
+                pos = iterator.next();
+                Assert.assertTrue(pos.getReadID() != deletePos.getReadID());
+                Assert.assertTrue(pos.getPosInRead() != deletePos.getPosInRead());
+                i++;
             }
         }
-        Assert.assertEquals(4, plist.getCountOfPosition());
         
-        while(iterator.hasNext()){
-            pos = iterator.next();
-            Assert.assertTrue(pos.getReadID() != deletePos.getReadID());
-            Assert.assertTrue(pos.getPosInRead() != deletePos.getPosInRead());
-            i++;
-        }
-        
+        //delete all the elements
         i = 0;
         iterator = plist.iterator();
         while(iterator.hasNext()){

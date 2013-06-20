@@ -136,6 +136,14 @@ public class LogAlgorithmForPathMergeVertex extends
             sendMsgToAllPreviousNodes(getVertexValue());
             voteToHalt();
         }
+        if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
+            outgoingMsg.setMessage(Message.START);
+            sendMsg(getVertexId(), outgoingMsg); //send to itself
+        }
+        if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
+            outgoingMsg.setMessage(Message.END);
+            sendMsg(getVertexId(), outgoingMsg); //send to itself
+        }
     }
 
     /**
@@ -143,7 +151,9 @@ public class LogAlgorithmForPathMergeVertex extends
      */
     public void initState(Iterator<MessageWritable> msgIterator) {
         while (msgIterator.hasNext()) {
-            if (!VertexUtil.isPathVertex(getVertexValue())) {
+            if (!VertexUtil.isPathVertex(getVertexValue())
+                    && !VertexUtil.isHeadWithoutIndegree(getVertexValue())
+                    && !VertexUtil.isRearWithoutOutdegree(getVertexValue())) {
                 msgIterator.next();
                 voteToHalt();
             } else {

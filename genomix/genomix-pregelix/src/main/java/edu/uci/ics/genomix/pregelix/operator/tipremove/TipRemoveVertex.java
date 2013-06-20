@@ -55,8 +55,11 @@ public class TipRemoveVertex extends
     private MessageWritable incomingMsg = new MessageWritable();
     private MessageWritable outgoingMsg = new MessageWritable();
     
-    Iterator<PositionWritable> iterator;
-    PositionWritable pos = new PositionWritable();
+    private Iterator<PositionWritable> iterator;
+    private PositionWritable pos = new PositionWritable();
+    private PositionWritable destVertexId = new PositionWritable();
+    private Iterator<PositionWritable> posIterator;
+    
     /**
      * initiate kmerSize, length
      */
@@ -67,28 +70,51 @@ public class TipRemoveVertex extends
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize); //kmerSize + 5
         outgoingMsg.reset();
     }
+    
+    /**
+     * get destination vertex
+     */
+    public PositionWritable getNextDestVertexId(ValueStateWritable value) {
+        if(value.getFFList().getCountOfPosition() > 0) // #FFList() > 0
+            posIterator = value.getFFList().iterator();
+        else // #FRList() > 0
+            posIterator = value.getFRList().iterator();
+        return posIterator.next();
+    }
+
+    public PositionWritable getPreDestVertexId(ValueStateWritable value) {
+        if(value.getRFList().getCountOfPosition() > 0) // #RFList() > 0
+            posIterator = value.getRFList().iterator();
+        else // #RRList() > 0
+            posIterator = value.getRRList().iterator();
+        return posIterator.next();
+    }
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
         if(getSuperstep() == 1){
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
-            	if(getVertexValue().getLengthOfMergeChain() >= length){
+            	if(getVertexValue().getLengthOfMergeChain() <= length){
             		if(getVertexValue().getFFList().getCountOfPosition() > 0)
             			outgoingMsg.setMessage(AdjMessage.FROMFF);
             		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
             			outgoingMsg.setMessage(AdjMessage.FROMFR);
             		outgoingMsg.setSourceVertexId(getVertexId());
+            		destVertexId.set(getNextDestVertexId(getVertexValue()));
+            		sendMsg(destVertexId, outgoingMsg);
             		deleteVertex(getVertexId());
             	}
             }
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
-                if(getVertexValue().getLengthOfMergeChain() > length){
+                if(getVertexValue().getLengthOfMergeChain() <= length){
                     if(getVertexValue().getRFList().getCountOfPosition() > 0)
                         outgoingMsg.setMessage(AdjMessage.FROMRF);
                     else if(getVertexValue().getRRList().getCountOfPosition() > 0)
                         outgoingMsg.setMessage(AdjMessage.FROMRR);
                     outgoingMsg.setSourceVertexId(getVertexId());
+                    destVertexId.set(getPreDestVertexId(getVertexValue()));
+                    sendMsg(destVertexId, outgoingMsg);
                     deleteVertex(getVertexId());
                 }
             }

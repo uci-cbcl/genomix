@@ -19,7 +19,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -122,7 +121,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
 //                    System.arraycopy(storage, offset + cursor * PositionWritable.LENGTH, 
 //                            storage, offset + (cursor-1) * PositionWritable.LENGTH, PositionWritable.LENGTH);
 //                }
-                if(currentIndex < valueCount - 1)
+                if(currentIndex < valueCount)
                     System.arraycopy(storage, offset + currentIndex * PositionWritable.LENGTH, 
                           storage, offset + (currentIndex - 1) * PositionWritable.LENGTH, 
                           (valueCount - currentIndex) * PositionWritable.LENGTH);

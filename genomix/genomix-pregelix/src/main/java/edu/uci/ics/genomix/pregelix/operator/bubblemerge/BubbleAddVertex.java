@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.tipremove;
+package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
@@ -46,9 +46,9 @@ import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
 /**
  *  Remove tip or single node when l > constant
  */
-public class TipAddVertex extends
+public class BubbleAddVertex extends
         Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "TipAddVertex.kmerSize";
+    public static final String KMER_SIZE = "BubbleAddVertex.kmerSize";
     public static int kmerSize = -1;
    
     /**
@@ -64,7 +64,7 @@ public class TipAddVertex extends
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
         if(getSuperstep() == 1){
-            if(getVertexId().getReadID() == 1 && getVertexId().getPosInRead() == 4){
+            if(getVertexId().getReadID() == 1 && getVertexId().getPosInRead() == 2){
                 getVertexValue().getFFList().append(2, (byte)1);
                 
                 //add tip vertex
@@ -82,24 +82,29 @@ public class TipAddVertex extends
                 /**
                  * set the vertex value
                  */
-                byte[] array = { 'G', 'A', 'A'};
-                KmerBytesWritable kmer = new KmerBytesWritable(array.length);
+                byte[] array = { 'T', 'A', 'G', 'C', 'C', 'A', 'G'}; //TAGCCAG
+                KmerBytesWritable kmer = new KmerBytesWritable(array.length); 
                 kmer.setByRead(array, 0);
                 vertexValue.setMergeChain(kmer);
                 PositionListWritable plist = new PositionListWritable();
-                plist.append(new PositionWritable(1, (byte)4));
+                plist.append(new PositionWritable(1, (byte)2));
                 vertexValue.setRRList(plist);
+                PositionListWritable plist2 = new PositionListWritable();
+                plist2.append(new PositionWritable(1, (byte)4));
+                vertexValue.setFFList(plist2);
                 vertex.setVertexValue(vertexValue);
                 
                 addVertex(vertexId, vertex);
             }
+            if(getVertexId().getReadID() == 1 && getVertexId().getPosInRead() == 4)
+                getVertexValue().getRRList().append(2, (byte)1);
         }
         voteToHalt();
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(TipAddVertex.class.getSimpleName());
-        job.setVertexClass(TipAddVertex.class);
+        PregelixJob job = new PregelixJob(BubbleAddVertex.class.getSimpleName());
+        job.setVertexClass(BubbleAddVertex.class);
         /**
          * BinaryInput and BinaryOutput
          */
