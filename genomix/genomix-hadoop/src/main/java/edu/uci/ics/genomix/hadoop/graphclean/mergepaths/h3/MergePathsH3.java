@@ -24,6 +24,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
+import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial.PathNodeFlag;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
@@ -32,28 +33,10 @@ public class MergePathsH3 extends Configured implements Tool {
     /*
      * Flags used when sending messages
      */
-    public static class MergeMessageFlag {
-        public static final byte EMPTY_MESSAGE = 0;
-        public static final byte FROM_SELF = 1;
-        public static final byte FROM_SUCCESSOR = 1 << 1;
-        public static final byte FROM_PREDECESSOR = 1 << 2;
-        public static final byte IS_HEAD = 1 << 3;
-        public static final byte IS_TAIL = 1 << 4;
-        public static final byte IS_PSEUDOHEAD = 1 << 5;
-        public static final byte IS_COMPLETE = 1 << 6;
-
-        public static String getFlagAsString(byte code) {
-            // TODO: allow multiple flags to be set
-            switch (code) {
-                case EMPTY_MESSAGE:
-                    return "EMPTY_MESSAGE";
-                case FROM_SELF:
-                    return "FROM_SELF";
-                case FROM_SUCCESSOR:
-                    return "FROM_SUCCESSOR";
-            }
-            return "ERROR_BAD_MESSAGE";
-        }
+    public static class MergeMessageFlag extends PathNodeFlag {
+        public static final byte FROM_SUCCESSOR = 1 << 5;
+        public static final byte FROM_PREDECESSOR = 1 << 6;
+        public static final byte IS_PSEUDOHEAD = ((byte) 1 << 6); //TODO FIXME        
     }
 
     /*

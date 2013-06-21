@@ -27,6 +27,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
      * 
      */
     private static final long serialVersionUID = 1L;
+    public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
     private PositionWritable nodeID;
     private PositionListWritable forwardForwardList;
     private PositionListWritable forwardReverseList;
