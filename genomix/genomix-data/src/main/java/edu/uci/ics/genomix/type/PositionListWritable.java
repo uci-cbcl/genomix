@@ -132,6 +132,20 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         };
         return it;
     }
+    
+    /*
+     * remove the first instance of @toRemove. Uses a linear scan.  Throws an exception if not in this list.
+     */
+    public void remove(PositionWritable toRemove) {
+        Iterator<PositionWritable> posIterator = this.iterator();
+        while (posIterator.hasNext()) {
+            if(toRemove.equals(posIterator.next())) {
+                posIterator.remove();
+                return;
+            }
+        }
+        throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString() + "` was not found in this list.");
+    }
 
     public void set(PositionListWritable list2) {
         set(list2.valueCount, list2.storage, list2.offset);
@@ -161,6 +175,20 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         Marshal.putInt(readID, storage, offset + valueCount * PositionWritable.LENGTH);
         storage[offset + valueCount * PositionWritable.LENGTH + PositionWritable.INTBYTES] = posInRead;
         valueCount += 1;
+    }
+    
+    /*
+     * Append the otherList to the end of myList
+     */
+    public void appendList(PositionListWritable otherList) {
+        if (otherList.valueCount > 0) {
+            setSize((valueCount + otherList.valueCount) * PositionWritable.LENGTH);
+            // copy contents of otherList into the end of my storage
+            System.arraycopy(otherList.storage, otherList.offset,
+                    storage, offset + valueCount * PositionWritable.LENGTH, 
+                    otherList.valueCount * PositionWritable.LENGTH);
+            valueCount += otherList.valueCount;
+        }
     }
     
     public static int getCountByDataLength(int length) {
