@@ -127,12 +127,12 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(text2, kmer2.toString());
         KmerBytesWritable merge = new KmerBytesWritable(kmer1);
         int kmerSize = 8;
-        merge.mergeNextKmer(kmerSize, kmer2);
+        merge.mergeWithFFKmer(kmerSize, kmer2);
         Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
 
         for (int i = 1; i < 8; i++) {
             merge.set(kmer1);
-            merge.mergeNextKmer(i, kmer2);
+            merge.mergeWithFFKmer(i, kmer2);
             Assert.assertEquals(text1 + text2.substring(i - 1), merge.toString());
         }
 
@@ -148,7 +148,7 @@ public class KmerBytesWritableTest {
                 Assert.assertEquals(text2, kmer2.toString());
                 for (int x = 1; x < jk; x++) {
                     merge.set(kmer1);
-                    merge.mergeNextKmer(x, kmer2);
+                    merge.mergeWithFFKmer(x, kmer2);
                     Assert.assertEquals(text1 + text2.substring(x - 1), merge.toString());
                 }
             }
@@ -168,12 +168,12 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(text2, kmer2.toString());
         KmerBytesWritable merge = new KmerBytesWritable(kmer2);
         int kmerSize = 8;
-        merge.mergePreKmer(kmerSize, kmer1);
+        merge.mergeWithRRKmer(kmerSize, kmer1);
         Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
 
         for (int i = 1; i < 8; i++) {
             merge.set(kmer2);
-            merge.mergePreKmer(i, kmer1);
+            merge.mergeWithRRKmer(i, kmer1);
             Assert.assertEquals(text1.substring(0, text1.length() - i + 1) + text2, merge.toString());
         }
 
@@ -189,7 +189,7 @@ public class KmerBytesWritableTest {
                 Assert.assertEquals(text2, kmer2.toString());
                 for (int x = 1; x < ik; x++) {
                     merge.set(kmer2);
-                    merge.mergePreKmer(x, kmer1);
+                    merge.mergeWithRRKmer(x, kmer1);
                     Assert.assertEquals(text1.substring(0, text1.length() - x + 1) + text2, merge.toString());
                 }
             }

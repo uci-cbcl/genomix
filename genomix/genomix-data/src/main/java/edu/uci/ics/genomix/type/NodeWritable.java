@@ -121,13 +121,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void mergeForwardNext(NodeWritable nextNode, int initialKmerSize) {
         this.forwardForwardList.set(nextNode.forwardForwardList);
         this.forwardReverseList.set(nextNode.forwardReverseList);
-        kmer.mergeNextKmer(initialKmerSize, nextNode.getKmer());
+        kmer.mergeWithFFKmer(initialKmerSize, nextNode.getKmer());
     }
 
     public void mergeForwardPre(NodeWritable preNode, int initialKmerSize) {
         this.reverseForwardList.set(preNode.reverseForwardList);
         this.reverseReverseList.set(preNode.reverseReverseList);
-        kmer.mergePreKmer(initialKmerSize, preNode.getKmer());
+        kmer.mergeWithRRKmer(initialKmerSize, preNode.getKmer());
     }
 
     public void set(NodeWritable node) {

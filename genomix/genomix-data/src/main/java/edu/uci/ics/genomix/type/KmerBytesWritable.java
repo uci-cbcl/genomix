@@ -358,7 +358,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param kmer
      *            : the next kmer
      */
-    public void mergeNextKmer(int initialKmerSize, KmerBytesWritable kmer) {
+    public void mergeWithFFKmer(int initialKmerSize, KmerBytesWritable kmer) {
         int preKmerLength = kmerlength;
         int preSize = size;
         this.kmerlength += kmer.kmerlength - initialKmerSize + 1;
@@ -372,7 +372,99 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
         clearLeadBit();
     }
+    
+    /**
+     * Merge Kmer with the next connected Kmer, when that Kmer needs to be reverse-complemented
+     * e.g. AAGCTAA merge with GGTTGTT, if the initial kmerSize = 3
+     * then it will return AAGCTAACAACC
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param kmer
+     *            : the next kmer
+     */
+    public void mergeWithFRKmer(int initialKmerSize, KmerBytesWritable kmer) {
+        int preKmerLength = kmerlength;
+        int preSize = size;
+        this.kmerlength += kmer.kmerlength - initialKmerSize + 1;
+        setSize(KmerUtil.getByteNumFromK(kmerlength));
+        
+        // copy prefix into right-side of buffer
+        for (int i = 1; i <= preSize; i++) {
+            bytes[offset + size - i] = bytes[offset + preSize - i];
+        }
+        
+        // copy complement of suffix in reverse order into left side of buffer.
+        // we read two bits (one letter) at a time from leading bits of kmer, copying their complement 
+        // into my trailing bits
+        byte destByte = 0x00;
+        int destPosn = 0;
+        for (; destPosn < kmer.getKmerLength(); destPosn++) {
+            // srcPosn starts at the end of kmer, but excludes the last (initialKmerSize - 1) letters
+            // there are +1 and -1 terms in there that cancel out :P
+            int srcPosn = kmer.getKmerLength() - destPosn - initialKmerSize;
+            byte compLetter = GeneCode.getPairedCodeFromSymbol(kmer.getGeneCodeAtPosition(srcPosn));
+            if ((destPosn % 4) == 0 && destPosn >= 4) {
+                // byte is full.  write the complete byte to storage
+                bytes[offset + preSize - (destPosn / 4)] = destByte;
+                destByte &= 0x00;
+            }
+            destByte = (byte) ((destByte << 2) | compLetter);
+        }
+        // fill in the leading, partial byte
+        bytes[offset + preSize - (destPosn / 4)] = destByte;
+        clearLeadBit();
+    }
 
+    /**
+     * Merge Kmer with the previous connected Kmer, when that kmer needs to be reverse-complemented
+     * e.g. AACAACC merge with TTCTGCC, if the initial kmerSize = 3
+     * then it will return GGCAGAACAACC
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param preKmer
+     *            : the previous kmer
+     */
+    public void mergeWithRFKmer(int initialKmerSize, KmerBytesWritable preKmer) {
+        int preKmerLength = kmerlength;
+        int preSize = size;
+        this.kmerlength += preKmer.kmerlength - initialKmerSize + 1;
+        setSize(KmerUtil.getByteNumFromK(kmerlength));
+        byte cacheByte = getOneByteFromKmerAtPosition(0, bytes, offset, preSize);
+        
+        // copy reverse complement of prekmer
+        // copy complement of suffix in reverse order into left side of buffer.
+        // we read two bits (one letter) at a time from leading bits of kmer, copying their complement 
+        // into my trailing bits
+        byte destByte = 0x00;
+        int destPosn = 0;
+        for (; destPosn < preKmer.getKmerLength(); destPosn++) {
+            // srcPosn starts at the end of kmer
+            int srcPosn = preKmer.getKmerLength() - destPosn - 1;
+            byte compLetter = GeneCode.getPairedCodeFromSymbol(preKmer.getGeneCodeAtPosition(srcPosn));
+            if ((destPosn % 4) == 0 && destPosn >= 4) {
+                // byte is full.  write the complete byte to storage
+                bytes[offset + size - (destPosn / 4)] = destByte;
+                destByte &= 0x00;
+            }
+            destByte = (byte) ((destByte << 2) | compLetter);
+        }
+        // fill in the leading, partial byte
+        bytes[offset + preSize - (destPosn / 4)] = destByte;
+        
+        // copy current kmer
+        int k = 4;
+        for (; k < preKmerLength; k += 4) {
+            byte onebyte = getOneByteFromKmerAtPosition(k, bytes, offset, preSize);
+            appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, size);
+            cacheByte = onebyte;
+        }
+        appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, size);
+        clearLeadBit();
+    }
+    
+    
     /**
      * Merge Kmer with the previous connected Kmer
      * e.g. AACAACC merge with AAGCTAA, if the initial kmerSize = 3
@@ -383,7 +475,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param preKmer
      *            : the previous kmer
      */
-    public void mergePreKmer(int initialKmerSize, KmerBytesWritable preKmer) {
+    public void mergeWithRRKmer(int initialKmerSize, KmerBytesWritable preKmer) {
         int preKmerLength = kmerlength;
         int preSize = size;
         this.kmerlength += preKmer.kmerlength - initialKmerSize + 1;
@@ -417,7 +509,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
         buffer[position] = (byte) ((buffer[position] & mask) | ((0xff & onebyte) << shift));
         if (position > start && shift != 0) {
-            buffer[position - 1] = (byte) ((buffer[position - 1] & (0xff - mask)) | ((byte) ((0xff & onebyte) >> (8 - shift))));
+            buffer[position - 1] = (byte) ((buffer[position - 1] & (0xff - mask)) | ((byte) ((0xff & onebyte) >>> (8 - shift))));
         }
     }
 
@@ -427,7 +519,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
             throw new IllegalArgumentException("Buffer of kmer storage is invalid");
         }
         int shift = (k % 4) << 1;
-        byte data = (byte) (((0xff) & buffer[position]) >> shift);
+        byte data = (byte) (((0xff) & buffer[position]) >>> shift);
         if (shift != 0 && position > start) {
             data |= 0xff & (buffer[position - 1] << (8 - shift));
         }
