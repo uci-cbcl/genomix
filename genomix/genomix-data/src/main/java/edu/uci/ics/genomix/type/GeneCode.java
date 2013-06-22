@@ -15,6 +15,8 @@
 
 package edu.uci.ics.genomix.type;
 
+import javax.management.RuntimeErrorException;
+
 public class GeneCode {
     public final static byte[] GENE_SYMBOL = { 'A', 'C', 'G', 'T' };
     /**
@@ -51,7 +53,7 @@ public class GeneCode {
     
     public static byte getPairedGeneCode(byte genecode){
         if ( genecode < 0 || genecode > 3){
-            throw new IllegalArgumentException("Invalid genecode");
+            throw new IllegalArgumentException("Invalid genecode: " + genecode);
         }
         return (byte) (3- genecode);
     }
@@ -65,5 +67,31 @@ public class GeneCode {
             throw new IllegalArgumentException("Invalid genecode");
         }
         return GENE_SYMBOL[code];
+    }
+    
+    public static String reverseComplement(String kmer) {
+        StringBuilder sb = new StringBuilder();
+        for (char letter : kmer.toCharArray()) {
+            sb.append(complement(letter));
+        }
+        return sb.reverse().toString();
+    }
+    
+    public static char complement(char ch) {
+        switch (ch) {
+            case 'A':
+            case 'a':
+                return 'T';
+            case 'C':
+            case 'c':
+                return 'G';
+            case 'G':
+            case 'g':
+                return 'C';
+            case 'T':
+            case 't':
+                return 'A';
+        }
+        throw new RuntimeException("Invalid character given in complement: " + ch);
     }
 }

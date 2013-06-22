@@ -15,6 +15,10 @@
 
 package edu.uci.ics.genomix.data.test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -115,7 +119,7 @@ public class KmerBytesWritableTest {
     }
 
     @Test
-    public void TestMergeNextKmer() {
+    public void TestMergeFFKmer() {
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
         String text = "AGCTGACCGT";
         KmerBytesWritable kmer1 = new KmerBytesWritable(8);
@@ -154,9 +158,86 @@ public class KmerBytesWritableTest {
             }
         }
     }
+    
+    @Test
+    public void TestMergeFRKmer() {
+        int kmerSize = 3;
+        String result = "AAGCTAACAACC";
+        byte[] resultArray = result.getBytes();
+        
+        String text1 = "AAGCTAA";
+        KmerBytesWritable kmer1 = new KmerBytesWritable(text1.length());
+        kmer1.setByRead(resultArray, 0);
+        Assert.assertEquals(text1, kmer1.toString());
+        
+        // kmer2 is the rc of the end of the read
+        String text2 = "GGTTGTT";
+        KmerBytesWritable kmer2 = new KmerBytesWritable(text2.length());
+        kmer2.setByReadReverse(resultArray, result.length() - text2.length());
+        Assert.assertEquals(text2, kmer2.toString());
+        
+        KmerBytesWritable merge = new KmerBytesWritable(kmer1);
+        merge.mergeWithFRKmer(kmerSize, kmer2);
+        Assert.assertEquals(result, merge.toString());
+        
+        int i = 1;
+        merge.set(kmer1);
+        merge.mergeWithFRKmer(i, kmer2);
+        Assert.assertEquals("AAGCTAAAACAACC", merge.toString());
+        
+        i = 2;
+        merge.set(kmer1);
+        merge.mergeWithFRKmer(i, kmer2);
+        Assert.assertEquals("AAGCTAAACAACC", merge.toString());
+        
+        i = 3;
+        merge.set(kmer1);
+        merge.mergeWithFRKmer(i, kmer2);
+        Assert.assertEquals("AAGCTAACAACC", merge.toString());
+    }
+    
+    
+    @Test
+    public void TestMergeRFKmer() {
+        int kmerSize = 3;
+        String result = "AAGCTAACAACC";
+        byte[] resultArray = result.getBytes();
+        
+        String text1 = "AAGCTAA";
+        KmerBytesWritable kmer1 = new KmerBytesWritable(text1.length());
+        kmer1.setByRead(resultArray, 0);
+        Assert.assertEquals(text1, kmer1.toString());
+        
+        // kmer2 is the rc of the end of the read
+        String text2 = "GGTTGTT";
+        KmerBytesWritable kmer2 = new KmerBytesWritable(text2.length());
+        kmer2.setByReadReverse(resultArray, result.length() - text2.length());
+        Assert.assertEquals(text2, kmer2.toString());
+        
+        KmerBytesWritable merge = new KmerBytesWritable(kmer1);
+        merge.mergeWithFRKmer(kmerSize, kmer2);
+        Assert.assertEquals(result, merge.toString());
+        
+        int i = 1;
+        merge.set(kmer1);
+        merge.mergeWithFRKmer(i, kmer2);
+        Assert.assertEquals("AAGCTAAAACAACC", merge.toString());
+        
+        i = 2;
+        merge.set(kmer1);
+        merge.mergeWithFRKmer(i, kmer2);
+        Assert.assertEquals("AAGCTAAACAACC", merge.toString());
+        
+        i = 3;
+        merge.set(kmer1);
+        merge.mergeWithFRKmer(i, kmer2);
+        Assert.assertEquals("AAGCTAACAACC", merge.toString());
+    }
+    
+    
 
     @Test
-    public void TestMergePreKmer() {
+    public void TestMergeRRKmer() {
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
         String text = "AGCTGACCGT";
         KmerBytesWritable kmer1 = new KmerBytesWritable(8);

@@ -267,7 +267,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         byte l = 0;
         int bytecount = 0;
         int bcount = size - 1;
-        for (int i = start + kmerlength - 1; i >= 0 && i < array.length; i--) {
+//        for (int i = start + kmerlength - 1; i >= 0 && i < array.length; i--) {
+        for (int i = start + kmerlength - 1; i >= start && i < array.length; i--) {
             byte code = GeneCode.getPairedCodeFromSymbol(array[i]);
             l |= (byte) (code << bytecount);
             bytecount += 2;
@@ -384,36 +385,32 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      *            : the next kmer
      */
     public void mergeWithFRKmer(int initialKmerSize, KmerBytesWritable kmer) {
-        int preKmerLength = kmerlength;
         int preSize = size;
+        int preKmerLength = kmerlength;
         this.kmerlength += kmer.kmerlength - initialKmerSize + 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
-        
         // copy prefix into right-side of buffer
         for (int i = 1; i <= preSize; i++) {
             bytes[offset + size - i] = bytes[offset + preSize - i];
         }
-        
-        // copy complement of suffix in reverse order into left side of buffer.
-        // we read two bits (one letter) at a time from leading bits of kmer, copying their complement 
-        // into my trailing bits
-        byte destByte = 0x00;
-        int destPosn = 0;
-        for (; destPosn < kmer.getKmerLength(); destPosn++) {
-            // srcPosn starts at the end of kmer, but excludes the last (initialKmerSize - 1) letters
-            // there are +1 and -1 terms in there that cancel out :P
-            int srcPosn = kmer.getKmerLength() - destPosn - initialKmerSize;
-            byte compLetter = GeneCode.getPairedCodeFromSymbol(kmer.getGeneCodeAtPosition(srcPosn));
-            if ((destPosn % 4) == 0 && destPosn >= 4) {
-                // byte is full.  write the complete byte to storage
-                bytes[offset + preSize - (destPosn / 4)] = destByte;
-                destByte &= 0x00;
-            }
-            destByte = (byte) ((destByte << 2) | compLetter);
-        }
-        // fill in the leading, partial byte
-        bytes[offset + preSize - (destPosn / 4)] = destByte;
-        clearLeadBit();
+
+        int bytecount = (preKmerLength % 4) * 2;
+        int bcount = size - preSize - bytecount / 8;  // may overlap previous kmer
+        byte l = bcount == size - preSize ? bytes[offset + bcount] : 0x00;
+        bytecount %= 8;
+        for (int i = kmer.kmerlength - initialKmerSize; i >= 0; i--) {
+          byte code = GeneCode.getPairedGeneCode(kmer.getGeneCodeAtPosition(i));
+          l |= (byte) (code << bytecount);
+          bytecount += 2;
+          if (bytecount == 8) {
+              bytes[offset + bcount--] = l;
+              l = 0;
+              bytecount = 0;
+          }
+      }
+      if (bcount >= 0) {
+          bytes[offset] = l;
+      }
     }
 
     /**
