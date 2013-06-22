@@ -26,7 +26,7 @@ import org.apache.hadoop.util.ToolRunner;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MergeMessageFlag;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4.MergePathsH4Mapper;
-import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
+import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
@@ -37,22 +37,22 @@ public class RemoveTips extends Configured implements Tool {
      * Mapper class: removes any tips by not mapping them at all
      */
     private static class RemoveTipsMapper extends MapReduceBase implements
-            Mapper<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
+            Mapper<PositionWritable, NodeWithFlagWritable, PositionWritable, NodeWithFlagWritable> {
         private int KMER_SIZE;
         private int removeTipsMinLength;
 
-        private MessageWritableNodeWithFlag outputValue;
+        private NodeWithFlagWritable outputValue;
         private NodeWritable curNode;
 
         public void configure(JobConf conf) {
             removeTipsMinLength = conf.getInt("removeTipsMinLength", 0);
-            outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
+            outputValue = new NodeWithFlagWritable(KMER_SIZE);
             curNode = new NodeWritable(KMER_SIZE);
         }
 
         @Override
-        public void map(PositionWritable key, MessageWritableNodeWithFlag value,
-                OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
+        public void map(PositionWritable key, NodeWithFlagWritable value,
+                OutputCollector<PositionWritable, NodeWithFlagWritable> output, Reporter reporter)
                 throws IOException {
             curNode.set(value.getNode());
             if ((curNode.inDegree() == 0 || curNode.outDegree() == 0)
@@ -60,7 +60,7 @@ public class RemoveTips extends Configured implements Tool {
                 // kill this node by NOT mapping it.  Update my neighbors with a suicide note
                 //TODO: update neighbors by removing me from its list
             } else {
-                outputValue.set(MergeMessageFlag.FROM_SELF, curNode);
+                outputValue.set(MergeMessageFlag.MSG_SELF, curNode);
                 output.collect(key, value);
             }
         }
@@ -70,11 +70,11 @@ public class RemoveTips extends Configured implements Tool {
      * Reducer class: keeps mapped nodes 
      */
     private static class MergePathsH4Reducer extends MapReduceBase implements
-            Reducer<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
+            Reducer<PositionWritable, NodeWithFlagWritable, PositionWritable, NodeWithFlagWritable> {
 
         private int KMER_SIZE;
-        private MessageWritableNodeWithFlag inputValue;
-        private MessageWritableNodeWithFlag outputValue;
+        private NodeWithFlagWritable inputValue;
+        private NodeWithFlagWritable outputValue;
         private NodeWritable curNode;
         private NodeWritable prevNode;
         private NodeWritable nextNode;
@@ -86,20 +86,20 @@ public class RemoveTips extends Configured implements Tool {
 
         public void configure(JobConf conf) {
             KMER_SIZE = conf.getInt("sizeKmer", 0);
-            outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
+            outputValue = new NodeWithFlagWritable(KMER_SIZE);
             curNode = new NodeWritable(KMER_SIZE);
             prevNode = new NodeWritable(KMER_SIZE);
             nextNode = new NodeWritable(KMER_SIZE);
         }
 
         @Override
-        public void reduce(PositionWritable key, Iterator<MessageWritableNodeWithFlag> values,
-                OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
+        public void reduce(PositionWritable key, Iterator<NodeWithFlagWritable> values,
+                OutputCollector<PositionWritable, NodeWithFlagWritable> output, Reporter reporter)
                 throws IOException {
 
             inputValue.set(values.next());
             if (!values.hasNext()) {
-                if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) > 0) {
+                if ((inputValue.getFlag() & MergeMessageFlag.MSG_SELF) > 0) {
                     // FROM_SELF => keep self
                     output.collect(key, inputValue);
                 } else {
@@ -126,9 +126,9 @@ public class RemoveTips extends Configured implements Tool {
         conf.setOutputFormat(SequenceFileOutputFormat.class);
 
         conf.setMapOutputKeyClass(PositionWritable.class);
-        conf.setMapOutputValueClass(MessageWritableNodeWithFlag.class);
+        conf.setMapOutputValueClass(NodeWithFlagWritable.class);
         conf.setOutputKeyClass(PositionWritable.class);
-        conf.setOutputValueClass(MessageWritableNodeWithFlag.class);
+        conf.setOutputValueClass(NodeWithFlagWritable.class);
 
         conf.setMapperClass(MergePathsH4Mapper.class);
         conf.setReducerClass(MergePathsH4Reducer.class);

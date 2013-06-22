@@ -23,7 +23,7 @@ import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
+import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial.PathNodeFlag;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -44,14 +44,14 @@ public class MergePathsH3 extends Configured implements Tool {
      * Heads send themselves to their successors, and all others map themselves.
      */
     private static class MergePathsH3Mapper extends MapReduceBase implements
-            Mapper<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
+            Mapper<PositionWritable, NodeWithFlagWritable, PositionWritable, NodeWithFlagWritable> {
         private static long randSeed;
         private Random randGenerator;
         private float probBeingRandomHead;
 
         private int KMER_SIZE;
         private PositionWritable outputKey;
-        private MessageWritableNodeWithFlag outputValue;
+        private NodeWithFlagWritable outputValue;
         private NodeWritable curNode;
         private byte headFlag;
         private byte outFlag;
@@ -64,7 +64,7 @@ public class MergePathsH3 extends Configured implements Tool {
             finalMerge = conf.getBoolean("finalMerge", false);
 
             KMER_SIZE = conf.getInt("sizeKmer", 0);
-            outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
+            outputValue = new NodeWithFlagWritable(KMER_SIZE);
             outputKey = new PositionWritable();
             curNode = new NodeWritable(KMER_SIZE);
         }
@@ -76,8 +76,8 @@ public class MergePathsH3 extends Configured implements Tool {
         }
 
         @Override
-        public void map(PositionWritable key, MessageWritableNodeWithFlag value,
-                OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
+        public void map(PositionWritable key, NodeWithFlagWritable value,
+                OutputCollector<PositionWritable, NodeWithFlagWritable> output, Reporter reporter)
                 throws IOException {
             curNode = value.getNode();
             // Map all path vertices; Heads and pseudoheads are sent to their successors
@@ -103,7 +103,7 @@ public class MergePathsH3 extends Configured implements Tool {
                 output.collect(outputKey, outputValue);
             } else {
                 // tail nodes map themselves
-                outFlag |= MergeMessageFlag.FROM_SELF;
+                outFlag |= MergeMessageFlag.MSG_SELF;
                 outputValue.set(outFlag, curNode);
                 output.collect(key, outputValue);
             }
@@ -114,11 +114,11 @@ public class MergePathsH3 extends Configured implements Tool {
      * Reducer class: merge nodes that co-occur; for singletons, remap the original nodes 
      */
     private static class MergePathsH3Reducer extends MapReduceBase implements
-            Reducer<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag> {
+            Reducer<PositionWritable, NodeWithFlagWritable, PositionWritable, NodeWithFlagWritable> {
 
         private int KMER_SIZE;
-        private MessageWritableNodeWithFlag inputValue;
-        private MessageWritableNodeWithFlag outputValue;
+        private NodeWithFlagWritable inputValue;
+        private NodeWithFlagWritable outputValue;
         private NodeWritable headNode;
         private NodeWritable tailNode;
         private int count;
@@ -126,20 +126,20 @@ public class MergePathsH3 extends Configured implements Tool {
 
         public void configure(JobConf conf) {
             KMER_SIZE = conf.getInt("sizeKmer", 0);
-            outputValue = new MessageWritableNodeWithFlag(KMER_SIZE);
+            outputValue = new NodeWithFlagWritable(KMER_SIZE);
             headNode = new NodeWritable(KMER_SIZE);
             tailNode = new NodeWritable(KMER_SIZE);
         }
 
         @Override
-        public void reduce(PositionWritable key, Iterator<MessageWritableNodeWithFlag> values,
-                OutputCollector<PositionWritable, MessageWritableNodeWithFlag> output, Reporter reporter)
+        public void reduce(PositionWritable key, Iterator<NodeWithFlagWritable> values,
+                OutputCollector<PositionWritable, NodeWithFlagWritable> output, Reporter reporter)
                 throws IOException {
 
             inputValue = values.next();
             if (!values.hasNext()) {
                 // all single nodes must be remapped
-                if ((inputValue.getFlag() & MergeMessageFlag.FROM_SELF) == MergeMessageFlag.FROM_SELF) {
+                if ((inputValue.getFlag() & MergeMessageFlag.MSG_SELF) == MergeMessageFlag.MSG_SELF) {
                     // FROM_SELF => remap self
                     output.collect(key, inputValue);
                 } else {
@@ -202,9 +202,9 @@ public class MergePathsH3 extends Configured implements Tool {
         conf.setOutputFormat(SequenceFileOutputFormat.class);
 
         conf.setMapOutputKeyClass(PositionWritable.class);
-        conf.setMapOutputValueClass(MessageWritableNodeWithFlag.class);
+        conf.setMapOutputValueClass(NodeWithFlagWritable.class);
         conf.setOutputKeyClass(PositionWritable.class);
-        conf.setOutputValueClass(MessageWritableNodeWithFlag.class);
+        conf.setOutputValueClass(NodeWithFlagWritable.class);
 
         conf.setMapperClass(MergePathsH3Mapper.class);
         conf.setReducerClass(MergePathsH3Reducer.class);
