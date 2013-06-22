@@ -14,7 +14,7 @@ import org.apache.hadoop.mrunit.ReduceDriver;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MergeMessageFlag;
-import edu.uci.ics.genomix.hadoop.pmcommon.MessageWritableNodeWithFlag;
+import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
@@ -41,9 +41,9 @@ public class TestPathNodeInitial {
     public void testNoNeighbors() throws IOException {
         NodeWritable noNeighborNode = new NodeWritable(posn1, new PositionListWritable(), new PositionListWritable(),
                 new PositionListWritable(), new PositionListWritable(), kmer);
-        MessageWritableNodeWithFlag output = new MessageWritableNodeWithFlag((byte) (MergeMessageFlag.FROM_SELF | MergeMessageFlag.IS_COMPLETE), noNeighborNode);
+        NodeWithFlagWritable output = new NodeWithFlagWritable((byte) (MergeMessageFlag.MSG_SELF | MergeMessageFlag.IS_COMPLETE), noNeighborNode);
         // test mapper
-        new MapDriver<NodeWritable, NullWritable, PositionWritable, MessageWritableNodeWithFlag>()
+        new MapDriver<NodeWritable, NullWritable, PositionWritable, NodeWithFlagWritable>()
                 .withMapper(new PathNodeInitial.PathNodeInitialMapper())
                 .withConfiguration(conf)
                 .withInput(noNeighborNode, NullWritable.get())
@@ -51,7 +51,7 @@ public class TestPathNodeInitial {
                 .runTest();
         // test reducer
 //        MultipleOutputs.addNamedOutput(conf, "complete", SequenceFileOutputFormat.class, PositionWritable.class, MessageWritableNodeWithFlag.class);
-        new ReduceDriver<PositionWritable, MessageWritableNodeWithFlag, PositionWritable, MessageWritableNodeWithFlag>()
+        new ReduceDriver<PositionWritable, NodeWithFlagWritable, PositionWritable, NodeWithFlagWritable>()
                 .withReducer(new PathNodeInitial.PathNodeInitialReducer())
                 .withConfiguration(conf)
                 .withInput(posn1, Arrays.asList(output))
