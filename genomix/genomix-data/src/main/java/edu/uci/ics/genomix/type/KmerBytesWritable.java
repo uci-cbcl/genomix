@@ -50,7 +50,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public KmerBytesWritable(int k, byte[] storage, int offset) {
         setNewReference(k, storage, offset);
     }
-    
+
     public KmerBytesWritable(int k, String kmer) {
         setNewReference(kmer.length(), kmer.getBytes(), 0);
     }
@@ -198,11 +198,16 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         if (pos >= kmerlength) {
             throw new IllegalArgumentException("gene position out of bound");
         }
+        return geneCodeAtPosition(pos);
+    }
+    
+    // unchecked version of above. Used when kmerlength is inaccurate (mid-merge)
+    private byte geneCodeAtPosition(int pos) {
         int posByte = pos / 4;
         int shift = (pos % 4) << 1;
         return (byte) ((bytes[offset + size - 1 - posByte] >> shift) & 0x3);
     }
-
+    
     public int getKmerLength() {
         return this.kmerlength;
     }
@@ -373,7 +378,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
         clearLeadBit();
     }
-    
+
     /**
      * Merge Kmer with the next connected Kmer, when that Kmer needs to be reverse-complemented
      * e.g. AAGCTAA merge with GGTTGTT, if the initial kmerSize = 3
@@ -395,22 +400,22 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
 
         int bytecount = (preKmerLength % 4) * 2;
-        int bcount = size - preSize - bytecount / 8;  // may overlap previous kmer
+        int bcount = size - preSize - bytecount / 8; // may overlap previous kmer
         byte l = bcount == size - preSize ? bytes[offset + bcount] : 0x00;
         bytecount %= 8;
         for (int i = kmer.kmerlength - initialKmerSize; i >= 0; i--) {
-          byte code = GeneCode.getPairedGeneCode(kmer.getGeneCodeAtPosition(i));
-          l |= (byte) (code << bytecount);
-          bytecount += 2;
-          if (bytecount == 8) {
-              bytes[offset + bcount--] = l;
-              l = 0;
-              bytecount = 0;
-          }
-      }
-      if (bcount >= 0) {
-          bytes[offset] = l;
-      }
+            byte code = GeneCode.getPairedGeneCode(kmer.getGeneCodeAtPosition(i));
+            l |= (byte) (code << bytecount);
+            bytecount += 2;
+            if (bytecount == 8) {
+                bytes[offset + bcount--] = l;
+                l = 0;
+                bytecount = 0;
+            }
+        }
+        if (bcount >= 0) {
+            bytes[offset] = l;
+        }
     }
 
     /**
@@ -428,40 +433,41 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         int preSize = size;
         this.kmerlength += preKmer.kmerlength - initialKmerSize + 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
-        byte cacheByte = getOneByteFromKmerAtPosition(0, bytes, offset, preSize);
-        
-        // copy reverse complement of prekmer
-        // copy complement of suffix in reverse order into left side of buffer.
-        // we read two bits (one letter) at a time from leading bits of kmer, copying their complement 
-        // into my trailing bits
-        byte destByte = 0x00;
-        int destPosn = 0;
-        for (; destPosn < preKmer.getKmerLength(); destPosn++) {
-            // srcPosn starts at the end of kmer
-            int srcPosn = preKmer.getKmerLength() - destPosn - 1;
-            byte compLetter = GeneCode.getPairedCodeFromSymbol(preKmer.getGeneCodeAtPosition(srcPosn));
-            if ((destPosn % 4) == 0 && destPosn >= 4) {
-                // byte is full.  write the complete byte to storage
-                bytes[offset + size - (destPosn / 4)] = destByte;
-                destByte &= 0x00;
+        //        byte cacheByte = getOneByteFromKmerAtPosition(0, bytes, offset, preSize);
+
+        int byteIndex = size - 1;
+        byte cacheByte = 0x00;
+        int posnInByte = 0;
+
+        // copy rc of preKmer into high bytes
+        for (int i = preKmer.kmerlength - 1; i >= initialKmerSize - 1; i--) {
+            byte code = GeneCode.getPairedGeneCode(preKmer.getGeneCodeAtPosition(i));
+            cacheByte |= (byte) (code << posnInByte);
+            posnInByte += 2;
+            if (posnInByte == 8) {
+                bytes[byteIndex--] = cacheByte;
+                cacheByte = 0;
+                posnInByte = 0;
             }
-            destByte = (byte) ((destByte << 2) | compLetter);
         }
-        // fill in the leading, partial byte
-        bytes[offset + preSize - (destPosn / 4)] = destByte;
         
-        // copy current kmer
-        int k = 4;
-        for (; k < preKmerLength; k += 4) {
-            byte onebyte = getOneByteFromKmerAtPosition(k, bytes, offset, preSize);
-            appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, size);
-            cacheByte = onebyte;
+        // copy my kmer into low positions of bytes
+        for (int i = 0; i < preKmerLength; i++) {
+           // expanding the capacity makes this offset incorrect.  It's off by the # of additional bytes added.
+            int newposn = i + (size - preSize) * 4;
+            byte code = geneCodeAtPosition(newposn);
+            cacheByte |= (byte) (code << posnInByte);
+            posnInByte += 2;
+            if (posnInByte == 8) {
+                bytes[byteIndex--] = cacheByte;
+                cacheByte = 0;
+                posnInByte = 0;
+            }
         }
-        appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, size);
+        bytes[offset] = cacheByte;
         clearLeadBit();
     }
-    
-    
+
     /**
      * Merge Kmer with the previous connected Kmer
      * e.g. AACAACC merge with AAGCTAA, if the initial kmerSize = 3
