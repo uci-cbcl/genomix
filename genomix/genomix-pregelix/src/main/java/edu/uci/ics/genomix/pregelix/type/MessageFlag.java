@@ -6,7 +6,7 @@ public class MessageFlag {
     public static final byte IS_TAIL = 1 << 2;
     public static final byte FROM_DEADVERTEX = 1 << 3;
     //public static final byte FROM_FORWARDLIST = 1 << 4;
-    public static final byte FROM_REWARDLIST = 1 << 4;
+    public static final byte FLIP = 1 << 4;
     public static final byte FROM_SUCCESSOR = 1 << 5;
     public static final byte FROM_PREDECESSOR = 1 << 6;
     
@@ -21,8 +21,8 @@ public class MessageFlag {
                 return "IS_TAIL";
             case FROM_DEADVERTEX:
                 return "FROM_DEADVERTEX";
-            case FROM_REWARDLIST:
-                return "FROM_REWARDLIST";
+            case FLIP:
+                return "FLIP";
             case FROM_SUCCESSOR:
                 return "FROM_SUCCESSOR";
             case FROM_PREDECESSOR:
