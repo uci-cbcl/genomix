@@ -83,7 +83,6 @@ public class P4ForPathMergeVertex extends
     private PositionWritable destVertexId = new PositionWritable();
     private Iterator<PositionWritable> posIterator;
     
-    private AdjacencyListWritable neighberNode = new AdjacencyListWritable();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -254,26 +253,41 @@ public class P4ForPathMergeVertex extends
     }
     
     /**
+     * check if A need to be flipped with successor
+     */
+    public boolean ifFilpWithSuccessor(){
+        if(getVertexValue().getFRList().getLength() > 0)
+            return true;
+        else
+            return false;
+    }
+    
+    /**
+     * check if A need to be filpped with predecessor
+     */
+    public boolean ifFlipWithPredecessor(){
+        if(getVertexValue().getRFList().getLength() > 0)
+            return true;
+        else
+            return false;
+    }
+    /**
      * send update message from predecessor
      */
     public void sendUpMsgFromPredecessor(){
         outFlag |= MessageFlag.FROM_PREDECESSOR;
-        if(getVertexValue().getFRList().getLength() > 0){
-            outFlag |= MessageFlag.FROM_REWARDLIST;
-        }
         outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
+        if(ifFlipWithPredecessor())
+            outFlag |= MessageFlag.FLIP;
         outgoingMsg.setMessage(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
         outUpFlag = (byte)(MessageFlag.FROM_DEADVERTEX | MessageFlag.FROM_SUCCESSOR);
-        if(getVertexValue().getRFList().getLength() > 0){
-            outUpFlag |= MessageFlag.FROM_REWARDLIST;
-            outgoingUpMsg.setNeighberNode(getVertexValue().getIncomingList());
-        } else
-            outgoingUpMsg.setNeighberNode(getVertexValue().getOutgoingList());
+        outgoingUpMsg.setNeighberNode(getVertexValue().getOutgoingList());
+        if(ifFilpWithSuccessor())
+            outFlag |= MessageFlag.FLIP;
         outgoingUpMsg.setMessage(outUpFlag);
         outgoingUpMsg.setSourceVertexId(getVertexId());
-        
         sendMsg(getPreDestVertexId(getVertexValue()), outgoingUpMsg);
         deleteVertex(getVertexId());
     }
@@ -283,24 +297,68 @@ public class P4ForPathMergeVertex extends
      */
     public void sendUpMsgFromSuccessor(){
         outFlag |= MessageFlag.FROM_SUCCESSOR;
-        if(getVertexValue().getRFList().getLength() > 0){
-            outFlag |= MessageFlag.FROM_REWARDLIST;
-            outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
-        } else
-            outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
+        outgoingUpMsg.setNeighberNode(getVertexValue().getOutgoingList());
+        if(ifFilpWithSuccessor())
+            outFlag |= MessageFlag.FLIP;
         outgoingMsg.setMessage(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
         outUpFlag = (byte)(MessageFlag.FROM_DEADVERTEX | MessageFlag.FROM_PREDECESSOR);
-        if(getVertexValue().getFRList().getLength() > 0){
-            outUpFlag |= MessageFlag.FROM_REWARDLIST;
-        }
         outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
+        if(ifFlipWithPredecessor())
+            outFlag |= MessageFlag.FLIP;
         outgoingUpMsg.setMessage(outUpFlag);
         outgoingUpMsg.setSourceVertexId(getVertexId());
         sendMsg(getNextDestVertexId(getVertexValue()), outgoingUpMsg);
         deleteVertex(getVertexId());
     }
+    
+    /**
+     * update AdjacencyList if message from predecessor 
+     */
+    public void updateAdjList_MsgPredecessor(){
+        if((outFlag & MessageFlag.FLIP) > 0){
+            if(getVertexValue().getFFList().getLength() > 0){
+                getVertexValue().setFFList(null);
+                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                    getVertexValue().setFRList(incomingMsg.getNeighberNode().getForwardList());
+                else
+                    getVertexValue().setFRList(incomingMsg.getNeighberNode().getReverseList());
+            } else {
+                getVertexValue().setFRList(null);
+                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                    getVertexValue().setFFList(incomingMsg.getNeighberNode().getForwardList());
+                else
+                    getVertexValue().setFFList(incomingMsg.getNeighberNode().getReverseList());
+            }
+        } else {
+            getVertexValue().setIncomingList(incomingMsg.getNeighberNode());
+        }
+    }
+    
+    /**
+     * update AdjacencyList if message from successor 
+     */
+    public void updateAdjList_MsgSuccessor(){
+        if((outFlag & MessageFlag.FLIP) > 0){
+            if(getVertexValue().getRRList().getLength() > 0){
+                getVertexValue().setRRList(null);
+                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                    getVertexValue().setRFList(incomingMsg.getNeighberNode().getForwardList());
+                else
+                    getVertexValue().setRFList(incomingMsg.getNeighberNode().getReverseList());
+            } else {
+                getVertexValue().setRFList(null);
+                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                    getVertexValue().setRRList(incomingMsg.getNeighberNode().getForwardList());
+                else
+                    getVertexValue().setRRList(incomingMsg.getNeighberNode().getReverseList());
+            }
+        } else {
+            getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
@@ -367,11 +425,23 @@ public class P4ForPathMergeVertex extends
                 outFlag = incomingMsg.getMessage();
                 if((outFlag & MessageFlag.FROM_DEADVERTEX) > 0){
                     if((outFlag & MessageFlag.FROM_PREDECESSOR) > 0){
-                        if((outFlag & MessageFlag.FROM_REWARDLIST) > 0){
-                            
-                        } else {
-                            getVertexValue().setIncomingList(incomingMsg.getNeighberNode());
-                        }
+                        updateAdjList_MsgPredecessor();
+                    } 
+                    else {//Message from successor.
+                        updateAdjList_MsgSuccessor();
+                    }
+                }
+                else {//Not for update, but for merging
+                    if((outFlag & MessageFlag.FROM_PREDECESSOR) > 0){
+                        //B merge with A's reverse
+                        //append A's reverse to B
+                        //
+                        updateAdjList_MsgPredecessor();
+                    } 
+                    else {//Message from successor
+                        //B merge with A's reverse
+                        //append 
+                        updateAdjList_MsgSuccessor();
                     }
                 }
             }
