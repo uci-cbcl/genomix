@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -21,6 +22,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private KmerBytesWritable chainVertexId;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private byte message;
+    private byte adjMessage;
 
     private byte checkMessage;
 
@@ -29,6 +31,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         chainVertexId = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
         message = Message.NON;
+        adjMessage = AdjMessage.NON;
         checkMessage = (byte) 0;
     }
     
@@ -46,6 +49,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             checkMessage |= CheckMessage.NEIGHBER;
             this.neighberNode.set(msg.getNeighberNode());
         }
+        checkMessage |= CheckMessage.ADJMSG;
+        this.adjMessage = msg.getAdjMessage();
         this.message = msg.getMessage();
     }
 
@@ -109,6 +114,15 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     public int getLengthOfChain() {
         return chainVertexId.getKmerLength();
     }
+    
+    public byte getAdjMessage() {
+        return adjMessage;
+    }
+
+    public void setAdjMessage(byte adjMessage) {
+        checkMessage |= CheckMessage.ADJMSG;
+        this.adjMessage = adjMessage;
+    }
 
     public byte getMessage() {
         return message;
@@ -127,6 +141,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             chainVertexId.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
+        if ((checkMessage & CheckMessage.ADJMSG) != 0)
+            out.write(adjMessage);
         out.write(message);
     }
 
@@ -140,6 +156,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             chainVertexId.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
+        if ((checkMessage & CheckMessage.ADJMSG) != 0)
+            adjMessage = in.readByte();
         message = in.readByte();
     }
 

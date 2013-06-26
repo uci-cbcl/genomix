@@ -12,9 +12,9 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.State;
@@ -52,7 +52,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class P4ForPathMergeVertex extends
-        Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
+        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "P4ForPathMergeVertex.kmerSize";
     public static final String ITERATIONS = "P4ForPathMergeVertex.iteration";
     public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
@@ -113,7 +113,7 @@ public class P4ForPathMergeVertex extends
     /**
      * set nextID to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
-    protected boolean setNextInfo(ValueStateWritable value) {
+    protected boolean setNextInfo(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0) {
             nextID.set(value.getFFList().getPosition(0));
             nextHead = isNodeRandomHead(nextID);
@@ -130,7 +130,7 @@ public class P4ForPathMergeVertex extends
     /**
      * set prevID to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
-    protected boolean setPrevInfo(ValueStateWritable value) {
+    protected boolean setPrevInfo(VertexValueWritable value) {
         if (value.getRRList().getCountOfPosition() > 0) {
             prevID.set(value.getRRList().getPosition(0));
             prevHead = isNodeRandomHead(prevID);
@@ -147,7 +147,7 @@ public class P4ForPathMergeVertex extends
     /**
      * get destination vertex
      */
-    public PositionWritable getNextDestVertexId(ValueStateWritable value) {
+    public PositionWritable getNextDestVertexId(VertexValueWritable value) {
         if(value.getFFList().getCountOfPosition() > 0) // #FFList() > 0
             posIterator = value.getFFList().iterator();
         else // #FRList() > 0
@@ -155,7 +155,7 @@ public class P4ForPathMergeVertex extends
         return posIterator.next();
     }
 
-    public PositionWritable getPreDestVertexId(ValueStateWritable value) {
+    public PositionWritable getPreDestVertexId(VertexValueWritable value) {
         if(value.getRFList().getCountOfPosition() > 0) // #RFList() > 0
             posIterator = value.getRFList().iterator();
         else // #RRList() > 0
@@ -166,7 +166,7 @@ public class P4ForPathMergeVertex extends
     /**
      * head send message to all next nodes
      */
-    public void sendMsgToAllNextNodes(ValueStateWritable value) {
+    public void sendMsgToAllNextNodes(VertexValueWritable value) {
         posIterator = value.getFFList().iterator(); // FFList
         while(posIterator.hasNext()){
             destVertexId.set(posIterator.next());
@@ -182,7 +182,7 @@ public class P4ForPathMergeVertex extends
     /**
      * head send message to all previous nodes
      */
-    public void sendMsgToAllPreviousNodes(ValueStateWritable value) {
+    public void sendMsgToAllPreviousNodes(VertexValueWritable value) {
         posIterator = value.getRFList().iterator(); // RFList
         while(posIterator.hasNext()){
             destVertexId.set(posIterator.next());
@@ -271,46 +271,105 @@ public class P4ForPathMergeVertex extends
         else
             return false;
     }
+    
     /**
-     * send update message from predecessor
+     * set adjMessage to successor(from predecessor)
      */
-    public void sendUpMsgFromPredecessor(){
+    public void setSuccessorAdjMsg(){
+        if(getVertexValue().getFFList().getLength() > 0)
+            outgoingMsg.setAdjMessage(AdjMessage.FROMFF);
+        else
+            outgoingMsg.setAdjMessage(AdjMessage.FROMFR);
+    }
+    
+    /**
+     * set adjMessage to predecessor(from successor)
+     */
+    public void setPredecessorAdjMsg(){
+        if(getVertexValue().getRFList().getLength() > 0)
+            outgoingMsg.setAdjMessage(AdjMessage.FROMRF);
+        else
+            outgoingMsg.setAdjMessage(AdjMessage.FROMRR);
+    }
+    
+    /**
+     * send update message to neighber
+     */
+    public void broadcastUpdateMsg(){
         outFlag |= MessageFlag.FROM_PREDECESSOR;
         outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
         if(ifFlipWithPredecessor())
             outFlag |= MessageFlag.FLIP;
         outgoingMsg.setMessage(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
+        setSuccessorAdjMsg();
         sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
-        outUpFlag = (byte)(MessageFlag.FROM_DEADVERTEX | MessageFlag.FROM_SUCCESSOR);
+        outUpFlag = (byte)(MessageFlag.FROM_SUCCESSOR);
         outgoingUpMsg.setNeighberNode(getVertexValue().getOutgoingList());
         if(ifFilpWithSuccessor())
             outFlag |= MessageFlag.FLIP;
         outgoingUpMsg.setMessage(outUpFlag);
         outgoingUpMsg.setSourceVertexId(getVertexId());
+        setPredecessorAdjMsg();
         sendMsg(getPreDestVertexId(getVertexValue()), outgoingUpMsg);
-        deleteVertex(getVertexId());
+        //remove its own neighbers
+        getVertexValue().setIncomingList(null);
+        getVertexValue().setOutgoingList(null);
     }
     
     /**
-     * send update message from successor
+     * This vertex tries to merge with next vertex and send update msg to neighber
+     */
+    public void sendUpMsgFromPredecessor(){
+        getVertexValue().setState(MessageFlag.SHOULD_MERGEWITHNEXT);
+        if(getVertexValue().getFFList().getLength() > 0)
+            getVertexValue().setMergeDest(getVertexValue().getFFList().getPosition(0));
+        else
+            getVertexValue().setMergeDest(getVertexValue().getFRList().getPosition(0));
+        broadcastUpdateMsg();
+    }
+    
+    /**
+     * This vertex tries to merge with next vertex and send update msg to neighber
      */
     public void sendUpMsgFromSuccessor(){
-        outFlag |= MessageFlag.FROM_SUCCESSOR;
-        outgoingUpMsg.setNeighberNode(getVertexValue().getOutgoingList());
-        if(ifFilpWithSuccessor())
-            outFlag |= MessageFlag.FLIP;
-        outgoingMsg.setMessage(outFlag);
-        outgoingMsg.setSourceVertexId(getVertexId());
-        sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
-        outUpFlag = (byte)(MessageFlag.FROM_DEADVERTEX | MessageFlag.FROM_PREDECESSOR);
-        outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
-        if(ifFlipWithPredecessor())
-            outFlag |= MessageFlag.FLIP;
-        outgoingUpMsg.setMessage(outUpFlag);
-        outgoingUpMsg.setSourceVertexId(getVertexId());
-        sendMsg(getNextDestVertexId(getVertexValue()), outgoingUpMsg);
-        deleteVertex(getVertexId());
+        getVertexValue().setState(MessageFlag.SHOULD_MERGEWITHPREV);
+        if(getVertexValue().getRFList().getLength() > 0)
+            getVertexValue().setMergeDest(getVertexValue().getRFList().getPosition(0));
+        else
+            getVertexValue().setMergeDest(getVertexValue().getRRList().getPosition(0));
+        broadcastUpdateMsg();
+    }
+    
+    /**
+     * updateAdjList
+     */
+    public void updateAdjList(){
+        if(incomingMsg.getAdjMessage() == AdjMessage.FROMFF){
+            getVertexValue().setRRList(null); //may replace setNull with remove 
+            if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                getVertexValue().setRFList(incomingMsg.getNeighberNode().getForwardList());
+            else
+                getVertexValue().setRFList(incomingMsg.getNeighberNode().getReverseList());
+        } else if(incomingMsg.getAdjMessage() == AdjMessage.FROMFR){
+            getVertexValue().setFRList(null); //may replace setNull with remove 
+            if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                getVertexValue().setFFList(incomingMsg.getNeighberNode().getForwardList());
+            else
+                getVertexValue().setFFList(incomingMsg.getNeighberNode().getReverseList());
+        } else if(incomingMsg.getAdjMessage() == AdjMessage.FROMRF){
+            getVertexValue().setRFList(null); //may replace setNull with remove 
+            if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                getVertexValue().setRRList(incomingMsg.getNeighberNode().getForwardList());
+            else
+                getVertexValue().setRRList(incomingMsg.getNeighberNode().getReverseList());
+        } else if(incomingMsg.getAdjMessage() == AdjMessage.FROMRR){
+            getVertexValue().setFFList(null); //may replace setNull with remove 
+            if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
+                getVertexValue().setFRList(incomingMsg.getNeighberNode().getForwardList());
+            else
+                getVertexValue().setFRList(incomingMsg.getNeighberNode().getReverseList());
+        }
     }
     
     /**
@@ -318,19 +377,7 @@ public class P4ForPathMergeVertex extends
      */
     public void updateAdjList_MsgPredecessor(){
         if((outFlag & MessageFlag.FLIP) > 0){
-            if(getVertexValue().getFFList().getLength() > 0){
-                getVertexValue().setFFList(null);
-                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
-                    getVertexValue().setFRList(incomingMsg.getNeighberNode().getForwardList());
-                else
-                    getVertexValue().setFRList(incomingMsg.getNeighberNode().getReverseList());
-            } else {
-                getVertexValue().setFRList(null);
-                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
-                    getVertexValue().setFFList(incomingMsg.getNeighberNode().getForwardList());
-                else
-                    getVertexValue().setFFList(incomingMsg.getNeighberNode().getReverseList());
-            }
+            updateAdjList();
         } else {
             getVertexValue().setIncomingList(incomingMsg.getNeighberNode());
         }
@@ -341,19 +388,7 @@ public class P4ForPathMergeVertex extends
      */
     public void updateAdjList_MsgSuccessor(){
         if((outFlag & MessageFlag.FLIP) > 0){
-            if(getVertexValue().getRRList().getLength() > 0){
-                getVertexValue().setRRList(null);
-                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
-                    getVertexValue().setRFList(incomingMsg.getNeighberNode().getForwardList());
-                else
-                    getVertexValue().setRFList(incomingMsg.getNeighberNode().getReverseList());
-            } else {
-                getVertexValue().setRFList(null);
-                if(incomingMsg.getNeighberNode().getForwardList().getLength() > 0)
-                    getVertexValue().setRRList(incomingMsg.getNeighberNode().getForwardList());
-                else
-                    getVertexValue().setRRList(incomingMsg.getNeighberNode().getReverseList());
-            }
+            updateAdjList();
         } else {
             getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
         }
@@ -366,7 +401,7 @@ public class P4ForPathMergeVertex extends
             startSendMsg();
         else if (getSuperstep() == 2)
             initState(msgIterator);
-        else if (getSuperstep() % 2 == 1){
+        else if (getSuperstep() % 4 == 3){
             // Node may be marked as head b/c it's a real head or a real tail
             headFlag = (byte) (State.START_VERTEX & getVertexValue().getState());
             tailFlag = (byte) (State.END_VERTEX & getVertexValue().getState());
@@ -382,7 +417,6 @@ public class P4ForPathMergeVertex extends
             hasNext = setNextInfo(getVertexValue()) && tailFlag == 0;
             hasPrev = setPrevInfo(getVertexValue()) && headFlag == 0;
             if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
-                outFlag |= MessageFlag.FROM_SELF;
                 getVertexValue().setState(outFlag);
                 voteToHalt();
             }
@@ -419,30 +453,47 @@ public class P4ForPathMergeVertex extends
                 }
             }
         }
-        else if (getSuperstep() % 2 == 0){
+        else if (getSuperstep() % 4 == 0){
+            //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 outFlag = incomingMsg.getMessage();
-                if((outFlag & MessageFlag.FROM_DEADVERTEX) > 0){
-                    if((outFlag & MessageFlag.FROM_PREDECESSOR) > 0){
-                        updateAdjList_MsgPredecessor();
-                    } 
-                    else {//Message from successor.
-                        updateAdjList_MsgSuccessor();
-                    }
+                if((outFlag & MessageFlag.FROM_PREDECESSOR) > 0){
+                    updateAdjList_MsgPredecessor();
+                } 
+                else {//Message from successor.
+                    updateAdjList_MsgSuccessor();
                 }
-                else {//Not for update, but for merging
-                    if((outFlag & MessageFlag.FROM_PREDECESSOR) > 0){
-                        //B merge with A's reverse
-                        //append A's reverse to B
-                        //
-                        updateAdjList_MsgPredecessor();
-                    } 
-                    else {//Message from successor
-                        //B merge with A's reverse
-                        //append 
-                        updateAdjList_MsgSuccessor();
-                    }
+            }
+        } else if (getSuperstep() % 4 == 1){
+            //send message to the merge object and kill self
+            if((getVertexValue().getState() | MessageFlag.SHOULD_MERGEWITHNEXT) > 0){
+                setSuccessorAdjMsg();
+                outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
+                sendMsg(getVertexValue().getMergeDest(), outgoingMsg);
+                deleteVertex(getVertexId());
+            } else if((getVertexValue().getState() | MessageFlag.SHOULD_MERGEWITHPREV) > 0){
+                setPredecessorAdjMsg();
+                outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
+                sendMsg(getVertexValue().getMergeDest(), outgoingMsg);
+                deleteVertex(getVertexId());
+            }
+        } else if (getSuperstep() % 4 == 2){
+            //merge kmer
+            while (msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                outFlag = incomingMsg.getMessage();
+                if(outFlag == AdjMessage.FROMFF){
+                    //mergeWithRR(incomingMsg.getChain())
+                }
+                else if(outFlag == AdjMessage.FROMFR){
+                  //mergeWithRF(incomingMsg.getChain())
+                }
+                else if(outFlag == AdjMessage.FROMRF){
+                  //mergeWithFR(incomingMsg.getChain())
+                }
+                else if(outFlag == AdjMessage.FROMRR){
+                  //mergeWithFF(incomingMsg.getChain())
                 }
             }
         }
@@ -458,7 +509,7 @@ public class P4ForPathMergeVertex extends
         job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }
 }

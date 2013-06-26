@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
@@ -50,7 +50,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class NaiveAlgorithmForPathMergeVertex extends
-        Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
+        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
     public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
     public static int kmerSize = -1;
@@ -79,7 +79,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     /**
      * get destination vertex
      */
-    public PositionWritable getNextDestVertexId(ValueStateWritable value) {
+    public PositionWritable getNextDestVertexId(VertexValueWritable value) {
         if(value.getFFList().getCountOfPosition() > 0) // #FFList() > 0
             posIterator = value.getFFList().iterator();
         else // #FRList() > 0
@@ -87,7 +87,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
         return posIterator.next();
     }
 
-    public PositionWritable getPreDestVertexId(ValueStateWritable value) {
+    public PositionWritable getPreDestVertexId(VertexValueWritable value) {
         if(value.getRFList().getCountOfPosition() > 0) // #RFList() > 0
             posIterator = value.getRFList().iterator();
         else // #RRList() > 0
@@ -98,7 +98,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     /**
      * head send message to all next nodes
      */
-    public void sendMsgToAllNextNodes(ValueStateWritable value) {
+    public void sendMsgToAllNextNodes(VertexValueWritable value) {
         posIterator = value.getFFList().iterator(); // FFList
         while(posIterator.hasNext()){
             destVertexId.set(posIterator.next());
@@ -114,7 +114,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     /**
      * head send message to all previous nodes
      */
-    public void sendMsgToAllPreviousNodes(ValueStateWritable value) {
+    public void sendMsgToAllPreviousNodes(VertexValueWritable value) {
         posIterator = value.getRFList().iterator(); // RFList
         while(posIterator.hasNext()){
             destVertexId.set(posIterator.next());
@@ -260,7 +260,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
         job.setVertexOutputFormatClass(NaiveAlgorithmForPathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }
 }

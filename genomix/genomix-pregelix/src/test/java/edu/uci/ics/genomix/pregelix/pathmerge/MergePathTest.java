@@ -12,7 +12,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
@@ -51,7 +51,7 @@ public class MergePathTest {
             Path path = new Path(input + "/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
             KmerBytesWritable key = new KmerBytesWritable(kmerSize);
-            ValueStateWritable value = new ValueStateWritable();
+            VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
                 if (key == null || value == null) {
@@ -91,7 +91,7 @@ public class MergePathTest {
             Path path = new Path(input + "/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
             KmerBytesWritable key = new KmerBytesWritable(kmerSize);
-            ValueStateWritable value = new ValueStateWritable();
+            VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
                 if (key == null || value == null) {
@@ -116,7 +116,7 @@ public class MergePathTest {
             Path path = new Path(input + "/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
             KmerBytesWritable key = new KmerBytesWritable(kmerSize);
-            ValueStateWritable value = new ValueStateWritable();
+            VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
                 if (key == null || value == null) {

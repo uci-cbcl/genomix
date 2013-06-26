@@ -11,7 +11,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -25,11 +25,11 @@ public class ConvertNodeToIdValue {
 
         SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
         SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf, outFile, PositionWritable.class,
-                ValueStateWritable.class, CompressionType.NONE);
+                VertexValueWritable.class, CompressionType.NONE);
         NodeWritable node = new NodeWritable();
         NullWritable value = NullWritable.get();
         PositionWritable outputKey = new PositionWritable();
-        ValueStateWritable outputValue = new ValueStateWritable();
+        VertexValueWritable outputValue = new VertexValueWritable();
 
         while(reader.next(node, value)) {
             System.out.println(node.getNodeID().toString());

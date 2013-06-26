@@ -9,7 +9,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -18,24 +18,24 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class LogAlgorithmForPathMergeInputFormat extends
-        BinaryVertexInputFormat<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
+        BinaryVertexInputFormat<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
 
     @SuppressWarnings("rawtypes")
     class BinaryLoadGraphReader extends
-            BinaryVertexReader<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
+            BinaryVertexReader<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
         private Vertex vertex = null;
         private NodeWritable node = new NodeWritable();
         private PositionWritable vertexId = new PositionWritable(); 
-        private ValueStateWritable vertexValue = new ValueStateWritable();
+        private VertexValueWritable vertexValue = new VertexValueWritable();
 
         public BinaryLoadGraphReader(RecordReader<NodeWritable, NullWritable> recordReader) {
             super(recordReader);
@@ -48,7 +48,7 @@ public class LogAlgorithmForPathMergeInputFormat extends
 
         @SuppressWarnings("unchecked")
         @Override
-        public Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> getCurrentVertex()
+        public Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
                 throws IOException, InterruptedException {
             if (vertex == null)
                 vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());

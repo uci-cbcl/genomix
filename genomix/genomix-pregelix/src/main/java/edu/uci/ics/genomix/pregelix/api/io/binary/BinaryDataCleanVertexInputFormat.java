@@ -13,7 +13,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
 public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
@@ -38,7 +38,7 @@ public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V
     public static abstract class BinaryDataCleanVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<PositionWritable, ValueStateWritable> lineRecordReader;
+        private final RecordReader<PositionWritable, VertexValueWritable> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -48,7 +48,7 @@ public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryDataCleanVertexReader(RecordReader<PositionWritable, ValueStateWritable> recordReader) {
+        public BinaryDataCleanVertexReader(RecordReader<PositionWritable, VertexValueWritable> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -74,7 +74,7 @@ public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<PositionWritable, ValueStateWritable> getRecordReader() {
+        protected RecordReader<PositionWritable, VertexValueWritable> getRecordReader() {
             return lineRecordReader;
         }
 

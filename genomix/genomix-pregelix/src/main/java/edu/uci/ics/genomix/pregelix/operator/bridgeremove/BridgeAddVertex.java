@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 
 /*
  * vertexId: BytesWritable
@@ -47,7 +47,7 @@ import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
  * Naive Algorithm for path merge graph
  */
 public class BridgeAddVertex extends
-        Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
+        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "BridgeRemoveVertex.kmerSize";
     public static final String LENGTH = "BridgeRemoveVertex.length";
     public static int kmerSize = -1;
@@ -77,7 +77,7 @@ public class BridgeAddVertex extends
                 vertex.getMsgList().clear();
                 vertex.getEdges().clear();
                 PositionWritable vertexId = new PositionWritable();
-                ValueStateWritable vertexValue = new ValueStateWritable();
+                VertexValueWritable vertexValue = new VertexValueWritable();
                 /**
                  * set the src vertex id
                  */
@@ -116,7 +116,7 @@ public class BridgeAddVertex extends
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }
 }

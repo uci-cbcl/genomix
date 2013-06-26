@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
@@ -49,7 +49,7 @@ public abstract class BinaryDataCleanVertexOutputFormat<I extends WritableCompar
         /** Context passed to initialize */
         private TaskAttemptContext context;
         /** Internal line record writer */
-        private final RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter;
+        private final RecordWriter<PositionWritable, VertexValueWritable> lineRecordWriter;
 
         /**
          * Initialize with the LineRecordWriter.
@@ -57,7 +57,7 @@ public abstract class BinaryDataCleanVertexOutputFormat<I extends WritableCompar
          * @param lineRecordWriter
          *            Line record writer from SequenceFileOutputFormat
          */
-        public BinaryVertexWriter(RecordWriter<PositionWritable, ValueStateWritable> lineRecordWriter) {
+        public BinaryVertexWriter(RecordWriter<PositionWritable, VertexValueWritable> lineRecordWriter) {
             this.lineRecordWriter = lineRecordWriter;
         }
 
@@ -76,7 +76,7 @@ public abstract class BinaryDataCleanVertexOutputFormat<I extends WritableCompar
          * 
          * @return Record writer to be used for writing.
          */
-        public RecordWriter<PositionWritable, ValueStateWritable> getRecordWriter() {
+        public RecordWriter<PositionWritable, VertexValueWritable> getRecordWriter() {
             return lineRecordWriter;
         }
 
