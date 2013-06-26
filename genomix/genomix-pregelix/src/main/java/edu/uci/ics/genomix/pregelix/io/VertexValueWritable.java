@@ -7,22 +7,25 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 
-public class ValueStateWritable implements WritableComparable<ValueStateWritable> {
+public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
 
     private AdjacencyListWritable incomingList;
     private AdjacencyListWritable outgoingList;
     private byte state;
     private KmerBytesWritable mergeChain;
+    private PositionWritable mergeDest;
 
-    public ValueStateWritable() {
+    public VertexValueWritable() {
         incomingList = new AdjacencyListWritable();
         outgoingList = new AdjacencyListWritable();
         state = State.NON_VERTEX;
         mergeChain = new KmerBytesWritable(0);
+        mergeDest = new PositionWritable();
     }
 
-    public ValueStateWritable(PositionListWritable forwardForwardList, PositionListWritable forwardReverseList,
+    public VertexValueWritable(PositionListWritable forwardForwardList, PositionListWritable forwardReverseList,
             PositionListWritable reverseForwardList, PositionListWritable reverseReverseList,
             byte state, KmerBytesWritable mergeChain) {
         set(forwardForwardList, forwardReverseList, 
@@ -41,7 +44,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
         this.mergeChain.set(mergeChain);
     }
     
-    public void set(ValueStateWritable value) {
+    public void set(VertexValueWritable value) {
         set(value.getFFList(),value.getFRList(),value.getRFList(),value.getRRList(),value.getState(),
                 value.getMergeChain());
     }
@@ -113,6 +116,14 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
     public void setMergeChain(KmerBytesWritable mergeChain) {
         this.mergeChain.set(mergeChain);
     }
+    
+    public PositionWritable getMergeDest() {
+        return mergeDest;
+    }
+
+    public void setMergeDest(PositionWritable mergeDest) {
+        this.mergeDest = mergeDest;
+    }
 
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -120,6 +131,7 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
         outgoingList.readFields(in);
         state = in.readByte();
         mergeChain.readFields(in);
+        mergeDest.readFields(in);
     }
 
     @Override
@@ -128,10 +140,11 @@ public class ValueStateWritable implements WritableComparable<ValueStateWritable
         outgoingList.write(out);
         out.writeByte(state);
         mergeChain.write(out);
+        mergeDest.write(out);
     }
 
     @Override
-    public int compareTo(ValueStateWritable o) {
+    public int compareTo(VertexValueWritable o) {
         return 0;
     }
 

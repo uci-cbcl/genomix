@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MergeBubbleMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
@@ -51,7 +51,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class BubbleMergeVertex extends
-        Vertex<PositionWritable, ValueStateWritable, NullWritable, MergeBubbleMessageWritable> {
+        Vertex<PositionWritable, VertexValueWritable, NullWritable, MergeBubbleMessageWritable> {
     public static final String KMER_SIZE = "BubbleMergeVertex.kmerSize";
     public static final String ITERATIONS = "BubbleMergeVertex.iteration";
     public static int kmerSize = -1;
@@ -81,7 +81,7 @@ public class BubbleMergeVertex extends
     /**
      * get destination vertex
      */
-    public PositionWritable getNextDestVertexId(ValueStateWritable value) {
+    public PositionWritable getNextDestVertexId(VertexValueWritable value) {
         if(value.getFFList().getCountOfPosition() > 0) // #FFList() > 0
             posIterator = value.getFFList().iterator();
         else // #FRList() > 0
@@ -92,7 +92,7 @@ public class BubbleMergeVertex extends
     /**
      * head send message to all next nodes
      */
-    public void sendMsgToAllNextNodes(ValueStateWritable value) {
+    public void sendMsgToAllNextNodes(VertexValueWritable value) {
         posIterator = value.getFFList().iterator(); // FFList
         while(posIterator.hasNext()){
             destVertexId.set(posIterator.next());
@@ -299,7 +299,7 @@ public class BubbleMergeVertex extends
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }
 }

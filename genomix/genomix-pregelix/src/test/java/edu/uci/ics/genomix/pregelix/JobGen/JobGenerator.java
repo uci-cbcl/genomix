@@ -10,7 +10,7 @@ import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
@@ -34,7 +34,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -51,7 +51,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class); //LogAlgorithmForPathMergeOutputFormat
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -67,7 +67,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, 3);
         job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, 0.3f);
         job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, 2);
@@ -86,7 +86,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(TipAddVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -103,7 +103,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -120,7 +120,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(BridgeAddVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -137,7 +137,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -154,7 +154,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(BubbleAddVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -171,7 +171,7 @@ public class JobGenerator {
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setInt(BubbleMergeVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }

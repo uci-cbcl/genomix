@@ -10,7 +10,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
@@ -46,7 +46,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  *  Remove tip or single node when l > constant
  */
 public class TipRemoveVertex extends
-        Vertex<PositionWritable, ValueStateWritable, NullWritable, MessageWritable> {
+        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "TipRemoveVertex.kmerSize";
     public static final String LENGTH = "TipRemoveVertex.length";
     public static int kmerSize = -1;
@@ -74,7 +74,7 @@ public class TipRemoveVertex extends
     /**
      * get destination vertex
      */
-    public PositionWritable getNextDestVertexId(ValueStateWritable value) {
+    public PositionWritable getNextDestVertexId(VertexValueWritable value) {
         if(value.getFFList().getCountOfPosition() > 0) // #FFList() > 0
             posIterator = value.getFFList().iterator();
         else // #FRList() > 0
@@ -82,7 +82,7 @@ public class TipRemoveVertex extends
         return posIterator.next();
     }
 
-    public PositionWritable getPreDestVertexId(ValueStateWritable value) {
+    public PositionWritable getPreDestVertexId(VertexValueWritable value) {
         if(value.getRFList().getCountOfPosition() > 0) // #RFList() > 0
             posIterator = value.getRFList().iterator();
         else // #RRList() > 0
@@ -182,7 +182,7 @@ public class TipRemoveVertex extends
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
-        job.setOutputValueClass(ValueStateWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }
 }

@@ -1,6 +1,6 @@
 package edu.uci.ics.genomix.pregelix.util;
 
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class VertexUtil {
@@ -9,7 +9,7 @@ public class VertexUtil {
      * 
      * @param vertexValue
      */
-    public static boolean isPathVertex(ValueStateWritable value) {
+    public static boolean isPathVertex(VertexValueWritable value) {
         return value.inDegree() == 1 && value.outDegree() == 1;
     }
 
@@ -18,7 +18,7 @@ public class VertexUtil {
      * 
      * @param vertexValue
      */
-    public static boolean isHeadVertex(ValueStateWritable value) {
+    public static boolean isHeadVertex(VertexValueWritable value) {
         return value.outDegree() > 0 && !isPathVertex(value) && !isHeadWithoutIndegree(value);
     }
 
@@ -27,21 +27,21 @@ public class VertexUtil {
      * 
      * @param vertexValue
      */
-    public static boolean isRearVertex(ValueStateWritable value) {
+    public static boolean isRearVertex(VertexValueWritable value) {
         return value.inDegree() > 0 && !isPathVertex(value) && !isRearWithoutOutdegree(value);
     }
 
     /**
      * Head Vertex without indegree: indegree = 0, outdegree = 1
      */
-    public static boolean isHeadWithoutIndegree(ValueStateWritable value){
+    public static boolean isHeadWithoutIndegree(VertexValueWritable value){
         return value.inDegree() == 0 && value.outDegree() == 1;
     }
     
     /**
      * Rear Vertex without outdegree: indegree = 1, outdegree = 0
      */
-    public static boolean isRearWithoutOutdegree(ValueStateWritable value){
+    public static boolean isRearWithoutOutdegree(VertexValueWritable value){
         return value.inDegree() == 1 && value.outDegree() == 0;
     }
     
@@ -65,32 +65,32 @@ public class VertexUtil {
     /**
      * check if vertex is a tip
      */
-    public static boolean isIncomingTipVertex(ValueStateWritable value){
+    public static boolean isIncomingTipVertex(VertexValueWritable value){
     	return value.inDegree() == 0 && value.outDegree() == 1;
     }
     
-    public static boolean isOutgoingTipVertex(ValueStateWritable value){
+    public static boolean isOutgoingTipVertex(VertexValueWritable value){
     	return value.inDegree() == 1 && value.outDegree() == 0;
     }
     
     /**
      * check if vertex is single
      */
-    public static boolean isSingleVertex(ValueStateWritable value){
+    public static boolean isSingleVertex(VertexValueWritable value){
         return value.inDegree() == 0 && value.outDegree() == 0;
     }
     
     /**
      * check if vertex is upbridge
      */
-    public static boolean isUpBridgeVertex(ValueStateWritable value){
+    public static boolean isUpBridgeVertex(VertexValueWritable value){
         return value.inDegree() == 1 && value.outDegree() > 1;
     }
     
     /**
      * check if vertex is downbridge
      */
-    public static boolean isDownBridgeVertex(ValueStateWritable value){
+    public static boolean isDownBridgeVertex(VertexValueWritable value){
         return value.inDegree() > 1 && value.outDegree() == 1;
     }
 }

@@ -12,7 +12,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
-import edu.uci.ics.genomix.pregelix.io.ValueStateWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -31,7 +31,7 @@ public class GenerateTextFile {
             //NodeWritable key = new NodeWritable(kmerSize);
             //NullWritable value = NullWritable.get();
             PositionWritable key = new PositionWritable();
-            ValueStateWritable value = new ValueStateWritable();
+            VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
                 if (key == null) {
@@ -54,7 +54,7 @@ public class GenerateTextFile {
             Path path = new Path("/home/anbangx/genomix_result/final_naive/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
             KmerBytesWritable key = new KmerBytesWritable(55);
-            ValueStateWritable value = new ValueStateWritable();
+            VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
                 if (key == null || value == null) {
@@ -78,7 +78,7 @@ public class GenerateTextFile {
             Path path = new Path("/home/anbangx/genomix_result/improvelog2/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
             KmerBytesWritable key = new KmerBytesWritable(55);
-            ValueStateWritable value = new ValueStateWritable();
+            VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
                 if (key == null || value == null) {
