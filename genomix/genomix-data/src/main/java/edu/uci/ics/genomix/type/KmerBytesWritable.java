@@ -384,6 +384,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * e.g. AAGCTAA merge with GGTTGTT, if the initial kmerSize = 3
      * then it will return AAGCTAACAACC
      * 
+     * A merge B =>  A B~
+     * 
      * @param initialKmerSize
      *            : the initial kmerSize
      * @param kmer

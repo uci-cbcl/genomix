@@ -28,6 +28,16 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
      */
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
+
+    // merge/update directions
+    public static class DirectionFlag {
+        public static final byte DIR_FF = 0b00 << 0;
+        public static final byte DIR_FR = 0b01 << 0;
+        public static final byte DIR_RF = 0b10 << 0;
+        public static final byte DIR_RR = 0b11 << 0;
+        public static final byte DIR_MASK = 0b11 << 0;
+    }
+
     private PositionWritable nodeID;
     private PositionListWritable forwardForwardList;
     private PositionListWritable forwardReverseList;
@@ -58,9 +68,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         reverseReverseList.set(RRList);
         kmer.set(kmer);
     }
-    
+
     public void set(PositionWritable nodeID, PositionListWritable FFList, PositionListWritable FRList,
-            PositionListWritable RFList, PositionListWritable RRList, KmerBytesWritable kmer){
+            PositionListWritable RFList, PositionListWritable RRList, KmerBytesWritable kmer) {
         this.nodeID.set(nodeID);
         this.forwardForwardList.set(FFList);
         this.forwardReverseList.set(FRList);
@@ -104,6 +114,21 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     public PositionListWritable getRRList() {
         return reverseReverseList;
+    }
+
+    public PositionListWritable getListFromDir(byte dir) {
+        switch (dir) {
+            case DirectionFlag.DIR_FF:
+                return getFFList();
+            case DirectionFlag.DIR_FR:
+                return getFRList();
+            case DirectionFlag.DIR_RF:
+                return getRFList();
+            case DirectionFlag.DIR_RR:
+                return getRRList();
+            default:
+                throw new RuntimeException("Unrecognized direction in getListFromDir: " + dir);
+        }
     }
 
     public PositionWritable getNodeID() {
