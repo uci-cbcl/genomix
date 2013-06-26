@@ -25,7 +25,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MergeMessageFlag;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4;
-import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4.MergePathsH4Mapper;
+import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4.H4UpdatesMapper;
 import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -130,7 +130,7 @@ public class RemoveTips extends Configured implements Tool {
         conf.setOutputKeyClass(PositionWritable.class);
         conf.setOutputValueClass(NodeWithFlagWritable.class);
 
-        conf.setMapperClass(MergePathsH4Mapper.class);
+        conf.setMapperClass(H4UpdatesMapper.class);
         conf.setReducerClass(MergePathsH4Reducer.class);
 
         FileSystem.get(conf).delete(new Path(outputPath), true);
