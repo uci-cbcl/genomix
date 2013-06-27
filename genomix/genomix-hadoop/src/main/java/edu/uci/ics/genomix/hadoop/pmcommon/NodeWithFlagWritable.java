@@ -143,10 +143,12 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
         } else if ((updateFlag & MessageFlag.MSG_UPDATE_MERGE) == MessageFlag.MSG_UPDATE_MERGE) {
             // this message wants to merge node with updateNode.
             // the direction flag indicates how the merge should take place.
+            // TODO send update or remove edge that I merge with
             switch (updateFlag & MessageFlag.DIR_MASK) {
                 case MessageFlag.DIR_FF:
                     node.getKmer().mergeWithFFKmer(kmerSize, updateNode.getKmer());
                     node.getFFList().set(updateNode.getFFList());
+                    // TODO not just FF list here-- FR as well
                     break;
                 case MessageFlag.DIR_FR:
                     // FIXME not sure if this should be reverse-complement or just reverse...
@@ -183,6 +185,10 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
     public NodeWithFlagWritable(byte flag, NodeWritable node) {
         this(node.getKmer().getKmerLength());
         set(flag, node);
+    }
+
+    public NodeWithFlagWritable(NodeWithFlagWritable other) {
+        this(other.flag, other.node);
     }
 
     public void set(NodeWithFlagWritable right) {

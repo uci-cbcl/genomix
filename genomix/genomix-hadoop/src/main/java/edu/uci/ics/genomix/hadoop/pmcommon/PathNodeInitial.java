@@ -61,7 +61,7 @@ public class PathNodeInitial extends Configured implements Tool {
 
     private static byte NEAR_PATH = MessageFlag.EXTRA_FLAG; // special-case extra flag for us
 
-    private static void sendOutputToNextNeighbors(NodeWritable node, NodeWithFlagWritable outputValue,
+    public static void sendOutputToNextNeighbors(NodeWritable node, NodeWithFlagWritable outputValue,
             OutputCollector<PositionWritable, NodeWithFlagWritable> collector) throws IOException {
         Iterator<PositionWritable> posIterator = node.getFFList().iterator(); // FFList
         while (posIterator.hasNext()) {
@@ -73,7 +73,7 @@ public class PathNodeInitial extends Configured implements Tool {
         }
     }
 
-    private static void sendOutputToPreviousNeighbors(NodeWritable node, NodeWithFlagWritable outputValue,
+    public static void sendOutputToPreviousNeighbors(NodeWritable node, NodeWithFlagWritable outputValue,
             OutputCollector<PositionWritable, NodeWithFlagWritable> collector) throws IOException {
         Iterator<PositionWritable> posIterator = node.getRRList().iterator(); // RRList
         while (posIterator.hasNext()) {
@@ -179,7 +179,7 @@ public class PathNodeInitial extends Configured implements Tool {
 
         /*
          * Segregate nodes into three bins:
-         *   1. mergeable nodes (marked as H/T)
+         *   1. mergeable nodes (maybe marked H or T)
          *   2. non-mergeable nodes that are candidates for updates
          *   3. non-mergeable nodes that are not path neighbors and won't be updated
          * 

@@ -117,7 +117,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public PositionListWritable getListFromDir(byte dir) {
-        switch (dir) {
+        switch (dir & DirectionFlag.DIR_MASK) {
             case DirectionFlag.DIR_FF:
                 return getFFList();
             case DirectionFlag.DIR_FR:
