@@ -181,7 +181,7 @@ public class BubbleMergeVertex extends
     public void compute(Iterator<MergeBubbleMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
-            if(VertexUtil.isHeadVertex(getVertexValue())
+            if(VertexUtil.isHeadVertexWithIndegree(getVertexValue())
                     || VertexUtil.isHeadWithoutIndegree(getVertexValue())){
                 outgoingMsg.setMessage(AdjMessage.NON);
                 outgoingMsg.setSourceVertexId(getVertexId());

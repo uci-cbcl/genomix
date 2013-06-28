@@ -97,9 +97,9 @@ public class TipRemoveVertex extends
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
             	if(getVertexValue().getLengthOfMergeChain() <= length){
             		if(getVertexValue().getFFList().getCountOfPosition() > 0)
-            			outgoingMsg.setMessage(AdjMessage.FROMFF);
+            			outgoingMsg.setFlag(AdjMessage.FROMFF);
             		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
-            			outgoingMsg.setMessage(AdjMessage.FROMFR);
+            			outgoingMsg.setFlag(AdjMessage.FROMFR);
             		outgoingMsg.setSourceVertexId(getVertexId());
             		destVertexId.set(getNextDestVertexId(getVertexValue()));
             		sendMsg(destVertexId, outgoingMsg);
@@ -109,9 +109,9 @@ public class TipRemoveVertex extends
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
                 if(getVertexValue().getLengthOfMergeChain() <= length){
                     if(getVertexValue().getRFList().getCountOfPosition() > 0)
-                        outgoingMsg.setMessage(AdjMessage.FROMRF);
+                        outgoingMsg.setFlag(AdjMessage.FROMRF);
                     else if(getVertexValue().getRRList().getCountOfPosition() > 0)
-                        outgoingMsg.setMessage(AdjMessage.FROMRR);
+                        outgoingMsg.setFlag(AdjMessage.FROMRR);
                     outgoingMsg.setSourceVertexId(getVertexId());
                     destVertexId.set(getPreDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
@@ -126,7 +126,7 @@ public class TipRemoveVertex extends
         else if(getSuperstep() == 2){
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if(incomingMsg.getMessage() == AdjMessage.FROMFF){
+                if(incomingMsg.getFlag() == AdjMessage.FROMFF){
                     //remove incomingMsg.getSourceId from RR positionList
                     iterator = getVertexValue().getRRList().iterator();
                     while(iterator.hasNext()){
@@ -136,7 +136,7 @@ public class TipRemoveVertex extends
                             break;
                         }
                     }
-                } else if(incomingMsg.getMessage() == AdjMessage.FROMFR){
+                } else if(incomingMsg.getFlag() == AdjMessage.FROMFR){
                     //remove incomingMsg.getSourceId from RF positionList
                     iterator = getVertexValue().getRFList().iterator();
                     while(iterator.hasNext()){
@@ -146,7 +146,7 @@ public class TipRemoveVertex extends
                             break;
                         }
                     }
-                } else if(incomingMsg.getMessage() == AdjMessage.FROMRF){
+                } else if(incomingMsg.getFlag() == AdjMessage.FROMRF){
                     //remove incomingMsg.getSourceId from FR positionList
                     iterator = getVertexValue().getFRList().iterator();
                     while(iterator.hasNext()){
@@ -156,7 +156,7 @@ public class TipRemoveVertex extends
                             break;
                         }
                     }
-                } else{ //incomingMsg.getMessage() == AdjMessage.FROMRR
+                } else{ //incomingMsg.getFlag() == AdjMessage.FROMRR
                     //remove incomingMsg.getSourceId from FF positionList
                     iterator = getVertexValue().getFFList().iterator();
                     while(iterator.hasNext()){

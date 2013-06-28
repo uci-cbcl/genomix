@@ -1,7 +1,9 @@
 package edu.uci.ics.genomix.pregelix.util;
 
+import edu.uci.ics.genomix.pregelix.io.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 
 public class VertexUtil {
     /**
@@ -18,7 +20,7 @@ public class VertexUtil {
      * 
      * @param vertexValue
      */
-    public static boolean isHeadVertex(VertexValueWritable value) {
+    public static boolean isHeadVertexWithIndegree(VertexValueWritable value) {
         return value.outDegree() > 0 && !isPathVertex(value) && !isHeadWithoutIndegree(value);
     }
 
@@ -27,7 +29,7 @@ public class VertexUtil {
      * 
      * @param vertexValue
      */
-    public static boolean isRearVertex(VertexValueWritable value) {
+    public static boolean isRearVertexWithOutdegree(VertexValueWritable value) {
         return value.inDegree() > 0 && !isPathVertex(value) && !isRearWithoutOutdegree(value);
     }
 
@@ -92,5 +94,15 @@ public class VertexUtil {
      */
     public static boolean isDownBridgeVertex(VertexValueWritable value){
         return value.inDegree() > 1 && value.outDegree() == 1;
+    }
+    
+    /**
+     * get nodeId from Ad
+     */
+    public static PositionWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
+        if(adj.getForwardList().getCountOfPosition() > 0)
+            return adj.getForwardList().getPosition(0);
+        else 
+            return adj.getReverseList().getPosition(0);
     }
 }

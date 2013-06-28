@@ -21,8 +21,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private PositionWritable sourceVertexId;
     private KmerBytesWritable chainVertexId;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
-    private byte message;
-    private byte adjMessage;
+    private byte flag;
 
     private byte checkMessage;
 
@@ -30,8 +29,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         sourceVertexId = new PositionWritable();
         chainVertexId = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
-        message = Message.NON;
-        adjMessage = AdjMessage.NON;
+        flag = Message.NON;
         checkMessage = (byte) 0;
     }
     
@@ -50,8 +48,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             this.neighberNode.set(msg.getNeighberNode());
         }
         checkMessage |= CheckMessage.ADJMSG;
-        this.adjMessage = msg.getAdjMessage();
-        this.message = msg.getMessage();
+        this.flag = msg.getFlag();
     }
 
     public void set(PositionWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
@@ -68,14 +65,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             checkMessage |= CheckMessage.NEIGHBER;
             this.neighberNode.set(neighberNode);
         }
-        this.message = message;
+        this.flag = message;
     }
 
     public void reset() {
         checkMessage = 0;
         chainVertexId.reset(1);
         neighberNode.reset();
-        message = Message.NON;
+        flag = Message.NON;
     }
 
     public PositionWritable getSourceVertexId() {
@@ -114,22 +111,13 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     public int getLengthOfChain() {
         return chainVertexId.getKmerLength();
     }
-    
-    public byte getAdjMessage() {
-        return adjMessage;
+
+    public byte getFlag() {
+        return flag;
     }
 
-    public void setAdjMessage(byte adjMessage) {
-        checkMessage |= CheckMessage.ADJMSG;
-        this.adjMessage = adjMessage;
-    }
-
-    public byte getMessage() {
-        return message;
-    }
-
-    public void setMessage(byte message) {
-        this.message = message;
+    public void setFlag(byte message) {
+        this.flag = message;
     }
 
     @Override
@@ -141,9 +129,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             chainVertexId.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
-        if ((checkMessage & CheckMessage.ADJMSG) != 0)
-            out.write(adjMessage);
-        out.write(message);
+        out.write(flag);
     }
 
     @Override
@@ -156,9 +142,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             chainVertexId.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
-        if ((checkMessage & CheckMessage.ADJMSG) != 0)
-            adjMessage = in.readByte();
-        message = in.readByte();
+        flag = in.readByte();
     }
 
     @Override

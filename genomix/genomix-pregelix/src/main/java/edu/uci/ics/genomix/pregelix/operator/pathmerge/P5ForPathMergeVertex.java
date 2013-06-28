@@ -51,11 +51,11 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 /**
  * Naive Algorithm for path merge graph
  */
-public class P4ForPathMergeVertex extends
+public class P5ForPathMergeVertex extends
         Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "P4ForPathMergeVertex.kmerSize";
-    public static final String ITERATIONS = "P4ForPathMergeVertex.iteration";
-    public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
+    public static final String KMER_SIZE = "P5ForPathMergeVertex.kmerSize";
+    public static final String ITERATIONS = "P5ForPathMergeVertex.iteration";
+    public static final String RANDSEED = "P5ForPathMergeVertex.randSeed";
     public static final String PROBBEINGRANDOMHEAD = "P4ForPathMergeVertex.probBeingRandomHead";
     public static int kmerSize = -1;
     private int maxIteration = -1;
@@ -75,7 +75,6 @@ public class P4ForPathMergeVertex extends
     private byte headFlag;
     private byte tailFlag;
     private byte outFlag;
-    private byte selfFlag;
     
     private MessageWritable incomingMsg = new MessageWritable();
     private MessageWritable outgoingMsg = new MessageWritable();
@@ -100,7 +99,6 @@ public class P4ForPathMergeVertex extends
         curHead = false;
         nextHead = false;
         prevHead = false;
-        outFlag = (byte)0;
         outgoingMsg.reset();
     }
 
@@ -200,22 +198,22 @@ public class P4ForPathMergeVertex extends
      */
     public void startSendMsg() {
         if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())) {
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
+            outgoingMsg.setFlag(Message.START);
             sendMsgToAllNextNodes(getVertexValue());
             voteToHalt();
         }
         if (VertexUtil.isRearVertexWithOutdegree(getVertexValue())) {
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
+            outgoingMsg.setFlag(Message.END);
             sendMsgToAllPreviousNodes(getVertexValue());
             voteToHalt();
         }
         if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
+            outgoingMsg.setFlag(Message.START);
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
         }
         if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
+            outgoingMsg.setFlag(Message.END);
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
         }
@@ -233,9 +231,23 @@ public class P4ForPathMergeVertex extends
                 voteToHalt();
             } else {
                 incomingMsg = msgIterator.next();
-                getVertexValue().setState(MessageFlag.IS_HEAD);
+                setState();
             }
         }
+    }
+
+    /**
+     * set vertex state
+     */
+    public void setState() {
+        if (incomingMsg.getFlag() == Message.START) {
+            getVertexValue().setState(MessageFlag.IS_HEAD); //State.START_VERTEX
+        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
+            getVertexValue().setState(MessageFlag.IS_TAIL);
+            getVertexValue().setMergeChain(getVertexValue().getMergeChain());
+            //voteToHalt();
+        } //else
+            //voteToHalt();
     }
     
     /**
@@ -283,8 +295,6 @@ public class P4ForPathMergeVertex extends
      * @throws IOException 
      */
     public void broadcastUpdateMsg(){
-        if((getVertexValue().getState() & MessageFlag.IS_HEAD) > 0)
-            outFlag |= MessageFlag.IS_HEAD;
         switch(getVertexValue().getState() & 0b0001){
             case MessageFlag.SHOULD_MERGEWITHPREV:
                 setSuccessorAdjMsg();
@@ -302,37 +312,6 @@ public class P4ForPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
-                break; 
-        }
-    }
-    
-    /**
-     * send merge message to neighber
-     * @throws IOException 
-     */
-    public void broadcastMergeMsg(){
-        if((getVertexValue().getState() & MessageFlag.IS_HEAD) > 0)
-            outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & 0b0001){
-            case MessageFlag.SHOULD_MERGEWITHNEXT:
-                setSuccessorAdjMsg();
-                if(ifFlipWithPredecessor())
-                    outFlag |= MessageFlag.FLIP;
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
-                sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
-                break;
-            case MessageFlag.SHOULD_MERGEWITHPREV:
-                setPredecessorAdjMsg();
-                if(ifFilpWithSuccessor())
-                    outFlag |= MessageFlag.FLIP;
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
                 sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
                 break; 
         }
@@ -503,33 +482,12 @@ public class P4ForPathMergeVertex extends
                 }
             }
         }
-        else if (getSuperstep() % 4 == 0){
-            //update neighber
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                processUpdate();
-            }
-        } else if (getSuperstep() % 4 == 1){
-            //send message to the merge object and kill self
-            broadcastMergeMsg();
-            deleteVertex(getVertexId());
-        } else if (getSuperstep() % 4 == 2){
-            //merge kmer
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                processMerge();
-
-                headFlag = (byte) (MessageFlag.IS_HEAD & incomingMsg.getFlag());
-                selfFlag = (byte) (MessageFlag.IS_HEAD & getVertexValue().getState());
-                if((headFlag & selfFlag) > 0)
-                    voteToHalt();
-            }
-        }
+      
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(P4ForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(P4ForPathMergeVertex.class);
+        PregelixJob job = new PregelixJob(P5ForPathMergeVertex.class.getSimpleName());
+        job.setVertexClass(P5ForPathMergeVertex.class);
         /**
          * BinaryInput and BinaryOutput
          */

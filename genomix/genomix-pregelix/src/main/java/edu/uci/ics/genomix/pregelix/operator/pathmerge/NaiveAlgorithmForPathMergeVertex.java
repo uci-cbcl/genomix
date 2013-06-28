@@ -131,20 +131,20 @@ public class NaiveAlgorithmForPathMergeVertex extends
      * start sending message
      */
     public void startSendMsg() {
-        if (VertexUtil.isHeadVertex(getVertexValue())) {
-            outgoingMsg.setMessage(Message.START);
+        if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())) {
+            outgoingMsg.setFlag(Message.START);
             sendMsgToAllNextNodes(getVertexValue());
         }
-        if (VertexUtil.isRearVertex(getVertexValue())) {
-            outgoingMsg.setMessage(Message.END);
+        if (VertexUtil.isRearVertexWithOutdegree(getVertexValue())) {
+            outgoingMsg.setFlag(Message.END);
             sendMsgToAllPreviousNodes(getVertexValue());
         }
         if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
-            outgoingMsg.setMessage(Message.START);
+            outgoingMsg.setFlag(Message.START);
             sendMsg(getVertexId(), outgoingMsg); //send to itself
         }
         if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
-            outgoingMsg.setMessage(Message.END);
+            outgoingMsg.setFlag(Message.END);
             sendMsg(getVertexId(), outgoingMsg); //send to itself
         }
     }
@@ -170,9 +170,9 @@ public class NaiveAlgorithmForPathMergeVertex extends
      * set vertex state
      */
     public void setState() {
-        if (incomingMsg.getMessage() == Message.START) {
+        if (incomingMsg.getFlag() == Message.START) {
             getVertexValue().setState(State.START_VERTEX);
-        } else if (incomingMsg.getMessage() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
+        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
             getVertexValue().setState(State.END_VERTEX);
             voteToHalt();
         } else
@@ -201,7 +201,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
         } else {
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if (incomingMsg.getMessage() != Message.STOP) {
+                if (incomingMsg.getFlag() != Message.STOP) {
                     mergeChainVertex();
                     outgoingMsg.setSourceVertexId(getVertexId());
                     destVertexId.set(getNextDestVertexId(getVertexValue()));
@@ -224,7 +224,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
         outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
         outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
         if (getVertexValue().getState() == State.END_VERTEX)
-            outgoingMsg.setMessage(Message.STOP);
+            outgoingMsg.setFlag(Message.STOP);
         destVertexId.set(incomingMsg.getSourceVertexId());
         sendMsg(destVertexId, outgoingMsg);
     }

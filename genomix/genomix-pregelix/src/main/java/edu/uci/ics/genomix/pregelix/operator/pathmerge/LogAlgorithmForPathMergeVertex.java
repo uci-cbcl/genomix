@@ -126,23 +126,23 @@ public class LogAlgorithmForPathMergeVertex extends
      * start sending message
      */
     public void startSendMsg() {
-        if (VertexUtil.isHeadVertex(getVertexValue())) {
-            outgoingMsg.setMessage(Message.START);
+        if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())) {
+            outgoingMsg.setFlag(Message.START);
             sendMsgToAllNextNodes(getVertexValue());
             voteToHalt();
         }
-        if (VertexUtil.isRearVertex(getVertexValue())) {
-            outgoingMsg.setMessage(Message.END);
+        if (VertexUtil.isRearVertexWithOutdegree(getVertexValue())) {
+            outgoingMsg.setFlag(Message.END);
             sendMsgToAllPreviousNodes(getVertexValue());
             voteToHalt();
         }
         if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
-            outgoingMsg.setMessage(Message.START);
+            outgoingMsg.setFlag(Message.START);
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
         }
         if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
-            outgoingMsg.setMessage(Message.END);
+            outgoingMsg.setFlag(Message.END);
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
         }
@@ -169,10 +169,10 @@ public class LogAlgorithmForPathMergeVertex extends
      * set vertex state
      */
     public void setState() {
-        if (incomingMsg.getMessage() == Message.START) {
+        if (incomingMsg.getFlag() == Message.START) {
             getVertexValue().setState(State.START_VERTEX);
             //getVertexValue().setMergeChain(null);
-        } else if (incomingMsg.getMessage() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
+        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
             getVertexValue().setState(State.END_VERTEX);
             getVertexValue().setMergeChain(getVertexValue().getMergeChain());
             voteToHalt();
@@ -185,11 +185,11 @@ public class LogAlgorithmForPathMergeVertex extends
      */
     public void sendOutMsg() {
         if (getVertexValue().getState() == State.START_VERTEX) {
-            outgoingMsg.setMessage(Message.START);
+            outgoingMsg.setFlag(Message.START);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
         } else if (getVertexValue().getState() != State.END_VERTEX) {
-            outgoingMsg.setMessage(Message.NON);
+            outgoingMsg.setFlag(Message.NON);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
         }
@@ -205,7 +205,7 @@ public class LogAlgorithmForPathMergeVertex extends
             if (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 if (mergeChainVertex()) {
-                    if (incomingMsg.getMessage() == Message.END) {
+                    if (incomingMsg.getFlag() == Message.END) {
                         if (getVertexValue().getState() == State.START_VERTEX) {
                             getVertexValue().setState(State.FINAL_VERTEX);
                             //String source = getVertexValue().getMergeChain().toString();
@@ -228,10 +228,10 @@ public class LogAlgorithmForPathMergeVertex extends
             outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
             outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
             if (getVertexValue().getState() == State.END_VERTEX)
-                outgoingMsg.setMessage(Message.END);
+                outgoingMsg.setFlag(Message.END);
             sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
 
-            if (incomingMsg.getMessage() == Message.START)
+            if (incomingMsg.getFlag() == Message.START)
                 deleteVertex(getVertexId());
         } else {
             if (getVertexValue().getState() != State.START_VERTEX && getVertexValue().getState() != State.END_VERTEX)

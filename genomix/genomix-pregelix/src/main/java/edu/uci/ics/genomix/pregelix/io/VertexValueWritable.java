@@ -4,6 +4,7 @@ import java.io.*;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
@@ -117,6 +118,14 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         this.mergeChain.set(mergeChain);
     }
     
+    public KmerBytesWritable getKmer() {
+        return mergeChain;
+    }
+
+    public void setKmer(KmerBytesWritable mergeChain) {
+        this.mergeChain.set(mergeChain);
+    }
+    
     public PositionWritable getMergeDest() {
         return mergeDest;
     }
@@ -167,4 +176,81 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public int outDegree(){
         return outgoingList.getForwardList().getCountOfPosition() + outgoingList.getReverseList().getCountOfPosition();
     }
+    
+    /*
+     * Process any changes to value.  This is for edge updates
+     */
+    public void processUpdates(byte neighborToDeleteDir, PositionWritable nodeToDelete,
+            byte neighborToMergeDir, PositionWritable nodeToAdd){
+        switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
+            case MessageFlag.DIR_FF:
+                this.getFFList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_FR:
+                this.getFRList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RF:
+                this.getRFList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RR:
+                this.getRRList().remove(nodeToDelete);
+                break;
+        }
+        switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
+            case MessageFlag.DIR_FF:
+                this.getFFList().append(nodeToAdd);
+                break;
+            case MessageFlag.DIR_FR:
+                this.getFRList().append(nodeToAdd);
+                break;
+            case MessageFlag.DIR_RF:
+                this.getRFList().append(nodeToAdd);
+                break;
+            case MessageFlag.DIR_RR:
+                this.getRRList().append(nodeToAdd);
+                break;
+        }
+    }
+    
+    /*
+     * Process any changes to value.  This is for merging
+     */
+    public void processMerges(byte neighborToDeleteDir, PositionWritable nodeToDelete,
+            byte neighborToMergeDir, PositionWritable nodeToAdd, 
+            int kmerSize, KmerBytesWritable kmer){
+        switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
+            case MessageFlag.DIR_FF:
+                this.getFFList().remove(nodeToDelete); //set(null);
+                break;
+            case MessageFlag.DIR_FR:
+                this.getFRList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RF:
+                this.getRFList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RR:
+                this.getRRList().remove(nodeToDelete);
+                break;
+        }
+        switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
+            case MessageFlag.DIR_FF:
+                this.getKmer().mergeWithFFKmer(kmerSize, kmer);
+                this.getFFList().append(nodeToAdd);
+                break;
+            case MessageFlag.DIR_FR:
+                this.getKmer().mergeWithFRKmer(kmerSize, kmer);
+                this.getFRList().append(nodeToAdd);
+                break;
+            case MessageFlag.DIR_RF:
+                this.getKmer().mergeWithRFKmer(kmerSize, kmer);
+                this.getRFList().append(nodeToAdd);
+                break;
+            case MessageFlag.DIR_RR:
+                this.getKmer().mergeWithRRKmer(kmerSize, kmer);
+                this.getRRList().append(nodeToAdd);
+                break;
+        }
+    }
+    
+
 }
