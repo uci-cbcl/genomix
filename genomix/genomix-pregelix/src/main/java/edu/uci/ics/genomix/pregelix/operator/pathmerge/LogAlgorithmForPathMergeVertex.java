@@ -86,19 +86,18 @@ public class LogAlgorithmForPathMergeVertex extends
      * head send message to path
      */
     public void sendMsgToPathVertex(Iterator<MessageWritable> msgIterator) {
-        if(getSuperstep() == 3){
-            headFlag = (byte)(getVertexValue().getState() | MessageFlag.IS_HEAD);
-            if(headFlag == 0)
-                sendOutMsg();
-        } else {
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                processMerge();
-                headFlag = (byte)(incomingMsg.getFlag() | MessageFlag.IS_HEAD);
-                if(headFlag > 0)
-                    getVertexValue().setState(MessageFlag.IS_HEAD);
-            }
+        //process merge when receiving msg
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            processMerge();
+            headFlag = (byte)(incomingMsg.getFlag() | MessageFlag.IS_HEAD);
+            if(headFlag > 0)
+                getVertexValue().setState(MessageFlag.IS_HEAD);
         }
+        //send out wantToMerge msg
+        headFlag = (byte)(getVertexValue().getState() | MessageFlag.IS_HEAD);
+        if(headFlag == 0)
+            sendOutMsg();
     }
 
     /**
