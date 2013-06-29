@@ -16,21 +16,19 @@ public class VertexUtil {
     }
 
     /**
-     * Head Vertex: out-degree > 0,
+     * Head Vertex: out-degree > 0
+     */
+    public static boolean isHead(VertexValueWritable value){
+        return value.outDegree() > 0 && !isPathVertex(value);
+    }
+    
+    /**
+     * Head Vertex: out-degree > 0, and has indegress
      * 
      * @param vertexValue
      */
     public static boolean isHeadVertexWithIndegree(VertexValueWritable value) {
-        return value.outDegree() > 0 && !isPathVertex(value) && !isHeadWithoutIndegree(value);
-    }
-
-    /**
-     * Rear Vertex: in-degree > 0,
-     * 
-     * @param vertexValue
-     */
-    public static boolean isRearVertexWithOutdegree(VertexValueWritable value) {
-        return value.inDegree() > 0 && !isPathVertex(value) && !isRearWithoutOutdegree(value);
+        return isHead(value) && !isHeadWithoutIndegree(value);
     }
 
     /**
@@ -39,6 +37,23 @@ public class VertexUtil {
     public static boolean isHeadWithoutIndegree(VertexValueWritable value){
         return value.inDegree() == 0 && value.outDegree() == 1;
     }
+    
+    /**
+     * Head Vertex: out-degree > 0
+     */
+    public static boolean isRear(VertexValueWritable value){
+        return value.inDegree() > 0 && !isPathVertex(value);
+    }
+    
+    /**
+     * Rear Vertex: in-degree > 0, and has outdegree
+     * 
+     * @param vertexValue
+     */
+    public static boolean isRearVertexWithOutdegree(VertexValueWritable value) {
+        return isRear(value) && !isRearWithoutOutdegree(value);
+    }
+
     
     /**
      * Rear Vertex without outdegree: indegree = 1, outdegree = 0

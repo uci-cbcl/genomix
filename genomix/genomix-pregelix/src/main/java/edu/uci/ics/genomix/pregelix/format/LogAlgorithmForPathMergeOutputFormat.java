@@ -41,7 +41,7 @@ public class LogAlgorithmForPathMergeOutputFormat extends
                 throws IOException, InterruptedException {
             node.set(vertex.getVertexId(), vertex.getVertexValue().getFFList(),
                     vertex.getVertexValue().getFRList(), vertex.getVertexValue().getRFList(),
-                    vertex.getVertexValue().getRRList(), vertex.getVertexValue().getMergeChain());
+                    vertex.getVertexValue().getRRList(), vertex.getVertexValue().getKmer());
             getRecordWriter().write(node, nul);
         }
     }

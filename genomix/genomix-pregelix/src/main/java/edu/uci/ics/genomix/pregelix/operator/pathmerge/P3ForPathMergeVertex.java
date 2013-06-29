@@ -232,8 +232,8 @@ public class P3ForPathMergeVertex extends
     public void mergeChainVertex(){
         lastKmer.set(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
                 incomingMsg.getChainVertexId()));
-        getVertexValue().setMergeChain(
-                kmerFactory.mergeTwoKmer(getVertexValue().getMergeChain(), 
+        getVertexValue().setKmer(
+                kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), 
                         lastKmer));
         getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
     }
@@ -258,7 +258,7 @@ public class P3ForPathMergeVertex extends
                 } else {
                     mergeChainVertex();
                     getVertexValue().setState(State.FINAL_VERTEX);
-                    //String source = getVertexValue().getMergeChain().toString();
+                    //String source = getVertexValue().getKmer().toString();
                     //System.out.println();
                 }
             }
@@ -271,7 +271,7 @@ public class P3ForPathMergeVertex extends
     public void responseMsgToHeadVertexMergePhase() {
         deleteVertex(getVertexId());
         outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-        outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
+        outgoingMsg.setChainVertexId(getVertexValue().getKmer());
         if (getVertexValue().getState() == State.END_VERTEX)
             outgoingMsg.setFlag(Message.STOP);
         sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
@@ -305,7 +305,7 @@ public class P3ForPathMergeVertex extends
                         if (getVertexValue().getState() == State.START_VERTEX
                                 && incomingMsg.getFlag() == Message.STOP) {
                             getVertexValue().setState(State.FINAL_VERTEX);
-                            //String source = getVertexValue().getMergeChain().toString();
+                            //String source = getVertexValue().getKmer().toString();
                             //System.out.println();
                         } else if(getVertexValue().getState() == State.PSEUDOHEAD
                                 && incomingMsg.getFlag() == Message.STOP)
@@ -325,7 +325,7 @@ public class P3ForPathMergeVertex extends
         else {
             deleteVertex(getVertexId());
             outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList()); //incomingMsg.getNeighberNode()
-            outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
+            outgoingMsg.setChainVertexId(getVertexValue().getKmer());
             if (getVertexValue().getState() == State.PSEUDOREAR)
                 outgoingMsg.setFlag(Message.FROMPSEUDOREAR);
             else if (getVertexValue().getState() == State.END_VERTEX)
@@ -347,7 +347,7 @@ public class P3ForPathMergeVertex extends
             if (getVertexValue().getState() == State.START_VERTEX
                     && incomingMsg.getFlag() == Message.STOP) {
                 getVertexValue().setState(State.FINAL_VERTEX);
-                //String source = getVertexValue().getMergeChain().toString();
+                //String source = getVertexValue().getKmer().toString();
                 //System.out.println();
             } else if(getVertexValue().getState() == State.PSEUDOHEAD
                     && incomingMsg.getFlag() == Message.STOP)

@@ -60,7 +60,7 @@ public class GenerateTextFile {
                 if (key == null || value == null) {
                     break;
                 }
-                if (value.getLengthOfMergeChain() != -1 && value.getLengthOfMergeChain() <= maxLength) {
+                if (value.getLengthOfKmer() != -1 && value.getLengthOfKmer() <= maxLength) {
                     bw.write(value.toString());
                     bw.newLine();
                 }
@@ -84,7 +84,7 @@ public class GenerateTextFile {
                 if (key == null || value == null) {
                     break;
                 }
-                if (value.getLengthOfMergeChain() != -1 && value.getLengthOfMergeChain() <= maxLength
+                if (value.getLengthOfKmer() != -1 && value.getLengthOfKmer() <= maxLength
                         && value.getState() == State.FINAL_VERTEX) {
                     bw.write(key.toString() + "\t" + value.toString());
                     bw.newLine();

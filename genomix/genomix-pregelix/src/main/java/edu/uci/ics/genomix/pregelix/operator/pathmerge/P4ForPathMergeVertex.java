@@ -15,7 +15,6 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
@@ -52,13 +51,9 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class P4ForPathMergeVertex extends
-        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "P4ForPathMergeVertex.kmerSize";
-    public static final String ITERATIONS = "P4ForPathMergeVertex.iteration";
+    BasicPathMergeVertex {
     public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
     public static final String PROBBEINGRANDOMHEAD = "P4ForPathMergeVertex.probBeingRandomHead";
-    public static int kmerSize = -1;
-    private int maxIteration = -1;
 
     private static long randSeed = -1;
     private float probBeingRandomHead = -1;
@@ -74,13 +69,7 @@ public class P4ForPathMergeVertex extends
     private boolean prevHead;
     private byte headFlag;
     private byte tailFlag;
-    private byte outFlag;
     private byte selfFlag;
-    
-    private MessageWritable incomingMsg = new MessageWritable();
-    private MessageWritable outgoingMsg = new MessageWritable();
-    private PositionWritable destVertexId = new PositionWritable();
-    private Iterator<PositionWritable> posIterator;
     
     /**
      * initiate kmerSize, maxIteration
@@ -144,306 +133,6 @@ public class P4ForPathMergeVertex extends
         return false;
     }
     
-    /**
-     * get destination vertex
-     */
-    public PositionWritable getNextDestVertexId(VertexValueWritable value) {
-        if(value.getFFList().getCountOfPosition() > 0) // #FFList() > 0
-            posIterator = value.getFFList().iterator();
-        else // #FRList() > 0
-            posIterator = value.getFRList().iterator();
-        return posIterator.next();
-    }
-
-    public PositionWritable getPreDestVertexId(VertexValueWritable value) {
-        if(value.getRFList().getCountOfPosition() > 0) // #RFList() > 0
-            posIterator = value.getRFList().iterator();
-        else // #RRList() > 0
-            posIterator = value.getRRList().iterator();
-        return posIterator.next();
-    }
-
-    /**
-     * head send message to all next nodes
-     */
-    public void sendMsgToAllNextNodes(VertexValueWritable value) {
-        posIterator = value.getFFList().iterator(); // FFList
-        while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        posIterator = value.getFRList().iterator(); // FRList
-        while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-
-    /**
-     * head send message to all previous nodes
-     */
-    public void sendMsgToAllPreviousNodes(VertexValueWritable value) {
-        posIterator = value.getRFList().iterator(); // RFList
-        while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        posIterator = value.getRRList().iterator(); // RRList
-        while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-
-    /**
-     * start sending message
-     */
-    public void startSendMsg() {
-        if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())) {
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
-            sendMsgToAllNextNodes(getVertexValue());
-            voteToHalt();
-        }
-        if (VertexUtil.isRearVertexWithOutdegree(getVertexValue())) {
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
-            sendMsgToAllPreviousNodes(getVertexValue());
-            voteToHalt();
-        }
-        if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
-            sendMsg(getVertexId(), outgoingMsg); //send to itself
-            voteToHalt();
-        }
-        if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
-            outgoingMsg.setFlag(MessageFlag.IS_HEAD);
-            sendMsg(getVertexId(), outgoingMsg); //send to itself
-            voteToHalt();
-        }
-    }
-
-    /**
-     * initiate head, rear and path node
-     */
-    public void initState(Iterator<MessageWritable> msgIterator) {
-        while (msgIterator.hasNext()) {
-            if (!VertexUtil.isPathVertex(getVertexValue())
-                    && !VertexUtil.isHeadWithoutIndegree(getVertexValue())
-                    && !VertexUtil.isRearWithoutOutdegree(getVertexValue())) {
-                msgIterator.next();
-                voteToHalt();
-            } else {
-                incomingMsg = msgIterator.next();
-                getVertexValue().setState(MessageFlag.IS_HEAD);
-            }
-        }
-    }
-    
-    /**
-     * check if A need to be flipped with successor
-     */
-    public boolean ifFilpWithSuccessor(){
-        if(getVertexValue().getFRList().getLength() > 0)
-            return true;
-        else
-            return false;
-    }
-    
-    /**
-     * check if A need to be filpped with predecessor
-     */
-    public boolean ifFlipWithPredecessor(){
-        if(getVertexValue().getRFList().getLength() > 0)
-            return true;
-        else
-            return false;
-    }
-    
-    /**
-     * set adjMessage to successor(from predecessor)
-     */
-    public void setSuccessorAdjMsg(){
-        if(getVertexValue().getFFList().getLength() > 0)
-            outFlag |= MessageFlag.DIR_FF;
-        else
-            outFlag |= MessageFlag.DIR_FR;
-    }
-    
-    /**
-     * set adjMessage to predecessor(from successor)
-     */
-    public void setPredecessorAdjMsg(){
-        if(getVertexValue().getRFList().getLength() > 0)
-            outFlag |= MessageFlag.DIR_RF;
-        else
-            outFlag |= MessageFlag.DIR_RF;
-    }
-    
-    /**
-     * send update message to neighber
-     * @throws IOException 
-     */
-    public void broadcastUpdateMsg(){
-        if((getVertexValue().getState() & MessageFlag.IS_HEAD) > 0)
-            outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & 0b0001){
-            case MessageFlag.SHOULD_MERGEWITHPREV:
-                setSuccessorAdjMsg();
-                if(ifFlipWithPredecessor())
-                    outFlag |= MessageFlag.FLIP;
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
-                break;
-            case MessageFlag.SHOULD_MERGEWITHNEXT:
-                setPredecessorAdjMsg();
-                if(ifFilpWithSuccessor())
-                    outFlag |= MessageFlag.FLIP;
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
-                break; 
-        }
-    }
-    
-    /**
-     * send merge message to neighber
-     * @throws IOException 
-     */
-    public void broadcastMergeMsg(){
-        if((getVertexValue().getState() & MessageFlag.IS_HEAD) > 0)
-            outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & 0b0001){
-            case MessageFlag.SHOULD_MERGEWITHNEXT:
-                setSuccessorAdjMsg();
-                if(ifFlipWithPredecessor())
-                    outFlag |= MessageFlag.FLIP;
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
-                sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
-                break;
-            case MessageFlag.SHOULD_MERGEWITHPREV:
-                setPredecessorAdjMsg();
-                if(ifFilpWithSuccessor())
-                    outFlag |= MessageFlag.FLIP;
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
-                sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
-                break; 
-        }
-    }
-    
-    /**
-     * This vertex tries to merge with next vertex and send update msg to neighber
-     * @throws IOException 
-     */
-    public void sendUpMsgFromPredecessor(){
-        byte state = getVertexValue().getState();
-        state |= MessageFlag.SHOULD_MERGEWITHNEXT;
-        getVertexValue().setState(state);
-        if(getVertexValue().getFFList().getLength() > 0)
-            getVertexValue().setMergeDest(getVertexValue().getFFList().getPosition(0));
-        else
-            getVertexValue().setMergeDest(getVertexValue().getFRList().getPosition(0));
-        broadcastUpdateMsg();
-    }
-    
-    /**
-     * This vertex tries to merge with next vertex and send update msg to neighber
-     * @throws IOException 
-     */
-    public void sendUpMsgFromSuccessor(){
-        byte state = getVertexValue().getState();
-        state |= MessageFlag.SHOULD_MERGEWITHPREV;
-        getVertexValue().setState(state);
-        if(getVertexValue().getRFList().getLength() > 0)
-            getVertexValue().setMergeDest(getVertexValue().getRFList().getPosition(0));
-        else
-            getVertexValue().setMergeDest(getVertexValue().getRRList().getPosition(0));
-        broadcastUpdateMsg();
-    }
-    
-    /**
-     * Returns the edge dir for B->A when the A->B edge is type @dir
-     */
-    public byte mirrorDirection(byte dir) {
-        switch (dir) {
-            case MessageFlag.DIR_FF:
-                return MessageFlag.DIR_RR;
-            case MessageFlag.DIR_FR:
-                return MessageFlag.DIR_FR;
-            case MessageFlag.DIR_RF:
-                return MessageFlag.DIR_RF;
-            case MessageFlag.DIR_RR:
-                return MessageFlag.DIR_FF;
-            default:
-                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
-        }
-    }
-    
-    /**
-     * check if need filp
-     */
-    public byte flipDirection(byte neighborDir, boolean flip){
-        if(flip){
-            switch (neighborDir) {
-                case MessageFlag.DIR_FF:
-                    return MessageFlag.DIR_FR;
-                case MessageFlag.DIR_FR:
-                    return MessageFlag.DIR_FF;
-                case MessageFlag.DIR_RF:
-                    return MessageFlag.DIR_RR;
-                case MessageFlag.DIR_RR:
-                    return MessageFlag.DIR_RF;
-                default:
-                    throw new RuntimeException("Unrecognized direction for neighborDir: " + neighborDir);
-            }
-        } else 
-            return neighborDir;
-    }
-    
-    /**
-     * updateAdjList
-     */
-    public void processUpdate(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        
-        boolean flip;
-        if((outFlag & MessageFlag.FLIP) > 0)
-            flip = true;
-        else
-            flip = false;
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, flip);
-        
-        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(), 
-                neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()));
-    }
-    
-    /**
-     * merge and updateAdjList
-     */
-    public void processMerge(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        
-        boolean flip;
-        if((outFlag & MessageFlag.FLIP) > 0)
-            flip = true;
-        else
-            flip = false;
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, flip);
-        
-        getVertexValue().processMerges(neighborToMeDir, incomingMsg.getSourceVertexId(), 
-                neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()),
-                kmerSize, incomingMsg.getChainVertexId());
-    }
-    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
@@ -466,10 +155,6 @@ public class P4ForPathMergeVertex extends
             // We prevent merging towards non-path nodes
             hasNext = setNextInfo(getVertexValue()) && tailFlag == 0;
             hasPrev = setPrevInfo(getVertexValue()) && headFlag == 0;
-            if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
-                getVertexValue().setState(outFlag);
-                voteToHalt();
-            }
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
@@ -518,7 +203,8 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 processMerge();
-
+                
+                //head meets head, stop
                 headFlag = (byte) (MessageFlag.IS_HEAD & incomingMsg.getFlag());
                 selfFlag = (byte) (MessageFlag.IS_HEAD & getVertexValue().getState());
                 if((headFlag & selfFlag) > 0)

@@ -37,6 +37,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         public static final byte DIR_RR = 0b11 << 0;
         public static final byte DIR_MASK = 0b11 << 0;
     }
+    
+    public static class MergeDirFlag extends DirectionFlag{
+        public static final byte SHOULD_MERGEWITHNEXT = 0b000 << 0;
+        public static final byte SHOULD_MERGEWITHPREV = 0b001 << 0;
+    }
 
     private PositionWritable nodeID;
     private PositionListWritable forwardForwardList;

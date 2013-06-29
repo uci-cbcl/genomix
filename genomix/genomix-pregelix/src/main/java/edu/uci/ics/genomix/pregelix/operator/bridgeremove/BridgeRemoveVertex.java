@@ -248,7 +248,7 @@ public class BridgeRemoveVertex extends
                 i++;
             }
             if(receivedMsgList.size() == 2){
-                if(getVertexValue().getLengthOfMergeChain() <= length){
+                if(getVertexValue().getLengthOfKmer() <= length){
                     broadcaseKillself();
                 }
             }

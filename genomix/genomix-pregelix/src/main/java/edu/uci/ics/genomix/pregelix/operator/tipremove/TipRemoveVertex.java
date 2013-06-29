@@ -95,7 +95,7 @@ public class TipRemoveVertex extends
         initVertex(); 
         if(getSuperstep() == 1){
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
-            	if(getVertexValue().getLengthOfMergeChain() <= length){
+            	if(getVertexValue().getLengthOfKmer() <= length){
             		if(getVertexValue().getFFList().getCountOfPosition() > 0)
             			outgoingMsg.setFlag(AdjMessage.FROMFF);
             		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
@@ -107,7 +107,7 @@ public class TipRemoveVertex extends
             	}
             }
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
-                if(getVertexValue().getLengthOfMergeChain() <= length){
+                if(getVertexValue().getLengthOfKmer() <= length){
                     if(getVertexValue().getRFList().getCountOfPosition() > 0)
                         outgoingMsg.setFlag(AdjMessage.FROMRF);
                     else if(getVertexValue().getRRList().getCountOfPosition() > 0)
@@ -119,7 +119,7 @@ public class TipRemoveVertex extends
                 }
             }
             else if(VertexUtil.isSingleVertex(getVertexValue())){
-                if(getVertexValue().getLengthOfMergeChain() > length)
+                if(getVertexValue().getLengthOfKmer() > length)
                     deleteVertex(getVertexId());
             }
         }
