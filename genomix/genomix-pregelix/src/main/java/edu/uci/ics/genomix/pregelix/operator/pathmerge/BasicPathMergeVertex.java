@@ -248,6 +248,8 @@ public class BasicPathMergeVertex extends
             newState |= MessageFlag.IS_OLDHEAD;
             getVertexValue().setState(newState);
             outFlag |= MessageFlag.IS_HEAD;
+        } else if((getVertexValue().getState() & MessageFlag.IS_OLDHEAD) > 0){
+            outFlag |= MessageFlag.IS_OLDHEAD;
         }
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
@@ -261,7 +263,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
                 outgoingMsg.setChainVertexId(getVertexValue().getKmer());
-                sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
+                sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getNextDestVertexId(getVertexValue())
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
@@ -272,7 +274,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
                 outgoingMsg.setChainVertexId(getVertexValue().getKmer());
-                sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
+                sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
     }
@@ -412,6 +414,25 @@ public class BasicPathMergeVertex extends
         getVertexValue().processMerges(neighborToMeDir, incomingMsg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()),
                 kmerSize, incomingMsg.getChainVertexId());
+    }
+    
+    /**
+     * merge and updateAdjList  having parameter
+     */
+    public void processMerge(MessageWritable msg){
+        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        
+        boolean flip;
+        if((outFlag & MessageFlag.FLIP) > 0)
+            flip = true;
+        else
+            flip = false;
+        byte neighborToMergeDir = flipDirection(neighborToMeDir, flip);
+        
+        getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
+                neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(msg.getNeighberNode()),
+                kmerSize, msg.getChainVertexId());
     }
     
     @Override

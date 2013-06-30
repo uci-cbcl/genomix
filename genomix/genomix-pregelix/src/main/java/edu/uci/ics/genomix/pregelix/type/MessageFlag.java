@@ -6,8 +6,9 @@ public class MessageFlag extends MergeDirFlag{
     
     public static final byte FLIP = 1 << 3;
     public static final byte IS_HEAD = 1 << 4;
-    public static final byte IS_OLDHEAD = 1 << 5;
     public static final byte IS_TAIL = 1 << 5;
+    public static final byte IS_OLDHEAD = 1 << 6;
+    public static final byte IS_FINAL = 0b000011;
     
     public static String getFlagAsString(byte code) {
         // TODO: allow multiple flags to be set

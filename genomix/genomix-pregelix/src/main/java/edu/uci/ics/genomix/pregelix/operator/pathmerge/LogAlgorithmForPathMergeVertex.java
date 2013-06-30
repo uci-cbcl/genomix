@@ -1,18 +1,16 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.NullWritable;
-
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.MessageFromHead;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -51,8 +49,10 @@ public class LogAlgorithmForPathMergeVertex extends
 
     private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
     private KmerBytesWritable lastKmer = new KmerBytesWritable(1);
-
+    private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
+    
     byte headFlag;
+    byte oldHeadFlag;
     /**
      * initiate kmerSize, maxIteration
      */
@@ -81,6 +81,32 @@ public class LogAlgorithmForPathMergeVertex extends
         outgoingMsg.setSourceVertexId(getVertexId());
         sendMsg(destVertexId, outgoingMsg);
     }
+    
+    /**
+     * check received message
+     */
+    public byte checkNumOfMsgsFromHead(){
+        int countHead = 0;
+        int countOldHead = 0;
+        for(int i = 0; i < receivedMsgList.size(); i++){
+            if((byte)(receivedMsgList.get(i).getFlag() | MessageFlag.IS_HEAD) > 0)
+                countHead++;
+            if((byte)(receivedMsgList.get(i).getFlag() | MessageFlag.IS_OLDHEAD) > 0)
+                countOldHead++;
+        }
+        if(countHead == 0 && countOldHead == 0)
+            return MessageFromHead.BothMsgsFromNonHead;
+        else if(countHead == 2)
+            return MessageFromHead.BothMsgsFromHead;
+        else if(countOldHead == 2)
+            return MessageFromHead.BothMsgsFromOldHead;
+        else if(countHead == 1)
+            return MessageFromHead.OneMsgFromHead;
+        else if(countOldHead == 1)
+            return MessageFromHead.OneMsgFromNonHead;
+        
+        return MessageFromHead.NO_INFO;
+    }
 
     /**
      * head send message to path
@@ -89,14 +115,40 @@ public class LogAlgorithmForPathMergeVertex extends
         //process merge when receiving msg
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            processMerge();
-            headFlag = (byte)(incomingMsg.getFlag() | MessageFlag.IS_HEAD);
-            if(headFlag > 0)
-                getVertexValue().setState(MessageFlag.IS_HEAD);
+            receivedMsgList.add(incomingMsg);
         }
+        if(receivedMsgList.size() != 0){
+            byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
+            switch(numOfMsgsFromHead){
+                case MessageFromHead.BothMsgsFromNonHead:
+                    for(int i = 0; i < 2; i++)
+                        processMerge(receivedMsgList.get(i));
+                    break;
+                case MessageFromHead.BothMsgsFromHead:
+                    for(int i = 0; i < 2; i++)
+                        processMerge(receivedMsgList.get(i));
+                    getVertexValue().setState(MessageFlag.IS_FINAL);
+                    break;
+                case MessageFromHead.BothMsgsFromOldHead:
+                    deleteVertex(getVertexId());
+                    break;
+                case MessageFromHead.OneMsgFromHead:
+                    for(int i = 0; i < 2; i++)
+                        processMerge(receivedMsgList.get(i));
+                    getVertexValue().setState(MessageFlag.IS_HEAD);
+                    break;
+                case MessageFromHead.OneMsgFromNonHead:
+                    //halt
+                    voteToHalt();
+                    break;
+            }
+        } else 
+            voteToHalt();
         //send out wantToMerge msg
         headFlag = (byte)(getVertexValue().getState() | MessageFlag.IS_HEAD);
-        if(headFlag == 0)
+        oldHeadFlag = (byte)(getVertexValue().getState() | MessageFlag.IS_OLDHEAD);
+        outFlag = (byte)(headFlag | oldHeadFlag);
+        if(outFlag == 0)
             sendOutMsg();
     }
 
@@ -134,7 +186,7 @@ public class LogAlgorithmForPathMergeVertex extends
             initState(msgIterator);
         else if (getSuperstep() % 2 == 1 && getSuperstep() <= maxIteration) {
             sendMsgToPathVertex(msgIterator);
-            voteToHalt();
+            //voteToHalt();
         } else if (getSuperstep() % 2 == 0 && getSuperstep() <= maxIteration) {
             responseMsgToHeadVertex(msgIterator);
             voteToHalt();
