@@ -57,7 +57,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
     /*
      * Returns the edge dir for B->A when the A->B edge is type @dir
      */
-    public byte mirrorDirection(byte dir) {
+    public static byte mirrorDirection(byte dir) {
         switch (dir) {
             case MessageFlag.DIR_FF:
                 return MessageFlag.DIR_RR;
@@ -76,7 +76,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
      * When A->B edge type is @neighborDir and B will merge towards C along a @mergeDir edge, 
      * returns the new edge type for A->C
      */
-    public byte flipDirection(byte neighborDir, byte mergeDir) {
+    public static byte flipDirection(byte neighborDir, byte mergeDir) {
         switch (mergeDir) {
 
             case MessageFlag.DIR_FF:
@@ -134,20 +134,32 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
             // the merge and if it's my predecessor or successor
             switch (updateFlag & MessageFlag.DIR_MASK) {
                 case MessageFlag.DIR_FF:
+                    // node merging with me is FF to me
                     node.getFFList().set(updateNode.getFFList());
                     node.getFRList().set(updateNode.getFRList());
+                    // update isn't allowed to have any other successors (mirror & flip)
+                    if (updateNode.getRFList().getCountOfPosition() > 0)
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 case MessageFlag.DIR_FR:
-                    // FIXME not sure if this should be reverse-complement or just reverse...
-                    node.getKmer().mergeWithFFKmer(kmerSize, updateNode.getKmer());
-                    node.getFRList().set(updateNode.getFRList());
+                    // flip edges
+                    node.getFFList().set(updateNode.getRFList());
+                    node.getFRList().set(updateNode.getRRList());
+                    if (updateNode.getFFList().getCountOfPosition() > 0)
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 case MessageFlag.DIR_RF:
-
+                    // flip edges
+                    node.getRFList().set(updateNode.getFFList());
+                    node.getRRList().set(updateNode.getFRList());
+                    if (updateNode.getRRList().getCountOfPosition() > 0)
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 case MessageFlag.DIR_RR:
-                    node.getKmer().mergeWithRRKmer(kmerSize, updateNode.getKmer());
+                    node.getRFList().set(updateNode.getRFList());
                     node.getRRList().set(updateNode.getRRList());
+                    if (updateNode.getFRList().getCountOfPosition() > 0)
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 default:
                     throw new IOException("Unrecognized direction in updateFlag: " + updateFlag);
