@@ -185,7 +185,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     public void mergeChainVertex() {
         //merge chain
         lastKmer.set(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
-                incomingMsg.getChainVertexId()));
+                incomingMsg.getKmer()));
         getVertexValue().setKmer(kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), lastKmer));
         getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
     }

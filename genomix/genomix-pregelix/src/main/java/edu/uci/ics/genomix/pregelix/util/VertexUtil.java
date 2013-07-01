@@ -117,7 +117,9 @@ public class VertexUtil {
     public static PositionWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
         if(adj.getForwardList().getCountOfPosition() > 0)
             return adj.getForwardList().getPosition(0);
-        else 
+        else if(adj.getReverseList().getCountOfPosition() > 0)
             return adj.getReverseList().getPosition(0);
+        else
+            return null;
     }
 }

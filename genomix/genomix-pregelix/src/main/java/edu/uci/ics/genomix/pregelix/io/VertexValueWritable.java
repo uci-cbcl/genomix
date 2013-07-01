@@ -4,7 +4,7 @@ import java.io.*;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
@@ -174,6 +174,10 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
      */
     public void processUpdates(byte neighborToDeleteDir, PositionWritable nodeToDelete,
             byte neighborToMergeDir, PositionWritable nodeToAdd){
+//        TODO
+//        this.getListFromDir(neighborToDeleteDir).remove(nodeToDelete);
+//        this.getListFromDir(neighborToMergeDir).append(nodeToDelete);
+        
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
                 this.getFFList().remove(nodeToDelete);
@@ -224,6 +228,9 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
                 this.getRRList().remove(nodeToDelete);
                 break;
         }
+        // TODO: remove switch below and replace with general direction merge
+//        this.getKmer().mergeWithDirKmer(neighborToMergeDir);
+        
         switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
                 this.getKmer().mergeWithFFKmer(kmerSize, kmer);

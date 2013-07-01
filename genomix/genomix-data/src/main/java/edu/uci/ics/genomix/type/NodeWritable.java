@@ -39,8 +39,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public static class MergeDirFlag extends DirectionFlag{
-        public static final byte SHOULD_MERGEWITHNEXT = 0b000 << 0;
-        public static final byte SHOULD_MERGEWITHPREV = 0b001 << 0;
+        public static final byte SHOULD_MERGEWITHNEXT = 0b0 << 2;
+        public static final byte SHOULD_MERGEWITHPREV = 0b1 << 2;
+        public static final byte SHOULD_MERGE_MASK = 0b1 << 2;
     }
 
     private PositionWritable nodeID;

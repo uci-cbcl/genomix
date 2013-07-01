@@ -420,7 +420,7 @@ public class P5ForPathMergeVertex extends
         
         getVertexValue().processMerges(neighborToMeDir, incomingMsg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()),
-                kmerSize, incomingMsg.getChainVertexId());
+                kmerSize, incomingMsg.getKmer());
     }
     
     @Override

@@ -27,6 +27,7 @@ public class BasicPathMergeVertex extends
     protected MessageWritable outgoingMsg = new MessageWritable();
     protected PositionWritable destVertexId = new PositionWritable();
     protected Iterator<PositionWritable> posIterator;
+    byte headFlag;
     protected byte outFlag;
     
     /**
@@ -39,6 +40,13 @@ public class BasicPathMergeVertex extends
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         outFlag = (byte)0;
         outgoingMsg.reset();
+    }
+    
+    /**
+     * reset headFlag
+     */
+    public void resetHeadFlag(){
+        headFlag = (byte)(getVertexValue().getState() & MessageFlag.IS_HEAD);
     }
     
     /**
@@ -205,7 +213,7 @@ public class BasicPathMergeVertex extends
         if(getVertexValue().getRFList().getLength() > 0)
             outFlag |= MessageFlag.DIR_RF;
         else
-            outFlag |= MessageFlag.DIR_RF;
+            outFlag |= MessageFlag.DIR_RR;
     }
     
     /**
@@ -248,8 +256,10 @@ public class BasicPathMergeVertex extends
             newState |= MessageFlag.IS_OLDHEAD;
             getVertexValue().setState(newState);
             outFlag |= MessageFlag.IS_HEAD;
+            voteToHalt();
         } else if((getVertexValue().getState() & MessageFlag.IS_OLDHEAD) > 0){
             outFlag |= MessageFlag.IS_OLDHEAD;
+            voteToHalt();
         }
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
@@ -286,7 +296,7 @@ public class BasicPathMergeVertex extends
     public void broadcastMergeMsg(){
         if((getVertexValue().getState() & MessageFlag.IS_HEAD) > 0)
             outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & 0b0001){
+        switch(getVertexValue().getState() & MessageFlag.SHOULD_MERGE_MASK) {
             case MessageFlag.SHOULD_MERGEWITHNEXT:
                 setSuccessorAdjMsg();
                 if(ifFlipWithPredecessor())
@@ -314,7 +324,7 @@ public class BasicPathMergeVertex extends
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
-    public void sendUpMsgFromPredecessor(){
+    public void sendUpMsgToPredecessor(){
         byte state = getVertexValue().getState();
         state |= MessageFlag.SHOULD_MERGEWITHNEXT;
         getVertexValue().setState(state);
@@ -329,7 +339,7 @@ public class BasicPathMergeVertex extends
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
-    public void sendUpMsgFromSuccessor(){
+    public void sendUpMsgToSuccessor(){
         byte state = getVertexValue().getState();
         state |= MessageFlag.SHOULD_MERGEWITHPREV;
         getVertexValue().setState(state);
@@ -398,7 +408,7 @@ public class BasicPathMergeVertex extends
     }
     
     /**
-     * merge and updateAdjList
+     * merge and updateAdjList merge with one neighbor
      */
     public void processMerge(){
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
@@ -413,7 +423,7 @@ public class BasicPathMergeVertex extends
         
         getVertexValue().processMerges(neighborToMeDir, incomingMsg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()),
-                kmerSize, incomingMsg.getChainVertexId());
+                kmerSize, incomingMsg.getKmer());
     }
     
     /**
@@ -432,7 +442,7 @@ public class BasicPathMergeVertex extends
         
         getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(msg.getNeighberNode()),
-                kmerSize, msg.getChainVertexId());
+                kmerSize, msg.getKmer());
     }
     
     @Override

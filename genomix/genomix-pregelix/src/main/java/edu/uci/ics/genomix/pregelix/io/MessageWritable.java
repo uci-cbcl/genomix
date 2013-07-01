@@ -19,7 +19,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
      * file stores the point to the file that stores the chains of connected DNA
      */
     private PositionWritable sourceVertexId;
-    private KmerBytesWritable chainVertexId;
+    private KmerBytesWritable kmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private byte flag;
 
@@ -27,7 +27,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
 
     public MessageWritable() {
         sourceVertexId = new PositionWritable();
-        chainVertexId = new KmerBytesWritable(0);
+        kmer = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
         flag = Message.NON;
         checkMessage = (byte) 0;
@@ -39,9 +39,9 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             checkMessage |= CheckMessage.SOURCE;
             this.sourceVertexId.set(msg.getSourceVertexId());
         }
-        if (chainVertexId != null) {
+        if (kmer != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.set(msg.getChainVertexId());
+            this.kmer.set(msg.getKmer());
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -59,7 +59,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.set(chainVertexId);
+            this.kmer.set(chainVertexId);
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -70,7 +70,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
 
     public void reset() {
         checkMessage = 0;
-        chainVertexId.reset(1);
+        kmer.reset(1);
         neighberNode.reset();
         flag = Message.NON;
     }
@@ -86,14 +86,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
     }
     
-    public KmerBytesWritable getChainVertexId() {
-        return chainVertexId;
+    public KmerBytesWritable getKmer() {
+        return kmer;
     }
 
     public void setChainVertexId(KmerBytesWritable chainVertexId) {
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.set(chainVertexId);
+            this.kmer.set(chainVertexId);
         }
     }
     
@@ -109,7 +109,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     }
     
     public int getLengthOfChain() {
-        return chainVertexId.getKmerLength();
+        return kmer.getKmerLength();
     }
 
     public byte getFlag() {
@@ -126,7 +126,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.write(out);
         if ((checkMessage & CheckMessage.CHAIN) != 0)
-            chainVertexId.write(out);
+            kmer.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
         out.write(flag);
@@ -139,7 +139,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.readFields(in);
         if ((checkMessage & CheckMessage.CHAIN) != 0)
-            chainVertexId.readFields(in);
+            kmer.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
         flag = in.readByte();
