@@ -25,6 +25,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.KmerUtil;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 /**
  * Variable kmer length byteswritable
@@ -502,6 +503,25 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         }
         appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, size);
         clearLeadBit();
+    }
+    
+    public void mergeWithKmerInDir(byte dir, int initialKmerSize, KmerBytesWritable kmer) {
+        switch(dir & DirectionFlag.DIR_MASK) {
+            case DirectionFlag.DIR_FF:
+                mergeWithFFKmer(initialKmerSize, kmer);
+                break;
+            case DirectionFlag.DIR_FR:
+                mergeWithFRKmer(initialKmerSize, kmer);
+                break;
+            case DirectionFlag.DIR_RF:
+                mergeWithRFKmer(initialKmerSize, kmer);
+                break;
+            case DirectionFlag.DIR_RR:
+                mergeWithRRKmer(initialKmerSize, kmer);
+                break;
+            default:
+                throw new RuntimeException("Direciotn not recognized: " + dir);
+        }
     }
 
     public static void appendOneByteAtPosition(int k, byte onebyte, byte[] buffer, int start, int length) {

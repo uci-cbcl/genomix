@@ -38,7 +38,8 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
         public static final byte EXTRA_FLAG = 1 << 6;
     }
 
-    public void setAsUpdateMessage(byte mergeDir, byte neighborDir, PositionWritable nodeToDelete, PositionWritable nodeToAdd) {
+    public void setAsUpdateMessage(byte mergeDir, byte neighborDir, PositionWritable nodeToDelete,
+            PositionWritable nodeToAdd) {
         byte neighborToMeDir = mirrorDirection(neighborDir);
         byte neighborToMergeDir = flipDirection(neighborToMeDir, mergeDir);
 
@@ -52,8 +53,6 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
         // add the new node to the appropriate list
         node.getListFromDir(neighborToMergeDir).append(nodeToAdd);
     }
-
-
 
     /*
      * Returns the edge dir for B->A when the A->B edge is type @dir
@@ -118,22 +117,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
             // remove position and merge its position lists with node
             if (!updateNode.equals(NodeWritable.EMPTY_NODE)) {
                 // need to remove updateNode from the specified PositionList
-                switch (updateFlag & MessageFlag.DIR_MASK) {
-                    case MessageFlag.DIR_FF:
-                        node.getFFList().remove(updateNode.getNodeID());
-                        break;
-                    case MessageFlag.DIR_FR:
-                        node.getFRList().remove(updateNode.getNodeID());
-                        break;
-                    case MessageFlag.DIR_RF:
-                        node.getRFList().remove(updateNode.getNodeID());
-                        break;
-                    case MessageFlag.DIR_RR:
-                        node.getRRList().remove(updateNode.getNodeID());
-                        break;
-                    default:
-                        throw new IOException("Unrecognized direction in updateFlag: " + updateFlag);
-                }
+                node.getListFromDir(updateFlag).remove(updateNode.getNodeID());
             }
             // now merge positionlists from update and node
             node.getFFList().appendList(updateNode.getFFList());
@@ -142,13 +126,16 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
             node.getRRList().appendList(updateNode.getRRList());
         } else if ((updateFlag & MessageFlag.MSG_UPDATE_MERGE) == MessageFlag.MSG_UPDATE_MERGE) {
             // this message wants to merge node with updateNode.
-            // the direction flag indicates how the merge should take place.
-            // TODO send update or remove edge that I merge with
+            // the direction flag indicates node's relationship with updateNode
+            node.getListFromDir(updateFlag).remove(updateNode.getNodeID()); // remove the node from my edges
+            node.getKmer().mergeWithKmerInDir(updateFlag, kmerSize, updateNode.getKmer()); // merge with its kmer
+
+            // merge my edges with the incoming node's edges, accounting for if the node flipped in 
+            // the merge and if it's my predecessor or successor
             switch (updateFlag & MessageFlag.DIR_MASK) {
                 case MessageFlag.DIR_FF:
-                    node.getKmer().mergeWithFFKmer(kmerSize, updateNode.getKmer());
                     node.getFFList().set(updateNode.getFFList());
-                    // TODO not just FF list here-- FR as well
+                    node.getFRList().set(updateNode.getFRList());
                     break;
                 case MessageFlag.DIR_FR:
                     // FIXME not sure if this should be reverse-complement or just reverse...
