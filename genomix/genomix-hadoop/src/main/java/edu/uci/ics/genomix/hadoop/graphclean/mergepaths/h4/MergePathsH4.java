@@ -290,10 +290,14 @@ public class MergePathsH4 extends Configured implements Tool {
         private NodeWithFlagWritable outputValue;
         private NodeWritable curNode;
         private PositionWritable outPosn;
-        private ArrayList<NodeWithFlagWritable> updateMsgs;
         private boolean sawCurNode;
         private byte outFlag;
         private byte inFlag;
+
+        // to prevent GC on update messages, we keep them all in one list and use the Node set method rather than creating new Node's
+        private ArrayList<NodeWithFlagWritable> updateMsgs;
+        private int updateMsgsSize;
+        private int updateMsgsCount;
 
         public void configure(JobConf conf) {
             KMER_SIZE = conf.getInt("sizeKmer", 0);
@@ -302,6 +306,7 @@ public class MergePathsH4 extends Configured implements Tool {
             curNode = new NodeWritable(KMER_SIZE);
             outPosn = new PositionWritable();
             updateMsgs = new ArrayList<NodeWithFlagWritable>();
+            updateMsgsSize = updateMsgs.size();
         }
 
         /*
@@ -315,14 +320,14 @@ public class MergePathsH4 extends Configured implements Tool {
         public void reduce(PositionWritable key, Iterator<NodeWithFlagWritable> values,
                 OutputCollector<PositionWritable, NodeWithFlagWritable> output, Reporter reporter) throws IOException {
             sawCurNode = false;
-            updateMsgs.clear();
-            
+            updateMsgsCount = 0;
+
             byte inDir;
             while (values.hasNext()) {
                 inputValue.set(values.next());
                 inFlag = inputValue.getFlag();
                 inDir = (byte) (inFlag & MessageFlag.MSG_MASK);
-                
+
                 switch (inDir) {
                     case MessageFlag.MSG_UPDATE_MERGE:
                     case MessageFlag.MSG_SELF:
@@ -334,13 +339,13 @@ public class MergePathsH4 extends Configured implements Tool {
                         sawCurNode = true;
                         if (inDir == MessageFlag.MSG_SELF) {
                             outPosn.set(curNode.getNodeID());
-                        } else {  // MSG_UPDATE_MERGE
+                        } else { // MSG_UPDATE_MERGE
                             // merge messages are sent to their merge recipient
                             outPosn.set(curNode.getListFromDir(inDir).getPosition(0));
                         }
                         break;
                     case MessageFlag.MSG_UPDATE_EDGE:
-                        updateMsgs.add(new NodeWithFlagWritable(inputValue)); // make a copy of inputValue-- not a reference!
+                        addUpdateMessage(inputValue);
                         break;
                     default:
                         throw new IOException("Unrecognized message type: " + (inFlag & MessageFlag.MSG_MASK));
@@ -349,15 +354,23 @@ public class MergePathsH4 extends Configured implements Tool {
 
             // process all the update messages for this node
             // I have no idea how to make this more efficient...
-            for (NodeWithFlagWritable updateMsg : updateMsgs) {
-                NodeWithFlagWritable.processUpdates(curNode, updateMsg, KMER_SIZE);
+            for (int i=0; i < updateMsgsCount; i++) {
+                NodeWithFlagWritable.processUpdates(curNode, updateMsgs.get(i), KMER_SIZE);
             }
             outputValue.set(outFlag, curNode);
             output.collect(outPosn, outputValue);
         }
+
+        private void addUpdateMessage(NodeWithFlagWritable myInputValue) {
+            updateMsgsCount++;
+            if (updateMsgsCount >= updateMsgsSize) {
+                updateMsgs.add(new NodeWithFlagWritable(inputValue)); // make a copy of inputValue-- not a reference!
+            } else {
+                updateMsgs.get(updateMsgsCount - 1).set(myInputValue); // update existing reference
+            }
+        }
     }
-    
-    
+
     /*
      * Mapper class: sends the update messages to their (already decided) destination
      */
@@ -413,14 +426,10 @@ public class MergePathsH4 extends Configured implements Tool {
             inFlag = value.getFlag();
             curNode.set(value.getNode());
             curID.set(curNode.getNodeID());
-            
+
         }
 
     }
-
-    
-    
-    
 
     /*
      * Reducer class: processes the update messages from updateMapper
