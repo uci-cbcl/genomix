@@ -75,10 +75,10 @@ public class LogAlgorithmLogFormatter extends Formatter {
                 builder.append("Send message to " + "\r\n");
                 builder.append("Destination Code: " + dest + "\r\n");
             }
-            builder.append("Message is: " + Message.MESSAGE_CONTENT.getContentFromCode(msg.getMessage()) + "\r\n");
+            builder.append("Message is: " + Message.MESSAGE_CONTENT.getContentFromCode(msg.getFlag()) + "\r\n");
 
             if (msg.getLengthOfChain() != -1) {
-                chain = msg.getChainVertexId().toString();
+                chain = msg.getKmer().toString();
                 builder.append("Chain Message: " + chain + "\r\n");
                 builder.append("Chain Length: " + msg.getLengthOfChain() + "\r\n");
             }

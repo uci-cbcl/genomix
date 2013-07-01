@@ -8,7 +8,6 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryDataCleanVertexOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
@@ -36,8 +35,7 @@ public class DataCleanOutputFormat extends
         @Override
         public void writeVertex(Vertex<PositionWritable, VertexValueWritable, NullWritable, ?> vertex)
                 throws IOException, InterruptedException {
-            if(vertex.getVertexValue().getState() != State.END_VERTEX)
-                getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
+            getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
         }
     }
 }

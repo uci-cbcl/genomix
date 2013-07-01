@@ -181,7 +181,7 @@ public class BubbleMergeVertex extends
     public void compute(Iterator<MergeBubbleMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
-            if(VertexUtil.isHeadVertex(getVertexValue())
+            if(VertexUtil.isHeadVertexWithIndegree(getVertexValue())
                     || VertexUtil.isHeadWithoutIndegree(getVertexValue())){
                 outgoingMsg.setMessage(AdjMessage.NON);
                 outgoingMsg.setSourceVertexId(getVertexId());
@@ -194,7 +194,7 @@ public class BubbleMergeVertex extends
                     outgoingMsg.setMessage(AdjMessage.NON);
                     outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setChainVertexId(getVertexValue().getMergeChain());
+                    outgoingMsg.setChainVertexId(getVertexValue().getKmer());
                     destVertexId.set(getNextDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 }
@@ -217,7 +217,7 @@ public class BubbleMergeVertex extends
             for(PositionWritable prevId : receivedMsgMap.keySet()){
                 receivedMsgList = receivedMsgMap.get(prevId);
                 if(receivedMsgList.size() > 1){
-                    //find the node with largest length of mergeChain
+                    //find the node with largest length of Kmer
                     boolean flag = true; //the same length
                     int maxLength = receivedMsgList.get(0).getLengthOfChain();
                     PositionWritable max = receivedMsgList.get(0).getSourceVertexId();
@@ -279,7 +279,7 @@ public class BubbleMergeVertex extends
                     broadcaseKillself();
                 } else if (incomingMsg.getMessage() == AdjMessage.MERGE){
                     //merge with small node
-                    getVertexValue().setMergeChain(kmerFactory.mergeTwoKmer(getVertexValue().getMergeChain(), 
+                    getVertexValue().setKmer(kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), 
                             incomingMsg.getChainVertexId()));
                 }
             }

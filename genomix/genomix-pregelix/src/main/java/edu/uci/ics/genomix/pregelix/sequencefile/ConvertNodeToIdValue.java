@@ -38,7 +38,7 @@ public class ConvertNodeToIdValue {
             outputValue.setFRList(node.getFRList());
             outputValue.setRFList(node.getRFList());
             outputValue.setRRList(node.getRRList());
-            outputValue.setMergeChain(node.getKmer());
+            outputValue.setKmer(node.getKmer());
             outputValue.setState(State.NON_VERTEX);
             writer.append(outputKey, outputValue);
         }

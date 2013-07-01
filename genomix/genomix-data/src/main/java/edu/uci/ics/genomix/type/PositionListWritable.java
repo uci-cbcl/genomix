@@ -163,10 +163,12 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
 
     public void append(PositionWritable pos) {
-        setSize((1 + valueCount) * PositionWritable.LENGTH);
-        System.arraycopy(pos.getByteArray(), pos.getStartOffset(), storage, offset + valueCount
-                * PositionWritable.LENGTH, pos.getLength());
-        valueCount += 1;
+        if(pos != null){
+            setSize((1 + valueCount) * PositionWritable.LENGTH);
+            System.arraycopy(pos.getByteArray(), pos.getStartOffset(), storage, offset + valueCount
+                    * PositionWritable.LENGTH, pos.getLength());
+            valueCount += 1;
+        }
     }
 
     public void append(int readID, byte posInRead) {

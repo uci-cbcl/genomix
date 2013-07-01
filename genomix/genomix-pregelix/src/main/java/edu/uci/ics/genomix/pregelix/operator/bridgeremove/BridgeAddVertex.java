@@ -89,7 +89,7 @@ public class BridgeAddVertex extends
                 byte[] array = { 'T', 'A', 'G', 'C', 'C', 'T'};
                 KmerBytesWritable kmer = new KmerBytesWritable(array.length);
                 kmer.setByRead(array, 0);
-                vertexValue.setMergeChain(kmer);
+                vertexValue.setKmer(kmer);
                 PositionListWritable plist = new PositionListWritable();
                 plist.append(new PositionWritable(1, (byte)2));
                 vertexValue.setRRList(plist);

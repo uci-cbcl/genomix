@@ -1,7 +1,9 @@
 package edu.uci.ics.genomix.pregelix.util;
 
+import edu.uci.ics.genomix.pregelix.io.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 
 public class VertexUtil {
     /**
@@ -14,21 +16,19 @@ public class VertexUtil {
     }
 
     /**
-     * Head Vertex: out-degree > 0,
-     * 
-     * @param vertexValue
+     * Head Vertex: out-degree > 0
      */
-    public static boolean isHeadVertex(VertexValueWritable value) {
-        return value.outDegree() > 0 && !isPathVertex(value) && !isHeadWithoutIndegree(value);
+    public static boolean isHead(VertexValueWritable value){
+        return value.outDegree() > 0 && !isPathVertex(value);
     }
-
+    
     /**
-     * Rear Vertex: in-degree > 0,
+     * Head Vertex: out-degree > 0, and has indegress
      * 
      * @param vertexValue
      */
-    public static boolean isRearVertex(VertexValueWritable value) {
-        return value.inDegree() > 0 && !isPathVertex(value) && !isRearWithoutOutdegree(value);
+    public static boolean isHeadVertexWithIndegree(VertexValueWritable value) {
+        return isHead(value) && !isHeadWithoutIndegree(value);
     }
 
     /**
@@ -37,6 +37,23 @@ public class VertexUtil {
     public static boolean isHeadWithoutIndegree(VertexValueWritable value){
         return value.inDegree() == 0 && value.outDegree() == 1;
     }
+    
+    /**
+     * Head Vertex: out-degree > 0
+     */
+    public static boolean isRear(VertexValueWritable value){
+        return value.inDegree() > 0 && !isPathVertex(value);
+    }
+    
+    /**
+     * Rear Vertex: in-degree > 0, and has outdegree
+     * 
+     * @param vertexValue
+     */
+    public static boolean isRearVertexWithOutdegree(VertexValueWritable value) {
+        return isRear(value) && !isRearWithoutOutdegree(value);
+    }
+
     
     /**
      * Rear Vertex without outdegree: indegree = 1, outdegree = 0
@@ -92,5 +109,17 @@ public class VertexUtil {
      */
     public static boolean isDownBridgeVertex(VertexValueWritable value){
         return value.inDegree() > 1 && value.outDegree() == 1;
+    }
+    
+    /**
+     * get nodeId from Ad
+     */
+    public static PositionWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
+        if(adj.getForwardList().getCountOfPosition() > 0)
+            return adj.getForwardList().getPosition(0);
+        else if(adj.getReverseList().getCountOfPosition() > 0)
+            return adj.getReverseList().getPosition(0);
+        else
+            return null;
     }
 }

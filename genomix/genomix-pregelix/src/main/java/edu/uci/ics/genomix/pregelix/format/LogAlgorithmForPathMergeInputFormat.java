@@ -70,7 +70,7 @@ public class LogAlgorithmForPathMergeInputFormat extends
                 vertexValue.setFRList(node.getFRList());
                 vertexValue.setRFList(node.getRFList());
                 vertexValue.setRRList(node.getRRList());
-                vertexValue.setMergeChain(node.getKmer());
+                vertexValue.setKmer(node.getKmer());
                 vertexValue.setState(State.NON_VERTEX);
                 vertex.setVertexValue(vertexValue);
             }
