@@ -561,6 +561,8 @@ public class MergePathsH4 extends Configured implements Tool {
         JobConf conf = new JobConf(baseConf);
         conf.setJarByClass(MergePathsH4.class);
         conf.setJobName("MergePathsH4 " + inputPath);
+        
+        //another comment
 
         FileInputFormat.addInputPaths(conf, inputPath);
         Path outputPath = new Path(inputPath + ".h4merge.tmp");

@@ -112,6 +112,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
             throws IOException {
         byte updateFlag = updateMsg.getFlag();
         NodeWritable updateNode = updateMsg.getNode();
+        
         if ((updateFlag & MessageFlag.MSG_UPDATE_EDGE) == MessageFlag.MSG_UPDATE_EDGE) {
             // this message wants to update the edges of node.
             // remove position and merge its position lists with node

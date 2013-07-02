@@ -53,27 +53,32 @@ public class BasicPathMergeVertex extends
      * get destination vertex
      */
     public PositionWritable getNextDestVertexId(VertexValueWritable value) {
-        if(value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
+        if (value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
             posIterator = value.getFFList().iterator();
             outFlag |= MessageFlag.DIR_FF;
-        }
-        else{ // #FRList() > 0
+            return posIterator.next();
+        } else if (value.getFRList().getCountOfPosition() > 0){ // #FRList() > 0
             posIterator = value.getFRList().iterator();
             outFlag |= MessageFlag.DIR_FR;
+            return posIterator.next();
+        } else {
+          return null;  
         }
-        return posIterator.next();
+        
     }
 
     public PositionWritable getPreDestVertexId(VertexValueWritable value) {
-        if(value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
+        if (value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
             posIterator = value.getRFList().iterator();
             outFlag |= MessageFlag.DIR_RF;
-        }
-        else{ // #RRList() > 0
+            return posIterator.next();
+        } else if (value.getRRList().getCountOfPosition() > 0){ // #RRList() > 0
             posIterator = value.getRRList().iterator();
             outFlag |= MessageFlag.DIR_RR;
+            return posIterator.next();
+        } else {
+            return null;
         }
-        return posIterator.next();
     }
 
     /**
@@ -223,7 +228,7 @@ public class BasicPathMergeVertex extends
     public void broadcastUpdateMsg(){
         if((getVertexValue().getState() & MessageFlag.IS_HEAD) > 0)
             outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & 0b0001){
+        switch(getVertexValue().getState() & MessageFlag.SHOULD_MERGE_MASK){
             case MessageFlag.SHOULD_MERGEWITHPREV:
                 setSuccessorAdjMsg();
                 if(ifFlipWithPredecessor())
@@ -231,7 +236,8 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
+                if(getNextDestVertexId(getVertexValue()) != null)
+                    sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
                 break;
             case MessageFlag.SHOULD_MERGEWITHNEXT:
                 setPredecessorAdjMsg();
@@ -240,7 +246,8 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
+                if(getPreDestVertexId(getVertexValue()) != null)
+                    sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
                 break; 
         }
     }
@@ -324,7 +331,7 @@ public class BasicPathMergeVertex extends
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
-    public void sendUpMsgToPredecessor(){
+    public void sendUpdateMsgToPredecessor(){
         byte state = getVertexValue().getState();
         state |= MessageFlag.SHOULD_MERGEWITHNEXT;
         getVertexValue().setState(state);
@@ -339,7 +346,7 @@ public class BasicPathMergeVertex extends
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
-    public void sendUpMsgToSuccessor(){
+    public void sendUpdateMsgToSuccessor(){
         byte state = getVertexValue().getState();
         state |= MessageFlag.SHOULD_MERGEWITHPREV;
         getVertexValue().setState(state);

@@ -128,6 +128,8 @@ public class MergePathsH4Driver {
                 return (path.matches(".*" + COMPLETE + "_i\\d+$") || path.matches(".*" + UPDATES + "_i\\d+$") || path.endsWith(lastMergeOutput));
             }
         };
+        // test comment 
+        
         StringBuilder sb = new StringBuilder();
         String delim = "";
         for (FileStatus file : dfs.globStatus(new Path(inputGraphPath.replaceAll("/$",  "") + "*"), updateFilter)) {
