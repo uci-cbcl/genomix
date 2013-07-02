@@ -39,17 +39,12 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.lib.IdentityMapper;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
-import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.uci.ics.genomix.hadoop.oldtype.VKmerBytesWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.MergePathMultiSeqOutputFormat;
-import edu.uci.ics.genomix.hadoop.pmcommon.MergePathValueWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable.MessageFlag;
-import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial;
-import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial.PathNodeInitialReducer;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
@@ -91,8 +86,8 @@ public class MergePathsH4 extends Configured implements Tool {
         private PositionWritable curID;
         private PositionWritable nextID;
         private PositionWritable prevID;
-        private boolean hasNext;
-        private boolean hasPrev;
+        private boolean mergeableNext;
+        private boolean mergeablePrev;
         private boolean curHead;
         private boolean nextHead;
         private boolean prevHead;
@@ -177,7 +172,7 @@ public class MergePathsH4 extends Configured implements Tool {
             inFlag = value.getFlag();
             curNode.set(value.getNode());
             curID.set(curNode.getNodeID());
-
+            mergeDir = MergeDir.NO_MERGE; // no merge to happen
             headFlag = (byte) (MessageFlag.IS_HEAD & inFlag);
             tailFlag = (byte) (MessageFlag.IS_TAIL & inFlag);
             mergeMsgFlag = (byte) (headFlag | tailFlag);
@@ -185,42 +180,40 @@ public class MergePathsH4 extends Configured implements Tool {
             curHead = isNodeRandomHead(curID);
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(curNode) && tailFlag == 0;
-            hasPrev = setPrevInfo(curNode) && headFlag == 0;
-            mergeDir = MergeDir.NO_MERGE; // no merge to happen
+            mergeableNext = setNextInfo(curNode) && tailFlag == 0;
+            mergeablePrev = setPrevInfo(curNode) && headFlag == 0;
 
             // decide where we're going to merge to
-            if (hasNext || hasPrev) {
+            if (mergeableNext || mergeablePrev) {
                 if (curHead) {
-                    if (hasNext && !nextHead) {
+                    if (mergeableNext && !nextHead) {
                         // merge forward
                         mergeMsgFlag |= nextDir;
                         mergeDir = MergeDir.FORWARD;
-                    } else if (hasPrev && !prevHead) {
+                    } else if (mergeablePrev && !prevHead) {
                         // merge backwards
                         mergeMsgFlag |= prevDir;
                         mergeDir = MergeDir.BACKWARD;
                     }
                 } else {
                     // I'm a tail
-                    if (hasNext && hasPrev) {
-                        // TODO change to local maximum
-                        if ((!nextHead && !prevHead) && (curID.compareTo(nextID) < 0 && curID.compareTo(prevID) < 0)) {
+                    if (mergeableNext && mergeablePrev) {
+                        if ((!nextHead && !prevHead) && (curID.compareTo(nextID) > 0 && curID.compareTo(prevID) > 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
                             mergeMsgFlag |= nextDir;
                             mergeDir = MergeDir.FORWARD;
                         }
-                    } else if (!hasPrev) {
+                    } else if (!mergeablePrev) {
                         // no previous node
-                        if (!nextHead && curID.compareTo(nextID) < 0) {
+                        if (!nextHead && curID.compareTo(nextID) > 0) {
                             // merge towards tail in forward dir
                             mergeMsgFlag |= nextDir;
                             mergeDir = MergeDir.FORWARD;
                         }
-                    } else if (!hasNext) {
+                    } else if (!mergeableNext) {
                         // no next node
-                        if (!prevHead && curID.compareTo(prevID) < 0) {
+                        if (!prevHead && curID.compareTo(prevID) > 0) {
                             // merge towards tail in reverse dir
                             mergeMsgFlag |= prevDir;
                             mergeDir = MergeDir.BACKWARD;
