@@ -101,9 +101,9 @@ public class MergePathsH4Driver {
             prevToMergeOutput = mergeOutput;
             setOutputPaths(inputGraphPath, iMerge);
             merger.run(prevToMergeOutput, mergeOutput, completeOutput, updatesOutput, baseConf);
-            dfs.copyToLocalFile(new Path(mergeOutput), new Path("i" + iMerge +"-toMerge"));
-            dfs.copyToLocalFile(new Path(completeOutput), new Path("i" + iMerge +"-complete"));
-            dfs.copyToLocalFile(new Path(updatesOutput), new Path("i" + iMerge +"-updates"));
+//            dfs.copyToLocalFile(new Path(mergeOutput), new Path("i" + iMerge +"-toMerge"));
+//            dfs.copyToLocalFile(new Path(completeOutput), new Path("i" + iMerge +"-complete"));
+//            dfs.copyToLocalFile(new Path(updatesOutput), new Path("i" + iMerge +"-updates"));
             
             if (dfs.listStatus(new Path(mergeOutput)) == null || dfs.listStatus(new Path(mergeOutput)).length == 0) {
                 // no output from previous run-- we are done!

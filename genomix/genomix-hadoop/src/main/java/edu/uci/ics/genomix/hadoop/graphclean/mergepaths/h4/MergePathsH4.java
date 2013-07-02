@@ -69,7 +69,6 @@ public class MergePathsH4 extends Configured implements Tool {
         NO_MERGE,
         FORWARD,
         BACKWARD
-
     }
 
     /*
@@ -322,13 +321,13 @@ public class MergePathsH4 extends Configured implements Tool {
             sawCurNode = false;
             updateMsgsCount = 0;
 
-            byte inDir;
+            byte inMsg;
             while (values.hasNext()) {
                 inputValue.set(values.next());
                 inFlag = inputValue.getFlag();
-                inDir = (byte) (inFlag & MessageFlag.MSG_MASK);
-
-                switch (inDir) {
+                inMsg = (byte) (inFlag & MessageFlag.MSG_MASK);
+                
+                switch (inMsg) {
                     case MessageFlag.MSG_UPDATE_MERGE:
                     case MessageFlag.MSG_SELF:
                         if (sawCurNode)
@@ -337,11 +336,11 @@ public class MergePathsH4 extends Configured implements Tool {
                         curNode.set(inputValue.getNode());
                         outFlag = inFlag;
                         sawCurNode = true;
-                        if (inDir == MessageFlag.MSG_SELF) {
+                        if (inMsg == MessageFlag.MSG_SELF) {
                             outPosn.set(curNode.getNodeID());
                         } else { // MSG_UPDATE_MERGE
                             // merge messages are sent to their merge recipient
-                            outPosn.set(curNode.getListFromDir(inDir).getPosition(0));
+                            outPosn.set(curNode.getListFromDir(inMsg).getPosition(0));
                         }
                         break;
                     case MessageFlag.MSG_UPDATE_EDGE:
@@ -350,6 +349,9 @@ public class MergePathsH4 extends Configured implements Tool {
                     default:
                         throw new IOException("Unrecognized message type: " + (inFlag & MessageFlag.MSG_MASK));
                 }
+            }
+            if (!sawCurNode) {
+                throw new IOException("Never saw self in recieve update messages!");
             }
 
             // process all the update messages for this node
