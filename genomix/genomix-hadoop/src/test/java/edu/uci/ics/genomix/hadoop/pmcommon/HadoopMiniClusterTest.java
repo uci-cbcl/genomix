@@ -40,8 +40,9 @@ public class HadoopMiniClusterTest {
     // subclass should modify this to include the HDFS directories that should be cleaned up
     protected ArrayList<String> HDFS_PATHS = new ArrayList<String>();
 
-    protected static String EXPECTED_ROOT = "src/test/resources/expected/";
-    protected static String ACTUAL_ROOT = "src/test/resources/actual/";
+    protected static final String EXPECTED_ROOT = "src/test/resources/expected/";
+    protected static final String ACTUAL_ROOT = "src/test/resources/actual/";
+    protected static final String DATA_ROOT = "src/test/resources/data/";
 
     protected static String HADOOP_CONF_ROOT = "src/test/resources/hadoop/conf/";
     protected static String HADOOP_CONF = HADOOP_CONF_ROOT + "conf.xml";

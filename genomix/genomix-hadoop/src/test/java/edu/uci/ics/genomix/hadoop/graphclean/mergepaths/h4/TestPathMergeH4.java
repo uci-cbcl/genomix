@@ -10,55 +10,69 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3Driver;
-import edu.uci.ics.genomix.hadoop.pmcommon.GenomixMiniClusterTest;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial;
 import edu.uci.ics.genomix.hadoop.velvetgraphbuilding.GraphBuildingDriver;
-import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
-import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 
 @SuppressWarnings("deprecation")
 public class TestPathMergeH4 extends HadoopMiniClusterTest {
-    protected final String LOCAL_SEQUENCE_FILE = "src/test/resources/data/webmap/text.txt";
-    protected final  String SEQUENCE = "/00-sequence/";
-    protected final String GRAPHBUILD = "/01-graphbuild/";
-    protected final String MERGED = "/02-pathmerge/";
-    
-    protected final String ACTUAL = "src/test/resources/actual/";
-    
-    protected final boolean regenerateGraph = true;
-    
+    protected String SEQUENCE = "/sequence/";
+    protected String GRAPHBUILD = "/graphbuild-unmerged/";
+    protected String MERGED = "/pathmerge/";
+    protected String LOCAL_SEQUENCE_FILE;
+    protected String readsFile;
+    protected boolean regenerateGraph;
     {
-        KMER_LENGTH = 5;
-        READ_LENGTH = 8;
         HDFS_PATHS = new ArrayList<String>(Arrays.asList(SEQUENCE, GRAPHBUILD, MERGED));
-        conf.setInt(GenomixJobConf.KMER_LENGTH, KMER_LENGTH);
-        conf.setInt(GenomixJobConf.READ_LENGTH, READ_LENGTH);
     }
-
+    
+    public void setupTestConf(int kmerLength, int readLength, boolean regenerateGraph, String readsFile) {
+        KMER_LENGTH = kmerLength;
+        READ_LENGTH = readLength;
+        this.readsFile = readsFile;
+        this.regenerateGraph = regenerateGraph;
+        LOCAL_SEQUENCE_FILE = DATA_ROOT + SEQUENCE + readsFile;
+    }
+    
     @Test
-    public void TestMergeOneIteration() throws Exception {
-        cleanUpOutput();
-        prepareGraph();
-        
-        MergePathsH4Driver h4 = new MergePathsH4Driver();
-        h4.run(GRAPHBUILD, MERGED, 2, KMER_LENGTH, 5, conf);
-        copyResultsToLocal(MERGED, ACTUAL_ROOT + MERGED, false, conf);
+    public void testTwoReads() throws Exception {
+        setupTestConf(5, 8, false, "tworeads.txt");
+        testPathNode();
+//        testMergeOneIteration();
+//        testMergeToCompletion();
     }
-
+    
 //    @Test
+    public void testSimpleText() throws Exception {
+        setupTestConf(5, 8, false, "text.txt");
+        testPathNode();
+        testMergeOneIteration();
+//        testMergeToCompletion();
+    }
+    
     public void testPathNode() throws IOException {
         cleanUpOutput();
         prepareGraph();
 
         // identify head and tail nodes with pathnode initial
         PathNodeInitial inith4 = new PathNodeInitial();
-        inith4.run(GRAPHBUILD, "/toMerge", "/completed", conf);
+        inith4.run(GRAPHBUILD, "/toMerge", "/toUpdate", "/completed", conf);
+        copyResultsToLocal("/toMerge", ACTUAL_ROOT + "path_toMerge", false, conf);
+        copyResultsToLocal("/toUpdate", ACTUAL_ROOT + "path_toUpdate", false, conf);
+        copyResultsToLocal("/completed", ACTUAL_ROOT + "path_completed", false, conf);
     }
-    
-    
 
+    public void testMergeOneIteration() throws Exception {
+        cleanUpOutput();
+        prepareGraph();
+        
+        MergePathsH4Driver h4 = new MergePathsH4Driver();
+        String outputs = h4.run(GRAPHBUILD, 2, KMER_LENGTH, 1, conf);
+        int i=0;
+        for (String out : outputs.split(",")) {
+            copyResultsToLocal(out, ACTUAL_ROOT + MERGED + i++, false, conf);
+        }
+    }
 
     public void buildGraph() throws IOException {
         JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 

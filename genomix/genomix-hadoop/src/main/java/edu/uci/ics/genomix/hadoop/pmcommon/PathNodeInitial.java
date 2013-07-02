@@ -56,7 +56,7 @@ import edu.uci.ics.genomix.type.PositionWritable;
 public class PathNodeInitial extends Configured implements Tool {
 
     public static final String COMPLETE_OUTPUT = "complete";
-    public static final String TO_MERGE_OUTPUT = "toMerge";
+    public static final String TO_UPDATE_OUTPUT = "toUpdate";
 
     private static byte NEAR_PATH = MessageFlag.EXTRA_FLAG; // special-case extra flag for us
 
@@ -155,7 +155,8 @@ public class PathNodeInitial extends Configured implements Tool {
     public static class PathNodeInitialReducer extends MapReduceBase implements
             Reducer<PositionWritable, NodeWithFlagWritable, PositionWritable, NodeWithFlagWritable> {
         private MultipleOutputs mos;
-        private OutputCollector<PositionWritable, NodeWithFlagWritable> completeCollector;
+        private OutputCollector<PositionWritable, NodeWithFlagWritable> toUpdateCollector;
+        private OutputCollector<NodeWritable, NullWritable> completeCollector;
         private int KMER_SIZE;
 
         private NodeWithFlagWritable inputValue;
@@ -165,12 +166,18 @@ public class PathNodeInitial extends Configured implements Tool {
         private byte inputFlag;
         private boolean sawSelf;
 
+        @Override
         public void configure(JobConf conf) {
             mos = new MultipleOutputs(conf);
             KMER_SIZE = conf.getInt("sizeKmer", 0);
             inputValue = new NodeWithFlagWritable(KMER_SIZE);
             outputValue = new NodeWithFlagWritable(KMER_SIZE);
             nodeToKeep = new NodeWritable(KMER_SIZE);
+        }
+
+        @Override
+        public void close() throws IOException {
+            mos.close();
         }
 
         /*
@@ -187,12 +194,15 @@ public class PathNodeInitial extends Configured implements Tool {
         public void reduce(PositionWritable key, Iterator<NodeWithFlagWritable> values,
                 OutputCollector<PositionWritable, NodeWithFlagWritable> toMergeCollector, Reporter reporter)
                 throws IOException {
+            toUpdateCollector = mos.getCollector(TO_UPDATE_OUTPUT, reporter);
             completeCollector = mos.getCollector(COMPLETE_OUTPUT, reporter);
 
             outputFlag = MessageFlag.EMPTY_MESSAGE;
             sawSelf = false;
             while (values.hasNext()) {
-                inputValue.set(values.next());
+                NodeWithFlagWritable next = values.next();
+                System.out.println(next);
+                inputValue.set(next);
                 inputFlag = inputValue.getFlag();
                 outputFlag |= inputFlag;
 
@@ -210,42 +220,42 @@ public class PathNodeInitial extends Configured implements Tool {
                 throw new IOException("Didn't see a self node in PathNodeInitial! flag: " + outputFlag);
             }
 
-            if ((outputFlag & MessageFlag.IS_HEAD) > 0 && (outputFlag & MessageFlag.IS_TAIL) > 0) {
-                // non-path or single path nodes
+            if (!nodeToKeep.isSimpleOrTerminalPath()) {
+                // non-path nodes need updates if adjacent to path nodes
                 if ((outputFlag & NEAR_PATH) > 0) {
-                    // non-path, but an update candidate
                     outputValue.set(MessageFlag.EMPTY_MESSAGE, nodeToKeep);
-                    toMergeCollector.collect(key, outputValue);
+                    toUpdateCollector.collect(key, outputValue);
                 } else {
-                    // non-path or single-node path.  Store in "complete" output
-                    outputValue.set(MessageFlag.EMPTY_MESSAGE, nodeToKeep);
-                    completeCollector.collect(key, outputValue);
+                    // not adjacent... store in "complete" output
+                    completeCollector.collect(nodeToKeep, NullWritable.get());
                 }
             } else {
-                // path nodes that are mergeable
-                outputFlag &= (MessageFlag.IS_HEAD | MessageFlag.IS_TAIL); // clear flags except H/T
-                outputValue.set(outputFlag, nodeToKeep);
-                toMergeCollector.collect(key, outputValue);
+                if ((outputFlag & MessageFlag.IS_HEAD) > 0 && (outputFlag & MessageFlag.IS_TAIL) > 0) {
+                    // path node, but cannot merge in either direction => complete
+                    completeCollector.collect(nodeToKeep, NullWritable.get());
+                } else {
+                    // path nodes that are mergeable
+                    outputFlag &= (MessageFlag.IS_HEAD | MessageFlag.IS_TAIL); // clear flags except H/T
+                    outputValue.set(outputFlag, nodeToKeep);
+                    toMergeCollector.collect(key, outputValue);
 
-                reporter.incrCounter("genomix", "path_nodes", 1);
-                if ((outputFlag & MessageFlag.IS_HEAD) > 0) {
-                    reporter.incrCounter("genomix", "path_nodes_heads", 1);
-                }
-                if ((outputFlag & MessageFlag.IS_TAIL) > 0) {
-                    reporter.incrCounter("genomix", "path_nodes_tails", 1);
+                    reporter.incrCounter("genomix", "path_nodes", 1);
+                    if ((outputFlag & MessageFlag.IS_HEAD) > 0) {
+                        reporter.incrCounter("genomix", "path_nodes_heads", 1);
+                    }
+                    if ((outputFlag & MessageFlag.IS_TAIL) > 0) {
+                        reporter.incrCounter("genomix", "path_nodes_tails", 1);
+                    }
                 }
             }
-        }
-
-        public void close() throws IOException {
-            mos.close();
         }
     }
 
     /*
      * Mark the head, tail, and simple path nodes in one map-reduce job.
      */
-    public RunningJob run(String inputPath, String toMergeOutput, String completeOutput, JobConf baseConf) throws IOException {
+    public RunningJob run(String inputPath, String toMergeOutput, String toUpdateOutput, String completeOutput,
+            JobConf baseConf) throws IOException {
         JobConf conf = new JobConf(baseConf);
         conf.setJarByClass(PathNodeInitial.class);
         conf.setJobName("PathNodeInitial " + inputPath);
@@ -253,21 +263,24 @@ public class PathNodeInitial extends Configured implements Tool {
         conf.setMapOutputValueClass(NodeWithFlagWritable.class);
         conf.setOutputKeyClass(PositionWritable.class);
         conf.setOutputValueClass(NodeWithFlagWritable.class);
-        
+
         conf.setInputFormat(SequenceFileInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
         FileInputFormat.addInputPaths(conf, inputPath);
         FileOutputFormat.setOutputPath(conf, new Path(toMergeOutput));
-        MultipleOutputs.addNamedOutput(conf, COMPLETE_OUTPUT, MergePathMultiSeqOutputFormat.class,
+        MultipleOutputs.addNamedOutput(conf, TO_UPDATE_OUTPUT, MergePathMultiSeqOutputFormat.class,
                 PositionWritable.class, NodeWithFlagWritable.class);
+        MultipleOutputs.addNamedOutput(conf, COMPLETE_OUTPUT, MergePathMultiSeqOutputFormat.class, NodeWritable.class,
+                NullWritable.class);
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(toMergeOutput), true); // clean output dir
-        
+
         conf.setMapperClass(PathNodeInitialMapper.class);
         conf.setReducerClass(PathNodeInitialReducer.class);
         RunningJob job = JobClient.runJob(conf);
 
         // move the tmp outputs to the arg-spec'ed dirs
+        dfs.rename(new Path(toMergeOutput + File.separator + TO_UPDATE_OUTPUT), new Path(toUpdateOutput));
         dfs.rename(new Path(toMergeOutput + File.separator + COMPLETE_OUTPUT), new Path(completeOutput));
 
         return job;

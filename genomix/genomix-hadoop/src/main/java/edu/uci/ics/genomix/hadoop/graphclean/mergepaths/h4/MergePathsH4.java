@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -180,11 +181,12 @@ public class MergePathsH4 extends Configured implements Tool {
             curHead = isNodeRandomHead(curID);
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
+            boolean isPath = curNode.isSimpleOrTerminalPath();
             mergeableNext = setNextInfo(curNode) && tailFlag == 0;
             mergeablePrev = setPrevInfo(curNode) && headFlag == 0;
 
             // decide where we're going to merge to
-            if (mergeableNext || mergeablePrev) {
+            if (isPath && (mergeableNext || mergeablePrev)) {
                 if (curHead) {
                     if (mergeableNext && !nextHead) {
                         // merge forward
@@ -372,8 +374,10 @@ public class MergePathsH4 extends Configured implements Tool {
     private static class H4MergeReducer extends MapReduceBase implements
             Reducer<PositionWritable, NodeWithFlagWritable, PositionWritable, NodeWithFlagWritable> {
         private MultipleOutputs mos;
+        public static final String TO_UPDATE_OUTPUT = "toUpdate";
         public static final String COMPLETE_OUTPUT = "complete";
-        private OutputCollector<PositionWritable, NodeWithFlagWritable> completeCollector;
+        private OutputCollector<PositionWritable, NodeWithFlagWritable> toUpdateCollector;
+        private OutputCollector<NodeWritable, NullWritable> completeCollector;
 
         private int KMER_SIZE;
         private NodeWithFlagWritable inputValue;
@@ -416,6 +420,7 @@ public class MergePathsH4 extends Configured implements Tool {
         public void reduce(PositionWritable key, Iterator<NodeWithFlagWritable> values,
                 OutputCollector<PositionWritable, NodeWithFlagWritable> toMergeCollector, Reporter reporter)
                 throws IOException {
+            toUpdateCollector = mos.getCollector(TO_UPDATE_OUTPUT, reporter);
             completeCollector = mos.getCollector(COMPLETE_OUTPUT, reporter);
             sawCurNode = false;
             mergeMsgsCount = 0;
@@ -450,11 +455,15 @@ public class MergePathsH4 extends Configured implements Tool {
                 outputValue.processUpdates(mergeMsgs.get(i), KMER_SIZE);
             }
 
-            // H + T indicates a complete path
-            if ((outputValue.getFlag() & MessageFlag.IS_HEAD) > 0
+            if (!outputValue.getNode().isSimpleOrTerminalPath()) {
+                // not a mergeable path, can't tell if it still needs updates!
+                toUpdateCollector.collect(outputKey, outputValue);
+            } else if ((outputValue.getFlag() & MessageFlag.IS_HEAD) > 0
                     && ((outputValue.getFlag() & MessageFlag.IS_TAIL) > 0)) {
-                completeCollector.collect(outputKey, outputValue);
+                // H + T indicates a complete path
+                completeCollector.collect(outputValue.getNode(), NullWritable.get());
             } else {
+                // not finished merging yet
                 toMergeCollector.collect(outputKey, outputValue);
             }
         }
@@ -467,7 +476,8 @@ public class MergePathsH4 extends Configured implements Tool {
     /*
      * Run one iteration of the mergePaths algorithm
      */
-    public RunningJob run(String inputPath, String toMergeOutput, String completeOutput, JobConf baseConf) throws IOException {
+    public RunningJob run(String inputPath, String toMergeOutput, String toUpdateOutput, String completeOutput, JobConf baseConf)
+            throws IOException {
         JobConf conf = new JobConf(baseConf);
         FileSystem dfs = FileSystem.get(conf);
         conf.setJarByClass(MergePathsH4.class);
@@ -478,10 +488,10 @@ public class MergePathsH4 extends Configured implements Tool {
         conf.setMapOutputValueClass(NodeWithFlagWritable.class);
         conf.setOutputKeyClass(PositionWritable.class);
         conf.setOutputValueClass(NodeWithFlagWritable.class);
-        
+
         // step 1: decide merge dir and send updates
         FileInputFormat.addInputPaths(conf, inputPath);
-        String outputUpdatesTmp = "h4.updatesProcessed." + new Random().nextDouble() + ".tmp";  // random filename
+        String outputUpdatesTmp = "h4.updatesProcessed." + new Random().nextDouble() + ".tmp"; // random filename
         FileOutputFormat.setOutputPath(conf, new Path(outputUpdatesTmp));
         dfs.delete(new Path(outputUpdatesTmp), true);
         conf.setMapperClass(H4UpdatesMapper.class);
@@ -490,22 +500,28 @@ public class MergePathsH4 extends Configured implements Tool {
 
         // step 2: process merges
         FileInputFormat.addInputPaths(conf, outputUpdatesTmp);
-        Path outputMergeTmp = new Path("h4.mergeProcessed." + new Random().nextDouble() + ".tmp");  // random filename
+        Path outputMergeTmp = new Path("h4.mergeProcessed." + new Random().nextDouble() + ".tmp"); // random filename
         FileOutputFormat.setOutputPath(conf, outputMergeTmp);
-        MultipleOutputs.addNamedOutput(conf, H4MergeReducer.COMPLETE_OUTPUT, MergePathMultiSeqOutputFormat.class,
+        MultipleOutputs.addNamedOutput(conf, H4MergeReducer.TO_UPDATE_OUTPUT, MergePathMultiSeqOutputFormat.class,
                 PositionWritable.class, NodeWithFlagWritable.class);
+        MultipleOutputs.addNamedOutput(conf, H4MergeReducer.COMPLETE_OUTPUT, MergePathMultiSeqOutputFormat.class,
+                NodeWritable.class, NullWritable.class);
         dfs.delete(outputMergeTmp, true);
-        dfs.delete(new Path(outputMergeTmp + "/" + H4MergeReducer.COMPLETE_OUTPUT), true);
         conf.setMapperClass(IdentityMapper.class);
         conf.setReducerClass(H4MergeReducer.class);
         job = JobClient.runJob(conf);
 
         // move the tmp outputs to the arg-spec'ed dirs. If there is no such dir, create an empty one to simplify downstream processing
-        if (!dfs.rename(new Path(outputMergeTmp + File.separator + H4MergeReducer.COMPLETE_OUTPUT), new Path(completeOutput))) {
+        if (!dfs.rename(new Path(outputMergeTmp + File.separator + H4MergeReducer.TO_UPDATE_OUTPUT), new Path(
+                toUpdateOutput))) {
+            dfs.mkdirs(new Path(toUpdateOutput));
+        }
+        if (!dfs.rename(new Path(outputMergeTmp + File.separator + H4MergeReducer.COMPLETE_OUTPUT), new Path(
+                completeOutput))) {
             dfs.mkdirs(new Path(completeOutput));
         }
         if (!dfs.rename(outputMergeTmp, new Path(toMergeOutput))) {
-            dfs.mkdirs(new Path(completeOutput));
+            dfs.mkdirs(new Path(toMergeOutput));
         }
 
         return job;

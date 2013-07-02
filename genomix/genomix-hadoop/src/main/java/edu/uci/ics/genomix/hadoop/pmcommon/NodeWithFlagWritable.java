@@ -235,10 +235,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
     }
 
     public NodeWritable getNode() {
-        if (node.getCount() != 0) {
-            return node;
-        }
-        return null;
+        return node;
     }
 
     public byte getFlag() {
