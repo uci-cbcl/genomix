@@ -342,9 +342,11 @@ public class MergePathsH4 extends Configured implements Tool {
                                     + outputValue.getNode() + "  current self: " + inputValue.getNode());
                         if (inMsg == MessageFlag.MSG_SELF) {
                             outPosn.set(outputValue.getNode().getNodeID());
-                        } else { // MSG_UPDATE_MERGE
+                        } else if (inMsg == MessageFlag.MSG_UPDATE_MERGE) {
                             // merge messages are sent to their merge recipient
                             outPosn.set(outputValue.getNode().getListFromDir(inMsg).getPosition(0));
+                        } else {
+                            throw new IOException("Unrecongized MessageFlag MSG: " + inMsg);
                         }
                         outputValue.set(inFlag, inputValue.getNode());
                         sawCurNode = true;
@@ -392,6 +394,7 @@ public class MergePathsH4 extends Configured implements Tool {
         private int mergeMsgsCount;
 
         public void configure(JobConf conf) {
+            mos = new MultipleOutputs(conf);
             KMER_SIZE = conf.getInt("sizeKmer", 0);
             inputValue = new NodeWithFlagWritable(KMER_SIZE);
             outputValue = new NodeWithFlagWritable(KMER_SIZE);
@@ -500,6 +503,9 @@ public class MergePathsH4 extends Configured implements Tool {
 
         // step 2: process merges
         FileInputFormat.addInputPaths(conf, outputUpdatesTmp);
+        for (Path out : FileInputFormat.getInputPaths(conf)) {
+            System.out.println(out);
+        }
         Path outputMergeTmp = new Path("h4.mergeProcessed." + new Random().nextDouble() + ".tmp"); // random filename
         FileOutputFormat.setOutputPath(conf, outputMergeTmp);
         MultipleOutputs.addNamedOutput(conf, H4MergeReducer.TO_UPDATE_OUTPUT, MergePathMultiSeqOutputFormat.class,

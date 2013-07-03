@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 
 @SuppressWarnings("deprecation")
 public class TestPathMergeH3 extends GenomixMiniClusterTest {
-    protected String LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/fr_test2.txt";
+    protected String LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/bubble_test1.txt";
     protected String HDFS_SEQUENCE = "/00-sequence/";
     protected String HDFS_GRAPHBUILD = "/01-graphbuild/";
     protected String HDFS_MARKPATHS = "/02-pathmark/";
@@ -71,7 +71,7 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
         FileOutputFormat.setOutputPath(buildConf, new Path(HDFS_GRAPHBUILD));
         buildConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         buildConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(new GenomixJobConf(buildConf), Plan.BUILD_UNMERGED_GRAPH, true);
+        driver.runJob(new GenomixJobConf(buildConf), Plan.BUILD_DEBRUJIN_GRAPH, true);
         String fileFormat = buildConf.get(GenomixJobConf.OUTPUT_FORMAT);
         boolean resultsAreText = GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(fileFormat);
         copyResultsToLocal(HDFS_GRAPHBUILD, ACTUAL_ROOT + GRAPHBUILD_FILE, resultsAreText, buildConf);

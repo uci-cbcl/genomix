@@ -37,8 +37,8 @@ public class TestPathMergeH4 extends HadoopMiniClusterTest {
     @Test
     public void testTwoReads() throws Exception {
         setupTestConf(5, 8, false, "tworeads.txt");
-        testPathNode();
-//        testMergeOneIteration();
+//        testPathNode();
+        testMergeOneIteration();
 //        testMergeToCompletion();
     }
     
@@ -90,9 +90,9 @@ public class TestPathMergeH4 extends HadoopMiniClusterTest {
         if (regenerateGraph) {
             copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
             buildGraph();
-            copyLocalToDFS(ACTUAL_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
+            copyLocalToDFS(ACTUAL_ROOT + GRAPHBUILD + readsFile + ".binmerge", GRAPHBUILD);
         } else {
-            copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD + ".bindir", GRAPHBUILD);
+            copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD + readsFile + ".binmerge", GRAPHBUILD);
         }
     }
 }
