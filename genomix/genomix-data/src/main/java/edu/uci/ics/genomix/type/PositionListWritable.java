@@ -143,7 +143,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
                 return;
             }
         }
-        throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString() + "` was not found in this list.");
+        //throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString() + "` was not found in this list.");
     }
 
     public void set(PositionListWritable list2) {

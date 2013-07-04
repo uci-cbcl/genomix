@@ -44,10 +44,8 @@ public class LogAlgorithmForPathMergeVertex extends
     BasicPathMergeVertex {
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
-    protected MessageWritable outgoingMsg2 = new MessageWritable();
-    protected PositionWritable destVertexId2 = new PositionWritable();
-    
-    byte finalFlag;
+    PositionWritable tempPostition = new PositionWritable();
+
     /**
      * initiate kmerSize, maxIteration
      */
@@ -57,7 +55,9 @@ public class LogAlgorithmForPathMergeVertex extends
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         headFlag = (byte)(getVertexValue().getState() & MessageFlag.IS_HEAD);
+        selfFlag =(byte)(getVertexValue().getState() & MessageFlag.VERTEX_MASK);
         outgoingMsg.reset();
+        receivedMsgList.clear();
     }
 
     /**
@@ -65,16 +65,22 @@ public class LogAlgorithmForPathMergeVertex extends
      */
     public void sendOutMsg() {
         //send wantToMerge to next
-        destVertexId.set(getNextDestVertexId(getVertexValue()));
-        outgoingMsg.setFlag(outFlag);
-        outgoingMsg.setSourceVertexId(getVertexId());
-        sendMsg(destVertexId, outgoingMsg);
+        tempPostition = getNextDestVertexId(getVertexValue());
+        if(tempPostition != null){
+            destVertexId.set(tempPostition);
+            outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            sendMsg(destVertexId, outgoingMsg);
+        }
         
         ////send wantToMerge to prev
-        destVertexId2.set(getPreDestVertexId(getVertexValue()));
-        outgoingMsg2.setFlag(outFlag);
-        outgoingMsg2.setSourceVertexId(getVertexId());
-        sendMsg(destVertexId2, outgoingMsg2);
+        tempPostition = getPreDestVertexId(getVertexValue());
+        if(tempPostition != null){
+            destVertexId.set(tempPostition);
+            outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            sendMsg(destVertexId, outgoingMsg);
+        }
     }
     
     /**
@@ -84,88 +90,96 @@ public class LogAlgorithmForPathMergeVertex extends
         int countHead = 0;
         int countOldHead = 0;
         for(int i = 0; i < receivedMsgList.size(); i++){
-            if((byte)(receivedMsgList.get(i).getFlag() & MessageFlag.IS_HEAD) > 0)
-                countHead++;
-            if((byte)(receivedMsgList.get(i).getFlag() & MessageFlag.IS_OLDHEAD) > 0)
-                countOldHead++;
+            inFlag = receivedMsgList.get(i).getFlag();
+            switch(inFlag & MessageFlag.VERTEX_MASK){
+                case MessageFlag.IS_HEAD:
+                    countHead++;
+                    break;
+                case MessageFlag.IS_OLDHEAD:
+                    countOldHead++;
+                    break;
+            }
         }
-        if(countHead == 0 && countOldHead == 0)
-            return MessageFromHead.BothMsgsFromNonHead;
-        else if(countHead == 2)
+        if(countHead == 2)
             return MessageFromHead.BothMsgsFromHead;
-        else if(countOldHead == 2)
-            return MessageFromHead.BothMsgsFromOldHead;
-        else if(countHead == 1 && headFlag == 0)
-            return MessageFromHead.OneMsgFromHeadToNonHead;
-        else if(countHead == 1 && headFlag > 0)
-            return MessageFromHead.OneMsgFromHeadToHead;
-        else if(countOldHead == 1)
-            return MessageFromHead.OneMsgFromNonHead;
-        
-        return MessageFromHead.NO_INFO;
+        else if(countHead == 1 && countOldHead == 1)
+            return MessageFromHead.OneMsgFromOldHeadAndOneFromHead;
+        else if(countHead == 1 && countOldHead == 0)
+            return MessageFromHead.OneMsgFromHeadAndOneFromNonHead;
+        else if(countHead == 0 && countOldHead == 0)
+            return MessageFromHead.BothMsgsFromNonHead;
+        else
+            return MessageFromHead.NO_MSG;
     }
 
     /**
      * head send message to path
      */
     public void sendMsgToPathVertex(Iterator<MessageWritable> msgIterator) {
-        //process merge when receiving msg
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            receivedMsgList.add(incomingMsg);
-        }
-        if(receivedMsgList.size() != 0){
-            byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
-            switch(numOfMsgsFromHead){
-                case MessageFromHead.BothMsgsFromNonHead:
-                    for(int i = 0; i < 2; i++)
-                        processMerge(receivedMsgList.get(i));
-                    break;
-                case MessageFromHead.BothMsgsFromHead:
-                case MessageFromHead.BothMsgsFromOldHead:
-                    for(int i = 0; i < 2; i++)
-                        processMerge(receivedMsgList.get(i));
-                    getVertexValue().setState(MessageFlag.IS_FINAL);
-                    break;
-                case MessageFromHead.OneMsgFromHeadToNonHead:
-                    for(int i = 0; i < 2; i++)
-                        processMerge(receivedMsgList.get(i));
-                    getVertexValue().setState(MessageFlag.IS_HEAD);
-                    break;
-                case MessageFromHead.OneMsgFromHeadToHead: //stop condition
-                    for(int i = 0; i < 2; i++){
-                        if(headFlag > 0){
-                            processMerge(receivedMsgList.get(i));
-                            break;
-                        }
-                    }
-                    getVertexValue().setState(MessageFlag.IS_FINAL);
-                    //voteToHalt();
-                    break;
-                case MessageFromHead.OneMsgFromNonHead:
-                    //halt
-                    //voteToHalt();
-                    break;
-            }
-        }
         //send out wantToMerge msg
-        resetHeadFlag();
-        finalFlag = (byte)(getVertexValue().getState() & MessageFlag.IS_FINAL);
-        outFlag = (byte)(headFlag | finalFlag);
-        if(outFlag == 0)
-            sendOutMsg();
+        if(selfFlag != MessageFlag.IS_HEAD){
+                sendOutMsg();
+        }
     }
 
     /**
      * path response message to head
      */
     public void responseMsgToHeadVertex(Iterator<MessageWritable> msgIterator) {
+        if(!msgIterator.hasNext() && selfFlag == MessageFlag.IS_HEAD){
+            getVertexValue().setState(MessageFlag.IS_STOP);
+            sendOutMsg();
+        }
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            sendMergeMsg();
+            if(getMsgFlag() == MessageFlag.IS_FINAL){
+                processMerge(incomingMsg);
+                getVertexValue().setState(MessageFlag.IS_FINAL);
+            }else
+                sendMergeMsg();
         }
     }
 
+    /**
+     * head vertex process merge
+     */
+    public void processMergeInHeadVertex(Iterator<MessageWritable> msgIterator){
+      //process merge when receiving msg
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if(getMsgFlag() == MessageFlag.IS_FINAL){
+                setStopFlag();
+                sendMergeMsg();
+                break;
+            }
+            receivedMsgList.add(incomingMsg);
+        }
+        if(receivedMsgList.size() != 0){
+            byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
+             switch(numOfMsgsFromHead){
+                case MessageFromHead.BothMsgsFromHead:
+                case MessageFromHead.OneMsgFromOldHeadAndOneFromHead:
+                    for(int i = 0; i < 2; i++)
+                        processMerge(receivedMsgList.get(i));
+                    getVertexValue().setState(MessageFlag.IS_FINAL);
+                    voteToHalt();
+                    break;
+                case MessageFromHead.OneMsgFromHeadAndOneFromNonHead:
+                    for(int i = 0; i < 2; i++)
+                        processMerge(receivedMsgList.get(i));
+                    getVertexValue().setState(MessageFlag.IS_HEAD);
+                    break;
+                case MessageFromHead.BothMsgsFromNonHead:
+                    for(int i = 0; i < 2; i++)
+                        processMerge(receivedMsgList.get(i));
+                    break;
+                case MessageFromHead.NO_MSG:
+                    //halt
+                    deleteVertex(getVertexId());
+                    break;
+            }
+        }
+    }
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
@@ -173,13 +187,17 @@ public class LogAlgorithmForPathMergeVertex extends
             startSendMsg();
         else if (getSuperstep() == 2)
             initState(msgIterator);
-        else if (getSuperstep() % 2 == 1 && getSuperstep() <= maxIteration) {
+        else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
             sendMsgToPathVertex(msgIterator);
-            if(headFlag == 0)
+            if(selfFlag != MessageFlag.IS_HEAD)
                 voteToHalt();
-        } else if (getSuperstep() % 2 == 0 && getSuperstep() <= maxIteration) {
+        } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             responseMsgToHeadVertex(msgIterator);
-        } else
+            if(selfFlag != MessageFlag.IS_HEAD)
+                voteToHalt();
+        } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
+            processMergeInHeadVertex(msgIterator);
+        }else
             voteToHalt();
     }
 

@@ -31,17 +31,31 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     // merge/update directions
     public static class DirectionFlag {
-        public static final byte DIR_FF = 0b00 << 0;
-        public static final byte DIR_FR = 0b01 << 0;
-        public static final byte DIR_RF = 0b10 << 0;
-        public static final byte DIR_RR = 0b11 << 0;
-        public static final byte DIR_MASK = 0b11 << 0;
+        public static final byte DIR_FF = 0b000 << 0;
+        public static final byte DIR_FR = 0b001 << 0;
+        public static final byte DIR_RF = 0b010 << 0;
+        public static final byte DIR_RR = 0b011 << 0;
+        public static final byte DIR_NO = 0b111 << 0;
+        public static final byte DIR_MASK = 0b111 << 0;
     }
     
-    public static class MergeDirFlag extends DirectionFlag{
-        public static final byte SHOULD_MERGEWITHNEXT = 0b0 << 2;
-        public static final byte SHOULD_MERGEWITHPREV = 0b1 << 2;
-        public static final byte SHOULD_MERGE_MASK = 0b1 << 2;
+    public static class SpecialVertexFlag extends DirectionFlag {
+        public static final byte IS_RANDOMTAIL = 0b00 << 4;
+        public static final byte IS_STOP = 0b00 << 4;
+        public static final byte IS_HEAD = 0b01 << 4;
+        public static final byte IS_FINAL = 0b10 << 4;
+        public static final byte IS_RANDOMHEAD = 0b11 << 4;
+        public static final byte IS_OLDHEAD = 0b11 << 4;
+
+        public static final byte VERTEX_MASK = 0b11 << 4;
+        public static final byte VERTEX_CLEAR = (byte) 11001111;
+    }
+    
+    public static class MergeDirFlag extends SpecialVertexFlag{
+        public static final byte NO_MERGE = 0b00 << 2;
+        public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 2;
+        public static final byte SHOULD_MERGEWITHPREV = 0b10 << 2;
+        public static final byte SHOULD_MERGE_MASK = 0b11 << 2;
     }
 
     private PositionWritable nodeID;

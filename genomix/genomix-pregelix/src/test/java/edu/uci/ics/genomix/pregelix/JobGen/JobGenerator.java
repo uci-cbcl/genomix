@@ -201,7 +201,7 @@ public class JobGenerator {
     
     public static void main(String[] args) throws IOException {
         //genNaiveAlgorithmForMergeGraph();
-        //genLogAlgorithmForMergeGraph();
+        genLogAlgorithmForMergeGraph();
         //genP3ForMergeGraph();
         //genTipAddGraph();
         //genTipRemoveGraph();
@@ -209,7 +209,7 @@ public class JobGenerator {
         //genBridgeRemoveGraph();
         //genBubbleAddGraph();
         //genBubbleMergeGraph();
-        genP4ForMergeGraph();
+        //genP4ForMergeGraph();
     }
 
 }
