@@ -76,9 +76,9 @@ public class GenomixMiniClusterTest {
                     new Path(localDestFile), false, conf, null);
         } else {
             // file is binary
-            // save the entire binary output dir
-            FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
-                    new Path(localDestFile + ".bindir"), false, conf);
+//            // save the entire binary output dir
+//            FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
+//                    new Path(localDestFile + ".bindir"), false, conf);
 
             // also load the Nodes and write them out as text locally. 
             FileSystem lfs = FileSystem.getLocal(new Configuration());

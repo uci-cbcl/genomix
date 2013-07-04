@@ -15,6 +15,7 @@
 package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -25,31 +26,29 @@ import org.apache.tools.ant.util.IdentityMapper;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.hadoop.pmcommon.ConvertGraphFromNodeWithFlagToNodeWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial;
 
 @SuppressWarnings("deprecation")
 public class MergePathsH4Driver {
 
     private static final String TO_MERGE = "toMerge";
+    private static final String TO_UPDATE = "toUpdate";
     private static final String COMPLETE = "complete";
-    private static final String UPDATES = "updates";
     private String mergeOutput;
+    private String toUpdateOutput;
     private String completeOutput;
-    private String updatesOutput;
 
     private void setOutputPaths(String basePath, int mergeIteration) {
         basePath = basePath.replaceAll("/$", ""); // strip trailing slash
         mergeOutput = basePath + "_" + TO_MERGE + "_i" + mergeIteration;
+        toUpdateOutput = basePath + "_" + TO_UPDATE + "_i" + mergeIteration;
         completeOutput = basePath + "_" + COMPLETE + "_i" + mergeIteration;
-        updatesOutput = basePath + "_" + UPDATES + "_i" + mergeIteration;
     }
 
     private static class Options {
         @Option(name = "-inputpath", usage = "the input path", required = true)
         public String inputPath;
-
-        @Option(name = "-outputpath", usage = "the output path", required = true)
-        public String outputPath;
 
         @Option(name = "-mergeresultpath", usage = "the merging results path", required = true)
         public String mergeResultPath;
@@ -74,8 +73,8 @@ public class MergePathsH4Driver {
      * iterations of path merging. Updates during the merge are batch-processed
      * at the end in a final update job.
      */
-    public void run(String inputGraphPath, String outputGraphPath, int numReducers, int sizeKmer, int mergeRound,
-            String defaultConfPath, JobConf defaultConf) throws IOException {
+    public String run(String inputGraphPath, int numReducers, int sizeKmer, int mergeRound, String defaultConfPath,
+            JobConf defaultConf) throws IOException {
         JobConf baseConf = defaultConf == null ? new JobConf() : defaultConf;
         if (defaultConfPath != null) {
             baseConf.addResource(new Path(defaultConfPath));
@@ -85,31 +84,35 @@ public class MergePathsH4Driver {
         FileSystem dfs = FileSystem.get(baseConf);
 
         int iMerge = 0;
+        boolean mergeComplete = false;
+        String prevToMergeOutput = inputGraphPath;
+        ArrayList<String> completeOutputs = new ArrayList<String>();
 
         // identify head and tail nodes with pathnode initial
         PathNodeInitial inith4 = new PathNodeInitial();
         setOutputPaths(inputGraphPath, iMerge);
-        String prevToMergeOutput = inputGraphPath;
-        System.out.println("initial run.  toMerge: " + mergeOutput + ", complete: " + completeOutput);
-        inith4.run(prevToMergeOutput, mergeOutput, completeOutput, baseConf);
-        dfs.copyToLocalFile(new Path(mergeOutput), new Path("initial-toMerge"));
-        dfs.copyToLocalFile(new Path(completeOutput), new Path("initial-complete"));
+        inith4.run(prevToMergeOutput, mergeOutput, toUpdateOutput, completeOutput, baseConf);
+        completeOutputs.add(completeOutput);
+        //        dfs.copyToLocalFile(new Path(mergeOutput), new Path("initial-toMerge"));
+        //        dfs.copyToLocalFile(new Path(completeOutput), new Path("initial-complete"));
 
         // several iterations of merging
         MergePathsH4 merger = new MergePathsH4();
         for (iMerge = 1; iMerge <= mergeRound; iMerge++) {
             prevToMergeOutput = mergeOutput;
             setOutputPaths(inputGraphPath, iMerge);
-            merger.run(prevToMergeOutput, mergeOutput, completeOutput, updatesOutput, baseConf);
-//            dfs.copyToLocalFile(new Path(mergeOutput), new Path("i" + iMerge +"-toMerge"));
-//            dfs.copyToLocalFile(new Path(completeOutput), new Path("i" + iMerge +"-complete"));
-//            dfs.copyToLocalFile(new Path(updatesOutput), new Path("i" + iMerge +"-updates"));
-            
+            merger.run(prevToMergeOutput, mergeOutput, toUpdateOutput, completeOutput, baseConf);
+            completeOutputs.add(completeOutput);
+            //            dfs.copyToLocalFile(new Path(mergeOutput), new Path("i" + iMerge +"-toMerge"));
+            //            dfs.copyToLocalFile(new Path(completeOutput), new Path("i" + iMerge +"-complete"));
+
             if (dfs.listStatus(new Path(mergeOutput)) == null || dfs.listStatus(new Path(mergeOutput)).length == 0) {
                 // no output from previous run-- we are done!
+                mergeComplete = true;
                 break;
             }
         }
+<<<<<<< HEAD
         
         // finally, combine all the completed paths and update messages to
         // create a single merged graph output
@@ -130,25 +133,34 @@ public class MergePathsH4Driver {
         };
         // test comment 
         
+=======
+        if (!mergeComplete) {
+            // if the merge didn't finish, we have to do one final iteration to convert back into (NodeWritable, NullWritable) pairs
+            ConvertGraphFromNodeWithFlagToNodeWritable converter = new ConvertGraphFromNodeWithFlagToNodeWritable();
+            converter.run(prevToMergeOutput, completeOutput, baseConf);
+            completeOutputs.add(completeOutput);
+        }
+
+        // final output string is a comma-separated list of completeOutputs
+>>>>>>> 0fd527e9535a755b9d0956adb1cdc845f1fc46c2
         StringBuilder sb = new StringBuilder();
         String delim = "";
-        for (FileStatus file : dfs.globStatus(new Path(inputGraphPath.replaceAll("/$",  "") + "*"), updateFilter)) {
-            sb.append(delim).append(file.getPath());
+        for (String output : completeOutputs) {
+            sb.append(delim).append(output);
             delim = ",";
         }
         String finalInputs = sb.toString();
-        System.out.println("This is the final sacrifice: " + finalInputs);
-        // TODO run the update iteration
+        return finalInputs;
     }
 
-    public void run(String inputPath, String outputGraphPath, int numReducers, int sizeKmer, int mergeRound,
-            String defaultConfPath) throws IOException {
-        run(inputPath, outputGraphPath, numReducers, sizeKmer, mergeRound, defaultConfPath, null);
+    public String run(String inputPath, int numReducers, int sizeKmer, int mergeRound, String defaultConfPath)
+            throws IOException {
+        return run(inputPath, numReducers, sizeKmer, mergeRound, defaultConfPath, null);
     }
 
-    public void run(String inputPath, String outputGraphPath, int numReducers, int sizeKmer, int mergeRound,
-            JobConf defaultConf) throws IOException {
-        run(inputPath, outputGraphPath, numReducers, sizeKmer, mergeRound, null, defaultConf);
+    public String run(String inputPath, int numReducers, int sizeKmer, int mergeRound, JobConf defaultConf)
+            throws IOException {
+        return run(inputPath, numReducers, sizeKmer, mergeRound, null, defaultConf);
     }
 
     public static void main(String[] args) throws Exception {
@@ -156,7 +168,7 @@ public class MergePathsH4Driver {
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         MergePathsH4Driver driver = new MergePathsH4Driver();
-        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, options.mergeRound,
-                null, null);
+        String outputs = driver.run(options.inputPath, options.numReducers, options.sizeKmer, options.mergeRound, null, null);
+        System.out.println("Job ran.  Find outputs in " + outputs);
     }
 }

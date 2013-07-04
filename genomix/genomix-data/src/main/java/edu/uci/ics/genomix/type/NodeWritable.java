@@ -254,4 +254,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return inDegree() == 1 && outDegree() == 1;
     }
 
+    public boolean isSimpleOrTerminalPath() {
+        return isPathNode() || (inDegree() == 0 && outDegree() == 1) || (inDegree() == 1 && outDegree() == 0);
+    }
+
 }

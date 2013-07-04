@@ -43,7 +43,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
         byte neighborToMeDir = mirrorDirection(neighborDir);
         byte neighborToMergeDir = flipDirection(neighborToMeDir, mergeDir);
 
-        // clear previous kmer and edge data 
+        // clear previous kmer and edge data
         node.reset(0);
 
         // indicate the node to delete
@@ -73,8 +73,9 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
     }
 
     /*
-     * When A->B edge type is @neighborDir and B will merge towards C along a @mergeDir edge, 
-     * returns the new edge type for A->C
+     * When A->B edge type is @neighborDir and B will merge towards C along a
+     * 
+     * @mergeDir edge, returns the new edge type for A->C
      */
     public static byte flipDirection(byte neighborDir, byte mergeDir) {
         switch (mergeDir) {
@@ -106,10 +107,10 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
     }
 
     /*
-     * Process any changes to @node contained in @updateMsg.  This includes merges and edge updates
+     * Process any changes to @self contained in @updateMsg. This includes
+     * merges and edge updates.
      */
-    public static void processUpdates(NodeWritable node, NodeWithFlagWritable updateMsg, int kmerSize)
-            throws IOException {
+    public void processUpdates(NodeWithFlagWritable updateMsg, int kmerSize) throws IOException {
         byte updateFlag = updateMsg.getFlag();
         NodeWritable updateNode = updateMsg.getNode();
         
@@ -131,7 +132,25 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
             node.getListFromDir(updateFlag).remove(updateNode.getNodeID()); // remove the node from my edges
             node.getKmer().mergeWithKmerInDir(updateFlag, kmerSize, updateNode.getKmer()); // merge with its kmer
 
-            // merge my edges with the incoming node's edges, accounting for if the node flipped in 
+            // pass along H/T information from the merging node. flipping H ->T, T -> H
+            switch (updateFlag & MessageFlag.DIR_MASK) {
+                case MessageFlag.DIR_FF:
+                case MessageFlag.DIR_RR:
+                    flag |= (byte) (updateFlag & MessageFlag.IS_HEAD);
+                    flag |= (byte) (updateFlag & MessageFlag.IS_TAIL);
+                    break;
+                case MessageFlag.DIR_FR:
+                case MessageFlag.DIR_RF:
+                    if ((updateFlag & MessageFlag.IS_HEAD) > 0)
+                        flag |= (byte) (updateFlag & MessageFlag.IS_TAIL);
+                    if ((updateFlag & MessageFlag.IS_TAIL) > 0)
+                        flag |= (byte) (updateFlag & MessageFlag.IS_HEAD);
+                    break;
+                default:
+                    throw new IOException("Unrecognized direction in updateFlag: " + updateFlag);
+            }
+
+            // merge my edges with the incoming node's edges, accounting for if the node flipped in
             // the merge and if it's my predecessor or successor
             switch (updateFlag & MessageFlag.DIR_MASK) {
                 case MessageFlag.DIR_FF:
@@ -140,27 +159,31 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
                     node.getFRList().set(updateNode.getFRList());
                     // update isn't allowed to have any other successors (mirror & flip)
                     if (updateNode.getRFList().getCountOfPosition() > 0)
-                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards "
+                                + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 case MessageFlag.DIR_FR:
                     // flip edges
                     node.getFFList().set(updateNode.getRFList());
                     node.getFRList().set(updateNode.getRRList());
                     if (updateNode.getFFList().getCountOfPosition() > 0)
-                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards "
+                                + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 case MessageFlag.DIR_RF:
                     // flip edges
                     node.getRFList().set(updateNode.getFFList());
                     node.getRRList().set(updateNode.getFRList());
                     if (updateNode.getRRList().getCountOfPosition() > 0)
-                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards "
+                                + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 case MessageFlag.DIR_RR:
                     node.getRFList().set(updateNode.getRFList());
                     node.getRRList().set(updateNode.getRRList());
                     if (updateNode.getFRList().getCountOfPosition() > 0)
-                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards " + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
+                        throw new IOException("Invalid merge detected!  Node: " + node + " merging towards "
+                                + updateNode + "along" + (updateFlag & MessageFlag.DIR_MASK));
                     break;
                 default:
                     throw new IOException("Unrecognized direction in updateFlag: " + updateFlag);
@@ -213,10 +236,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
     }
 
     public NodeWritable getNode() {
-        if (node.getCount() != 0) {
-            return node;
-        }
-        return null;
+        return node;
     }
 
     public byte getFlag() {
@@ -246,7 +266,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
 
     @Override
     public int hashCode() {
-        //        return super.hashCode() + flag + node.hashCode();
+        // return super.hashCode() + flag + node.hashCode();
         return flag + node.hashCode();
     }
 
@@ -257,5 +277,9 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
             return (this.flag == rightMessage.flag && this.node.equals(rightMessage.node));
         }
         return false;
+    }
+
+    public void setNode(NodeWritable otherNode) {
+        node.set(otherNode);
     }
 }
