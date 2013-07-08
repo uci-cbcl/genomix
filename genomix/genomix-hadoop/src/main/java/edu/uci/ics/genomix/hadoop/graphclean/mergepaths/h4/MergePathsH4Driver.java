@@ -112,6 +112,28 @@ public class MergePathsH4Driver {
                 break;
             }
         }
+<<<<<<< HEAD
+        
+        // finally, combine all the completed paths and update messages to
+        // create a single merged graph output
+        dfs.delete(new Path(outputGraphPath), true); // clear any previous
+                                                     // output
+        // use all the "complete" and "update" outputs in addition to the final
+        // (possibly empty) toMerge directories
+        // as input to the final update step. This builds a comma-delim'ed
+        // String of said files.
+        final String lastMergeOutput = mergeOutput;
+        PathFilter updateFilter = new PathFilter() {
+            @Override
+            public boolean accept(Path arg0) {
+                String path = arg0.toString();
+                System.out.println("equals last: " + path + " vs " + lastMergeOutput + " = " + path.endsWith(lastMergeOutput));
+                return (path.matches(".*" + COMPLETE + "_i\\d+$") || path.matches(".*" + UPDATES + "_i\\d+$") || path.endsWith(lastMergeOutput));
+            }
+        };
+        // test comment 
+        
+=======
         if (!mergeComplete) {
             // if the merge didn't finish, we have to do one final iteration to convert back into (NodeWritable, NullWritable) pairs
             ConvertGraphFromNodeWithFlagToNodeWritable converter = new ConvertGraphFromNodeWithFlagToNodeWritable();
@@ -120,6 +142,7 @@ public class MergePathsH4Driver {
         }
 
         // final output string is a comma-separated list of completeOutputs
+>>>>>>> 0fd527e9535a755b9d0956adb1cdc845f1fc46c2
         StringBuilder sb = new StringBuilder();
         String delim = "";
         for (String output : completeOutputs) {

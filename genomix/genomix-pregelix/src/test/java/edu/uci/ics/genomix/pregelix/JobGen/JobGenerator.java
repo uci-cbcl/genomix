@@ -18,6 +18,7 @@ import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.LogAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.NaiveAlgorithmForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P3ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -77,6 +78,23 @@ public class JobGenerator {
     private static void genP3ForMergeGraph() throws IOException {
         generateP3ForMergeGraphJob("P3ForMergeGraph", outputBase
                 + "P3ForMergeGraph.xml");
+    }
+    
+    private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(P4ForPathMergeVertex.class);
+        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
+        job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(PositionWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(P4ForPathMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genP4ForMergeGraph() throws IOException {
+        generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase
+                + "P4ForMergeGraph.xml");
     }
     
     private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
@@ -191,6 +209,7 @@ public class JobGenerator {
         //genBridgeRemoveGraph();
         //genBubbleAddGraph();
         //genBubbleMergeGraph();
+        //genP4ForMergeGraph();
     }
 
 }

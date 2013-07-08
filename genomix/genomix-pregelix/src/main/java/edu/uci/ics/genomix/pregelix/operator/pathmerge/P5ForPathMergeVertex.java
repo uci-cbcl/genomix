@@ -243,7 +243,7 @@ public class P5ForPathMergeVertex extends
         if (incomingMsg.getFlag() == Message.START) {
             getVertexValue().setState(MessageFlag.IS_HEAD); //State.START_VERTEX
         } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
-            getVertexValue().setState(MessageFlag.IS_TAIL);
+            getVertexValue().setState(MessageFlag.IS_HEAD);
             getVertexValue().setKmer(getVertexValue().getKmer());
             //voteToHalt();
         } //else
@@ -445,7 +445,7 @@ public class P5ForPathMergeVertex extends
             // We prevent merging towards non-path nodes
             hasNext = setNextInfo(getVertexValue()) && tailFlag == 0;
             hasPrev = setPrevInfo(getVertexValue()) && headFlag == 0;
-            if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_TAIL) > 0) {
+            if ((outFlag & MessageFlag.IS_HEAD) > 0 && (outFlag & MessageFlag.IS_HEAD) > 0) {
                 getVertexValue().setState(outFlag);
                 voteToHalt();
             }

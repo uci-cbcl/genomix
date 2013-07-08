@@ -485,6 +485,16 @@ public class MergePathsH4 extends Configured implements Tool {
         FileSystem dfs = FileSystem.get(conf);
         conf.setJarByClass(MergePathsH4.class);
         conf.setJobName("MergePathsH4 " + inputPath);
+<<<<<<< HEAD
+        
+        //another comment
+
+        FileInputFormat.addInputPaths(conf, inputPath);
+        Path outputPath = new Path(inputPath + ".h4merge.tmp");
+        FileOutputFormat.setOutputPath(conf, outputPath);
+
+=======
+>>>>>>> 0fd527e9535a755b9d0956adb1cdc845f1fc46c2
         conf.setInputFormat(SequenceFileInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
         conf.setMapOutputKeyClass(PositionWritable.class);

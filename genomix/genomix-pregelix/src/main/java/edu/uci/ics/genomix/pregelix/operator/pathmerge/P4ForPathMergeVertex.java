@@ -1,14 +1,10 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.apache.hadoop.io.NullWritable;
-
 import edu.uci.ics.genomix.type.PositionWritable;
 
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat;
@@ -16,8 +12,6 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputForma
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.type.State;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
  * vertexId: BytesWritable
@@ -55,7 +49,7 @@ public class P4ForPathMergeVertex extends
     public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
     public static final String PROBBEINGRANDOMHEAD = "P4ForPathMergeVertex.probBeingRandomHead";
 
-    private static long randSeed = -1;
+    private static long randSeed = 1;
     private float probBeingRandomHead = -1;
     private Random randGenerator;
     
@@ -67,8 +61,6 @@ public class P4ForPathMergeVertex extends
     private boolean curHead;
     private boolean nextHead;
     private boolean prevHead;
-    private byte headFlag;
-    private byte tailFlag;
     private byte selfFlag;
     
     /**
@@ -79,8 +71,9 @@ public class P4ForPathMergeVertex extends
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
-        if (randSeed < 0)
-            randSeed = getContext().getConfiguration().getLong("randomSeed", 0);
+        //if (randSeed < 0)
+        //    randSeed = getContext().getConfiguration().getLong("randomSeed", 0);
+        randSeed = getSuperstep();
         randGenerator = new Random(randSeed);
         if (probBeingRandomHead < 0)
             probBeingRandomHead = getContext().getConfiguration().getFloat("probBeingRandomHead", 0.5f);
@@ -90,12 +83,17 @@ public class P4ForPathMergeVertex extends
         nextHead = false;
         prevHead = false;
         outFlag = (byte)0;
+        inFlag = (byte)0;
+        // Node may be marked as head b/c it's a real head or a real tail
+        headFlag = (byte) (MessageFlag.IS_HEAD & getVertexValue().getState());
         outgoingMsg.reset();
     }
 
     protected boolean isNodeRandomHead(PositionWritable nodeID) {
         // "deterministically random", based on node id
-        randGenerator.setSeed(randSeed ^ nodeID.hashCode());
+        //randGenerator.setSeed(randSeed);
+        //randSeed = randGenerator.nextInt();
+        randGenerator.setSeed((randSeed ^ nodeID.hashCode()) * 100000);//randSeed + nodeID.hashCode()
         return randGenerator.nextFloat() < probBeingRandomHead;
     }
 
@@ -141,48 +139,50 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
-            // Node may be marked as head b/c it's a real head or a real tail
-            headFlag = (byte) (State.START_VERTEX & getVertexValue().getState());
-            tailFlag = (byte) (State.END_VERTEX & getVertexValue().getState());
-            outFlag = (byte) (headFlag | tailFlag);
+
+            //tailFlag = (byte) (MessageFlag.IS_TAIL & getVertexValue().getState());
+            //outFlag = (byte) (headFlag | tailFlag);
+            outFlag |= headFlag;
+            outFlag |= MessageFlag.NO_MERGE;
             
             // only PATH vertices are present. Find the ID's for my neighbors
             curID.set(getVertexId());
             
             curHead = isNodeRandomHead(curID);
             
+            
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue()) && tailFlag == 0;
-            hasPrev = setPrevInfo(getVertexValue()) && headFlag == 0;
+            hasNext = setNextInfo(getVertexValue());//&& headFlag == 0;
+            hasPrev = setPrevInfo(getVertexValue());//&& headFlag == 0;
             if (hasNext || hasPrev) {
                 if (curHead) {
-                    if (hasNext && !nextHead) {
+                    if (hasNext && !nextHead && (getNextDestVertexId(getVertexValue()) != null)) {
                         // compress this head to the forward tail
-                        sendUpMsgToPredecessor(); //TODO up -> update  From -> to
-                    } else if (hasPrev && !prevHead) {
+                        sendUpdateMsgToPredecessor(); //TODO up -> update  From -> to
+                    } else if (hasPrev && !prevHead && (getPreDestVertexId(getVertexValue()) != null)) {
                         // compress this head to the reverse tail
-                        sendUpMsgToSuccessor();
+                        sendUpdateMsgToSuccessor();
                     }
                 } else {
                     // I'm a tail
                     if (hasNext && hasPrev) {
-                        if ((!nextHead && !prevHead) && (curID.compareTo(nextID) < 0 && curID.compareTo(prevID) < 0)) {
+                         if ((!nextHead && !prevHead) && (curID.compareTo(nextID) < 0 && curID.compareTo(prevID) < 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
-                            sendUpMsgToPredecessor();
+                            sendUpdateMsgToPredecessor();
                         }
                     } else if (!hasPrev) {
                         // no previous node
                         if (!nextHead && curID.compareTo(nextID) < 0) {
                             // merge towards tail in forward dir
-                            sendUpMsgToPredecessor();
+                            sendUpdateMsgToPredecessor();
                         }
                     } else if (!hasNext) {
                         // no next node
                         if (!prevHead && curID.compareTo(prevID) < 0) {
                             // merge towards tail in reverse dir
-                            sendUpMsgToSuccessor();
+                            sendUpdateMsgToSuccessor();
                         }
                     }
                 }
@@ -197,17 +197,16 @@ public class P4ForPathMergeVertex extends
         } else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self
             broadcastMergeMsg();
-            deleteVertex(getVertexId());
         } else if (getSuperstep() % 4 == 2){
             //merge kmer
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
+                selfFlag = (byte) (MessageFlag.VERTEX_MASK & getVertexValue().getState());
                 processMerge();
                 
                 //head meets head, stop
-                headFlag = (byte) (MessageFlag.IS_HEAD & incomingMsg.getFlag());
-                selfFlag = (byte) (MessageFlag.IS_HEAD & getVertexValue().getState());
-                if((headFlag & selfFlag) > 0)
+                headFlag = (byte) (MessageFlag.VERTEX_MASK & incomingMsg.getFlag());
+                if(headFlag == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)
                     voteToHalt();
             }
         }
