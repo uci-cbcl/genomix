@@ -2,7 +2,7 @@
 """
 Convert a graph to graphviz format and run `dot` on it.
 
-Kmer sequences are included 
+Kmer sequences are included
 """
 
 __author__ = "Jacob Biesinger"
@@ -12,9 +12,9 @@ __license__ = "Apache"
 
 import sys
 import os
-import glob
 import re
 import string
+import argparse
 
 import pydot
 
@@ -23,8 +23,10 @@ element_re = re.compile(r"\d+,\d+|\w+")
 #edge_colors = dict(FF='black', FR='red', RF='blue', RR='gray')
 edge_colors = dict(FF='#DD1E2F', FR='#EBB035', RF='#06A2CB', RR='#218559')
 
+
 def reverse_complement(kmer, _table=string.maketrans('ACGT', 'TGCA')):
     return string.translate(kmer, _table)[::-1]
+
 
 def add_legend(graph):
     legend = pydot.Subgraph('cluster_legend', splines='line', rankdir='LR', label='legend', rank='min')
@@ -34,6 +36,7 @@ def add_legend(graph):
         legend.add_edge(pydot.Edge('legend_0_' + str(i), 'legend_1_' + str(i), label=edgetype, color=edgecolor))
     graph.add_subgraph(legend)
     return graph
+
 
 def graph_from_file(filename, legend=True, kmers=True, flag=True):
     graph_name = os.path.split(filename)[1].replace('.', '_')
@@ -61,41 +64,58 @@ def graph_from_file(filename, legend=True, kmers=True, flag=True):
         for edgename, edgelist in [('FF', ff), ('FR', fr), ('RF', rf), ('RR', rr)]:
             for e in edgelist:
                 edges.append(pydot.Edge(nodeid, e, color=edge_colors[edgename]))
-    
+
     for readid, subnodes in nodes.items():
         subg = pydot.Subgraph('cluster_' + readid, fillcolor='lightgray')
         for node in subnodes:
             subg.add_node(node)
         graph.add_subgraph(subg)
-    
+
     for e in edges:
         graph.add_edge(e)
-    
+
     return graph
 
-def recursive_plot(topdir, suffix='.txt'):
+def recursive_plot(topdir, suffix='.txt', **kwargs):
     "Recursively plot any files matching `suffix`"
-    def matches(f):
-        return os.path.isfile(f) and f.endswith(suffix)
-    
     for root, dirnames, filenames in os.walk(topdir):
-        for filename in filter(matches, filenames):
+        for filename in filenames:
+            f = os.path.join(root, filename)
+            if not os.path.isfile(f) or not f.endswith(suffix):
+                continue
             try:
-                graph = graph_from_file(os.path.join(root, filename))
+                graph = graph_from_file(f, **kwargs)
             except Exception:
-                raise
+                pass
             else:
+                print 'plotting', f
                 graph.write_png(f + '.png')
-    
+
+
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no-legend', action='store_true')
+    parser.add_argument('--no-kmers', action='store_true')
+    parser.add_argument('--no-flag', action='store_true')
+
+    parser.add_argument('txt_graphs', nargs='*')
+    parser.add_argument('--directory', '-d', help='Recurse here and plot all '
+                        'graphs that are found.', nargs='+', default=[])
+    return parser
+
 
 def main(args):
-    for f in args:
-        try:
-            graph = graph_from_file(f)
-        except Exception as e:
-            raise
-        else:
-            graph.write_png(f + '.png')
+    parser = get_parser()
+    args = parser.parse_args(args)
+    kwargs = dict(legend=not args.no_legend, kmers=not args.no_kmers,
+                  flag=not args.no_flag)
+    for filename in args.txt_graphs:
+        graph = graph_from_file(filename, **kwargs)
+        print 'plotting', filename
+        graph.write_png(filename + '.png')
+
+    for d in args.directory:
+        recursive_plot(d, **kwargs)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
