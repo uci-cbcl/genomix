@@ -37,7 +37,45 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
 
     @Test
     public void TestBuildGraph() throws Exception {
+    	LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/bubble_test1.txt";
+    	GRAPHBUILD_FILE = "bubble_test1.txt";
         cleanUpOutput();
+        copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
+        buildGraph();
+        
+        LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/fr_test.txt";
+    	GRAPHBUILD_FILE = "fr_test.txt";
+    	cleanUpOutput();
+        copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
+        buildGraph();
+    	
+    	LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/fr_test2.txt";
+    	GRAPHBUILD_FILE = "fr_test2.txt";
+    	cleanUpOutput();
+        copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
+        buildGraph();
+        
+        LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/rf_test.txt";
+    	GRAPHBUILD_FILE = "rf_test.txt";
+    	cleanUpOutput();
+        copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
+        buildGraph();
+        
+        LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/singleread.txt";
+    	GRAPHBUILD_FILE = "single_read.txt";
+    	cleanUpOutput();
+        copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
+        buildGraph();
+        
+        LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/text.txt";
+    	GRAPHBUILD_FILE = "text.txt";
+    	cleanUpOutput();
+        copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
+        buildGraph();
+        
+        LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/tworeads.txt";
+    	GRAPHBUILD_FILE = "tworeads.txt";
+    	cleanUpOutput();
         copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
         buildGraph();
     }
@@ -71,7 +109,7 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
         FileOutputFormat.setOutputPath(buildConf, new Path(HDFS_GRAPHBUILD));
         buildConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         buildConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(new GenomixJobConf(buildConf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+        driver.runJob(new GenomixJobConf(buildConf), Plan.BUILD_UNMERGED_GRAPH, true);
         String fileFormat = buildConf.get(GenomixJobConf.OUTPUT_FORMAT);
         boolean resultsAreText = GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(fileFormat);
         copyResultsToLocal(HDFS_GRAPHBUILD, ACTUAL_ROOT + GRAPHBUILD_FILE, resultsAreText, buildConf);

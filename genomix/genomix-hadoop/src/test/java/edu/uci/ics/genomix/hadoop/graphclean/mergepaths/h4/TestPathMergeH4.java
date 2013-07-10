@@ -36,7 +36,7 @@ public class TestPathMergeH4 extends HadoopMiniClusterTest {
     
     @Test
     public void testTwoReads() throws Exception {
-        setupTestConf(5, 8, false, "tworeads.txt");
+        setupTestConf(5, 8, true, "tworeads.txt");
 //        testPathNode();
         testMergeOneIteration();
 //        testMergeToCompletion();

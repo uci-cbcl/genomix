@@ -163,11 +163,11 @@ public class GenomixMiniClusterTest {
      * Remove the local "actual" folder and any hdfs folders in use by this test
      */
     public void cleanUpOutput() throws IOException {
-        // local cleanup
-        FileSystem lfs = FileSystem.getLocal(new Configuration());
-        if (lfs.exists(new Path(ACTUAL_ROOT))) {
-            lfs.delete(new Path(ACTUAL_ROOT), true);
-        }
+//        // local cleanup
+//        FileSystem lfs = FileSystem.getLocal(new Configuration());
+//        if (lfs.exists(new Path(ACTUAL_ROOT))) {
+//            lfs.delete(new Path(ACTUAL_ROOT), true);
+//        }
         // dfs cleanup
         for (String path : HDFS_PATHS) {
             if (dfs.exists(new Path(path))) {

@@ -52,8 +52,8 @@ def graph_from_file(filename, legend=True, kmers=True, flag=True):
         FF_kmer = '<TR><TD BGCOLOR="%s">%s</TD></TR>' % (edge_colors['FF'], kmer) if kmers else ''
         RR_kmer = '<TR><TD BGCOLOR="%s">%s</TD></TR>' % (edge_colors['RR'], reverse_complement(kmer)) if kmers else ''
         node_label = r'''<<FONT POINT-SIZE="10"><TABLE ALIGN="CENTER" BORDER="0" CELLBORDER="0" CELLSPACING="0">
-        {FF_kmer}
         <TR><TD>{nodeid}{flag}</TD></TR>
+        {FF_kmer}
         {RR_kmer}
         </TABLE></FONT>>'''.format(**locals())
         node = pydot.Node(nodeid, rank=readid, group=readid, label=node_label)
