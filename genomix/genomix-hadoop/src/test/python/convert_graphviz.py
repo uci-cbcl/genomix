@@ -100,7 +100,7 @@ def get_parser():
 
     parser.add_argument('txt_graphs', nargs='*')
     parser.add_argument('--directory', '-d', help='Recurse here and plot all '
-                        'graphs that are found.', nargs='+', default=[])
+                        'graphs that are found.', action='append', default=[])
     return parser
 
 

@@ -16,3 +16,4 @@ metastore_db
 teststore
 .DS_Store
 bin
+.idea
