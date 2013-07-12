@@ -86,7 +86,7 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
         buildGraph();
         
         LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/fr_with_tip.txt";
-        GRAPHBUILD_FILE = "fr_with_tipcon.txt";
+        GRAPHBUILD_FILE = "fr_with_tip.txt";
         cleanUpOutput();
         copyLocalToDFS(LOCAL_SEQUENCE_FILE, HDFS_SEQUENCE);
         buildGraph();

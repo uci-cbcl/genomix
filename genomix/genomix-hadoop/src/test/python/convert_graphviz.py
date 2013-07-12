@@ -78,6 +78,7 @@ def graph_from_file(filename, legend=True, kmers=True, flag=True):
 
 def recursive_plot(topdir, suffix='.txt', **kwargs):
     "Recursively plot any files matching `suffix`"
+    out_type = kwargs.get('out_type', 'svg')
     for root, dirnames, filenames in os.walk(topdir):
         for filename in filenames:
             f = os.path.join(root, filename)
@@ -88,8 +89,8 @@ def recursive_plot(topdir, suffix='.txt', **kwargs):
             except Exception:
                 pass
             else:
-                print 'plotting', f
-                graph.write_png(f + '.png')
+                print 'plotting', f +'.' + out_type
+                graph.write(f + '.' + out_type, format=out_type)
 
 
 def get_parser():
@@ -101,6 +102,7 @@ def get_parser():
     parser.add_argument('txt_graphs', nargs='*')
     parser.add_argument('--directory', '-d', help='Recurse here and plot all '
                         'graphs that are found.', action='append', default=[])
+    parser.add_argument('--out-type', type=str, default='svg')
     return parser
 
 
@@ -111,8 +113,8 @@ def main(args):
                   flag=not args.no_flag)
     for filename in args.txt_graphs:
         graph = graph_from_file(filename, **kwargs)
-        print 'plotting', filename
-        graph.write_png(filename + '.png')
+        print 'plotting', filename + args.out_type
+        graph.write(filename + args.out_type, format=args.out_type)
 
     for d in args.directory:
         recursive_plot(d, **kwargs)
