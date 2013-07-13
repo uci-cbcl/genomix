@@ -36,6 +36,11 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
     }
 
     @Test
+    public void BuildAllGraphs() throws Exception {
+        for (String path : )
+    }
+    
+//    @Test
     public void TestBuildGraph() throws Exception {
     	LOCAL_SEQUENCE_FILE = "src/test/resources/data/sequence/bubble_test1.txt";
     	GRAPHBUILD_FILE = "bubble_test1.txt";
