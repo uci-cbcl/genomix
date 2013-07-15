@@ -10,6 +10,7 @@ import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
@@ -27,6 +28,7 @@ public class BasicPathMergeVertex extends
     protected MessageWritable outgoingMsg = new MessageWritable();
     protected PositionWritable destVertexId = new PositionWritable();
     protected Iterator<PositionWritable> posIterator;
+    private PositionWritable pos = new PositionWritable();
     byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
@@ -140,6 +142,47 @@ public class BasicPathMergeVertex extends
             sendMsg(destVertexId, outgoingMsg);
         }
     }
+    
+    /**
+     * head send message to all next nodes
+     */
+    public void sendSettledMsgToAllNextNodes(VertexValueWritable value) {
+        posIterator = value.getFFList().iterator(); // FFList
+        while(posIterator.hasNext()){
+            outgoingMsg.setFlag(AdjMessage.FROMFF);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        posIterator = value.getFRList().iterator(); // FRList
+        while(posIterator.hasNext()){
+            outgoingMsg.setFlag(AdjMessage.FROMFR);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+    }
+
+    /**
+     * head send message to all previous nodes
+     */
+    public void sendSettledMsgToAllPreviousNodes(VertexValueWritable value) {
+        posIterator = value.getRFList().iterator(); // RFList
+        while(posIterator.hasNext()){
+            outgoingMsg.setFlag(AdjMessage.FROMRF);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        posIterator = value.getRRList().iterator(); // RRList
+        while(posIterator.hasNext()){
+            outgoingMsg.setFlag(AdjMessage.FROMRR);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+    }
+    
     /**
      * start sending message
      */
@@ -509,6 +552,56 @@ public class BasicPathMergeVertex extends
      */
     public void resetSelfFlag(){
         selfFlag =(byte)(getVertexValue().getState() & MessageFlag.VERTEX_MASK);
+    }
+    
+    /**
+     * do some remove operations on adjMap after receiving the info about dead Vertex
+     */
+    public void responseToDeadVertex(Iterator<MessageWritable> msgIterator){
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if(incomingMsg.getFlag() == AdjMessage.FROMFF){
+                //remove incomingMsg.getSourceId from RR positionList
+                posIterator = getVertexValue().getRRList().iterator();
+                while(posIterator.hasNext()){
+                    pos = posIterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        posIterator.remove();
+                        break;
+                    }
+                }
+            } else if(incomingMsg.getFlag() == AdjMessage.FROMFR){
+                //remove incomingMsg.getSourceId from FR positionList
+                posIterator = getVertexValue().getFRList().iterator();
+                while(posIterator.hasNext()){
+                    pos = posIterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        posIterator.remove();
+                        break;
+                    }
+                }
+            } else if(incomingMsg.getFlag() == AdjMessage.FROMRF){
+                //remove incomingMsg.getSourceId from RF positionList
+                posIterator = getVertexValue().getRFList().iterator();
+                while(posIterator.hasNext()){
+                    pos = posIterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        posIterator.remove();
+                        break;
+                    }
+                }
+            } else{ //incomingMsg.getFlag() == AdjMessage.FROMRR
+                //remove incomingMsg.getSourceId from FF positionList
+                posIterator = getVertexValue().getFFList().iterator();
+                while(posIterator.hasNext()){
+                    pos = posIterator.next();
+                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                        posIterator.remove();
+                        break;
+                    }
+                }
+            }
+        }
     }
     
     @Override

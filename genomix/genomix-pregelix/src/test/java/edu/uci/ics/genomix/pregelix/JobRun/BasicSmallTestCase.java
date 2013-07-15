@@ -29,7 +29,7 @@ import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
-public class PathMergeSmallTestCase extends TestCase {
+public class BasicSmallTestCase extends TestCase {
     private final PregelixJob job;
     private final String resultFileDir;
     private final String textFileDir;
@@ -37,7 +37,7 @@ public class PathMergeSmallTestCase extends TestCase {
     private final Driver driver = new Driver(this.getClass());
     private final FileSystem dfs;
 
-    public PathMergeSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs,
+    public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs,
             String hdfsInput, String resultFile, String textFile) throws Exception {
         super("test");
         this.jobFile = jobFile;

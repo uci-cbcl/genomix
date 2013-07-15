@@ -27,7 +27,7 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
     protected String PATHMERGE_FILE = "mergepath.result";
     protected boolean regenerateGraph = true;
     
-    {
+    {w
         KMER_LENGTH = 5;
         READ_LENGTH = 8;
         HDFS_PATHS = new ArrayList<String>(Arrays.asList(HDFS_SEQUENCE, HDFS_GRAPHBUILD, HDFS_MARKPATHS, HDFS_MERGED));

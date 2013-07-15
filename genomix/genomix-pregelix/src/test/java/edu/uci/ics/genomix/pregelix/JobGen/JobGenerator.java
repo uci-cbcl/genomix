@@ -83,7 +83,7 @@ public class JobGenerator {
     private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(P4ForPathMergeVertex.class);
-        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
+        job.setVertexInputFormatClass(DataCleanInputFormat.class);
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
@@ -201,15 +201,15 @@ public class JobGenerator {
     
     public static void main(String[] args) throws IOException {
         //genNaiveAlgorithmForMergeGraph();
-        genLogAlgorithmForMergeGraph();
+        //genLogAlgorithmForMergeGraph();
         //genP3ForMergeGraph();
-        //genTipAddGraph();
-        //genTipRemoveGraph();
-        //genBridgeAddGraph();
-        //genBridgeRemoveGraph();
-        //genBubbleAddGraph();
-        //genBubbleMergeGraph();
-        //genP4ForMergeGraph();
+        genTipAddGraph();
+        genTipRemoveGraph();
+        genBridgeAddGraph();
+        genBridgeRemoveGraph();
+        genBubbleAddGraph();
+        genBubbleMergeGraph();
+        genP4ForMergeGraph();
     }
 
 }

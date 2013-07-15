@@ -144,7 +144,7 @@ public class BubbleMergeVertex extends
                 }
             } else if(incomingMsg.getMessage() == AdjMessage.FROMFR){
                 //remove incomingMsg.getSourceId from RF positionList
-                iterator = getVertexValue().getRFList().iterator();
+                iterator = getVertexValue().getFRList().iterator();
                 while(iterator.hasNext()){
                     pos = iterator.next();
                     if(pos.equals(incomingMsg.getSourceVertexId())){
@@ -154,7 +154,7 @@ public class BubbleMergeVertex extends
                 }
             } else if(incomingMsg.getMessage() == AdjMessage.FROMRF){
                 //remove incomingMsg.getSourceId from FR positionList
-                iterator = getVertexValue().getFRList().iterator();
+                iterator = getVertexValue().getRFList().iterator();
                 while(iterator.hasNext()){
                     pos = iterator.next();
                     if(pos.equals(incomingMsg.getSourceVertexId())){

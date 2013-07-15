@@ -2,16 +2,15 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
@@ -47,20 +46,12 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class BridgeRemoveVertex extends
-        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "BridgeRemoveVertex.kmerSize";
+    BasicPathMergeVertex {
     public static final String LENGTH = "BridgeRemoveVertex.length";
-    public static int kmerSize = -1;
     private int length = -1;
 
-    private MessageWritable incomingMsg = new MessageWritable();
-    private MessageWritable outgoingMsg = new MessageWritable();
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
-    
-    private Iterator<PositionWritable> iterator;
-    private PositionWritable pos = new PositionWritable();
-    private PositionWritable destVertexId = new PositionWritable();
-    private Iterator<PositionWritable> posIterator;
+   
     /**
      * initiate kmerSize, maxIteration
      */
@@ -71,46 +62,6 @@ public class BridgeRemoveVertex extends
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
         outgoingMsg.reset();
         receivedMsgList.clear();
-    }
-    
-    /**
-     * head send message to all next nodes
-     */
-    public void sendMsgToAllNextNodes(VertexValueWritable value) {
-        posIterator = value.getFFList().iterator(); // FFList
-        while(posIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMFF);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        posIterator = value.getFRList().iterator(); // FRList
-        while(posIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-
-    /**
-     * head send message to all previous nodes
-     */
-    public void sendMsgToAllPreviousNodes(VertexValueWritable value) {
-        posIterator = value.getRFList().iterator(); // RFList
-        while(posIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        posIterator = value.getRRList().iterator(); // RRList
-        while(posIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMRR);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
     }
     
     /**
@@ -129,21 +80,21 @@ public class BridgeRemoveVertex extends
                 && receivedMsgList.get(1).getFlag() == AdjMessage.FROMRF) {
             outgoingMsg.setFlag(AdjMessage.FROMRR);
             sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
+            outgoingMsg.setFlag(AdjMessage.FROMRF);
             sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
             deleteVertex(getVertexId());
         } else if (receivedMsgList.get(0).getFlag() == AdjMessage.FROMFR 
                 && receivedMsgList.get(1).getFlag() == AdjMessage.FROMRR) {
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
+            outgoingMsg.setFlag(AdjMessage.FROMFR);
             sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
             outgoingMsg.setFlag(AdjMessage.FROMFF);
             sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
             deleteVertex(getVertexId());
         } else if (receivedMsgList.get(0).getFlag() == AdjMessage.FROMFR 
                 && receivedMsgList.get(1).getFlag() == AdjMessage.FROMRF) {
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
             outgoingMsg.setFlag(AdjMessage.FROMFR);
+            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setFlag(AdjMessage.FROMRF);
             sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
             deleteVertex(getVertexId());
         } // RR
@@ -158,74 +109,25 @@ public class BridgeRemoveVertex extends
                 && receivedMsgList.get(0).getFlag() == AdjMessage.FROMRF) {
             outgoingMsg.setFlag(AdjMessage.FROMRR);
             sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
+            outgoingMsg.setFlag(AdjMessage.FROMRF);
             sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
             deleteVertex(getVertexId());
         } else if (receivedMsgList.get(1).getFlag() == AdjMessage.FROMFR 
                 && receivedMsgList.get(0).getFlag() == AdjMessage.FROMRR) {
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
+            outgoingMsg.setFlag(AdjMessage.FROMFR);
             sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
             outgoingMsg.setFlag(AdjMessage.FROMFF);
             sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
             deleteVertex(getVertexId());
         } else if (receivedMsgList.get(1).getFlag() == AdjMessage.FROMFR 
                 && receivedMsgList.get(0).getFlag() == AdjMessage.FROMRF) {
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
             outgoingMsg.setFlag(AdjMessage.FROMFR);
+            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
+            outgoingMsg.setFlag(AdjMessage.FROMRF);
             sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
             deleteVertex(getVertexId());
-        }
-    }
-    
-    /**
-     * do some remove operations on adjMap after receiving the info about dead Vertex
-     */
-    public void responseToDeadVertex(Iterator<MessageWritable> msgIterator){
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            if(incomingMsg.getFlag() == AdjMessage.FROMFF){
-                //remove incomingMsg.getSourceId from RR positionList
-                iterator = getVertexValue().getRRList().iterator();
-                while(iterator.hasNext()){
-                    pos = iterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
-                        iterator.remove();
-                        break;
-                    }
-                }
-            } else if(incomingMsg.getFlag() == AdjMessage.FROMFR){
-                //remove incomingMsg.getSourceId from RF positionList
-                iterator = getVertexValue().getRFList().iterator();
-                while(iterator.hasNext()){
-                    pos = iterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
-                        iterator.remove();
-                        break;
-                    }
-                }
-            } else if(incomingMsg.getFlag() == AdjMessage.FROMRF){
-                //remove incomingMsg.getSourceId from FR positionList
-                iterator = getVertexValue().getFRList().iterator();
-                while(iterator.hasNext()){
-                    pos = iterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
-                        iterator.remove();
-                        break;
-                    }
-                }
-            } else{ //incomingMsg.getFlag() == AdjMessage.FROMRR
-                //remove incomingMsg.getSourceId from FF positionList
-                iterator = getVertexValue().getFFList().iterator();
-                while(iterator.hasNext()){
-                    pos = iterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
-                        iterator.remove();
-                        break;
-                    }
-                }
-            }
-        }
+        } else
+            voteToHalt();
     }
 
     @Override
@@ -233,11 +135,11 @@ public class BridgeRemoveVertex extends
         initVertex();
         if (getSuperstep() == 1) {
             if(VertexUtil.isUpBridgeVertex(getVertexValue())){
-                sendMsgToAllNextNodes(getVertexValue());
+                sendSettledMsgToAllNextNodes(getVertexValue());
             }
-           else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
-                sendMsgToAllPreviousNodes(getVertexValue());
-           }
+            else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
+                sendSettledMsgToAllPreviousNodes(getVertexValue());
+            }
         }
         else if (getSuperstep() == 2){
             int i = 0;

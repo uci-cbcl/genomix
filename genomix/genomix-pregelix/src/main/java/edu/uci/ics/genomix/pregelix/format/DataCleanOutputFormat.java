@@ -36,8 +36,8 @@ public class DataCleanOutputFormat extends
         @Override
         public void writeVertex(Vertex<PositionWritable, VertexValueWritable, NullWritable, ?> vertex)
                 throws IOException, InterruptedException {
-            if(vertex.getVertexValue().getState() != MessageFlag.IS_OLDHEAD)
-                getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
+            //if(vertex.getVertexValue().getState() != MessageFlag.IS_OLDHEAD)
+            getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
         }
     }
 }
