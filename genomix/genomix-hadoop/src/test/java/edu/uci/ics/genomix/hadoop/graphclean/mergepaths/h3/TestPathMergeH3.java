@@ -1,8 +1,20 @@
 package edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.SimpleFileVisitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -35,9 +47,36 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
         conf.setInt(GenomixJobConf.READ_LENGTH, READ_LENGTH);
     }
 
+    /*
+     * Build all graphs in any "input/reads" directory
+     */
     @Test
     public void BuildAllGraphs() throws Exception {
-        for (String path : )
+    	final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/src/test/resources/input/reads/**/*.txt");
+        Files.walkFileTree(Paths.get("."), new SimpleFileVisitor<java.nio.file.Path>() {
+            @Override
+            public FileVisitResult visitFile(java.nio.file.Path file, BasicFileAttributes attrs) throws IOException {
+                if (matcher.matches(file)) {
+                	TestPathMergeH3 tester = new TestPathMergeH3();
+                	tester.LOCAL_SEQUENCE_FILE = file.toString();
+                	tester.GRAPHBUILD_FILE = file.getFileName().toString();
+                	tester.cleanUpOutput();
+                	TestPathMergeH3.copyLocalToDFS(tester.LOCAL_SEQUENCE_FILE, tester.HDFS_SEQUENCE);
+                	try {
+						tester.buildGraph();
+					} catch (Exception e) {
+						throw new IOException(e);
+					}
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(java.nio.file.Path file, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
     }
     
 //    @Test
@@ -132,9 +171,11 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
         FileOutputFormat.setOutputPath(buildConf, new Path(HDFS_GRAPHBUILD));
         buildConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         buildConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(new GenomixJobConf(buildConf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+        driver.runJob(new GenomixJobConf(buildConf), Plan.BUILD_UNMERGED_GRAPH, true);
         String fileFormat = buildConf.get(GenomixJobConf.OUTPUT_FORMAT);
         boolean resultsAreText = GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(fileFormat);
-        copyResultsToLocal(HDFS_GRAPHBUILD, ACTUAL_ROOT + GRAPHBUILD_FILE, resultsAreText, buildConf);
+        File rootDir = new File(new File(ACTUAL_ROOT + LOCAL_SEQUENCE_FILE).getParent());
+        FileUtils.forceMkdir(rootDir);
+        copyResultsToLocal(HDFS_GRAPHBUILD, ACTUAL_ROOT + LOCAL_SEQUENCE_FILE, resultsAreText, buildConf);
     }
 }

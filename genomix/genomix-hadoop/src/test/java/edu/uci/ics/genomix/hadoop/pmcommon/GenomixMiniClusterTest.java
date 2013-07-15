@@ -88,8 +88,11 @@ public class GenomixMiniClusterTest {
 
             FileStatus[] files = dfs.globStatus(new Path(hdfsSrcDir + "*"));
             SequenceFile.Reader reader = new SequenceFile.Reader(dfs, files[0].getPath(), conf);
-            SequenceFile.Writer writer = new SequenceFile.Writer(lfs, new JobConf(), new Path(localDestFile
-                    + ".binmerge"), reader.getKeyClass(), reader.getValueClass());
+            String destBinDir = localDestFile.substring(0, localDestFile.lastIndexOf("."));
+            FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
+                    new Path(destBinDir), false, conf);
+//            SequenceFile.Writer writer = new SequenceFile.Writer(lfs, new JobConf(), new Path(localDestFile
+//                    + ".binmerge"), reader.getKeyClass(), reader.getValueClass());
 
             Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
@@ -106,12 +109,12 @@ public class GenomixMiniClusterTest {
                     bw.write(key.toString() + "\t" + value.toString());
                     System.out.println(key.toString() + "\t" + value.toString());
                     bw.newLine();
-                    writer.append(key, value);
+//                    writer.append(key, value);
 
                 }
                 reader.close();
             }
-            writer.close();
+//            writer.close();
             bw.close();
         }
 
