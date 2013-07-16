@@ -14,7 +14,7 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat.BinaryVertexReader;
 
@@ -74,7 +74,7 @@ class BinaryLoadGraphReader extends
             vertexValue.setRFList(node.getRFList());
             vertexValue.setRRList(node.getRRList());
             vertexValue.setKmer(node.getKmer());
-            vertexValue.setState(State.NON_VERTEX);
+            vertexValue.setState(State.IS_NON);
             vertex.setVertexValue(vertexValue);
         }
 

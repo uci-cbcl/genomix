@@ -4,7 +4,7 @@ import java.util.logging.*;
 
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
-import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.pregelix.type.State2;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class LogAlgorithmLogFormatter extends Formatter {
@@ -83,7 +83,7 @@ public class LogAlgorithmLogFormatter extends Formatter {
                 builder.append("Chain Length: " + msg.getLengthOfChain() + "\r\n");
             }
 
-            builder.append("State is: " + State.STATE_CONTENT.getContentFromCode(state) + "\r\n");
+            builder.append("State is: " + State2.STATE_CONTENT.getContentFromCode(state) + "\r\n");
         }
         if (operation == 2) {
             chain = mergeChain.toString();

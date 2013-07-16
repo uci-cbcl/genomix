@@ -10,6 +10,7 @@ import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
@@ -44,18 +45,18 @@ public class BasicPathMergeVertex extends
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         outFlag = (byte)0;
         outgoingMsg.reset();
-        headFlag = (byte)(getVertexValue().getState() & MessageFlag.IS_HEAD);
+        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
     /**
      * reset headFlag
      */
     public void resetHeadFlag(){
-        headFlag = (byte)(getVertexValue().getState() & MessageFlag.IS_HEAD);
+        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
     public byte getHeadFlag(){
-        return (byte)(getVertexValue().getState() & MessageFlag.IS_HEAD);
+        return (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
     /**
@@ -316,8 +317,8 @@ public class BasicPathMergeVertex extends
     public void sendMergeMsg(){
         if(selfFlag == MessageFlag.IS_HEAD){
             byte newState = getVertexValue().getState(); 
-            newState &= ~MessageFlag.IS_HEAD;
-            newState |= MessageFlag.IS_OLDHEAD;
+            newState &= ~State.IS_HEAD;
+            newState |= State.IS_OLDHEAD;
             getVertexValue().setState(newState);
             resetSelfFlag();
             outFlag |= MessageFlag.IS_HEAD;
@@ -360,7 +361,7 @@ public class BasicPathMergeVertex extends
     public void broadcastMergeMsg(){
         if(headFlag > 0)
             outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & MessageFlag.SHOULD_MERGE_MASK) {
+        switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK) {
             case MessageFlag.SHOULD_MERGEWITHNEXT:
                 setSuccessorAdjMsg();
                 if(ifFlipWithPredecessor())
@@ -392,7 +393,7 @@ public class BasicPathMergeVertex extends
      */
     public void sendUpdateMsgToPredecessor(){
         byte state = getVertexValue().getState();
-        state |= MessageFlag.SHOULD_MERGEWITHNEXT;
+        state |= State.SHOULD_MERGEWITHNEXT;
         getVertexValue().setState(state);
         if(getVertexValue().getFFList().getLength() > 0)
             getVertexValue().setMergeDest(getVertexValue().getFFList().getPosition(0));
@@ -407,7 +408,7 @@ public class BasicPathMergeVertex extends
      */
     public void sendUpdateMsgToSuccessor(){
         byte state = getVertexValue().getState();
-        state |= MessageFlag.SHOULD_MERGEWITHPREV;
+        state |= State.SHOULD_MERGEWITHPREV;
         getVertexValue().setState(state);
         if(getVertexValue().getRFList().getLength() > 0)
             getVertexValue().setMergeDest(getVertexValue().getRFList().getPosition(0));
@@ -479,7 +480,7 @@ public class BasicPathMergeVertex extends
         
         if((inFlag & MessageFlag.IS_HEAD) > 0){
             byte state = getVertexValue().getState();
-            state |= MessageFlag.IS_HEAD;
+            state |= State.IS_HEAD;
             getVertexValue().setState(state);
         }
         
@@ -509,8 +510,8 @@ public class BasicPathMergeVertex extends
      */
     public void setHeadState(){
         byte state = getVertexValue().getState();
-        state &= MessageFlag.VERTEX_CLEAR;
-        state |= MessageFlag.IS_HEAD;
+        state &= State.VERTEX_CLEAR;
+        state |= State.IS_HEAD;
         getVertexValue().setState(state);
     }
     
@@ -519,8 +520,8 @@ public class BasicPathMergeVertex extends
      */
     public void setFinalState(){
         byte state = getVertexValue().getState();
-        state &= MessageFlag.VERTEX_CLEAR;
-        state |= MessageFlag.IS_FINAL;
+        state &= State.VERTEX_CLEAR;
+        state |= State.IS_FINAL;
         getVertexValue().setState(state);
     }
     
@@ -529,8 +530,8 @@ public class BasicPathMergeVertex extends
      */
     public void setStopFlag(){
         byte state = incomingMsg.getFlag();
-        state &= MessageFlag.VERTEX_CLEAR;
-        state |= MessageFlag.IS_STOP;
+        state &= State.VERTEX_CLEAR;
+        state |= State.IS_STOP;
         getVertexValue().setState(state);
     }
     

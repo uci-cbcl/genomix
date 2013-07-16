@@ -1,6 +1,6 @@
 package edu.uci.ics.genomix.pregelix.type;
 
-public class State {
+public class State2 {
 
     public static final byte NON_VERTEX = 0;
     public static final byte START_VERTEX = 1;

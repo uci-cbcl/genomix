@@ -11,6 +11,7 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
 /*
@@ -85,7 +86,7 @@ public class P4ForPathMergeVertex extends
         outFlag = (byte)0;
         inFlag = (byte)0;
         // Node may be marked as head b/c it's a real head or a real tail
-        headFlag = (byte) (MessageFlag.IS_HEAD & getVertexValue().getState());
+        headFlag = (byte) (State.IS_HEAD & getVertexValue().getState());
         outgoingMsg.reset();
     }
 
@@ -101,7 +102,7 @@ public class P4ForPathMergeVertex extends
      * set nextID to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
-        if(headFlag > 0 && (getVertexValue().getState() & MessageFlag.SHOULD_MERGEWITHPREV) > 0){
+        if(headFlag > 0 && (getVertexValue().getState() & State.SHOULD_MERGEWITHPREV) > 0){
             return false;
         }
         if (value.getFFList().getCountOfPosition() > 0) {
@@ -121,7 +122,7 @@ public class P4ForPathMergeVertex extends
      * set prevID to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
-        if(headFlag > 0 && (getVertexValue().getState() & MessageFlag.SHOULD_MERGEWITHNEXT) > 0){
+        if(headFlag > 0 && (getVertexValue().getState() & State.SHOULD_MERGEWITHNEXT) > 0){
             return false;
         }
         if (value.getRRList().getCountOfPosition() > 0) {
@@ -213,7 +214,7 @@ public class P4ForPathMergeVertex extends
             //merge kmer
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                selfFlag = (byte) (MessageFlag.VERTEX_MASK & getVertexValue().getState());
+                selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
                 processMerge();
                 
                 //head meets head, stop

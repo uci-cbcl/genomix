@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -71,7 +71,7 @@ public class LogAlgorithmForPathMergeInputFormat extends
                 vertexValue.setRFList(node.getRFList());
                 vertexValue.setRRList(node.getRRList());
                 vertexValue.setKmer(node.getKmer());
-                vertexValue.setState(State.NON_VERTEX);
+                vertexValue.setState(State.IS_NON);
                 vertex.setVertexValue(vertexValue);
             }
 

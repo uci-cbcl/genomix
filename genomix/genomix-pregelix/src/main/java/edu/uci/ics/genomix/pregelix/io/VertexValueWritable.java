@@ -5,13 +5,32 @@ import java.io.*;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
 public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
 
+    public static class VertexStateFlag {
+        public static final byte IS_NON = 0b00 << 5;
+        public static final byte IS_RANDOMTAIL = 0b00 << 5;
+        public static final byte IS_STOP = 0b00 << 5;
+        public static final byte IS_HEAD = 0b01 << 5;
+        public static final byte IS_FINAL = 0b10 << 5;
+        public static final byte IS_RANDOMHEAD = 0b11 << 5;
+        public static final byte IS_OLDHEAD = 0b11 << 5;
+
+        public static final byte VERTEX_MASK = 0b11 << 5;
+        public static final byte VERTEX_CLEAR = (byte) 11001111;
+    }
+    
+    public static class State extends VertexStateFlag{
+        public static final byte NO_MERGE = 0b00 << 3;
+        public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
+        public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
+        public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
+    }
+    
     private AdjacencyListWritable incomingList;
     private AdjacencyListWritable outgoingList;
     private byte state;
@@ -21,7 +40,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public VertexValueWritable() {
         incomingList = new AdjacencyListWritable();
         outgoingList = new AdjacencyListWritable();
-        state = State.NON_VERTEX;
+        state = State.IS_NON;
         kmer = new KmerBytesWritable(0);
         mergeDest = new PositionWritable();
     }

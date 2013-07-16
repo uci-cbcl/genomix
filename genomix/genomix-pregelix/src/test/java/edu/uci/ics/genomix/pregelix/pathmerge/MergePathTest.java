@@ -13,7 +13,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.pregelix.type.State2;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class MergePathTest {
@@ -57,7 +57,7 @@ public class MergePathTest {
                 if (key == null || value == null) {
                     break;
                 }
-                if (value.getState() == State.FINAL_VERTEX) {
+                if (value.getState() == State2.FINAL_VERTEX) {
                     /*bw.write(value.getMergeChain().toString()
                     		+ "\t" + GeneCode.getSymbolFromBitMap(value.getAdjMap()));
                     bw.newLine();*/

@@ -12,7 +12,8 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
@@ -39,7 +40,7 @@ public class ConvertNodeToIdValue {
             outputValue.setRFList(node.getRFList());
             outputValue.setRRList(node.getRRList());
             outputValue.setKmer(node.getKmer());
-            outputValue.setState(State.NON_VERTEX);
+            outputValue.setState(State.IS_HEAD);
             writer.append(outputKey, outputValue);
         }
         writer.close();

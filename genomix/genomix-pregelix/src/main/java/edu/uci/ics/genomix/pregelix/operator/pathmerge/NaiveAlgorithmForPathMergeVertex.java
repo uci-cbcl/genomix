@@ -14,8 +14,8 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.Message;
-import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
@@ -171,9 +171,9 @@ public class NaiveAlgorithmForPathMergeVertex extends
      */
     public void setState() {
         if (incomingMsg.getFlag() == Message.START) {
-            getVertexValue().setState(State.START_VERTEX);
-        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
-            getVertexValue().setState(State.END_VERTEX);
+            getVertexValue().setState(State.IS_HEAD);
+        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.IS_HEAD) {
+            getVertexValue().setState(State.IS_HEAD);//is tail
             voteToHalt();
         } else
             voteToHalt();
@@ -208,7 +208,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
                     sendMsg(destVertexId, outgoingMsg);
                 } else {
                     mergeChainVertex();
-                    getVertexValue().setState(State.FINAL_VERTEX);
+                    getVertexValue().setState(State.IS_FINAL);
                     //String source = getVertexValue().getKmer().toString();
                     //System.out.println();
                 }
@@ -223,7 +223,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
         deleteVertex(getVertexId());
         outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
         outgoingMsg.setChainVertexId(getVertexValue().getKmer());
-        if (getVertexValue().getState() == State.END_VERTEX)
+        if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outgoingMsg.setFlag(Message.STOP);
         destVertexId.set(incomingMsg.getSourceVertexId());
         sendMsg(destVertexId, outgoingMsg);

@@ -13,7 +13,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
@@ -85,7 +85,7 @@ public class GenerateTextFile {
                     break;
                 }
                 if (value.getLengthOfKmer() != -1 && value.getLengthOfKmer() <= maxLength
-                        && value.getState() == State.FINAL_VERTEX) {
+                        && value.getState() == State.IS_FINAL) {
                     bw.write(key.toString() + "\t" + value.toString());
                     bw.newLine();
                 }

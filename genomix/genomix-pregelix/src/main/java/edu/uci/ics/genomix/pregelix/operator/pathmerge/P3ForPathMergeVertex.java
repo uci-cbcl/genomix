@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputForma
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.Message;
-import edu.uci.ics.genomix.pregelix.type.State;
+import edu.uci.ics.genomix.pregelix.type.State2;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
@@ -177,7 +177,7 @@ public class P3ForPathMergeVertex extends
             if (random < pseudoRate)
                 markPseudoHead();
             else{
-                getVertexValue().setState(State.NON_VERTEX);
+                getVertexValue().setState(State2.NON_VERTEX);
                 voteToHalt();
             }
             /*if (getVertexId().toString().equals("CCTCA") || getVertexId().toString().equals("CTCAG")) //AGTAC CCTCA CTCAG CGCCC ACGCC
@@ -192,9 +192,9 @@ public class P3ForPathMergeVertex extends
      */
     public void setState() {
         if (incomingMsg.getFlag() == Message.START) {
-            getVertexValue().setState(State.START_VERTEX);
-        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
-            getVertexValue().setState(State.END_VERTEX);
+            getVertexValue().setState(State2.START_VERTEX);
+        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State2.START_VERTEX) {
+            getVertexValue().setState(State2.END_VERTEX);
             voteToHalt();
         } else
             voteToHalt();
@@ -204,7 +204,7 @@ public class P3ForPathMergeVertex extends
      * mark the pseudoHead
      */
     public void markPseudoHead() {
-        getVertexValue().setState(State.PSEUDOHEAD);
+        getVertexValue().setState(State2.PSEUDOHEAD);
         outgoingMsg.setFlag(Message.FROMPSEUDOHEAD);
         destVertexId
                 .set(getPreDestVertexId(getVertexValue()));
@@ -216,13 +216,13 @@ public class P3ForPathMergeVertex extends
      */
     public void markPseudoRear() {
         if (incomingMsg.getFlag() == Message.FROMPSEUDOHEAD 
-                && getVertexValue().getState() != State.START_VERTEX) {
-            getVertexValue().setState(State.PSEUDOREAR);
+                && getVertexValue().getState() != State2.START_VERTEX) {
+            getVertexValue().setState(State2.PSEUDOREAR);
             voteToHalt();
         }
         else if(incomingMsg.getFlag() == Message.FROMPSEUDOHEAD 
-                && getVertexValue().getState() == State.START_VERTEX){
-            getVertexValue().setState(State.START_HALT);
+                && getVertexValue().getState() == State2.START_VERTEX){
+            getVertexValue().setState(State2.START_HALT);
         }
     }
  
@@ -257,7 +257,7 @@ public class P3ForPathMergeVertex extends
                     sendMsg(destVertexId, outgoingMsg);
                 } else {
                     mergeChainVertex();
-                    getVertexValue().setState(State.FINAL_VERTEX);
+                    getVertexValue().setState(State2.FINAL_VERTEX);
                     //String source = getVertexValue().getKmer().toString();
                     //System.out.println();
                 }
@@ -272,7 +272,7 @@ public class P3ForPathMergeVertex extends
         deleteVertex(getVertexId());
         outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
         outgoingMsg.setChainVertexId(getVertexValue().getKmer());
-        if (getVertexValue().getState() == State.END_VERTEX)
+        if (getVertexValue().getState() == State2.END_VERTEX)
             outgoingMsg.setFlag(Message.STOP);
         sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
     }
@@ -282,7 +282,7 @@ public class P3ForPathMergeVertex extends
      */
     public void sendMsgToPathVertexPartitionPhase(Iterator<MessageWritable> msgIterator) {
         if (getSuperstep() == 4) {
-            if(getVertexValue().getState() != State.START_HALT){
+            if(getVertexValue().getState() != State2.START_HALT){
                 outgoingMsg.setSourceVertexId(getVertexId());
                 destVertexId.set(getNextDestVertexId(getVertexValue()));
                 sendMsg(destVertexId, outgoingMsg);
@@ -302,14 +302,14 @@ public class P3ForPathMergeVertex extends
                         voteToHalt();
                     } else {
                         //check head or pseudoHead
-                        if (getVertexValue().getState() == State.START_VERTEX
+                        if (getVertexValue().getState() == State2.START_VERTEX
                                 && incomingMsg.getFlag() == Message.STOP) {
-                            getVertexValue().setState(State.FINAL_VERTEX);
+                            getVertexValue().setState(State2.FINAL_VERTEX);
                             //String source = getVertexValue().getKmer().toString();
                             //System.out.println();
-                        } else if(getVertexValue().getState() == State.PSEUDOHEAD
+                        } else if(getVertexValue().getState() == State2.PSEUDOHEAD
                                 && incomingMsg.getFlag() == Message.STOP)
-                            getVertexValue().setState(State.END_VERTEX);
+                            getVertexValue().setState(State2.END_VERTEX);
                     }
                 }
             }
@@ -320,15 +320,15 @@ public class P3ForPathMergeVertex extends
      * path node sends message back to head node in partition phase
      */
     public void responseMsgToHeadVertexPartitionPhase() {
-        if (getVertexValue().getState() == State.PSEUDOHEAD)
+        if (getVertexValue().getState() == State2.PSEUDOHEAD)
             outgoingMsg.setFlag(Message.FROMPSEUDOHEAD);
         else {
             deleteVertex(getVertexId());
             outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList()); //incomingMsg.getNeighberNode()
             outgoingMsg.setChainVertexId(getVertexValue().getKmer());
-            if (getVertexValue().getState() == State.PSEUDOREAR)
+            if (getVertexValue().getState() == State2.PSEUDOREAR)
                 outgoingMsg.setFlag(Message.FROMPSEUDOREAR);
-            else if (getVertexValue().getState() == State.END_VERTEX)
+            else if (getVertexValue().getState() == State2.END_VERTEX)
                 outgoingMsg.setFlag(Message.STOP);
         }
         sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
@@ -344,25 +344,25 @@ public class P3ForPathMergeVertex extends
             mergeChainVertex();
             getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
             //check head or pseudoHead
-            if (getVertexValue().getState() == State.START_VERTEX
+            if (getVertexValue().getState() == State2.START_VERTEX
                     && incomingMsg.getFlag() == Message.STOP) {
-                getVertexValue().setState(State.FINAL_VERTEX);
+                getVertexValue().setState(State2.FINAL_VERTEX);
                 //String source = getVertexValue().getKmer().toString();
                 //System.out.println();
-            } else if(getVertexValue().getState() == State.PSEUDOHEAD
+            } else if(getVertexValue().getState() == State2.PSEUDOHEAD
                     && incomingMsg.getFlag() == Message.STOP)
-                getVertexValue().setState(State.END_VERTEX);
+                getVertexValue().setState(State2.END_VERTEX);
         }
     }
     /**
      * After partition phase, reset state: ex. psudoHead and psudoRear -> null
      */
     public void resetState() {
-        if (getVertexValue().getState() == State.PSEUDOHEAD || getVertexValue().getState() == State.PSEUDOREAR) {
-            getVertexValue().setState(State.NON_VERTEX);
+        if (getVertexValue().getState() == State2.PSEUDOHEAD || getVertexValue().getState() == State2.PSEUDOREAR) {
+            getVertexValue().setState(State2.NON_VERTEX);
         }
-        if(getVertexValue().getState() == State.START_HALT)
-            getVertexValue().setState(State.START_VERTEX);
+        if(getVertexValue().getState() == State2.START_HALT)
+            getVertexValue().setState(State2.START_VERTEX);
     }
 
     @Override
@@ -388,7 +388,7 @@ public class P3ForPathMergeVertex extends
             finalProcessPartitionPhase(msgIterator);
         } else if (getSuperstep() % 2 == 1 && getSuperstep() <= maxIteration) {
             resetState();
-            if(getVertexValue().getState() == State.START_VERTEX)
+            if(getVertexValue().getState() == State2.START_VERTEX)
                 sendMsgToPathVertexMergePhase(msgIterator);
             voteToHalt();
         } else if (getSuperstep() % 2 == 0 && getSuperstep() <= maxIteration) {

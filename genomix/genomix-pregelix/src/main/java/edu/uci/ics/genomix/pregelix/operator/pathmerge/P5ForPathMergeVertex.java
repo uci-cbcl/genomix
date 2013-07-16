@@ -15,9 +15,9 @@ import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeInputFormat
 import edu.uci.ics.genomix.pregelix.format.NaiveAlgorithmForPathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.type.State;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
@@ -242,7 +242,7 @@ public class P5ForPathMergeVertex extends
     public void setState() {
         if (incomingMsg.getFlag() == Message.START) {
             getVertexValue().setState(MessageFlag.IS_HEAD); //State.START_VERTEX
-        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.START_VERTEX) {
+        } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.IS_HEAD) {
             getVertexValue().setState(MessageFlag.IS_HEAD);
             getVertexValue().setKmer(getVertexValue().getKmer());
             //voteToHalt();
@@ -432,8 +432,8 @@ public class P5ForPathMergeVertex extends
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
             // Node may be marked as head b/c it's a real head or a real tail
-            headFlag = (byte) (State.START_VERTEX & getVertexValue().getState());
-            tailFlag = (byte) (State.END_VERTEX & getVertexValue().getState());
+            headFlag = (byte) (State.IS_HEAD & getVertexValue().getState());
+            tailFlag = (byte) (State.IS_HEAD & getVertexValue().getState()); //is_tail
             outFlag = (byte) (headFlag | tailFlag);
             
             // only PATH vertices are present. Find the ID's for my neighbors
