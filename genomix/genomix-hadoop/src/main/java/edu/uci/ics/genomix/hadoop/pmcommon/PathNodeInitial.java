@@ -266,7 +266,8 @@ public class PathNodeInitial extends Configured implements Tool {
 
         conf.setInputFormat(SequenceFileInputFormat.class);
         conf.setOutputFormat(SequenceFileOutputFormat.class);
-        FileInputFormat.addInputPaths(conf, inputPath);
+        FileInputFormat.setInputPaths(conf, inputPath);
+//        FileInputFormat.getInputPaths(conf);
         FileOutputFormat.setOutputPath(conf, new Path(toMergeOutput));
         MultipleOutputs.addNamedOutput(conf, TO_UPDATE_OUTPUT, MergePathMultiSeqOutputFormat.class,
                 PositionWritable.class, NodeWithFlagWritable.class);
@@ -280,8 +281,12 @@ public class PathNodeInitial extends Configured implements Tool {
         RunningJob job = JobClient.runJob(conf);
 
         // move the tmp outputs to the arg-spec'ed dirs
-        dfs.rename(new Path(toMergeOutput + File.separator + TO_UPDATE_OUTPUT), new Path(toUpdateOutput));
-        dfs.rename(new Path(toMergeOutput + File.separator + COMPLETE_OUTPUT), new Path(completeOutput));
+        if (!dfs.rename(new Path(toMergeOutput + File.separator + TO_UPDATE_OUTPUT), new Path(toUpdateOutput))) {
+            dfs.mkdirs(new Path(toUpdateOutput));
+        }
+        if (!dfs.rename(new Path(toMergeOutput + File.separator + COMPLETE_OUTPUT), new Path(completeOutput))) {
+            dfs.mkdirs(new Path(completeOutput));
+        }
 
         return job;
     }

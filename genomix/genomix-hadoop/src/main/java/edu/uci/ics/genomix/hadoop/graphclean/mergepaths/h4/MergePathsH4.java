@@ -190,11 +190,11 @@ public class MergePathsH4 extends Configured implements Tool {
                 if (curHead) {
                     if (mergeableNext && !nextHead) {
                         // merge forward
-                        mergeMsgFlag |= nextDir;
+                        mergeMsgFlag |= NodeWithFlagWritable.mirrorDirection(nextDir);
                         mergeDir = MergeDir.FORWARD;
                     } else if (mergeablePrev && !prevHead) {
                         // merge backwards
-                        mergeMsgFlag |= prevDir;
+                        mergeMsgFlag |= NodeWithFlagWritable.mirrorDirection(prevDir);
                         mergeDir = MergeDir.BACKWARD;
                     }
                 } else {
@@ -203,21 +203,21 @@ public class MergePathsH4 extends Configured implements Tool {
                         if ((!nextHead && !prevHead) && (curID.compareTo(nextID) > 0 && curID.compareTo(prevID) > 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
-                            mergeMsgFlag |= nextDir;
+                            mergeMsgFlag |= NodeWithFlagWritable.mirrorDirection(nextDir);
                             mergeDir = MergeDir.FORWARD;
                         }
                     } else if (!mergeablePrev) {
                         // no previous node
                         if (!nextHead && curID.compareTo(nextID) > 0) {
                             // merge towards tail in forward dir
-                            mergeMsgFlag |= nextDir;
+                            mergeMsgFlag |= NodeWithFlagWritable.mirrorDirection(nextDir);
                             mergeDir = MergeDir.FORWARD;
                         }
                     } else if (!mergeableNext) {
                         // no next node
                         if (!prevHead && curID.compareTo(prevID) > 0) {
                             // merge towards tail in reverse dir
-                            mergeMsgFlag |= prevDir;
+                            mergeMsgFlag |= NodeWithFlagWritable.mirrorDirection(prevDir);
                             mergeDir = MergeDir.BACKWARD;
                         }
                     }
@@ -341,10 +341,10 @@ public class MergePathsH4 extends Configured implements Tool {
                             throw new IOException("Saw more than one MSG_SELF! previously seen self: "
                                     + outputValue.getNode() + "  current self: " + inputValue.getNode());
                         if (inMsg == MessageFlag.MSG_SELF) {
-                            outPosn.set(outputValue.getNode().getNodeID());
+                            outPosn.set(inputValue.getNode().getNodeID());
                         } else if (inMsg == MessageFlag.MSG_UPDATE_MERGE) {
                             // merge messages are sent to their merge recipient
-                            outPosn.set(outputValue.getNode().getListFromDir(inMsg).getPosition(0));
+                            outPosn.set(inputValue.getNode().getListFromDir(inMsg).getPosition(0));
                         } else {
                             throw new IOException("Unrecongized MessageFlag MSG: " + inMsg);
                         }
@@ -436,7 +436,7 @@ public class MergePathsH4 extends Configured implements Tool {
                         if (sawCurNode)
                             throw new IOException("Saw more than one MSG_SELF! previously seen self: "
                                     + outputValue.getNode() + "  current self: " + inputValue.getNode());
-                        outputKey.set(outputValue.getNode().getNodeID());
+                        outputKey.set(inputValue.getNode().getNodeID());
                         outputValue.set(inFlag, inputValue.getNode());
                         sawCurNode = true;
                         break;
@@ -494,7 +494,7 @@ public class MergePathsH4 extends Configured implements Tool {
         conf.setOutputValueClass(NodeWithFlagWritable.class);
 
         // step 1: decide merge dir and send updates
-        FileInputFormat.addInputPaths(conf, inputPath);
+        FileInputFormat.setInputPaths(conf, inputPath);
         String outputUpdatesTmp = "h4.updatesProcessed." + new Random().nextDouble() + ".tmp"; // random filename
         FileOutputFormat.setOutputPath(conf, new Path(outputUpdatesTmp));
         dfs.delete(new Path(outputUpdatesTmp), true);
@@ -503,10 +503,10 @@ public class MergePathsH4 extends Configured implements Tool {
         RunningJob job = JobClient.runJob(conf);
 
         // step 2: process merges
-        FileInputFormat.addInputPaths(conf, outputUpdatesTmp);
-        for (Path out : FileInputFormat.getInputPaths(conf)) {
-            System.out.println(out);
-        }
+        FileInputFormat.setInputPaths(conf, outputUpdatesTmp);
+//        for (Path out : FileInputFormat.getInputPaths(conf)) {
+//            System.out.println(out);
+//        }
         Path outputMergeTmp = new Path("h4.mergeProcessed." + new Random().nextDouble() + ".tmp"); // random filename
         FileOutputFormat.setOutputPath(conf, outputMergeTmp);
         MultipleOutputs.addNamedOutput(conf, H4MergeReducer.TO_UPDATE_OUTPUT, MergePathMultiSeqOutputFormat.class,

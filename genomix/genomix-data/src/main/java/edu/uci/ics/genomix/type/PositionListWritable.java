@@ -173,7 +173,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     /*
      * remove the first instance of @toRemove. Uses a linear scan.  Throws an exception if not in this list.
      */
-    public void remove(PositionWritable toRemove) {
+    public void remove(PositionWritable toRemove, boolean ignoreMissing) {
         Iterator<PositionWritable> posIterator = this.iterator();
         while (posIterator.hasNext()) {
             if(toRemove.equals(posIterator.next())) {
@@ -181,7 +181,13 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
                 return;
             }
         }
-        //throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString() + "` was not found in this list.");
+        if (!ignoreMissing) {
+        	throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString() + "` was not found in this list.");
+        }
+    }
+    
+    public void remove(PositionWritable toRemove) {
+    	remove(toRemove, false);
     }
     
     @Override

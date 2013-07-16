@@ -16,35 +16,30 @@ import edu.uci.ics.genomix.hadoop.velvetgraphbuilding.GraphBuildingDriver;
 
 @SuppressWarnings("deprecation")
 public class TestPathMergeH4 extends HadoopMiniClusterTest {
-    protected String SEQUENCE = "/sequence/";
-    protected String GRAPHBUILD = "/graphbuild-unmerged/";
-    protected String MERGED = "/pathmerge/";
-    protected String LOCAL_SEQUENCE_FILE;
-    protected String readsFile;
-    protected boolean regenerateGraph;
-    {
-        HDFS_PATHS = new ArrayList<String>(Arrays.asList(SEQUENCE, GRAPHBUILD, MERGED));
-    }
-    
-    public void setupTestConf(int kmerLength, int readLength, boolean regenerateGraph, String readsFile) {
+    protected String INPUT_GRAPH;
+    protected String OUTPUT_GRAPH;
+    protected String localPath;
+
+    public void setupTestConf(int kmerLength, int readLength, String inputDir) throws IOException {
         KMER_LENGTH = kmerLength;
         READ_LENGTH = readLength;
-        this.readsFile = readsFile;
-        this.regenerateGraph = regenerateGraph;
-        LOCAL_SEQUENCE_FILE = DATA_ROOT + SEQUENCE + readsFile;
+        INPUT_GRAPH = "/input" + inputDir;
+        OUTPUT_GRAPH = "/output" + inputDir;
+        HDFS_PATHS = new ArrayList<String>(Arrays.asList(OUTPUT_GRAPH));
+        copyLocalToDFS(INPUT_ROOT + inputDir, INPUT_GRAPH);
     }
     
     @Test
     public void testTwoReads() throws Exception {
-        setupTestConf(5, 8, true, "tworeads.txt");
-//        testPathNode();
+        setupTestConf(5, 8, "/graphs/pathmerge/singleread");
+        testPathNode();
         testMergeOneIteration();
-//        testMergeToCompletion();
+        testMergeToCompletion();
     }
-    
-//    @Test
+
+	//    @Test
     public void testSimpleText() throws Exception {
-        setupTestConf(5, 8, false, "text.txt");
+        setupTestConf(5, 8, "text.txt");
         testPathNode();
         testMergeOneIteration();
 //        testMergeToCompletion();
@@ -52,47 +47,28 @@ public class TestPathMergeH4 extends HadoopMiniClusterTest {
     
     public void testPathNode() throws IOException {
         cleanUpOutput();
-        prepareGraph();
-
         // identify head and tail nodes with pathnode initial
         PathNodeInitial inith4 = new PathNodeInitial();
-        inith4.run(GRAPHBUILD, "/toMerge", "/toUpdate", "/completed", conf);
-        copyResultsToLocal("/toMerge", ACTUAL_ROOT + "path_toMerge", false, conf);
-        copyResultsToLocal("/toUpdate", ACTUAL_ROOT + "path_toUpdate", false, conf);
-        copyResultsToLocal("/completed", ACTUAL_ROOT + "path_completed", false, conf);
+        inith4.run(INPUT_GRAPH, OUTPUT_GRAPH + "/toMerge", OUTPUT_GRAPH + "/toUpdate", OUTPUT_GRAPH + "/completed", conf);
     }
 
     public void testMergeOneIteration() throws Exception {
         cleanUpOutput();
-        prepareGraph();
         
         MergePathsH4Driver h4 = new MergePathsH4Driver();
-        String outputs = h4.run(GRAPHBUILD, 2, KMER_LENGTH, 1, conf);
-        int i=0;
+        String outputs = h4.run(INPUT_GRAPH, 2, KMER_LENGTH, 1, conf);
         for (String out : outputs.split(",")) {
-            copyResultsToLocal(out, ACTUAL_ROOT + MERGED + i++, false, conf);
+            copyResultsToLocal(out, out.replaceFirst("/input/", ACTUAL_ROOT), false, conf);
         }
-    }
-
-    public void buildGraph() throws IOException {
-        JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 
-        FileInputFormat.setInputPaths(buildConf, SEQUENCE);
-        FileOutputFormat.setOutputPath(buildConf, new Path(GRAPHBUILD));
-        
-        GraphBuildingDriver tldriver = new GraphBuildingDriver();
-        tldriver.run(SEQUENCE, GRAPHBUILD, 2, KMER_LENGTH, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
-        
-        boolean resultsAreText = false;
-        copyResultsToLocal(GRAPHBUILD, ACTUAL_ROOT + GRAPHBUILD, resultsAreText, buildConf);
     }
     
-    private void prepareGraph() throws IOException {
-        if (regenerateGraph) {
-            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
-            buildGraph();
-            copyLocalToDFS(ACTUAL_ROOT + GRAPHBUILD + readsFile + ".binmerge", GRAPHBUILD);
-        } else {
-            copyLocalToDFS(EXPECTED_ROOT + GRAPHBUILD + readsFile + ".binmerge", GRAPHBUILD);
+    public void testMergeToCompletion() throws Exception {
+    	cleanUpOutput();
+        
+        MergePathsH4Driver h4 = new MergePathsH4Driver();
+        String outputs = h4.run(INPUT_GRAPH, 2, KMER_LENGTH, 50, conf);
+        for (String out : outputs.split(",")) {
+            copyResultsToLocal(out, out.replaceFirst("/input/", ACTUAL_ROOT), false, conf);
         }
-    }
+	}
 }

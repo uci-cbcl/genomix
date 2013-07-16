@@ -129,7 +129,7 @@ public class NodeWithFlagWritable extends BinaryComparable implements WritableCo
         } else if ((updateFlag & MessageFlag.MSG_UPDATE_MERGE) == MessageFlag.MSG_UPDATE_MERGE) {
             // this message wants to merge node with updateNode.
             // the direction flag indicates node's relationship with updateNode
-            node.getListFromDir(updateFlag).remove(updateNode.getNodeID()); // remove the node from my edges
+//            node.getListFromDir(updateFlag).remove(updateNode.getNodeID()); // remove the node from my edges
             node.getKmer().mergeWithKmerInDir(updateFlag, kmerSize, updateNode.getKmer()); // merge with its kmer
 
             // pass along H/T information from the merging node. flipping H ->T, T -> H

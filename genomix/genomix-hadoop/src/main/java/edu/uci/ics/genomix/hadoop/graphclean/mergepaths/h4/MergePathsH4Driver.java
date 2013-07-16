@@ -114,6 +114,8 @@ public class MergePathsH4Driver {
         }
         if (!mergeComplete) {
             // if the merge didn't finish, we have to do one final iteration to convert back into (NodeWritable, NullWritable) pairs
+            prevToMergeOutput = mergeOutput;
+            setOutputPaths(inputGraphPath, iMerge);
             ConvertGraphFromNodeWithFlagToNodeWritable converter = new ConvertGraphFromNodeWithFlagToNodeWritable();
             converter.run(prevToMergeOutput, completeOutput, baseConf);
             completeOutputs.add(completeOutput);

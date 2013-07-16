@@ -19,6 +19,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -27,6 +29,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import edu.uci.ics.genomix.hadoop.velvetgraphbuilding.GraphBuildingDriver;
 import edu.uci.ics.genomix.hyracks.test.TestUtils;
 
 /*
@@ -42,7 +45,7 @@ public class HadoopMiniClusterTest {
 
     protected static final String EXPECTED_ROOT = "src/test/resources/expected/";
     protected static final String ACTUAL_ROOT = "src/test/resources/actual/";
-    protected static final String DATA_ROOT = "src/test/resources/data/";
+    protected static final String INPUT_ROOT = "src/test/resources/input/";
 
     protected static String HADOOP_CONF_ROOT = "src/test/resources/hadoop/conf/";
     protected static String HADOOP_CONF = HADOOP_CONF_ROOT + "conf.xml";
@@ -62,12 +65,16 @@ public class HadoopMiniClusterTest {
         FileUtils.cleanDirectory(new File(ACTUAL_ROOT));
     }
 
+    protected static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
+            Configuration conf) throws IOException {
+    	copyResultsToLocal(hdfsSrcDir, localDestFile, resultsAreText, conf, true);
+    }
     /*
      * Merge and copy a DFS directory to a local destination, converting to text if necessary. 
      * Also locally store the binary-formatted result if available.
      */
     protected static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
-            Configuration conf) throws IOException {
+            Configuration conf, boolean ignoreZeroOutputs) throws IOException {
         if (resultsAreText) {
             // for text files, just concatenate them together
             FileUtil.copyMerge(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
@@ -88,7 +95,15 @@ public class HadoopMiniClusterTest {
             	}
             }
             if (validFile == null) {
-                throw new IOException("No non-zero outputs in source directory " + hdfsSrcDir);
+            	if (ignoreZeroOutputs) {
+            		// just make a dummy output dir
+            		FileSystem lfs = FileSystem.getLocal(new Configuration());
+            		lfs.mkdirs(new Path(localDestFile).getParent());
+            		return;
+            	}
+            	else {
+            		throw new IOException("No non-zero outputs in source directory " + hdfsSrcDir);
+            	}
             }
 
             // also load the Nodes and write them out as text locally. 
@@ -168,7 +183,10 @@ public class HadoopMiniClusterTest {
     protected static void copyLocalToDFS(String localSrc, String hdfsDest) throws IOException {
         Path dest = new Path(hdfsDest);
         dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(new Path(localSrc), dest);
+        System.out.println("copying from " + localSrc + " to " + dest);
+        for (File f : new File(localSrc).listFiles()) {  
+        	dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);
+        }
     }
 
     /*
@@ -197,4 +215,27 @@ public class HadoopMiniClusterTest {
         dfsCluster.shutdown();
         mrCluster.shutdown();
     }
+    
+//    public void buildGraph() throws IOException {
+//        JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 
+//        FileInputFormat.setInputPaths(buildConf, SEQUENCE);
+//        FileOutputFormat.setOutputPath(buildConf, new Path(INPUT_GRAPH));
+//        
+//        GraphBuildingDriver tldriver = new GraphBuildingDriver();
+//        tldriver.run(SEQUENCE, INPUT_GRAPH, 2, KMER_LENGTH, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
+//        
+//        boolean resultsAreText = true;
+//        copyResultsToLocal(INPUT_GRAPH, ACTUAL_ROOT + INPUT_GRAPH, resultsAreText, buildConf);
+//    }
+//    
+//    private void prepareGraph() throws IOException {
+//        if (regenerateGraph) {
+//            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
+//            buildGraph();
+//            copyLocalToDFS(ACTUAL_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
+//        } else {
+//            copyLocalToDFS(EXPECTED_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
+//        }
+//    }
+
 }
