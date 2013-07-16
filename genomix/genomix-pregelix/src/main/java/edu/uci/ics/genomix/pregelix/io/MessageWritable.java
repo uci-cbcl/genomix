@@ -21,6 +21,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private KmerBytesWritable kmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private byte flag;
+    private boolean isFlip;
 
     private byte checkMessage;
 
@@ -29,6 +30,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         kmer = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
         flag = Message.NON;
+        isFlip = false;
         checkMessage = (byte) 0;
     }
     
@@ -118,6 +120,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     public void setFlag(byte message) {
         this.flag = message;
     }
+    
+    public boolean isFlip() {
+        return isFlip;
+    }
+
+    public void setFlip(boolean isFlip) {
+        this.isFlip = isFlip;
+    }
 
     @Override
     public void write(DataOutput out) throws IOException {
@@ -128,6 +138,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             kmer.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
+        out.writeBoolean(isFlip);
         out.write(flag);
     }
 
@@ -141,6 +152,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             kmer.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
+        isFlip = in.readBoolean();
         flag = in.readByte();
     }
 

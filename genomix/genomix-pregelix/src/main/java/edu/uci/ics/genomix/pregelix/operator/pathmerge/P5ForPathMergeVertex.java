@@ -295,7 +295,7 @@ public class P5ForPathMergeVertex extends
      * @throws IOException 
      */
     public void broadcastUpdateMsg(){
-        switch(getVertexValue().getState() & 0b0001){
+       /* switch(getVertexValue().getState() & 0b0001){
             case MessageFlag.SHOULD_MERGEWITHPREV:
                 setSuccessorAdjMsg();
                 if(ifFlipWithPredecessor())
@@ -314,7 +314,7 @@ public class P5ForPathMergeVertex extends
                 outgoingMsg.setSourceVertexId(getVertexId());
                 sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
                 break; 
-        }
+        }*/
     }
     
     /**
@@ -390,7 +390,7 @@ public class P5ForPathMergeVertex extends
      * updateAdjList
      */
     public void processUpdate(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        /*byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         
         boolean flip;
@@ -401,14 +401,14 @@ public class P5ForPathMergeVertex extends
         byte neighborToMergeDir = flipDirection(neighborToMeDir, flip);
         
         getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(), 
-                neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()));
+                neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()));*/
     }
     
     /**
      * merge and updateAdjList
      */
     public void processMerge(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        /*byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         
         boolean flip;
@@ -420,7 +420,7 @@ public class P5ForPathMergeVertex extends
         
         getVertexValue().processMerges(neighborToMeDir, incomingMsg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()),
-                kmerSize, incomingMsg.getKmer());
+                kmerSize, incomingMsg.getKmer());*/
     }
     
     @Override
