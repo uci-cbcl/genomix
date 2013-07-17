@@ -150,6 +150,7 @@ public class P4ForPathMergeVertex extends
             //tailFlag = (byte) (MessageFlag.IS_TAIL & getVertexValue().getState());
             //outFlag = (byte) (headFlag | tailFlag);
             outFlag |= headFlag;
+            
             outFlag |= MessageFlag.NO_MERGE;
             
             // only PATH vertices are present. Find the ID's for my neighbors

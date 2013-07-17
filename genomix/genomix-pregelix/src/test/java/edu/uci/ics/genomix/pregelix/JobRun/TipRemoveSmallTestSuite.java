@@ -42,10 +42,10 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 @SuppressWarnings("deprecation")
 public class TipRemoveSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(TipRemoveSmallTestSuite.class.getName());
-
-    public static final String PreFix = "data/actual/tipadd"; //"graphbuildresult";
+    //P4ForMergeGraph/bin/read
+    public static final String PreFix = "data/actual"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "TipAddGraph/bin/read"};/*, PreFix + File.separator
+    + "bridgeadd/BridgeAddGraph/bin/tworeads"};/*, PreFix + File.separator
             /*+ "CyclePath"};, PreFix + File.separator
             + "SimplePath", PreFix + File.separator
             + "SinglePath", PreFix + File.separator

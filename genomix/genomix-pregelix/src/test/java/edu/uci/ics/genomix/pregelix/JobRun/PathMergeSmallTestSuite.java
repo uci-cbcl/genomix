@@ -43,9 +43,19 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class PathMergeSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(PathMergeSmallTestSuite.class.getName());
 
-    public static final String PreFix = "data/actual/tipadd"; //"graphbuildresult";
+    public static final String PreFix = "data/PathTestSet_bidirection"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "TipAddGraph/bin/read"};/*, PreFix + File.separator
+    + "2", PreFix + File.separator
+    + "3", PreFix + File.separator
+    + "4", PreFix + File.separator
+    + "5", PreFix + File.separator
+    + "6", PreFix + File.separator
+    + "7", PreFix + File.separator
+    + "8", PreFix + File.separator
+    + "9", PreFix + File.separator};
+    /*+ "tipremove/TipRemoveGraph/bin/tworeads"};
+    + "bridgeadd/BridgeAddGraph/bin/tworeads"};, PreFix + File.separator
+    + "tipadd/TipAddGraph/bin/read"}, PreFix + File.separator
             /*+ "CyclePath"};, PreFix + File.separator
             + "SimplePath", PreFix + File.separator
             + "SinglePath", PreFix + File.separator

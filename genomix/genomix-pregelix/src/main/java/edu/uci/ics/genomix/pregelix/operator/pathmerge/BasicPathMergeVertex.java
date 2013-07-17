@@ -39,13 +39,13 @@ public class BasicPathMergeVertex extends
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
-        if (maxIteration < 0)
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
-        outFlag = (byte)0;
-        outgoingMsg.reset();
-        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
+//        if (kmerSize == -1)
+//            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+//        if (maxIteration < 0)
+//            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+//        outFlag = (byte)0;
+//        outgoingMsg.reset();
+//        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
     /**
@@ -65,6 +65,34 @@ public class BasicPathMergeVertex extends
     public PositionWritable getNextDestVertexId(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
             posIterator = value.getFFList().iterator();
+            return posIterator.next();
+        } else if (value.getFRList().getCountOfPosition() > 0){ // #FRList() > 0
+            posIterator = value.getFRList().iterator();
+            return posIterator.next();
+        } else {
+          return null;  
+        }
+        
+    }
+
+    public PositionWritable getPreDestVertexId(VertexValueWritable value) {
+        if (value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
+            posIterator = value.getRFList().iterator();
+            return posIterator.next();
+        } else if (value.getRRList().getCountOfPosition() > 0){ // #RRList() > 0
+            posIterator = value.getRRList().iterator();
+            return posIterator.next();
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+     * get destination vertex
+     */
+    public PositionWritable getNextDestVertexIdAndSetFlag(VertexValueWritable value) {
+        if (value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
+            posIterator = value.getFFList().iterator();
             outFlag |= MessageFlag.DIR_FF;
             return posIterator.next();
         } else if (value.getFRList().getCountOfPosition() > 0){ // #FRList() > 0
@@ -77,7 +105,7 @@ public class BasicPathMergeVertex extends
         
     }
 
-    public PositionWritable getPreDestVertexId(VertexValueWritable value) {
+    public PositionWritable getPreDestVertexIdAndSetFlag(VertexValueWritable value) {
         if (value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
             posIterator = value.getRFList().iterator();
             outFlag |= MessageFlag.DIR_RF;

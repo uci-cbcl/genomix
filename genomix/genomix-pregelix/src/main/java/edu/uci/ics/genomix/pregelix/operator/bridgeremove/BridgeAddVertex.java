@@ -86,7 +86,7 @@ public class BridgeAddVertex extends
                 /**
                  * set the vertex value
                  */
-                byte[] array = { 'T', 'A', 'G', 'C', 'C', 'T'};
+                byte[] array = { 'T', 'A', 'G', 'C', 'C'};
                 KmerBytesWritable kmer = new KmerBytesWritable(array.length);
                 kmer.setByRead(array, 0);
                 vertexValue.setKmer(kmer);

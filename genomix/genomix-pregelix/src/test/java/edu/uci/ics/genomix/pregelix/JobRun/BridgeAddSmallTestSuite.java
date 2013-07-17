@@ -40,12 +40,12 @@ import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
-public class BridgeRemoveSmallTestSuite extends TestSuite {
-    private static final Logger LOGGER = Logger.getLogger(BridgeRemoveSmallTestSuite.class.getName());
+public class BridgeAddSmallTestSuite extends TestSuite {
+    private static final Logger LOGGER = Logger.getLogger(BridgeAddSmallTestSuite.class.getName());
 
     public static final String PreFix = "data/input"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "pathmerge_tip"};/*, PreFix + File.separator
+    + "tworeads"};/*, PreFix + File.separator
             /*+ "CyclePath"};, PreFix + File.separator
             + "SimplePath", PreFix + File.separator
             + "SinglePath", PreFix + File.separator
@@ -57,12 +57,12 @@ public class BridgeRemoveSmallTestSuite extends TestSuite {
             PreFix + File.separator + "Path", PreFix + File.separator + "BridgePath",
             PreFix + File.separator + "CyclePath", PreFix + File.separator + "RingPath",
             PreFix + File.separator + "LongPath", PreFix + File.separator + "TreePath" };*/
-    private static final String ACTUAL_RESULT_DIR = "actual";
+    private static final String ACTUAL_RESULT_DIR = "data/actual/bridgeadd";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
-    private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
+    private static final String PATH_TO_ONLY = "src/test/resources/only_bridgeadd.txt";
 
     public static final String HDFS_INPUTPATH = "/PathTestSet";
 
@@ -134,7 +134,7 @@ public class BridgeRemoveSmallTestSuite extends TestSuite {
         List<String> onlys = getFileList(PATH_TO_ONLY);
         File testData = new File(PATH_TO_JOBS);
         File[] queries = testData.listFiles();
-        BridgeRemoveSmallTestSuite testSuite = new BridgeRemoveSmallTestSuite();
+        BridgeAddSmallTestSuite testSuite = new BridgeAddSmallTestSuite();
         testSuite.setUp();
         boolean onlyEnabled = false;
         FileSystem dfs = FileSystem.get(testSuite.conf);
