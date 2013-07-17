@@ -94,17 +94,16 @@ public class P4ForPathMergeVertex extends
         // "deterministically random", based on node id
         //randGenerator.setSeed(randSeed);
         //randSeed = randGenerator.nextInt();
-        randGenerator.setSeed((randSeed ^ nodeID.hashCode()) * 100000);//randSeed + nodeID.hashCode()
+        randGenerator.setSeed((randSeed ^ nodeID.hashCode()) * 100000 * getSuperstep());//randSeed + nodeID.hashCode()
         return randGenerator.nextFloat() < probBeingRandomHead;
     }
-
+    
     /**
      * set nextID to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
+
+
     protected boolean setNextInfo(VertexValueWritable value) {
-        if(headFlag > 0 && (getVertexValue().getState() & State.SHOULD_MERGEWITHPREV) > 0){
-            return false;
-        }
         if (value.getFFList().getCountOfPosition() > 0) {
             nextID.set(value.getFFList().getPosition(0));
             nextHead = isNodeRandomHead(nextID);
@@ -121,8 +120,9 @@ public class P4ForPathMergeVertex extends
     /**
      * set prevID to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
+     
     protected boolean setPrevInfo(VertexValueWritable value) {
-        if(headFlag > 0 && (getVertexValue().getState() & State.SHOULD_MERGEWITHNEXT) > 0){
+        if(headFlag > 0 && (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHNEXT) > 0){
             return false;
         }
         if (value.getRRList().getCountOfPosition() > 0) {
@@ -152,6 +152,7 @@ public class P4ForPathMergeVertex extends
             outFlag |= headFlag;
             
             outFlag |= MessageFlag.NO_MERGE;
+            setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
             curID.set(getVertexId());
@@ -167,12 +168,12 @@ public class P4ForPathMergeVertex extends
                 if (curHead) {
                     if (hasNext && !nextHead && (getNextDestVertexId(getVertexValue()) != null)) {
                         // compress this head to the forward tail
-                        sendUpdateMsgToPredecessor(); //TODO up -> update  From -> to
+                		sendUpdateMsgToPredecessor(); //TODO up -> update  From -> to
                     } else if (hasPrev && !prevHead && (getPreDestVertexId(getVertexValue()) != null)) {
                         // compress this head to the reverse tail
                         sendUpdateMsgToSuccessor();
-                    } else
-                        voteToHalt();
+                    } //else
+                        //voteToHalt();
                 } else {
                     // I'm a tail
                     if (hasNext && hasPrev) {
@@ -180,24 +181,24 @@ public class P4ForPathMergeVertex extends
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
                             sendUpdateMsgToPredecessor();
-                        } else
-                            voteToHalt();
+                        } //else
+                            //voteToHalt();
                     } else if (!hasPrev) {
                         // no previous node
                         if (!nextHead && curID.compareTo(nextID) < 0) {
                             // merge towards tail in forward dir
                             sendUpdateMsgToPredecessor();
-                        } else
-                            voteToHalt();
+                        } //else
+                            //voteToHalt();
                     } else if (!hasNext) {
                         // no next node
                         if (!prevHead && curID.compareTo(prevID) < 0) {
                             // merge towards tail in reverse dir
                             sendUpdateMsgToSuccessor();
-                        } else
-                            voteToHalt();
-                    } else
-                        voteToHalt();
+                        } //else
+                            //voteToHalt();
+                    } //else
+                        //voteToHalt();
                 }
             }
         }
@@ -206,7 +207,7 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 processUpdate();
-                voteToHalt();
+                //voteToHalt();
             }
         } else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self

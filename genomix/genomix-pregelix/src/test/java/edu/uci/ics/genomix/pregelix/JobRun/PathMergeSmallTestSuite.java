@@ -45,6 +45,7 @@ public class PathMergeSmallTestSuite extends TestSuite {
 
     public static final String PreFix = "data/PathTestSet_bidirection"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
+    + "tworeads_6"};/*
     + "2", PreFix + File.separator
     + "3", PreFix + File.separator
     + "4", PreFix + File.separator
@@ -52,7 +53,8 @@ public class PathMergeSmallTestSuite extends TestSuite {
     + "6", PreFix + File.separator
     + "7", PreFix + File.separator
     + "8", PreFix + File.separator
-    + "9", PreFix + File.separator};
+    + "9", PreFix + File.separator
+    + "tworeads"}; 
     /*+ "tipremove/TipRemoveGraph/bin/tworeads"};
     + "bridgeadd/BridgeAddGraph/bin/tworeads"};, PreFix + File.separator
     + "tipadd/TipAddGraph/bin/read"}, PreFix + File.separator

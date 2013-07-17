@@ -6,7 +6,9 @@ import java.io.FileReader;
 
 public class Graph {
 
-    /**
+    private BufferedReader br;
+
+	/**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
      * 
@@ -14,7 +16,7 @@ public class Graph {
      */
     private void start(String fileName) throws Exception {
         File filePathTo = new File("graph/" + fileName);
-        BufferedReader br = new BufferedReader(new FileReader(filePathTo));
+        br = new BufferedReader(new FileReader(filePathTo));
         String line = "";
         String[] split;
 

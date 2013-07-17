@@ -46,11 +46,11 @@ import edu.uci.ics.genomix.type.NodeWritable;
 @SuppressWarnings("deprecation")
 public class JobRunStepByStepTest {
     private static final int KmerSize = 3;
-    private static final int ReadLength = 11;
+    private static final int ReadLength = 8;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_INPUT_PATH = "data/graphbuild.test/pathmerge_TestSet/9";
+    private static final String DATA_INPUT_PATH = "data/input/singleread";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
 

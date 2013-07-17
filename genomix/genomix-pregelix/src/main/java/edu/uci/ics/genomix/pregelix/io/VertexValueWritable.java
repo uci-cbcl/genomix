@@ -25,10 +25,14 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
     
     public static class State extends VertexStateFlag{
+    	public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b101 << 0;
+	    public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b111 << 0;
+    	    
         public static final byte NO_MERGE = 0b00 << 3;
         public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
         public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
         public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
+        public static final byte SHOULD_MERGE_CLEAR = 0b1110011;
     }
     
     private AdjacencyListWritable incomingList;
