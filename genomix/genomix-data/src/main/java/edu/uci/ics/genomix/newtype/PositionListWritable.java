@@ -1,19 +1,4 @@
-/*
- * Copyright 2009-2013 by The Regents of the University of California
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * you may obtain a copy of the License from
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package edu.uci.ics.genomix.type;
+package edu.uci.ics.genomix.newtype;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -25,28 +10,22 @@ import java.util.List;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
+import edu.uci.ics.genomix.newtype.PositionWritable;
 
-public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable {
-    /**
-     * 
-     */
+public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable{
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
     protected static final byte[] EMPTY = {};
-    public static final int INTBYTES = 4;
+    public static final int LONGBYTES = 8;
     
     protected PositionWritable posIter = new PositionWritable();
-
+    
     public PositionListWritable() {
         this.storage = EMPTY;
         this.valueCount = 0;
         this.offset = 0;
-    }
-
-    public PositionListWritable(int count, byte[] data, int offset) {
-        setNewReference(count, data, offset);
     }
     
     public PositionListWritable(List<PositionWritable> posns) {
@@ -55,19 +34,71 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             append(p);
         }
     }
-
+    
     public void setNewReference(int count, byte[] data, int offset) {
         this.valueCount = count;
         this.storage = data;
         this.offset = offset;
     }
+    
+    public void append(long uuid) {
+        setSize((1 + valueCount) * PositionWritable.LENGTH);
+        Marshal.putLong(uuid, storage, offset + valueCount * PositionWritable.LENGTH);
+        valueCount += 1;
+    }
+    
+    public void append(PositionWritable pos) {
+        if(pos != null){
+            setSize((1 + valueCount) * PositionWritable.LENGTH);
+            System.arraycopy(pos.getByteArray(), pos.getStartOffset(), storage, offset + valueCount
+                    * PositionWritable.LENGTH, pos.getLength());
+            valueCount += 1;
+        }
+    }
+    
+    /*
+     * Append the otherList to the end of myList
+     */
+    public void appendList(PositionListWritable otherList) {
+        if (otherList.valueCount > 0) {
+            setSize((valueCount + otherList.valueCount) * PositionWritable.LENGTH);
+            // copy contents of otherList into the end of my storage
+            System.arraycopy(otherList.storage, otherList.offset,
+                    storage, offset + valueCount * PositionWritable.LENGTH, 
+                    otherList.valueCount * PositionWritable.LENGTH);
+            valueCount += otherList.valueCount;
+        }
+    }
+    
+    public static int getCountByDataLength(int length) {
+        if (length % PositionWritable.LENGTH != 0) {
+            throw new IllegalArgumentException("Length of positionlist is invalid");
+        }
+        return length / PositionWritable.LENGTH;
+    }
+    
+    public void set(PositionListWritable otherList) {
+        set(otherList.valueCount, otherList.storage, otherList.offset);
+    }
 
+    public void set(int valueCount, byte[] newData, int offset) {
+        this.valueCount = valueCount;
+        setSize(valueCount * PositionWritable.LENGTH);
+        if (valueCount > 0) {
+            System.arraycopy(newData, offset, storage, this.offset, valueCount * PositionWritable.LENGTH);
+        }
+    }
+
+    public void reset() {
+        valueCount = 0;
+    }
+    
     protected void setSize(int size) {
         if (size > getCapacity()) {
             setCapacity((size * 3 / 2));
         }
     }
-
+    
     protected int getCapacity() {
         return storage.length - offset;
     }
@@ -82,7 +113,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             offset = 0;
         }
     }
-
+    
     public PositionWritable getPosition(int i) {
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
@@ -90,13 +121,28 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         posIter.setNewReference(storage, offset + i * PositionWritable.LENGTH);
         return posIter;
     }
-
-    public void resetPosition(int i, int readID, byte posInRead) {
+    
+    public void resetPosition(int i, long uuid) {
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
-        Marshal.putInt(readID, storage, offset + i * PositionWritable.LENGTH);
-        storage[offset + INTBYTES] = posInRead;
+        Marshal.putLong(uuid, storage, offset + i * PositionWritable.LENGTH);
+    }
+    
+    public int getCountOfPosition() {
+        return valueCount;
+    }
+
+    public byte[] getByteArray() {
+        return storage;
+    }
+
+    public int getStartOffset() {
+        return offset;
+    }
+
+    public int getLength() {
+        return valueCount * PositionWritable.LENGTH;
     }
     
     @Override
@@ -141,92 +187,20 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         }
         //throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString() + "` was not found in this list.");
     }
-
-    public void set(PositionListWritable list2) {
-        set(list2.valueCount, list2.storage, list2.offset);
-    }
-
-    public void set(int valueCount, byte[] newData, int offset) {
-        this.valueCount = valueCount;
-        setSize(valueCount * PositionWritable.LENGTH);
-        if (valueCount > 0) {
-            System.arraycopy(newData, offset, storage, this.offset, valueCount * PositionWritable.LENGTH);
-        }
-    }
-
-    public void reset() {
-        valueCount = 0;
-    }
-
-    public void append(PositionWritable pos) {
-        if(pos != null){
-            setSize((1 + valueCount) * PositionWritable.LENGTH);
-            System.arraycopy(pos.getByteArray(), pos.getStartOffset(), storage, offset + valueCount
-                    * PositionWritable.LENGTH, pos.getLength());
-            valueCount += 1;
-        }
-    }
-
-    public void append(int readID, byte posInRead) {
-        setSize((1 + valueCount) * PositionWritable.LENGTH);
-        Marshal.putInt(readID, storage, offset + valueCount * PositionWritable.LENGTH);
-        storage[offset + valueCount * PositionWritable.LENGTH + PositionWritable.INTBYTES] = posInRead;
-        valueCount += 1;
+    
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.writeInt(valueCount);
+        out.write(storage, offset, valueCount * PositionWritable.LENGTH);
     }
     
-    /*
-     * Append the otherList to the end of myList
-     */
-    public void appendList(PositionListWritable otherList) {
-        if (otherList.valueCount > 0) {
-            setSize((valueCount + otherList.valueCount) * PositionWritable.LENGTH);
-            // copy contents of otherList into the end of my storage
-            System.arraycopy(otherList.storage, otherList.offset,
-                    storage, offset + valueCount * PositionWritable.LENGTH, 
-                    otherList.valueCount * PositionWritable.LENGTH);
-            valueCount += otherList.valueCount;
-        }
-    }
-    
-    public static int getCountByDataLength(int length) {
-        if (length % PositionWritable.LENGTH != 0) {
-            for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-                System.out.println(ste);
-            }
-            throw new IllegalArgumentException("Length of positionlist is invalid");
-        }
-        return length / PositionWritable.LENGTH;
-    }
-
-    public int getCountOfPosition() {
-        return valueCount;
-    }
-
-    public byte[] getByteArray() {
-        return storage;
-    }
-
-    public int getStartOffset() {
-        return offset;
-    }
-
-    public int getLength() {
-        return valueCount * PositionWritable.LENGTH;
-    }
-
     @Override
     public void readFields(DataInput in) throws IOException {
         this.valueCount = in.readInt();
         setSize(valueCount * PositionWritable.LENGTH);
         in.readFully(storage, offset, valueCount * PositionWritable.LENGTH);
     }
-
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeInt(valueCount);
-        out.write(storage, offset, valueCount * PositionWritable.LENGTH);
-    }
-
+    
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
