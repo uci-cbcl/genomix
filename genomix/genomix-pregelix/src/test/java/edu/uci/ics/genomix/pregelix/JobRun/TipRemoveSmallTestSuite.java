@@ -43,20 +43,10 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class TipRemoveSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(TipRemoveSmallTestSuite.class.getName());
     //P4ForMergeGraph/bin/read
-    public static final String PreFix = "data/actual"; //"graphbuildresult";
+    public static final String PreFix = "data/input"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "bridgeadd/BridgeAddGraph/bin/tworeads"};/*, PreFix + File.separator
-            /*+ "CyclePath"};, PreFix + File.separator
-            + "SimplePath", PreFix + File.separator
-            + "SinglePath", PreFix + File.separator
-            + "TreePath"};*/
-           /* + "2", PreFix + File.separator + "3", PreFix + File.separator + "4", PreFix + File.separator + "5",
-            PreFix + File.separator + "6", PreFix + File.separator + "7", PreFix + File.separator + "8",
-            PreFix + File.separator + "9", PreFix + File.separator + "TwoKmer", PreFix + File.separator + "ThreeKmer",
-            PreFix + File.separator + "SinglePath", PreFix + File.separator + "SimplePath",
-            PreFix + File.separator + "Path", PreFix + File.separator + "BridgePath",
-            PreFix + File.separator + "CyclePath", PreFix + File.separator + "RingPath",
-            PreFix + File.separator + "LongPath", PreFix + File.separator + "TreePath" };*/
+    + "graphs/tipremove/fr_with_tip"};
+    //+ "bridgeadd/BridgeAddGraph/bin/tworeads"};
     private static final String ACTUAL_RESULT_DIR = "data/actual/tipremove";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

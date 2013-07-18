@@ -45,24 +45,13 @@ public class BubbleMergeSmallTestSuite extends TestSuite {
 
     public static final String PreFix = "data/input"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "pathmerge"};/*, PreFix + File.separator
-            /*+ "CyclePath"};, PreFix + File.separator
-            + "SimplePath", PreFix + File.separator
-            + "SinglePath", PreFix + File.separator
-            + "TreePath"};*/
-           /* + "2", PreFix + File.separator + "3", PreFix + File.separator + "4", PreFix + File.separator + "5",
-            PreFix + File.separator + "6", PreFix + File.separator + "7", PreFix + File.separator + "8",
-            PreFix + File.separator + "9", PreFix + File.separator + "TwoKmer", PreFix + File.separator + "ThreeKmer",
-            PreFix + File.separator + "SinglePath", PreFix + File.separator + "SimplePath",
-            PreFix + File.separator + "Path", PreFix + File.separator + "BridgePath",
-            PreFix + File.separator + "CyclePath", PreFix + File.separator + "RingPath",
-            PreFix + File.separator + "LongPath", PreFix + File.separator + "TreePath" };*/
-    private static final String ACTUAL_RESULT_DIR = "actual";
+    + "graphs/bubblemerge/fr_bubble"};
+    private static final String ACTUAL_RESULT_DIR = "data/actual/bubblemerge";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
-    private static final String PATH_TO_ONLY = "src/test/resources/only.txt";
+    private static final String PATH_TO_ONLY = "src/test/resources/only_bubblemerge.txt";
 
     public static final String HDFS_INPUTPATH = "/PathTestSet";
 

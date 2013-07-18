@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
  * vertexId: BytesWritable
@@ -122,9 +123,6 @@ public class P4ForPathMergeVertex extends
      */
      
     protected boolean setPrevInfo(VertexValueWritable value) {
-        if(headFlag > 0 && (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHNEXT) > 0){
-            return false;
-        }
         if (value.getRRList().getCountOfPosition() > 0) {
             prevID.set(value.getRRList().getPosition(0));
             prevHead = isNodeRandomHead(prevID);
@@ -146,7 +144,6 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
-
             //tailFlag = (byte) (MessageFlag.IS_TAIL & getVertexValue().getState());
             //outFlag = (byte) (headFlag | tailFlag);
             outFlag |= headFlag;
@@ -166,15 +163,16 @@ public class P4ForPathMergeVertex extends
             hasPrev = setPrevInfo(getVertexValue());//&& headFlag == 0;
             if (hasNext || hasPrev) {
                 if (curHead) {
-                    if (hasNext && !nextHead && (getNextDestVertexId(getVertexValue()) != null)) {
+                    if (hasNext && !nextHead) {
                         // compress this head to the forward tail
                 		sendUpdateMsgToPredecessor(); //TODO up -> update  From -> to
-                    } else if (hasPrev && !prevHead && (getPreDestVertexId(getVertexValue()) != null)) {
+                    } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
                         sendUpdateMsgToSuccessor();
                     } //else
                         //voteToHalt();
-                } else {
+                }
+            }else {
                     // I'm a tail
                     if (hasNext && hasPrev) {
                          if ((!nextHead && !prevHead) && (curID.compareTo(nextID) < 0 && curID.compareTo(prevID) < 0)) {
@@ -200,14 +198,14 @@ public class P4ForPathMergeVertex extends
                     } //else
                         //voteToHalt();
                 }
-            }
         }
         else if (getSuperstep() % 4 == 0){
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 processUpdate();
-                //voteToHalt();
+                if(VertexUtil.isHeadOrRearVertexWithDegree(getVertexValue()))
+                    voteToHalt();
             }
         } else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self

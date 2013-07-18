@@ -22,6 +22,9 @@ public class VertexUtil {
         return value.outDegree() > 0 && !isPathVertex(value);
     }
     
+    public static boolean isHeadOrRearVertexWithDegree(VertexValueWritable value){
+        return isHeadVertexWithIndegree(value) || isRearVertexWithOutdegree(value);
+    }
     /**
      * Head Vertex: out-degree > 0, and has indegress
      * 

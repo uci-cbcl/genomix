@@ -60,6 +60,17 @@ public class BasicPathMergeVertex extends
     }
     
     /**
+     * check if prev/next destination exists
+     */
+    public boolean hasNextDest(VertexValueWritable value){
+        return value.getFFList().getCountOfPosition() > 0 || value.getFRList().getCountOfPosition() > 0;
+    }
+    
+    public boolean hasPrevDest(VertexValueWritable value){
+        return value.getRFList().getCountOfPosition() > 0 || value.getRRList().getCountOfPosition() > 0;
+    }
+    
+    /**
      * get destination vertex
      */
     public PositionWritable getNextDestVertexId(VertexValueWritable value) {
@@ -70,9 +81,8 @@ public class BasicPathMergeVertex extends
             posIterator = value.getFRList().iterator();
             return posIterator.next();
         } else {
-          return null;  
+            return null;  
         }
-        
     }
 
     public PositionWritable getPreDestVertexId(VertexValueWritable value) {
@@ -222,22 +232,22 @@ public class BasicPathMergeVertex extends
      */
     public void startSendMsg() {
         if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())) {
-            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD | MessageFlag.HEAD_SHOULD_MERGEWITHNEXT));
+            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));//| MessageFlag.HEAD_SHOULD_MERGEWITHNEXT
             sendMsgToAllNextNodes(getVertexValue());
             voteToHalt();
         }
         if (VertexUtil.isRearVertexWithOutdegree(getVertexValue())) {
-            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD | MessageFlag.HEAD_SHOULD_MERGEWITHPREV));
+            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));//| MessageFlag.HEAD_SHOULD_MERGEWITHPREV
             sendMsgToAllPreviousNodes(getVertexValue());
             voteToHalt();
         }
         if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
-            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD | MessageFlag.HEAD_SHOULD_MERGEWITHNEXT));
+            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));//| MessageFlag.HEAD_SHOULD_MERGEWITHNEXT
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
         }
         if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
-            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD | MessageFlag.HEAD_SHOULD_MERGEWITHPREV));
+            outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));//| MessageFlag.HEAD_SHOULD_MERGEWITHPREV
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
         }
@@ -421,20 +431,20 @@ public class BasicPathMergeVertex extends
         getVertexValue().setState(state);
     }
     
-    public byte isHeadShouldMergeWithPrev(){
-    	return (byte) (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHPREV);
-    }
+//    public byte isHeadShouldMergeWithPrev(){
+//    	return (byte) (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHPREV);
+//    }
     /**
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
     public void sendUpdateMsgToPredecessor(){
     	setStateAsMergeWithNext();
-    	if(isHeadShouldMergeWithPrev() == 0){
-		    if(getVertexValue().getFFList().getLength() > 0)
-		        getVertexValue().setMergeDest(getVertexValue().getFFList().getPosition(0));
-		    else
-		        getVertexValue().setMergeDest(getVertexValue().getFRList().getPosition(0));
+    	if(hasNextDest(getVertexValue())){
+//		    if(getVertexValue().getFFList().getLength() > 0)
+//		        getVertexValue().setMergeDest(getVertexValue().getFFList().getPosition(0));
+//		    else
+//		        getVertexValue().setMergeDest(getVertexValue().getFRList().getPosition(0));
 		    broadcastUpdateMsg();
     	}
     }
@@ -445,20 +455,20 @@ public class BasicPathMergeVertex extends
         getVertexValue().setState(state);
     }
     
-    public byte isHeadShouldMergeWithNext(){
-    	return (byte) (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHNEXT);
-    }
+//    public byte isHeadShouldMergeWithNext(){
+//    	return (byte) (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHNEXT);
+//    }
     /**
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
     public void sendUpdateMsgToSuccessor(){
     	setStateAsMergeWithPrev();
-    	if(isHeadShouldMergeWithNext() == 0){
-		    if(getVertexValue().getRFList().getLength() > 0)
-		        getVertexValue().setMergeDest(getVertexValue().getRFList().getPosition(0));
-		    else
-		        getVertexValue().setMergeDest(getVertexValue().getRRList().getPosition(0));
+    	if(hasNextDest(getVertexValue())){
+//		    if(getVertexValue().getRFList().getLength() > 0)
+//		        getVertexValue().setMergeDest(getVertexValue().getRFList().getPosition(0));
+//		    else
+//		        getVertexValue().setMergeDest(getVertexValue().getRRList().getPosition(0));
 		    broadcastUpdateMsg();
     	}
     }

@@ -83,12 +83,12 @@ public class JobGenerator {
     private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(P4ForPathMergeVertex.class);
-        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class); //DataCleanInputFormat
+        job.setVertexInputFormatClass(DataCleanInputFormat.class); //NaiveAlgorithmForPathMergeInputFormat //
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(P4ForPathMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().setInt(P4ForPathMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -100,7 +100,7 @@ public class JobGenerator {
     private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(TipAddVertex.class);
-        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
+        job.setVertexInputFormatClass(DataCleanOutputFormat.class);
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
@@ -117,12 +117,12 @@ public class JobGenerator {
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(TipRemoveVertex.class);
-        job.setVertexInputFormatClass(DataCleanInputFormat.class);
+        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
+        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -156,7 +156,7 @@ public class JobGenerator {
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
+        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -185,12 +185,12 @@ public class JobGenerator {
     private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(BubbleMergeVertex.class);
-        job.setVertexInputFormatClass(DataCleanInputFormat.class);
+        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
         job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(BubbleMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().setInt(BubbleMergeVertex.KMER_SIZE, 5);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -203,7 +203,7 @@ public class JobGenerator {
         //genNaiveAlgorithmForMergeGraph();
         //genLogAlgorithmForMergeGraph();
         //genP3ForMergeGraph();
-        genTipAddGraph();
+        //genTipAddGraph();
         genTipRemoveGraph();
         genBridgeAddGraph();
         genBridgeRemoveGraph();

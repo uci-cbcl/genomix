@@ -96,7 +96,7 @@
 <property><name>io.sort.mb</name><value>100</value></property>
 <property><name>mapred.local.dir</name><value>${hadoop.tmp.dir}/mapred/local</value></property>
 <property><name>io.sort.factor</name><value>10</value></property>
-<property><name>BasicPathMergeVertex.kmerSize</name><value>3</value></property>
+<property><name>BasicPathMergeVertex.kmerSize</name><value>5</value></property>
 <property><name>mapred.task.profile</name><value>false</value></property>
 <property><name>job.end.retry.interval</name><value>30000</value></property>
 <property><name>mapred.tasktracker.procfsbasedprocesstree.sleeptime-before-sigkill</name><value>5000</value></property>

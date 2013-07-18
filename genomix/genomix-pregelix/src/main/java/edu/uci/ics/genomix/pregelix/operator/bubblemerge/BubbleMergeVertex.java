@@ -88,18 +88,57 @@ public class BubbleMergeVertex extends
             posIterator = value.getFRList().iterator();
         return posIterator.next();
     }
+    
+    public PositionWritable getPrevDestVertexId(VertexValueWritable value) {
+        if(value.getRFList().getCountOfPosition() > 0) // #FFList() > 0
+            posIterator = value.getRFList().iterator();
+        else // #FRList() > 0
+            posIterator = value.getRRList().iterator();
+        return posIterator.next();
+    }
 
+    /**
+     * check if prev/next destination exists
+     */
+    public boolean hasNextDest(VertexValueWritable value){
+        return value.getFFList().getCountOfPosition() > 0 || value.getFRList().getCountOfPosition() > 0;
+    }
+    
+    public boolean hasPrevDest(VertexValueWritable value){
+        return value.getRFList().getCountOfPosition() > 0 || value.getRRList().getCountOfPosition() > 0;
+    }
+    
     /**
      * head send message to all next nodes
      */
     public void sendMsgToAllNextNodes(VertexValueWritable value) {
         posIterator = value.getFFList().iterator(); // FFList
         while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMFF);
             destVertexId.set(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getFRList().iterator(); // FRList
         while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMFR);
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+    }
+    
+    /**
+     * head send message to all next nodes
+     */
+    public void sendMsgToAllPrevNodes(VertexValueWritable value) {
+        posIterator = value.getRFList().iterator(); // FFList
+        while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMRF);
+            destVertexId.set(posIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        posIterator = value.getRRList().iterator(); // FRList
+        while(posIterator.hasNext()){
+            outgoingMsg.setMessage(AdjMessage.FROMRR);
             destVertexId.set(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
@@ -183,20 +222,42 @@ public class BubbleMergeVertex extends
         if (getSuperstep() == 1) {
             if(VertexUtil.isHeadVertexWithIndegree(getVertexValue())
                     || VertexUtil.isHeadWithoutIndegree(getVertexValue())){
-                outgoingMsg.setMessage(AdjMessage.NON);
                 outgoingMsg.setSourceVertexId(getVertexId());
                 sendMsgToAllNextNodes(getVertexValue());
             }
+//            if(VertexUtil.isRearVertexWithOutdegree(getVertexValue())
+//                    || VertexUtil.isRearWithoutOutdegree(getVertexValue())){
+//                outgoingMsg.setSourceVertexId(getVertexId());
+//                sendMsgToAllPrevNodes(getVertexValue());
+//            }
         } else if (getSuperstep() == 2){
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 if(VertexUtil.isPathVertex(getVertexValue())){
-                    outgoingMsg.setMessage(AdjMessage.NON);
-                    outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
-                    outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setChainVertexId(getVertexValue().getKmer());
-                    destVertexId.set(getNextDestVertexId(getVertexValue()));
-                    sendMsg(destVertexId, outgoingMsg);
+                    switch(incomingMsg.getMessage()){
+                        case AdjMessage.FROMFF:
+                        case AdjMessage.FROMRF:
+                            if(hasNextDest(getVertexValue())){
+                                outgoingMsg.setMessage(AdjMessage.NON);
+                                outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
+                                outgoingMsg.setSourceVertexId(getVertexId());
+                                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                                destVertexId.set(getNextDestVertexId(getVertexValue()));
+                                sendMsg(destVertexId, outgoingMsg);
+                            }
+                            break;
+                        case AdjMessage.FROMFR:
+                        case AdjMessage.FROMRR:
+                            if(hasPrevDest(getVertexValue())){
+                                outgoingMsg.setMessage(AdjMessage.NON);
+                                outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
+                                outgoingMsg.setSourceVertexId(getVertexId());
+                                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                                destVertexId.set(getPrevDestVertexId(getVertexValue()));
+                                sendMsg(destVertexId, outgoingMsg);
+                            }
+                            break;
+                    }
                 }
             }
         } else if (getSuperstep() == 3){
@@ -273,7 +334,7 @@ public class BubbleMergeVertex extends
                 }
             }
         } else if (getSuperstep() == 4){
-            while (msgIterator.hasNext()) {
+            if(msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 if(incomingMsg.getMessage() == AdjMessage.KILL){
                     broadcaseKillself();
