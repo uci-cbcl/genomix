@@ -14,8 +14,7 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
-    public static final int LENGTH = 5;
-    public static final int LONGBYTES = 8;
+    public static final int LENGTH = 8;
     
     public PositionWritable() {
         storage = new byte[LENGTH];

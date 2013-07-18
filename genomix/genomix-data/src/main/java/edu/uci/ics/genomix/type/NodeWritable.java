@@ -30,7 +30,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public NodeWritable() {
-        this(21);
+        this(0);
     }
     
     public NodeWritable(int kmerSize) {

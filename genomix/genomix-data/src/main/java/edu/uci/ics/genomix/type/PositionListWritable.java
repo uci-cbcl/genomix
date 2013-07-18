@@ -30,6 +30,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     
     public PositionListWritable(List<PositionWritable> posns) {
         this();
+        setSize(posns.size());  // reserve space for all elements
         for (PositionWritable p : posns) {
             append(p);
         }
@@ -48,12 +49,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
     
     public void append(PositionWritable pos) {
-        if(pos != null){
-            setSize((1 + valueCount) * PositionWritable.LENGTH);
-            System.arraycopy(pos.getByteArray(), pos.getStartOffset(), storage, offset + valueCount
-                    * PositionWritable.LENGTH, pos.getLength());
-            valueCount += 1;
-        }
+        append(pos.getUUID());
     }
     
     /*
