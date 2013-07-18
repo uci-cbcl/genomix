@@ -25,7 +25,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.KmerUtil;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.oldtype.NodeWritable.DirectionFlag;
 
 /**
  * Variable kmer length byteswritable

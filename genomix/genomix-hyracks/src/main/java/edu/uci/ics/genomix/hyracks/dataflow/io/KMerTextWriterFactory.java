@@ -17,9 +17,9 @@ package edu.uci.ics.genomix.hyracks.dataflow.io;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;

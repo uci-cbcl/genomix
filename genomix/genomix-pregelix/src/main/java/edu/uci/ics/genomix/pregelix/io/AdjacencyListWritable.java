@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
 
 public class AdjacencyListWritable implements WritableComparable<AdjacencyListWritable>{
     private PositionListWritable forwardList;

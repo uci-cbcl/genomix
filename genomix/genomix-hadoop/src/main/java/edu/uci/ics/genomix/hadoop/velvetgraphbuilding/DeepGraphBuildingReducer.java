@@ -8,9 +8,10 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+
+import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 
 @SuppressWarnings("deprecation")
 public class DeepGraphBuildingReducer extends MapReduceBase implements

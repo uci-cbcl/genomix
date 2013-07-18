@@ -3,8 +3,9 @@ package edu.uci.ics.genomix.hadoop.velvetgraphbuilding;
 //import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Partitioner;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 
 public class ReadIDPartitioner implements Partitioner<PositionWritable, PositionListAndKmerWritable>{
     

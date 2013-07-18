@@ -6,8 +6,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 
 public class PositionListWritableTest {
 

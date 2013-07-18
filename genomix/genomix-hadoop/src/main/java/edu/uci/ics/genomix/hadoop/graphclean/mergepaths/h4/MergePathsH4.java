@@ -46,8 +46,8 @@ import org.apache.hadoop.util.ToolRunner;
 import edu.uci.ics.genomix.hadoop.pmcommon.MergePathMultiSeqOutputFormat;
 import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable.MessageFlag;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 
 /*
  * a probabilistic merge algorithm for merging long single paths (chains without only 1 incoming and outgoing edge)

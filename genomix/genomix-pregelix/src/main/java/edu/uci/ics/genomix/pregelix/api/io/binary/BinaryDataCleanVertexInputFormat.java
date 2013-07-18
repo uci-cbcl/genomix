@@ -13,8 +13,8 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
 
 public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
         extends VertexInputFormat<I, V, E, M> {

@@ -4,7 +4,7 @@ import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.oldtype.NodeWritable;
 
 public class DataLoadLogFormatter extends Formatter {
     private NodeWritable key;

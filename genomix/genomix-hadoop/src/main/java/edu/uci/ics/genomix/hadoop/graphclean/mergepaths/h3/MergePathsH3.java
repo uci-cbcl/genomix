@@ -25,8 +25,8 @@ import org.apache.hadoop.util.ToolRunner;
 
 import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial.PathNodeFlag;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 
 @SuppressWarnings("deprecation")
 public class MergePathsH3 extends Configured implements Tool {

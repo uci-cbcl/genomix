@@ -3,8 +3,8 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
@@ -11,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFromHead;
-import edu.uci.ics.genomix.type.PositionWritable;
 /*
  * vertexId: BytesWritable
  * vertexValue: VertexValueWritable

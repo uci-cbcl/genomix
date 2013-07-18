@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
@@ -21,7 +22,6 @@ import edu.uci.ics.genomix.pregelix.operator.pathmerge.P3ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
-import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class JobGenerator {

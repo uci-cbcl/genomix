@@ -11,7 +11,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.oldtype.NodeWritable;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 

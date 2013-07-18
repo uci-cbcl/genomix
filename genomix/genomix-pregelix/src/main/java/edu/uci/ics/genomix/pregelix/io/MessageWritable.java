@@ -6,10 +6,10 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
 
 public class MessageWritable implements WritableComparable<MessageWritable> {
     /**

@@ -4,8 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
+
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
 
 public class PositionListAndKmerWritable implements WritableComparable<PositionListAndKmerWritable> {
     

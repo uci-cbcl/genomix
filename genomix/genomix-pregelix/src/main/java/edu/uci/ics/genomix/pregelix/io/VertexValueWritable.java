@@ -4,10 +4,10 @@ import java.io.*;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
 
 public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
 

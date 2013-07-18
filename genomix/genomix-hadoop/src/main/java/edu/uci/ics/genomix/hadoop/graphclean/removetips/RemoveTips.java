@@ -27,8 +27,8 @@ import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h3.MergePathsH3.MergeMes
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4;
 import edu.uci.ics.genomix.hadoop.graphclean.mergepaths.h4.MergePathsH4.H4UpdatesMapper;
 import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
 
 @SuppressWarnings("deprecation")
 public class RemoveTips extends Configured implements Tool {

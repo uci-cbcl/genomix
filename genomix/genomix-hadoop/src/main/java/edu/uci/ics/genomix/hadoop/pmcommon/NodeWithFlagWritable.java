@@ -10,11 +10,11 @@ import javax.management.RuntimeErrorException;
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.oldtype.PositionListWritable;
+import edu.uci.ics.genomix.oldtype.PositionWritable;
+import edu.uci.ics.genomix.oldtype.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
 
 /*
  * Simple "Message" class, allowing a NodeWritable to be sent, along with a message flag.
