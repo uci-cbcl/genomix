@@ -16,6 +16,12 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     protected int offset;
     public static final int LENGTH = 8;
     
+    public static final int totalBits = 64;
+    private static final int bitsForMate = 1;
+    private static final int bitsForPosition = 16;
+    private static final int readIdShift = bitsForPosition + bitsForMate;
+    private static final int positionIdShift = bitsForMate;
+    
     public PositionWritable() {
         storage = new byte[LENGTH];
         offset = 0;
@@ -35,7 +41,7 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     }
     
     public void set(byte mateId, long readId, int posId){
-        long uuid = (readId << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
+        long uuid = (readId << readIdShift) + ((posId & 0xFFFF) << positionIdShift) + (mateId & 0b1);
         Marshal.putLong(uuid, storage, offset);
     }
     
@@ -57,11 +63,11 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     }
     
     public long getReadId(){
-        return Marshal.getLong(storage, offset) >> 17;
+        return Marshal.getLong(storage, offset) >>> readIdShift;
     }
     
     public int getPosId(){
-        return (int) ((Marshal.getLong(storage, offset) >> 1) & 0xffff);
+        return (int) ((Marshal.getLong(storage, offset) >>> positionIdShift) & 0xffff);
     }
     
     public byte[] getByteArray() {
@@ -104,8 +110,11 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
         return (this.getUUID() < other.getUUID()) ? -1 : ((this.getUUID() == other.getUUID()) ? 0 : 1);
     }
     
+    /*
+     * String of form "(readId-posID_mate)" where mate is _1 or _2
+     */
     @Override
     public String toString() {
-        return "(" + Long.toString(this.getUUID()) + ")";
+        return "(" + this.getReadId() + "-" + this.getPosId() + "_" + (this.getMateId() + 1) + ")";
     }
 }
