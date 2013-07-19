@@ -22,8 +22,7 @@ public class Marshal {
                 + ((bytes[offset + 3] & 0xff) << 0);
     }
     
-    public static long getLong(byte[] bytes, int offset) {
-        
+    public static long getLong(byte[] bytes, int offset) {   
         long value = 0;
         for (int i = offset; i < bytes.length && i < offset + 8; i++)
         {
@@ -44,7 +43,6 @@ public class Marshal {
     
     public static void putLong(long val, byte[] bytes, int offset) {
         ByteBuffer byteBuffer = ByteBuffer.allocate(8); 
-        //byte[] tmp = byteBuffer.putLong(val).array();
         System.arraycopy(byteBuffer.putLong(val).array(), 0, bytes, offset, 8);
 //        bytes[offset] = (byte)((val >>> 56) & 0xFF);        
 //        bytes[offset + 1] = (byte)((val >>> 48) & 0xFF);

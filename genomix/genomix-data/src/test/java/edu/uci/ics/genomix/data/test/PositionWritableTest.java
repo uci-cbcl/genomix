@@ -1,7 +1,4 @@
 package edu.uci.ics.genomix.data.test;
-
-import java.util.Random;
-
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -14,24 +11,31 @@ public class PositionWritableTest {
     @Test
     public void TestInitial() {
         PositionWritable pos = new PositionWritable();
-        Random r = new Random();
-        long uuid = -1; //r.nextLong();
-        pos = new PositionWritable(uuid);
-        Assert.assertEquals(pos.getUUID(), uuid);
-        
-        byte[] start = new byte[256];
-        Marshal.putLong(uuid, start, 0);
-        PositionWritable pos1 = new PositionWritable(start, 0);
-        Assert.assertEquals(pos1.getUUID(), uuid);
-//       
-//        for (int i = 0; i < 128; i++) {
-//            Marshal.putLong((long)i, start, i);
-//            pos = new PositionWritable(start, i);
-//            Assert.assertEquals(pos.getUUID(), (long)i);
-//            pos.set((long)-i);
-//            Assert.assertEquals(pos.getUUID(), (long)-i);
-//            pos.setNewReference(start, i);
-//            Assert.assertEquals(pos.getUUID(), (long)-i);
-//        }
+        PositionWritable pos1 = new PositionWritable();
+        byte mateId;
+        long readId;
+        int posId;
+        byte[] start = new byte[8];
+        for (int i = 0; i < 65535; i++) {
+            mateId = (byte)1;
+            readId = (long)i;
+            posId = i;
+            pos = new PositionWritable(mateId, readId, posId);
+            Assert.assertEquals(pos.getMateId(), mateId);
+            Assert.assertEquals(pos.getReadId(), readId);
+            Assert.assertEquals(pos.getPosId(), posId);
+            
+            long finalId = ((readId + 1) << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
+            Marshal.putLong(finalId, start, 0);
+            pos1 = new PositionWritable(start, 0);
+            Assert.assertEquals(pos1.getMateId(), mateId);
+            Assert.assertEquals(pos1.getReadId(), readId + 1);
+            Assert.assertEquals(pos1.getPosId(), posId);
+            
+            pos.setNewReference(start, 0);
+            Assert.assertEquals(pos.getMateId(), mateId);
+            Assert.assertEquals(pos.getReadId(), readId + 1);
+            Assert.assertEquals(pos.getPosId(), posId);
+        }
     }
 }
