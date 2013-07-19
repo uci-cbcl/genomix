@@ -1,35 +1,37 @@
 package edu.uci.ics.genomix.data.test;
 
+import java.util.Random;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
 
 import edu.uci.ics.genomix.data.Marshal;
-import edu.uci.ics.genomix.oldtype.PositionWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 
 public class PositionWritableTest {
 
     @Test
     public void TestInitial() {
         PositionWritable pos = new PositionWritable();
-        pos = new PositionWritable(3, (byte) 1);
-        Assert.assertEquals(pos.getReadID(), 3);
-        Assert.assertEquals(pos.getPosInRead(), 1);
-
+        Random r = new Random();
+        long uuid = -1; //r.nextLong();
+        pos = new PositionWritable(uuid);
+        Assert.assertEquals(pos.getUUID(), uuid);
+        
         byte[] start = new byte[256];
-        for (int i = 0; i < 128; i++) {
-            Marshal.putInt(i, start, i);
-            start[i + PositionWritable.INTBYTES] = (byte) (i / 2);
-            pos = new PositionWritable(start, i);
-            Assert.assertEquals(pos.getReadID(), i);
-            Assert.assertEquals(pos.getPosInRead(), (byte) (i / 2));
-            pos.set(-i, (byte) (i / 4));
-            Assert.assertEquals(pos.getReadID(), -i);
-            Assert.assertEquals(pos.getPosInRead(), (byte) (i / 4));
-            pos.setNewReference(start, i);
-            Assert.assertEquals(pos.getReadID(), -i);
-            Assert.assertEquals(pos.getPosInRead(), (byte) (i / 4));
-
-        }
+        Marshal.putLong(uuid, start, 0);
+        PositionWritable pos1 = new PositionWritable(start, 0);
+        Assert.assertEquals(pos1.getUUID(), uuid);
+//       
+//        for (int i = 0; i < 128; i++) {
+//            Marshal.putLong((long)i, start, i);
+//            pos = new PositionWritable(start, i);
+//            Assert.assertEquals(pos.getUUID(), (long)i);
+//            pos.set((long)-i);
+//            Assert.assertEquals(pos.getUUID(), (long)-i);
+//            pos.setNewReference(start, i);
+//            Assert.assertEquals(pos.getUUID(), (long)-i);
+//        }
     }
 }

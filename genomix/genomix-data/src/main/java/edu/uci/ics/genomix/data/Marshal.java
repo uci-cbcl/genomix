@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.genomix.data;
 
+import java.nio.ByteBuffer;
+
 public class Marshal {
     public static int getInt(byte[] bytes, int offset) {
         return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8)
@@ -21,9 +23,16 @@ public class Marshal {
     }
     
     public static long getLong(byte[] bytes, int offset) {
-        return ((bytes[offset] & 0xff) << 54) + ((bytes[offset] & 0xff) << 48) + ((bytes[offset + 1] & 0xff) << 40) 
-                + ((bytes[offset + 2] & 0xff) << 32) + ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) 
-                + ((bytes[offset + 2] & 0xff) << 8) + ((bytes[offset + 3] & 0xff) << 0);
+        
+        long value = 0;
+        for (int i = offset; i < bytes.length && i < offset + 8; i++)
+        {
+           value = (value << 8) + (bytes[i] & 0xff);
+        }
+        return value;
+//        return ((bytes[offset] & 0xff) << 56) + ((bytes[offset + 1] & 0xff) << 48) + ((bytes[offset + 2] & 0xff) << 40) 
+//                + ((bytes[offset + 3] & 0xff) << 32) + ((bytes[offset + 4] & 0xff) << 24) + ((bytes[offset + 5] & 0xff) << 16) 
+//                + ((bytes[offset + 6] & 0xff) << 8) + ((bytes[offset + 7] & 0xff) << 0);
     }
     
     public static void putInt(int val, byte[] bytes, int offset) {
@@ -34,14 +43,17 @@ public class Marshal {
     }
     
     public static void putLong(long val, byte[] bytes, int offset) {
-        bytes[offset] = (byte)((val >>> 54) & 0xFF);        
-        bytes[offset + 1] = (byte)((val >>> 48) & 0xFF);
-        bytes[offset + 2] = (byte)((val >>>  40) & 0xFF);
-        bytes[offset + 3] = (byte)((val >>>  32) & 0xFF);
-        bytes[offset + 4] = (byte)((val >>>  24) & 0xFF);
-        bytes[offset + 5] = (byte)((val >>>  16) & 0xFF);
-        bytes[offset + 6] = (byte)((val >>>  8) & 0xFF);
-        bytes[offset + 7] = (byte)((val >>>  0) & 0xFF);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(8); 
+        //byte[] tmp = byteBuffer.putLong(val).array();
+        System.arraycopy(byteBuffer.putLong(val).array(), 0, bytes, offset, 8);
+//        bytes[offset] = (byte)((val >>> 56) & 0xFF);        
+//        bytes[offset + 1] = (byte)((val >>> 48) & 0xFF);
+//        bytes[offset + 2] = (byte)((val >>> 40) & 0xFF);
+//        bytes[offset + 3] = (byte)((val >>> 32) & 0xFF);
+//        bytes[offset + 4] = (byte)((val >>> 24) & 0xFF);
+//        bytes[offset + 5] = (byte)((val >>> 16) & 0xFF);
+//        bytes[offset + 6] = (byte)((val >>> 8) & 0xFF);
+//        bytes[offset + 7] = (byte)((val >>> 0) & 0xFF);
     }
     
     public static int hashBytes(byte[] bytes, int offset, int length) {

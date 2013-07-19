@@ -26,6 +26,10 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
         set(uuid);
     }
     
+    public PositionWritable(byte[] storage, int offset) {
+        setNewReference(storage, offset);
+    }
+    
     public void set(long uuid){
         Marshal.putLong(uuid, storage, offset);
     }

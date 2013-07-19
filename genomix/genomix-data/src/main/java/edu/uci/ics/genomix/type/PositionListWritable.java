@@ -49,7 +49,10 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
     
     public void append(PositionWritable pos) {
-        append(pos.getUUID());
+        if(pos != null)
+            append(pos.getUUID());
+        else
+            throw new RuntimeException("This position is null pointer!");
     }
     
     /*
