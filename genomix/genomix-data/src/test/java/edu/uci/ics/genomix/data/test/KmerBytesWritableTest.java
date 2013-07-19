@@ -15,10 +15,6 @@
 
 package edu.uci.ics.genomix.data.test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-
 import junit.framework.Assert;
 
 import org.junit.Test;

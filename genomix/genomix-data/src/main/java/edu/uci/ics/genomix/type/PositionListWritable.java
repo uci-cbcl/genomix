@@ -28,6 +28,10 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         this.offset = 0;
     }
     
+    public PositionListWritable(int count, byte[] data, int offset) {
+        setNewReference(count, data, offset);
+    }
+    
     public PositionListWritable(List<PositionWritable> posns) {
         this();
         setSize(posns.size());  // reserve space for all elements
@@ -46,6 +50,11 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         setSize((1 + valueCount) * PositionWritable.LENGTH);
         Marshal.putLong(uuid, storage, offset + valueCount * PositionWritable.LENGTH);
         valueCount += 1;
+    }
+    
+    public void append(byte mateId, long readId, int posId){
+        long uuid = (readId << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
+        append(uuid);
     }
     
     public void append(PositionWritable pos) {

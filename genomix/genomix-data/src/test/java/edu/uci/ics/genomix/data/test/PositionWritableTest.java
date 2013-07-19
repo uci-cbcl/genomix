@@ -17,7 +17,7 @@ public class PositionWritableTest {
         int posId;
         byte[] start = new byte[8];
         for (int i = 0; i < 65535; i++) {
-            mateId = (byte)1;
+            mateId = (byte)1;//0
             readId = (long)i;
             posId = i;
             pos = new PositionWritable(mateId, readId, posId);
@@ -25,8 +25,8 @@ public class PositionWritableTest {
             Assert.assertEquals(pos.getReadId(), readId);
             Assert.assertEquals(pos.getPosId(), posId);
             
-            long finalId = ((readId + 1) << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
-            Marshal.putLong(finalId, start, 0);
+            long uuid = ((readId + 1) << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
+            Marshal.putLong(uuid, start, 0);
             pos1 = new PositionWritable(start, 0);
             Assert.assertEquals(pos1.getMateId(), mateId);
             Assert.assertEquals(pos1.getReadId(), readId + 1);

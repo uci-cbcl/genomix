@@ -30,9 +30,13 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
         setNewReference(storage, offset);
     }
     
+    public void set(long uuid){
+        Marshal.putLong(uuid, storage, offset);
+    }
+    
     public void set(byte mateId, long readId, int posId){
-        long finalId = (readId << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
-        Marshal.putLong(finalId, storage, offset);
+        long uuid = (readId << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
+        Marshal.putLong(uuid, storage, offset);
     }
     
     public void set(PositionWritable pos) {
@@ -42,6 +46,10 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     public void setNewReference(byte[] storage, int offset) {
         this.storage = storage;
         this.offset = offset;
+    }
+    
+    public long getUUID(){
+        return Marshal.getLong(storage, offset);
     }
     
     public byte getMateId(){
@@ -54,10 +62,6 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     
     public int getPosId(){
         return (int) ((Marshal.getLong(storage, offset) >> 1) & 0xffff);
-    }
-    
-    public long getUUID(){
-        return Marshal.getLong(storage, offset);
     }
     
     public byte[] getByteArray() {

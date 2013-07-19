@@ -6,8 +6,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.oldtype.PositionListWritable;
-import edu.uci.ics.genomix.oldtype.PositionWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 
 public class PositionListWritableTest {
 
@@ -15,17 +15,26 @@ public class PositionListWritableTest {
     public void TestInitial() {
         PositionListWritable plist = new PositionListWritable();
         Assert.assertEquals(plist.getCountOfPosition(), 0);
-
+        
+        byte mateId;
+        long readId;
+        int posId;
         for (int i = 0; i < 200; i++) {
-            plist.append(i, (byte) i);
-            Assert.assertEquals(i, plist.getPosition(i).getReadID());
-            Assert.assertEquals((byte) i, plist.getPosition(i).getPosInRead());
+            mateId = (byte)1;
+            readId = (long)i;
+            posId = i;
+            plist.append(mateId, readId, posId);
+            Assert.assertEquals(plist.getPosition(i).getMateId(), mateId);
+            Assert.assertEquals(plist.getPosition(i).getReadId(), readId);
+            Assert.assertEquals(plist.getPosition(i).getPosId(), posId);
             Assert.assertEquals(i + 1, plist.getCountOfPosition());
         }
+        
         int i = 0;
         for (PositionWritable pos : plist) {
-            Assert.assertEquals(i, pos.getReadID());
-            Assert.assertEquals((byte) i, pos.getPosInRead());
+            Assert.assertEquals((byte)1, pos.getMateId());
+            Assert.assertEquals((long) i, pos.getReadId());
+            Assert.assertEquals(i, pos.getPosId());
             i++;
         }
         
@@ -43,16 +52,25 @@ public class PositionListWritableTest {
         PositionListWritable plist = new PositionListWritable();
         Assert.assertEquals(plist.getCountOfPosition(), 0);
         
+        byte mateId;
+        long readId;
+        int posId;
         for (int i = 0; i < 5; i++) {
-            plist.append(i, (byte) i);
-            Assert.assertEquals(i, plist.getPosition(i).getReadID());
-            Assert.assertEquals((byte) i, plist.getPosition(i).getPosInRead());
+            mateId = (byte)1;
+            readId = (long)i;
+            posId = i;
+            plist.append(mateId, readId, posId);
+            Assert.assertEquals(plist.getPosition(i).getMateId(), mateId);
+            Assert.assertEquals(plist.getPosition(i).getReadId(), readId);
+            Assert.assertEquals(plist.getPosition(i).getPosId(), posId);
             Assert.assertEquals(i + 1, plist.getCountOfPosition());
         }
+        
         int i = 0;
         for (PositionWritable pos : plist) {
-            Assert.assertEquals(i, pos.getReadID());
-            Assert.assertEquals((byte) i, pos.getPosInRead());
+            Assert.assertEquals((byte)1, pos.getMateId());
+            Assert.assertEquals((long) i, pos.getReadId());
+            Assert.assertEquals(i, pos.getPosId());
             i++;
         }
         
@@ -65,7 +83,7 @@ public class PositionListWritableTest {
         for(int j = 0; j < 5; j++){
             iterator = copyList.iterator();
             PositionWritable deletePos = new PositionWritable();
-            deletePos.set(j, (byte)j);
+            deletePos.set((byte)1, (long)j, j);
             while(iterator.hasNext()){
                 pos = iterator.next();
                 if(pos.equals(deletePos)){
@@ -76,8 +94,9 @@ public class PositionListWritableTest {
             Assert.assertEquals(5 - 1 - j, copyList.getCountOfPosition());
             while(iterator.hasNext()){
                 pos = iterator.next();
-                Assert.assertTrue(pos.getReadID() != deletePos.getReadID());
-                Assert.assertTrue(pos.getPosInRead() != deletePos.getPosInRead());
+                Assert.assertTrue(pos.getUUID() != deletePos.getUUID());
+                Assert.assertTrue(pos.getReadId() != deletePos.getReadId());
+                Assert.assertTrue(pos.getPosId() != deletePos.getPosId());
                 i++;
             }
         }
