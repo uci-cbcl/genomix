@@ -40,9 +40,12 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
         Marshal.putLong(uuid, storage, offset);
     }
     
+    public static long makeUUID(byte mateId, long readId, int posId) {
+        return (readId << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
+    }
+    
     public void set(byte mateId, long readId, int posId){
-        long uuid = (readId << readIdShift) + ((posId & 0xFFFF) << positionIdShift) + (mateId & 0b1);
-        Marshal.putLong(uuid, storage, offset);
+        Marshal.putLong(makeUUID(mateId, readId, posId), storage, offset);
     }
     
     public void set(PositionWritable pos) {

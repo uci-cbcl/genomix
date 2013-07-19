@@ -18,7 +18,6 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     protected int offset;
     protected int valueCount;
     protected static final byte[] EMPTY = {};
-    public static final int LONGBYTES = 8;
     
     protected PositionWritable posIter = new PositionWritable();
     
@@ -53,8 +52,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
     
     public void append(byte mateId, long readId, int posId){
-        long uuid = (readId << 17) + ((posId & 0xFFFF) << 1) + (mateId & 0b1);
-        append(uuid);
+        append(PositionWritable.makeUUID(mateId, readId, posId));
     }
     
     public void append(PositionWritable pos) {
