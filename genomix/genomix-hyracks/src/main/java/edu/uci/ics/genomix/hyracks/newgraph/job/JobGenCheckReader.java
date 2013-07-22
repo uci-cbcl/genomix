@@ -21,6 +21,7 @@ import java.util.Map;
 import edu.uci.ics.genomix.hyracks.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 import edu.uci.ics.genomix.oldtype.PositionWritable;
+import edu.uci.ics.genomix.type.IntermediateNodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -75,6 +76,7 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
 
                             private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
                             private PositionWritable pos = new PositionWritable();
+                            private IntermediateNodeWritable intermediateNode = new IntermediateNodeWritable();
 
                             @Override
                             public void open(DataOutput output) throws HyracksDataException {

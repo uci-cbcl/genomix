@@ -44,8 +44,11 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private static final Log LOG = LogFactory.getLog(ReadsKeyValueParserFactory.class);
 
     public static final int OutputKmerField = 0;
-    public static final int OutputPosition = 1;
-    public static final int OutputKmerListField = 2;
+    public static final int OutputNodeId = 1;
+    public static final int OutputForwardForwardField = 2;
+    public static final int OutputForwardReverseField = 3;
+    public static final int OutputReverseForwardField = 4;
+    public static final int OutputReverseReverseField = 5;
 
     private final int readLength;
     private final int kmerSize;
@@ -110,7 +113,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 nextKmer.shiftKmerWithNextChar(array[kmerSize]);
                 kmerList.append(nextKmer);
                 uniqueKey.set(mateId, readID, 1);
-                interMediateNode.setUniqueKey(uniqueKey);
+                interMediateNode.setNodeId(uniqueKey);
                 interMediateNode.setFFList(kmerList);
                 InsertToFrame(kmer, interMediateNode, writer);
 
@@ -121,7 +124,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextKmer.shiftKmerWithNextChar(array[i+1]);
                     kmerList.append(nextKmer);
                     uniqueKey.set(mateId, readID, i - kmerSize + 2);
-                    interMediateNode.setUniqueKey(uniqueKey);
+                    interMediateNode.setNodeId(uniqueKey);
                     interMediateNode.setFFList(kmerList);
                     InsertToFrame(kmer, interMediateNode, writer);
                 }
@@ -129,17 +132,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             private void InsertToFrame(KmerBytesWritable kmer, IntermediateNodeWritable node, IFrameWriter writer) {
                 try {
-                    if (Math.abs(node.getUniqueKey().getPosId()) > 32768) {
-                        throw new IllegalArgumentException("Position id is beyond 32768 at " + node.getUniqueKey().getReadId());
+                    if (Math.abs(node.getNodeId().getPosId()) > 32768) {
+                        throw new IllegalArgumentException("Position id is beyond 32768 at " + node.getNodeId().getReadId());
                     }
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-                    tupleBuilder.addField(node, instance)
+                    tupleBuilder.addField(node.getNodeId().getByteArray(), node.getNodeId().getStartOffset(), node.getNodeId().getLength());
                     tupleBuilder.addField(node.getFFList().getByteArray(), node.getFFList().getStartOffset(), node.getFFList().getLength());
                     tupleBuilder.addField(node.getFRList().getByteArray(), node.getFRList().getStartOffset(), node.getFRList().getLength());
                     tupleBuilder.addField(node.getRFList().getByteArray(), node.getRFList().getStartOffset(), node.getRFList().getLength());
                     tupleBuilder.addField(node.getRRList().getByteArray(), node.getRRList().getStartOffset(), node.getRRList().getLength());
-                    tupleBuilder.addField(node.getUniqueKey().getByteArray(), node.getUniqueKey().getStartOffset(), node.getUniqueKey().getLength());
                     
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {
