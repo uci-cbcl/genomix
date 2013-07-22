@@ -87,6 +87,18 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         return posIter;
     }
     
+    public void set(KmerListWritable otherList) {
+        set(otherList.valueCount, otherList.storage, otherList.offset);
+    }
+
+    public void set(int valueCount, byte[] newData, int offset) {
+        this.valueCount = valueCount;
+        setSize(valueCount * KMER_LENGTH);
+        if (valueCount > 0) {
+            System.arraycopy(newData, offset, storage, this.offset, valueCount * KMER_LENGTH);
+        }
+    }
+    
     @Override
     public Iterator<KmerBytesWritable> iterator() {
         Iterator<KmerBytesWritable> it = new Iterator<KmerBytesWritable>() {

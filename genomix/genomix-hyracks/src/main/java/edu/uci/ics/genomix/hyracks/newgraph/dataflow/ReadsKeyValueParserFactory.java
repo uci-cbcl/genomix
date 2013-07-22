@@ -26,7 +26,9 @@ import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.IntermediateNodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -69,8 +71,11 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         return new IKeyValueParser<LongWritable, Text>() {
 
             private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
+            private KmerBytesWritable nextKmer = new KmerBytesWritable(kmerSize);
             private PositionReference pos = new PositionReference();
-
+            private KmerListWritable kmerList = new KmerListWritable();
+            private IntermediateNodeWritable interMediateNode = new IntermediateNodeWritable();
+            
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer) throws HyracksDataException {
                 String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
@@ -103,6 +108,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     return;
                 }
                 kmer.setByRead(array, 0);
+                nextKmer.set(kmer);
+                nextKmer.shiftKmerWithNextChar(array[kmerSize]);
+                kmerList.append(nextKmer);
+                interMediateNode.setFFList(kmerList);
                 InsertToFrame(kmer, readID, 1, writer);
 
                 /** middle kmer */
