@@ -39,7 +39,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     private static final long serialVersionUID = 1L;
     private static final byte[] EMPTY_BYTES = {};
 
-    protected int size;
+    public int size;
     protected byte[] bytes;
     protected int offset;
     protected int kmerlength;

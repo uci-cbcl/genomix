@@ -12,13 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hyracks.job;
+package edu.uci.ics.genomix.hyracks.newgraph.job;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
 
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.hyracks.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -37,9 +38,6 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 public class JobGenCheckReader extends JobGenBrujinGraph {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     public JobGenCheckReader(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
