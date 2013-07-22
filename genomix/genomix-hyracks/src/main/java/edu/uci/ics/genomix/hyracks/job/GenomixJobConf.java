@@ -83,7 +83,7 @@ public class GenomixJobConf extends JobConf {
      * Set the kmer length
      * 
      * @param the
-     *            desired frame size
+     *            desired frame kmerByteSize
      */
     final public void setKmerLength(int kmerlength) {
         setInt(KMER_LENGTH, kmerlength);

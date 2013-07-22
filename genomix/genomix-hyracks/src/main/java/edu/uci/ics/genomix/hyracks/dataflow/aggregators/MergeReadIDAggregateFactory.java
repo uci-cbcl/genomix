@@ -206,7 +206,7 @@ public class MergeReadIDAggregateFactory implements IAggregatorDescriptorFactory
                         int leadbyte = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
                         int readID = accessor.getBuffer().getInt(
                                 leadbyte + accessor.getFieldStartOffset(tIndex, InputReadIDField));
-                        LOG.warn("MergeReadID on read:" + readID + " is of size: " + totalSize + ", current frameSize:"
+                        LOG.warn("MergeReadID on read:" + readID + " is of kmerByteSize: " + totalSize + ", current frameSize:"
                                 + frameSize + "\n Recommendate to enlarge the FrameSize");
                     }
                     if (totalSize > frameSize) {

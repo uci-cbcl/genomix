@@ -27,7 +27,7 @@ import org.apache.hadoop.io.WritableComparator;
 /**
  * Fix kmer length byteswritable
  * It was used to generate the graph in which phase the kmer length doesn't change.
- * Thus the size of bytes doesn't change either.
+ * Thus the kmerByteSize of bytes doesn't change either.
  */
 public class KmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
     /**

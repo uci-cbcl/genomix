@@ -129,7 +129,7 @@ public class JobGenBrujinGraph extends JobGen {
         LOG.info("Groupby type:" + type);
         LOG.info("Output format:" + output);
         LOG.info("Frame limit" + frameLimits);
-        LOG.info("Frame size" + frameSize);
+        LOG.info("Frame kmerByteSize" + frameSize);
     }
     
     public HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec) throws HyracksDataException {

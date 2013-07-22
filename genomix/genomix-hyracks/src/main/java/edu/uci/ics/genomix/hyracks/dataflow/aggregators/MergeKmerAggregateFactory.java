@@ -95,7 +95,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 try {
                     if (inputVal.getLength() > frameSize / 2) {
-                        LOG.warn("MergeKmer: output data size is too big: " + inputVal.getLength());
+                        LOG.warn("MergeKmer: output data kmerByteSize is too big: " + inputVal.getLength());
                     }
                     fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
                     tupleBuilder.addFieldEndOffset();

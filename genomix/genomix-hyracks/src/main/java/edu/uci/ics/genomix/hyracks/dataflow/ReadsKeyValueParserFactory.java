@@ -139,7 +139,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                         if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                                 tupleBuilder.getSize())) {
                             throw new IllegalStateException(
-                                    "Failed to copy an record into a frame: the record size is too large.");
+                                    "Failed to copy an record into a frame: the record kmerByteSize is too large.");
                         }
                     }
                 } catch (Exception e) {

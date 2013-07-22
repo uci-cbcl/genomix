@@ -159,7 +159,7 @@ public class TestPathMergeH3 extends GenomixMiniClusterTest {
 //        copyResultsToLocal(HDFS_MARKPATHS + "complete", ACTUAL_ROOT + PATHMARKS_FILE, false, conf);
 //
 //        MergePathsH3Driver h3 = new MergePathsH3Driver();
-//        h3.run(HDFS_MARKPATHS + "toMerge", HDFS_MERGED, 2, KMER_LENGTH, 1, conf);
+//        h3.run(HDFS_MARKPATHS + "toMerge", HDFS_MERGED, 2, kmerByteSize, 1, conf);
 //        copyResultsToLocal(HDFS_MERGED, ACTUAL_ROOT + PATHMERGE_FILE, false, conf);
     }
 

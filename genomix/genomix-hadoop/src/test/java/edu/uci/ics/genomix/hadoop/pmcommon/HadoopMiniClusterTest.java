@@ -222,7 +222,7 @@ public class HadoopMiniClusterTest {
 //        FileOutputFormat.setOutputPath(buildConf, new Path(INPUT_GRAPH));
 //        
 //        GraphBuildingDriver tldriver = new GraphBuildingDriver();
-//        tldriver.run(SEQUENCE, INPUT_GRAPH, 2, KMER_LENGTH, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
+//        tldriver.run(SEQUENCE, INPUT_GRAPH, 2, kmerByteSize, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
 //        
 //        boolean resultsAreText = true;
 //        copyResultsToLocal(INPUT_GRAPH, ACTUAL_ROOT + INPUT_GRAPH, resultsAreText, buildConf);

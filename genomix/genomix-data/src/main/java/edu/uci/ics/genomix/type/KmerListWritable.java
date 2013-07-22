@@ -9,12 +9,14 @@ import java.util.List;
 
 import org.apache.hadoop.io.Writable;
 
+import edu.uci.ics.genomix.data.KmerUtil;
+
 public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable{
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
-    public int KMER_LENGTH = 3;
+    public int kmerByteSize = 2; //default kmerSize = 5, kmerByteSize = 2, fix length once setting
     protected static final byte[] EMPTY = {};
     
     protected KmerBytesWritable posIter = new KmerBytesWritable();
@@ -25,9 +27,9 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         this.offset = 0;
     }
     
-    public KmerListWritable(int kmerLength) {
+    public KmerListWritable(int kmerSize) {
         this();
-        this.KMER_LENGTH = kmerLength;
+        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerSize);;
     }
     
     public KmerListWritable(int count, byte[] data, int offset) {
@@ -49,8 +51,8 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
     
     public void append(KmerBytesWritable kmer){
-        setSize((1 + valueCount) * kmer.getLength());
-        System.arraycopy(kmer.getBytes(), 0, storage, offset, KMER_LENGTH);
+        setSize((1 + valueCount) * kmerByteSize);
+        System.arraycopy(kmer.getBytes(), 0, storage, offset, kmerByteSize);
         valueCount += 1;
     }
     
@@ -83,7 +85,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
-        posIter.setNewReference(storage, offset + i * KMER_LENGTH);
+        posIter.setNewReference(storage, offset + i * kmerByteSize);
         return posIter;
     }
     
@@ -93,9 +95,9 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
 
     public void set(int valueCount, byte[] newData, int offset) {
         this.valueCount = valueCount;
-        setSize(valueCount * KMER_LENGTH);
+        setSize(valueCount * kmerByteSize);
         if (valueCount > 0) {
-            System.arraycopy(newData, offset, storage, this.offset, valueCount * KMER_LENGTH);
+            System.arraycopy(newData, offset, storage, this.offset, valueCount * kmerByteSize);
         }
     }
     
@@ -118,9 +120,9 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
             @Override
             public void remove() {
                 if(currentIndex < valueCount)
-                    System.arraycopy(storage, offset + currentIndex * KMER_LENGTH, 
-                          storage, offset + (currentIndex - 1) * KMER_LENGTH, 
-                          (valueCount - currentIndex) * KMER_LENGTH);
+                    System.arraycopy(storage, offset + currentIndex * kmerByteSize, 
+                          storage, offset + (currentIndex - 1) * kmerByteSize, 
+                          (valueCount - currentIndex) * kmerByteSize);
                 valueCount--;
                 currentIndex--;
             }
@@ -131,14 +133,14 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     @Override
     public void readFields(DataInput in) throws IOException {
         this.valueCount = in.readInt();
-        setSize(valueCount * KMER_LENGTH);
-        in.readFully(storage, offset, valueCount * KMER_LENGTH);
+        setSize(valueCount * kmerByteSize);
+        in.readFully(storage, offset, valueCount * kmerByteSize);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(valueCount);
-        out.write(storage, offset, valueCount * KMER_LENGTH);
+        out.write(storage, offset, valueCount * kmerByteSize);
     }
     
     public int getCountOfPosition() {
@@ -154,6 +156,6 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
     
     public int getLength() {
-        return valueCount * KMER_LENGTH;
+        return valueCount * kmerByteSize;
     }
 }

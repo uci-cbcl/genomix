@@ -39,7 +39,7 @@ public class MergePathsH3Driver {
         @Option(name = "-num-reducers", usage = "the number of reducers", required = true)
         public int numReducers;
 
-        @Option(name = "-kmer-size", usage = "the size of kmer", required = true)
+        @Option(name = "-kmer-kmerByteSize", usage = "the kmerByteSize of kmer", required = true)
         public int sizeKmer;
 
         @Option(name = "-merge-rounds", usage = "the maximum number of rounds to merge", required = false)

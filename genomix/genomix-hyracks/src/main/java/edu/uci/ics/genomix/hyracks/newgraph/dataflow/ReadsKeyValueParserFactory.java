@@ -44,7 +44,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private static final Log LOG = LogFactory.getLog(ReadsKeyValueParserFactory.class);
 
     public static final int OutputKmerField = 0;
-    public static final int OutputNodeId = 1;
+    public static final int OutputNodeIdField = 1;
     public static final int OutputForwardForwardField = 2;
     public static final int OutputForwardReverseField = 3;
     public static final int OutputReverseForwardField = 4;
@@ -72,8 +72,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
             private KmerBytesWritable nextKmer = new KmerBytesWritable(kmerSize);
-            private PositionWritable uniqueKey = new PositionWritable();
-            private KmerListWritable kmerList = new KmerListWritable();
+            private PositionWritable nodeId = new PositionWritable();
+            private KmerListWritable kmerList = new KmerListWritable(kmerSize);
             private IntermediateNodeWritable interMediateNode = new IntermediateNodeWritable();
             private byte mateId = 0;
             
@@ -112,8 +112,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 nextKmer.set(kmer);
                 nextKmer.shiftKmerWithNextChar(array[kmerSize]);
                 kmerList.append(nextKmer);
-                uniqueKey.set(mateId, readID, 1);
-                interMediateNode.setNodeId(uniqueKey);
+                nodeId.set(mateId, readID, 1);
+                interMediateNode.setNodeId(nodeId);
                 interMediateNode.setFFList(kmerList);
                 InsertToFrame(kmer, interMediateNode, writer);
 
@@ -123,8 +123,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextKmer.set(kmer);
                     nextKmer.shiftKmerWithNextChar(array[i+1]);
                     kmerList.append(nextKmer);
-                    uniqueKey.set(mateId, readID, i - kmerSize + 2);
-                    interMediateNode.setNodeId(uniqueKey);
+                    nodeId.set(mateId, readID, i - kmerSize + 2);
+                    interMediateNode.setNodeId(nodeId);
                     interMediateNode.setFFList(kmerList);
                     InsertToFrame(kmer, interMediateNode, writer);
                 }
@@ -150,7 +150,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                         if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                                 tupleBuilder.getSize())) {
                             throw new IllegalStateException(
-                                    "Failed to copy an record into a frame: the record size is too large.");
+                                    "Failed to copy an record into a frame: the record kmerByteSize is too large.");
                         }
                     }
                 } catch (Exception e) {

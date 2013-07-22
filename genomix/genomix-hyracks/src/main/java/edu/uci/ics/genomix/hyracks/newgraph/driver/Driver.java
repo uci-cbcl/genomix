@@ -10,12 +10,8 @@ import org.apache.commons.logging.LogFactory;
 import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.job.JobGen;
-import edu.uci.ics.genomix.hyracks.job.JobGenBrujinGraph;
-import edu.uci.ics.genomix.hyracks.job.JobGenCheckReader;
-import edu.uci.ics.genomix.hyracks.job.JobGenCreateKmerInfo;
-import edu.uci.ics.genomix.hyracks.job.JobGenGroupbyReadID;
-import edu.uci.ics.genomix.hyracks.job.JobGenMapKmerToRead;
-import edu.uci.ics.genomix.hyracks.job.JobGenUnMerged;
+import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenCheckReader;
+
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;

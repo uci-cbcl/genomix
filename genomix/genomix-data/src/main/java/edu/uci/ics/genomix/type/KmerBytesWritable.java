@@ -30,7 +30,7 @@ import edu.uci.ics.genomix.oldtype.NodeWritable.DirectionFlag;
 /**
  * Variable kmer length byteswritable
  * It was used to generate the graph in which phase the kmer length doesn't change.
- * Thus the size of bytes doesn't change either.
+ * Thus the kmerByteSize of bytes doesn't change either.
  */
 public class KmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
     /**
@@ -39,7 +39,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     private static final long serialVersionUID = 1L;
     private static final byte[] EMPTY_BYTES = {};
 
-    public int size;
+    public int kmerByteSize;
     protected byte[] bytes;
     protected int offset;
     protected int kmerlength;
@@ -64,9 +64,9 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public KmerBytesWritable(int k) {
         this.kmerlength = k;
-        this.size = KmerUtil.getByteNumFromK(kmerlength);
+        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);
         if (k > 0) {
-            this.bytes = new byte[this.size];
+            this.bytes = new byte[this.kmerByteSize];
         } else {
             this.bytes = EMPTY_BYTES;
         }
@@ -100,7 +100,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public void set(byte[] newData, int offset) {
         if (kmerlength > 0) {
-            System.arraycopy(newData, offset, bytes, this.offset, size);
+            System.arraycopy(newData, offset, bytes, this.offset, kmerByteSize);
         }
     }
 
@@ -117,7 +117,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void set(int k, byte[] newData, int offset) {
         reset(k);
         if (k > 0) {
-            System.arraycopy(newData, offset, bytes, this.offset, size);
+            System.arraycopy(newData, offset, bytes, this.offset, kmerByteSize);
         }
     }
 
@@ -143,7 +143,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void setNewReference(byte[] newData, int offset) {
         this.bytes = newData;
         this.offset = offset;
-        if (newData.length - offset < size) {
+        if (newData.length - offset < kmerByteSize) {
             throw new IllegalArgumentException("Not given enough space");
         }
     }
@@ -159,7 +159,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public void setNewReference(int k, byte[] newData, int offset) {
         this.kmerlength = k;
-        this.size = KmerUtil.getByteNumFromK(k);
+        this.kmerByteSize = KmerUtil.getByteNumFromK(k);
         setNewReference(newData, offset);
     }
 
@@ -167,7 +167,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         if (size > getCapacity()) {
             setCapacity((size * 3 / 2));
         }
-        this.size = size;
+        this.kmerByteSize = size;
     }
 
     protected int getCapacity() {
@@ -177,11 +177,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     protected void setCapacity(int new_cap) {
         if (new_cap != getCapacity()) {
             byte[] new_data = new byte[new_cap];
-            if (new_cap < size) {
-                size = new_cap;
+            if (new_cap < kmerByteSize) {
+                kmerByteSize = new_cap;
             }
-            if (size != 0) {
-                System.arraycopy(bytes, offset, new_data, 0, size);
+            if (kmerByteSize != 0) {
+                System.arraycopy(bytes, offset, new_data, 0, kmerByteSize);
             }
             bytes = new_data;
             offset = 0;
@@ -206,7 +206,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     private byte geneCodeAtPosition(int pos) {
         int posByte = pos / 4;
         int shift = (pos % 4) << 1;
-        return (byte) ((bytes[offset + size - 1 - posByte] >> shift) & 0x3);
+        return (byte) ((bytes[offset + kmerByteSize - 1 - posByte] >> shift) & 0x3);
     }
     
     public int getKmerLength() {
@@ -224,7 +224,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     @Override
     public int getLength() {
-        return size;
+        return kmerByteSize;
     }
 
     /**
@@ -238,7 +238,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void setByRead(byte[] array, int start) {
         byte l = 0;
         int bytecount = 0;
-        int bcount = this.size - 1;
+        int bcount = this.kmerByteSize - 1;
         for (int i = start; i < start + kmerlength && i < array.length; i++) {
             byte code = GeneCode.getCodeFromSymbol(array[i]);
             l |= (byte) (code << bytecount);
@@ -272,7 +272,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void setByReadReverse(byte[] array, int start) {
         byte l = 0;
         int bytecount = 0;
-        int bcount = size - 1;
+        int bcount = kmerByteSize - 1;
 //        for (int i = start + kmerlength - 1; i >= 0 && i < array.length; i--) {
         for (int i = start + kmerlength - 1; i >= start && i < array.length; i--) {
             byte code = GeneCode.getPairedCodeFromSymbol(array[i]);
@@ -313,8 +313,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @return the shift out gene, in gene code format
      */
     public byte shiftKmerWithNextCode(byte c) {
-        byte output = (byte) (bytes[offset + size - 1] & 0x03);
-        for (int i = size - 1; i > 0; i--) {
+        byte output = (byte) (bytes[offset + kmerByteSize - 1] & 0x03);
+        for (int i = kmerByteSize - 1; i > 0; i--) {
             byte in = (byte) (bytes[offset + i - 1] & 0x03);
             bytes[offset + i] = (byte) (((bytes[offset + i] >>> 2) & 0x3f) | (in << 6));
         }
@@ -346,11 +346,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public byte shiftKmerWithPreCode(byte c) {
         int pos = ((kmerlength - 1) % 4) << 1;
         byte output = (byte) ((bytes[offset] >> pos) & 0x03);
-        for (int i = 0; i < size - 1; i++) {
+        for (int i = 0; i < kmerByteSize - 1; i++) {
             byte in = (byte) ((bytes[offset + i + 1] >> 6) & 0x03);
             bytes[offset + i] = (byte) ((bytes[offset + i] << 2) | in);
         }
-        bytes[offset + size - 1] = (byte) ((bytes[offset + size - 1] << 2) | c);
+        bytes[offset + kmerByteSize - 1] = (byte) ((bytes[offset + kmerByteSize - 1] << 2) | c);
         clearLeadBit();
         return output;
     }
@@ -367,15 +367,15 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public void mergeWithFFKmer(int initialKmerSize, KmerBytesWritable kmer) {
         int preKmerLength = kmerlength;
-        int preSize = size;
+        int preSize = kmerByteSize;
         this.kmerlength += kmer.kmerlength - initialKmerSize + 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
         for (int i = 1; i <= preSize; i++) {
-            bytes[offset + size - i] = bytes[offset + preSize - i];
+            bytes[offset + kmerByteSize - i] = bytes[offset + preSize - i];
         }
         for (int k = initialKmerSize - 1; k < kmer.getKmerLength(); k += 4) {
             byte onebyte = getOneByteFromKmerAtPosition(k, kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-            appendOneByteAtPosition(preKmerLength + k - initialKmerSize + 1, onebyte, bytes, offset, size);
+            appendOneByteAtPosition(preKmerLength + k - initialKmerSize + 1, onebyte, bytes, offset, kmerByteSize);
         }
         clearLeadBit();
     }
@@ -393,18 +393,18 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      *            : the next kmer
      */
     public void mergeWithFRKmer(int initialKmerSize, KmerBytesWritable kmer) {
-        int preSize = size;
+        int preSize = kmerByteSize;
         int preKmerLength = kmerlength;
         this.kmerlength += kmer.kmerlength - initialKmerSize + 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
         // copy prefix into right-side of buffer
         for (int i = 1; i <= preSize; i++) {
-            bytes[offset + size - i] = bytes[offset + preSize - i];
+            bytes[offset + kmerByteSize - i] = bytes[offset + preSize - i];
         }
 
         int bytecount = (preKmerLength % 4) * 2;
-        int bcount = size - preSize - bytecount / 8; // may overlap previous kmer
-        byte l = bcount == size - preSize ? bytes[offset + bcount] : 0x00;
+        int bcount = kmerByteSize - preSize - bytecount / 8; // may overlap previous kmer
+        byte l = bcount == kmerByteSize - preSize ? bytes[offset + bcount] : 0x00;
         bytecount %= 8;
         for (int i = kmer.kmerlength - initialKmerSize; i >= 0; i--) {
             byte code = GeneCode.getPairedGeneCode(kmer.getGeneCodeAtPosition(i));
@@ -433,12 +433,12 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public void mergeWithRFKmer(int initialKmerSize, KmerBytesWritable preKmer) {
         int preKmerLength = kmerlength;
-        int preSize = size;
+        int preSize = kmerByteSize;
         this.kmerlength += preKmer.kmerlength - initialKmerSize + 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
         //        byte cacheByte = getOneByteFromKmerAtPosition(0, bytes, offset, preSize);
 
-        int byteIndex = size - 1;
+        int byteIndex = kmerByteSize - 1;
         byte cacheByte = 0x00;
         int posnInByte = 0;
 
@@ -457,7 +457,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         // copy my kmer into low positions of bytes
         for (int i = 0; i < preKmerLength; i++) {
            // expanding the capacity makes this offset incorrect.  It's off by the # of additional bytes added.
-            int newposn = i + (size - preSize) * 4;
+            int newposn = i + (kmerByteSize - preSize) * 4;
             byte code = geneCodeAtPosition(newposn);
             cacheByte |= (byte) (code << posnInByte);
             posnInByte += 2;
@@ -483,25 +483,25 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public void mergeWithRRKmer(int initialKmerSize, KmerBytesWritable preKmer) {
         int preKmerLength = kmerlength;
-        int preSize = size;
+        int preSize = kmerByteSize;
         this.kmerlength += preKmer.kmerlength - initialKmerSize + 1;
         setSize(KmerUtil.getByteNumFromK(kmerlength));
         byte cacheByte = getOneByteFromKmerAtPosition(0, bytes, offset, preSize);
 
         // copy prekmer
         for (int k = 0; k < preKmer.kmerlength - initialKmerSize + 1; k += 4) {
-            byte onebyte = getOneByteFromKmerAtPosition(k, preKmer.bytes, preKmer.offset, preKmer.size);
-            appendOneByteAtPosition(k, onebyte, bytes, offset, size);
+            byte onebyte = getOneByteFromKmerAtPosition(k, preKmer.bytes, preKmer.offset, preKmer.kmerByteSize);
+            appendOneByteAtPosition(k, onebyte, bytes, offset, kmerByteSize);
         }
 
         // copy current kmer
         int k = 4;
         for (; k < preKmerLength; k += 4) {
             byte onebyte = getOneByteFromKmerAtPosition(k, bytes, offset, preSize);
-            appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, size);
+            appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, kmerByteSize);
             cacheByte = onebyte;
         }
-        appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, size);
+        appendOneByteAtPosition(preKmer.kmerlength - initialKmerSize + k - 4 + 1, cacheByte, bytes, offset, kmerByteSize);
         clearLeadBit();
     }
     
@@ -560,13 +560,13 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     @Override
     public void readFields(DataInput in) throws IOException {
         this.kmerlength = in.readInt();
-        this.size = KmerUtil.getByteNumFromK(kmerlength);
+        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);
         if (this.kmerlength > 0) {
-            if (this.bytes.length < this.size) {
-                this.bytes = new byte[this.size];
+            if (this.bytes.length < this.kmerByteSize) {
+                this.bytes = new byte[this.kmerByteSize];
                 this.offset = 0;
             }
-            in.readFully(bytes, offset, size);
+            in.readFully(bytes, offset, kmerByteSize);
         }
     }
 
@@ -574,7 +574,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void write(DataOutput out) throws IOException {
         out.writeInt(kmerlength);
         if (kmerlength > 0) {
-            out.write(bytes, offset, size);
+            out.write(bytes, offset, kmerByteSize);
         }
     }
 

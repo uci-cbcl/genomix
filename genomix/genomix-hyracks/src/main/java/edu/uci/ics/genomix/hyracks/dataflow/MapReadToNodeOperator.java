@@ -183,7 +183,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
             offset += INT_LENGTH + length;
             length = buffer.getInt(offset);
             if (kmer.getLength() != length) {
-                throw new IllegalArgumentException("kmer size is invalid");
+                throw new IllegalArgumentException("kmer kmerByteSize is invalid");
             }
             offset += INT_LENGTH;
             kmer.set(buffer.array(), offset);
