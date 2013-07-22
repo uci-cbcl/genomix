@@ -15,7 +15,6 @@
 
 package edu.uci.ics.genomix.type;
 
-import javax.management.RuntimeErrorException;
 
 public class GeneCode {
     public final static byte[] GENE_SYMBOL = { 'A', 'C', 'G', 'T' };

@@ -131,14 +131,14 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     @Override
     public void readFields(DataInput in) throws IOException {
         this.valueCount = in.readInt();
-        setSize(valueCount * PositionWritable.LENGTH);
-        in.readFully(storage, offset, valueCount * PositionWritable.LENGTH);
+        setSize(valueCount * KMER_LENGTH);
+        in.readFully(storage, offset, valueCount * KMER_LENGTH);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(valueCount);
-        out.write(storage, offset, valueCount * PositionWritable.LENGTH);
+        out.write(storage, offset, valueCount * KMER_LENGTH);
     }
     
     public int getCountOfPosition() {
@@ -151,5 +151,9 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
 
     public int getStartOffset() {
         return offset;
+    }
+    
+    public int getLength() {
+        return valueCount * KMER_LENGTH;
     }
 }

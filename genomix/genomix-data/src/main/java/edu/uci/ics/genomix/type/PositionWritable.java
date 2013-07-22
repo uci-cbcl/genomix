@@ -57,6 +57,11 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
         this.offset = offset;
     }
     
+    public void reset(){
+        storage = new byte[LENGTH];
+        offset = 0;
+    }
+    
     public long getUUID(){
         return Marshal.getLong(storage, offset);
     }

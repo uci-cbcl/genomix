@@ -24,11 +24,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
-import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.IntermediateNodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -48,7 +47,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     public static final int OutputPosition = 1;
     public static final int OutputKmerListField = 2;
 
-    private final boolean bReversed;
     private final int readLength;
     private final int kmerSize;
 
@@ -56,7 +54,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             null });
 
     public ReadsKeyValueParserFactory(int readlength, int k, boolean bGenerateReversed) {
-        bReversed = bGenerateReversed;
         this.readLength = readlength;
         this.kmerSize = k;
     }
@@ -72,9 +69,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
             private KmerBytesWritable nextKmer = new KmerBytesWritable(kmerSize);
-            private PositionReference pos = new PositionReference();
+            private PositionWritable uniqueKey = new PositionWritable();
             private KmerListWritable kmerList = new KmerListWritable();
             private IntermediateNodeWritable interMediateNode = new IntermediateNodeWritable();
+            private byte mateId = 0;
             
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer) throws HyracksDataException {
@@ -111,37 +109,37 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 nextKmer.set(kmer);
                 nextKmer.shiftKmerWithNextChar(array[kmerSize]);
                 kmerList.append(nextKmer);
+                uniqueKey.set(mateId, readID, 1);
+                interMediateNode.setUniqueKey(uniqueKey);
                 interMediateNode.setFFList(kmerList);
-                InsertToFrame(kmer, readID, 1, writer);
+                InsertToFrame(kmer, interMediateNode, writer);
 
                 /** middle kmer */
                 for (int i = kmerSize; i < array.length; i++) {
                     kmer.shiftKmerWithNextChar(array[i]);
-                    InsertToFrame(kmer, readID, i - kmerSize + 2, writer);
-                }
-
-                if (bReversed) {
-                    /** first kmer */
-                    kmer.setByReadReverse(array, 0);
-                    InsertToFrame(kmer, readID, -1, writer);
-                    /** middle kmer */
-                    for (int i = kmerSize; i < array.length; i++) {
-                        kmer.shiftKmerWithPreCode(GeneCode.getPairedCodeFromSymbol(array[i]));
-                        InsertToFrame(kmer, readID, -(i - kmerSize + 2), writer);
-                    }
+                    nextKmer.set(kmer);
+                    nextKmer.shiftKmerWithNextChar(array[i+1]);
+                    kmerList.append(nextKmer);
+                    uniqueKey.set(mateId, readID, i - kmerSize + 2);
+                    interMediateNode.setUniqueKey(uniqueKey);
+                    interMediateNode.setFFList(kmerList);
+                    InsertToFrame(kmer, interMediateNode, writer);
                 }
             }
 
-            private void InsertToFrame(KmerBytesWritable kmer, int readID, int posInRead, IFrameWriter writer) {
+            private void InsertToFrame(KmerBytesWritable kmer, IntermediateNodeWritable node, IFrameWriter writer) {
                 try {
-                    if (Math.abs(posInRead) > 127) {
-                        throw new IllegalArgumentException("Position id is beyond 127 at " + readID);
+                    if (Math.abs(node.getUniqueKey().getPosId()) > 32768) {
+                        throw new IllegalArgumentException("Position id is beyond 32768 at " + node.getUniqueKey().getReadId());
                     }
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-                    pos.set(readID, (byte) posInRead);
-                    tupleBuilder.addField(pos.getByteArray(), pos.getStartOffset(), pos.getLength());
-
+                    tupleBuilder.addField(node.getFFList().getByteArray(), node.getFFList().getStartOffset(), node.getFFList().getLength());
+                    tupleBuilder.addField(node.getFRList().getByteArray(), node.getFRList().getStartOffset(), node.getFRList().getLength());
+                    tupleBuilder.addField(node.getRFList().getByteArray(), node.getRFList().getStartOffset(), node.getRFList().getLength());
+                    tupleBuilder.addField(node.getRRList().getByteArray(), node.getRRList().getStartOffset(), node.getRRList().getLength());
+                    tupleBuilder.addField(node.getUniqueKey().getByteArray(), node.getUniqueKey().getStartOffset(), node.getUniqueKey().getLength());
+                    
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {
                         FrameUtils.flushFrame(outputBuffer, writer);

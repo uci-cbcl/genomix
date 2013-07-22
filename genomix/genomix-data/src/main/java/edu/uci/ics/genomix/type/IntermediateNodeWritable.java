@@ -16,34 +16,34 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
     private KmerListWritable forwardReverseList;
     private KmerListWritable reverseForwardList;
     private KmerListWritable reverseReverseList;
-    private long uuid;
+    private PositionWritable uniqueKey;
     
     public IntermediateNodeWritable(){
         forwardForwardList = new KmerListWritable();
         forwardReverseList = new KmerListWritable();
         reverseForwardList = new KmerListWritable();
         reverseReverseList = new KmerListWritable();
-        uuid = 0L;
+        uniqueKey = new PositionWritable();
     }
     
     public IntermediateNodeWritable(KmerListWritable FFList, KmerListWritable FRList,
-            KmerListWritable RFList, KmerListWritable RRList, long uuid) {
+            KmerListWritable RFList, KmerListWritable RRList, PositionWritable uniqueKey) {
         this();
-        set(FFList, FRList, RFList, RRList, uuid);
+        set(FFList, FRList, RFList, RRList, uniqueKey);
     }
     
     public void set(IntermediateNodeWritable node){
         set(node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
-                node.reverseReverseList, node.uuid);
+                node.reverseReverseList, node.uniqueKey);
     }
     
     public void set(KmerListWritable FFList, KmerListWritable FRList,
-            KmerListWritable RFList, KmerListWritable RRList, long uuid) {
+            KmerListWritable RFList, KmerListWritable RRList, PositionWritable uniqueKey) {
         this.forwardForwardList.set(FFList);
         this.forwardReverseList.set(FRList);
         this.reverseForwardList.set(RFList);
         this.reverseReverseList.set(RRList);
-        this.uuid = uuid;
+        this.uniqueKey.set(uniqueKey);
     }
 
     public void reset(int kmerSize) {
@@ -51,7 +51,7 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
         forwardReverseList.reset();
         reverseForwardList.reset();
         reverseReverseList.reset();
-        uuid = 0;
+        uniqueKey.reset();
     }
     
     public KmerListWritable getFFList() {
@@ -59,15 +59,15 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
     }
 
     public void setFFList(KmerListWritable forwardForwardList) {
-        this.forwardForwardList = forwardForwardList;
+        this.forwardForwardList.set(forwardForwardList);
     }
 
-    public KmerListWritable getFReList() {
+    public KmerListWritable getFRList() {
         return forwardReverseList;
     }
 
     public void setFRList(KmerListWritable forwardReverseList) {
-        this.forwardReverseList = forwardReverseList;
+        this.forwardReverseList.set(forwardReverseList);
     }
 
     public KmerListWritable getRFList() {
@@ -75,7 +75,7 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
     }
 
     public void setRFList(KmerListWritable reverseForwardList) {
-        this.reverseForwardList = reverseForwardList;
+        this.reverseForwardList.set(reverseForwardList);
     }
 
     public KmerListWritable getRRList() {
@@ -83,16 +83,24 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
     }
 
     public void setRRList(KmerListWritable reverseReverseList) {
-        this.reverseReverseList = reverseReverseList;
+        this.reverseReverseList.set(reverseReverseList);
     }
 
-    @Override
+    public PositionWritable getUniqueKey() {
+		return uniqueKey;
+	}
+
+	public void setUniqueKey(PositionWritable uniqueKey) {
+		this.uniqueKey.set(uniqueKey);
+	}
+
+	@Override
     public void readFields(DataInput in) throws IOException {
         this.forwardForwardList.readFields(in);
         this.forwardReverseList.readFields(in);
         this.reverseForwardList.readFields(in);
         this.reverseReverseList.readFields(in);
-        this.uuid = in.readLong();
+        this.uniqueKey.readFields(in);
     }
 
     @Override
@@ -101,18 +109,18 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
         this.forwardReverseList.write(out);
         this.reverseForwardList.write(out);
         this.reverseReverseList.write(out);
-        out.writeLong(this.uuid);
+        this.uniqueKey.write(out);
     }
 
     @Override
     public int compareTo(IntermediateNodeWritable other) {
         // TODO Auto-generated method stub
-        return this.uuid > other.uuid ? 1 : ((this.uuid == other.uuid) ? 0 : -1);
+        return this.uniqueKey.compareTo(other.uniqueKey);
     }
     
     @Override
     public int hashCode() {
-        return Long.valueOf(this.uuid).hashCode(); 
+        return this.uniqueKey.hashCode();
     }
     
     @Override
@@ -122,7 +130,7 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
             return (this.forwardForwardList.equals(nw.forwardForwardList)
                     && this.forwardReverseList.equals(nw.forwardReverseList)
                     && this.reverseForwardList.equals(nw.reverseForwardList)
-                    && this.reverseReverseList.equals(nw.reverseReverseList) && (this.uuid == nw.uuid));
+                    && this.reverseReverseList.equals(nw.reverseReverseList) && (this.uniqueKey.equals(nw.uniqueKey)));
         }
         return false;
     }
@@ -135,7 +143,7 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
         sbuilder.append(forwardReverseList.toString()).append('\t');
         sbuilder.append(reverseForwardList.toString()).append('\t');
         sbuilder.append(reverseReverseList.toString()).append('\t');
-        sbuilder.append(uuid).append(')');
+        sbuilder.append(uniqueKey.toString()).append(')');
         return sbuilder.toString();
     }
 }
