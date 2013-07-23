@@ -109,7 +109,23 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return reverseReverseList;
     }
     
-    public KmerListWritable getListFromDir(byte dir) {
+	public void setFFList(KmerListWritable forwardForwardList) {
+		this.forwardForwardList = forwardForwardList;
+	}
+
+	public void setFRList(KmerListWritable forwardReverseList) {
+		this.forwardReverseList = forwardReverseList;
+	}
+
+	public void setRFList(KmerListWritable reverseForwardList) {
+		this.reverseForwardList = reverseForwardList;
+	}
+
+	public void setRRList(KmerListWritable reverseReverseList) {
+		this.reverseReverseList = reverseReverseList;
+	}
+
+	public KmerListWritable getListFromDir(byte dir) {
         switch (dir & DirectionFlag.DIR_MASK) {
             case DirectionFlag.DIR_FF:
                 return getFFList();

@@ -82,20 +82,154 @@ public class GenomixMapper extends MapReduceBase implements
             if (KMER_SIZE >= array.length) {
                 throw new IOException("short read");
             }
+            
+            /** first kmer **/
             curForwardKmer.setByRead(array, 0);
             curReverseKmer.set(kmerFactory.reverse(curForwardKmer));
-            if(curForwardKmer.compareTo(curReverseKmer) >= 0)
-                curKmerDir = KmerDir.FORWARD;
-            else
-                curKmerDir = KmerDir.REVERSE;
-            nodeId.set(mateId, readID, 0);
+            curKmerDir = curForwardKmer.compareTo(curReverseKmer) >= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             setNextKmer(array[KMER_SIZE]);
+            //set value.nodeId
+            nodeId.set(mateId, readID, 1);
+            outputNode.setNodeId(nodeId);
+            //set value.edgeList
+            setEdgeListForNextKmer();
+            //output mapper result
+            setMapperOutput(output);
+            
+            /** middle kmer **/
+            for (int i = KMER_SIZE + 1; i < array.length; i++) {
+            	setPreKmerByOldCurKmer();
+            	setCurKmerByOldNextKmer();
+            	setNextKmer(array[i]);
+        	    //set value.nodeId
+                nodeId.set(mateId, readID, i - KMER_SIZE + 1);
+                outputNode.setNodeId(nodeId);
+                //set value.edgeList
+                setEdgeListForPreKmer();
+                setEdgeListForNextKmer();
+                //output mapper result
+                setMapperOutput(output);
+            }
+            
+            /** last kmer **/
+        	setPreKmerByOldCurKmer();
+        	setCurKmerByOldNextKmer();
+        	//set value.nodeId
+            nodeId.set(mateId, readID, array.length - KMER_SIZE + 1);
+            outputNode.setNodeId(nodeId);
+            //set value.edgeList
+            setEdgeListForPreKmer();
+            //output mapper result
+            setMapperOutput(output);
         }
     }
     
+    public void setEdgeListForPreKmer(){
+    	switch(curKmerDir){
+    		case FORWARD:
+    			switch(preKmerDir){
+    				case FORWARD:
+    					kmerList.reset();
+    					kmerList.append(preForwardKmer);
+    					outputNode.setRRList(kmerList);
+    					break;
+    				case REVERSE:
+    					kmerList.reset();
+    					kmerList.append(preReverseKmer);
+    					outputNode.setRFList(kmerList);
+    					break;
+    			}
+    			break;
+    		case REVERSE:
+    			switch(preKmerDir){
+    				case FORWARD:
+    					kmerList.reset();
+    					kmerList.append(nextForwardKmer);
+    					outputNode.setFRList(kmerList);
+    					break;
+    				case REVERSE:
+    					kmerList.reset();
+    					kmerList.append(nextReverseKmer);
+    					outputNode.setFFList(kmerList);
+    					break;
+    			}
+    			break;
+    	}
+    }
+    
+    public void setEdgeListForNextKmer(){
+    	switch(curKmerDir){
+    		case FORWARD:
+    			switch(nextKmerDir){
+    				case FORWARD:
+    					kmerList.reset();
+    					kmerList.append(nextForwardKmer);
+    					outputNode.setFFList(kmerList);
+    					break;
+    				case REVERSE:
+    					kmerList.reset();
+    					kmerList.append(nextReverseKmer);
+    					outputNode.setFRList(kmerList);
+    					break;
+    			}
+    			break;
+    		case REVERSE:
+    			switch(nextKmerDir){
+    				case FORWARD:
+    					kmerList.reset();
+    					kmerList.append(nextForwardKmer);
+    					outputNode.setRFList(kmerList);
+    					break;
+    				case REVERSE:
+    					kmerList.reset();
+    					kmerList.append(nextReverseKmer);
+    					outputNode.setRRList(kmerList);
+    					break;
+    			}
+    			break;
+    	}
+    }
+    
+    //set preKmer by shifting curKmer with preChar
+    public void setPreKmer(byte preChar){
+        preForwardKmer.set(curForwardKmer);
+        preForwardKmer.shiftKmerWithPreChar(preChar);
+        preReverseKmer.set(preForwardKmer);
+        preReverseKmer.set(kmerFactory.reverse(nextForwardKmer));
+        preKmerDir = preForwardKmer.compareTo(preReverseKmer) >= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
+    }
+    
+    //set nextKmer by shifting curKmer with nextChar
     public void setNextKmer(byte nextChar){
         nextForwardKmer.set(curForwardKmer);
         nextForwardKmer.shiftKmerWithNextChar(nextChar);
-        nextForwardKmer.set(kmerFactory.reverse(nextForwardKmer));
+        nextReverseKmer.set(nextForwardKmer);
+        nextReverseKmer.set(kmerFactory.reverse(nextForwardKmer));
+        nextKmerDir = nextForwardKmer.compareTo(nextReverseKmer) >= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
+    }
+    
+    //old curKmer becomes current preKmer
+    public void setPreKmerByOldCurKmer(){
+    	preKmerDir = curKmerDir;
+    	preForwardKmer.set(curForwardKmer);
+    	preReverseKmer.set(curReverseKmer);
+    }
+    
+    //old nextKmer becomes current curKmer
+    public void setCurKmerByOldNextKmer(){
+    	curKmerDir = nextKmerDir;
+    	curForwardKmer.set(nextForwardKmer);
+    	preReverseKmer.set(nextReverseKmer);
+    }
+    
+    public void setMapperOutput(OutputCollector<KmerBytesWritable, NodeWritable> output) throws IOException{
+    	switch(curKmerDir){
+    	case FORWARD:
+    		output.collect(curForwardKmer, outputNode);
+    		break;
+    	case REVERSE:
+    		output.collect(curReverseKmer, outputNode);
+    		break;
+    }
     }
 }
