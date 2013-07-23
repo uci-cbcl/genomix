@@ -2,11 +2,25 @@ package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
 
-import org.apache.commons.cli.Options;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.hadoop.graphbuilding.GenomixCombiner;
+import edu.uci.ics.genomix.hadoop.graphbuilding.GenomixMapper;
+import edu.uci.ics.genomix.hadoop.graphbuilding.GenomixReducer;
+import edu.uci.ics.genomix.hadoop.oldtype.KmerBytesWritable;
+import edu.uci.ics.genomix.hadoop.oldtype.KmerCountValue;
 
+
+@SuppressWarnings("deprecation")
 public class GenomixDriver {
     
     private static class Options {
@@ -27,7 +41,29 @@ public class GenomixDriver {
     }
     
     public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength) throws IOException{
-        
+        JobConf conf = new JobConf(GenomixDriver.class);
+        conf.setInt("sizeKmer", sizeKmer);
+        conf.setInt("readLength", readLength);
+
+        conf.setJobName("Genomix Graph Building");
+        conf.setMapperClass(GenomixMapper.class);
+        conf.setReducerClass(GenomixReducer.class);
+        conf.setCombinerClass(GenomixCombiner.class);
+
+        conf.setMapOutputKeyClass(KmerBytesWritable.class);
+        conf.setMapOutputValueClass(KmerCountValue.class);
+
+        conf.setInputFormat(TextInputFormat.class);
+        conf.setOutputFormat(SequenceFileOutputFormat.class);
+        conf.setOutputKeyClass(KmerBytesWritable.class);
+        conf.setOutputValueClass(KmerCountValue.class);
+        FileInputFormat.setInputPaths(conf, new Path(inputPath));
+        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+        conf.setNumReduceTasks(numReducers);
+
+        FileSystem dfs = FileSystem.get(conf);
+        dfs.delete(new Path(outputPath), true);
+        JobClient.runJob(conf);
     }
     
     public static void main(String[] args) throws Exception {

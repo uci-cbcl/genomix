@@ -102,8 +102,6 @@ public class P4ForPathMergeVertex extends
     /**
      * set nextID to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
-
-
     protected boolean setNextInfo(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0) {
             nextID.set(value.getFFList().getPosition(0));
@@ -121,7 +119,6 @@ public class P4ForPathMergeVertex extends
     /**
      * set prevID to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
-     
     protected boolean setPrevInfo(VertexValueWritable value) {
         if (value.getRRList().getCountOfPosition() > 0) {
             prevID.set(value.getRRList().getPosition(0));
@@ -169,8 +166,7 @@ public class P4ForPathMergeVertex extends
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
                         sendUpdateMsgToSuccessor();
-                    } //else
-                        //voteToHalt();
+                    } 
                 }
             }else {
                     // I'm a tail
@@ -179,24 +175,20 @@ public class P4ForPathMergeVertex extends
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
                             sendUpdateMsgToPredecessor();
-                        } //else
-                            //voteToHalt();
+                        }
                     } else if (!hasPrev) {
                         // no previous node
                         if (!nextHead && curID.compareTo(nextID) < 0) {
                             // merge towards tail in forward dir
                             sendUpdateMsgToPredecessor();
-                        } //else
-                            //voteToHalt();
+                        }
                     } else if (!hasNext) {
                         // no next node
                         if (!prevHead && curID.compareTo(prevID) < 0) {
                             // merge towards tail in reverse dir
                             sendUpdateMsgToSuccessor();
-                        } //else
-                            //voteToHalt();
-                    } //else
-                        //voteToHalt();
+                        }
+                    }
                 }
         }
         else if (getSuperstep() % 4 == 0){
