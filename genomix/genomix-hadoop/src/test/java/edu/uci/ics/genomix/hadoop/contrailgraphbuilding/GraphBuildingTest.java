@@ -12,17 +12,19 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
+import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class GraphBuildingTest {
 
     private JobConf conf = new JobConf();
-    private static final String ACTUAL_RESULT_DIR = "actual1";
+    private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/text.txt";
+    private static final String DATA_PATH = "data/webmap/test.txt";
     private static final String HDFS_PATH = "/webmap";
-    private static final String RESULT_PATH = "/result1";
-    private static final String EXPECTED_PATH = "expected/";
-    private static final int COUNT_REDUCER = 2;
+    private static final String RESULT_PATH = "/result";
+    
+//    private static final int COUNT_REDUCER = 2;
     private static final int SIZE_KMER = 5;
     private static final int READ_LENGTH = 8;
     
@@ -30,11 +32,19 @@ public class GraphBuildingTest {
     private MiniMRCluster mrCluster;
     private FileSystem dfs;
     
+    @Test
     public void test() throws Exception {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
+        TestMapKmerToNode();
         cleanupHadoop();
+    }
+    
+    public void TestMapKmerToNode() throws Exception {
+        GenomixDriver driver = new GenomixDriver();
+        driver.run(HDFS_PATH, RESULT_PATH, 0, SIZE_KMER, READ_LENGTH, false, HADOOP_CONF_PATH);
+        dumpResult();
     }
     
     private void startHadoop() throws IOException {
@@ -60,5 +70,10 @@ public class GraphBuildingTest {
         mrCluster.shutdown();
         dfsCluster.shutdown();
     }
-
+    
+    private void dumpResult() throws IOException {
+        Path src = new Path(RESULT_PATH);
+        Path dest = new Path(ACTUAL_RESULT_DIR);
+        dfs.copyToLocalFile(src, dest);
+    }
 }

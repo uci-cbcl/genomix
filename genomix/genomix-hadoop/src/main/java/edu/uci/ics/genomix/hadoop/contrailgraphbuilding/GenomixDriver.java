@@ -10,14 +10,12 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.hadoop.mapred.TextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.hadoop.graphbuilding.GenomixCombiner;
-import edu.uci.ics.genomix.hadoop.graphbuilding.GenomixMapper;
-import edu.uci.ics.genomix.hadoop.graphbuilding.GenomixReducer;
-import edu.uci.ics.genomix.hadoop.oldtype.KmerBytesWritable;
-import edu.uci.ics.genomix.hadoop.oldtype.KmerCountValue;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 
 
 @SuppressWarnings("deprecation")
@@ -40,23 +38,33 @@ public class GenomixDriver {
         public int readLength;
     }
     
-    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength) throws IOException{
+    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength,
+            boolean seqOutput, String defaultConfPath) throws IOException{
         JobConf conf = new JobConf(GenomixDriver.class);
         conf.setInt("sizeKmer", sizeKmer);
         conf.setInt("readLength", readLength);
+        if (defaultConfPath != null) {
+            conf.addResource(new Path(defaultConfPath));
+        }
 
         conf.setJobName("Genomix Graph Building");
         conf.setMapperClass(GenomixMapper.class);
         conf.setReducerClass(GenomixReducer.class);
-        conf.setCombinerClass(GenomixCombiner.class);
 
         conf.setMapOutputKeyClass(KmerBytesWritable.class);
-        conf.setMapOutputValueClass(KmerCountValue.class);
-
+        conf.setMapOutputValueClass(NodeWritable.class);
+        
+        //InputFormat and OutputFormat for Reducer
         conf.setInputFormat(TextInputFormat.class);
-        conf.setOutputFormat(SequenceFileOutputFormat.class);
+        if (seqOutput == true)
+            conf.setOutputFormat(SequenceFileOutputFormat.class);
+        else
+            conf.setOutputFormat(TextOutputFormat.class);
+        
+        //Output Key/Value Class
         conf.setOutputKeyClass(KmerBytesWritable.class);
-        conf.setOutputValueClass(KmerCountValue.class);
+        conf.setOutputValueClass(NodeWritable.class);
+        
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         conf.setNumReduceTasks(numReducers);
@@ -71,6 +79,7 @@ public class GenomixDriver {
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         GenomixDriver driver = new GenomixDriver();
-        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, options.readLength);
+        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, 
+                options.readLength, true, null);
     }
 }

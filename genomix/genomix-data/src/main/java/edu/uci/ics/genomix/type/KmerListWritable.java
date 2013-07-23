@@ -17,7 +17,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
-    public int kmerByteSize = 0; //default kmerSize = 5, kmerByteSize = 2, fix length once setting
+    public int kmerByteSize = 0; 
     public int kmerlength = 0;
     protected static final byte[] EMPTY = {};
     
@@ -29,13 +29,10 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         this.offset = 0;
     }
     
-    public KmerListWritable(int kmerSize) {
+    public KmerListWritable(int kmerlength) {
         this();
-        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerSize);;
-    }
-    
-    public KmerListWritable(int count, byte[] data, int offset) {
-        setNewReference(count, data, offset);
+        this.kmerlength = kmerlength;
+        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);;
     }
     
     public KmerListWritable(int kmerlength, int count, byte[] data, int offset) {
@@ -64,6 +61,20 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         setSize((1 + valueCount) * kmerByteSize); 
         System.arraycopy(kmer.getBytes(), 0, storage, offset + valueCount * kmerByteSize, kmerByteSize);
         valueCount += 1;
+    }
+    
+    /*
+     * Append the otherList to the end of myList
+     */
+    public void appendList(KmerListWritable otherList) {
+        if (otherList.valueCount > 0) {
+            setSize((valueCount + otherList.valueCount) * PositionWritable.LENGTH);
+            // copy contents of otherList into the end of my storage
+            System.arraycopy(otherList.storage, otherList.offset,
+                    storage, offset + valueCount * kmerByteSize, 
+                    otherList.valueCount * kmerByteSize);
+            valueCount += otherList.valueCount;
+        }
     }
     
     protected void setSize(int size) {
@@ -177,10 +188,6 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('[');
-//        for (KmerBytesWritable kmer : this) {
-//            sbuilder.append(kmer.toString());
-//            sbuilder.append(',');
-//        }
         for(int i = 0; i < valueCount; i++){
             sbuilder.append(getPosition(i).toString());
             sbuilder.append(',');

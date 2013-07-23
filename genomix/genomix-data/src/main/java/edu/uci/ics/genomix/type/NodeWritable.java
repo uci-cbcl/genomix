@@ -13,7 +13,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
     
-    private PositionWritable nodeId;
+    private PositionListWritable nodeId;
     private KmerListWritable forwardForwardList;
     private KmerListWritable forwardReverseList;
     private KmerListWritable reverseForwardList;
@@ -35,7 +35,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public NodeWritable(int kmerSize) {
-        nodeId = new PositionWritable();
+        nodeId = new PositionListWritable();
         forwardForwardList = new KmerListWritable();
         forwardReverseList = new KmerListWritable();
         reverseForwardList = new KmerListWritable();
@@ -43,7 +43,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         kmer = new KmerBytesWritable(kmerSize);
     }
     
-    public NodeWritable(PositionWritable nodeId, KmerListWritable FFList, KmerListWritable FRList,
+    public NodeWritable(PositionListWritable nodeId, KmerListWritable FFList, KmerListWritable FRList,
             KmerListWritable RFList, KmerListWritable RRList, KmerBytesWritable kmer) {
         this(kmer.getKmerLength());
         set(nodeId, FFList, FRList, RFList, RRList, kmer);
@@ -54,7 +54,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 node.reverseReverseList, node.kmer);
     }
     
-    public void set(PositionWritable nodeId, KmerListWritable FFList, KmerListWritable FRList,
+    public void set(PositionListWritable nodeId, KmerListWritable FFList, KmerListWritable FRList,
             KmerListWritable RFList, KmerListWritable RRList, KmerBytesWritable kmer) {
         this.nodeId.set(nodeId);
         this.forwardForwardList.set(FFList);
@@ -71,14 +71,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         reverseForwardList.reset();
         reverseReverseList.reset();
         kmer.reset(kmerSize);
-    }
-    
-    public PositionWritable getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(PositionWritable nodeId) {
-        this.nodeId = nodeId;
     }
 
     public KmerBytesWritable getKmer() {

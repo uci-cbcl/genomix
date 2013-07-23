@@ -14,13 +14,22 @@ import edu.uci.ics.genomix.type.NodeWritable;
 @SuppressWarnings("deprecation")
 public class GenomixReducer extends MapReduceBase implements
 	Reducer<KmerBytesWritable, NodeWritable, KmerBytesWritable, NodeWritable>{
-
+    
+    private NodeWritable outputNode = new NodeWritable();
+    
 	@Override
 	public void reduce(KmerBytesWritable key, Iterator<NodeWritable> values,
 			OutputCollector<KmerBytesWritable, NodeWritable> output,
 			Reporter reporter) throws IOException {
-		// TODO Auto-generated method stub
+		outputNode.reset(GenomixMapper.KMER_SIZE);
 		
+		//copy first item to outputNode
+		if(values.hasNext())
+		    outputNode.set(values.next());
+		while (values.hasNext()) {
+		    NodeWritable tmpNode = values.next();
+		    outputNode.getFFList().appendList(tmpNode.getFFList());
+		}
 	}
 
 }
