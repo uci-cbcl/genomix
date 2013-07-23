@@ -17,7 +17,8 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
-    public int kmerByteSize = 2; //default kmerSize = 5, kmerByteSize = 2, fix length once setting
+    public int kmerByteSize = 0; //default kmerSize = 5, kmerByteSize = 2, fix length once setting
+    public int kmerlength = 0;
     protected static final byte[] EMPTY = {};
     
     protected KmerBytesWritable posIter = new KmerBytesWritable();
@@ -37,6 +38,12 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         setNewReference(count, data, offset);
     }
     
+    public KmerListWritable(int kmerlength, int count, byte[] data, int offset) {
+        this.kmerlength = kmerlength;
+        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);
+        setNewReference(count, data, offset);
+    }
+    
     public KmerListWritable(List<KmerBytesWritable> kmers) {
         this();
         setSize(kmers.size());  // reserve space for all elements
@@ -52,8 +59,10 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
     
     public void append(KmerBytesWritable kmer){
-        setSize((1 + valueCount) * kmerByteSize);
-        System.arraycopy(kmer.getBytes(), 0, storage, offset, kmerByteSize);
+        kmerByteSize = kmer.kmerByteSize;
+        kmerlength = kmer.kmerlength;
+        setSize((1 + valueCount) * kmerByteSize); 
+        System.arraycopy(kmer.getBytes(), 0, storage, offset + valueCount * kmerByteSize, kmerByteSize);
         valueCount += 1;
     }
     
@@ -79,18 +88,22 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
     
     public void reset() {
+        storage = EMPTY;
         valueCount = 0;
+        offset = 0;
     }
     
     public KmerBytesWritable getPosition(int i) {
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
-        posIter.setNewReference(storage, offset + i * kmerByteSize);
+        posIter.setNewReference(kmerlength, storage, offset + i * kmerByteSize);
         return posIter;
     }
     
     public void set(KmerListWritable otherList) {
+        this.kmerlength = otherList.kmerlength;
+        this.kmerByteSize = otherList.kmerByteSize;
         set(otherList.valueCount, otherList.storage, otherList.offset);
     }
 

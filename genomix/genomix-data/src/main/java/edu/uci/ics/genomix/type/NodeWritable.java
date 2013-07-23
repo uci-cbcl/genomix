@@ -7,18 +7,19 @@ import java.io.Serializable;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.type.PositionListWritable;
 
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable{
 
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
     
-    private PositionListWritable forwardForwardList;
-    private PositionListWritable forwardReverseList;
-    private PositionListWritable reverseForwardList;
-    private PositionListWritable reverseReverseList;
+    private PositionWritable nodeId;
+    private KmerListWritable forwardForwardList;
+    private KmerListWritable forwardReverseList;
+    private KmerListWritable reverseForwardList;
+    private KmerListWritable reverseReverseList;
     private KmerBytesWritable kmer;
+    
     
     // merge/update directions
     public static class DirectionFlag {
@@ -34,26 +35,28 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public NodeWritable(int kmerSize) {
-        forwardForwardList = new PositionListWritable();
-        forwardReverseList = new PositionListWritable();
-        reverseForwardList = new PositionListWritable();
-        reverseReverseList = new PositionListWritable();
+        nodeId = new PositionWritable();
+        forwardForwardList = new KmerListWritable();
+        forwardReverseList = new KmerListWritable();
+        reverseForwardList = new KmerListWritable();
+        reverseReverseList = new KmerListWritable();
         kmer = new KmerBytesWritable(kmerSize);
     }
     
-    public NodeWritable(PositionListWritable FFList, PositionListWritable FRList,
-            PositionListWritable RFList, PositionListWritable RRList, KmerBytesWritable kmer) {
+    public NodeWritable(PositionWritable nodeId, KmerListWritable FFList, KmerListWritable FRList,
+            KmerListWritable RFList, KmerListWritable RRList, KmerBytesWritable kmer) {
         this(kmer.getKmerLength());
-        set(FFList, FRList, RFList, RRList, kmer);
+        set(nodeId, FFList, FRList, RFList, RRList, kmer);
     }
     
     public void set(NodeWritable node){
-        set(node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
+        set(node.nodeId, node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
                 node.reverseReverseList, node.kmer);
     }
     
-    public void set(PositionListWritable FFList, PositionListWritable FRList,
-            PositionListWritable RFList, PositionListWritable RRList, KmerBytesWritable kmer) {
+    public void set(PositionWritable nodeId, KmerListWritable FFList, KmerListWritable FRList,
+            KmerListWritable RFList, KmerListWritable RRList, KmerBytesWritable kmer) {
+        this.nodeId.set(nodeId);
         this.forwardForwardList.set(FFList);
         this.forwardReverseList.set(FRList);
         this.reverseForwardList.set(RFList);
@@ -62,6 +65,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void reset(int kmerSize) {
+        nodeId.reset();
         forwardForwardList.reset();
         forwardReverseList.reset();
         reverseForwardList.reset();
@@ -69,6 +73,14 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         kmer.reset(kmerSize);
     }
     
+    public PositionWritable getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(PositionWritable nodeId) {
+        this.nodeId = nodeId;
+    }
+
     public KmerBytesWritable getKmer() {
         return kmer;
     }
@@ -81,23 +93,23 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return kmer.getKmerLength();
     }
     
-    public PositionListWritable getFFList() {
+    public KmerListWritable getFFList() {
         return forwardForwardList;
     }
 
-    public PositionListWritable getFRList() {
+    public KmerListWritable getFRList() {
         return forwardReverseList;
     }
 
-    public PositionListWritable getRFList() {
+    public KmerListWritable getRFList() {
         return reverseForwardList;
     }
 
-    public PositionListWritable getRRList() {
+    public KmerListWritable getRRList() {
         return reverseReverseList;
     }
     
-    public PositionListWritable getListFromDir(byte dir) {
+    public KmerListWritable getListFromDir(byte dir) {
         switch (dir & DirectionFlag.DIR_MASK) {
             case DirectionFlag.DIR_FF:
                 return getFFList();
@@ -113,6 +125,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     @Override
     public void write(DataOutput out) throws IOException {
+        this.nodeId.write(out);
         this.forwardForwardList.write(out);
         this.forwardReverseList.write(out);
         this.reverseForwardList.write(out);
@@ -122,6 +135,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     @Override
     public void readFields(DataInput in) throws IOException {
+        this.nodeId.readFields(in);
         this.forwardForwardList.readFields(in);
         this.forwardReverseList.readFields(in);
         this.reverseForwardList.readFields(in);
@@ -143,7 +157,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public boolean equals(Object o) {
         if (o instanceof NodeWritable) {
             NodeWritable nw = (NodeWritable) o;
-            return (this.forwardForwardList.equals(nw.forwardForwardList)
+            return (this.nodeId.equals(nw.nodeId)
+                    && this.forwardForwardList.equals(nw.forwardForwardList)
                     && this.forwardReverseList.equals(nw.forwardReverseList)
                     && this.reverseForwardList.equals(nw.reverseForwardList)
                     && this.reverseReverseList.equals(nw.reverseReverseList) && this.kmer.equals(nw.kmer));
@@ -155,6 +170,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('(');
+        sbuilder.append(nodeId.toString()).append('\t');
         sbuilder.append(forwardForwardList.toString()).append('\t');
         sbuilder.append(forwardReverseList.toString()).append('\t');
         sbuilder.append(reverseForwardList.toString()).append('\t');
