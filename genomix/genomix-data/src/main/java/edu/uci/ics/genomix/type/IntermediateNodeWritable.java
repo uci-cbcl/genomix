@@ -139,11 +139,11 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('(');
+        sbuilder.append(nodeId.toString()).append('\t');
         sbuilder.append(forwardForwardList.toString()).append('\t');
         sbuilder.append(forwardReverseList.toString()).append('\t');
         sbuilder.append(reverseForwardList.toString()).append('\t');
-        sbuilder.append(reverseReverseList.toString()).append('\t');
-        sbuilder.append(nodeId.toString()).append(')');
+        sbuilder.append(reverseReverseList.toString()).append('\t').append(')');
         return sbuilder.toString();
     }
 }

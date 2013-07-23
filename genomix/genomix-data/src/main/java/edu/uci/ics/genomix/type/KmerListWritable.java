@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.KmerUtil;
+import edu.uci.ics.genomix.data.Marshal;
 
 public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable{
     private static final long serialVersionUID = 1L;
@@ -157,5 +158,30 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     
     public int getLength() {
         return valueCount * kmerByteSize;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append('[');
+//        for (KmerBytesWritable kmer : this) {
+//            sbuilder.append(kmer.toString());
+//            sbuilder.append(',');
+//        }
+        for(int i = 0; i < valueCount; i++){
+            sbuilder.append(getPosition(i).toString());
+            sbuilder.append(',');
+        }
+        if (valueCount > 0) {
+            sbuilder.setCharAt(sbuilder.length() - 1, ']');
+        } else {
+            sbuilder.append(']');
+        }
+        return sbuilder.toString();
+    }
+    
+    @Override
+    public int hashCode() {
+        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
     }
 }

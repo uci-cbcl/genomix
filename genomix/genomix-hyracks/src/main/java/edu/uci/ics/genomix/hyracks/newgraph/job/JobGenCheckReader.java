@@ -23,6 +23,7 @@ import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
 import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.type.IntermediateNodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -72,7 +73,8 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
                         return new ITupleWriter() {
 
                             private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
-                            private IntermediateNodeWritable intermediateNode = new IntermediateNodeWritable();
+                            private KmerListWritable kmerList = new KmerListWritable();
+                            //private IntermediateNodeWritable intermediateNode = new IntermediateNodeWritable();
 
                             @Override
                             public void open(DataOutput output) throws HyracksDataException {
@@ -89,25 +91,28 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
                                     kmer.setNewReference(
                                             tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
                                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputKmerField));
-                                    //nodeId
-                                    intermediateNode.getNodeId().setNewReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeIdField), 
-                                            tuple.getFieldStart(ReadsKeyValueParserFactory.OutputForwardForwardField));
+                                    kmerList.setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputNodeIdField), 
+                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeIdField), 
+                                            tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeIdField));
+//                                    //nodeId
+//                                    intermediateNode.getNodeId().setNewReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeIdField), 
+//                                            tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeIdField));
                                     //FF list
-                                    intermediateNode.getFFList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputForwardForwardField / kmer.getLength()) ,
-                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputForwardForwardField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputForwardForwardField));
-                                    //FR list
-                                    intermediateNode.getFRList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputForwardReverseField / kmer.getLength()),
-                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputForwardReverseField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputForwardReverseField));
-                                    //RF list
-                                    intermediateNode.getRFList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputReverseForwardField / kmer.getLength()),
-                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputReverseForwardField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputReverseForwardField));
-                                    //RR list
-                                    intermediateNode.getRRList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputReverseReverseField / kmer.getLength()),
-                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputReverseReverseField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputReverseReverseField));
-                                    
+//                                    intermediateNode.getFFList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputForwardForwardField) / 2 ,
+//                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputForwardForwardField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputForwardForwardField));
+//                                    //FR list
+//                                    intermediateNode.getFRList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputForwardReverseField / kmer.getLength()),
+//                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputForwardReverseField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputForwardReverseField));
+//                                    //RF list
+//                                    intermediateNode.getRFList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputReverseForwardField / kmer.getLength()),
+//                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputReverseForwardField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputReverseForwardField));
+//                                    //RR list
+//                                    intermediateNode.getRRList().setNewReference(tuple.getFieldLength(ReadsKeyValueParserFactory.OutputReverseReverseField / kmer.getLength()),
+//                                            tuple.getFieldData(ReadsKeyValueParserFactory.OutputReverseReverseField), tuple.getFieldStart(ReadsKeyValueParserFactory.OutputReverseReverseField));
+//                                    
                                     output.write(kmer.toString().getBytes());
                                     output.writeByte('\t');
-                                    output.write(intermediateNode.toString().getBytes());
+                                    output.write(kmerList.toString().getBytes());
                                     output.writeByte('\n');
                                 } catch (IOException e) {
                                     throw new HyracksDataException(e);

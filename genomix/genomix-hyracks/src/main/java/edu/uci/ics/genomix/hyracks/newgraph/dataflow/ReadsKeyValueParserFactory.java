@@ -112,36 +112,46 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 nextKmer.set(kmer);
                 nextKmer.shiftKmerWithNextChar(array[kmerSize]);
                 kmerList.append(nextKmer);
-                nodeId.set(mateId, readID, 1);
-                interMediateNode.setNodeId(nodeId);
-                interMediateNode.setFFList(kmerList);
-                InsertToFrame(kmer, interMediateNode, writer);
+                nextKmer.toString();
+                kmerList.toString();
+//                nodeId.set(mateId, readID, 1);
+//                interMediateNode.setNodeId(nodeId);
+//                interMediateNode.setFFList(kmerList);
+                InsertToFrame(kmer, kmerList, writer);
 
                 /** middle kmer */
-                for (int i = kmerSize; i < array.length; i++) {
+                int i = kmerSize;
+                for (; i < array.length - 1; i++) {
                     kmer.shiftKmerWithNextChar(array[i]);
                     nextKmer.set(kmer);
                     nextKmer.shiftKmerWithNextChar(array[i+1]);
                     kmerList.append(nextKmer);
-                    nodeId.set(mateId, readID, i - kmerSize + 2);
-                    interMediateNode.setNodeId(nodeId);
-                    interMediateNode.setFFList(kmerList);
-                    InsertToFrame(kmer, interMediateNode, writer);
+//                    nodeId.set(mateId, readID, i - kmerSize + 2);
+//                    interMediateNode.setNodeId(nodeId);
+//                    interMediateNode.setFFList(kmerList);
+                    InsertToFrame(kmer, kmerList, writer);
                 }
+//                
+//                /** last kmer */
+//                kmer.shiftKmerWithNextChar(array[i]);
+//                nodeId.set(mateId, readID, i - kmerSize + 2);
+//                interMediateNode.setNodeId(nodeId);
+//                InsertToFrame(kmer, interMediateNode, writer);
             }
-
-            private void InsertToFrame(KmerBytesWritable kmer, IntermediateNodeWritable node, IFrameWriter writer) {
+            //IntermediateNodeWritable node
+            private void InsertToFrame(KmerBytesWritable kmer, KmerListWritable kmerList, IFrameWriter writer) {
                 try {
-                    if (Math.abs(node.getNodeId().getPosId()) > 32768) {
-                        throw new IllegalArgumentException("Position id is beyond 32768 at " + node.getNodeId().getReadId());
-                    }
+//                    if (Math.abs(node.getNodeId().getPosId()) > 32768) {
+//                        throw new IllegalArgumentException("Position id is beyond 32768 at " + node.getNodeId().getReadId());
+//                    }
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-                    tupleBuilder.addField(node.getNodeId().getByteArray(), node.getNodeId().getStartOffset(), node.getNodeId().getLength());
-                    tupleBuilder.addField(node.getFFList().getByteArray(), node.getFFList().getStartOffset(), node.getFFList().getLength());
-                    tupleBuilder.addField(node.getFRList().getByteArray(), node.getFRList().getStartOffset(), node.getFRList().getLength());
-                    tupleBuilder.addField(node.getRFList().getByteArray(), node.getRFList().getStartOffset(), node.getRFList().getLength());
-                    tupleBuilder.addField(node.getRRList().getByteArray(), node.getRRList().getStartOffset(), node.getRRList().getLength());
+                    tupleBuilder.addField(kmerList.getByteArray(), kmer.getOffset(), kmer.getLength());
+                    //tupleBuilder.addField(node.getNodeId().getByteArray(), node.getNodeId().getStartOffset(), node.getNodeId().getLength());
+//                    tupleBuilder.addField(node.getFFList().getByteArray(), node.getFFList().getStartOffset(), node.getFFList().getLength());
+//                    tupleBuilder.addField(node.getFRList().getByteArray(), node.getFRList().getStartOffset(), node.getFRList().getLength());
+//                    tupleBuilder.addField(node.getRFList().getByteArray(), node.getRFList().getStartOffset(), node.getRFList().getLength());
+//                    tupleBuilder.addField(node.getRRList().getByteArray(), node.getRRList().getStartOffset(), node.getRRList().getLength());
                     
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {
