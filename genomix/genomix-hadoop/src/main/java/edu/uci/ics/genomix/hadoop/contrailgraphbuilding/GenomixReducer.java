@@ -24,12 +24,19 @@ public class GenomixReducer extends MapReduceBase implements
 		outputNode.reset(GenomixMapper.KMER_SIZE);
 		
 		//copy first item to outputNode
-		if(values.hasNext())
-		    outputNode.set(values.next());
+		if(values.hasNext()){
+		    NodeWritable tmpNode = values.next();
+		    outputNode.set(tmpNode);
+		}
 		while (values.hasNext()) {
 		    NodeWritable tmpNode = values.next();
+		    outputNode.getNodeIdList().appendList(tmpNode.getNodeIdList());
 		    outputNode.getFFList().appendList(tmpNode.getFFList());
+		    outputNode.getFRList().appendList(tmpNode.getFRList());
+		    outputNode.getRFList().appendList(tmpNode.getRFList());
+		    outputNode.getRRList().appendList(tmpNode.getRRList());
 		}
+		output.collect(key,outputNode);
 	}
 
 }

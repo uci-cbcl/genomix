@@ -43,7 +43,7 @@ public class GraphBuildingTest {
     
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
-        driver.run(HDFS_PATH, RESULT_PATH, 0, SIZE_KMER, READ_LENGTH, false, HADOOP_CONF_PATH);
+        driver.run(HDFS_PATH, RESULT_PATH, 2, SIZE_KMER, READ_LENGTH, false, HADOOP_CONF_PATH);
         dumpResult();
     }
     

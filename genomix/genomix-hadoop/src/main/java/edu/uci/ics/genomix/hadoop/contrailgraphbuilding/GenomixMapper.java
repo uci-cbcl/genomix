@@ -15,6 +15,7 @@ import org.apache.hadoop.mapred.Reporter;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 
 @SuppressWarnings("deprecation")
@@ -33,10 +34,11 @@ public class GenomixMapper extends MapReduceBase implements
     private KmerBytesWritable curReverseKmer;
     private KmerBytesWritable nextForwardKmer;
     private KmerBytesWritable nextReverseKmer;
-    private NodeWritable outputNode;
     private PositionWritable nodeId;
+    private PositionListWritable nodeIdList;
     private KmerListWritable edgeListForPreKmer;
     private KmerListWritable edgeListForNextKmer;
+    private NodeWritable outputNode;
     
     private KmerDir preKmerDir;
     private KmerDir curKmerDir;
@@ -53,10 +55,11 @@ public class GenomixMapper extends MapReduceBase implements
         curReverseKmer = new KmerBytesWritable(KMER_SIZE);
         nextForwardKmer = new KmerBytesWritable(KMER_SIZE);
         nextReverseKmer = new KmerBytesWritable(KMER_SIZE);
-        outputNode = new NodeWritable();
         nodeId = new PositionWritable();
+        nodeIdList = new PositionListWritable();
         edgeListForPreKmer = new KmerListWritable();
         edgeListForNextKmer = new KmerListWritable();
+        outputNode = new NodeWritable();
         preKmerDir = KmerDir.FORWARD;
         curKmerDir = KmerDir.FORWARD;
         nextKmerDir = KmerDir.FORWARD;
@@ -83,13 +86,13 @@ public class GenomixMapper extends MapReduceBase implements
             }
             
             /** first kmer **/
+            outputNode.reset(0);
             curForwardKmer.setByRead(array, 0);
             curReverseKmer.setByReadReverse(array, 0);
             curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             setNextKmer(array[KMER_SIZE]);
             //set value.nodeId
-            nodeId.set(mateId, readID, 1);
-            outputNode.setNodeId(nodeId);
+            setNodeId(mateId, readID, 1);
             //set value.edgeList
             setEdgeListForNextKmer();
             //output mapper result
@@ -97,12 +100,12 @@ public class GenomixMapper extends MapReduceBase implements
             
             /** middle kmer **/
             for (int i = KMER_SIZE + 1; i < array.length; i++) {
+                outputNode.reset(0);
             	setPreKmerByOldCurKmer();
             	setCurKmerByOldNextKmer();
             	setNextKmer(array[i]);
         	    //set value.nodeId
-                nodeId.set(mateId, readID, i - KMER_SIZE + 1);
-                outputNode.setNodeId(nodeId);
+            	setNodeId(mateId, readID, i - KMER_SIZE + 1);
                 //set value.edgeList
                 setEdgeListForPreKmer();
                 setEdgeListForNextKmer();
@@ -111,16 +114,23 @@ public class GenomixMapper extends MapReduceBase implements
             }
             
             /** last kmer **/
+            outputNode.reset(0);
         	setPreKmerByOldCurKmer();
         	setCurKmerByOldNextKmer();
         	//set value.nodeId
-            nodeId.set(mateId, readID, array.length - KMER_SIZE + 1);
-            outputNode.setNodeId(nodeId);
+        	setNodeId(mateId, readID, array.length - KMER_SIZE + 1);
             //set value.edgeList
             setEdgeListForPreKmer();
             //output mapper result
             setMapperOutput(output);
         }
+    }
+    
+    public void setNodeId(byte mateId, long readID, int posId){
+        nodeId.set(mateId, readID, posId);
+        nodeIdList.reset();
+        nodeIdList.append(nodeId);
+        outputNode.setNodeIdList(nodeIdList);
     }
     
     public void setEdgeListForPreKmer(){
