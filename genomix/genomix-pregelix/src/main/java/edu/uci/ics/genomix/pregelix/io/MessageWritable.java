@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -17,7 +16,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
      * stores neighber vertexValue when pathVertex sends the message
      * file stores the point to the file that stores the chains of connected DNA
      */
-    private PositionWritable sourceVertexId;
+    private KmerBytesWritable sourceVertexId;
     private KmerBytesWritable kmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private byte flag;
@@ -26,7 +25,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private byte checkMessage;
 
     public MessageWritable() {
-        sourceVertexId = new PositionWritable();
+        sourceVertexId = new KmerBytesWritable();
         kmer = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
         flag = Message.NON;
@@ -52,11 +51,11 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         this.flag = msg.getFlag();
     }
 
-    public void set(PositionWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
+    public void set(KmerBytesWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId.getReadID(),sourceVertexId.getPosInRead());
+            this.sourceVertexId.set(sourceVertexId);
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
@@ -76,14 +75,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         flag = Message.NON;
     }
 
-    public PositionWritable getSourceVertexId() {
+    public KmerBytesWritable getSourceVertexId() {
         return sourceVertexId;
     }
 
-    public void setSourceVertexId(PositionWritable sourceVertexId) {
+    public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId.getReadID(),sourceVertexId.getPosInRead());
+            this.sourceVertexId.set(sourceVertexId);
         }
     }
     

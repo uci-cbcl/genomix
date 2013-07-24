@@ -98,6 +98,10 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         }
     }
     
+    public void reset() {
+        this.reset(0);
+    }
+    
     public void reset(int kmerSize) {
         kmerlength = kmerSize;
         kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);
@@ -155,6 +159,26 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
             }
         };
         return it;
+    }
+    
+    /*
+     * remove the first instance of @toRemove. Uses a linear scan.  Throws an exception if not in this list.
+     */
+    public void remove(KmerBytesWritable toRemove, boolean ignoreMissing) {
+        Iterator<KmerBytesWritable> posIterator = this.iterator();
+        while (posIterator.hasNext()) {
+            if(toRemove.equals(posIterator.next())) {
+                posIterator.remove();
+                return;
+            }
+        }
+        if (!ignoreMissing) {
+            throw new ArrayIndexOutOfBoundsException("the KmerBytesWritable `" + toRemove.toString() + "` was not found in this list.");
+        }
+    }
+    
+    public void remove(KmerBytesWritable toRemove) {
+        remove(toRemove, false);
     }
 
     @Override

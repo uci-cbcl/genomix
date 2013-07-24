@@ -7,19 +7,19 @@ import org.apache.hadoop.io.NullWritable;
 
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 /**
  * Naive Algorithm for path merge graph
  */
 public class BasicPathMergeVertex extends
-        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "BasicPathMergeVertex.kmerSize";
     public static final String ITERATIONS = "BasicPathMergeVertex.iteration";
     public static int kmerSize = -1;
@@ -27,9 +27,9 @@ public class BasicPathMergeVertex extends
     
     protected MessageWritable incomingMsg = new MessageWritable();
     protected MessageWritable outgoingMsg = new MessageWritable();
-    protected PositionWritable destVertexId = new PositionWritable();
-    protected Iterator<PositionWritable> posIterator;
-    private PositionWritable pos = new PositionWritable();
+    protected KmerBytesWritable destVertexId = new KmerBytesWritable();
+    protected Iterator<KmerBytesWritable> posIterator;
+    private KmerBytesWritable kmer = new KmerBytesWritable();
     byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
@@ -66,7 +66,7 @@ public class BasicPathMergeVertex extends
     /**
      * get destination vertex
      */
-    public PositionWritable getNextDestVertexId(VertexValueWritable value) {
+    public KmerBytesWritable getNextDestVertexId(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
             posIterator = value.getFFList().iterator();
             return posIterator.next();
@@ -78,7 +78,7 @@ public class BasicPathMergeVertex extends
         }
     }
 
-    public PositionWritable getPreDestVertexId(VertexValueWritable value) {
+    public KmerBytesWritable getPreDestVertexId(VertexValueWritable value) {
         if (value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
             posIterator = value.getRFList().iterator();
             return posIterator.next();
@@ -93,7 +93,7 @@ public class BasicPathMergeVertex extends
     /**
      * get destination vertex
      */
-    public PositionWritable getNextDestVertexIdAndSetFlag(VertexValueWritable value) {
+    public KmerBytesWritable getNextDestVertexIdAndSetFlag(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
             posIterator = value.getFFList().iterator();
             outFlag |= MessageFlag.DIR_FF;
@@ -108,7 +108,7 @@ public class BasicPathMergeVertex extends
         
     }
 
-    public PositionWritable getPreDestVertexIdAndSetFlag(VertexValueWritable value) {
+    public KmerBytesWritable getPreDestVertexIdAndSetFlag(VertexValueWritable value) {
         if (value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
             posIterator = value.getRFList().iterator();
             outFlag |= MessageFlag.DIR_RF;
@@ -618,8 +618,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from RR positionList
                 posIterator = getVertexValue().getRRList().iterator();
                 while(posIterator.hasNext()){
-                    pos = posIterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                    kmer = posIterator.next();
+                    if(kmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }
@@ -628,8 +628,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from FR positionList
                 posIterator = getVertexValue().getFRList().iterator();
                 while(posIterator.hasNext()){
-                    pos = posIterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                    kmer = posIterator.next();
+                    if(kmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }
@@ -638,8 +638,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from RF positionList
                 posIterator = getVertexValue().getRFList().iterator();
                 while(posIterator.hasNext()){
-                    pos = posIterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                    kmer = posIterator.next();
+                    if(kmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }
@@ -648,8 +648,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from FF positionList
                 posIterator = getVertexValue().getFFList().iterator();
                 while(posIterator.hasNext()){
-                    pos = posIterator.next();
-                    if(pos.equals(incomingMsg.getSourceVertexId())){
+                    kmer = posIterator.next();
+                    if(kmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }

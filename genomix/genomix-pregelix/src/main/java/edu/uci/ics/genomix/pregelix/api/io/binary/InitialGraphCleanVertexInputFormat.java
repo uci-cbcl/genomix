@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.api.io.binary;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -14,9 +13,10 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
-import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
-public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
+public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
         extends VertexInputFormat<I, V, E, M> {
 
     /** Uses the SequenceFileInputFormat to do everything */
@@ -38,7 +38,7 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
     public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<NodeWritable, NullWritable> lineRecordReader;
+        private final RecordReader<KmerBytesWritable, NodeWritable> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -48,7 +48,7 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryVertexReader(RecordReader<NodeWritable, NullWritable> recordReader) {
+        public BinaryVertexReader(RecordReader<KmerBytesWritable, NodeWritable> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -74,7 +74,7 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<NodeWritable, NullWritable> getRecordReader() {
+        protected RecordReader<KmerBytesWritable, NodeWritable> getRecordReader() {
             return lineRecordReader;
         }
 
