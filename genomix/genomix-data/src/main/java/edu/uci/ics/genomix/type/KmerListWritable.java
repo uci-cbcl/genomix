@@ -17,8 +17,8 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
-    public int kmerByteSize = 2; 
-    public int kmerlength = 5;
+    public int kmerByteSize = 0; 
+    public int kmerlength = 0;
     protected static final byte[] EMPTY = {};
     
     protected KmerBytesWritable posIter = new KmerBytesWritable();

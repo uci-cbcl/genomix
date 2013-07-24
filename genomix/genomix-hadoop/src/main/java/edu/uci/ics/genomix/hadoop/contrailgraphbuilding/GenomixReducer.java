@@ -33,11 +33,6 @@ public class GenomixReducer extends MapReduceBase implements
 			Reporter reporter) throws IOException {
 		outputNode.reset(KMER_SIZE);
 		
-//		//copy first item to outputNode
-//		if(values.hasNext()){
-//		    NodeWritable tmpNode = values.next();
-//		    outputNode.set(tmpNode);
-//		}
 		while (values.hasNext()) {
 		    tmpNode.set(values.next());
 		    outputNode.getNodeIdList().appendList(tmpNode.getNodeIdList());
