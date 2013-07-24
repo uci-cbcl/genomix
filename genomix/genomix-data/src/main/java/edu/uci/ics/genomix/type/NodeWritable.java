@@ -154,7 +154,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 //        out.writeByte(kmerMark);
 //        this.nodeIdList.write(out);
         this.forwardForwardList.write(out);
-        this.forwardReverseList.write(out);
+//        this.forwardReverseList.write(out);
 //        this.reverseForwardList.write(out);
 //        this.reverseReverseList.write(out);
 //        if(kmerMark == KMER.EXIST) 
@@ -166,7 +166,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 //        kmerMark = in.readByte();
 //        this.nodeIdList.readFields(in);
         this.forwardForwardList.readFields(in);
-        this.forwardReverseList.readFields(in);
+//        this.forwardReverseList.readFields(in);
 //        this.reverseForwardList.readFields(in);
 //        this.reverseReverseList.readFields(in);
 //        if(kmerMark == KMER.EXIST)

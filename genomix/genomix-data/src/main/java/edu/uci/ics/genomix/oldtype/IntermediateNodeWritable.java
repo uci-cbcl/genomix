@@ -48,14 +48,6 @@ public class IntermediateNodeWritable implements WritableComparable<Intermediate
         this.reverseReverseList.set(RRList);
         this.nodeId.set(uniqueKey);
     }
-
-    public void reset(int kmerSize) {
-        forwardForwardList.reset();
-        forwardReverseList.reset();
-        reverseForwardList.reset();
-        reverseReverseList.reset();
-        nodeId.reset();
-    }
     
     public KmerListWritable getFFList() {
         return forwardForwardList;

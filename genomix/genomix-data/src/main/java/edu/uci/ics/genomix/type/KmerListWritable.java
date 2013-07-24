@@ -17,8 +17,8 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
-    public int kmerByteSize = 0; 
-    public int kmerlength = 0;
+    public int kmerByteSize = 2; 
+    public int kmerlength = 5;
     protected static final byte[] EMPTY = {};
     
     protected KmerBytesWritable posIter = new KmerBytesWritable();
@@ -160,8 +160,8 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     @Override
     public void readFields(DataInput in) throws IOException {
         this.valueCount = in.readInt();
-        setSize(valueCount * kmerByteSize);
-        in.readFully(storage, offset, valueCount * kmerByteSize);
+        setSize(valueCount * kmerByteSize);//kmerByteSize
+        in.readFully(storage, offset, valueCount * kmerByteSize);//kmerByteSize
     }
 
     @Override
