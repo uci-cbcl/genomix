@@ -60,7 +60,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * Initial Kmer space by kmerlength
      * 
      * @param k
-     *            kmerlength
+     *            kmerlengthz
      */
     public KmerBytesWritable(int k) {
         this.kmerlength = k;

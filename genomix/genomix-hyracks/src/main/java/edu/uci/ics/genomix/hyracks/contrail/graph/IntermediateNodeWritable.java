@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.type;
+package edu.uci.ics.genomix.hyracks.contrail.graph;
 
 import java.io.DataInput;
 import java.io.DataOutput;
