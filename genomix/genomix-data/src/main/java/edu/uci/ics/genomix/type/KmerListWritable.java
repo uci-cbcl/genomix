@@ -32,7 +32,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     public KmerListWritable(int kmerlength) {
         this();
         this.kmerlength = kmerlength;
-        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);;
+        this.kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);
     }
     
     public KmerListWritable(int kmerlength, int count, byte[] data, int offset) {
@@ -68,7 +68,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
      */
     public void appendList(KmerListWritable otherList) {
         if (otherList.valueCount > 0) {
-            setSize((valueCount + otherList.valueCount) * PositionWritable.LENGTH);
+            setSize((valueCount + otherList.valueCount) * kmerByteSize);
             // copy contents of otherList into the end of my storage
             System.arraycopy(otherList.storage, otherList.offset,
                     storage, offset + valueCount * kmerByteSize, 
@@ -98,7 +98,9 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         }
     }
     
-    public void reset() {
+    public void reset(int kmerSize) {
+        kmerlength = kmerSize;
+        kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);
         storage = EMPTY;
         valueCount = 0;
         offset = 0;

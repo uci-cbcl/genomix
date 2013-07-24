@@ -16,20 +16,20 @@ public class GenomixReducer extends MapReduceBase implements
 	Reducer<KmerBytesWritable, NodeWritable, KmerBytesWritable, NodeWritable>{
     
     private NodeWritable outputNode = new NodeWritable();
-    
+    private NodeWritable tmpNode = new NodeWritable();
 	@Override
 	public void reduce(KmerBytesWritable key, Iterator<NodeWritable> values,
 			OutputCollector<KmerBytesWritable, NodeWritable> output,
 			Reporter reporter) throws IOException {
-		outputNode.reset(GenomixMapper.KMER_SIZE);
+		outputNode.reset(0);
 		
-		//copy first item to outputNode
-		if(values.hasNext()){
-		    NodeWritable tmpNode = values.next();
-		    outputNode.set(tmpNode);
-		}
+//		//copy first item to outputNode
+//		if(values.hasNext()){
+//		    NodeWritable tmpNode = values.next();
+//		    outputNode.set(tmpNode);
+//		}
 		while (values.hasNext()) {
-		    NodeWritable tmpNode = values.next();
+		    tmpNode.set(values.next());
 		    outputNode.getNodeIdList().appendList(tmpNode.getNodeIdList());
 		    outputNode.getFFList().appendList(tmpNode.getFFList());
 		    outputNode.getFRList().appendList(tmpNode.getFRList());

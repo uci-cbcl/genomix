@@ -14,6 +14,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
+
 @SuppressWarnings("deprecation")
 public class GraphBuildingTest {
 
@@ -43,7 +45,7 @@ public class GraphBuildingTest {
     
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
-        driver.run(HDFS_PATH, RESULT_PATH, 2, SIZE_KMER, READ_LENGTH, false, HADOOP_CONF_PATH);
+        driver.run(HDFS_PATH, RESULT_PATH, 0, SIZE_KMER, READ_LENGTH, true, HADOOP_CONF_PATH);
         dumpResult();
     }
     
@@ -51,9 +53,9 @@ public class GraphBuildingTest {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
         System.setProperty("hadoop.log.dir", "logs");
-        dfsCluster = new MiniDFSCluster(conf, 2, true, null);
+        dfsCluster = new MiniDFSCluster(conf, 1, true, null);
         dfs = dfsCluster.getFileSystem();
-        mrCluster = new MiniMRCluster(4, dfs.getUri().toString(), 2);
+        mrCluster = new MiniMRCluster(1, dfs.getUri().toString(), 1);
 
         Path src = new Path(DATA_PATH);
         Path dest = new Path(HDFS_PATH + "/");
@@ -75,5 +77,6 @@ public class GraphBuildingTest {
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR);
         dfs.copyToLocalFile(src, dest);
+        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, "test.txt", false, conf, true, dfs);
     }
 }

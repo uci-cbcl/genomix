@@ -10,10 +10,10 @@ import org.apache.hadoop.io.WritableComparable;
 
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable{
 
-    public static class KMER{
-        public static final byte EXIST = 0;
-        public static final byte NON_EXIST = 1;
-    }
+//    public static class KMER{
+//        public static final byte EXIST = 0;
+//        public static final byte NON_EXIST = 1;
+//    }
     
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
@@ -24,7 +24,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private KmerListWritable reverseForwardList;
     private KmerListWritable reverseReverseList;
     private KmerBytesWritable kmer;
-    private byte kmerMark;
+//    private byte kmerMark;
     
     // merge/update directions
     public static class DirectionFlag {
@@ -41,12 +41,12 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     
     public NodeWritable(int kmerSize) {
         nodeIdList = new PositionListWritable();
-        forwardForwardList = new KmerListWritable();
-        forwardReverseList = new KmerListWritable();
-        reverseForwardList = new KmerListWritable();
-        reverseReverseList = new KmerListWritable();
+        forwardForwardList = new KmerListWritable(kmerSize);
+        forwardReverseList = new KmerListWritable(kmerSize);
+        reverseForwardList = new KmerListWritable(kmerSize);
+        reverseReverseList = new KmerListWritable(kmerSize);
         kmer = new KmerBytesWritable(kmerSize);
-        kmerMark = KMER.NON_EXIST;
+//        kmerMark = KMER.NON_EXIST;
     }
     
     public NodeWritable(PositionListWritable nodeIdList, KmerListWritable FFList, KmerListWritable FRList,
@@ -68,17 +68,17 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.reverseForwardList.set(RFList);
         this.reverseReverseList.set(RRList);
         this.kmer.set(kmer);
-        kmerMark = KMER.EXIST;
+//        kmerMark = KMER.EXIST;
     }
 
     public void reset(int kmerSize) {
         nodeIdList.reset();
-        forwardForwardList.reset();
-        forwardReverseList.reset();
-        reverseForwardList.reset();
-        reverseReverseList.reset();
+        forwardForwardList.reset(kmerSize);
+        forwardReverseList.reset(kmerSize);
+        reverseForwardList.reset(kmerSize);
+        reverseReverseList.reset(kmerSize);
         kmer.reset(kmerSize);
-        kmerMark = KMER.NON_EXIST;
+//        kmerMark = KMER.NON_EXIST;
     }
     
     
@@ -95,7 +95,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void setKmer(KmerBytesWritable kmer) {
-        kmerMark = KMER.EXIST;
+//        kmerMark = KMER.EXIST;
         this.kmer.set(kmer);
     }
     
@@ -151,26 +151,26 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeByte(kmerMark);
-        this.nodeIdList.write(out);
+//        out.writeByte(kmerMark);
+//        this.nodeIdList.write(out);
         this.forwardForwardList.write(out);
         this.forwardReverseList.write(out);
-        this.reverseForwardList.write(out);
-        this.reverseReverseList.write(out);
-        if(kmerMark == KMER.EXIST) 
-            this.kmer.write(out);
+//        this.reverseForwardList.write(out);
+//        this.reverseReverseList.write(out);
+//        if(kmerMark == KMER.EXIST) 
+//        this.kmer.write(out);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        kmerMark = in.readByte();
-        this.nodeIdList.readFields(in);
+//        kmerMark = in.readByte();
+//        this.nodeIdList.readFields(in);
         this.forwardForwardList.readFields(in);
         this.forwardReverseList.readFields(in);
-        this.reverseForwardList.readFields(in);
-        this.reverseReverseList.readFields(in);
-        if(kmerMark == KMER.EXIST)
-            this.kmer.readFields(in);
+//        this.reverseForwardList.readFields(in);
+//        this.reverseReverseList.readFields(in);
+//        if(kmerMark == KMER.EXIST)
+//        this.kmer.readFields(in);
     }
 
     @Override
