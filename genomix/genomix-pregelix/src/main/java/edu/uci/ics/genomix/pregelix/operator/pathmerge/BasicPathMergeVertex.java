@@ -365,6 +365,8 @@ public class BasicPathMergeVertex extends
                 setSuccessorAdjMsg();
                 if(ifFlipWithPredecessor())
                     outgoingMsg.setFlip(true);
+                else
+                    outgoingMsg.setFlip(false);
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
@@ -376,6 +378,8 @@ public class BasicPathMergeVertex extends
                 setPredecessorAdjMsg();
                 if(ifFilpWithSuccessor())
                     outgoingMsg.setFlip(true);
+                else
+                    outgoingMsg.setFlip(false);
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
@@ -397,6 +401,8 @@ public class BasicPathMergeVertex extends
                 setSuccessorAdjMsg();
                 if(ifFlipWithPredecessor())
                     outgoingMsg.setFlip(true);
+                else
+                    outgoingMsg.setFlip(false);
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
@@ -408,6 +414,8 @@ public class BasicPathMergeVertex extends
                 setPredecessorAdjMsg();
                 if(ifFilpWithSuccessor())
                     outgoingMsg.setFlip(true);
+                else
+                    outgoingMsg.setFlip(false);
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());

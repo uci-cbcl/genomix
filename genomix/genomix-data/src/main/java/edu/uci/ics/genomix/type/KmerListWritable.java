@@ -56,11 +56,13 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
     
     public void append(KmerBytesWritable kmer){
-        kmerByteSize = kmer.kmerByteSize;
-        kmerlength = kmer.kmerlength;
-        setSize((1 + valueCount) * kmerByteSize); 
-        System.arraycopy(kmer.getBytes(), 0, storage, offset + valueCount * kmerByteSize, kmerByteSize);
-        valueCount += 1;
+        if(kmer != null){
+            kmerByteSize = kmer.kmerByteSize;
+            kmerlength = kmer.kmerlength;
+            setSize((1 + valueCount) * kmerByteSize); 
+            System.arraycopy(kmer.getBytes(), 0, storage, offset + valueCount * kmerByteSize, kmerByteSize);
+            valueCount += 1;
+        }
     }
     
     /*

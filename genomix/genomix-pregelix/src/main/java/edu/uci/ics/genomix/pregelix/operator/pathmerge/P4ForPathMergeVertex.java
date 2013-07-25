@@ -175,7 +175,7 @@ public class P4ForPathMergeVertex extends
                         sendUpdateMsgToSuccessor();
                     } 
                 }
-            }else {
+                else {
                     // I'm a tail
                     if (hasNext && hasPrev) {
                          if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
@@ -197,6 +197,7 @@ public class P4ForPathMergeVertex extends
                         }
                     }
                 }
+            }
         }
         else if (getSuperstep() % 4 == 0){
             //update neighber

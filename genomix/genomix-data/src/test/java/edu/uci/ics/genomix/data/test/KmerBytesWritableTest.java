@@ -228,6 +228,15 @@ public class KmerBytesWritableTest {
         merge.set(kmer1);
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAACAACCC", merge.toString());
+        
+        String test1 = "CTA";
+        String test2 = "AGA";
+        KmerBytesWritable k1 = new KmerBytesWritable(3);
+        KmerBytesWritable k2 = new KmerBytesWritable(3);
+        k1.setByRead(test1.getBytes(), 0);
+        k2.setByRead(test2.getBytes(), 0);
+        k1.mergeWithRFKmer(3, k2);
+        Assert.assertEquals("CTAT", k1);
     }
     
     

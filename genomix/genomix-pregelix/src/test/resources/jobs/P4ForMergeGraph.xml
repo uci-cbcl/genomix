@@ -58,7 +58,7 @@
 <property><name>mapred.job.tracker.persist.jobstatus.hours</name><value>0</value></property>
 <property><name>fs.s3.sleepTimeSeconds</name><value>10</value></property>
 <property><name>fs.default.name</name><value>file:///</value></property>
-<property><name>mapred.output.key.class</name><value>edu.uci.ics.genomix.oldtype.PositionWritable</value></property>
+<property><name>mapred.output.key.class</name><value>edu.uci.ics.genomix.type.KmerBytesWritable</value></property>
 <property><name>tasktracker.http.threads</name><value>40</value></property>
 <property><name>mapred.tasktracker.taskmemorymanager.monitoring-interval</name><value>5000</value></property>
 <property><name>hadoop.rpc.socket.factory.class.default</name><value>org.apache.hadoop.net.StandardSocketFactory</value></property>

@@ -12,7 +12,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -28,16 +27,14 @@ public class GenerateTextFile {
         File srcPath = new File(strSrcDir);
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            //NodeWritable key = new NodeWritable(kmerSize);
-            //NullWritable value = NullWritable.get();
-            PositionWritable key = new PositionWritable();
+            KmerBytesWritable key = new KmerBytesWritable();
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
                 if (key == null) {
                     break;
                 }
-                bw.write(key.toString() + value.toString());
+                bw.write(key.toString() + "\t" + value.toString());
                 System.out.println(key.toString());
                 bw.newLine();
             }

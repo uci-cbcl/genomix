@@ -284,15 +284,19 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
                 this.getFFList().remove(nodeToDelete); //set(null);
+                this.getKmer().mergeWithFFKmer(kmerSize, kmer);
                 break;
             case MessageFlag.DIR_FR:
                 this.getFRList().remove(nodeToDelete);
+                this.getKmer().mergeWithFRKmer(kmerSize, kmer);
                 break;
             case MessageFlag.DIR_RF:
                 this.getRFList().remove(nodeToDelete);
+                this.getKmer().mergeWithRFKmer(kmerSize, kmer);
                 break;
             case MessageFlag.DIR_RR:
                 this.getRRList().remove(nodeToDelete);
+                this.getKmer().mergeWithRRKmer(kmerSize, kmer);
                 break;
         }
         // TODO: remove switch below and replace with general direction merge
@@ -300,19 +304,15 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         
         switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
-                this.getKmer().mergeWithFFKmer(kmerSize, kmer);
                 this.getFFList().append(nodeToAdd);
                 break;
             case MessageFlag.DIR_FR:
-                this.getKmer().mergeWithFRKmer(kmerSize, kmer);
                 this.getFRList().append(nodeToAdd);
                 break;
             case MessageFlag.DIR_RF:
-                this.getKmer().mergeWithRFKmer(kmerSize, kmer);
                 this.getRFList().append(nodeToAdd);
                 break;
             case MessageFlag.DIR_RR:
-                this.getKmer().mergeWithRRKmer(kmerSize, kmer);
                 this.getRRList().append(nodeToAdd);
                 break;
         }
