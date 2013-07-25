@@ -13,13 +13,10 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.contrail.graph;
+package edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators;
 
 import java.io.DataOutput;
 import java.io.IOException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -32,18 +29,35 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
+public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFactory {
+
+    /**
+     * 
+     */
     private static final long serialVersionUID = 1L;
-    private static final Log LOG = LogFactory.getLog(MergeKmerAggregateFactory.class);
 
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
-        final int frameSize = ctx.getFrameSize();
         return new IAggregatorDescriptor() {
-
             private PositionReference position = new PositionReference();
+
+            protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
+                int tupleOffset = accessor.getTupleStartOffset(tIndex);
+                int fieldStart = accessor.getFieldStartOffset(tIndex, fieldId);
+                int offset = tupleOffset + fieldStart + accessor.getFieldSlotsLength();
+                return offset;
+            }
+
+            @Override
+            public void reset() {
+            }
+
+            @Override
+            public void close() {
+
+            }
 
             @Override
             public AggregateState createAggregateStates() {
@@ -55,31 +69,19 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                     AggregateState state) throws HyracksDataException {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 inputVal.reset();
-                int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
-                for (int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex,
-                        1); offset += PositionReference.LENGTH) {
-                    position.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
-                    inputVal.append(position);
-                }
-                //make a fake feild to cheat caller
+                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                inputVal.append(position);
+
+                // make an empty field
                 tupleBuilder.addFieldEndOffset();
-            }
-
-            @Override
-            public void reset() {
-
             }
 
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
-                int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
-                for (int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex,
-                        1); offset += PositionReference.LENGTH) {
-                    position.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
-                    inputVal.append(position);
-                }
+                position.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                inputVal.append(position);
             }
 
             @Override
@@ -94,23 +96,15 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 try {
-                    if (inputVal.getLength() > frameSize / 2) {
-                        LOG.warn("MergeKmer: output data kmerByteSize is too big: " + inputVal.getLength());
-                    }
                     fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
-                    tupleBuilder.addFieldEndOffset();
 
+                    tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
             }
 
-            @Override
-            public void close() {
-
-            }
-
         };
-
     }
+
 }
