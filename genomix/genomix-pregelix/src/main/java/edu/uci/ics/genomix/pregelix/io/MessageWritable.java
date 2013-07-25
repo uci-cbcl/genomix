@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -17,16 +16,17 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
      * stores neighber vertexValue when pathVertex sends the message
      * file stores the point to the file that stores the chains of connected DNA
      */
-    private PositionWritable sourceVertexId;
+    private KmerBytesWritable sourceVertexId;
     private KmerBytesWritable kmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private byte flag;
     private boolean isFlip;
+    private int kmerlength = 0;
 
     private byte checkMessage;
 
     public MessageWritable() {
-        sourceVertexId = new PositionWritable();
+        sourceVertexId = new KmerBytesWritable();
         kmer = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
         flag = Message.NON;
@@ -34,7 +34,18 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         checkMessage = (byte) 0;
     }
     
+    public MessageWritable(int kmerSize) {
+        kmerlength = kmerSize;
+        sourceVertexId = new KmerBytesWritable();
+        kmer = new KmerBytesWritable(0);
+        neighberNode = new AdjacencyListWritable(kmerSize);
+        flag = Message.NON;
+        isFlip = false;
+        checkMessage = (byte) 0;
+    }
+    
     public void set(MessageWritable msg) {
+        this.kmerlength = msg.kmerlength;
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
@@ -52,11 +63,12 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         this.flag = msg.getFlag();
     }
 
-    public void set(PositionWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
+    public void set(int kmerlength, KmerBytesWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
+        this.kmerlength = kmerlength;
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId.getReadID(),sourceVertexId.getPosInRead());
+            this.sourceVertexId.set(sourceVertexId);
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
@@ -75,15 +87,22 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         neighberNode.reset();
         flag = Message.NON;
     }
+    
+    public void reset(int kmerSize) {
+        checkMessage = 0;
+        kmer.reset(1);
+        neighberNode.reset(kmerSize);
+        flag = Message.NON;
+    }
 
-    public PositionWritable getSourceVertexId() {
+    public KmerBytesWritable getSourceVertexId() {
         return sourceVertexId;
     }
 
-    public void setSourceVertexId(PositionWritable sourceVertexId) {
+    public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId.getReadID(),sourceVertexId.getPosInRead());
+            this.sourceVertexId.set(sourceVertexId);
         }
     }
     
@@ -131,6 +150,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
 
     @Override
     public void write(DataOutput out) throws IOException {
+        out.writeInt(kmerlength);
         out.writeByte(checkMessage);
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.write(out);
@@ -139,12 +159,13 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
         out.writeBoolean(isFlip);
-        out.write(flag);
+        out.writeByte(flag); 
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        this.reset();
+        kmerlength = in.readInt();
+        this.reset(kmerlength);
         checkMessage = in.readByte();
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.readFields(in);

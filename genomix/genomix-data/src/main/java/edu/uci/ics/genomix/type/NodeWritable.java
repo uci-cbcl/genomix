@@ -10,11 +10,6 @@ import org.apache.hadoop.io.WritableComparable;
 
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable{
 
-//    public static class KMER{
-//        public static final byte EXIST = 0;
-//        public static final byte NON_EXIST = 1;
-//    }
-    
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
     
@@ -24,7 +19,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private KmerListWritable reverseForwardList;
     private KmerListWritable reverseReverseList;
     private KmerBytesWritable kmer;
-//    private byte kmerMark;
+    private int kmerlength = 0;
     
     // merge/update directions
     public static class DirectionFlag {
@@ -39,14 +34,14 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this(0);
     }
     
-    public NodeWritable(int kmerSize) {
+    public NodeWritable(int kmerlenth) {
+        this.kmerlength = kmerlenth;
         nodeIdList = new PositionListWritable();
-        forwardForwardList = new KmerListWritable(kmerSize);
-        forwardReverseList = new KmerListWritable(kmerSize);
-        reverseForwardList = new KmerListWritable(kmerSize);
-        reverseReverseList = new KmerListWritable(kmerSize);
-        kmer = new KmerBytesWritable(kmerSize);
-//        kmerMark = KMER.NON_EXIST;
+        forwardForwardList = new KmerListWritable(kmerlenth);
+        forwardReverseList = new KmerListWritable(kmerlenth);
+        reverseForwardList = new KmerListWritable(kmerlenth);
+        reverseReverseList = new KmerListWritable(kmerlenth);
+        kmer = new KmerBytesWritable(); //in graph construction - not set kmerlength Optimization: VKmer
     }
     
     public NodeWritable(PositionListWritable nodeIdList, KmerListWritable FFList, KmerListWritable FRList,
@@ -56,6 +51,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public void set(NodeWritable node){
+        this.kmerlength = node.kmerlength;
         set(node.nodeIdList, node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
                 node.reverseReverseList, node.kmer);
     }
@@ -68,17 +64,16 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.reverseForwardList.set(RFList);
         this.reverseReverseList.set(RRList);
         this.kmer.set(kmer);
-//        kmerMark = KMER.EXIST;
     }
 
     public void reset(int kmerSize) {
-        nodeIdList.reset();
-        forwardForwardList.reset(kmerSize);
-        forwardReverseList.reset(kmerSize);
-        reverseForwardList.reset(kmerSize);
-        reverseReverseList.reset(kmerSize);
-        kmer.reset(kmerSize);
-//        kmerMark = KMER.NON_EXIST;
+        this.kmerlength = kmerSize;
+        this.nodeIdList.reset();
+        this.forwardForwardList.reset(kmerSize);
+        this.forwardReverseList.reset(kmerSize);
+        this.reverseForwardList.reset(kmerSize);
+        this.reverseReverseList.reset(kmerSize);
+        this.kmer.reset(0);
     }
     
     
@@ -95,10 +90,17 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void setKmer(KmerBytesWritable kmer) {
-//        kmerMark = KMER.EXIST;
         this.kmer.set(kmer);
     }
     
+    public int getKmerlength() {
+        return kmerlength;
+    }
+
+    public void setKmerlength(int kmerlength) {
+        this.kmerlength = kmerlength;
+    }
+
     public int getCount() {
         return kmer.getKmerLength();
     }
@@ -149,28 +151,28 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 throw new RuntimeException("Unrecognized direction in getListFromDir: " + dir);
         }
     }
+	
     @Override
     public void write(DataOutput out) throws IOException {
-//        out.writeByte(kmerMark);
-//        this.nodeIdList.write(out);
+        out.writeInt(kmerlength);
+        this.nodeIdList.write(out);
         this.forwardForwardList.write(out);
         this.forwardReverseList.write(out);
-//        this.reverseForwardList.write(out);
-//        this.reverseReverseList.write(out);
-//        if(kmerMark == KMER.EXIST) 
-//        this.kmer.write(out);
+        this.reverseForwardList.write(out);
+        this.reverseReverseList.write(out);
+        this.kmer.write(out);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-//        kmerMark = in.readByte();
-//        this.nodeIdList.readFields(in);
+        this.kmerlength = in.readInt();
+        reset(kmerlength);
+        this.nodeIdList.readFields(in);
         this.forwardForwardList.readFields(in);
         this.forwardReverseList.readFields(in);
-//        this.reverseForwardList.readFields(in);
-//        this.reverseReverseList.readFields(in);
-//        if(kmerMark == KMER.EXIST)
-//        this.kmer.readFields(in);
+        this.reverseForwardList.readFields(in);
+        this.reverseReverseList.readFields(in);
+        this.kmer.readFields(in);
     }
 
     @Override
@@ -199,13 +201,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append('(');
+        sbuilder.append('{');
         sbuilder.append(nodeIdList.toString()).append('\t');
         sbuilder.append(forwardForwardList.toString()).append('\t');
         sbuilder.append(forwardReverseList.toString()).append('\t');
         sbuilder.append(reverseForwardList.toString()).append('\t');
         sbuilder.append(reverseReverseList.toString()).append('\t');
-        sbuilder.append(kmer.toString()).append(')');
+        sbuilder.append(kmer.toString()).append('}');
         return sbuilder.toString();
     }
 

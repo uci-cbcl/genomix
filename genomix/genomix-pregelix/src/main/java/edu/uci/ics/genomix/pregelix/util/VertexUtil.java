@@ -117,7 +117,7 @@ public class VertexUtil {
     /**
      * get nodeId from Ad
      */
-    public static PositionWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
+    public static KmerBytesWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
         if(adj.getForwardList().getCountOfPosition() > 0)
             return adj.getForwardList().getPosition(0);
         else if(adj.getReverseList().getCountOfPosition() > 0)

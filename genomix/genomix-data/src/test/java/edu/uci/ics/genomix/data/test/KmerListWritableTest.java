@@ -30,7 +30,7 @@ public class KmerListWritableTest {
             Assert.assertEquals(1, kmerList.getCountOfPosition());
         }
         
-        kmerList.reset(kmer.getKmerLength());
+        kmerList.reset(0);
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
             kmer = new KmerBytesWritable(5);

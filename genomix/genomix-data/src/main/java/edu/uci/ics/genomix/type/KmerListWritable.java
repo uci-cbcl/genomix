@@ -56,11 +56,13 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
     
     public void append(KmerBytesWritable kmer){
-        kmerByteSize = kmer.kmerByteSize;
-        kmerlength = kmer.kmerlength;
-        setSize((1 + valueCount) * kmerByteSize); 
-        System.arraycopy(kmer.getBytes(), 0, storage, offset + valueCount * kmerByteSize, kmerByteSize);
-        valueCount += 1;
+        if(kmer != null){
+            kmerByteSize = kmer.kmerByteSize;
+            kmerlength = kmer.kmerlength;
+            setSize((1 + valueCount) * kmerByteSize); 
+            System.arraycopy(kmer.getBytes(), 0, storage, offset + valueCount * kmerByteSize, kmerByteSize);
+            valueCount += 1;
+        }
     }
     
     /*
@@ -96,6 +98,10 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
             storage = new_data;
             offset = 0;
         }
+    }
+    
+    public void reset() {
+        this.reset(0);
     }
     
     public void reset(int kmerSize) {
@@ -156,12 +162,32 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         };
         return it;
     }
+    
+    /*
+     * remove the first instance of @toRemove. Uses a linear scan.  Throws an exception if not in this list.
+     */
+    public void remove(KmerBytesWritable toRemove, boolean ignoreMissing) {
+        Iterator<KmerBytesWritable> posIterator = this.iterator();
+        while (posIterator.hasNext()) {
+            if(toRemove.equals(posIterator.next())) {
+                posIterator.remove();
+                return;
+            }
+        }
+        if (!ignoreMissing) {
+            throw new ArrayIndexOutOfBoundsException("the KmerBytesWritable `" + toRemove.toString() + "` was not found in this list.");
+        }
+    }
+    
+    public void remove(KmerBytesWritable toRemove) {
+        remove(toRemove, false);
+    }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         this.valueCount = in.readInt();
-        setSize(valueCount * kmerByteSize);
-        in.readFully(storage, offset, valueCount * kmerByteSize);
+        setSize(valueCount * kmerByteSize);//kmerByteSize
+        in.readFully(storage, offset, valueCount * kmerByteSize);//kmerByteSize
     }
 
     @Override

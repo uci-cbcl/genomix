@@ -22,13 +22,13 @@ public class GraphBuildingTest {
     private JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/test.txt";
+    private static final String DATA_PATH = "data/webmap/pathmerge_TestSet/9";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result";
     
 //    private static final int COUNT_REDUCER = 2;
-    private static final int SIZE_KMER = 5;
-    private static final int READ_LENGTH = 8;
+    private static final int SIZE_KMER = 3;
+    private static final int READ_LENGTH = 11;
     
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -45,7 +45,7 @@ public class GraphBuildingTest {
     
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
-        driver.run(HDFS_PATH, RESULT_PATH, 0, SIZE_KMER, READ_LENGTH, true, HADOOP_CONF_PATH);
+        driver.run(HDFS_PATH, RESULT_PATH, 1, SIZE_KMER, READ_LENGTH, true, HADOOP_CONF_PATH);
         dumpResult();
     }
     
@@ -77,6 +77,6 @@ public class GraphBuildingTest {
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR);
         dfs.copyToLocalFile(src, dest);
-        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, "test.txt", false, conf, true, dfs);
+        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, "actual/test.txt", false, conf, true, dfs);
     }
 }
