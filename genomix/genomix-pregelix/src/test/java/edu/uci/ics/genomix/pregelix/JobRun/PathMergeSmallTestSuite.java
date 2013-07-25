@@ -43,9 +43,9 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class PathMergeSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(PathMergeSmallTestSuite.class.getName());
 
-    public static final String PreFix = "data/actual"; //"graphbuildresult";
+    public static final String PreFix = "data/PathMergeTestSet"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "bubblemerge/BubbleMergeGraph/bin/small_bubble"};
+    + "8"};
     //+ "tipremove/TipRemoveGraph/bin/fr_with_tip"};
     //+ "graphs/pathmerge/singleread"};
     //+ "bridgeadd/BridgeAddGraph/bin/tworeads"};

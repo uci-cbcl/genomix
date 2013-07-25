@@ -17,6 +17,11 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
         forwardList = new KmerListWritable();
         reverseList = new KmerListWritable();
     }
+    
+    public AdjacencyListWritable(int kmerSize){
+        forwardList = new KmerListWritable(kmerSize);
+        reverseList = new KmerListWritable(kmerSize);
+    }
 
     public void set(AdjacencyListWritable adjacencyList){
         forwardList.set(adjacencyList.getForwardList());
@@ -26,6 +31,11 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     public void reset(){
         forwardList.reset();
         reverseList.reset();
+    }
+    
+    public void reset(int kmerSize){
+        forwardList.reset(kmerSize);
+        reverseList.reset(kmerSize);
     }
     
     public int getCountOfPosition(){

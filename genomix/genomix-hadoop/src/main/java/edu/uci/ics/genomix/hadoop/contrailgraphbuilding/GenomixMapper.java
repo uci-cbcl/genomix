@@ -226,7 +226,7 @@ public class GenomixMapper extends MapReduceBase implements
     public void setCurKmerByOldNextKmer(){
     	curKmerDir = nextKmerDir;
     	curForwardKmer.set(nextForwardKmer);
-    	preReverseKmer.set(nextReverseKmer);
+    	curReverseKmer.set(nextReverseKmer);
     }
     
     public void setMapperOutput(OutputCollector<KmerBytesWritable, NodeWritable> output) throws IOException{

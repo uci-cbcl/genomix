@@ -41,14 +41,20 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     private byte state;
     private KmerBytesWritable kmer;
     private KmerBytesWritable mergeDest;
+    private int kmerlength = 0;
 
     public VertexValueWritable() {
+        this(0);
+    }
+    
+    public VertexValueWritable(int kmerSize){
+        kmerlength = kmerSize;
         nodeIdList = new PositionListWritable();
         incomingList = new AdjacencyListWritable();
         outgoingList = new AdjacencyListWritable();
         state = State.IS_NON;
-        kmer = new KmerBytesWritable(0);
-        mergeDest = new KmerBytesWritable(0);
+        kmer = new KmerBytesWritable(kmerSize);
+        mergeDest = new KmerBytesWritable(kmerSize);
     }
 
     public VertexValueWritable(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
@@ -62,6 +68,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public void set(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
             KmerListWritable reverseForwardList, KmerListWritable reverseReverseList, 
             byte state, KmerBytesWritable kmer) {
+        this.kmerlength = kmer.kmerByteSize;
         this.incomingList.setForwardList(reverseForwardList);
         this.incomingList.setReverseList(reverseReverseList);
         this.outgoingList.setForwardList(forwardForwardList);
@@ -71,6 +78,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
     
     public void set(VertexValueWritable value) {
+        this.kmerlength = value.kmerlength;
         set(value.getNodeIdList(), value.getFFList(),value.getFRList(),value.getRFList(),value.getRRList(),value.getState(),
                 value.getKmer());
     }
@@ -159,25 +167,47 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public void setMergeDest(KmerBytesWritable mergeDest) {
         this.mergeDest = mergeDest;
     }
+    
+    
+    public int getKmerlength() {
+        return kmerlength;
+    }
 
+    public void setKmerlength(int kmerlength) {
+        this.kmerlength = kmerlength;
+    }
+
+    public void reset(int kmerSize) {
+        this.kmerlength = kmerSize;
+        this.nodeIdList.reset();
+        this.incomingList.getForwardList().reset(kmerSize);
+        this.incomingList.getReverseList().reset(kmerSize);
+        this.outgoingList.getForwardList().reset(kmerSize);
+        this.outgoingList.getReverseList().reset(kmerSize);
+        this.kmer.reset(0);
+    }
+    
     @Override
     public void readFields(DataInput in) throws IOException {
-        nodeIdList.readFields(in);
-        incomingList.readFields(in);
-        outgoingList.readFields(in);
-        state = in.readByte();
-        kmer.readFields(in);
-        mergeDest.readFields(in);
+        this.kmerlength = in.readInt();
+        this.reset(kmerlength);
+        this.nodeIdList.readFields(in);
+        this.incomingList.readFields(in);
+        this.outgoingList.readFields(in);
+        this.state = in.readByte();
+        this.kmer.readFields(in);
+        this.mergeDest.readFields(in);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-        nodeIdList.write(out);
-        incomingList.write(out);
-        outgoingList.write(out);
-        out.writeByte(state);
-        kmer.write(out);
-        mergeDest.write(out);
+        out.writeInt(this.kmerlength);
+        this.nodeIdList.write(out);
+        this.incomingList.write(out);
+        this.outgoingList.write(out);
+        out.writeByte(this.state);
+        this.kmer.write(out);
+        this.mergeDest.write(out);
     }
 
     @Override

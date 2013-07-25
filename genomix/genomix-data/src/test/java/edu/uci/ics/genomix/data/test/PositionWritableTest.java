@@ -1,4 +1,5 @@
 package edu.uci.ics.genomix.data.test;
+
 import java.util.Random;
 
 import junit.framework.Assert;

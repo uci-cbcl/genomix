@@ -25,8 +25,8 @@ public class BasicPathMergeVertex extends
     public static int kmerSize = -1;
     protected int maxIteration = -1;
     
-    protected MessageWritable incomingMsg = new MessageWritable();
-    protected MessageWritable outgoingMsg = new MessageWritable();
+    protected MessageWritable incomingMsg = null; // = new MessageWritable();
+    protected MessageWritable outgoingMsg = null; // = new MessageWritable();
     protected KmerBytesWritable destVertexId = new KmerBytesWritable();
     protected Iterator<KmerBytesWritable> posIterator;
     private KmerBytesWritable kmer = new KmerBytesWritable();
@@ -315,10 +315,10 @@ public class BasicPathMergeVertex extends
      * @throws IOException 
      */
     public void broadcastUpdateMsg(){
-        if((getVertexValue().getState() & MessageFlag.IS_HEAD) > 0)
+        if((getVertexValue().getState() & State.IS_HEAD) > 0)
             outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & MessageFlag.SHOULD_MERGE_MASK){
-            case MessageFlag.SHOULD_MERGEWITHPREV:
+        switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK){
+            case State.SHOULD_MERGEWITHPREV:
                 setSuccessorAdjMsg();
                 if(ifFlipWithPredecessor())
                     outgoingMsg.setFlip(true);
@@ -328,7 +328,7 @@ public class BasicPathMergeVertex extends
                 if(getNextDestVertexId(getVertexValue()) != null)
                     sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
                 break;
-            case MessageFlag.SHOULD_MERGEWITHNEXT:
+            case State.SHOULD_MERGEWITHNEXT:
                 setPredecessorAdjMsg();
                 if(ifFilpWithSuccessor())
                     outgoingMsg.setFlip(true);
@@ -424,20 +424,13 @@ public class BasicPathMergeVertex extends
         getVertexValue().setState(state);
     }
     
-//    public byte isHeadShouldMergeWithPrev(){
-//    	return (byte) (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHPREV);
-//    }
     /**
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
     public void sendUpdateMsgToPredecessor(){
-    	setStateAsMergeWithNext();
     	if(hasNextDest(getVertexValue())){
-//		    if(getVertexValue().getFFList().getLength() > 0)
-//		        getVertexValue().setMergeDest(getVertexValue().getFFList().getPosition(0));
-//		    else
-//		        getVertexValue().setMergeDest(getVertexValue().getFRList().getPosition(0));
+    	    setStateAsMergeWithNext();
 		    broadcastUpdateMsg();
     	}
     }
@@ -448,20 +441,13 @@ public class BasicPathMergeVertex extends
         getVertexValue().setState(state);
     }
     
-//    public byte isHeadShouldMergeWithNext(){
-//    	return (byte) (getVertexValue().getState() & State.HEAD_SHOULD_MERGEWITHNEXT);
-//    }
     /**
      * This vertex tries to merge with next vertex and send update msg to neighber
      * @throws IOException 
      */
     public void sendUpdateMsgToSuccessor(){
-    	setStateAsMergeWithPrev();
-    	if(hasNextDest(getVertexValue())){
-//		    if(getVertexValue().getRFList().getLength() > 0)
-//		        getVertexValue().setMergeDest(getVertexValue().getRFList().getPosition(0));
-//		    else
-//		        getVertexValue().setMergeDest(getVertexValue().getRRList().getPosition(0));
+    	if(hasPrevDest(getVertexValue())){
+    	    setStateAsMergeWithPrev();
 		    broadcastUpdateMsg();
     	}
     }

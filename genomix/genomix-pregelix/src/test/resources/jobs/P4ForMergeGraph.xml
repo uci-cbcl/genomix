@@ -58,7 +58,7 @@
 <property><name>mapred.job.tracker.persist.jobstatus.hours</name><value>0</value></property>
 <property><name>fs.s3.sleepTimeSeconds</name><value>10</value></property>
 <property><name>fs.default.name</name><value>file:///</value></property>
-<property><name>mapred.output.key.class</name><value>edu.uci.ics.genomix.type.PositionWritable</value></property>
+<property><name>mapred.output.key.class</name><value>edu.uci.ics.genomix.oldtype.PositionWritable</value></property>
 <property><name>tasktracker.http.threads</name><value>40</value></property>
 <property><name>mapred.tasktracker.taskmemorymanager.monitoring-interval</name><value>5000</value></property>
 <property><name>hadoop.rpc.socket.factory.class.default</name><value>org.apache.hadoop.net.StandardSocketFactory</value></property>
@@ -96,7 +96,7 @@
 <property><name>io.sort.mb</name><value>100</value></property>
 <property><name>mapred.local.dir</name><value>${hadoop.tmp.dir}/mapred/local</value></property>
 <property><name>io.sort.factor</name><value>10</value></property>
-<property><name>BasicPathMergeVertex.kmerSize</name><value>5</value></property>
+<property><name>BasicPathMergeVertex.kmerSize</name><value>3</value></property>
 <property><name>mapred.task.profile</name><value>false</value></property>
 <property><name>job.end.retry.interval</name><value>30000</value></property>
 <property><name>mapred.tasktracker.procfsbasedprocesstree.sleeptime-before-sigkill</name><value>5000</value></property>
@@ -117,12 +117,12 @@
 <property><name>mapred.line.input.format.linespermap</name><value>1</value></property>
 <property><name>job.end.retry.attempts</name><value>0</value></property>
 <property><name>ipc.client.idlethreshold</name><value>4000</value></property>
-<property><name>pregelix.vertexOutputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat</value></property>
+<property><name>pregelix.vertexOutputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat</value></property>
 <property><name>mapred.reduce.copy.backoff</name><value>300</value></property>
 <property><name>mapred.map.tasks.speculative.execution</name><value>true</value></property>
 <property><name>mapred.inmem.merge.threshold</name><value>1000</value></property>
 <property><name>hadoop.logfile.size</name><value>10000000</value></property>
-<property><name>pregelix.vertexInputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat</value></property>
+<property><name>pregelix.vertexInputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat</value></property>
 <property><name>mapred.job.queue.name</name><value>default</value></property>
 <property><name>mapred.job.tracker.persist.jobstatus.active</name><value>false</value></property>
 <property><name>pregelix.incStateLength</name><value>true</value></property>

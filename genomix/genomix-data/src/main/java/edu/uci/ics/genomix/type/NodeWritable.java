@@ -51,6 +51,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public void set(NodeWritable node){
+        this.kmerlength = node.kmerlength;
         set(node.nodeIdList, node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
                 node.reverseReverseList, node.kmer);
     }
@@ -92,6 +93,14 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.kmer.set(kmer);
     }
     
+    public int getKmerlength() {
+        return kmerlength;
+    }
+
+    public void setKmerlength(int kmerlength) {
+        this.kmerlength = kmerlength;
+    }
+
     public int getCount() {
         return kmer.getKmerLength();
     }

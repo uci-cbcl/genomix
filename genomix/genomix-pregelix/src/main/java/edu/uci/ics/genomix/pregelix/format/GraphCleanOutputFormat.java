@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
-public class DataCleanOutputFormat extends
+public class GraphCleanOutputFormat extends
     BinaryDataCleanVertexOutputFormat<KmerBytesWritable, VertexValueWritable, NullWritable> {
 
     @Override

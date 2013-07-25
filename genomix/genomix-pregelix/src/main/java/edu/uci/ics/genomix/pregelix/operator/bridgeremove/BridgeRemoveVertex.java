@@ -6,8 +6,8 @@ import java.util.Iterator;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.DataCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.DataCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicPathMergeVertex;
@@ -167,8 +167,8 @@ public class BridgeRemoveVertex extends
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(DataCleanInputFormat.class);
-        job.setVertexOutputFormatClass(DataCleanOutputFormat.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);

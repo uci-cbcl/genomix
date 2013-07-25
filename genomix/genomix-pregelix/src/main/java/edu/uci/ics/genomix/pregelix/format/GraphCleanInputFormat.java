@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryDataCleanVertexInputForm
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryDataCleanVertexInputFormat.BinaryDataCleanVertexReader;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
-public class DataCleanInputFormat extends
+public class GraphCleanInputFormat extends
     BinaryDataCleanVertexInputFormat<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
