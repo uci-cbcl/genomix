@@ -6,12 +6,13 @@ import java.util.Iterator;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeInputFormat;
-import edu.uci.ics.genomix.pregelix.format.LogAlgorithmForPathMergeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFromHead;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 /*
  * vertexId: BytesWritable
  * vertexValue: VertexValueWritable
@@ -44,7 +45,7 @@ public class LogAlgorithmForPathMergeVertex extends
     BasicPathMergeVertex {
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
-    PositionWritable tempPostition = new PositionWritable();
+    KmerBytesWritable tempPostition = new KmerBytesWritable();
 
     /**
      * initiate kmerSize, maxIteration
@@ -207,8 +208,8 @@ public class LogAlgorithmForPathMergeVertex extends
         /**
          * BinaryInput and BinaryOutput~/
          */
-        job.setVertexInputFormatClass(LogAlgorithmForPathMergeInputFormat.class);
-        job.setVertexOutputFormatClass(LogAlgorithmForPathMergeOutputFormat.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setOutputKeyClass(PositionWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.setDynamicVertexValueSize(true);

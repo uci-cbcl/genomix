@@ -236,7 +236,7 @@ public class KmerBytesWritableTest {
         k1.setByRead(test1.getBytes(), 0);
         k2.setByRead(test2.getBytes(), 0);
         k1.mergeWithRFKmer(3, k2);
-        Assert.assertEquals("CTAT", k1);
+        Assert.assertEquals("TCTA", k1.toString());
     }
     
     
