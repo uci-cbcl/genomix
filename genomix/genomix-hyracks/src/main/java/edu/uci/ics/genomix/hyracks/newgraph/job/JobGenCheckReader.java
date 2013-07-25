@@ -20,8 +20,8 @@ import java.util.Map;
 
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
+import edu.uci.ics.genomix.oldtype.IntermediateNodeWritable;
 import edu.uci.ics.genomix.oldtype.PositionWritable;
-import edu.uci.ics.genomix.type.IntermediateNodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;

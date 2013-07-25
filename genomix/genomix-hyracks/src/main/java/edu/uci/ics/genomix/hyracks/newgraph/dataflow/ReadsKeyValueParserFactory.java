@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import edu.uci.ics.genomix.type.IntermediateNodeWritable;
+import edu.uci.ics.genomix.oldtype.IntermediateNodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;

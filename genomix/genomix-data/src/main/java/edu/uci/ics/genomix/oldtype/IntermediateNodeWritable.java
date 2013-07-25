@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.type;
+package edu.uci.ics.genomix.oldtype;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.apache.hadoop.io.WritableComparable;
+
+import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 
 public class IntermediateNodeWritable implements WritableComparable<IntermediateNodeWritable>, Serializable{
 

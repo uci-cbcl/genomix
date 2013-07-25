@@ -308,12 +308,27 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     
                     tupleBuilder.addField(Node.getreadId().getByteArray(), Node.getreadId().getStartOffset(), Node.getreadId().getLength());
                     
+                    tupleBuilder.getDataOutput().writeInt(Node.getFFList().getCountOfPosition());
+                    tupleBuilder.addFieldEndOffset();
+                    
                     tupleBuilder.addField(Node.getFFList().getByteArray(), Node.getFFList().getStartOffset(), Node.getFFList()
                             .getLength());
+                    
+                    tupleBuilder.getDataOutput().writeInt(Node.getFRList().getCountOfPosition());
+                    tupleBuilder.addFieldEndOffset();
+                    
                     tupleBuilder.addField(Node.getFRList().getByteArray(), Node.getFRList().getStartOffset(), Node.getFRList()
                             .getLength());
+                    
+                    tupleBuilder.getDataOutput().writeInt(Node.getRFList().getCountOfPosition());
+                    tupleBuilder.addFieldEndOffset();
+                    
                     tupleBuilder.addField(Node.getRFList().getByteArray(), Node.getRFList().getStartOffset(), Node.getRFList()
                             .getLength());
+                    
+                    tupleBuilder.getDataOutput().writeInt(Node.getRRList().getCountOfPosition());
+                    tupleBuilder.addFieldEndOffset();
+                    
                     tupleBuilder.addField(Node.getRRList().getByteArray(), Node.getRRList().getStartOffset(), Node.getRRList()
                             .getLength());
 

@@ -211,13 +211,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append('(');
+        sbuilder.append('{');
         sbuilder.append(nodeID.toString()).append('\t');
         sbuilder.append(forwardForwardList.toString()).append('\t');
         sbuilder.append(forwardReverseList.toString()).append('\t');
         sbuilder.append(reverseForwardList.toString()).append('\t');
         sbuilder.append(reverseReverseList.toString()).append('\t');
-        sbuilder.append(kmer.toString()).append(')');
+        sbuilder.append(kmer.toString()).append('}');
         return sbuilder.toString();
     }
 

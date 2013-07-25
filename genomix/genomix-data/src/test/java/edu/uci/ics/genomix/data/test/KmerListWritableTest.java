@@ -24,13 +24,13 @@ public class KmerListWritableTest {
             String randomString = generateString(i);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
-            kmerList.reset();
+            kmerList.reset(kmer.getKmerLength());
             kmerList.append(kmer);
             Assert.assertEquals(kmerList.getPosition(0).toString(), randomString);
             Assert.assertEquals(1, kmerList.getCountOfPosition());
         }
         
-        kmerList.reset();
+        kmerList.reset(kmer.getKmerLength());
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
             kmer = new KmerBytesWritable(5);

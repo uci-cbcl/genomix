@@ -39,13 +39,6 @@ public class BasicPathMergeVertex extends
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
-//        if (kmerSize == -1)
-//            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
-//        if (maxIteration < 0)
-//            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
-//        outFlag = (byte)0;
-//        outgoingMsg.reset();
-//        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
     /**

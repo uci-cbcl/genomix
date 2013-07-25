@@ -69,12 +69,19 @@ public class HadoopMiniClusterTest {
             Configuration conf) throws IOException {
     	copyResultsToLocal(hdfsSrcDir, localDestFile, resultsAreText, conf, true);
     }
+    
+    public static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
+            Configuration conf, boolean ignoreZeroOutputs) throws IOException {
+        copyResultsToLocal(hdfsSrcDir, localDestFile, resultsAreText,
+                conf, ignoreZeroOutputs, dfs);
+    }
+    
     /*
      * Merge and copy a DFS directory to a local destination, converting to text if necessary. 
      * Also locally store the binary-formatted result if available.
      */
-    protected static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
-            Configuration conf, boolean ignoreZeroOutputs) throws IOException {
+    public static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
+            Configuration conf, boolean ignoreZeroOutputs, FileSystem dfs) throws IOException {
         if (resultsAreText) {
             // for text files, just concatenate them together
             FileUtil.copyMerge(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),

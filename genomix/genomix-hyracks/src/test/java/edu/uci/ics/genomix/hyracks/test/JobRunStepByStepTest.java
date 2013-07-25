@@ -75,8 +75,8 @@ public class JobRunStepByStepTest {
 
     @Test
     public void TestAll() throws Exception {
-        TestReader();
-//        TestGroupbyKmer();
+//        TestReader();
+        TestGroupbyKmer();
 //        TestMapKmerToRead();
 //        TestGroupByReadID();
 //        TestEndToEnd();
