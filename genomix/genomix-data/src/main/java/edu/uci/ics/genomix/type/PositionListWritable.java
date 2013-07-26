@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -73,6 +74,27 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
                     storage, offset + valueCount * PositionWritable.LENGTH, 
                     otherList.valueCount * PositionWritable.LENGTH);
             valueCount += otherList.valueCount;
+        }
+    }
+    
+    /**
+     * Save the union of my list and otherList. Uses a temporary HashSet for
+     * uniquefication
+     */
+    public void unionUpdate(PositionListWritable otherList) {
+        int newSize = valueCount + otherList.valueCount;
+        HashSet<PositionWritable> uniqueElements = new HashSet<PositionWritable>(
+                newSize);
+        for (PositionWritable pos : this) {
+            uniqueElements.add(pos);
+        }
+        for (PositionWritable pos : otherList) {
+            uniqueElements.add(pos);
+        }
+        valueCount = 0;
+        setSize(newSize);
+        for (PositionWritable pos : uniqueElements) {
+            append(pos);
         }
     }
     
