@@ -672,7 +672,6 @@ public class BasicPathMergeVertex extends
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
                 kmer.reset(index + 1);
                 kmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
-                System.out.println(kmer.toString());
                 break;
         }
        

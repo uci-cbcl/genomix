@@ -143,6 +143,7 @@ public class LogAlgorithmForPathMergeVertex extends
                 getVertexValue().setState(State.IS_FINAL);
             }else{
                 sendUpdateMsg();
+                outFlag = 0;
                 sendMergeMsg();
             }
         }
@@ -177,7 +178,7 @@ public class LogAlgorithmForPathMergeVertex extends
                 case MessageFromHead.OneMsgFromHeadAndOneFromNonHead:
                     for(int i = 0; i < 2; i++)
                         processFinalMerge(receivedMsgList.get(i));
-                    getVertexValue().setState(State .IS_HEAD);
+                    setHeadState();
                     break;
                 case MessageFromHead.BothMsgsFromNonHead:
                     for(int i = 0; i < 2; i++)
@@ -216,6 +217,7 @@ public class LogAlgorithmForPathMergeVertex extends
                 voteToHalt();
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
             processMergeInHeadVertex(msgIterator);
+            System.out.print("");
         }else
             voteToHalt();
     }

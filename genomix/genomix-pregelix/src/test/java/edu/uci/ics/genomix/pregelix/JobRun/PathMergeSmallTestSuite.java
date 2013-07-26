@@ -45,13 +45,13 @@ public class PathMergeSmallTestSuite extends TestSuite {
 
     public static final String PreFix = "data/PathMergeTestSet"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-//    + "2", PreFix + File.separator
-//    + "3", PreFix + File.separator
-//    + "4", PreFix + File.separator
-//    + "5", PreFix + File.separator
-//    + "6", PreFix + File.separator
-//    + "7", PreFix + File.separator
-//    + "8", PreFix + File.separator
+    + "2", PreFix + File.separator
+    + "3", PreFix + File.separator
+    + "4", PreFix + File.separator
+    + "5", PreFix + File.separator
+    + "6", PreFix + File.separator
+    + "7", PreFix + File.separator
+    + "8", PreFix + File.separator
     + "9"};
     private static final String ACTUAL_RESULT_DIR = "data/actual/pathmerge";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
