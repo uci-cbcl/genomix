@@ -52,7 +52,7 @@ public class PathMergeSmallTestSuite extends TestSuite {
 //    + "6", PreFix + File.separator
 //    + "7", PreFix + File.separator
 //    + "8", PreFix + File.separator
-    + "4"};
+    + "9"};
     private static final String ACTUAL_RESULT_DIR = "data/actual/pathmerge";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

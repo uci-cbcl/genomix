@@ -467,7 +467,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
                 posnInByte = 0;
             }
         }
-        bytes[offset] = cacheByte;
+        if(posnInByte > 0)
+            bytes[offset] = cacheByte;
         clearLeadBit();
     }
 

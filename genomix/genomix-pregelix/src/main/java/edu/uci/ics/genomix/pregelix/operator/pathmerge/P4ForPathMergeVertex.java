@@ -78,8 +78,8 @@ public class P4ForPathMergeVertex extends
             incomingMsg = new MessageWritable(kmerSize);
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable(kmerSize);
-        //if (randSeed < 0)
-        //    randSeed = getContext().getConfiguration().getLong("randomSeed", 0);
+        else
+            outgoingMsg.reset(kmerSize);
         randSeed = getSuperstep();
         randGenerator = new Random(randSeed);
         if (probBeingRandomHead < 0)

@@ -22,6 +22,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private byte flag;
     private boolean isFlip;
     private int kmerlength = 0;
+    private boolean updateMsg = false;
 
     private byte checkMessage;
 
@@ -61,6 +62,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
         checkMessage |= CheckMessage.ADJMSG;
         this.flag = msg.getFlag();
+        updateMsg = msg.isUpdateMsg();
     }
 
     public void set(int kmerlength, KmerBytesWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
@@ -82,17 +84,16 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     }
 
     public void reset() {
-        checkMessage = 0;
-        kmer.reset(1);
-        neighberNode.reset();
-        flag = Message.NON;
+        reset(0);
     }
     
     public void reset(int kmerSize) {
-        checkMessage = 0;
+        checkMessage = (byte) 0;
+        kmerlength = kmerSize;
         kmer.reset(1);
         neighberNode.reset(kmerSize);
         flag = Message.NON;
+        isFlip = false;
     }
 
     public KmerBytesWritable getSourceVertexId() {
@@ -148,6 +149,15 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         this.isFlip = isFlip;
     }
 
+    
+    public boolean isUpdateMsg() {
+        return updateMsg;
+    }
+
+    public void setUpdateMsg(boolean updateMsg) {
+        this.updateMsg = updateMsg;
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(kmerlength);
@@ -160,6 +170,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             neighberNode.write(out);
         out.writeBoolean(isFlip);
         out.writeByte(flag); 
+        out.writeBoolean(updateMsg);
     }
 
     @Override
@@ -175,6 +186,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             neighberNode.readFields(in);
         isFlip = in.readBoolean();
         flag = in.readByte();
+        updateMsg = in.readBoolean();
     }
 
     @Override

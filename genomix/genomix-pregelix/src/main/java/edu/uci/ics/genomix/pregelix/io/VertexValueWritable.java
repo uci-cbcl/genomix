@@ -32,7 +32,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
         public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
         public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
-        public static final byte SHOULD_MERGE_CLEAR = 0b1110011;
+        public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
     }
     
     private PositionListWritable nodeIdList;
@@ -234,6 +234,26 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     
     public int outDegree(){
         return outgoingList.getForwardList().getCountOfPosition() + outgoingList.getReverseList().getCountOfPosition();
+    }
+    
+    /*
+     * Delete the corresponding edge
+     */
+    public void processDelete(byte neighborToDeleteDir, KmerBytesWritable nodeToDelete){
+        switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
+            case MessageFlag.DIR_FF:
+                this.getFFList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_FR:
+                this.getFRList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RF:
+                this.getRFList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RR:
+                this.getRRList().remove(nodeToDelete);
+                break;
+        }
     }
     
     /*
