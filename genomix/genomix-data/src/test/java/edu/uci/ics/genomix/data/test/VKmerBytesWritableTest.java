@@ -20,6 +20,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.type.GeneCode;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class VKmerBytesWritableTest {
@@ -318,6 +319,91 @@ public class VKmerBytesWritableTest {
 		k1.mergeWithRFKmer(5, k2);
 		Assert.assertEquals("CTAGAT", k1.toString());
 		k1.mergeWithRRKmer(5, k3);
+		Assert.assertEquals("GCTAGAT", k1.toString());
+	}
+	
+	@Test
+	public void TestMergeRFAndRFKmer() {
+		String test1 = "TAGAT";
+		String test2 = "TCTAG"; // rc = CTAGA
+		String test3 = "CTAGC"; // rc = GCTAG
+		VKmerBytesWritable k1 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k2 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k3 = new VKmerBytesWritable(5);
+		k1.setByRead(test1.getBytes(), 0);
+		k2.setByRead(test2.getBytes(), 0);
+		k3.setByRead(test3.getBytes(), 0);
+		k1.mergeWithRFKmer(5, k2);
+		Assert.assertEquals("CTAGAT", k1.toString());
+		k1.mergeWithRFKmer(5, k3);
+		Assert.assertEquals("GCTAGAT", k1.toString());
+	}
+	
+	@Test
+	public void TestMergeRFAndFRKmer() {
+		String test1 = "TAGAT"; // rc = ATCTA
+		String test2 = "TCTAG"; // rc = CTAGA
+		String test3 = "GCTAG"; // rc = CTAGC
+		VKmerBytesWritable k1 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k2 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k3 = new VKmerBytesWritable(5);
+		k1.setByRead(test1.getBytes(), 0);
+		k2.setByRead(test2.getBytes(), 0);
+		k3.setByRead(test3.getBytes(), 0);
+		k2.mergeWithRFKmer(5, k1);
+		Assert.assertEquals("ATCTAG", k2.toString());
+		k2.mergeWithFRKmer(5, k3);
+		Assert.assertEquals("ATCTAGC", k2.toString());
+	}
+	
+	@Test
+	public void TestMergeRFAndFFKmer() {
+		String test1 = "TAGAT"; // rc = ATCTA
+		String test2 = "TCTAG"; // rc = CTAGA
+		String test3 = "CTAGC"; // rc = GCTAG
+		VKmerBytesWritable k1 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k2 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k3 = new VKmerBytesWritable(5);
+		k1.setByRead(test1.getBytes(), 0);
+		k2.setByRead(test2.getBytes(), 0);
+		k3.setByRead(test3.getBytes(), 0);
+		k2.mergeWithRFKmer(5, k1);
+		Assert.assertEquals("ATCTAG", k2.toString());
+		k2.mergeWithFFKmer(5, k3);
+		Assert.assertEquals("ATCTAGC", k2.toString());
+	}
+	
+	@Test
+	public void TestMergeKmerAndVKmer() {
+		String test1 = "TAGAT"; // rc = ATCTA
+		String test2 = "TCTAG"; // rc = CTAGA
+		String test3 = "CTAGC"; // rc = GCTAG
+		KmerBytesWritable k1 = new KmerBytesWritable(5);
+		VKmerBytesWritable k2 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k3 = new VKmerBytesWritable(5);
+		k1.setByRead(test1.getBytes(), 0);
+		k2.setByRead(test2.getBytes(), 0);
+		k3.setByRead(test3.getBytes(), 0);
+		k2.mergeWithRFKmer(5, k1);
+		Assert.assertEquals("ATCTAG", k2.toString());
+		k2.mergeWithFFKmer(5, k3);
+		Assert.assertEquals("ATCTAGC", k2.toString());
+	}
+	
+	@Test
+	public void TestMergeKmerAndVKmerRFAndRFKmer() {
+		String test1 = "TAGAT";
+		String test2 = "TCTAG"; // rc = CTAGA
+		String test3 = "CTAGC"; // rc = GCTAG
+		KmerBytesWritable k1 = new KmerBytesWritable(5);
+		VKmerBytesWritable k2 = new VKmerBytesWritable(5);
+		VKmerBytesWritable k3 = new VKmerBytesWritable(5);
+		k1.setByRead(test1.getBytes(), 0);
+		k2.setByRead(test2.getBytes(), 0);
+		k3.setByRead(test3.getBytes(), 0);
+		k1.mergeWithRFKmer(5, k2);
+		Assert.assertEquals("CTAGAT", k1.toString());
+		k1.mergeWithRFKmer(5, k3);
 		Assert.assertEquals("GCTAGAT", k1.toString());
 	}
 }
