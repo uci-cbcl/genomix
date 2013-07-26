@@ -229,14 +229,34 @@ public class KmerBytesWritableTest {
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAACAACCC", merge.toString());
         
-        String test1 = "CTA";
-        String test2 = "AGA";
+        String test1;
+        String test2;
+        test1 = "CTA";
+        test2 = "AGA";
         KmerBytesWritable k1 = new KmerBytesWritable(3);
         KmerBytesWritable k2 = new KmerBytesWritable(3);
         k1.setByRead(test1.getBytes(), 0);
         k2.setByRead(test2.getBytes(), 0);
         k1.mergeWithRFKmer(3, k2);
         Assert.assertEquals("TCTA", k1.toString());
+        
+        test1 = "CTA";
+        test2 = "ATA"; //TAT
+        k1 = new KmerBytesWritable(3);
+        k2 = new KmerBytesWritable(3);
+        k1.setByRead(test1.getBytes(), 0);
+        k2.setByRead(test2.getBytes(), 0);
+        k1.mergeWithFRKmer(3, k2);
+        Assert.assertEquals("CTAT", k1.toString());
+        
+        test1 = "ATA";
+        test2 = "CTA"; //TAT
+        k1 = new KmerBytesWritable(3);
+        k2 = new KmerBytesWritable(3);
+        k1.setByRead(test1.getBytes(), 0);
+        k2.setByRead(test2.getBytes(), 0);
+        k1.mergeWithFRKmer(3, k2);
+        Assert.assertEquals("ATAG", k1.toString());
     }
     
     
@@ -281,5 +301,55 @@ public class KmerBytesWritableTest {
             }
         }
     }
-
+    
+    @Test
+    public void TestFinalMerge() {
+        String selfString;
+        String match;
+        String msgString;
+        int index;
+        KmerBytesWritable kmer = new KmerBytesWritable();
+        int kmerSize = 3;
+        
+        String F1 = "AATAG";
+        String F2 = "TAGAA";
+        String R1 = "CTATT";
+        String R2 = "TTCTA";
+        
+        //FF test
+        selfString = F1;
+        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
+        msgString = F2;
+        index = msgString.indexOf(match);
+        kmer.reset(msgString.length() - index);
+        kmer.setByRead(msgString.substring(index).getBytes(), 0);
+        System.out.println(kmer.toString());
+        
+        //FR test
+        selfString = F1;
+        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
+        msgString = GeneCode.reverseComplement(R2);
+        index = msgString.indexOf(match);
+        kmer.reset(msgString.length() - index);
+        kmer.setByRead(msgString.substring(index).getBytes(), 0);
+        System.out.println(kmer.toString());
+        
+        //RF test
+        selfString = R1;
+        match = selfString.substring(0,kmerSize - 1); 
+        msgString = GeneCode.reverseComplement(F2);
+        index = msgString.lastIndexOf(match) + kmerSize - 2;
+        kmer.reset(index + 1);
+        kmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
+        System.out.println(kmer.toString());
+        
+        //RR test
+        selfString = R1;
+        match = selfString.substring(0,kmerSize - 1); 
+        msgString = R2;
+        index = msgString.lastIndexOf(match) + kmerSize - 2;
+        kmer.reset(index + 1);
+        kmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
+        System.out.println(kmer.toString());
+    }
 }

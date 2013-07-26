@@ -32,7 +32,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
         public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
         public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
-        public static final byte SHOULD_MERGE_CLEAR = 0b1110011;
+        public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
     }
     
     private PositionListWritable nodeIdList;

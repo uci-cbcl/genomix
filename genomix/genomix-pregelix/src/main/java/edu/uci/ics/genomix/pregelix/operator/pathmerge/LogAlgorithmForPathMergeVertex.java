@@ -170,22 +170,22 @@ public class LogAlgorithmForPathMergeVertex extends
                 case MessageFromHead.BothMsgsFromHead:
                 case MessageFromHead.OneMsgFromOldHeadAndOneFromHead:
                     for(int i = 0; i < 2; i++)
-                        processMerge(receivedMsgList.get(i));
+                        processFinalMerge(receivedMsgList.get(i)); //processMerge()
                     getVertexValue().setState(State.IS_FINAL);
                     voteToHalt();
                     break;
                 case MessageFromHead.OneMsgFromHeadAndOneFromNonHead:
                     for(int i = 0; i < 2; i++)
-                        processMerge(receivedMsgList.get(i));
+                        processFinalMerge(receivedMsgList.get(i));
                     getVertexValue().setState(State .IS_HEAD);
                     break;
                 case MessageFromHead.BothMsgsFromNonHead:
                     for(int i = 0; i < 2; i++)
-                        processMerge(receivedMsgList.get(i));
+                        processFinalMerge(receivedMsgList.get(i));
                     break;
                 case MessageFromHead.NO_MSG:
                     //halt
-                    deleteVertex(getVertexId());
+                    voteToHalt(); //deleteVertex(getVertexId());
                     break;
             }
         }

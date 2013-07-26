@@ -495,6 +495,7 @@ public class BasicPathMergeVertex extends
     
     public void setStateAsMergeWithNext(){
     	byte state = getVertexValue().getState();
+    	state &= State.SHOULD_MERGE_CLEAR;
         state |= State.SHOULD_MERGEWITHNEXT;
         getVertexValue().setState(state);
     }
@@ -512,6 +513,7 @@ public class BasicPathMergeVertex extends
     
     public void setStateAsMergeWithPrev(){
         byte state = getVertexValue().getState();
+        state &= State.SHOULD_MERGE_CLEAR;
         state |= State.SHOULD_MERGEWITHPREV;
         getVertexValue().setState(state);
     }
@@ -638,7 +640,7 @@ public class BasicPathMergeVertex extends
         String match;
         String msgString;
         int index;
-        switch(neighborToMergeDir){
+        switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
@@ -648,28 +650,29 @@ public class BasicPathMergeVertex extends
                 kmer.setByRead(msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_FR:
-                selfString = getVertexId().toString();
-                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length());
+                selfString = getVertexValue().getKmer().toString();
+                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
                 msgString = GeneCode.reverseComplement(msg.getKmer().toString());
                 index = msgString.indexOf(match);
                 kmer.reset(msgString.length() - index);
-                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                kmer.setByReadReverse(msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RF:
-                selfString = GeneCode.reverseComplement(getVertexValue().getKmer().toString());
-                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length());
-                msgString = msg.getKmer().toString();
-                index = msgString.indexOf(match);
-                kmer.reset(msgString.length() - index);
-                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                selfString = getVertexValue().getKmer().toString();
+                match = selfString.substring(0,kmerSize - 1); 
+                msgString = GeneCode.reverseComplement(msg.getKmer().toString());
+                index = msgString.lastIndexOf(match) + kmerSize - 2;
+                kmer.reset(index + 1);
+                kmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RR:
-                selfString = GeneCode.reverseComplement(getVertexValue().getKmer().toString());
-                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length());
-                msgString = GeneCode.reverseComplement(msg.getKmer().toString());
-                index = msgString.indexOf(match);
-                kmer.reset(msgString.length() - index);
-                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                selfString = getVertexValue().getKmer().toString();
+                match = selfString.substring(0,kmerSize - 1); 
+                msgString = msg.getKmer().toString();
+                index = msgString.lastIndexOf(match) + kmerSize - 2;
+                kmer.reset(index + 1);
+                kmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
+                System.out.println(kmer.toString());
                 break;
         }
        
