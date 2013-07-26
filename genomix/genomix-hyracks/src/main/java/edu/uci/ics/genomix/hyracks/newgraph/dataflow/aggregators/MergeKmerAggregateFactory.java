@@ -18,8 +18,10 @@ package edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
-import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -30,77 +32,54 @@ import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFactory {
-
-    /**
-     * 
-     */
+public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
+    private static final Log LOG = LogFactory.getLog(MergeKmerAggregateFactory.class);
 
-    private final int readLength;
-    private final int kmerSize;
-    
-    public AggregateKmerAggregateFactory(int readlength, int k) {
-        this.readLength = readlength;
-        this.kmerSize = k;
-    }
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
+        final int frameSize = ctx.getFrameSize();
         return new IAggregatorDescriptor() {
-//            private PositionReference position = new PositionReference();
-            
-            private NodeWritable readNode = new NodeWritable(kmerSize);
-            
-            protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
-                int tupleOffset = accessor.getTupleStartOffset(tIndex);
-                int fieldStart = accessor.getFieldStartOffset(tIndex, fieldId);
-                int offset = tupleOffset + fieldStart + accessor.getFieldSlotsLength();
-                return offset;
-            }
 
-            @Override
-            public void reset() {
-            }
-
-            @Override
-            public void close() {
-
-            }
+            private PositionReference position = new PositionReference();
 
             @Override
             public AggregateState createAggregateStates() {
-                return new AggregateState(new NodeWritable());
+                return new AggregateState(new ArrayBackedValueStorage());
             }
 
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                NodeWritable localUniNode = (NodeWritable) state.state;
-                localUniNode.reset(kmerSize);
-                readNode.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//????
-                localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
-                localUniNode.getFFList().appendList(readNode.getFFList());
-                localUniNode.getFRList().appendList(readNode.getFRList());
-                localUniNode.getRFList().appendList(readNode.getRFList());
-                localUniNode.getRRList().appendList(readNode.getRRList());
-//                inputVal.append(position);
+                ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
+                inputVal.reset();
+                int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
+                for (int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex,
+                        1); offset += PositionReference.LENGTH) {
+                    position.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
+                    inputVal.append(position);
+                }
+                //make a fake feild to cheat caller
+                tupleBuilder.addFieldEndOffset();
+            }
 
-                // make an empty field
-                tupleBuilder.addFieldEndOffset();///???
+            @Override
+            public void reset() {
+
             }
 
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                NodeWritable localUniNode = (NodeWritable) state.state;
-                readNode.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//????
-                localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
-                localUniNode.getFFList().appendList(readNode.getFFList());
-                localUniNode.getFRList().appendList(readNode.getFRList());
-                localUniNode.getRFList().appendList(readNode.getRFList());
-                localUniNode.getRRList().appendList(readNode.getRRList());
+                ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
+                int leadOffset = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
+                for (int offset = accessor.getFieldStartOffset(tIndex, 1); offset < accessor.getFieldEndOffset(tIndex,
+                        1); offset += PositionReference.LENGTH) {
+                    position.setNewReference(accessor.getBuffer().array(), leadOffset + offset);
+                    inputVal.append(position);
+                }
             }
 
             @Override
@@ -113,17 +92,25 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 try {
-                    fieldOutput.write(localUniNode.getByteArray(), localUniNode.getStartOffset(), localUniNode.getLength());
-
+                    if (inputVal.getLength() > frameSize / 2) {
+                        LOG.warn("MergeKmer: output data kmerByteSize is too big: " + inputVal.getLength());
+                    }
+                    fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
                     tupleBuilder.addFieldEndOffset();
+
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
             }
 
-        };
-    }
+            @Override
+            public void close() {
 
+            }
+
+        };
+
+    }
 }
