@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFromHead;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -45,7 +45,7 @@ public class LogAlgorithmForPathMergeVertex extends
     BasicPathMergeVertex {
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
-    KmerBytesWritable tempPostition = new KmerBytesWritable();
+    KmerBytesWritable tmpKmer = new KmerBytesWritable();
 
     /**
      * initiate kmerSize, maxIteration
@@ -55,9 +55,14 @@ public class LogAlgorithmForPathMergeVertex extends
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
-        headFlag = (byte)(getVertexValue().getState() & MessageFlag.IS_HEAD);
-        selfFlag =(byte)(getVertexValue().getState() & MessageFlag.VERTEX_MASK);
-        outgoingMsg.reset();
+        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
+        selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable(kmerSize);
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable(kmerSize);
+        else
+            outgoingMsg.reset(kmerSize);
         receivedMsgList.clear();
     }
 
@@ -66,18 +71,18 @@ public class LogAlgorithmForPathMergeVertex extends
      */
     public void sendOutMsg() {
         //send wantToMerge to next
-        tempPostition = getNextDestVertexIdAndSetFlag(getVertexValue());
-        if(tempPostition != null){
-            destVertexId.set(tempPostition);
+        tmpKmer = getNextDestVertexIdAndSetFlag(getVertexValue());
+        if(tmpKmer != null){
+            destVertexId.set(tmpKmer);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
         }
         
-        ////send wantToMerge to prev
-        tempPostition = getPreDestVertexIdAndSetFlag(getVertexValue());
-        if(tempPostition != null){
-            destVertexId.set(tempPostition);
+        //send wantToMerge to prev
+        tmpKmer = getPreDestVertexIdAndSetFlag(getVertexValue());
+        if(tmpKmer != null){
+            destVertexId.set(tmpKmer);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
@@ -118,7 +123,7 @@ public class LogAlgorithmForPathMergeVertex extends
      */
     public void sendMsgToPathVertex(Iterator<MessageWritable> msgIterator) {
         //send out wantToMerge msg
-        if(selfFlag != MessageFlag.IS_HEAD){
+        if(selfFlag != State.IS_HEAD && selfFlag != State.IS_OLDHEAD){
                 sendOutMsg();
         }
     }
@@ -127,17 +132,19 @@ public class LogAlgorithmForPathMergeVertex extends
      * path response message to head
      */
     public void responseMsgToHeadVertex(Iterator<MessageWritable> msgIterator) {
-        if(!msgIterator.hasNext() && selfFlag == MessageFlag.IS_HEAD){
-            getVertexValue().setState(MessageFlag.IS_STOP);
+        if(!msgIterator.hasNext() && selfFlag == State.IS_HEAD){
+            outFlag |= MessageFlag.IS_FINAL;
             sendOutMsg();
         }
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if(getMsgFlag() == MessageFlag.IS_FINAL){
                 processMerge(incomingMsg);
-                getVertexValue().setState(MessageFlag.IS_FINAL);
-            }else
+                getVertexValue().setState(State.IS_FINAL);
+            }else{
+                sendUpdateMsg();
                 sendMergeMsg();
+            }
         }
     }
 
@@ -149,11 +156,13 @@ public class LogAlgorithmForPathMergeVertex extends
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if(getMsgFlag() == MessageFlag.IS_FINAL){
-                setStopFlag();
-                sendMergeMsg();
+                sendFinalMergeMsg();
                 break;
             }
-            receivedMsgList.add(incomingMsg);
+            if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD)
+                processUpdate();
+            else if(!incomingMsg.isUpdateMsg())
+                receivedMsgList.add(incomingMsg);
         }
         if(receivedMsgList.size() != 0){
             byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
@@ -162,13 +171,13 @@ public class LogAlgorithmForPathMergeVertex extends
                 case MessageFromHead.OneMsgFromOldHeadAndOneFromHead:
                     for(int i = 0; i < 2; i++)
                         processMerge(receivedMsgList.get(i));
-                    getVertexValue().setState(MessageFlag.IS_FINAL);
+                    getVertexValue().setState(State.IS_FINAL);
                     voteToHalt();
                     break;
                 case MessageFromHead.OneMsgFromHeadAndOneFromNonHead:
                     for(int i = 0; i < 2; i++)
                         processMerge(receivedMsgList.get(i));
-                    getVertexValue().setState(MessageFlag.IS_HEAD);
+                    getVertexValue().setState(State .IS_HEAD);
                     break;
                 case MessageFromHead.BothMsgsFromNonHead:
                     for(int i = 0; i < 2; i++)
@@ -189,12 +198,21 @@ public class LogAlgorithmForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
-            sendMsgToPathVertex(msgIterator);
-            if(selfFlag != MessageFlag.IS_HEAD)
-                voteToHalt();
+            if(msgIterator.hasNext()){ //for processing final merge
+                incomingMsg = msgIterator.next();
+                if(getMsgFlag() == MessageFlag.IS_FINAL){
+                    setFinalState();
+                    processMerge(incomingMsg);
+                }
+            }
+            else{
+                sendMsgToPathVertex(msgIterator);
+                if(selfFlag != State.IS_HEAD)
+                    voteToHalt();
+            }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             responseMsgToHeadVertex(msgIterator);
-            if(selfFlag != MessageFlag.IS_HEAD)
+            if(selfFlag != State.IS_HEAD)
                 voteToHalt();
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
             processMergeInHeadVertex(msgIterator);
@@ -209,8 +227,8 @@ public class LogAlgorithmForPathMergeVertex extends
          * BinaryInput and BinaryOutput~/
          */
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(PositionWritable.class);
+        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class);
+        job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.setDynamicVertexValueSize(true);
         Client.run(args, job);

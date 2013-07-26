@@ -237,6 +237,26 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
     
     /*
+     * Delete the corresponding edge
+     */
+    public void processDelete(byte neighborToDeleteDir, KmerBytesWritable nodeToDelete){
+        switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
+            case MessageFlag.DIR_FF:
+                this.getFFList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_FR:
+                this.getFRList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RF:
+                this.getRFList().remove(nodeToDelete);
+                break;
+            case MessageFlag.DIR_RR:
+                this.getRRList().remove(nodeToDelete);
+                break;
+        }
+    }
+    
+    /*
      * Process any changes to value.  This is for edge updates
      */
     public void processUpdates(byte neighborToDeleteDir, KmerBytesWritable nodeToDelete,
