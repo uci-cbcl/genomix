@@ -29,13 +29,11 @@ import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory
 import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDPartitionComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
 import edu.uci.ics.genomix.hyracks.dataflow.ConnectorPolicyAssignmentPolicy;
-import edu.uci.ics.genomix.hyracks.dataflow.MapKmerPositionToReadOperator;
-import edu.uci.ics.genomix.hyracks.dataflow.MapReadToNodeOperator;
-import edu.uci.ics.genomix.hyracks.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.aggregators.AggregateKmerAggregateFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.aggregators.AggregateReadIDAggregateFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.aggregators.MergeKmerAggregateFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.aggregators.MergeReadIDAggregateFactory;
+import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.AggregateKmerAggregateFactory;
+import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.MergeKmerAggregateFactory;
+
+
 import edu.uci.ics.genomix.hyracks.dataflow.io.KMerSequenceWriterFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.io.KMerTextWriterFactory;
 import edu.uci.ics.genomix.hyracks.dataflow.io.NodeSequenceWriterFactory;
@@ -103,7 +101,7 @@ public class JobGenBrujinGraph extends JobGen {
     protected int tableSize;
     protected GroupbyType groupbyType;
     protected OutputFormat outputFormat;
-    protected boolean bGenerateReversedKmer;
+
 
     protected void logDebug(String status) {
         LOG.debug(status + " nc nodes:" + ncNodeNames.length);
@@ -173,7 +171,7 @@ public class JobGenBrujinGraph extends JobGen {
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
                     hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(readLength,
-                            kmerSize, bGenerateReversedKmer));
+                            kmerSize));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
