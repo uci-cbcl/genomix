@@ -18,20 +18,17 @@ package edu.uci.ics.genomix.type;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.Serializable;
 
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.KmerUtil;
 import edu.uci.ics.genomix.data.Marshal;
-import edu.uci.ics.genomix.oldtype.NodeWritable.DirectionFlag;
 
 /**
- * Variable kmer length byteswritable It was used to generate the graph in which
- * phase the kmer length doesn't change. Thus the kmerByteSize of bytes doesn't
- * change either.
+ * Variable-length kmer which stores its length internally.
+ * 
+ * Note: `offset` as used in this class is the offset at which the *kmer*
+ * begins. There is a {@value HEADER_SIZE}-byte header preceding the kmer
  */
 public class VKmerBytesWritable extends KmerBytesWritable {
 
@@ -126,7 +123,8 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	public void setAsCopy(byte[] newData, int offset) {
 		int k = Marshal.getInt(newData, offset);
 		reset(k);
-		System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.offset, bytesUsed);
+		System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.offset,
+				bytesUsed);
 	}
 
 	/**
@@ -156,12 +154,12 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 		this.lettersInKmer = k;
 		Marshal.putInt(k, bytes, offset - HEADER_SIZE);
 	}
-	
+
 	@Override
 	protected int getCapacity() {
 		return bytes.length - HEADER_SIZE;
 	}
-	
+
 	@Override
 	protected void setCapacity(int new_cap) {
 		if (new_cap != getCapacity()) {
@@ -170,13 +168,13 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 				bytesUsed = new_cap;
 			}
 			if (bytesUsed != 0) {
-				System.arraycopy(bytes, offset, new_data, HEADER_SIZE, bytesUsed);
+				System.arraycopy(bytes, offset, new_data, HEADER_SIZE,
+						bytesUsed);
 			}
 			bytes = new_data;
 			offset = HEADER_SIZE;
 		}
 	}
-
 
 	@Override
 	public void mergeWithFFKmer(int initialKmerSize, KmerBytesWritable kmer) {
