@@ -133,17 +133,17 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	 * 
 	 * @param newData
 	 *            : byte array to copy (should have a header)
-	 * @param offset
+	 * @param blockOffset
 	 */
-	public void setAsReference(byte[] newData, int offset) {
+	public void setAsReference(byte[] newData, int blockOffset) {
 		this.bytes = newData;
-		this.offset = offset + HEADER_SIZE;
-		int kRequested = Marshal.getInt(newData, offset);
+		this.offset = blockOffset + HEADER_SIZE;
+		int kRequested = Marshal.getInt(newData, blockOffset);
 		int bytesRequested = KmerUtil.getByteNumFromK(kRequested) + HEADER_SIZE;
-		if (newData.length - offset < bytesRequested) {
+		if (newData.length - blockOffset < bytesRequested) {
 			throw new IllegalArgumentException("Requested " + bytesRequested
 					+ " bytes (k=" + kRequested + ") but buffer has only "
-					+ (newData.length - offset) + " bytes");
+					+ (newData.length - blockOffset) + " bytes");
 		}
 		setKmerLength(kRequested);
 	}
@@ -214,6 +214,9 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
 	}
 
+	/**
+	 * write the entire byte array including the header
+	 */
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.write(bytes, offset - HEADER_SIZE, bytesUsed + HEADER_SIZE);
