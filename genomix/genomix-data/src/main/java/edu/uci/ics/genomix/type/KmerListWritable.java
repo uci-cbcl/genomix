@@ -14,17 +14,18 @@ import edu.uci.ics.genomix.data.Marshal;
 
 public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable{
     private static final long serialVersionUID = 1L;
-    protected byte[] storage;
-    protected int offset;
-    protected int valueCount;
-    public int kmerByteSize = 0; 
-    public int kmerlength = 0;
-    protected static final byte[] EMPTY = {};
+    private static final byte[] EMPTY_BYTES = {0,0,0,0};
     
-    protected KmerBytesWritable posIter = new KmerBytesWritable();
+    private byte[] storage;
+    private int offset;
+    private int valueCount;
+    
+    private int kmerByteSize = 0; 
+    private int kmerlength = 0;
+    private KmerBytesWritable posIter = new KmerBytesWritable();
     
     public KmerListWritable() {
-        this.storage = EMPTY;
+        this.storage = EMPTY_BYTES;
         this.valueCount = 0;
         this.offset = 0;
     }
@@ -107,7 +108,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     public void reset(int kmerSize) {
         kmerlength = kmerSize;
         kmerByteSize = KmerUtil.getByteNumFromK(kmerlength);
-        storage = EMPTY;
+        storage = EMPTY_BYTES;
         valueCount = 0;
         offset = 0;
     }
