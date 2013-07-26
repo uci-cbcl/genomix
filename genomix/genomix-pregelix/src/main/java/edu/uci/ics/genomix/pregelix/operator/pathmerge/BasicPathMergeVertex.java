@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 /**
@@ -29,7 +30,7 @@ public class BasicPathMergeVertex extends
     protected MessageWritable outgoingMsg = null; 
     protected KmerBytesWritable destVertexId = new KmerBytesWritable();
     protected Iterator<KmerBytesWritable> posIterator;
-    private KmerBytesWritable kmer = new KmerBytesWritable();
+    private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
     byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
@@ -622,6 +623,59 @@ public class BasicPathMergeVertex extends
         getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(msg.getNeighberNode()),
                 kmerSize, msg.getKmer());
+    }
+    
+    /**
+     * final merge and updateAdjList  having parameter for p2
+     */
+    public void processFinalMerge(MessageWritable msg){
+        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+
+        byte neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());
+        
+        String selfString;
+        String match;
+        String msgString;
+        int index;
+        switch(neighborToMergeDir){
+            case MessageFlag.DIR_FF:
+                selfString = getVertexValue().getKmer().toString();
+                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
+                msgString = msg.getKmer().toString();
+                index = msgString.indexOf(match);
+                kmer.reset(msgString.length() - index);
+                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                break;
+            case MessageFlag.DIR_FR:
+                selfString = getVertexId().toString();
+                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length());
+                msgString = GeneCode.reverseComplement(msg.getKmer().toString());
+                index = msgString.indexOf(match);
+                kmer.reset(msgString.length() - index);
+                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                break;
+            case MessageFlag.DIR_RF:
+                selfString = GeneCode.reverseComplement(getVertexValue().getKmer().toString());
+                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length());
+                msgString = msg.getKmer().toString();
+                index = msgString.indexOf(match);
+                kmer.reset(msgString.length() - index);
+                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                break;
+            case MessageFlag.DIR_RR:
+                selfString = GeneCode.reverseComplement(getVertexValue().getKmer().toString());
+                match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length());
+                msgString = GeneCode.reverseComplement(msg.getKmer().toString());
+                index = msgString.indexOf(match);
+                kmer.reset(msgString.length() - index);
+                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                break;
+        }
+       
+        getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
+                neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(msg.getNeighberNode()),
+                kmerSize, kmer);
     }
     
     /**

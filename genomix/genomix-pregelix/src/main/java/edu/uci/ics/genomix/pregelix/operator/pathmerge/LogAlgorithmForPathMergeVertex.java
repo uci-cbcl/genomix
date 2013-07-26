@@ -202,7 +202,7 @@ public class LogAlgorithmForPathMergeVertex extends
                 incomingMsg = msgIterator.next();
                 if(getMsgFlag() == MessageFlag.IS_FINAL){
                     setFinalState();
-                    processMerge(incomingMsg);
+                    processFinalMerge(incomingMsg);
                 }
             }
             else{
