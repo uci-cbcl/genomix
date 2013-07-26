@@ -131,7 +131,7 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
 
         for (int i = 1; i < 8; i++) {
-            merge.set(kmer1);
+            merge.setAsCopy(kmer1);
             merge.mergeWithFFKmer(i, kmer2);
             Assert.assertEquals(text1 + text2.substring(i - 1), merge.toString());
         }
@@ -147,7 +147,7 @@ public class KmerBytesWritableTest {
                 Assert.assertEquals(text1, kmer1.toString());
                 Assert.assertEquals(text2, kmer2.toString());
                 for (int x = 1; x < jk; x++) {
-                    merge.set(kmer1);
+                    merge.setAsCopy(kmer1);
                     merge.mergeWithFFKmer(x, kmer2);
                     Assert.assertEquals(text1 + text2.substring(x - 1), merge.toString());
                 }
@@ -177,17 +177,17 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(result, merge.toString());
         
         int i = 1;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(i, kmer2);
         Assert.assertEquals("AAGCTAAAACAACC", merge.toString());
         
         i = 2;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(i, kmer2);
         Assert.assertEquals("AAGCTAAACAACC", merge.toString());
         
         i = 3;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(i, kmer2);
         Assert.assertEquals("AAGCTAACAACC", merge.toString());
     }
@@ -215,17 +215,17 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(result, merge.toString());
         
         int i = 1;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAAAACAACCC", merge.toString());
         
         i = 2;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAAACAACCC", merge.toString());
         
         i = 3;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAACAACCC", merge.toString());
         
@@ -258,7 +258,7 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
 
         for (int i = 1; i < 8; i++) {
-            merge.set(kmer2);
+            merge.setAsCopy(kmer2);
             merge.mergeWithRRKmer(i, kmer1);
             Assert.assertEquals(text1.substring(0, text1.length() - i + 1) + text2, merge.toString());
         }
@@ -274,7 +274,7 @@ public class KmerBytesWritableTest {
                 Assert.assertEquals(text1, kmer1.toString());
                 Assert.assertEquals(text2, kmer2.toString());
                 for (int x = 1; x < ik; x++) {
-                    merge.set(kmer2);
+                    merge.setAsCopy(kmer2);
                     merge.mergeWithRRKmer(x, kmer1);
                     Assert.assertEquals(text1.substring(0, text1.length() - x + 1) + text2, merge.toString());
                 }

@@ -49,7 +49,7 @@ public class KMerTextWriterFactory implements ITupleWriterFactory {
                 if (kmer.getLength() > tuple.getFieldLength(KMerSequenceWriterFactory.InputKmerField)) {
                     throw new IllegalArgumentException("Not enough kmer bytes");
                 }
-                kmer.setNewReference(tuple.getFieldData(KMerSequenceWriterFactory.InputKmerField),
+                kmer.setAsReference(tuple.getFieldData(KMerSequenceWriterFactory.InputKmerField),
                         tuple.getFieldStart(KMerSequenceWriterFactory.InputKmerField));
                 int countOfPos = tuple.getFieldLength(KMerSequenceWriterFactory.InputPositionListField)
                         / PositionWritable.LENGTH;

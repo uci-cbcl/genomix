@@ -128,12 +128,12 @@ public class BasicPathMergeVertex extends
     public void sendMsgToAllNextNodes(VertexValueWritable value) {
         posIterator = value.getFFList().iterator(); // FFList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getFRList().iterator(); // FRList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -144,12 +144,12 @@ public class BasicPathMergeVertex extends
     public void sendMsgToAllPreviousNodes(VertexValueWritable value) {
         posIterator = value.getRFList().iterator(); // RFList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getRRList().iterator(); // RRList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -160,22 +160,22 @@ public class BasicPathMergeVertex extends
     public void sendMsgToAllNeighborNodes(VertexValueWritable value){
         posIterator = value.getFFList().iterator(); // FFList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getFRList().iterator(); // FRList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getFFList().iterator(); // FFList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getFRList().iterator(); // FRList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -188,14 +188,14 @@ public class BasicPathMergeVertex extends
         while(posIterator.hasNext()){
             outgoingMsg.setFlag(AdjMessage.FROMFF);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getFRList().iterator(); // FRList
         while(posIterator.hasNext()){
             outgoingMsg.setFlag(AdjMessage.FROMFR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -208,14 +208,14 @@ public class BasicPathMergeVertex extends
         while(posIterator.hasNext()){
             outgoingMsg.setFlag(AdjMessage.FROMRF);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         posIterator = value.getRRList().iterator(); // RRList
         while(posIterator.hasNext()){
             outgoingMsg.setFlag(AdjMessage.FROMRR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
+            destVertexId.setAsCopy(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }

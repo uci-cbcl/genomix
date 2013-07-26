@@ -49,11 +49,11 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(msg.getSourceVertexId());
+            this.sourceVertexId.setAsCopy(msg.getSourceVertexId());
         }
         if (kmer != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.kmer.set(msg.getKmer());
+            this.kmer.setAsCopy(msg.getKmer());
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -68,11 +68,11 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId);
+            this.sourceVertexId.setAsCopy(sourceVertexId);
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.kmer.set(chainVertexId);
+            this.kmer.setAsCopy(chainVertexId);
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -102,7 +102,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId);
+            this.sourceVertexId.setAsCopy(sourceVertexId);
         }
     }
     
@@ -113,7 +113,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     public void setChainVertexId(KmerBytesWritable chainVertexId) {
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.kmer.set(chainVertexId);
+            this.kmer.setAsCopy(chainVertexId);
         }
     }
     

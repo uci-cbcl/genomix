@@ -186,7 +186,7 @@ public class MapReadToNodeOperator extends AbstractSingleActivityOperatorDescrip
                 throw new IllegalArgumentException("kmer kmerByteSize is invalid");
             }
             offset += INT_LENGTH;
-            kmer.set(buffer.array(), offset);
+            kmer.setAsCopy(buffer.array(), offset);
         }
 
         private void connect(NodeReference curNode, NodeReference nextNode) {

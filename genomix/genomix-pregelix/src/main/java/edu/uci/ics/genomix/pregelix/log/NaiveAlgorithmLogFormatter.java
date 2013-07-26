@@ -15,8 +15,8 @@ public class NaiveAlgorithmLogFormatter extends Formatter {
 
     public void set(long step, KmerBytesWritable sourceVertexId, KmerBytesWritable destVertexId) {
         this.step = step;
-        this.sourceVertexId.set(sourceVertexId);
-        this.destVertexId.set(destVertexId);
+        this.sourceVertexId.setAsCopy(sourceVertexId);
+        this.destVertexId.setAsCopy(destVertexId);
     }
 
     public String format(LogRecord record) {

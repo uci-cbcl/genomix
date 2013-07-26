@@ -121,7 +121,7 @@ public class JobGenGroupbyReadID extends JobGenBrujinGraph {
                                                     throw new IllegalArgumentException("kmerlength is invalid");
                                                 }
                                                 fieldOffset += 4;
-                                                kmer.setNewReference(buffer, fieldOffset);
+                                                kmer.setAsReference(buffer, fieldOffset);
                                                 fieldOffset += kmer.getLength();
                                                 kmerString = kmer.toString();
                                             }

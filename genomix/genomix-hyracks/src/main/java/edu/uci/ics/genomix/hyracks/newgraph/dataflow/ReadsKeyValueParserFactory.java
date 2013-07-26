@@ -169,7 +169,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
             
             public void setNextKmer(byte nextChar){
-                nextForwardKmer.set(curForwardKmer);
+                nextForwardKmer.setAsCopy(curForwardKmer);
                 nextForwardKmer.shiftKmerWithNextChar(nextChar);
                 nextReverseKmer.setByReadReverse(nextForwardKmer.toString().getBytes(), nextForwardKmer.getOffset());
                 nextKmerDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
@@ -177,14 +177,14 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             
             public void setPreKmerByOldCurKmer(){
                 preKmerDir = curKmerDir;
-                preForwardKmer.set(curForwardKmer);
-                preReverseKmer.set(curReverseKmer);
+                preForwardKmer.setAsCopy(curForwardKmer);
+                preReverseKmer.setAsCopy(curReverseKmer);
             }
 
             public void setCurKmerByOldNextKmer(){
                 curKmerDir = nextKmerDir;
-                curForwardKmer.set(nextForwardKmer);
-                curReverseKmer.set(nextReverseKmer);
+                curForwardKmer.setAsCopy(nextForwardKmer);
+                curReverseKmer.setAsCopy(nextReverseKmer);
             }
             
             public void writeToFrame(IFrameWriter writer) {

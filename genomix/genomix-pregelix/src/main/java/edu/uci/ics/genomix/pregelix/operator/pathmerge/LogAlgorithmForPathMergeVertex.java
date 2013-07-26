@@ -67,7 +67,7 @@ public class LogAlgorithmForPathMergeVertex extends
         //send wantToMerge to next
         tempPostition = getNextDestVertexIdAndSetFlag(getVertexValue());
         if(tempPostition != null){
-            destVertexId.set(tempPostition);
+            destVertexId.setAsCopy(tempPostition);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
@@ -76,7 +76,7 @@ public class LogAlgorithmForPathMergeVertex extends
         ////send wantToMerge to prev
         tempPostition = getPreDestVertexIdAndSetFlag(getVertexValue());
         if(tempPostition != null){
-            destVertexId.set(tempPostition);
+            destVertexId.setAsCopy(tempPostition);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);

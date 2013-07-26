@@ -69,7 +69,7 @@ public class NodeTextWriterFactory implements ITupleWriterFactory {
                         tuple.getFieldData(NodeSequenceWriterFactory.InputRRField),
                         tuple.getFieldStart(NodeSequenceWriterFactory.InputRRField));
 
-                node.getKmer().setNewReference(
+                node.getKmer().setAsReference(
                         Marshal.getInt(tuple.getFieldData(NodeSequenceWriterFactory.InputCountOfKmerField),
                                 tuple.getFieldStart(NodeSequenceWriterFactory.InputCountOfKmerField)),
                         tuple.getFieldData(NodeSequenceWriterFactory.InputKmerBytesField),

@@ -60,7 +60,7 @@ public class RemoveTips extends Configured implements Tool {
                 // kill this node by NOT mapping it.  Update my neighbors with a suicide note
                 //TODO: update neighbors by removing me from its list
             } else {
-                outputValue.set(MergeMessageFlag.MSG_SELF, curNode);
+                outputValue.setAsCopy(MergeMessageFlag.MSG_SELF, curNode);
                 output.collect(key, value);
             }
         }

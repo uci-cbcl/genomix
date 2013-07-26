@@ -64,7 +64,7 @@ public class KmerBytesWritableFactory {
             return null;
         }
         if (lastK == kmerChain.getKmerLength()) {
-            kmer.set(kmerChain);
+            kmer.setAsCopy(kmerChain);
             return kmer;
         }
         kmer.reset(lastK);
@@ -100,7 +100,7 @@ public class KmerBytesWritableFactory {
             return null;
         }
         if (firstK == kmerChain.getKmerLength()) {
-            kmer.set(kmerChain);
+            kmer.setAsCopy(kmerChain);
             return kmer;
         }
         kmer.reset(firstK);
@@ -124,7 +124,7 @@ public class KmerBytesWritableFactory {
             return null;
         }
         if (startK == 0 && kSize == kmerChain.getKmerLength()) {
-            kmer.set(kmerChain);
+            kmer.setAsCopy(kmerChain);
             return kmer;
         }
         kmer.reset(kSize);
@@ -256,7 +256,7 @@ public class KmerBytesWritableFactory {
      * @return new created kmer that shifted by afterCode, the K will not change
      */
     public KmerBytesWritable shiftKmerWithNextCode(final KmerBytesWritable kmer, byte afterCode) {
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
         this.kmer.shiftKmerWithNextCode(afterCode);
         return this.kmer;
     }
@@ -274,7 +274,7 @@ public class KmerBytesWritableFactory {
      * @return new created kmer that shifted by preCode, the K will not change
      */
     public KmerBytesWritable shiftKmerWithPreCode(final KmerBytesWritable kmer, byte preCode) {
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
         this.kmer.shiftKmerWithPreCode(preCode);
         return this.kmer;
     }

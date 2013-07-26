@@ -42,7 +42,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.set(msg.getChainVertexId());
+            this.chainVertexId.setAsCopy(msg.getChainVertexId());
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -63,7 +63,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.set(chainVertexId);
+            this.chainVertexId.setAsCopy(chainVertexId);
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -101,7 +101,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
     public void setChainVertexId(KmerBytesWritable chainVertexId) {
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.set(chainVertexId);
+            this.chainVertexId.setAsCopy(chainVertexId);
         }
     }
     

@@ -54,12 +54,12 @@ public class PositionListAndKmerWritable implements WritableComparable<PositionL
     public void set(PositionListAndKmerWritable right) {
         this.countOfKmer = right.countOfKmer;
         this.vertexIDList.set(right.vertexIDList);
-        this.kmer.set(right.kmer);
+        this.kmer.setAsCopy(right.kmer);
     }
 
     public void set(PositionListWritable list, KmerBytesWritable kmer) {
         this.vertexIDList.set(list);
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
     }
     
     @Override

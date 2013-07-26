@@ -111,12 +111,12 @@ public class P4ForPathMergeVertex extends
      */
     protected boolean setNextInfo(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0) {
-            nextKmer.set(value.getFFList().getPosition(0));
+            nextKmer.setAsCopy(value.getFFList().getPosition(0));
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
         if (value.getFRList().getCountOfPosition() > 0) {
-            nextKmer.set(value.getFRList().getPosition(0));
+            nextKmer.setAsCopy(value.getFRList().getPosition(0));
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
@@ -128,12 +128,12 @@ public class P4ForPathMergeVertex extends
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
         if (value.getRRList().getCountOfPosition() > 0) {
-            prevKmer.set(value.getRRList().getPosition(0));
+            prevKmer.setAsCopy(value.getRRList().getPosition(0));
             prevHead = isNodeRandomHead(prevKmer);
             return true;
         }
         if (value.getRFList().getCountOfPosition() > 0) {
-            prevKmer.set(value.getRFList().getPosition(0));
+            prevKmer.setAsCopy(value.getRFList().getPosition(0));
             prevHead = isNodeRandomHead(prevKmer);
             return true;
         }
@@ -156,7 +156,7 @@ public class P4ForPathMergeVertex extends
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
-            curKmer.set(getVertexId());
+            curKmer.setAsCopy(getVertexId());
             
             curHead = isNodeRandomHead(curKmer);
             

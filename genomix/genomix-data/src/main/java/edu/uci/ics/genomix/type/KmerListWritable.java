@@ -116,7 +116,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
-        posIter.setNewReference(kmerlength, storage, offset + i * kmerByteSize);
+        posIter.setAsReference(kmerlength, storage, offset + i * kmerByteSize);
         return posIter;
     }
     

@@ -88,7 +88,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 reverseForwardList.reset(kmerSize);
                 reverseReverseList.reset(kmerSize);
                 
-                kmer.set(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//??从1算起？？
+                kmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//??从1算起？？
                 nodeIdList.setNewReference(1, accessor.getBuffer().array(), getOffSet(accessor, tIndex, 2));
                 int ffCount = Marshal.getInt(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 3));//??
                 forwardForwardList.setNewReference(ffCount, accessor.getBuffer().array(), getOffSet(accessor, tIndex, 4));
@@ -100,7 +100,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 reverseForwardList.setNewReference(rrCount, accessor.getBuffer().array(), getOffSet(accessor, tIndex, 10));
                 nodeAggreter.set(nodeIdList, forwardForwardList, forwardReverseList, reverseForwardList, reverseForwardList, kmer);
                 
-                inputVal.getKmer().set(kmer);
+                inputVal.getKmer().setAsCopy(kmer);
                 inputVal.getNodeIdList().appendList(nodeIdList);
                 inputVal.getFFList().appendList(forwardForwardList);
                 inputVal.getFRList().appendList(forwardReverseList);
@@ -115,7 +115,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 NodeWritable inputVal = (NodeWritable) state.state;
-                kmer.set(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//??从1算起？？
+                kmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//??从1算起？？
                 nodeIdList.setNewReference(1, accessor.getBuffer().array(), getOffSet(accessor, tIndex, 2));
                 int ffCount = Marshal.getInt(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 3));//??
                 forwardForwardList.setNewReference(ffCount, accessor.getBuffer().array(), getOffSet(accessor, tIndex, 4));
@@ -127,7 +127,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 reverseForwardList.setNewReference(rrCount, accessor.getBuffer().array(), getOffSet(accessor, tIndex, 10));
                 nodeAggreter.set(nodeIdList, forwardForwardList, forwardReverseList, reverseForwardList, reverseForwardList, kmer);
                 
-                inputVal.getKmer().set(kmer);
+                inputVal.getKmer().setAsCopy(kmer);
                 inputVal.getNodeIdList().appendList(nodeIdList);
                 inputVal.getFFList().appendList(forwardForwardList);
                 inputVal.getFRList().appendList(forwardReverseList);

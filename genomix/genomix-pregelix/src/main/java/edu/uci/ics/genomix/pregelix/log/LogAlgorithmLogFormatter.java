@@ -32,8 +32,8 @@ public class LogAlgorithmLogFormatter extends Formatter {
     public void set(long step, KmerBytesWritable sourceVertexId, KmerBytesWritable destVertexId,
             MessageWritable msg, byte state) {
         this.step = step;
-        this.sourceVertexId.set(sourceVertexId);
-        this.destVertexId.set(destVertexId);
+        this.sourceVertexId.setAsCopy(sourceVertexId);
+        this.destVertexId.setAsCopy(destVertexId);
         this.msg = msg;
         this.state = state;
         this.operation = 0;
@@ -42,15 +42,15 @@ public class LogAlgorithmLogFormatter extends Formatter {
     public void setMergeChain(long step, KmerBytesWritable sourceVertexId, KmerBytesWritable mergeChain) {
         this.reset();
         this.step = step;
-        this.sourceVertexId.set(sourceVertexId);
-        this.mergeChain.set(mergeChain);
+        this.sourceVertexId.setAsCopy(sourceVertexId);
+        this.mergeChain.setAsCopy(mergeChain);
         this.operation = 2;
     }
 
     public void setVotoToHalt(long step, KmerBytesWritable sourceVertexId) {
         this.reset();
         this.step = step;
-        this.sourceVertexId.set(sourceVertexId);
+        this.sourceVertexId.setAsCopy(sourceVertexId);
         this.operation = 3;
     }
 

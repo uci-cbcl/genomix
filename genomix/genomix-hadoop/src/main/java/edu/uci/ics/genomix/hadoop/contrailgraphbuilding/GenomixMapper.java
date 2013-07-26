@@ -201,7 +201,7 @@ public class GenomixMapper extends MapReduceBase implements
     
     //set preKmer by shifting curKmer with preChar
     public void setPreKmer(byte preChar){
-        preForwardKmer.set(curForwardKmer);
+        preForwardKmer.setAsCopy(curForwardKmer);
         preForwardKmer.shiftKmerWithPreChar(preChar);
         preReverseKmer.setByReadReverse(preForwardKmer.toString().getBytes(), preForwardKmer.getOffset());
         preKmerDir = preForwardKmer.compareTo(preReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
@@ -209,7 +209,7 @@ public class GenomixMapper extends MapReduceBase implements
     
     //set nextKmer by shifting curKmer with nextChar
     public void setNextKmer(byte nextChar){
-        nextForwardKmer.set(curForwardKmer);
+        nextForwardKmer.setAsCopy(curForwardKmer);
         nextForwardKmer.shiftKmerWithNextChar(nextChar);
         nextReverseKmer.setByReadReverse(nextForwardKmer.toString().getBytes(), nextForwardKmer.getOffset());
         nextKmerDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
@@ -218,15 +218,15 @@ public class GenomixMapper extends MapReduceBase implements
     //old curKmer becomes current preKmer
     public void setPreKmerByOldCurKmer(){
     	preKmerDir = curKmerDir;
-    	preForwardKmer.set(curForwardKmer);
-    	preReverseKmer.set(curReverseKmer);
+    	preForwardKmer.setAsCopy(curForwardKmer);
+    	preReverseKmer.setAsCopy(curReverseKmer);
     }
     
     //old nextKmer becomes current curKmer
     public void setCurKmerByOldNextKmer(){
     	curKmerDir = nextKmerDir;
-    	curForwardKmer.set(nextForwardKmer);
-    	curReverseKmer.set(nextReverseKmer);
+    	curForwardKmer.setAsCopy(nextForwardKmer);
+    	curReverseKmer.setAsCopy(nextReverseKmer);
     }
     
     public void setMapperOutput(OutputCollector<KmerBytesWritable, NodeWritable> output) throws IOException{

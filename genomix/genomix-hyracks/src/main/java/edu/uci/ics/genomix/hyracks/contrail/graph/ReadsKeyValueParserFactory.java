@@ -150,10 +150,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
                 /** first kmer **/
                 curForwardKmer.setByRead(array, 0);
-                curReverseKmer.set(kmerFactory.reverse(curForwardKmer));
+                curReverseKmer.setAsCopy(kmerFactory.reverse(curForwardKmer));
                 curKmerDir = curForwardKmer.compareTo(curReverseKmer) >= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 setNextKmer(array[kmerSize]);
-                readId.set(mateId, readID);
+                readId.setAsCopy(mateId, readID);
                 outputNode.setreadId(readId);
                 setEdgeListForNextKmer();
                 switch (curKmerDir) {
@@ -170,7 +170,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     setCurKmerByOldNextKmer();
                     setNextKmer(array[i]);
                     //set value.readId
-                    readId.set(mateId, readID);
+                    readId.setAsCopy(mateId, readID);
                     outputNode.setreadId(readId);
                     //set value.edgeList
                     setEdgeListForPreKmer();
@@ -189,7 +189,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 setPreKmerByOldCurKmer();
                 setCurKmerByOldNextKmer();
                 //set value.readId
-                readId.set(mateId, readID);
+                readId.setAsCopy(mateId, readID);
                 outputNode.setreadId(readId);
                 //set value.edgeList
                 setEdgeListForPreKmer();
@@ -205,32 +205,32 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
 
             public void setPreKmer(byte preChar){
-                preForwardKmer.set(curForwardKmer);
+                preForwardKmer.setAsCopy(curForwardKmer);
                 preForwardKmer.shiftKmerWithPreChar(preChar);
-                preReverseKmer.set(preForwardKmer);
-                preReverseKmer.set(kmerFactory.reverse(nextForwardKmer));
+                preReverseKmer.setAsCopy(preForwardKmer);
+                preReverseKmer.setAsCopy(kmerFactory.reverse(nextForwardKmer));
                 preKmerDir = preForwardKmer.compareTo(preReverseKmer) >= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             }
             
             public void setNextKmer(byte nextChar) {
-                nextForwardKmer.set(curForwardKmer);
+                nextForwardKmer.setAsCopy(curForwardKmer);
                 nextForwardKmer.shiftKmerWithNextChar(nextChar);
-                nextReverseKmer.set(nextForwardKmer);
-                nextReverseKmer.set(kmerFactory.reverse(nextForwardKmer));
+                nextReverseKmer.setAsCopy(nextForwardKmer);
+                nextReverseKmer.setAsCopy(kmerFactory.reverse(nextForwardKmer));
                 nextKmerDir = nextForwardKmer.compareTo(nextReverseKmer) >= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             }
 
             public void setPreKmerByOldCurKmer() {
                 preKmerDir = curKmerDir;
-                preForwardKmer.set(curForwardKmer);
-                preReverseKmer.set(curReverseKmer);
+                preForwardKmer.setAsCopy(curForwardKmer);
+                preReverseKmer.setAsCopy(curReverseKmer);
             }
 
             //old nextKmer becomes current curKmer
             public void setCurKmerByOldNextKmer() {
                 curKmerDir = nextKmerDir;
-                curForwardKmer.set(nextForwardKmer);
-                preReverseKmer.set(nextReverseKmer);
+                curForwardKmer.setAsCopy(nextForwardKmer);
+                preReverseKmer.setAsCopy(nextReverseKmer);
             }
 
             public void setEdgeListForNextKmer() {

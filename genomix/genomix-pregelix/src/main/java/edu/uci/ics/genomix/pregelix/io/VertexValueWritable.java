@@ -74,7 +74,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         this.outgoingList.setForwardList(forwardForwardList);
         this.outgoingList.setReverseList(forwardReverseList);
         this.state = state;
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
     }
     
     public void set(VertexValueWritable value) {
@@ -157,7 +157,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
 
     public void setKmer(KmerBytesWritable kmer) {
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
     }
     
     public KmerBytesWritable getMergeDest() {
