@@ -46,7 +46,7 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	 * Initialize as empty kmer
 	 */
 	public VKmerBytesWritable() {
-		this(EMPTY_BYTES, 0);
+		this(EMPTY_BYTES, HEADER_SIZE);
 	}
 
 	/**
@@ -54,12 +54,16 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	 */
 	public VKmerBytesWritable(String kmer) {
 		bytes = new byte[HEADER_SIZE + KmerUtil.getByteNumFromK(kmer.length())];
-		offset = 0;
+		offset = HEADER_SIZE;
 		setAsCopy(kmer);
 	}
 
 	/**
 	 * Set as reference to given data
+	 * 
+	 * @param storage
+	 *            : byte array with header
+	 * @param offset
 	 */
 	public VKmerBytesWritable(byte[] storage, int offset) {
 		setAsReference(storage, offset);
@@ -74,7 +78,7 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 		} else {
 			bytes = EMPTY_BYTES;
 		}
-		offset = 0;
+		offset = HEADER_SIZE;
 		setKmerLength(k);
 	}
 
@@ -97,21 +101,8 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	public void setAsCopy(KmerBytesWritable other) {
 		reset(other.lettersInKmer);
 		if (lettersInKmer > 0) {
-			System.arraycopy(other.bytes, other.offset, bytes, this.offset
-					+ HEADER_SIZE, lettersInKmer);
-		}
-	}
-
-	/**
-	 * Deep copy of the given kmer
-	 * 
-	 * @param other
-	 */
-	public void setAsCopy(VKmerBytesWritable other) {
-		reset(other.lettersInKmer);
-		if (lettersInKmer > 0) {
-			System.arraycopy(other.bytes, other.offset + HEADER_SIZE, bytes,
-					this.offset + HEADER_SIZE, lettersInKmer);
+			System.arraycopy(other.bytes, other.offset, bytes, this.offset,
+					bytesUsed);
 		}
 	}
 
@@ -122,21 +113,7 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	public void setAsCopy(String kmer) {
 		int k = kmer.length();
 		reset(k);
-		System.arraycopy(kmer.getBytes(), 0, bytes, offset + HEADER_SIZE, k);
-	}
-
-	/**
-	 * Deep copy of the given bytes data
-	 * 
-	 * @param k
-	 * @param newData
-	 *            : presumed NOT to have a header
-	 * @param offset
-	 */
-	@Override
-	public void setAsCopy(int k, byte[] newData, int offset) {
-		reset(k);
-		System.arraycopy(newData, offset, bytes, this.offset + HEADER_SIZE, k);
+		System.arraycopy(kmer.getBytes(), 0, bytes, offset, bytesUsed);
 	}
 
 	/**
@@ -149,8 +126,7 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	public void setAsCopy(byte[] newData, int offset) {
 		int k = Marshal.getInt(newData, offset);
 		reset(k);
-		System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.offset
-				+ HEADER_SIZE, k);
+		System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.offset, bytesUsed);
 	}
 
 	/**
@@ -163,9 +139,9 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	 */
 	public void setAsReference(byte[] newData, int offset) {
 		this.bytes = newData;
-		this.offset = offset;
+		this.offset = offset + HEADER_SIZE;
 		int kRequested = Marshal.getInt(newData, offset);
-		int bytesRequested = KmerUtil.getByteNumFromK(kRequested);
+		int bytesRequested = KmerUtil.getByteNumFromK(kRequested) + HEADER_SIZE;
 		if (newData.length - offset < bytesRequested) {
 			throw new IllegalArgumentException("Requested " + bytesRequested
 					+ " bytes (k=" + kRequested + ") but buffer has only "
@@ -176,164 +152,86 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 
 	@Override
 	public void setKmerLength(int k) {
-		this.bytesUsed = HEADER_SIZE + KmerUtil.getByteNumFromK(k);
+		this.bytesUsed = KmerUtil.getByteNumFromK(k);
 		this.lettersInKmer = k;
-		Marshal.putInt(k, bytes, offset);
+		Marshal.putInt(k, bytes, offset - HEADER_SIZE);
 	}
-
+	
 	@Override
-	public void setByRead(byte[] stringBytes, int start) {
-		offset += HEADER_SIZE;
-		super.setByRead(stringBytes, start);
-		offset -= HEADER_SIZE;
+	protected int getCapacity() {
+		return bytes.length - HEADER_SIZE;
 	}
-
+	
 	@Override
-	public void setByReadReverse(byte[] array, int start) {
-		offset += HEADER_SIZE;
-		super.setByReadReverse(array, start);
-		offset -= HEADER_SIZE;
+	protected void setCapacity(int new_cap) {
+		if (new_cap != getCapacity()) {
+			byte[] new_data = new byte[new_cap + HEADER_SIZE];
+			if (new_cap < bytesUsed) {
+				bytesUsed = new_cap;
+			}
+			if (bytesUsed != 0) {
+				System.arraycopy(bytes, offset, new_data, HEADER_SIZE, bytesUsed);
+			}
+			bytes = new_data;
+			offset = HEADER_SIZE;
+		}
 	}
 
-	@Override
-	public byte shiftKmerWithNextCode(byte c) {
-		offset += HEADER_SIZE;
-		byte retval = super.shiftKmerWithNextCode(c);
-		offset -= HEADER_SIZE;
-		return retval;
-
-	}
-
-	@Override
-	public byte shiftKmerWithPreCode(byte c) {
-		offset += HEADER_SIZE;
-		byte retval = super.shiftKmerWithPreCode(c);
-		offset -= HEADER_SIZE;
-		return retval;
-	}
 
 	@Override
 	public void mergeWithFFKmer(int initialKmerSize, KmerBytesWritable kmer) {
-		offset += HEADER_SIZE;
 		super.mergeWithFFKmer(initialKmerSize, kmer);
-		offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
-	}
-
-	/**
-	 * Merge with kmer that's FF to me. See KmerBytesWritable.mergeWithFFKmer.
-	 */
-	public void mergeWithFFKmer(int initialKmerSize, VKmerBytesWritable kmer) {
-		offset += HEADER_SIZE;
-		kmer.offset += HEADER_SIZE;
-		super.mergeWithFFKmer(initialKmerSize, kmer);
-		offset -= HEADER_SIZE;
-		kmer.offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
+		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
 	}
 
 	@Override
 	public void mergeWithFRKmer(int initialKmerSize, KmerBytesWritable kmer) {
-		offset += HEADER_SIZE;
 		super.mergeWithFRKmer(initialKmerSize, kmer);
-		offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
-	}
-
-	/**
-	 * Merge with kmer that's FR to me. See KmerBytesWritable.mergeWithFRKmer.
-	 */
-	public void mergeWithFRKmer(int initialKmerSize, VKmerBytesWritable kmer) {
-		offset += HEADER_SIZE;
-		kmer.offset += HEADER_SIZE;
-		super.mergeWithFRKmer(initialKmerSize, kmer);
-		offset -= HEADER_SIZE;
-		kmer.offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
+		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
 	}
 
 	@Override
 	public void mergeWithRFKmer(int initialKmerSize, KmerBytesWritable preKmer) {
-		offset += HEADER_SIZE;
 		super.mergeWithRFKmer(initialKmerSize, preKmer);
-		offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
-	}
-
-	/**
-	 * Merge with kmer that's RF to me. See KmerBytesWritable.mergeWithRFKmer.
-	 */
-	public void mergeWithRFKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
-		offset += HEADER_SIZE;
-		preKmer.offset += HEADER_SIZE;
-		super.mergeWithRFKmer(initialKmerSize, preKmer);
-		offset -= HEADER_SIZE;
-		preKmer.offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
+		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
 	}
 
 	@Override
 	public void mergeWithRRKmer(int initialKmerSize, KmerBytesWritable preKmer) {
-		offset += HEADER_SIZE;
 		super.mergeWithRRKmer(initialKmerSize, preKmer);
-		offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
-	}
-
-	/**
-	 * Merge with kmer that's RR to me. See KmerBytesWritable.mergeWithRRKmer.
-	 */
-	public void mergeWithRRKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
-		offset += HEADER_SIZE;
-		preKmer.offset += HEADER_SIZE;
-		super.mergeWithRRKmer(initialKmerSize, preKmer);
-		offset -= HEADER_SIZE;
-		preKmer.offset -= HEADER_SIZE;
-		Marshal.putInt(lettersInKmer, bytes, offset);
-	}
-
-	@Override
-	protected void clearLeadBit() {
-		offset += HEADER_SIZE;
-		super.clearLeadBit();
-		offset -= HEADER_SIZE;
+		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		lettersInKmer = in.readInt();
-		bytesUsed = HEADER_SIZE + KmerUtil.getByteNumFromK(lettersInKmer);
+		bytesUsed = KmerUtil.getByteNumFromK(lettersInKmer);
 		if (lettersInKmer > 0) {
-			if (this.bytes.length < this.bytesUsed) {
-				this.bytes = new byte[this.bytesUsed];
-				this.offset = 0;
+			if (getCapacity() < this.bytesUsed) {
+				this.bytes = new byte[this.bytesUsed + HEADER_SIZE];
+				this.offset = HEADER_SIZE;
 			}
-			in.readFully(bytes, offset + HEADER_SIZE, bytesUsed - HEADER_SIZE);
+			in.readFully(bytes, offset, bytesUsed);
 		}
-		Marshal.putInt(lettersInKmer, bytes, offset);
+		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(lettersInKmer);
-		if (lettersInKmer > 0) {
-			out.write(bytes, offset + HEADER_SIZE, bytesUsed - HEADER_SIZE);
-		}
+		out.write(bytes, offset - HEADER_SIZE, bytesUsed + HEADER_SIZE);
 	}
 
 	@Override
 	public boolean equals(Object right) {
 		if (right instanceof VKmerBytesWritable) {
-			return this.lettersInKmer == ((VKmerBytesWritable) right).lettersInKmer
-					&& super.equals(right);
+			return super.equals(right); // compare bytes directly
 		} else if (right instanceof KmerBytesWritable) {
 			// for Kmers, we need to skip our header
 			KmerBytesWritable rightKmer = (KmerBytesWritable) right;
-			if (lettersInKmer != rightKmer.lettersInKmer) {
-				// break early
+			if (lettersInKmer != rightKmer.lettersInKmer) { // check length
 				return false;
 			}
-			for (int i = 0; i < lettersInKmer; i++) {
+			for (int i = 0; i < lettersInKmer; i++) { // check letters
 				if (bytes[i + HEADER_SIZE] != rightKmer.bytes[i]) {
 					return false;
 				}
@@ -346,7 +244,7 @@ public class VKmerBytesWritable extends KmerBytesWritable {
 	@Override
 	public String toString() {
 		return KmerUtil.recoverKmerFrom(this.lettersInKmer, this.getBytes(),
-				offset + HEADER_SIZE, this.getLength());
+				offset, this.getLength());
 	}
 
 	public static class Comparator extends WritableComparator {

@@ -229,14 +229,24 @@ public class KmerBytesWritableTest {
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAACAACCC", merge.toString());
         
-        String test1 = "CTA";
-        String test2 = "AGA";
-        KmerBytesWritable k1 = new KmerBytesWritable(3);
-        KmerBytesWritable k2 = new KmerBytesWritable(3);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithRFKmer(3, k2);
-        Assert.assertEquals("CTAT", k1);
+//        String test1 = "CTTAT";
+//        String test2 = "AGACC";  // rc = GGTCT
+//        KmerBytesWritable k1 = new KmerBytesWritable(5);
+//        KmerBytesWritable k2 = new KmerBytesWritable(5);
+//        k1.setByRead(test1.getBytes(), 0);
+//        k2.setByRead(test2.getBytes(), 0);
+//        k1.mergeWithRFKmer(3, k2);
+//        Assert.assertEquals("GGTCTTAT", k1.toString());  //GGTCGTCT  -> AGACGACC ??
+        
+        String test3 = "CTA";
+        String test4 = "AGA";  // rc = TCT
+        KmerBytesWritable k3 = new KmerBytesWritable(3);
+        KmerBytesWritable k4 = new KmerBytesWritable(3);
+        k3.setByRead(test3.getBytes(), 0);
+        k4.setByRead(test4.getBytes(), 0);
+        k3.mergeWithRFKmer(3, k4);
+        Assert.assertEquals("TCTA", k3.toString());
+//        Assert.assertEquals("CTAT", k3);  // this is an incorrect test case-- the merge always flips the passed-in kmer
     }
     
     
@@ -282,4 +292,22 @@ public class KmerBytesWritableTest {
         }
     }
 
+    @Test
+    public void TestMergeRFAndRRKmer() {
+    	String test1 = "TAGAT";
+    	String test2 = "TCTAG";  // rc = CTAGA
+    	String test3 = "GCTAG";
+    	KmerBytesWritable k1 = new KmerBytesWritable(5);
+        KmerBytesWritable k2 = new KmerBytesWritable(5);
+        KmerBytesWritable k3 = new KmerBytesWritable(5);
+        k1.setByRead(test1.getBytes(), 0);
+        k2.setByRead(test2.getBytes(), 0);
+        k3.setByRead(test3.getBytes(), 0);
+        k1.mergeWithRFKmer(5, k2);
+        Assert.assertEquals("CTAGAT", k1.toString());
+        k1.mergeWithRRKmer(5, k3);
+        Assert.assertEquals("GCTAGAT", k1.toString());
+    }
 }
+
+
