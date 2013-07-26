@@ -44,6 +44,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
         this.readLength = readlength;
         this.kmerSize = k;
     }
+    
+    
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)

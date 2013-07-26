@@ -82,8 +82,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             private PositionWritable nodeId = new PositionWritable();
             private PositionListWritable nodeIdList = new PositionListWritable();
-            private KmerListWritable edgeListForPreKmer = new KmerListWritable(kmerSize);;
-            private KmerListWritable edgeListForNextKmer = new KmerListWritable(kmerSize);;
+            private KmerListWritable edgeListForPreKmer = new KmerListWritable(kmerSize);
+            private KmerListWritable edgeListForNextKmer = new KmerListWritable(kmerSize);
             private NodeWritable outputNode = new NodeWritable(kmerSize);
 
             private KmerBytesWritable preForwardKmer = new KmerBytesWritable(kmerSize);
