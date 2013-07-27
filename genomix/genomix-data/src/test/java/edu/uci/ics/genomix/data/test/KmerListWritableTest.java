@@ -32,9 +32,9 @@ public class KmerListWritableTest {
         }
         
         kmerList.reset();
+        KmerBytesWritable.setGlobalKmerLength(5);
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
-            KmerBytesWritable.setGlobalKmerLength(5);
             kmer = new KmerBytesWritable();
             String randomString = generateString(5);
             byte[] array = randomString.getBytes();

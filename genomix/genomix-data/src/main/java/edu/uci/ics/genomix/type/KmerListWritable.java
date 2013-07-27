@@ -33,7 +33,9 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
 
     public KmerListWritable(byte[] data, int offset) {
-        setNewReference(data, offset);
+//        setNewReference(data, offset);
+        this();
+        setCopy(data, offset);
     }
 
     public KmerListWritable(List<KmerBytesWritable> kmers) {
@@ -44,15 +46,15 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         }
     }
 
-    public void setNewReference(byte[] data, int offset) {
-        valueCount = Marshal.getInt(data, offset);
-        if (valueCount * KmerBytesWritable.getBytesPerKmer() > data.length - offset) {
-            throw new IllegalArgumentException("Specified data buffer (len=" + (data.length - offset)
-                    + ") is not large enough to store requested number of elements (" + valueCount + ")!");
-        }
-        this.storage = data;
-        this.offset = offset;
-    }
+//    public void setNewReference(byte[] data, int offset) {
+//        valueCount = Marshal.getInt(data, offset);
+//        if (valueCount * KmerBytesWritable.getBytesPerKmer() > data.length - offset) {
+//            throw new IllegalArgumentException("Specified data buffer (len=" + (data.length - offset)
+//                    + ") is not large enough to store requested number of elements (" + valueCount + ")!");
+//        }
+//        this.storage = data;
+//        this.offset = offset;
+//    }
 
     public void append(KmerBytesWritable kmer) {
         setSize((1 + valueCount) * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
@@ -121,9 +123,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
 
     public void reset() {
-        storage = EMPTY_BYTES;
         valueCount = 0;
-        offset = 0;
     }
 
     public KmerBytesWritable getPosition(int i) {
@@ -148,7 +148,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
             System.arraycopy(newData, offset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, valueCount
                     * KmerBytesWritable.getBytesPerKmer());
         }
-        Marshal.putInt(valueCount, storage, offset);
+        Marshal.putInt(valueCount, storage, this.offset);
     }
 
     @Override

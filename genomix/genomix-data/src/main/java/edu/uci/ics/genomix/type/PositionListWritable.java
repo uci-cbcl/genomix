@@ -13,78 +13,81 @@ import org.apache.hadoop.io.Writable;
 import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.PositionWritable;
 
-public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable{
+public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable {
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
-    protected static final byte[] EMPTY = {};
-    
+    protected static final byte[] EMPTY_BYTES = {0,0,0,0};
+    protected static final int HEADER_SIZE = 4;
+
     protected PositionWritable posIter = new PositionWritable();
-    
+
     public PositionListWritable() {
-        this.storage = EMPTY;
+        this.storage = EMPTY_BYTES;
         this.valueCount = 0;
         this.offset = 0;
     }
-    
-    public PositionListWritable(int count, byte[] data, int offset) {
-        setNewReference(count, data, offset);
+
+    public PositionListWritable(byte[] data, int offset) {
+//        setNewReference(data, offset);
+        set(data, offset);
     }
-    
+
     public PositionListWritable(List<PositionWritable> posns) {
         this();
-        setSize(posns.size());  // reserve space for all elements
+        setSize(posns.size()); // reserve space for all elements
         for (PositionWritable p : posns) {
             append(p);
         }
     }
-    
-    public void setNewReference(int count, byte[] data, int offset) {
-        this.valueCount = count;
-        this.storage = data;
-        this.offset = offset;
-    }
-    
+
+//    public void setNewReference(byte[] data, int offset) {
+//        this.valueCount = Marshal.getInt(data, offset);
+//        this.storage = data;
+//        this.offset = offset;
+//        isReference = true;
+//    }
+
     public void append(long uuid) {
-        setSize((1 + valueCount) * PositionWritable.LENGTH);
-        Marshal.putLong(uuid, storage, offset + valueCount * PositionWritable.LENGTH);
+        setSize((1 + valueCount) * PositionWritable.LENGTH + HEADER_SIZE);
+        Marshal.putLong(uuid, storage, offset + valueCount * PositionWritable.LENGTH + HEADER_SIZE);
         valueCount += 1;
+        Marshal.putInt(valueCount, storage, offset);
     }
-    
-    public void append(byte mateId, long readId, int posId){
+
+    public void append(byte mateId, long readId, int posId) {
         append(PositionWritable.makeUUID(mateId, readId, posId));
     }
-    
+
     public void append(PositionWritable pos) {
-        if(pos != null)
+        if (pos != null)
             append(pos.getUUID());
         else
             throw new RuntimeException("This position is null pointer!");
     }
-    
+
     /*
      * Append the otherList to the end of myList
      */
     public void appendList(PositionListWritable otherList) {
         if (otherList.valueCount > 0) {
-            setSize((valueCount + otherList.valueCount) * PositionWritable.LENGTH);
+            setSize((valueCount + otherList.valueCount) * PositionWritable.LENGTH + HEADER_SIZE);
             // copy contents of otherList into the end of my storage
-            System.arraycopy(otherList.storage, otherList.offset,
-                    storage, offset + valueCount * PositionWritable.LENGTH, 
-                    otherList.valueCount * PositionWritable.LENGTH);
+            System.arraycopy(otherList.storage, otherList.offset + HEADER_SIZE, storage, offset + valueCount
+                    * PositionWritable.LENGTH + HEADER_SIZE, otherList.valueCount * PositionWritable.LENGTH);
             valueCount += otherList.valueCount;
+            Marshal.putInt(valueCount, storage, offset);
         }
     }
-    
+
     /**
      * Save the union of my list and otherList. Uses a temporary HashSet for
      * uniquefication
      */
     public void unionUpdate(PositionListWritable otherList) {
         int newSize = valueCount + otherList.valueCount;
-        HashSet<PositionWritable> uniqueElements = new HashSet<PositionWritable>(
-                newSize);
+        HashSet<PositionWritable> uniqueElements = new HashSet<PositionWritable>(newSize);
         for (PositionWritable pos : this) {
             uniqueElements.add(pos);
         }
@@ -92,42 +95,47 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             uniqueElements.add(pos);
         }
         valueCount = 0;
-        setSize(newSize);
+        setSize(newSize * PositionWritable.LENGTH + HEADER_SIZE);
         for (PositionWritable pos : uniqueElements) {
             append(pos);
         }
     }
-    
+
     public static int getCountByDataLength(int length) {
         if (length % PositionWritable.LENGTH != 0) {
             throw new IllegalArgumentException("Length of positionlist is invalid");
         }
         return length / PositionWritable.LENGTH;
     }
-    
+
     public void set(PositionListWritable otherList) {
-        set(otherList.valueCount, otherList.storage, otherList.offset);
+        set(otherList.storage, otherList.offset);
     }
 
-    public void set(int valueCount, byte[] newData, int offset) {
-        this.valueCount = valueCount;
-        setSize(valueCount * PositionWritable.LENGTH);
+    public void set(byte[] newData, int offset) {
+        valueCount = Marshal.getInt(newData, offset);
+        setSize(valueCount * PositionWritable.LENGTH + HEADER_SIZE);
         if (valueCount > 0) {
-            System.arraycopy(newData, offset, storage, this.offset, valueCount * PositionWritable.LENGTH);
+            System.arraycopy(newData, offset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, valueCount * PositionWritable.LENGTH);
         }
+        Marshal.putInt(valueCount, storage, offset);
     }
 
     public void reset() {
         valueCount = 0;
+        Marshal.putInt(valueCount, storage, offset);
     }
-    
+
     protected void setSize(int size) {
         if (size > getCapacity()) {
             setCapacity((size * 3 / 2));
         }
     }
-    
+
     protected int getCapacity() {
+//        if (isReference) {  // my storage is a borrowed reference so I can't expand beyond my original size
+//            return valueCount * PositionWritable.LENGTH + HEADER_SIZE;
+//        }
         return storage.length - offset;
     }
 
@@ -141,7 +149,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             offset = 0;
         }
     }
-    
+
     public PositionWritable getPosition(int i) {
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
@@ -149,14 +157,14 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         posIter.setNewReference(storage, offset + i * PositionWritable.LENGTH);
         return posIter;
     }
-    
+
     public void resetPosition(int i, long uuid) {
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
         Marshal.putLong(uuid, storage, offset + i * PositionWritable.LENGTH);
     }
-    
+
     public int getCountOfPosition() {
         return valueCount;
     }
@@ -172,7 +180,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     public int getLength() {
         return valueCount * PositionWritable.LENGTH;
     }
-    
+
     @Override
     public Iterator<PositionWritable> iterator() {
         Iterator<PositionWritable> it = new Iterator<PositionWritable>() {
@@ -191,50 +199,51 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
 
             @Override
             public void remove() {
-                if(currentIndex < valueCount)
-                    System.arraycopy(storage, offset + currentIndex * PositionWritable.LENGTH, 
-                          storage, offset + (currentIndex - 1) * PositionWritable.LENGTH, 
-                          (valueCount - currentIndex) * PositionWritable.LENGTH);
+                if (currentIndex < valueCount)
+                    System.arraycopy(storage, offset + currentIndex * PositionWritable.LENGTH, storage, offset
+                            + (currentIndex - 1) * PositionWritable.LENGTH, (valueCount - currentIndex)
+                            * PositionWritable.LENGTH);
                 valueCount--;
                 currentIndex--;
             }
         };
         return it;
     }
-    
+
     /*
      * remove the first instance of @toRemove. Uses a linear scan.  Throws an exception if not in this list.
      */
     public void remove(PositionWritable toRemove, boolean ignoreMissing) {
         Iterator<PositionWritable> posIterator = this.iterator();
         while (posIterator.hasNext()) {
-            if(toRemove.equals(posIterator.next())) {
+            if (toRemove.equals(posIterator.next())) {
                 posIterator.remove();
                 return;
             }
         }
         if (!ignoreMissing) {
-        	throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString() + "` was not found in this list.");
+            throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString()
+                    + "` was not found in this list.");
         }
     }
-    
+
     public void remove(PositionWritable toRemove) {
-    	remove(toRemove, false);
+        remove(toRemove, false);
     }
-    
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(valueCount);
         out.write(storage, offset, valueCount * PositionWritable.LENGTH);
     }
-    
+
     @Override
     public void readFields(DataInput in) throws IOException {
         this.valueCount = in.readInt();
         setSize(valueCount * PositionWritable.LENGTH);
         in.readFully(storage, offset, valueCount * PositionWritable.LENGTH);
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
@@ -250,12 +259,12 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         }
         return sbuilder.toString();
     }
-    
+
     @Override
     public int hashCode() {
         return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof PositionListWritable))
@@ -263,9 +272,9 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         PositionListWritable other = (PositionListWritable) o;
         if (this.valueCount != other.valueCount)
             return false;
-        for (int i=0; i < this.valueCount; i++) {
-                if (!this.getPosition(i).equals(other.getPosition(i)))
-                    return false;
+        for (int i = 0; i < this.valueCount; i++) {
+            if (!this.getPosition(i).equals(other.getPosition(i)))
+                return false;
         }
         return true;
     }
