@@ -42,6 +42,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     protected int bytesUsed;
     protected byte[] bytes;
     protected int kmerStartOffset;
+    protected int storageMaxSize;  // since we may be a reference inside a larger datablock, we must track our maximum size
 
     /**
      * Initialize as empty kmer
@@ -56,6 +57,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     public VKmerBytesWritable(String kmer) {
         bytes = new byte[HEADER_SIZE + KmerUtil.getByteNumFromK(kmer.length())];
         kmerStartOffset = HEADER_SIZE;
+        storageMaxSize = bytes.length;
         setAsCopy(kmer);
     }
 
@@ -82,6 +84,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
             throw new IllegalArgumentException("Invalid K (" + k + ").");
         }
         kmerStartOffset = HEADER_SIZE;
+        storageMaxSize = bytes.length;
         setKmerLength(k);
     }
 
@@ -146,6 +149,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
             throw new IllegalArgumentException("Requested " + bytesRequested + " bytes (k=" + kRequested
                     + ") but buffer has only " + (newData.length - blockOffset) + " bytes");
         }
+        storageMaxSize = bytesRequested;  // since we are a reference, store our max capacity
         setKmerLength(kRequested);
     }
 
@@ -159,6 +163,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         if (bytesUsed < newByteLength) {
             bytes = new byte[newByteLength + HEADER_SIZE];
             kmerStartOffset = HEADER_SIZE;
+            storageMaxSize = bytes.length;
         }
         setKmerLength(k);
     }
@@ -300,7 +305,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     }
 
     protected int getKmerByteCapacity() {
-        return bytes.length - HEADER_SIZE;
+        return storageMaxSize  - HEADER_SIZE;
     }
 
     protected void setKmerByteCapacity(int new_cap) {
@@ -314,6 +319,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
             }
             bytes = new_data;
             kmerStartOffset = HEADER_SIZE;
+            storageMaxSize = bytes.length;
         }
     }
 
@@ -329,6 +335,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
             if (getKmerByteCapacity() < this.bytesUsed) {
                 this.bytes = new byte[this.bytesUsed + HEADER_SIZE];
                 this.kmerStartOffset = HEADER_SIZE;
+                storageMaxSize = bytes.length;
             }
             in.readFully(bytes, kmerStartOffset, bytesUsed);
         }

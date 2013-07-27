@@ -23,19 +23,19 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
+    protected int storageMaxSize;  // since we may be a reference inside a larger datablock, we must track our maximum size
 
     private KmerBytesWritable posIter = new KmerBytesWritable();
 
     public KmerListWritable() {
-        this.storage = EMPTY_BYTES;
-        this.valueCount = 0;
-        this.offset = 0;
+        storage = EMPTY_BYTES;
+        valueCount = 0;
+        offset = 0;
+        storageMaxSize = storage.length; 
     }
 
     public KmerListWritable(byte[] data, int offset) {
-//        setNewReference(data, offset);
-        this();
-        setCopy(data, offset);
+        setNewReference(data, offset);
     }
 
     public KmerListWritable(List<KmerBytesWritable> kmers) {
@@ -46,15 +46,16 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         }
     }
 
-//    public void setNewReference(byte[] data, int offset) {
-//        valueCount = Marshal.getInt(data, offset);
-//        if (valueCount * KmerBytesWritable.getBytesPerKmer() > data.length - offset) {
-//            throw new IllegalArgumentException("Specified data buffer (len=" + (data.length - offset)
-//                    + ") is not large enough to store requested number of elements (" + valueCount + ")!");
-//        }
-//        this.storage = data;
-//        this.offset = offset;
-//    }
+    public void setNewReference(byte[] data, int offset) {
+        valueCount = Marshal.getInt(data, offset);
+        if (valueCount * KmerBytesWritable.getBytesPerKmer() > data.length - offset) {
+            throw new IllegalArgumentException("Specified data buffer (len=" + (data.length - offset)
+                    + ") is not large enough to store requested number of elements (" + valueCount + ")!");
+        }
+        this.storage = data;
+        this.offset = offset;
+        this.storageMaxSize = valueCount * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE;
+    }
 
     public void append(KmerBytesWritable kmer) {
         setSize((1 + valueCount) * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
@@ -108,17 +109,18 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
 
     protected int getCapacity() {
-        return storage.length - offset;
+        return storageMaxSize - offset;
     }
 
     protected void setCapacity(int new_cap) {
         if (new_cap > getCapacity()) {
             byte[] new_data = new byte[new_cap];
-            if (storage.length - offset > 0) {
-                System.arraycopy(storage, offset, new_data, 0, storage.length - offset);
+            if (valueCount > 0) {
+                System.arraycopy(storage, offset, new_data, 0, valueCount * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
             }
             storage = new_data;
             offset = 0;
+            storageMaxSize = storage.length;
         }
     }
 
@@ -139,15 +141,16 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     }
 
     /**
-     * save as a copy of the given data buffer, including the header
+     * read a KmerListWritable from newData, which should include the header
      */
     public void setCopy(byte[] newData, int offset) {
-        valueCount = Marshal.getInt(newData, offset);
-        setSize(valueCount * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
-        if (valueCount > 0) {
-            System.arraycopy(newData, offset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, valueCount
+        int newValueCount = Marshal.getInt(newData, offset);
+        setSize(newValueCount * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
+        if (newValueCount > 0) {
+            System.arraycopy(newData, offset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, newValueCount
                     * KmerBytesWritable.getBytesPerKmer());
         }
+        valueCount = newValueCount;
         Marshal.putInt(valueCount, storage, this.offset);
     }
 
@@ -190,9 +193,10 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         while (posIterator.hasNext()) {
             if (toRemove.equals(posIterator.next())) {
                 posIterator.remove();
-                return;
+                return;  // break as soon as the element is found 
             }
         }
+        // element was not found
         if (!ignoreMissing) {
             throw new ArrayIndexOutOfBoundsException("the KmerBytesWritable `" + toRemove.toString()
                     + "` was not found in this list.");

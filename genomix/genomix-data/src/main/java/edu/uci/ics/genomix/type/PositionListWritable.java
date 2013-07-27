@@ -15,24 +15,26 @@ import edu.uci.ics.genomix.type.PositionWritable;
 
 public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable {
     private static final long serialVersionUID = 1L;
+    protected static final byte[] EMPTY_BYTES = {0,0,0,0};
+    protected static final int HEADER_SIZE = 4;
+    
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
-    protected static final byte[] EMPTY_BYTES = {0,0,0,0};
-    protected static final int HEADER_SIZE = 4;
+    protected int maxStorageSize;
+
 
     protected PositionWritable posIter = new PositionWritable();
 
     public PositionListWritable() {
-        this.storage = EMPTY_BYTES;
-        this.valueCount = 0;
-        this.offset = 0;
+        storage = EMPTY_BYTES;
+        valueCount = 0;
+        offset = 0;
+        maxStorageSize = storage.length; 
     }
 
     public PositionListWritable(byte[] data, int offset) {
-//        setNewReference(data, offset);
-        this();
-        set(data, offset);
+        setNewReference(data, offset);
     }
 
     public PositionListWritable(List<PositionWritable> posns) {
@@ -42,14 +44,13 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             append(p);
         }
     }
-
-//    // TODO: we currently don't track who actually owns each block so variable-length references are impossible. We could track 1) if it's a reference and 2) the size of the original reference block, but that would require a check for every setSize and might be coplicated logic  
-//    public void setNewReference(byte[] data, int offset) {
-//        this.valueCount = Marshal.getInt(data, offset);
-//        this.storage = data;
-//        this.offset = offset;
-//        isReference = true;
-//    }
+  
+    public void setNewReference(byte[] data, int offset) {
+        this.valueCount = Marshal.getInt(data, offset);
+        this.storage = data;
+        this.offset = offset;
+        maxStorageSize = valueCount * PositionWritable.LENGTH + HEADER_SIZE;
+    }
 
     public void append(long uuid) {
         setSize((1 + valueCount) * PositionWritable.LENGTH + HEADER_SIZE);
@@ -115,11 +116,12 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
 
     public void set(byte[] newData, int newOffset) {
-        valueCount = Marshal.getInt(newData, newOffset);
-        setSize(valueCount * PositionWritable.LENGTH + HEADER_SIZE);
-        if (valueCount > 0) {
-            System.arraycopy(newData, newOffset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, valueCount * PositionWritable.LENGTH);
+        int newValueCount = Marshal.getInt(newData, newOffset);
+        setSize(newValueCount * PositionWritable.LENGTH + HEADER_SIZE);
+        if (newValueCount > 0) {
+            System.arraycopy(newData, newOffset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, newValueCount * PositionWritable.LENGTH);
         }
+        valueCount = newValueCount;
         Marshal.putInt(valueCount, storage, this.offset);
     }
 
@@ -135,20 +137,18 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
 
     protected int getCapacity() {
-//        if (isReference) {  // my storage is a borrowed reference so I can't expand beyond my original size
-//            return valueCount * PositionWritable.LENGTH + HEADER_SIZE;
-//        }
-        return storage.length - offset;
+        return maxStorageSize - offset;
     }
 
     protected void setCapacity(int new_cap) {
         if (new_cap > getCapacity()) {
             byte[] new_data = new byte[new_cap];
-            if (storage.length - offset > 0) {
-                System.arraycopy(storage, offset, new_data, 0, storage.length - offset);
+            if (valueCount > 0) {
+                System.arraycopy(storage, offset, new_data, 0, valueCount * PositionWritable.LENGTH + HEADER_SIZE);
             }
             storage = new_data;
             offset = 0;
+            maxStorageSize = storage.length;
         }
     }
 
@@ -221,9 +221,10 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         while (posIterator.hasNext()) {
             if (toRemove.equals(posIterator.next())) {
                 posIterator.remove();
-                return;
+                return;  // found it. return early. 
             }
         }
+        // element not found.
         if (!ignoreMissing) {
             throw new ArrayIndexOutOfBoundsException("the PositionWritable `" + toRemove.toString()
                     + "` was not found in this list.");

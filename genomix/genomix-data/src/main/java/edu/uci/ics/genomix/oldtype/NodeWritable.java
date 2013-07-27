@@ -45,7 +45,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private PositionListWritable forwardReverseList;
     private PositionListWritable reverseForwardList;
     private PositionListWritable reverseReverseList;
-    private KmerBytesWritable kmer;
+    private VKmerBytesWritable kmer;
 
     public NodeWritable() {
         this(21);
@@ -57,7 +57,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         forwardReverseList = new PositionListWritable();
         reverseForwardList = new PositionListWritable();
         reverseReverseList = new PositionListWritable();
-        kmer = new KmerBytesWritable(kmerSize);
+        kmer = new VKmerBytesWritable();
     }
 
     public NodeWritable(PositionWritable nodeID, PositionListWritable FFList, PositionListWritable FRList,

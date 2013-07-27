@@ -173,6 +173,23 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         curOffset += reverseReverseList.getLength();
         kmer.setAsCopy(data, curOffset);
     }
+    
+    public void setAsReference(byte[] data, int offset) {
+        int curOffset = offset;
+        nodeIdList.setNewReference(data, curOffset);
+        
+        curOffset += nodeIdList.getLength();
+        forwardForwardList.setNewReference(data, curOffset);
+        curOffset += forwardForwardList.getLength();
+        forwardReverseList.setNewReference(data, curOffset);
+        curOffset += forwardReverseList.getLength();
+        reverseForwardList.setNewReference(data, curOffset);
+        curOffset += reverseForwardList.getLength();
+        reverseReverseList.setNewReference(data, curOffset);
+        
+        curOffset += reverseReverseList.getLength();
+        kmer.setAsReference(data, curOffset);
+    }
 	
     @Override
     public void write(DataOutput out) throws IOException {
