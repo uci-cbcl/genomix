@@ -131,7 +131,7 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
 
         for (int i = 1; i < 8; i++) {
-            merge.set(kmer1);
+            merge.setAsCopy(kmer1);
             merge.mergeWithFFKmer(i, kmer2);
             Assert.assertEquals(text1 + text2.substring(i - 1), merge.toString());
         }
@@ -147,7 +147,7 @@ public class KmerBytesWritableTest {
                 Assert.assertEquals(text1, kmer1.toString());
                 Assert.assertEquals(text2, kmer2.toString());
                 for (int x = 1; x < jk; x++) {
-                    merge.set(kmer1);
+                    merge.setAsCopy(kmer1);
                     merge.mergeWithFFKmer(x, kmer2);
                     Assert.assertEquals(text1 + text2.substring(x - 1), merge.toString());
                 }
@@ -177,17 +177,17 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(result, merge.toString());
         
         int i = 1;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(i, kmer2);
         Assert.assertEquals("AAGCTAAAACAACC", merge.toString());
         
         i = 2;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(i, kmer2);
         Assert.assertEquals("AAGCTAAACAACC", merge.toString());
         
         i = 3;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(i, kmer2);
         Assert.assertEquals("AAGCTAACAACC", merge.toString());
     }
@@ -215,48 +215,38 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(result, merge.toString());
         
         int i = 1;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAAAACAACCC", merge.toString());
         
         i = 2;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAAACAACCC", merge.toString());
         
         i = 3;
-        merge.set(kmer1);
+        merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(i, kmer2);
         Assert.assertEquals("GGCACAACAACCC", merge.toString());
         
-        String test1;
-        String test2;
-        test1 = "CTA";
-        test2 = "AGA";
-        KmerBytesWritable k1 = new KmerBytesWritable(3);
-        KmerBytesWritable k2 = new KmerBytesWritable(3);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithRFKmer(3, k2);
-        Assert.assertEquals("TCTA", k1.toString());
+//        String test1 = "CTTAT";
+//        String test2 = "AGACC";  // rc = GGTCT
+//        KmerBytesWritable k1 = new KmerBytesWritable(5);
+//        KmerBytesWritable k2 = new KmerBytesWritable(5);
+//        k1.setByRead(test1.getBytes(), 0);
+//        k2.setByRead(test2.getBytes(), 0);
+//        k1.mergeWithRFKmer(3, k2);
+//        Assert.assertEquals("GGTCTTAT", k1.toString());  //GGTCGTCT  -> AGACGACC ??
         
-        test1 = "CTA";
-        test2 = "ATA"; //TAT
-        k1 = new KmerBytesWritable(3);
-        k2 = new KmerBytesWritable(3);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithFRKmer(3, k2);
-        Assert.assertEquals("CTAT", k1.toString());
-        
-        test1 = "ATA";
-        test2 = "CTA"; //TAT
-        k1 = new KmerBytesWritable(3);
-        k2 = new KmerBytesWritable(3);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithFRKmer(3, k2);
-        Assert.assertEquals("ATAG", k1.toString());
+        String test3 = "CTA";
+        String test4 = "AGA";  // rc = TCT
+        KmerBytesWritable k3 = new KmerBytesWritable(3);
+        KmerBytesWritable k4 = new KmerBytesWritable(3);
+        k3.setByRead(test3.getBytes(), 0);
+        k4.setByRead(test4.getBytes(), 0);
+        k3.mergeWithRFKmer(3, k4);
+        Assert.assertEquals("TCTA", k3.toString());
+//        Assert.assertEquals("CTAT", k3);  // this is an incorrect test case-- the merge always flips the passed-in kmer
     }
     
     
@@ -278,7 +268,7 @@ public class KmerBytesWritableTest {
         Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
 
         for (int i = 1; i < 8; i++) {
-            merge.set(kmer2);
+            merge.setAsCopy(kmer2);
             merge.mergeWithRRKmer(i, kmer1);
             Assert.assertEquals(text1.substring(0, text1.length() - i + 1) + text2, merge.toString());
         }
@@ -294,62 +284,30 @@ public class KmerBytesWritableTest {
                 Assert.assertEquals(text1, kmer1.toString());
                 Assert.assertEquals(text2, kmer2.toString());
                 for (int x = 1; x < ik; x++) {
-                    merge.set(kmer2);
+                    merge.setAsCopy(kmer2);
                     merge.mergeWithRRKmer(x, kmer1);
                     Assert.assertEquals(text1.substring(0, text1.length() - x + 1) + text2, merge.toString());
                 }
             }
         }
     }
-    
+
     @Test
-    public void TestFinalMerge() {
-        String selfString;
-        String match;
-        String msgString;
-        int index;
-        KmerBytesWritable kmer = new KmerBytesWritable();
-        int kmerSize = 3;
-        
-        String F1 = "AATAG";
-        String F2 = "TAGAA";
-        String R1 = "CTATT";
-        String R2 = "TTCTA";
-        
-        //FF test
-        selfString = F1;
-        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
-        msgString = F2;
-        index = msgString.indexOf(match);
-        kmer.reset(msgString.length() - index);
-        kmer.setByRead(msgString.substring(index).getBytes(), 0);
-        System.out.println(kmer.toString());
-        
-        //FR test
-        selfString = F1;
-        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
-        msgString = GeneCode.reverseComplement(R2);
-        index = msgString.indexOf(match);
-        kmer.reset(msgString.length() - index);
-        kmer.setByRead(msgString.substring(index).getBytes(), 0);
-        System.out.println(kmer.toString());
-        
-        //RF test
-        selfString = R1;
-        match = selfString.substring(0,kmerSize - 1); 
-        msgString = GeneCode.reverseComplement(F2);
-        index = msgString.lastIndexOf(match) + kmerSize - 2;
-        kmer.reset(index + 1);
-        kmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
-        System.out.println(kmer.toString());
-        
-        //RR test
-        selfString = R1;
-        match = selfString.substring(0,kmerSize - 1); 
-        msgString = R2;
-        index = msgString.lastIndexOf(match) + kmerSize - 2;
-        kmer.reset(index + 1);
-        kmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
-        System.out.println(kmer.toString());
+    public void TestMergeRFAndRRKmer() {
+    	String test1 = "TAGAT";
+    	String test2 = "TCTAG";  // rc = CTAGA
+    	String test3 = "GCTAG";
+    	KmerBytesWritable k1 = new KmerBytesWritable(5);
+        KmerBytesWritable k2 = new KmerBytesWritable(5);
+        KmerBytesWritable k3 = new KmerBytesWritable(5);
+        k1.setByRead(test1.getBytes(), 0);
+        k2.setByRead(test2.getBytes(), 0);
+        k3.setByRead(test3.getBytes(), 0);
+        k1.mergeWithRFKmer(5, k2);
+        Assert.assertEquals("CTAGAT", k1.toString());
+        k1.mergeWithRRKmer(5, k3);
+        Assert.assertEquals("GCTAGAT", k1.toString());
     }
 }
+
+

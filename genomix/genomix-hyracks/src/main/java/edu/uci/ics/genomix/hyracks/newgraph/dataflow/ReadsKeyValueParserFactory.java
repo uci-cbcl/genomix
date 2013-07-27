@@ -46,6 +46,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
     public static final int OutputKmerField = 0;
     public static final int outputNodeIdListField = 1;
+    
     public static final int OutputForwardForwardField = 2;
     public static final int OutputFFListCountField = 3;
     public static final int OutputForwardReverseField = 4;
