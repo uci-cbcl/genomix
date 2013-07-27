@@ -16,10 +16,10 @@
 package edu.uci.ics.genomix.type;
 
 public class KmerBytesWritableFactory {
-    private KmerBytesWritable kmer;
+    private VKmerBytesWritable kmer;
 
     public KmerBytesWritableFactory(int k) {
-        kmer = new KmerBytesWritable(k);
+        kmer = new VKmerBytesWritable(k);
     }
 
     /**
@@ -30,7 +30,7 @@ public class KmerBytesWritableFactory {
      * @param array
      * @param start
      */
-    public KmerBytesWritable getKmerByRead(int k, byte[] array, int start) {
+    public VKmerBytesWritable getKmerByRead(int k, byte[] array, int start) {
         kmer.reset(k);
         kmer.setByRead(array, start);
         return kmer;
@@ -43,7 +43,7 @@ public class KmerBytesWritableFactory {
      * @param array
      * @param start
      */
-    public KmerBytesWritable getKmerByReadReverse(int k, byte[] array, int start) {
+    public VKmerBytesWritable getKmerByReadReverse(int k, byte[] array, int start) {
         kmer.reset(k);
         kmer.setByReadReverse(array, start);
         return kmer;
@@ -59,28 +59,28 @@ public class KmerBytesWritableFactory {
      * @param kmerChain
      * @return LastKmer bytes array
      */
-    public KmerBytesWritable getLastKmerFromChain(int lastK, final KmerBytesWritable kmerChain) {
-        if (lastK > kmerChain.getKmerLength()) {
+    public VKmerBytesWritable getLastKmerFromChain(int lastK, final VKmerBytesWritable kmerChain) {
+        if (lastK > kmerChain.getKmerLetterLength()) {
             return null;
         }
-        if (lastK == kmerChain.getKmerLength()) {
+        if (lastK == kmerChain.getKmerLetterLength()) {
             kmer.setAsCopy(kmerChain);
             return kmer;
         }
         kmer.reset(lastK);
 
         /** from end to start */
-        int byteInChain = kmerChain.getLength() - 1 - (kmerChain.getKmerLength() - lastK) / 4;
-        int posInByteOfChain = ((kmerChain.getKmerLength() - lastK) % 4) << 1; // *2
-        int byteInKmer = kmer.getLength() - 1;
+        int byteInChain = kmerChain.getKmerByteLength() - 1 - (kmerChain.getKmerLetterLength() - lastK) / 4;
+        int posInByteOfChain = ((kmerChain.getKmerLetterLength() - lastK) % 4) << 1; // *2
+        int byteInKmer = kmer.getKmerByteLength() - 1;
         for (; byteInKmer >= 0 && byteInChain > 0; byteInKmer--, byteInChain--) {
-            kmer.getBytes()[byteInKmer] = (byte) ((0xff & kmerChain.getBytes()[byteInChain]) >> posInByteOfChain);
-            kmer.getBytes()[byteInKmer] |= ((kmerChain.getBytes()[byteInChain - 1] << (8 - posInByteOfChain)));
+            kmer.getBytes()[byteInKmer + kmer.getKmerOffset()] = (byte) ((0xff & kmerChain.getBytes()[byteInChain + kmerChain.getKmerOffset()]) >> posInByteOfChain);
+            kmer.getBytes()[byteInKmer + kmer.getKmerOffset()] |= ((kmerChain.getBytes()[byteInChain  + kmerChain.getKmerOffset() - 1] << (8 - posInByteOfChain)));
         }
 
         /** last kmer byte */
         if (byteInKmer == 0) {
-            kmer.getBytes()[0] = (byte) ((kmerChain.getBytes()[0] & 0xff) >> posInByteOfChain);
+            kmer.getBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmerChain.getBytes()[0 + kmerChain.getKmerOffset()] & 0xff) >> posInByteOfChain);
         }
         kmer.clearLeadBit();
         return kmer;
@@ -95,52 +95,52 @@ public class KmerBytesWritableFactory {
      * @param kmerChain
      * @return FirstKmer bytes array
      */
-    public KmerBytesWritable getFirstKmerFromChain(int firstK, final KmerBytesWritable kmerChain) {
-        if (firstK > kmerChain.getKmerLength()) {
+    public VKmerBytesWritable getFirstKmerFromChain(int firstK, final VKmerBytesWritable kmerChain) {
+        if (firstK > kmerChain.getKmerLetterLength()) {
             return null;
         }
-        if (firstK == kmerChain.getKmerLength()) {
+        if (firstK == kmerChain.getKmerLetterLength()) {
             kmer.setAsCopy(kmerChain);
             return kmer;
         }
         kmer.reset(firstK);
 
         int i = 1;
-        for (; i < kmer.getLength(); i++) {
-            kmer.getBytes()[kmer.getLength() - i] = kmerChain.getBytes()[kmerChain.getLength() - i];
+        for (; i < kmer.getKmerByteLength(); i++) {
+            kmer.getBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] = kmerChain.getBytes()[kmerChain.getKmerOffset() + kmerChain.getKmerByteLength() - i];
         }
         int posInByteOfChain = (firstK % 4) << 1; // *2
         if (posInByteOfChain == 0) {
-            kmer.getBytes()[0] = kmerChain.getBytes()[kmerChain.getLength() - i];
+            kmer.getBytes()[0 + kmer.getKmerOffset()] = kmerChain.getBytes()[kmerChain.getKmerOffset() + kmerChain.getKmerByteLength() - i];
         } else {
-            kmer.getBytes()[0] = (byte) (kmerChain.getBytes()[kmerChain.getLength() - i] & ((1 << posInByteOfChain) - 1));
+            kmer.getBytes()[0 + kmer.getKmerOffset()] = (byte) (kmerChain.getBytes()[kmerChain.getKmerOffset() + kmerChain.getKmerByteLength() - i] & ((1 << posInByteOfChain) - 1));
         }
         kmer.clearLeadBit();
         return kmer;
     }
 
-    public KmerBytesWritable getSubKmerFromChain(int startK, int kSize, final KmerBytesWritable kmerChain) {
-        if (startK + kSize > kmerChain.getKmerLength()) {
+    public VKmerBytesWritable getSubKmerFromChain(int startK, int kSize, final VKmerBytesWritable kmerChain) {
+        if (startK + kSize > kmerChain.getKmerLetterLength()) {
             return null;
         }
-        if (startK == 0 && kSize == kmerChain.getKmerLength()) {
+        if (startK == 0 && kSize == kmerChain.getKmerLetterLength()) {
             kmer.setAsCopy(kmerChain);
             return kmer;
         }
         kmer.reset(kSize);
 
         /** from end to start */
-        int byteInChain = kmerChain.getLength() - 1 - startK / 4;
+        int byteInChain = kmerChain.getKmerByteLength() - 1 - startK / 4;
         int posInByteOfChain = startK % 4 << 1; // *2
-        int byteInKmer = kmer.getLength() - 1;
+        int byteInKmer = kmer.getKmerByteLength() - 1;
         for (; byteInKmer >= 0 && byteInChain > 0; byteInKmer--, byteInChain--) {
-            kmer.getBytes()[byteInKmer] = (byte) ((0xff & kmerChain.getBytes()[byteInChain]) >> posInByteOfChain);
-            kmer.getBytes()[byteInKmer] |= ((kmerChain.getBytes()[byteInChain - 1] << (8 - posInByteOfChain)));
+            kmer.getBytes()[byteInKmer + kmer.getKmerOffset()] = (byte) ((0xff & kmerChain.getBytes()[byteInChain + kmerChain.getKmerOffset()]) >> posInByteOfChain);
+            kmer.getBytes()[byteInKmer + kmer.getKmerOffset()] |= ((kmerChain.getBytes()[byteInChain + kmerChain.getKmerOffset() - 1] << (8 - posInByteOfChain)));
         }
 
         /** last kmer byte */
         if (byteInKmer == 0) {
-            kmer.getBytes()[0] = (byte) ((kmerChain.getBytes()[0] & 0xff) >> posInByteOfChain);
+            kmer.getBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmerChain.getBytes()[0 + kmerChain.getKmerOffset()] & 0xff) >> posInByteOfChain);
         }
         kmer.clearLeadBit();
         return kmer;
@@ -159,15 +159,15 @@ public class KmerBytesWritableFactory {
      *            : next neighbor in gene-code format
      * @return the merged Kmer, this K of this Kmer is k+1
      */
-    public KmerBytesWritable mergeKmerWithNextCode(final KmerBytesWritable kmer, byte nextCode) {
-        this.kmer.reset(kmer.getKmerLength() + 1);
-        for (int i = 1; i <= kmer.getLength(); i++) {
-            this.kmer.getBytes()[this.kmer.getLength() - i] = kmer.getBytes()[kmer.getLength() - i];
+    public VKmerBytesWritable mergeKmerWithNextCode(final VKmerBytesWritable kmer, byte nextCode) {
+        this.kmer.reset(kmer.getKmerLetterLength() + 1);
+        for (int i = 1; i <= kmer.getKmerByteLength(); i++) {
+            this.kmer.getBytes()[this.kmer.getKmerOffset() + this.kmer.getKmerByteLength() - i] = kmer.getBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i];
         }
-        if (this.kmer.getLength() > kmer.getLength()) {
-            this.kmer.getBytes()[0] = (byte) (nextCode & 0x3);
+        if (this.kmer.getKmerByteLength() > kmer.getKmerByteLength()) {
+            this.kmer.getBytes()[0 + kmer.getKmerOffset()] = (byte) (nextCode & 0x3);
         } else {
-            this.kmer.getBytes()[0] = (byte) (kmer.getBytes()[0] | ((nextCode & 0x3) << ((kmer.getKmerLength() % 4) << 1)));
+            this.kmer.getBytes()[0 + kmer.getKmerOffset()] = (byte) (kmer.getBytes()[0 + kmer.getKmerOffset()] | ((nextCode & 0x3) << ((kmer.getKmerLetterLength() % 4) << 1)));
         }
         this.kmer.clearLeadBit();
         return this.kmer;
@@ -186,17 +186,17 @@ public class KmerBytesWritableFactory {
      *            : next neighbor in gene-code format
      * @return the merged Kmer,this K of this Kmer is k+1
      */
-    public KmerBytesWritable mergeKmerWithPreCode(final KmerBytesWritable kmer, byte preCode) {
-        this.kmer.reset(kmer.getKmerLength() + 1);
+    public VKmerBytesWritable mergeKmerWithPreCode(final VKmerBytesWritable kmer, byte preCode) {
+        this.kmer.reset(kmer.getKmerLetterLength() + 1);
         int byteInMergedKmer = 0;
-        if (kmer.getKmerLength() % 4 == 0) {
-            this.kmer.getBytes()[0] = (byte) ((kmer.getBytes()[0] >> 6) & 0x3);
+        if (kmer.getKmerLetterLength() % 4 == 0) {
+            this.kmer.getBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmer.getBytes()[0 + kmer.getKmerOffset()] >> 6) & 0x3);
             byteInMergedKmer++;
         }
-        for (int i = 0; i < kmer.getLength() - 1; i++, byteInMergedKmer++) {
-            this.kmer.getBytes()[byteInMergedKmer] = (byte) ((kmer.getBytes()[i] << 2) | ((kmer.getBytes()[i + 1] >> 6) & 0x3));
+        for (int i = 0; i < kmer.getKmerByteLength() - 1; i++, byteInMergedKmer++) {
+            this.kmer.getBytes()[byteInMergedKmer + kmer.getKmerOffset()] = (byte) ((kmer.getBytes()[i + kmer.getKmerOffset()] << 2) | ((kmer.getBytes()[i + kmer.getKmerOffset() + 1] >> 6) & 0x3));
         }
-        this.kmer.getBytes()[byteInMergedKmer] = (byte) ((kmer.getBytes()[kmer.getLength() - 1] << 2) | (preCode & 0x3));
+        this.kmer.getBytes()[byteInMergedKmer + kmer.getKmerOffset()] = (byte) ((kmer.getBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - 1] << 2) | (preCode & 0x3));
         this.kmer.clearLeadBit();
         return this.kmer;
     }
@@ -215,28 +215,28 @@ public class KmerBytesWritableFactory {
      *            : bytes array of next kmer
      * @return merged kmer, the new k is @preK + @nextK
      */
-    public KmerBytesWritable mergeTwoKmer(final KmerBytesWritable preKmer, final KmerBytesWritable nextKmer) {
-        kmer.reset(preKmer.getKmerLength() + nextKmer.getKmerLength());
+    public VKmerBytesWritable mergeTwoKmer(final VKmerBytesWritable preKmer, final VKmerBytesWritable nextKmer) {
+        kmer.reset(preKmer.getKmerLetterLength() + nextKmer.getKmerLetterLength());
         int i = 1;
-        for (; i <= preKmer.getLength(); i++) {
-            kmer.getBytes()[kmer.getLength() - i] = preKmer.getBytes()[preKmer.getLength() - i];
+        for (; i <= preKmer.getKmerByteLength(); i++) {
+            kmer.getBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] = preKmer.getBytes()[preKmer.getKmerOffset() + preKmer.getKmerByteLength() - i];
         }
         if (i > 1) {
             i--;
         }
-        if (preKmer.getKmerLength() % 4 == 0) {
-            for (int j = 1; j <= nextKmer.getLength(); j++) {
-                kmer.getBytes()[kmer.getLength() - i - j] = nextKmer.getBytes()[nextKmer.getLength() - j];
+        if (preKmer.getKmerLetterLength() % 4 == 0) {
+            for (int j = 1; j <= nextKmer.getKmerByteLength(); j++) {
+                kmer.getBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i - j] = nextKmer.getBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j];
             }
         } else {
-            int posNeedToMove = ((preKmer.getKmerLength() % 4) << 1);
-            kmer.getBytes()[kmer.getLength() - i] |= nextKmer.getBytes()[nextKmer.getLength() - 1] << posNeedToMove;
-            for (int j = 1; j < nextKmer.getLength(); j++) {
-                kmer.getBytes()[kmer.getLength() - i - j] = (byte) (((nextKmer.getBytes()[nextKmer.getLength() - j] & 0xff) >> (8 - posNeedToMove)) | (nextKmer
-                        .getBytes()[nextKmer.getLength() - j - 1] << posNeedToMove));
+            int posNeedToMove = ((preKmer.getKmerLetterLength() % 4) << 1);
+            kmer.getBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] |= nextKmer.getBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - 1] << posNeedToMove;
+            for (int j = 1; j < nextKmer.getKmerByteLength(); j++) {
+                kmer.getBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i - j] = (byte) (((nextKmer.getBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j] & 0xff) >> (8 - posNeedToMove)) | (nextKmer
+                        .getBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j - 1] << posNeedToMove));
             }
-            if (nextKmer.getKmerLength() % 4 == 0 || (nextKmer.getKmerLength() % 4) * 2 + posNeedToMove > 8) {
-                kmer.getBytes()[0] = (byte) ((0xff & nextKmer.getBytes()[0]) >> (8 - posNeedToMove));
+            if (nextKmer.getKmerLetterLength() % 4 == 0 || (nextKmer.getKmerLetterLength() % 4) * 2 + posNeedToMove > 8) {
+                kmer.getBytes()[0 + kmer.getKmerOffset()] = (byte) ((0xff & nextKmer.getBytes()[0 + nextKmer.getKmerOffset()]) >> (8 - posNeedToMove));
             }
         }
         kmer.clearLeadBit();
@@ -255,7 +255,7 @@ public class KmerBytesWritableFactory {
      *            : input genecode
      * @return new created kmer that shifted by afterCode, the K will not change
      */
-    public KmerBytesWritable shiftKmerWithNextCode(final KmerBytesWritable kmer, byte afterCode) {
+    public VKmerBytesWritable shiftKmerWithNextCode(final VKmerBytesWritable kmer, byte afterCode) {
         this.kmer.setAsCopy(kmer);
         this.kmer.shiftKmerWithNextCode(afterCode);
         return this.kmer;
@@ -273,7 +273,7 @@ public class KmerBytesWritableFactory {
      *            : input genecode
      * @return new created kmer that shifted by preCode, the K will not change
      */
-    public KmerBytesWritable shiftKmerWithPreCode(final KmerBytesWritable kmer, byte preCode) {
+    public VKmerBytesWritable shiftKmerWithPreCode(final VKmerBytesWritable kmer, byte preCode) {
         this.kmer.setAsCopy(kmer);
         this.kmer.shiftKmerWithPreCode(preCode);
         return this.kmer;
@@ -284,22 +284,22 @@ public class KmerBytesWritableFactory {
      * 
      * @param kmer
      */
-    public KmerBytesWritable reverse(final KmerBytesWritable kmer) {
-        this.kmer.reset(kmer.getKmerLength());
+    public VKmerBytesWritable reverse(final VKmerBytesWritable kmer) {
+        this.kmer.reset(kmer.getKmerLetterLength());
 
-        int curPosAtKmer = ((kmer.getKmerLength() - 1) % 4) << 1;
+        int curPosAtKmer = ((kmer.getKmerLetterLength() - 1) % 4) << 1;
         int curByteAtKmer = 0;
 
         int curPosAtReverse = 0;
-        int curByteAtReverse = this.kmer.getLength() - 1;
-        this.kmer.getBytes()[curByteAtReverse] = 0;
-        for (int i = 0; i < kmer.getKmerLength(); i++) {
-            byte gene = (byte) ((kmer.getBytes()[curByteAtKmer] >> curPosAtKmer) & 0x03);
-            this.kmer.getBytes()[curByteAtReverse] |= gene << curPosAtReverse;
+        int curByteAtReverse = this.kmer.getKmerByteLength() - 1;
+        this.kmer.getBytes()[curByteAtReverse + this.kmer.getKmerOffset()] = 0;
+        for (int i = 0; i < kmer.getKmerLetterLength(); i++) {
+            byte gene = (byte) ((kmer.getBytes()[curByteAtKmer + kmer.getKmerOffset()] >> curPosAtKmer) & 0x03);
+            this.kmer.getBytes()[curByteAtReverse + this.kmer.getKmerOffset()] |= gene << curPosAtReverse;
             curPosAtReverse += 2;
             if (curPosAtReverse >= 8) {
                 curPosAtReverse = 0;
-                this.kmer.getBytes()[--curByteAtReverse] = 0;
+                this.kmer.getBytes()[--curByteAtReverse + this.kmer.getKmerOffset()] = 0;
             }
             curPosAtKmer -= 2;
             if (curPosAtKmer < 0) {

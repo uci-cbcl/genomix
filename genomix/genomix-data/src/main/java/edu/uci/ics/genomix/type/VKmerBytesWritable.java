@@ -155,9 +155,12 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * @param k
      */
     public void reset(int k) {
+        int newByteLength = KmerUtil.getByteNumFromK(k);
+        if (bytesUsed < newByteLength) {
+            bytes = new byte[newByteLength + HEADER_SIZE];
+            kmerStartOffset = HEADER_SIZE;
+        }
         setKmerLength(k);
-        setSize(bytesUsed);
-        clearLeadBit();
     }
 
     protected void clearLeadBit() {
@@ -251,7 +254,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         return output;
     }
 
-    public int getKmerLength() {
+    public int getKmerLetterLength() {
         return lettersInKmer;
     }
 
@@ -274,10 +277,21 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         return kmerStartOffset;
     }
 
+    /**
+     * Return the number of bytes used by both header and kmer chain
+     */
     @Override
     public int getLength() {
+        return bytesUsed + HEADER_SIZE;
+    }
+    
+    /**
+     * Return the number of bytes used by the kmer chain
+     */
+    public int getKmerByteLength() {
         return bytesUsed;
     }
+    
 
     public void setKmerLength(int k) {
         this.bytesUsed = KmerUtil.getByteNumFromK(k);
@@ -467,7 +481,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         for (int i = 1; i <= preSize; i++) {
             bytes[kmerStartOffset + bytesUsed - i] = bytes[kmerStartOffset + preSize - i];
         }
-        for (int k = initialKmerSize - 1; k < kmer.getKmerLength(); k += 4) {
+        for (int k = initialKmerSize - 1; k < kmer.getKmerLetterLength(); k += 4) {
             byte onebyte = KmerBytesWritable.getOneByteFromKmerAtPosition(k, kmer.bytes, kmer.kmerStartOffset,
                     kmer.bytesUsed);
             KmerBytesWritable.appendOneByteAtPosition(preKmerLength + k - initialKmerSize + 1, onebyte, bytes,
