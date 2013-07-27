@@ -355,7 +355,8 @@ public class BasicPathMergeVertex extends
     public void sendUpdateMsg(){
         outgoingMsg.setUpdateMsg(true);
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        switch(meToNeighborDir){
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
                 sendUpdateMsgToPredecessor();

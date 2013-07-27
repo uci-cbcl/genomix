@@ -432,44 +432,9 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      *            : the previous kmer
      */
     public void mergeWithRFKmer(int initialKmerSize, KmerBytesWritable preKmer) {
-        int preKmerLength = kmerlength;
-        int preSize = kmerByteSize;
-        this.kmerlength += preKmer.kmerlength - initialKmerSize + 1;
-        setSize(KmerUtil.getByteNumFromK(kmerlength));
-        //        byte cacheByte = getOneByteFromKmerAtPosition(0, bytes, offset, preSize);
-
-        int byteIndex = kmerByteSize - 1;
-        byte cacheByte = 0x00;
-        int posnInByte = 0;
-
-        // copy rc of preKmer into high bytes
-        for (int i = preKmer.kmerlength - 1; i >= initialKmerSize - 1; i--) {
-            byte code = GeneCode.getPairedGeneCode(preKmer.getGeneCodeAtPosition(i));
-            cacheByte |= (byte) (code << posnInByte);
-            posnInByte += 2;
-            if (posnInByte == 8) {
-                bytes[byteIndex--] = cacheByte;
-                cacheByte = 0;
-                posnInByte = 0;
-            }
-        }
-        
-        // copy my kmer into low positions of bytes
-        for (int i = 0; i < preKmerLength; i++) {
-           // expanding the capacity makes this offset incorrect.  It's off by the # of additional bytes added.
-            int newposn = i + (kmerByteSize - preSize) * 4;
-            byte code = geneCodeAtPosition(newposn);
-            cacheByte |= (byte) (code << posnInByte);
-            posnInByte += 2;
-            if (posnInByte == 8) {
-                bytes[byteIndex--] = cacheByte;
-                cacheByte = 0;
-                posnInByte = 0;
-            }
-        }
-        if(posnInByte > 0)
-            bytes[offset] = cacheByte;
-        clearLeadBit();
+        KmerBytesWritable reversed = new KmerBytesWritable(preKmer.kmerlength);
+        reversed.setByReadReverse(preKmer.toString().getBytes(), 0);
+        mergeWithRRKmer(initialKmerSize, reversed);
     }
 
     /**

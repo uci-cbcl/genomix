@@ -217,7 +217,6 @@ public class LogAlgorithmForPathMergeVertex extends
                 voteToHalt();
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
             processMergeInHeadVertex(msgIterator);
-            System.out.print("");
         }else
             voteToHalt();
     }
