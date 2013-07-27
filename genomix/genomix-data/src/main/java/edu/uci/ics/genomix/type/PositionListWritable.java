@@ -31,17 +31,19 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
 
     public PositionListWritable(byte[] data, int offset) {
 //        setNewReference(data, offset);
+        this();
         set(data, offset);
     }
 
     public PositionListWritable(List<PositionWritable> posns) {
         this();
-        setSize(posns.size()); // reserve space for all elements
+        setSize(posns.size() * PositionWritable.LENGTH + HEADER_SIZE); // reserve space for all elements
         for (PositionWritable p : posns) {
             append(p);
         }
     }
 
+//    // TODO: we currently don't track who actually owns each block so variable-length references are impossible. We could track 1) if it's a reference and 2) the size of the original reference block, but that would require a check for every setSize and might be coplicated logic  
 //    public void setNewReference(byte[] data, int offset) {
 //        this.valueCount = Marshal.getInt(data, offset);
 //        this.storage = data;
@@ -112,13 +114,13 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         set(otherList.storage, otherList.offset);
     }
 
-    public void set(byte[] newData, int offset) {
-        valueCount = Marshal.getInt(newData, offset);
+    public void set(byte[] newData, int newOffset) {
+        valueCount = Marshal.getInt(newData, newOffset);
         setSize(valueCount * PositionWritable.LENGTH + HEADER_SIZE);
         if (valueCount > 0) {
-            System.arraycopy(newData, offset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, valueCount * PositionWritable.LENGTH);
+            System.arraycopy(newData, newOffset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, valueCount * PositionWritable.LENGTH);
         }
-        Marshal.putInt(valueCount, storage, offset);
+        Marshal.putInt(valueCount, storage, this.offset);
     }
 
     public void reset() {
@@ -154,7 +156,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
-        posIter.setNewReference(storage, offset + i * PositionWritable.LENGTH);
+        posIter.setNewReference(storage, offset + i * PositionWritable.LENGTH + HEADER_SIZE);
         return posIter;
     }
 
@@ -162,7 +164,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         if (i >= valueCount) {
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
-        Marshal.putLong(uuid, storage, offset + i * PositionWritable.LENGTH);
+        Marshal.putLong(uuid, storage, offset + i * PositionWritable.LENGTH + HEADER_SIZE);
     }
 
     public int getCountOfPosition() {
@@ -178,7 +180,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
 
     public int getLength() {
-        return valueCount * PositionWritable.LENGTH;
+        return valueCount * PositionWritable.LENGTH + HEADER_SIZE;
     }
 
     @Override
@@ -200,11 +202,12 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             @Override
             public void remove() {
                 if (currentIndex < valueCount)
-                    System.arraycopy(storage, offset + currentIndex * PositionWritable.LENGTH, storage, offset
-                            + (currentIndex - 1) * PositionWritable.LENGTH, (valueCount - currentIndex)
+                    System.arraycopy(storage, offset + currentIndex * PositionWritable.LENGTH + HEADER_SIZE, storage, offset
+                            + (currentIndex - 1) * PositionWritable.LENGTH + HEADER_SIZE, (valueCount - currentIndex)
                             * PositionWritable.LENGTH);
                 valueCount--;
                 currentIndex--;
+                Marshal.putInt(valueCount, storage, offset);
             }
         };
         return it;
@@ -234,14 +237,15 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(valueCount);
-        out.write(storage, offset, valueCount * PositionWritable.LENGTH);
+        out.write(storage, offset + HEADER_SIZE, valueCount * PositionWritable.LENGTH);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         this.valueCount = in.readInt();
-        setSize(valueCount * PositionWritable.LENGTH);
-        in.readFully(storage, offset, valueCount * PositionWritable.LENGTH);
+        setSize(valueCount * PositionWritable.LENGTH + HEADER_SIZE);
+        in.readFully(storage, offset + HEADER_SIZE, valueCount * PositionWritable.LENGTH);
+        Marshal.putInt(valueCount, storage, offset);
     }
 
     @Override
