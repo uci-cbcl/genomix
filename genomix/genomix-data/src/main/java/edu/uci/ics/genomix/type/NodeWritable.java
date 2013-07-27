@@ -139,6 +139,41 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
     }
 	
+	/**
+	 * Returns the length of the byte-array version of this node
+	 */
+	public int getSerializedLength() {
+	    return nodeIdList.getLength() + forwardForwardList.getLength() + forwardReverseList.getLength() + 
+	            reverseForwardList.getLength() + reverseReverseList.getLength() + kmer.getLength();
+	}
+	
+	/**
+     * Return this Node's representation as a new byte array 
+     */
+    public byte[] marshalToByteArray() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(getSerializedLength());
+        DataOutputStream out = new DataOutputStream(baos);
+        write(out);
+        return baos.toByteArray();
+    }
+    
+    public void setAsCopy(byte[] data, int offset) {
+        int curOffset = offset;
+        nodeIdList.set(data, curOffset);
+        
+        curOffset += nodeIdList.getLength();
+        forwardForwardList.setCopy(data, curOffset);
+        curOffset += forwardForwardList.getLength();
+        forwardReverseList.setCopy(data, curOffset);
+        curOffset += forwardReverseList.getLength();
+        reverseForwardList.setCopy(data, curOffset);
+        curOffset += reverseForwardList.getLength();
+        reverseReverseList.setCopy(data, curOffset);
+        
+        curOffset += reverseReverseList.getLength();
+        kmer.setAsCopy(data, curOffset);
+    }
+	
     @Override
     public void write(DataOutput out) throws IOException {
         this.nodeIdList.write(out);
