@@ -20,20 +20,22 @@ public class KmerListWritableTest {
         //one kmer in list and reset each time
         KmerBytesWritable kmer;
         for (int i = 1; i < 200; i++) {
-            kmer = new KmerBytesWritable(i);
+            KmerBytesWritable.setGlobalKmerLength(i);
+            kmer = new KmerBytesWritable();
             String randomString = generateString(i);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
-            kmerList.reset(kmer.getKmerLength());
+            kmerList.reset();
             kmerList.append(kmer);
-            Assert.assertEquals(kmerList.getPosition(0).toString(), randomString);
+            Assert.assertEquals(randomString, kmerList.getPosition(0).toString());
             Assert.assertEquals(1, kmerList.getCountOfPosition());
         }
         
-        kmerList.reset(0);
+        kmerList.reset();
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
-            kmer = new KmerBytesWritable(5);
+            KmerBytesWritable.setGlobalKmerLength(5);
+            kmer = new KmerBytesWritable();
             String randomString = generateString(5);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
@@ -44,8 +46,8 @@ public class KmerListWritableTest {
         
         byte [] another = new byte [kmerList.getLength()*2];
         int start = 20;
-        System.arraycopy(kmerList.getByteArray(), 0, another, start, kmerList.getLength());
-        KmerListWritable plist2 = new KmerListWritable(kmerList.kmerlength, kmerList.getCountOfPosition(),another,start);
+        System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start, kmerList.getLength());
+        KmerListWritable plist2 = new KmerListWritable(another, start);
         for(int i = 0; i < plist2.getCountOfPosition(); i++){
             Assert.assertEquals(kmerList.getPosition(i).toString(), plist2.getPosition(i).toString());
         }
@@ -59,12 +61,13 @@ public class KmerListWritableTest {
         int i;
         KmerBytesWritable kmer;
         for (i = 0; i < 200; i++) {
-            kmer = new KmerBytesWritable(5);
+            KmerBytesWritable.setGlobalKmerLength(5);
+            kmer = new KmerBytesWritable();
             String randomString = generateString(5);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
             kmerList.append(kmer);
-            Assert.assertEquals(kmerList.getPosition(i).toString(), randomString);
+            Assert.assertEquals(randomString, kmerList.getPosition(i).toString());
             Assert.assertEquals(i + 1, kmerList.getCountOfPosition());
         }
         
@@ -72,12 +75,12 @@ public class KmerListWritableTest {
         KmerBytesWritable tmpKmer = new KmerBytesWritable();
         i = 0;
         KmerListWritable copyList = new KmerListWritable();
-        copyList.set(kmerList);
+        copyList.setCopy(kmerList);
         Iterator<KmerBytesWritable> iterator;
         for(int j = 0; j < 5; j++){
             iterator = copyList.iterator();
             byte[] array = kmerList.getPosition(j).toString().getBytes();
-            KmerBytesWritable deletePos = new KmerBytesWritable(5);
+            KmerBytesWritable deletePos = new KmerBytesWritable();
             deletePos.setByRead(array, 0);
             while(iterator.hasNext()){
                 tmpKmer = iterator.next();

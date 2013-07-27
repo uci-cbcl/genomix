@@ -36,8 +36,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = {};
 
-    protected static int lettersInKmer = -1;
-    protected static int bytesUsed = -1;
+    protected static int lettersInKmer;
+    protected static int bytesUsed;
     protected byte[] bytes;
     protected int offset;
 
@@ -149,8 +149,12 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         return (byte) ((bytes[offset + bytesUsed - 1 - posByte] >> shift) & 0x3);
     }
 
-    public int getKmerLength() {
+    public static int getKmerLength() {
         return lettersInKmer;
+    }
+
+    public static int getBytesPerKmer() {
+        return bytesUsed;
     }
 
     @Override

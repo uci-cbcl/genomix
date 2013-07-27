@@ -59,10 +59,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void set(PositionListWritable nodeIdList, KmerListWritable FFList, KmerListWritable FRList,
             KmerListWritable RFList, KmerListWritable RRList, KmerBytesWritable kmer) {
         this.nodeIdList.set(nodeIdList);
-        this.forwardForwardList.set(FFList);
-        this.forwardReverseList.set(FRList);
-        this.reverseForwardList.set(RFList);
-        this.reverseReverseList.set(RRList);
+        this.forwardForwardList.setCopy(FFList);
+        this.forwardReverseList.setCopy(FRList);
+        this.reverseForwardList.setCopy(RFList);
+        this.reverseReverseList.setCopy(RRList);
         this.kmer.setAsCopy(kmer);
     }
 
@@ -122,19 +122,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
 	public void setFFList(KmerListWritable forwardForwardList) {
-		this.forwardForwardList.set(forwardForwardList);
+		this.forwardForwardList.setCopy(forwardForwardList);
 	}
 
 	public void setFRList(KmerListWritable forwardReverseList) {
-		this.forwardReverseList.set(forwardReverseList);
+		this.forwardReverseList.setCopy(forwardReverseList);
 	}
 
 	public void setRFList(KmerListWritable reverseForwardList) {
-		this.reverseForwardList.set(reverseForwardList);
+		this.reverseForwardList.setCopy(reverseForwardList);
 	}
 
 	public void setRRList(KmerListWritable reverseReverseList) {
-		this.reverseReverseList.set(reverseReverseList);
+		this.reverseReverseList.setCopy(reverseReverseList);
 	}
 
 	public KmerListWritable getListFromDir(byte dir) {
@@ -212,14 +212,14 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void mergeForwardNext(NodeWritable nextNode, int initialKmerSize) {
-        this.forwardForwardList.set(nextNode.forwardForwardList);
-        this.forwardReverseList.set(nextNode.forwardReverseList);
+        this.forwardForwardList.setCopy(nextNode.forwardForwardList);
+        this.forwardReverseList.setCopy(nextNode.forwardReverseList);
         kmer.mergeWithFFKmer(initialKmerSize, nextNode.getKmer());
     }
 
     public void mergeForwardPre(NodeWritable preNode, int initialKmerSize) {
-        this.reverseForwardList.set(preNode.reverseForwardList);
-        this.reverseReverseList.set(preNode.reverseReverseList);
+        this.reverseForwardList.setCopy(preNode.reverseForwardList);
+        this.reverseReverseList.setCopy(preNode.reverseReverseList);
         kmer.mergeWithRRKmer(initialKmerSize, preNode.getKmer());
     }
     

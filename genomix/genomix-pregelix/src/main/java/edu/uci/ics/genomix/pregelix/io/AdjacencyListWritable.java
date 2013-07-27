@@ -24,8 +24,8 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     }
 
     public void set(AdjacencyListWritable adjacencyList){
-        forwardList.set(adjacencyList.getForwardList());
-        reverseList.set(adjacencyList.getReverseList());
+        forwardList.setCopy(adjacencyList.getForwardList());
+        reverseList.setCopy(adjacencyList.getReverseList());
     }
     
     public void reset(){
