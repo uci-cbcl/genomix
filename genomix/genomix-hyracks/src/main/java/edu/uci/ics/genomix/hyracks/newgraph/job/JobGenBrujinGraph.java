@@ -194,28 +194,6 @@ public class JobGenBrujinGraph extends JobGen {
         return kmerCrossAggregator;
     }
 
-
-    public AbstractOperatorDescriptor generateKmerWritorOperator(JobSpecification jobSpec,
-            AbstractOperatorDescriptor kmerCrossAggregator) throws HyracksException {
-        // Output Kmer
-        ITupleWriterFactory kmerWriter = null;
-        switch (outputFormat) {
-            case TEXT:
-                kmerWriter = new KMerTextWriterFactory(kmerSize);
-                break;
-            case BINARY:
-            default:
-                kmerWriter = new KMerSequenceWriterFactory(hadoopJobConfFactory.getConf());
-                break;
-        }
-        logDebug("WriteOperator");
-        HDFSWriteOperatorDescriptor writeKmerOperator = new HDFSWriteOperatorDescriptor(jobSpec,
-                hadoopJobConfFactory.getConf(), kmerWriter);
-        connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, writeKmerOperator, ncNodeNames,
-                new OneToOneConnectorDescriptor(jobSpec));
-        return writeKmerOperator;
-    }
-
     public AbstractOperatorDescriptor generateNodeWriterOpertator(JobSpecification jobSpec,
             AbstractOperatorDescriptor mapEachReadToNode) throws HyracksException {
         ITupleWriterFactory nodeWriter = null;
