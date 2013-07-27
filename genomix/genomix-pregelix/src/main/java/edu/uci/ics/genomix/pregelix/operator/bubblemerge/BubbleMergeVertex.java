@@ -150,17 +150,24 @@ public class BubbleMergeVertex extends
     public void broadcaseKillself(){
         outgoingMsg.setSourceVertexId(getVertexId());
         
-        if(getVertexValue().getFFList().getCountOfPosition() > 0) // #FFList() > 0
+        if(getVertexValue().getFFList().getCountOfPosition() > 0){//#FFList() > 0
             outgoingMsg.setMessage(AdjMessage.FROMFF);
-        else // #FRList() > 0
+            sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+        }
+        else if(getVertexValue().getFRList().getCountOfPosition() > 0){//#FRList() > 0
             outgoingMsg.setMessage(AdjMessage.FROMFR);
-        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+            sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+        }
         
-        if(getVertexValue().getRFList().getCountOfPosition() > 0) // #RFList() > 0
+        
+        if(getVertexValue().getRFList().getCountOfPosition() > 0){//#RFList() > 0
             outgoingMsg.setMessage(AdjMessage.FROMRF);
-        else // #RRList() > 0
+            sendMsg(incomingMsg.getStartVertexId(), outgoingMsg);
+        }
+        else if(getVertexValue().getRRList().getCountOfPosition() > 0){//#RRList() > 0
             outgoingMsg.setMessage(AdjMessage.FROMRR);
-        sendMsg(incomingMsg.getStartVertexId(), outgoingMsg);
+            sendMsg(incomingMsg.getStartVertexId(), outgoingMsg);
+        }
         
         deleteVertex(getVertexId());
     }

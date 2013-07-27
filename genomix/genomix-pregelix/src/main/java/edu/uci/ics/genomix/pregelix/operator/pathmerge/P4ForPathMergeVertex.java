@@ -211,7 +211,7 @@ public class P4ForPathMergeVertex extends
             //send message to the merge object and kill self
             broadcastMergeMsg();
         } else if (getSuperstep() % 4 == 2){
-            //merge kmer
+            //merge tmpKmer
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());

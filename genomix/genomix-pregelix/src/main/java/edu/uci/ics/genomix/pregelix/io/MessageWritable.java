@@ -54,7 +54,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
         if (kmer != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.kmer.set(msg.getKmer());
+            this.kmer.set(msg.getActualKmer());
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -107,14 +107,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
     }
     
-    public KmerBytesWritable getKmer() {
+    public KmerBytesWritable getActualKmer() {
         return kmer;
     }
 
-    public void setChainVertexId(KmerBytesWritable chainVertexId) {
-        if (chainVertexId != null) {
+    public void setAcutalKmer(KmerBytesWritable actualKmer) {
+        if (actualKmer != null) {
             checkMessage |= CheckMessage.CHAIN;
-            this.kmer.set(chainVertexId);
+            this.kmer.set(actualKmer);
         }
     }
     

@@ -30,7 +30,7 @@ public class BasicPathMergeVertex extends
     protected MessageWritable outgoingMsg = null; 
     protected KmerBytesWritable destVertexId = new KmerBytesWritable();
     protected Iterator<KmerBytesWritable> posIterator;
-    private KmerBytesWritable kmer = new KmerBytesWritable(kmerSize);
+    protected KmerBytesWritable tmpKmer = new KmerBytesWritable(kmerSize);
     byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
@@ -398,7 +398,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getNextDestVertexId(getVertexValue())
                 break;
             case MessageFlag.DIR_RF:
@@ -411,7 +411,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
@@ -438,7 +438,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getNextDestVertexId(getVertexValue())
                 break;
             case MessageFlag.DIR_RF:
@@ -451,7 +451,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
@@ -474,7 +474,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
                 sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
                 deleteVertex(getVertexId());
                 break;
@@ -487,7 +487,7 @@ public class BasicPathMergeVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
                 sendMsg(getPreDestVertexId(getVertexValue()), outgoingMsg);
                 deleteVertex(getVertexId());
                 break; 
@@ -611,7 +611,7 @@ public class BasicPathMergeVertex extends
         
         getVertexValue().processMerges(neighborToMeDir, incomingMsg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(incomingMsg.getNeighberNode()),
-                kmerSize, incomingMsg.getKmer());
+                kmerSize, incomingMsg.getActualKmer());
     }
     
     /**
@@ -625,7 +625,7 @@ public class BasicPathMergeVertex extends
         
         getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(msg.getNeighberNode()),
-                kmerSize, msg.getKmer());
+                kmerSize, msg.getActualKmer());
     }
     
     /**
@@ -645,40 +645,40 @@ public class BasicPathMergeVertex extends
             case MessageFlag.DIR_FF:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
-                msgString = msg.getKmer().toString();
+                msgString = msg.getActualKmer().toString();
                 index = msgString.indexOf(match);
-                kmer.reset(msgString.length() - index);
-                kmer.setByRead(msgString.substring(index).getBytes(), 0);
+                tmpKmer.reset(msgString.length() - index);
+                tmpKmer.setByRead(msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_FR:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
-                msgString = GeneCode.reverseComplement(msg.getKmer().toString());
+                msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.indexOf(match);
-                kmer.reset(msgString.length() - index);
-                kmer.setByReadReverse(msgString.substring(index).getBytes(), 0);
+                tmpKmer.reset(msgString.length() - index);
+                tmpKmer.setByReadReverse(msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RF:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(0,kmerSize - 1); 
-                msgString = GeneCode.reverseComplement(msg.getKmer().toString());
+                msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
-                kmer.reset(index + 1);
-                kmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
+                tmpKmer.reset(index + 1);
+                tmpKmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RR:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(0,kmerSize - 1); 
-                msgString = msg.getKmer().toString();
+                msgString = msg.getActualKmer().toString();
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
-                kmer.reset(index + 1);
-                kmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
+                tmpKmer.reset(index + 1);
+                tmpKmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
                 break;
         }
        
         getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
                 neighborToMergeDir, VertexUtil.getNodeIdFromAdjacencyList(msg.getNeighberNode()),
-                kmerSize, kmer);
+                kmerSize, tmpKmer);
     }
     
     /**
@@ -726,6 +726,34 @@ public class BasicPathMergeVertex extends
     }
     
     /**
+     * broadcast kill self to all neighbers  Pre-condition: vertex is a path vertex 
+     */
+    public void broadcaseKillself(){
+        outgoingMsg.setSourceVertexId(getVertexId());
+        
+        if(getVertexValue().getFFList().getCountOfPosition() > 0){//#FFList() > 0
+            outgoingMsg.setFlag(MessageFlag.DIR_FF);
+            sendMsg(getVertexValue().getFFList().getPosition(0), outgoingMsg);
+        }
+        else if(getVertexValue().getFRList().getCountOfPosition() > 0){//#FRList() > 0
+            outgoingMsg.setFlag(MessageFlag.DIR_FR);
+            sendMsg(getVertexValue().getFRList().getPosition(0), outgoingMsg);
+        }
+        
+        
+        if(getVertexValue().getRFList().getCountOfPosition() > 0){//#RFList() > 0
+            outgoingMsg.setFlag(MessageFlag.DIR_RF);
+            sendMsg(getVertexValue().getRFList().getPosition(0), outgoingMsg);
+        }
+        else if(getVertexValue().getRRList().getCountOfPosition() > 0){//#RRList() > 0
+            outgoingMsg.setFlag(MessageFlag.DIR_RR);
+            sendMsg(getVertexValue().getRRList().getPosition(0), outgoingMsg);
+        }
+        
+        deleteVertex(getVertexId());
+    }
+    
+    /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
     public void responseToDeadVertex(Iterator<MessageWritable> msgIterator){
@@ -735,8 +763,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from RR positionList
                 posIterator = getVertexValue().getRRList().iterator();
                 while(posIterator.hasNext()){
-                    kmer = posIterator.next();
-                    if(kmer.equals(incomingMsg.getSourceVertexId())){
+                    tmpKmer = posIterator.next();
+                    if(tmpKmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }
@@ -745,8 +773,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from FR positionList
                 posIterator = getVertexValue().getFRList().iterator();
                 while(posIterator.hasNext()){
-                    kmer = posIterator.next();
-                    if(kmer.equals(incomingMsg.getSourceVertexId())){
+                    tmpKmer = posIterator.next();
+                    if(tmpKmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }
@@ -755,8 +783,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from RF positionList
                 posIterator = getVertexValue().getRFList().iterator();
                 while(posIterator.hasNext()){
-                    kmer = posIterator.next();
-                    if(kmer.equals(incomingMsg.getSourceVertexId())){
+                    tmpKmer = posIterator.next();
+                    if(tmpKmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }
@@ -765,8 +793,8 @@ public class BasicPathMergeVertex extends
                 //remove incomingMsg.getSourceId from FF positionList
                 posIterator = getVertexValue().getFFList().iterator();
                 while(posIterator.hasNext()){
-                    kmer = posIterator.next();
-                    if(kmer.equals(incomingMsg.getSourceVertexId())){
+                    tmpKmer = posIterator.next();
+                    if(tmpKmer.equals(incomingMsg.getSourceVertexId())){
                         posIterator.remove();
                         break;
                     }

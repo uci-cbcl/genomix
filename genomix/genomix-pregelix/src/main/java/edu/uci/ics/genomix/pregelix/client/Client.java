@@ -34,7 +34,7 @@ public class Client {
         @Option(name = "-plan", usage = "query plan choice", required = false)
         public Plan planChoice = Plan.OUTER_JOIN;
 
-        @Option(name = "-kmer-kmerByteSize", usage = "the kmerByteSize of kmer", required = false)
+        @Option(name = "-tmpKmer-kmerByteSize", usage = "the kmerByteSize of tmpKmer", required = false)
         public int sizeKmer;
 
         @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
