@@ -15,10 +15,6 @@ import edu.uci.ics.genomix.data.Marshal;
 /**
  * A list of fixed-length kmers. The length of this list is stored internally.
  */
-	@Override
-	public int hashCode() {
-		return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
-	}
 public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable {
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 };
@@ -252,4 +248,8 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         return sbuilder.toString();
     }
 
+    @Override
+    public int hashCode() {
+        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
+    }
 }

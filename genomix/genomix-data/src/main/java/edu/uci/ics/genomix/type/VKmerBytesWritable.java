@@ -329,9 +329,21 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     }
 
     @Override
-    public boolean equals(Object right) {
-        if (right instanceof VKmerBytesWritable) {
-            return lettersInKmer == ((VKmerBytesWritable) right).lettersInKmer && super.equals(right); // compare bytes directly
+    public int hashCode() {
+        return Marshal.hashBytes(bytes, kmerStartOffset - HEADER_SIZE, bytesUsed + HEADER_SIZE);
+    }
+
+    @Override
+    public boolean equals(Object right_obj) {
+        if (right_obj instanceof VKmerBytesWritable) {
+            // since these may be backed by storage of different sizes, we have to manually check each byte, including the header
+            VKmerBytesWritable right = (VKmerBytesWritable) right_obj;
+            for (int i = -HEADER_SIZE; i < bytesUsed; i++) {
+                if (bytes[kmerStartOffset + i] != right.bytes[right.kmerStartOffset + i]) {
+                    return false;
+                }
+            }
+            return true;
         }
         return false;
     }

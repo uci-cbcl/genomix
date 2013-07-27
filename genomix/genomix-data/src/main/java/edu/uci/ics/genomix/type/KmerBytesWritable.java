@@ -25,6 +25,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.KmerUtil;
+import edu.uci.ics.genomix.data.Marshal;
 
 /**
  * Fixed, static-length Kmer used as the key and edge values of each
@@ -152,7 +153,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public static int getKmerLength() {
         return lettersInKmer;
     }
-
+    
     public static int getBytesPerKmer() {
         return bytesUsed;
     }
@@ -333,13 +334,21 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     @Override
     public int hashCode() {
-        return super.hashCode() * 31 + lettersInKmer;
+        return Marshal.hashBytes(bytes, offset, bytesUsed);
     }
 
     @Override
     public boolean equals(Object right_obj) {
-        if (right_obj instanceof KmerBytesWritable)
-            return super.equals(right_obj);
+        if (right_obj instanceof KmerBytesWritable) {
+            // since these may be backed by storage of different sizes, we have to manually check each byte
+            KmerBytesWritable right = (KmerBytesWritable) right_obj;
+            for (int i=0; i < bytesUsed; i++) {
+                if (bytes[offset + i] != right.bytes[right.offset + i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
         return false;
     }
 
