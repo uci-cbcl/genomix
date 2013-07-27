@@ -28,16 +28,17 @@ import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFacto
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.ReadIDPartitionComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
-import edu.uci.ics.genomix.hyracks.dataflow.ConnectorPolicyAssignmentPolicy;
+//import edu.uci.ics.genomix.hyracks.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.AggregateKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.MergeKmerAggregateFactory;
 
 
-import edu.uci.ics.genomix.hyracks.dataflow.io.KMerSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.io.KMerTextWriterFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.io.NodeSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.dataflow.io.NodeTextWriterFactory;
+//import edu.uci.ics.genomix.hyracks.dataflow.io.KMerSequenceWriterFactory;
+//import edu.uci.ics.genomix.hyracks.dataflow.io.KMerTextWriterFactory;
+//import edu.uci.ics.genomix.hyracks.dataflow.io.NodeSequenceWriterFactory;
+//import edu.uci.ics.genomix.hyracks.dataflow.io.NodeTextWriterFactory;
+
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -119,18 +120,6 @@ public class JobGenBrujinGraph extends JobGen {
         initJobConfiguration(scheduler);
     }
 
-    private ExternalGroupOperatorDescriptor newExternalGroupby(JobSpecification jobSpec, int[] keyFields,
-            IAggregatorDescriptorFactory aggeragater, IAggregatorDescriptorFactory merger,
-            ITuplePartitionComputerFactory partition, INormalizedKeyComputerFactory normalizer,
-            IPointableFactory pointable, RecordDescriptor outRed) {
-        return new ExternalGroupOperatorDescriptor(jobSpec, keyFields, frameLimits,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, normalizer,
-                aggeragater, merger, outRed, new HashSpillableTableFactory(new FieldHashPartitionComputerFactory(
-                        keyFields,
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(pointable) }),
-                        tableSize), true);
-    }
-
     private Object[] generateAggeragateDescriptorbyType(JobSpecification jobSpec, int[] keyFields,
             IAggregatorDescriptorFactory aggregator, IAggregatorDescriptorFactory merger,
             ITuplePartitionComputerFactory partition, INormalizedKeyComputerFactory normalizer,
@@ -140,16 +129,8 @@ public class JobGenBrujinGraph extends JobGen {
         Object[] obj = new Object[3];
 
         switch (groupbyType) {
-            case EXTERNAL:
-                obj[0] = newExternalGroupby(jobSpec, keyFields, aggregator, merger, partition, normalizer, pointable,
-                        combineRed);
-                obj[1] = new MToNPartitioningConnectorDescriptor(jobSpec, partition);
-                obj[2] = newExternalGroupby(jobSpec, keyFields, merger, merger, partition, normalizer, pointable,
-                        finalRec);
-                break;
             case PRECLUSTER:
             default:
-
                 obj[0] = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, aggregator,
                         combineRed);
@@ -190,15 +171,16 @@ public class JobGenBrujinGraph extends JobGen {
 
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(jobSpec, frameLimits, keyFields,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
-                ReadsKeyValueParserFactory.readKmerOutputRec);
+                ReadsKeyValueParserFactory.readKmerOutputRec);//???????????
+        
         connectOperators(jobSpec, readOperator, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
                 jobSpec));
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
         jobSpec.setFrameSize(frameSize);
 
-        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(),
-                new MergeKmerAggregateFactory(), new KmerHashPartitioncomputerFactory(),
+        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(readLength,kmerSize),
+                new MergeKmerAggregateFactory(readLength,kmerSize), new KmerHashPartitioncomputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         logDebug("LocalKmerGroupby Operator");
@@ -288,18 +270,11 @@ public class JobGenBrujinGraph extends JobGen {
         tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
         frameSize = conf.getInt(GenomixJobConf.FRAME_SIZE, GenomixJobConf.DEFAULT_FRAME_SIZE);
 
-        bGenerateReversedKmer = conf.getBoolean(GenomixJobConf.REVERSED_KMER, GenomixJobConf.DEFAULT_REVERSED);
-
         String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        if (type.equalsIgnoreCase(GenomixJobConf.GROUPBY_TYPE_EXTERNAL)) {
-            groupbyType = GroupbyType.EXTERNAL;
-        } else if (type.equalsIgnoreCase(GenomixJobConf.GROUPBY_TYPE_PRECLUSTER)) {
-            groupbyType = GroupbyType.PRECLUSTER;
-        } else {
-            groupbyType = GroupbyType.HYBRIDHASH;
-        }
+        groupbyType = GroupbyType.PRECLUSTER;
 
-        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
+        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
+        
         if (output.equalsIgnoreCase("text")) {
             outputFormat = OutputFormat.TEXT;
         } else {
