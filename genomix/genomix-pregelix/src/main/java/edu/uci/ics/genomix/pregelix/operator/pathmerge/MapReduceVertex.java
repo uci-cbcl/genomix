@@ -21,12 +21,12 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 public class MapReduceVertex extends
     BasicGraphCleanVertex {
     
-    private static boolean fakeVertexExist = false;
-    private static KmerBytesWritable fakeVertex = null;
+    public static boolean fakeVertexExist = false;
+    protected static KmerBytesWritable fakeVertex = null;
     
-    private KmerBytesWritable reverseKmer;
-    private KmerListWritable kmerList = null;
-    private Map<KmerBytesWritable, KmerListWritable> kmerMapper = new HashMap<KmerBytesWritable, KmerListWritable>();
+    protected KmerBytesWritable reverseKmer;
+    protected KmerListWritable kmerList = null;
+    protected Map<KmerBytesWritable, KmerListWritable> kmerMapper = new HashMap<KmerBytesWritable, KmerListWritable>();
 
     /**
      * initiate kmerSize, maxIteration
@@ -69,82 +69,110 @@ public class MapReduceVertex extends
         return sb.toString();
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    /**
+     * add fake vertex
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void addFakeVertex(){
+        if(!fakeVertexExist){
+            //add a fake vertex
+            Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+            vertex.getMsgList().clear();
+            vertex.getEdges().clear();
+            VertexValueWritable vertexValue = new VertexValueWritable(kmerSize + 1);
+            vertexValue.setState(State.IS_FAKE);
+            vertexValue.setFakeVertex(true);
+            
+            vertex.setVertexId(fakeVertex);
+            vertex.setVertexValue(vertexValue);
+            
+            addVertex(fakeVertex, vertex);
+            fakeVertexExist = true;
+        }
+    }
+    
+    public void sendMsgToFakeVertex(){
+        if(!getVertexValue().isFakeVertex()){
+            outgoingMsg.setSourceVertexId(getVertexId());
+            outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+            sendMsg(fakeVertex, outgoingMsg);
+            voteToHalt();
+        }
+    }
+    
+    public void mapKeyByActualKmer(Iterator<MessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            String kmerString = incomingMsg.getActualKmer().toString();
+            tmpKmer.reset(kmerString.length());
+            reverseKmer.reset(kmerString.length());
+            tmpKmer.setByRead(kmerString.getBytes(), 0);
+            reverseKmer.setByReadReverse(kmerString.getBytes(), 0);
+
+            if(reverseKmer.compareTo(tmpKmer) < 0)
+                tmpKmer.set(reverseKmer);
+            if(!kmerMapper.containsKey(tmpKmer)){
+                kmerList.reset();
+                kmerList.append(incomingMsg.getSourceVertexId());
+                kmerMapper.put(tmpKmer, kmerList);
+            } else{
+                kmerList.set(kmerMapper.get(tmpKmer));
+                kmerList.append(incomingMsg.getSourceVertexId());
+                kmerMapper.put(tmpKmer, kmerList);
+            }
+        }
+    }
+    
+    public void reduceKeyByActualKmer(){
+        for(KmerBytesWritable key : kmerMapper.keySet()){
+            kmerList = kmerMapper.get(key);
+            for(int i = 1; i < kmerList.getCountOfPosition(); i++){
+                //send kill message
+                outgoingMsg.setFlag(MessageFlag.KILL);
+                destVertexId.set(kmerList.getPosition(i));
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
+    
+    public void finalVertexResponseToFakeVertex(Iterator<MessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            inFlag = incomingMsg.getFlag();
+            if(inFlag == MessageFlag.KILL){
+                broadcaseKillself();
+            }
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
-            if(!fakeVertexExist){
-                //add a fake vertex
-                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-                vertex.getMsgList().clear();
-                vertex.getEdges().clear();
-                VertexValueWritable vertexValue = new VertexValueWritable(kmerSize + 1);
-                vertexValue.setState(State.IS_FAKE);
-                vertexValue.setFakeVertex(true);
-                
-                vertex.setVertexId(fakeVertex);
-                vertex.setVertexValue(vertexValue);
-                
-                addVertex(fakeVertex, vertex);
-                fakeVertexExist = true;
-            }
+            addFakeVertex();
         }
         else if(getSuperstep() == 2){
-            if(!getVertexValue().isFakeVertex()){
-                outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
-                sendMsg(fakeVertex, outgoingMsg);
-                voteToHalt();
-            }
+            /** NON-FAKE and Final vertice send msg to FAKE vertex **/
+            sendMsgToFakeVertex();
         } else if(getSuperstep() == 3){
             kmerMapper.clear();
             /** Mapper **/
-            while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                String kmerString = incomingMsg.getActualKmer().toString();
-                tmpKmer.reset(kmerString.length());
-                reverseKmer.reset(kmerString.length());
-                tmpKmer.setByRead(kmerString.getBytes(), 0);
-                reverseKmer.setByReadReverse(kmerString.getBytes(), 0);
-
-                if(reverseKmer.compareTo(tmpKmer) < 0)
-                    tmpKmer.set(reverseKmer);
-                if(!kmerMapper.containsKey(tmpKmer)){
-                    kmerList.reset();
-                    kmerList.append(incomingMsg.getSourceVertexId());
-                    kmerMapper.put(tmpKmer, kmerList);
-                } else{
-                    kmerList.set(kmerMapper.get(tmpKmer));
-                    kmerList.append(incomingMsg.getSourceVertexId());
-                    kmerMapper.put(tmpKmer, kmerList);
-                }
-            }
+            mapKeyByActualKmer(msgIterator);
             /** Reducer **/
-            for(KmerBytesWritable key : kmerMapper.keySet()){
-                kmerList = kmerMapper.get(key);
-                for(int i = 1; i < kmerList.getCountOfPosition(); i++){
-                    //send kill message
-                    outgoingMsg.setFlag(MessageFlag.KILL);
-                    destVertexId.set(kmerList.getPosition(i));
-                    sendMsg(destVertexId, outgoingMsg);
-                }
-            }
+            reduceKeyByActualKmer();
         } else if(getSuperstep() == 4){
             /** only for test single MapReduce job**/
             if(!msgIterator.hasNext() && getVertexValue().getState() == State.IS_FAKE){
                 fakeVertexExist = false;
                 deleteVertex(fakeVertex);
             }
-            while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                inFlag = incomingMsg.getFlag();
-                if(inFlag == MessageFlag.KILL){
-                    broadcaseKillself();
-                }
-            }
+            finalVertexResponseToFakeVertex(msgIterator);
         } else if(getSuperstep() == 5){
-            responseToDeadVertex(msgIterator);
+            while (msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                if(isKillMsg())
+                    responseToDeadVertex();
+            }
         }
     }
     

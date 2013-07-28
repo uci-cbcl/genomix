@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFromHead;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerListWritable;
 /*
  * vertexId: BytesWritable
  * vertexValue: VertexValueWritable
@@ -42,11 +43,12 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class LogAlgorithmForPathMergeVertex extends
-    BasicGraphCleanVertex {
+    MapReduceVertex {
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
     KmerBytesWritable tmpKmer = new KmerBytesWritable();
-
+    
+    private boolean isFakeVertex = false;
     /**
      * initiate kmerSize, maxIteration
      */
@@ -64,6 +66,18 @@ public class LogAlgorithmForPathMergeVertex extends
         else
             outgoingMsg.reset(kmerSize);
         receivedMsgList.clear();
+        if(reverseKmer == null)
+            reverseKmer = new KmerBytesWritable(kmerSize);
+        if(kmerList == null)
+            kmerList = new KmerListWritable(kmerSize);
+        else
+            kmerList.reset(kmerSize);
+        if(fakeVertex == null){
+            fakeVertex = new KmerBytesWritable(kmerSize + 1);
+            String random = generaterRandomString(kmerSize + 1);
+            fakeVertex.setByRead(random.getBytes(), 0); 
+        }
+        isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
     }
 
     /**
@@ -138,7 +152,14 @@ public class LogAlgorithmForPathMergeVertex extends
         }
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            if(getMsgFlag() == MessageFlag.IS_FINAL){
+            /** final Vertex Responses To FakeVertex **/
+            if((byte)(incomingMsg.getFlag() & MessageFlag.KILL_MASK) == MessageFlag.KILL){
+                if((byte)(incomingMsg.getFlag() & MessageFlag.DIR_MASK) == MessageFlag.DIR_FROM_DEADVERTEX){
+                    responseToDeadVertex();
+                } else{
+                    broadcaseKillself();
+                }
+            }else if(getMsgFlag() == MessageFlag.IS_FINAL){
                 processMerge(incomingMsg);
                 getVertexValue().setState(State.IS_FINAL);
             }else{
@@ -156,15 +177,24 @@ public class LogAlgorithmForPathMergeVertex extends
       //process merge when receiving msg
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            /** for final processing **/
-            if(getMsgFlag() == MessageFlag.IS_FINAL){
-                sendFinalMergeMsg();
-                break;
+            /** final Vertex Responses To FakeVertex **/
+            if((byte)(incomingMsg.getFlag() & MessageFlag.KILL_MASK) == MessageFlag.KILL){
+                if((byte)(incomingMsg.getFlag() & MessageFlag.DIR_MASK) == MessageFlag.DIR_FROM_DEADVERTEX){
+                    responseToDeadVertex();
+                } else{
+                    broadcaseKillself();
+                }
+            } else {
+                /** for final processing **/
+                if(getMsgFlag() == MessageFlag.IS_FINAL){
+                    sendFinalMergeMsg();
+                    break;
+                }
+                if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD)
+                    processUpdate();
+                else if(!incomingMsg.isUpdateMsg())
+                    receivedMsgList.add(incomingMsg);
             }
-            if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD)
-                processUpdate();
-            else if(!incomingMsg.isUpdateMsg())
-                receivedMsgList.add(incomingMsg);
         }
         if(receivedMsgList.size() != 0){
             byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
@@ -174,6 +204,8 @@ public class LogAlgorithmForPathMergeVertex extends
                     for(int i = 0; i < 2; i++)
                         processFinalMerge(receivedMsgList.get(i)); //processMerge()
                     getVertexValue().setState(State.IS_FINAL);
+                    /** NON-FAKE and Final vertice send msg to FAKE vertex **/
+                    sendMsgToFakeVertex();
                     voteToHalt();
                     break;
                 case MessageFromHead.OneMsgFromHeadAndOneFromNonHead:
@@ -195,31 +227,63 @@ public class LogAlgorithmForPathMergeVertex extends
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
-        if (getSuperstep() == 1)
+        if (getSuperstep() == 1){
+            addFakeVertex();
             startSendMsg();
-        else if (getSuperstep() == 2)
+        }
+        else if (getSuperstep() == 2){
+            if(!msgIterator.hasNext() && isFakeVertex)
+                voteToHalt();
             initState(msgIterator);
+        }
         else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
-            /** for processing final merge **/
-            if(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                if(getMsgFlag() == MessageFlag.IS_FINAL){
-                    setFinalState();
-                    processFinalMerge(incomingMsg);
+            if(!isFakeVertex){
+                /** for processing final merge **/
+                if(msgIterator.hasNext()){
+                    incomingMsg = msgIterator.next();
+                    if(getMsgFlag() == MessageFlag.IS_FINAL){
+                        setFinalState();
+                        processFinalMerge(incomingMsg);
+                        /** NON-FAKE and Final vertice send msg to FAKE vertex **/
+                        sendMsgToFakeVertex();
+                    } else if(isKillMsg()){
+                        responseToDeadVertex();
+                    }
+                }
+                /** processing general case **/
+                else{
+                    sendMsgToPathVertex(msgIterator);
+                    if(selfFlag != State.IS_HEAD)
+                        voteToHalt();
                 }
             }
-            /** processing general case **/
+            /** Fake vertex agregates message and group them by actual kmer **/
             else{
-                sendMsgToPathVertex(msgIterator);
-                if(selfFlag != State.IS_HEAD)
-                    voteToHalt();
+                kmerMapper.clear();
+                /** Mapper **/
+                mapKeyByActualKmer(msgIterator);
+                /** Reducer **/
+                reduceKeyByActualKmer();
+                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
-            responseMsgToHeadVertex(msgIterator);
-            if(selfFlag != State.IS_HEAD)
+            if(!isFakeVertex){
+                responseMsgToHeadVertex(msgIterator);
+                if(selfFlag != State.IS_HEAD)
+                    voteToHalt();
+            } 
+            /** Fake vertex agregates message and group them by actual kmer **/
+            else{
+                kmerMapper.clear();
+                /** Mapper **/
+                mapKeyByActualKmer(msgIterator);
+                /** Reducer **/
+                reduceKeyByActualKmer();
                 voteToHalt();
+            }
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
-            processMergeInHeadVertex(msgIterator);
+            if(!isFakeVertex)
+                processMergeInHeadVertex(msgIterator);
         }else
             voteToHalt();
     }

@@ -727,24 +727,31 @@ public class BasicGraphCleanVertex extends
      * broadcast kill self to all neighbers  Pre-condition: vertex is a path vertex 
      */
     public void broadcaseKillself(){
+        outFlag = 0;
+        outFlag |= MessageFlag.KILL;
+        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
         outgoingMsg.setSourceVertexId(getVertexId());
         
         if(getVertexValue().getFFList().getCountOfPosition() > 0){//#FFList() > 0
-            outgoingMsg.setFlag(MessageFlag.DIR_FF);
+            outFlag |= MessageFlag.DIR_FF;
+            outgoingMsg.setFlag(outFlag);
             sendMsg(getVertexValue().getFFList().getPosition(0), outgoingMsg);
         }
         else if(getVertexValue().getFRList().getCountOfPosition() > 0){//#FRList() > 0
-            outgoingMsg.setFlag(MessageFlag.DIR_FR);
+            outFlag |= MessageFlag.DIR_FR;
+            outgoingMsg.setFlag(outFlag);
             sendMsg(getVertexValue().getFRList().getPosition(0), outgoingMsg);
         }
         
         
         if(getVertexValue().getRFList().getCountOfPosition() > 0){//#RFList() > 0
-            outgoingMsg.setFlag(MessageFlag.DIR_RF);
+            outFlag |= MessageFlag.DIR_RF;
+            outgoingMsg.setFlag(outFlag);
             sendMsg(getVertexValue().getRFList().getPosition(0), outgoingMsg);
         }
         else if(getVertexValue().getRRList().getCountOfPosition() > 0){//#RRList() > 0
-            outgoingMsg.setFlag(MessageFlag.DIR_RR);
+            outFlag |= MessageFlag.DIR_RR;
+            outgoingMsg.setFlag(outFlag);
             sendMsg(getVertexValue().getRRList().getPosition(0), outgoingMsg);
         }
         
@@ -754,10 +761,9 @@ public class BasicGraphCleanVertex extends
     /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
-    public void responseToDeadVertex(Iterator<MessageWritable> msgIterator){
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            if(incomingMsg.getFlag() == AdjMessage.FROMFF){
+    public void responseToDeadVertex(){
+        switch(incomingMsg.getFlag() & MessageFlag.DIR_MASK){
+            case MessageFlag.DIR_FF:
                 //remove incomingMsg.getSourceId from RR positionList
                 posIterator = getVertexValue().getRRList().iterator();
                 while(posIterator.hasNext()){
@@ -767,7 +773,8 @@ public class BasicGraphCleanVertex extends
                         break;
                     }
                 }
-            } else if(incomingMsg.getFlag() == AdjMessage.FROMFR){
+                break;
+            case MessageFlag.DIR_FR:
                 //remove incomingMsg.getSourceId from FR positionList
                 posIterator = getVertexValue().getFRList().iterator();
                 while(posIterator.hasNext()){
@@ -777,7 +784,8 @@ public class BasicGraphCleanVertex extends
                         break;
                     }
                 }
-            } else if(incomingMsg.getFlag() == AdjMessage.FROMRF){
+                break;
+            case MessageFlag.DIR_RF:
                 //remove incomingMsg.getSourceId from RF positionList
                 posIterator = getVertexValue().getRFList().iterator();
                 while(posIterator.hasNext()){
@@ -787,7 +795,8 @@ public class BasicGraphCleanVertex extends
                         break;
                     }
                 }
-            } else{ //incomingMsg.getFlag() == AdjMessage.FROMRR
+                break;
+            case MessageFlag.DIR_RR:
                 //remove incomingMsg.getSourceId from FF positionList
                 posIterator = getVertexValue().getFFList().iterator();
                 while(posIterator.hasNext()){
@@ -797,8 +806,13 @@ public class BasicGraphCleanVertex extends
                         break;
                     }
                 }
-            }
+                break;
         }
+    }
+    
+    public boolean isKillMsg(){
+        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
+        return killFlag == MessageFlag.KILL;
     }
     
     @Override

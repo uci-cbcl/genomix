@@ -44,21 +44,21 @@ public class JobGenerator {
 //                + "NaiveAlgorithmForMergeGraph.xml");
 //    }
 
-//    private static void generateLogAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(LogAlgorithmForPathMergeVertex.class);
-//        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-//        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(KmerBytesWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genLogAlgorithmForMergeGraph() throws IOException {
-//        generateLogAlgorithmForMergeGraphJob("LogAlgorithmForMergeGraph", outputBase + "LogAlgorithmForMergeGraph.xml");
-//    }
+    private static void generateLogAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(LogAlgorithmForPathMergeVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genLogAlgorithmForMergeGraph() throws IOException {
+        generateLogAlgorithmForMergeGraphJob("LogAlgorithmForMergeGraph", outputBase + "LogAlgorithmForMergeGraph.xml");
+    }
 //    
 //    private static void generateP3ForMergeGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(jobName);
@@ -215,7 +215,7 @@ public class JobGenerator {
     
     public static void main(String[] args) throws IOException {
         //genNaiveAlgorithmForMergeGraph();
-//        genLogAlgorithmForMergeGraph();
+        genLogAlgorithmForMergeGraph();
         //genP3ForMergeGraph();
         //genTipAddGraph();
 //        genTipRemoveGraph();
@@ -224,7 +224,7 @@ public class JobGenerator {
 //        genBubbleAddGraph();
 //        genBubbleMergeGraph();
 //        genP4ForMergeGraph();
-        genMapReduceGraph();
+//        genMapReduceGraph();
     }
 
 }

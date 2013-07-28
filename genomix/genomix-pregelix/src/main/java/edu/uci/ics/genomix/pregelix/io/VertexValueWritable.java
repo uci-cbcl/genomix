@@ -20,6 +20,9 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
         public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
         public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
+        
+        public static final byte KILL = 0b11 << 3;
+        public static final byte KILL_MASK = 0b11 << 3;
     }
     
     public static class VertexStateFlag extends FakeFlag {
@@ -37,6 +40,8 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public static class FakeFlag{
         public static final byte IS_NONFAKE = 0 << 0;
         public static final byte IS_FAKE = 1 << 0;
+        
+        public static final byte FAKEFLAG_MASK = (byte) 00000001;
     }
     
     private PositionListWritable nodeIdList;
