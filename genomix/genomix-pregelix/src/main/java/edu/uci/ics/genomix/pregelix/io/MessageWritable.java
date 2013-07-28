@@ -9,6 +9,7 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
 
 public class MessageWritable implements WritableComparable<MessageWritable> {
     /**
@@ -19,6 +20,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private KmerBytesWritable sourceVertexId;
     private KmerBytesWritable kmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
+    private PositionListWritable nodeIdList = new PositionListWritable();
     private byte flag;
     private boolean isFlip;
     private int kmerlength = 0;
@@ -158,6 +160,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         this.updateMsg = updateMsg;
     }
 
+    public PositionListWritable getNodeIdList() {
+        return nodeIdList;
+    }
+
+    public void setNodeIdList(PositionListWritable nodeIdList) {
+        this.nodeIdList.set(nodeIdList);
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(kmerlength);
@@ -168,6 +178,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             kmer.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
+        if ((checkMessage & CheckMessage.NODEIDLIST) != 0)
+            nodeIdList.write(out);
         out.writeBoolean(isFlip);
         out.writeByte(flag); 
         out.writeBoolean(updateMsg);
@@ -184,6 +196,8 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             kmer.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
+        if ((checkMessage & CheckMessage.NODEIDLIST) != 0)
+            nodeIdList.readFields(in);
         isFlip = in.readBoolean();
         flag = in.readByte();
         updateMsg = in.readBoolean();

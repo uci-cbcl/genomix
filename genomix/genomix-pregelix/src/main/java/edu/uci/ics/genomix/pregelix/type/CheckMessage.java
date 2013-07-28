@@ -6,7 +6,7 @@ public class CheckMessage {
     public static final byte CHAIN = 1 << 1;
     public static final byte NEIGHBER = 1 << 2;
     public static final byte MESSAGE = 1 << 3;
-    public static final byte STATE = 1 << 4;
+    public static final byte NODEIDLIST = 1 << 4;
     public static final byte ADJMSG = 1 << 5;
     public static final byte START = 1 << 6;
 
@@ -27,8 +27,8 @@ public class CheckMessage {
                 case MESSAGE:
                     r = "MESSAGE";
                     break;
-                case STATE:
-                    r = "STATE";
+                case NODEIDLIST:
+                    r = "READID";
                     break;
                 case ADJMSG:
                     r = "ADJMSG";

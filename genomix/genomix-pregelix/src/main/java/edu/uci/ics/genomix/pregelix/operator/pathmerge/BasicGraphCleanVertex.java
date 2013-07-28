@@ -163,23 +163,25 @@ public class BasicGraphCleanVertex extends
      * one vertex send message to previous and next vertices (neighbor)
      */
     public void sendMsgToAllNeighborNodes(VertexValueWritable value){
-        posIterator = value.getFFList().iterator(); // FFList
+        sendMsgToAllNextNodes(value);
+        sendMsgToAllPreviousNodes(value);
+    }
+    
+    /**
+     * head send message to all previous nodes
+     */
+    public void sendSettledMsgToAllPreviousNodes(VertexValueWritable value) {
+        posIterator = value.getRFList().iterator(); // RFList
         while(posIterator.hasNext()){
+            outgoingMsg.setFlag(AdjMessage.FROMRF);
+            outgoingMsg.setSourceVertexId(getVertexId());
             destVertexId.set(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
-        posIterator = value.getFRList().iterator(); // FRList
+        posIterator = value.getRRList().iterator(); // RRList
         while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        posIterator = value.getFFList().iterator(); // FFList
-        while(posIterator.hasNext()){
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        posIterator = value.getFRList().iterator(); // FRList
-        while(posIterator.hasNext()){
+            outgoingMsg.setFlag(AdjMessage.FROMRR);
+            outgoingMsg.setSourceVertexId(getVertexId());
             destVertexId.set(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
@@ -199,26 +201,6 @@ public class BasicGraphCleanVertex extends
         posIterator = value.getFRList().iterator(); // FRList
         while(posIterator.hasNext()){
             outgoingMsg.setFlag(AdjMessage.FROMFR);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-
-    /**
-     * head send message to all previous nodes
-     */
-    public void sendSettledMsgToAllPreviousNodes(VertexValueWritable value) {
-        posIterator = value.getRFList().iterator(); // RFList
-        while(posIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(posIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        posIterator = value.getRRList().iterator(); // RRList
-        while(posIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMRR);
             outgoingMsg.setSourceVertexId(getVertexId());
             destVertexId.set(posIterator.next());
             sendMsg(destVertexId, outgoingMsg);

@@ -244,6 +244,10 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         return outgoingList.getForwardList().getCountOfPosition() + outgoingList.getReverseList().getCountOfPosition();
     }
     
+    public int getDegree(){
+        return inDegree() + outDegree();
+    }
+    
     /*
      * Delete the corresponding edge
      */
