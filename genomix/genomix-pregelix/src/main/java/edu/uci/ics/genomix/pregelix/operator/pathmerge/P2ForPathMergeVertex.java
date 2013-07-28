@@ -42,7 +42,7 @@ import edu.uci.ics.genomix.type.KmerListWritable;
  * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
-public class LogAlgorithmForPathMergeVertex extends
+public class P2ForPathMergeVertex extends
     MapReduceVertex {
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
@@ -289,8 +289,8 @@ public class LogAlgorithmForPathMergeVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(LogAlgorithmForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(LogAlgorithmForPathMergeVertex.class);
+        PregelixJob job = new PregelixJob(P2ForPathMergeVertex.class.getSimpleName());
+        job.setVertexClass(P2ForPathMergeVertex.class);
         /**
          * BinaryInput and BinaryOutput~/
          */
