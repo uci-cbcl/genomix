@@ -18,255 +18,596 @@ package edu.uci.ics.genomix.type;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
+import org.apache.hadoop.io.BinaryComparable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.KmerUtil;
 import edu.uci.ics.genomix.data.Marshal;
+import edu.uci.ics.genomix.oldtype.NodeWritable.DirectionFlag;
 
 /**
  * Variable-length kmer which stores its length internally.
- * 
  * Note: `offset` as used in this class is the offset at which the *kmer*
  * begins. There is a {@value HEADER_SIZE}-byte header preceding the kmer
  */
-public class VKmerBytesWritable extends KmerBytesWritable {
+public class VKmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
+    private static final long serialVersionUID = 1L;
+    protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 }; // int indicating 0 length
+    protected static final int HEADER_SIZE = 4; // number of bytes for header info
 
-	private static final long serialVersionUID = 1L;
-	protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 }; // int
-																// indicating 0
-																// length
-	protected static final int HEADER_SIZE = 4; // number of bytes for header
-												// info
+    protected int lettersInKmer;
+    protected int bytesUsed;
+    protected byte[] bytes;
+    protected int kmerStartOffset;
+    protected int storageMaxSize;  // since we may be a reference inside a larger datablock, we must track our maximum size
 
-	/**
-	 * Initialize as empty kmer
-	 */
-	public VKmerBytesWritable() {
-		this(EMPTY_BYTES, HEADER_SIZE);
-	}
+    /**
+     * Initialize as empty kmer
+     */
+    public VKmerBytesWritable() {
+        this(EMPTY_BYTES, 0);
+    }
 
-	/**
-	 * Copy contents of kmer string
-	 */
-	public VKmerBytesWritable(String kmer) {
-		bytes = new byte[HEADER_SIZE + KmerUtil.getByteNumFromK(kmer.length())];
-		offset = HEADER_SIZE;
-		setAsCopy(kmer);
-	}
+    /**
+     * Copy contents of kmer string
+     */
+    public VKmerBytesWritable(String kmer) {
+        bytes = new byte[HEADER_SIZE + KmerUtil.getByteNumFromK(kmer.length())];
+        kmerStartOffset = HEADER_SIZE;
+        storageMaxSize = bytes.length;
+        setAsCopy(kmer);
+    }
 
-	/**
-	 * Set as reference to given data
-	 * 
-	 * @param storage
-	 *            : byte array with header
-	 * @param offset
-	 */
-	public VKmerBytesWritable(byte[] storage, int offset) {
-		setAsReference(storage, offset);
-	}
+    /**
+     * Set as reference to given data
+     * 
+     * @param storage
+     *            : byte array with header
+     * @param offset
+     */
+    public VKmerBytesWritable(byte[] storage, int offset) {
+        setAsReference(storage, offset);
+    }
 
-	/**
-	 * Reserve space for k letters
-	 */
-	public VKmerBytesWritable(int k) {
-		if (k > 0) {
-			bytes = new byte[HEADER_SIZE + KmerUtil.getByteNumFromK(k)];
-		} else {
-			bytes = EMPTY_BYTES;
-		}
-		offset = HEADER_SIZE;
-		setKmerLength(k);
-	}
+    /**
+     * Reserve space for k letters
+     */
+    public VKmerBytesWritable(int k) {
+        if (k > 0) {
+            bytes = new byte[HEADER_SIZE + KmerUtil.getByteNumFromK(k)];
+        } else if (k == 0) {
+            bytes = EMPTY_BYTES;
+        } else {
+            throw new IllegalArgumentException("Invalid K (" + k + ").");
+        }
+        kmerStartOffset = HEADER_SIZE;
+        storageMaxSize = bytes.length;
+        setKmerLength(k);
+    }
 
-	/**
-	 * deep copy of kmer in other
-	 * 
-	 * @param other
-	 */
-	public VKmerBytesWritable(VKmerBytesWritable other) {
-		this(other.lettersInKmer);
-		setAsCopy(other);
-	}
+    /**
+     * deep copy of kmer in other
+     * 
+     * @param other
+     */
+    public VKmerBytesWritable(VKmerBytesWritable other) {
+        this(other.lettersInKmer);
+        setAsCopy(other);
+    }
 
-	/**
-	 * Deep copy of the given kmer
-	 * 
-	 * @param other
-	 */
-	@Override
-	public void setAsCopy(KmerBytesWritable other) {
-		reset(other.lettersInKmer);
-		if (lettersInKmer > 0) {
-			System.arraycopy(other.bytes, other.offset, bytes, this.offset,
-					bytesUsed);
-		}
-	}
+    /**
+     * Deep copy of the given kmer
+     * 
+     * @param other
+     */
+    public void setAsCopy(VKmerBytesWritable other) {
+        reset(other.lettersInKmer);
+        if (lettersInKmer > 0) {
+            System.arraycopy(other.bytes, other.kmerStartOffset, bytes, this.kmerStartOffset, bytesUsed);
+        }
+    }
 
-	/**
-	 * set from String kmer
-	 */
-	@Override
-	public void setAsCopy(String kmer) {
-		int k = kmer.length();
-		reset(k);
-		System.arraycopy(kmer.getBytes(), 0, bytes, offset, bytesUsed);
-	}
+    /**
+     * set from String kmer
+     */
+    public void setAsCopy(String kmer) {
+        int k = kmer.length();
+        reset(k);
+        System.arraycopy(kmer.getBytes(), 0, bytes, kmerStartOffset, bytesUsed);
+    }
 
-	/**
-	 * Deep copy of the given bytes data
-	 * 
-	 * @param newData
-	 *            : byte array to copy (should have a header)
-	 * @param offset
-	 */
-	public void setAsCopy(byte[] newData, int offset) {
-		int k = Marshal.getInt(newData, offset);
-		reset(k);
-		System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.offset,
-				bytesUsed);
-	}
+    /**
+     * Deep copy of the given bytes data
+     * 
+     * @param newData
+     *            : byte array to copy (should have a header)
+     * @param offset
+     */
+    public void setAsCopy(byte[] newData, int offset) {
+        int k = Marshal.getInt(newData, offset);
+        reset(k);
+        System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.kmerStartOffset, bytesUsed);
+    }
 
-	/**
-	 * Point this datablock to the given bytes array It works like the pointer
-	 * to new datablock.
-	 * 
-	 * @param newData
-	 *            : byte array to copy (should have a header)
-	 * @param blockOffset
-	 */
-	public void setAsReference(byte[] newData, int blockOffset) {
-		this.bytes = newData;
-		this.offset = blockOffset + HEADER_SIZE;
-		int kRequested = Marshal.getInt(newData, blockOffset);
-		int bytesRequested = KmerUtil.getByteNumFromK(kRequested) + HEADER_SIZE;
-		if (newData.length - blockOffset < bytesRequested) {
-			throw new IllegalArgumentException("Requested " + bytesRequested
-					+ " bytes (k=" + kRequested + ") but buffer has only "
-					+ (newData.length - blockOffset) + " bytes");
-		}
-		setKmerLength(kRequested);
-	}
+    /**
+     * Point this datablock to the given bytes array It works like the pointer
+     * to new datablock.
+     * 
+     * @param newData
+     *            : byte array to copy (should have a header)
+     * @param blockOffset
+     */
+    public void setAsReference(byte[] newData, int blockOffset) {
+        bytes = newData;
+        kmerStartOffset = blockOffset + HEADER_SIZE;
+        int kRequested = Marshal.getInt(newData, blockOffset);
+        int bytesRequested = KmerUtil.getByteNumFromK(kRequested) + HEADER_SIZE;
+        if (newData.length - blockOffset < bytesRequested) {
+            throw new IllegalArgumentException("Requested " + bytesRequested + " bytes (k=" + kRequested
+                    + ") but buffer has only " + (newData.length - blockOffset) + " bytes");
+        }
+        storageMaxSize = bytesRequested;  // since we are a reference, store our max capacity
+        setKmerLength(kRequested);
+    }
 
-	@Override
-	public void setKmerLength(int k) {
-		this.bytesUsed = KmerUtil.getByteNumFromK(k);
-		this.lettersInKmer = k;
-		Marshal.putInt(k, bytes, offset - HEADER_SIZE);
-	}
+    /**
+     * Reset array by kmerlength
+     * 
+     * @param k
+     */
+    public void reset(int k) {
+        int newByteLength = KmerUtil.getByteNumFromK(k);
+        if (bytesUsed < newByteLength) {
+            bytes = new byte[newByteLength + HEADER_SIZE];
+            kmerStartOffset = HEADER_SIZE;
+            storageMaxSize = bytes.length;
+        }
+        setKmerLength(k);
+    }
 
-	@Override
-	protected int getCapacity() {
-		return bytes.length - HEADER_SIZE;
-	}
+    protected void clearLeadBit() {
+        if (lettersInKmer % 4 != 0) {
+            bytes[kmerStartOffset] &= (1 << ((lettersInKmer % 4) << 1)) - 1;
+        }
+    }
 
-	@Override
-	protected void setCapacity(int new_cap) {
-		if (new_cap != getCapacity()) {
-			byte[] new_data = new byte[new_cap + HEADER_SIZE];
-			if (new_cap < bytesUsed) {
-				bytesUsed = new_cap;
-			}
-			if (bytesUsed != 0) {
-				System.arraycopy(bytes, offset, new_data, HEADER_SIZE,
-						bytesUsed);
-			}
-			bytes = new_data;
-			offset = HEADER_SIZE;
-		}
-	}
+    /**
+     * Get one genecode (A|G|C|T) from the given kmer index e.g. Get the 4th
+     * gene of the kmer ACGTA will return T
+     * 
+     * @param pos
+     * @return
+     */
+    public byte getGeneCodeAtPosition(int pos) {
+        if (pos >= lettersInKmer || pos < 0) {
+            throw new ArrayIndexOutOfBoundsException("Gene position (" + pos + ") out of bounds for k=" + lettersInKmer);
+        }
+        return geneCodeAtPosition(pos);
+    }
 
-	@Override
-	public void mergeWithFFKmer(int initialKmerSize, KmerBytesWritable kmer) {
-		super.mergeWithFFKmer(initialKmerSize, kmer);
-		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
-	}
+    /**
+     * unchecked version of getGeneCodeAtPosition. Used when kmerlength is
+     * inaccurate (mid-merge)
+     */
+    private byte geneCodeAtPosition(int pos) {
+        int posByte = pos / 4;
+        int shift = (pos % 4) << 1;
+        return (byte) ((bytes[kmerStartOffset + bytesUsed - 1 - posByte] >> shift) & 0x3);
+    }
 
-	@Override
-	public void mergeWithFRKmer(int initialKmerSize, KmerBytesWritable kmer) {
-		super.mergeWithFRKmer(initialKmerSize, kmer);
-		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
-	}
+    /**
+     * Shift Kmer to accept new char input
+     * 
+     * @param c
+     *            Input new gene character
+     * @return the shift out gene, in gene code format
+     */
+    public byte shiftKmerWithNextChar(byte c) {
+        return shiftKmerWithNextCode(GeneCode.getCodeFromSymbol(c));
+    }
 
-	@Override
-	public void mergeWithRFKmer(int initialKmerSize, KmerBytesWritable preKmer) {
-		super.mergeWithRFKmer(initialKmerSize, preKmer);
-		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
-	}
+    /**
+     * Shift Kmer to accept new gene code
+     * 
+     * @param c
+     *            Input new gene code
+     * @return the shift out gene, in gene code format
+     */
+    public byte shiftKmerWithNextCode(byte c) {
+        byte output = (byte) (bytes[kmerStartOffset + bytesUsed - 1] & 0x03);
+        for (int i = bytesUsed - 1; i > 0; i--) {
+            byte in = (byte) (bytes[kmerStartOffset + i - 1] & 0x03);
+            bytes[kmerStartOffset + i] = (byte) (((bytes[kmerStartOffset + i] >>> 2) & 0x3f) | (in << 6));
+        }
+        int pos = ((lettersInKmer - 1) % 4) << 1;
+        byte code = (byte) (c << pos);
+        bytes[kmerStartOffset] = (byte) (((bytes[kmerStartOffset] >>> 2) & 0x3f) | code);
+        clearLeadBit();
+        return output;
+    }
 
-	@Override
-	public void mergeWithRRKmer(int initialKmerSize, KmerBytesWritable preKmer) {
-		super.mergeWithRRKmer(initialKmerSize, preKmer);
-		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
-	}
+    /**
+     * Shift Kmer to accept new input char
+     * 
+     * @param c
+     *            Input new gene character
+     * @return the shiftout gene, in gene code format
+     */
+    public byte shiftKmerWithPreChar(byte c) {
+        return shiftKmerWithPreCode(GeneCode.getCodeFromSymbol(c));
+    }
 
-	@Override
-	public void readFields(DataInput in) throws IOException {
-		lettersInKmer = in.readInt();
-		bytesUsed = KmerUtil.getByteNumFromK(lettersInKmer);
-		if (lettersInKmer > 0) {
-			if (getCapacity() < this.bytesUsed) {
-				this.bytes = new byte[this.bytesUsed + HEADER_SIZE];
-				this.offset = HEADER_SIZE;
-			}
-			in.readFully(bytes, offset, bytesUsed);
-		}
-		Marshal.putInt(lettersInKmer, bytes, offset - HEADER_SIZE);
-	}
+    /**
+     * Shift Kmer to accept new gene code
+     * 
+     * @param c
+     *            Input new gene code
+     * @return the shiftout gene, in gene code format
+     */
+    public byte shiftKmerWithPreCode(byte c) {
+        int pos = ((lettersInKmer - 1) % 4) << 1;
+        byte output = (byte) ((bytes[kmerStartOffset] >> pos) & 0x03);
+        for (int i = 0; i < bytesUsed - 1; i++) {
+            byte in = (byte) ((bytes[kmerStartOffset + i + 1] >> 6) & 0x03);
+            bytes[kmerStartOffset + i] = (byte) ((bytes[kmerStartOffset + i] << 2) | in);
+        }
+        bytes[kmerStartOffset + bytesUsed - 1] = (byte) ((bytes[kmerStartOffset + bytesUsed - 1] << 2) | c);
+        clearLeadBit();
+        return output;
+    }
 
-	/**
-	 * write the entire byte array including the header
-	 */
-	@Override
-	public void write(DataOutput out) throws IOException {
-		out.write(bytes, offset - HEADER_SIZE, bytesUsed + HEADER_SIZE);
-	}
+    public int getKmerLetterLength() {
+        return lettersInKmer;
+    }
 
-	@Override
-	public boolean equals(Object right) {
-		if (right instanceof VKmerBytesWritable) {
-			return super.equals(right); // compare bytes directly
-		} else if (right instanceof KmerBytesWritable) {
-			// for Kmers, we need to skip our header
-			KmerBytesWritable rightKmer = (KmerBytesWritable) right;
-			if (lettersInKmer != rightKmer.lettersInKmer) { // check length
-				return false;
-			}
-			for (int i = 0; i < lettersInKmer; i++) { // check letters
-				if (bytes[i + HEADER_SIZE] != rightKmer.bytes[i]) {
-					return false;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
+    @Override
+    public byte[] getBytes() {
+        return bytes;
+    }
 
-	@Override
-	public String toString() {
-		return KmerUtil.recoverKmerFrom(this.lettersInKmer, this.getBytes(),
-				offset, this.getLength());
-	}
+    /**
+     * Return the (hyracks-specific) data block offset. This includes the header.
+     */
+    public int getBlockOffset() {
+        return kmerStartOffset - HEADER_SIZE;
+    }
 
-	public static class Comparator extends WritableComparator {
+    /**
+     * Return the data block offset where the kmer data begins. This excludes the header.
+     */
+    public int getKmerOffset() {
+        return kmerStartOffset;
+    }
 
-		public Comparator() {
-			super(VKmerBytesWritable.class);
-		}
+    /**
+     * Return the number of bytes used by both header and kmer chain
+     */
+    @Override
+    public int getLength() {
+        return bytesUsed + HEADER_SIZE;
+    }
+    
+    /**
+     * Return the number of bytes used by the kmer chain
+     */
+    public int getKmerByteLength() {
+        return bytesUsed;
+    }
+    
 
-		public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-			int kmerlength1 = Marshal.getInt(b1, s1);
-			int kmerlength2 = Marshal.getInt(b2, s2);
-			if (kmerlength1 == kmerlength2) {
-				return compareBytes(b1, s1 + HEADER_SIZE, l1 - HEADER_SIZE, b2,
-						s2 + HEADER_SIZE, l2 - HEADER_SIZE);
-			}
-			return kmerlength1 - kmerlength2;
-		}
-	}
+    public void setKmerLength(int k) {
+        this.bytesUsed = KmerUtil.getByteNumFromK(k);
+        this.lettersInKmer = k;
+        saveHeader(k);
+    }
 
-	static { // register this comparator
-		WritableComparator.define(VKmerBytesWritable.class, new Comparator());
-	}
+    protected int getKmerByteCapacity() {
+        return storageMaxSize  - HEADER_SIZE;
+    }
+
+    protected void setKmerByteCapacity(int new_cap) {
+        if (new_cap != getKmerByteCapacity()) {
+            byte[] new_data = new byte[new_cap + HEADER_SIZE];
+            if (new_cap < bytesUsed) {
+                bytesUsed = new_cap;
+            }
+            if (bytesUsed != 0) {
+                System.arraycopy(bytes, kmerStartOffset, new_data, HEADER_SIZE, bytesUsed);
+            }
+            bytes = new_data;
+            kmerStartOffset = HEADER_SIZE;
+            storageMaxSize = bytes.length;
+        }
+    }
+
+    private void saveHeader(int length) {
+        Marshal.putInt(length, bytes, kmerStartOffset - HEADER_SIZE);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        lettersInKmer = in.readInt();
+        bytesUsed = KmerUtil.getByteNumFromK(lettersInKmer);
+        if (lettersInKmer > 0) {
+            if (getKmerByteCapacity() < this.bytesUsed) {
+                this.bytes = new byte[this.bytesUsed + HEADER_SIZE];
+                this.kmerStartOffset = HEADER_SIZE;
+                storageMaxSize = bytes.length;
+            }
+            in.readFully(bytes, kmerStartOffset, bytesUsed);
+        }
+    }
+
+    /**
+     * write the entire byte array including the header
+     */
+    @Override
+    public void write(DataOutput out) throws IOException {
+        out.write(bytes, kmerStartOffset - HEADER_SIZE, bytesUsed + HEADER_SIZE);
+    }
+
+    @Override
+    public int hashCode() {
+        return Marshal.hashBytes(bytes, kmerStartOffset - HEADER_SIZE, bytesUsed + HEADER_SIZE);
+    }
+
+    @Override
+    public boolean equals(Object right_obj) {
+        if (right_obj instanceof VKmerBytesWritable) {
+            // since these may be backed by storage of different sizes, we have to manually check each byte, including the header
+            VKmerBytesWritable right = (VKmerBytesWritable) right_obj;
+            for (int i = -HEADER_SIZE; i < bytesUsed; i++) {
+                if (bytes[kmerStartOffset + i] != right.bytes[right.kmerStartOffset + i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return KmerUtil.recoverKmerFrom(this.lettersInKmer, bytes, kmerStartOffset, bytesUsed);
+    }
+
+    public static class Comparator extends WritableComparator {
+
+        public Comparator() {
+            super(VKmerBytesWritable.class);
+        }
+
+        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
+            int kmerlength1 = Marshal.getInt(b1, s1);
+            int kmerlength2 = Marshal.getInt(b2, s2);
+            if (kmerlength1 == kmerlength2) {
+                return compareBytes(b1, s1 + HEADER_SIZE, l1 - HEADER_SIZE, b2, s2 + HEADER_SIZE, l2 - HEADER_SIZE);
+            }
+            return kmerlength1 - kmerlength2;
+        }
+    }
+
+    static { // register this comparator
+        WritableComparator.define(VKmerBytesWritable.class, new Comparator());
+    }
+
+    /**
+     * Ensures that there is space for at least `size` bytes of kmer (not
+     * including any header)
+     */
+    protected void setSize(int size) {
+        if (size > getKmerByteCapacity()) {
+            setKmerByteCapacity((size * 3 / 2));
+        }
+        this.bytesUsed = size;
+    }
+
+    public void setByRead(int k, byte[] stringBytes, int start) {
+        reset(k);
+        setByRead(stringBytes, start);
+    }
+
+    /**
+     * Read Kmer from read text into bytes array e.g. AATAG will compress as
+     * [0x000G, 0xATAA]
+     * 
+     * @param stringBytes
+     * @param start
+     */
+    public void setByRead(byte[] stringBytes, int start) {
+        byte l = 0;
+        int bytecount = 0;
+        int bcount = this.bytesUsed - 1;
+        for (int i = start; i < start + lettersInKmer && i < stringBytes.length; i++) {
+            byte code = GeneCode.getCodeFromSymbol(stringBytes[i]);
+            l |= (byte) (code << bytecount);
+            bytecount += 2;
+            if (bytecount == 8) {
+                bytes[kmerStartOffset + bcount--] = l;
+                l = 0;
+                bytecount = 0;
+            }
+        }
+        if (bcount >= 0) {
+            bytes[kmerStartOffset] = l;
+        }
+    }
+
+    public void setByReadReverse(int k, byte[] stringBytes, int start) {
+        reset(k);
+        setByReadReverse(stringBytes, start);
+    }
+
+    /**
+     * Compress Reversed read into bytes array e.g. AATAG will paired to CTATT,
+     * and then compress as [0x000T,0xTATC]
+     * 
+     * @param input
+     *            array
+     * @param start
+     *            position
+     */
+    public void setByReadReverse(byte[] array, int start) {
+        byte l = 0;
+        int bytecount = 0;
+        int bcount = bytesUsed - 1;
+        // for (int i = start + kmerlength - 1; i >= 0 && i < array.length; i--)
+        // {
+        for (int i = start + lettersInKmer - 1; i >= start && i < array.length; i--) {
+            byte code = GeneCode.getPairedCodeFromSymbol(array[i]);
+            l |= (byte) (code << bytecount);
+            bytecount += 2;
+            if (bytecount == 8) {
+                bytes[kmerStartOffset + bcount--] = l;
+                l = 0;
+                bytecount = 0;
+            }
+        }
+        if (bcount >= 0) {
+            bytes[kmerStartOffset] = l;
+        }
+    }
+
+    /**
+     * Merge Kmer with the next connected Kmer e.g. AAGCTAA merge with AACAACC,
+     * if the initial kmerSize = 3 then it will return AAGCTAACAACC
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param kmer
+     *            : the next kmer
+     */
+    public void mergeWithFFKmer(int initialKmerSize, VKmerBytesWritable kmer) {
+        int preKmerLength = lettersInKmer;
+        int preSize = bytesUsed;
+        lettersInKmer += kmer.lettersInKmer - initialKmerSize + 1;
+        setSize(KmerUtil.getByteNumFromK(lettersInKmer));
+        for (int i = 1; i <= preSize; i++) {
+            bytes[kmerStartOffset + bytesUsed - i] = bytes[kmerStartOffset + preSize - i];
+        }
+        for (int k = initialKmerSize - 1; k < kmer.getKmerLetterLength(); k += 4) {
+            byte onebyte = KmerBytesWritable.getOneByteFromKmerAtPosition(k, kmer.bytes, kmer.kmerStartOffset,
+                    kmer.bytesUsed);
+            KmerBytesWritable.appendOneByteAtPosition(preKmerLength + k - initialKmerSize + 1, onebyte, bytes,
+                    kmerStartOffset, bytesUsed);
+        }
+        clearLeadBit();
+        saveHeader(lettersInKmer);
+    }
+
+    /**
+     * Merge Kmer with the next connected Kmer, when that Kmer needs to be
+     * reverse-complemented e.g. AAGCTAA merge with GGTTGTT, if the initial
+     * kmerSize = 3 then it will return AAGCTAACAACC A merge B => A B~
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param kmer
+     *            : the next kmer
+     */
+    public void mergeWithFRKmer(int initialKmerSize, VKmerBytesWritable kmer) {
+        int preSize = bytesUsed;
+        int preKmerLength = lettersInKmer;
+        lettersInKmer += kmer.lettersInKmer - initialKmerSize + 1;
+        setSize(KmerUtil.getByteNumFromK(lettersInKmer));
+        // copy prefix into right-side of buffer
+        for (int i = 1; i <= preSize; i++) {
+            bytes[kmerStartOffset + bytesUsed - i] = bytes[kmerStartOffset + preSize - i];
+        }
+
+        int bytecount = (preKmerLength % 4) * 2;
+        int bcount = bytesUsed - preSize - bytecount / 8; // may overlap
+                                                          // previous kmer
+        byte l = bcount == bytesUsed - preSize ? bytes[kmerStartOffset + bcount] : 0x00;
+        bytecount %= 8;
+        for (int i = kmer.lettersInKmer - initialKmerSize; i >= 0; i--) {
+            byte code = GeneCode.getPairedGeneCode(kmer.getGeneCodeAtPosition(i));
+            l |= (byte) (code << bytecount);
+            bytecount += 2;
+            if (bytecount == 8) {
+                bytes[kmerStartOffset + bcount--] = l;
+                l = 0;
+                bytecount = 0;
+            }
+        }
+        if (bcount >= 0) {
+            bytes[kmerStartOffset] = l;
+        }
+        saveHeader(lettersInKmer);
+    }
+
+    /**
+     * Merge Kmer with the previous connected Kmer, when that kmer needs to be
+     * reverse-complemented e.g. AACAACC merge with TTCTGCC, if the initial
+     * kmerSize = 3 then it will return GGCAGAACAACC
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param preKmer
+     *            : the previous kmer
+     */
+    public void mergeWithRFKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
+        VKmerBytesWritable reversed = new VKmerBytesWritable(preKmer.lettersInKmer);
+        reversed.setByReadReverse(preKmer.toString().getBytes(), 0);
+        mergeWithRRKmer(initialKmerSize, reversed);
+    }
+
+    /**
+     * Merge Kmer with the previous connected Kmer e.g. AACAACC merge with
+     * AAGCTAA, if the initial kmerSize = 3 then it will return AAGCTAACAACC
+     * 
+     * @param initialKmerSize
+     *            : the initial kmerSize
+     * @param preKmer
+     *            : the previous kmer
+     */
+    public void mergeWithRRKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
+        int preKmerLength = lettersInKmer;
+        int preSize = bytesUsed;
+        lettersInKmer += preKmer.lettersInKmer - initialKmerSize + 1;
+        setSize(KmerUtil.getByteNumFromK(lettersInKmer));
+        byte cacheByte = KmerBytesWritable.getOneByteFromKmerAtPosition(0, bytes, kmerStartOffset, preSize);
+
+        // copy prekmer
+        for (int k = 0; k < preKmer.lettersInKmer - initialKmerSize + 1; k += 4) {
+            byte onebyte = KmerBytesWritable.getOneByteFromKmerAtPosition(k, preKmer.bytes, preKmer.kmerStartOffset,
+                    preKmer.bytesUsed);
+            KmerBytesWritable.appendOneByteAtPosition(k, onebyte, bytes, kmerStartOffset, bytesUsed);
+        }
+
+        // copy current kmer
+        int k = 4;
+        for (; k < preKmerLength; k += 4) {
+            byte onebyte = KmerBytesWritable.getOneByteFromKmerAtPosition(k, bytes, kmerStartOffset, preSize);
+            KmerBytesWritable.appendOneByteAtPosition(preKmer.lettersInKmer - initialKmerSize + k - 4 + 1, cacheByte,
+                    bytes, kmerStartOffset, bytesUsed);
+            cacheByte = onebyte;
+        }
+        KmerBytesWritable.appendOneByteAtPosition(preKmer.lettersInKmer - initialKmerSize + k - 4 + 1, cacheByte,
+                bytes, kmerStartOffset, bytesUsed);
+        clearLeadBit();
+    }
+
+    public void mergeWithKmerInDir(byte dir, int initialKmerSize, VKmerBytesWritable kmer) {
+        switch (dir & DirectionFlag.DIR_MASK) {
+            case DirectionFlag.DIR_FF:
+                mergeWithFFKmer(initialKmerSize, kmer);
+                break;
+            case DirectionFlag.DIR_FR:
+                mergeWithFRKmer(initialKmerSize, kmer);
+                break;
+            case DirectionFlag.DIR_RF:
+                mergeWithRFKmer(initialKmerSize, kmer);
+                break;
+            case DirectionFlag.DIR_RR:
+                mergeWithRRKmer(initialKmerSize, kmer);
+                break;
+            default:
+                throw new RuntimeException("Direction not recognized: " + dir);
+        }
+    }
 
 }

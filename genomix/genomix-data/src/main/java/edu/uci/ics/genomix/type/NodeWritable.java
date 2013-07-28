@@ -1,25 +1,27 @@
 package edu.uci.ics.genomix.type;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.WritableComparable;
 
 
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable{
 
     private static final long serialVersionUID = 1L;
-    public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
+    public static final NodeWritable EMPTY_NODE = new NodeWritable();
     
     private PositionListWritable nodeIdList;
     private KmerListWritable forwardForwardList;
     private KmerListWritable forwardReverseList;
     private KmerListWritable reverseForwardList;
     private KmerListWritable reverseReverseList;
-    private KmerBytesWritable kmer;
-    private int kmerlength = 0;
+    private VKmerBytesWritable kmer;
     
     // merge/update directions
     public static class DirectionFlag {
@@ -31,48 +33,41 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public NodeWritable() {
-        this(0);
-    }
-    
-    public NodeWritable(int kmerlenth) {
-        this.kmerlength = kmerlenth;
         nodeIdList = new PositionListWritable();
-        forwardForwardList = new KmerListWritable(kmerlenth);
-        forwardReverseList = new KmerListWritable(kmerlenth);
-        reverseForwardList = new KmerListWritable(kmerlenth);
-        reverseReverseList = new KmerListWritable(kmerlenth);
-        kmer = new KmerBytesWritable(); //in graph construction - not set kmerlength Optimization: VKmer
+        forwardForwardList = new KmerListWritable();
+        forwardReverseList = new KmerListWritable();
+        reverseForwardList = new KmerListWritable();
+        reverseReverseList = new KmerListWritable();
+        kmer = new VKmerBytesWritable();  // in graph construction - not set kmerlength Optimization: VKmer
     }
     
     public NodeWritable(PositionListWritable nodeIdList, KmerListWritable FFList, KmerListWritable FRList,
-            KmerListWritable RFList, KmerListWritable RRList, KmerBytesWritable kmer) {
-        this(kmer.getKmerLength());
+            KmerListWritable RFList, KmerListWritable RRList, VKmerBytesWritable kmer) {
+        this();
         set(nodeIdList, FFList, FRList, RFList, RRList, kmer);
     }
     
     public void set(NodeWritable node){
-        this.kmerlength = node.kmerlength;
         set(node.nodeIdList, node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
                 node.reverseReverseList, node.kmer);
     }
     
     public void set(PositionListWritable nodeIdList, KmerListWritable FFList, KmerListWritable FRList,
-            KmerListWritable RFList, KmerListWritable RRList, KmerBytesWritable kmer) {
+            KmerListWritable RFList, KmerListWritable RRList, VKmerBytesWritable kmer2) {
         this.nodeIdList.set(nodeIdList);
-        this.forwardForwardList.set(FFList);
-        this.forwardReverseList.set(FRList);
-        this.reverseForwardList.set(RFList);
-        this.reverseReverseList.set(RRList);
-        this.kmer.setAsCopy(kmer);
+        this.forwardForwardList.setCopy(FFList);
+        this.forwardReverseList.setCopy(FRList);
+        this.reverseForwardList.setCopy(RFList);
+        this.reverseReverseList.setCopy(RRList);
+        this.kmer.setAsCopy(kmer2);
     }
 
-    public void reset(int kmerSize) {
-        this.kmerlength = kmerSize;
+    public void reset() {
         this.nodeIdList.reset();
-        this.forwardForwardList.reset(kmerSize);
-        this.forwardReverseList.reset(kmerSize);
-        this.reverseForwardList.reset(kmerSize);
-        this.reverseReverseList.reset(kmerSize);
+        this.forwardForwardList.reset();
+        this.forwardReverseList.reset();
+        this.reverseForwardList.reset();
+        this.reverseReverseList.reset();
         this.kmer.reset(0);
     }
     
@@ -85,24 +80,16 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.nodeIdList.set(nodeIdList);
     }
 
-    public KmerBytesWritable getKmer() {
+    public VKmerBytesWritable getKmer() {
         return kmer;
     }
 
-    public void setKmer(KmerBytesWritable kmer) {
+    public void setKmer(VKmerBytesWritable kmer) {
         this.kmer.setAsCopy(kmer);
     }
     
-    public int getKmerlength() {
-        return kmerlength;
-    }
-
-    public void setKmerlength(int kmerlength) {
-        this.kmerlength = kmerlength;
-    }
-
-    public int getCount() {
-        return kmer.getKmerLength();
+    public int getKmerLength() {
+        return kmer.getKmerLetterLength();
     }
     
     public KmerListWritable getFFList() {
@@ -122,19 +109,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
 	public void setFFList(KmerListWritable forwardForwardList) {
-		this.forwardForwardList.set(forwardForwardList);
+		this.forwardForwardList.setCopy(forwardForwardList);
 	}
 
 	public void setFRList(KmerListWritable forwardReverseList) {
-		this.forwardReverseList.set(forwardReverseList);
+		this.forwardReverseList.setCopy(forwardReverseList);
 	}
 
 	public void setRFList(KmerListWritable reverseForwardList) {
-		this.reverseForwardList.set(reverseForwardList);
+		this.reverseForwardList.setCopy(reverseForwardList);
 	}
 
 	public void setRRList(KmerListWritable reverseReverseList) {
-		this.reverseReverseList.set(reverseReverseList);
+		this.reverseReverseList.setCopy(reverseReverseList);
 	}
 
 	public KmerListWritable getListFromDir(byte dir) {
@@ -152,9 +139,60 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
     }
 	
+	/**
+	 * Returns the length of the byte-array version of this node
+	 */
+	public int getSerializedLength() {
+	    return nodeIdList.getLength() + forwardForwardList.getLength() + forwardReverseList.getLength() + 
+	            reverseForwardList.getLength() + reverseReverseList.getLength() + kmer.getLength();
+	}
+	
+	/**
+     * Return this Node's representation as a new byte array 
+     */
+    public byte[] marshalToByteArray() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(getSerializedLength());
+        DataOutputStream out = new DataOutputStream(baos);
+        write(out);
+        return baos.toByteArray();
+    }
+    
+    public void setAsCopy(byte[] data, int offset) {
+        int curOffset = offset;
+        nodeIdList.set(data, curOffset);
+        
+        curOffset += nodeIdList.getLength();
+        forwardForwardList.setCopy(data, curOffset);
+        curOffset += forwardForwardList.getLength();
+        forwardReverseList.setCopy(data, curOffset);
+        curOffset += forwardReverseList.getLength();
+        reverseForwardList.setCopy(data, curOffset);
+        curOffset += reverseForwardList.getLength();
+        reverseReverseList.setCopy(data, curOffset);
+        
+        curOffset += reverseReverseList.getLength();
+        kmer.setAsCopy(data, curOffset);
+    }
+    
+    public void setAsReference(byte[] data, int offset) {
+        int curOffset = offset;
+        nodeIdList.setNewReference(data, curOffset);
+        
+        curOffset += nodeIdList.getLength();
+        forwardForwardList.setNewReference(data, curOffset);
+        curOffset += forwardForwardList.getLength();
+        forwardReverseList.setNewReference(data, curOffset);
+        curOffset += forwardReverseList.getLength();
+        reverseForwardList.setNewReference(data, curOffset);
+        curOffset += reverseForwardList.getLength();
+        reverseReverseList.setNewReference(data, curOffset);
+        
+        curOffset += reverseReverseList.getLength();
+        kmer.setAsReference(data, curOffset);
+    }
+	
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeInt(kmerlength);
         this.nodeIdList.write(out);
         this.forwardForwardList.write(out);
         this.forwardReverseList.write(out);
@@ -165,8 +203,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        this.kmerlength = in.readInt();
-        reset(kmerlength);
+        reset();
         this.nodeIdList.readFields(in);
         this.forwardForwardList.readFields(in);
         this.forwardReverseList.readFields(in);
@@ -211,15 +248,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return sbuilder.toString();
     }
 
-    public void mergeForwardNext(NodeWritable nextNode, int initialKmerSize) {
-        this.forwardForwardList.set(nextNode.forwardForwardList);
-        this.forwardReverseList.set(nextNode.forwardReverseList);
+    public void mergeForwardNext(final NodeWritable nextNode, int initialKmerSize) {
+        this.forwardForwardList.setCopy(nextNode.forwardForwardList);
+        this.forwardReverseList.setCopy(nextNode.forwardReverseList);
         kmer.mergeWithFFKmer(initialKmerSize, nextNode.getKmer());
     }
 
-    public void mergeForwardPre(NodeWritable preNode, int initialKmerSize) {
-        this.reverseForwardList.set(preNode.reverseForwardList);
-        this.reverseReverseList.set(preNode.reverseReverseList);
+    public void mergeForwardPre(final NodeWritable preNode, int initialKmerSize) {
+        this.reverseForwardList.setCopy(preNode.reverseForwardList);
+        this.reverseReverseList.setCopy(preNode.reverseReverseList);
         kmer.mergeWithRRKmer(initialKmerSize, preNode.getKmer());
     }
     

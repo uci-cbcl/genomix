@@ -23,6 +23,7 @@ import java.io.Serializable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
     /**
@@ -45,7 +46,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private PositionListWritable forwardReverseList;
     private PositionListWritable reverseForwardList;
     private PositionListWritable reverseReverseList;
-    private KmerBytesWritable kmer;
+    private VKmerBytesWritable kmer;
 
     public NodeWritable() {
         this(21);
@@ -57,7 +58,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         forwardReverseList = new PositionListWritable();
         reverseForwardList = new PositionListWritable();
         reverseReverseList = new PositionListWritable();
-        kmer = new KmerBytesWritable(kmerSize);
+        kmer = new VKmerBytesWritable();
     }
 
     public NodeWritable(PositionWritable nodeID, PositionListWritable FFList, PositionListWritable FRList,
@@ -68,7 +69,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         forwardReverseList.set(FRList);
         reverseForwardList.set(RFList);
         reverseReverseList.set(RRList);
-        kmer.set(kmer);
+        kmer.setAsCopy(kmer);
     }
 
     public void set(PositionWritable nodeID, PositionListWritable FFList, PositionListWritable FRList,
@@ -78,7 +79,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.forwardReverseList.set(FRList);
         this.reverseForwardList.set(RFList);
         this.reverseReverseList.set(RRList);
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
     }
 
     public void setNodeID(PositionWritable ref) {
@@ -90,7 +91,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void setKmer(KmerBytesWritable right) {
-        this.kmer.set(right);
+        this.kmer.setAsCopy(right);
     }
 
     public void reset(int kmerSize) {
@@ -163,7 +164,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.forwardReverseList.set(node.forwardReverseList);
         this.reverseForwardList.set(node.reverseForwardList);
         this.reverseReverseList.set(node.reverseReverseList);
-        this.kmer.set(node.kmer);
+        this.kmer.setAsCopy(node.kmer);
     }
 
     @Override
