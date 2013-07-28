@@ -42,7 +42,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class LogAlgorithmForPathMergeVertex extends
-    BasicPathMergeVertex {
+    BasicGraphCleanVertex {
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
     KmerBytesWritable tmpKmer = new KmerBytesWritable();
@@ -156,6 +156,7 @@ public class LogAlgorithmForPathMergeVertex extends
       //process merge when receiving msg
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
+            /** for final processing **/
             if(getMsgFlag() == MessageFlag.IS_FINAL){
                 sendFinalMergeMsg();
                 break;
@@ -199,13 +200,15 @@ public class LogAlgorithmForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
-            if(msgIterator.hasNext()){ //for processing final merge
+            /** for processing final merge **/
+            if(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
                 if(getMsgFlag() == MessageFlag.IS_FINAL){
                     setFinalState();
                     processFinalMerge(incomingMsg);
                 }
             }
+            /** processing general case **/
             else{
                 sendMsgToPathVertex(msgIterator);
                 if(selfFlag != State.IS_HEAD)

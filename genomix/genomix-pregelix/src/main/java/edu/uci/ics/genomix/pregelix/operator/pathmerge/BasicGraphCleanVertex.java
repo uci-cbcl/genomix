@@ -19,10 +19,10 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 /**
  * Naive Algorithm for path merge graph
  */
-public class BasicPathMergeVertex extends
+public class BasicGraphCleanVertex extends
         Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "BasicPathMergeVertex.kmerSize";
-    public static final String ITERATIONS = "BasicPathMergeVertex.iteration";
+    public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
+    public static final String ITERATIONS = "BasicGraphCleanVertex.iteration";
     public static int kmerSize = -1;
     protected int maxIteration = -1;
     

@@ -48,7 +48,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
  * Naive Algorithm for path merge graph
  */
 public class P4ForPathMergeVertex extends
-    BasicPathMergeVertex {
+    BasicGraphCleanVertex {
     public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
     public static final String PROBBEINGRANDOMHEAD = "P4ForPathMergeVertex.probBeingRandomHead";
 

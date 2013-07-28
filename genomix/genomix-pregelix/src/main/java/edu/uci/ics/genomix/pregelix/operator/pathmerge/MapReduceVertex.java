@@ -19,7 +19,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class MapReduceVertex extends
-    BasicPathMergeVertex {
+    BasicGraphCleanVertex {
     
     private static boolean fakeVertexExist = false;
     private static KmerBytesWritable fakeVertex = null;

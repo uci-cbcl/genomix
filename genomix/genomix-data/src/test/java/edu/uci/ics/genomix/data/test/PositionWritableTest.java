@@ -42,7 +42,6 @@ public class PositionWritableTest {
             Assert.assertEquals(pos.getPosId(), posId);
             
             Assert.assertEquals(pos1.toString(), pos.toString());
-            String out = pos.toString();
         }
     }
 }
