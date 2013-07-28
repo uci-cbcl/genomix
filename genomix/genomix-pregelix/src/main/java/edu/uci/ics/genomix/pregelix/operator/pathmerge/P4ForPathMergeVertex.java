@@ -93,7 +93,6 @@ public class P4ForPathMergeVertex extends
         inFlag = (byte)0;
         // Node may be marked as head b/c it's a real head or a real tail
         headFlag = (byte) (State.IS_HEAD & getVertexValue().getState());
-        outgoingMsg.reset();
     }
 
     protected boolean isNodeRandomHead(KmerBytesWritable nodeKmer) {

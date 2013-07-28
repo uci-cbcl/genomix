@@ -100,7 +100,7 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(MapReduceVertex.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -109,7 +109,7 @@ public class JobGenerator {
     }
 
     private static void genMapReduceGraph() throws IOException {
-        generateMapReduceGraphJob("LogAlgorithmForMergeGraph", outputBase + "LogAlgorithmForMergeGraph.xml");
+        generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
     }
 //    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(jobName);

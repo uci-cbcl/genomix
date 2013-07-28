@@ -415,8 +415,6 @@ public class BasicPathMergeVertex extends
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
-//        if(headBecomeOldHead)
-//            getVertexValue().processDelete(neighborToMeDir, incomingMsg.getSourceVertexId());
     }
     
     /**

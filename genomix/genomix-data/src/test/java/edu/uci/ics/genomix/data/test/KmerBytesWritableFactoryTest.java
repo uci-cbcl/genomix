@@ -198,5 +198,12 @@ public class KmerBytesWritableFactoryTest {
         Assert.assertEquals(kmer.toString(), "AGCTGAC");
         KmerBytesWritable reversed = kmerFactory.reverse(kmer);
         Assert.assertEquals(reversed.toString(), "CAGTCGA");
+        
+        kmer.reset(8);
+        kmer.setByRead(("AATAGAAC").getBytes(), 0);
+        Assert.assertEquals(kmer.toString(), "AATAGAAC");
+        reversed.reset(8);
+        reversed = kmerFactory.reverse(kmer);
+        Assert.assertEquals(reversed.toString(), "GTTCTATT");
     }
 }

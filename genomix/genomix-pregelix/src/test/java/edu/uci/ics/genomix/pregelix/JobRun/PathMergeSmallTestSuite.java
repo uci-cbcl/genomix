@@ -43,7 +43,7 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class PathMergeSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(PathMergeSmallTestSuite.class.getName());
 
-    public static final String PreFix = "data/PathMergeTestSet"; //"graphbuildresult";
+    public static final String PreFix = "data/LogAlgorithmForMergeGraph/bin"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
     + "2", PreFix + File.separator
     + "3", PreFix + File.separator

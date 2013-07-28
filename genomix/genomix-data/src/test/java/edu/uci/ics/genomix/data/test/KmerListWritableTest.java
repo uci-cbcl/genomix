@@ -21,7 +21,7 @@ public class KmerListWritableTest {
         KmerBytesWritable kmer;
         for (int i = 1; i < 200; i++) {
             kmer = new KmerBytesWritable(i);
-            String randomString = generateString(i);
+            String randomString = generaterRandomString(i);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
             kmerList.reset(kmer.getKmerLength());
@@ -34,7 +34,7 @@ public class KmerListWritableTest {
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
             kmer = new KmerBytesWritable(5);
-            String randomString = generateString(5);
+            String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
             kmerList.append(kmer);
@@ -60,7 +60,7 @@ public class KmerListWritableTest {
         KmerBytesWritable kmer;
         for (i = 0; i < 200; i++) {
             kmer = new KmerBytesWritable(5);
-            String randomString = generateString(5);
+            String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
             kmerList.append(kmer);
@@ -105,7 +105,7 @@ public class KmerListWritableTest {
         Assert.assertEquals(0, kmerList.getCountOfPosition());
     }
     
-    public String generateString(int n){
+    public String generaterRandomString(int n){
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
         Random random = new Random();

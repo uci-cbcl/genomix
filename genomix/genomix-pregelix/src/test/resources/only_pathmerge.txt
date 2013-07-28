@@ -1,1 +1,1 @@
-LogAlgorithmForMergeGraph.xml
+MapReduceGraph.xml
