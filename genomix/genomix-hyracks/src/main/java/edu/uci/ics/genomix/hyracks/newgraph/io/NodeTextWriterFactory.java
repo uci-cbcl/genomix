@@ -29,7 +29,7 @@ import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 public class NodeTextWriterFactory implements ITupleWriterFactory {
 
     /**
-     * 
+     * Write the node to Text
      */
     private static final long serialVersionUID = 1L;
     private final int kmerSize;

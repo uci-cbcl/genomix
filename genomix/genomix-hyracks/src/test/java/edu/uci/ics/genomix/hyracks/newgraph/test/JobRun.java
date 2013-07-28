@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import junit.framework.Assert;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -41,11 +40,7 @@ public class JobRun {
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
 
-    private static final String EXPECTED_DIR = "src/test/resources/expected/";
-    private static final String EXPECTED_READER_RESULT = EXPECTED_DIR + "result_after_initial_read";
-
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
-    private static final String CONVERT_RESULT = DUMPED_RESULT + ".txt";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";;
     private MiniDFSCluster dfsCluster;
     
@@ -65,6 +60,7 @@ public class JobRun {
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+        dumpResult();
     }
     
     @Before
@@ -124,55 +120,13 @@ public class JobRun {
         }
     }
     
-/*    private boolean checkResults(String expectedPath, int[] poslistField) throws Exception {
-        File dumped = null;
+    private void dumpResult() throws Exception {
         String format = conf.get(GenomixJobConf.OUTPUT_FORMAT);
         if (GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(format)) {
             FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH),
                     FileSystem.getLocal(new Configuration()), new Path(DUMPED_RESULT), false, conf, null);
-            dumped = new File(DUMPED_RESULT);
-        } else {
-
-            FileSystem.getLocal(new Configuration()).mkdirs(new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH));
-            File filePathTo = new File(CONVERT_RESULT);
-            BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
-            for (int i = 0; i < numPartitionPerMachine * numberOfNC; i++) {
-                String partname = "/part-" + i;
-                // FileUtil.copy(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH
-                // + partname), FileSystem.getLocal(new Configuration()),
-                // new Path(ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + partname),
-                // false, conf);
-
-                Path path = new Path(HDFS_OUTPUT_PATH + partname);
-                FileSystem dfs = FileSystem.get(conf);
-                if (dfs.getFileStatus(path).getLen() == 0) {
-                    continue;
-                }
-                SequenceFile.Reader reader = new SequenceFile.Reader(dfs, path, conf);
-
-                NodeWritable node = new NodeWritable(conf.getInt(GenomixJobConf.KMER_LENGTH, KmerSize));
-                NullWritable value = NullWritable.get();
-                while (reader.next(node, value)) {
-                    if (node == null) {
-                        break;
-                    }
-                    bw.write(node.toString());
-                    System.out.println(node.toString());
-                    bw.newLine();
-                }
-                reader.close();
-            }
-            bw.close();
-            dumped = new File(CONVERT_RESULT);
-        }
-
-        if (poslistField != null) {
-            TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
-        } else {
-            TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
-        }
-        return true;
-    }*/
+        } 
+    }
     
     @After
     public void tearDown() throws Exception {
