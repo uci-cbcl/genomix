@@ -41,7 +41,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hyracks.driver.Driver;
 import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
-import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.velvet.oldtype.NodeWritable;
 
 @SuppressWarnings("deprecation")
 public class JobRunStepByStepTest {

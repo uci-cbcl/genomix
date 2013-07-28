@@ -25,8 +25,8 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
-import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.oldtype.KmerBytesWritable;
+import edu.uci.ics.genomix.velvet.oldtype.GeneCode;
+import edu.uci.ics.genomix.velvet.oldtype.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;

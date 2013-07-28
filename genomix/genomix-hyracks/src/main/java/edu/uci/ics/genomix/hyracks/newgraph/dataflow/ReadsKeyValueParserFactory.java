@@ -29,6 +29,7 @@ import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
+
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -45,14 +46,14 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private static final Log LOG = LogFactory.getLog(ReadsKeyValueParserFactory.class);
 
     public static final int OutputKmerField = 0;
-    public static final int outputNodeIdListField = 1;
+    public static final int OutputNodeField = 1;
     
 
     private final int readLength;
     private final int kmerSize;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
-            null, null, null, null, null, null, null, null});
+            null});
 
     public ReadsKeyValueParserFactory(int readlength, int k) {
         this.readLength = readlength;
@@ -70,21 +71,21 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         final ByteBuffer outputBuffer = ctx.allocateFrame();
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());
         outputAppender.reset(outputBuffer, true);
-
+        KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new IKeyValueParser<LongWritable, Text>() {
-
+            
             private PositionWritable nodeId = new PositionWritable();
             private PositionListWritable nodeIdList = new PositionListWritable();
-            private KmerListWritable edgeListForPreKmer = new KmerListWritable(kmerSize);
-            private KmerListWritable edgeListForNextKmer = new KmerListWritable(kmerSize);
-            private NodeWritable outputNode = new NodeWritable(kmerSize);
+            private KmerListWritable edgeListForPreKmer = new KmerListWritable();
+            private KmerListWritable edgeListForNextKmer = new KmerListWritable();
+            private NodeWritable outputNode = new NodeWritable();
 
-            private KmerBytesWritable preForwardKmer = new KmerBytesWritable(kmerSize);
-            private KmerBytesWritable preReverseKmer = new KmerBytesWritable(kmerSize);
-            private KmerBytesWritable curForwardKmer = new KmerBytesWritable(kmerSize);
-            private KmerBytesWritable curReverseKmer = new KmerBytesWritable(kmerSize);
-            private KmerBytesWritable nextForwardKmer = new KmerBytesWritable(kmerSize);
-            private KmerBytesWritable nextReverseKmer = new KmerBytesWritable(kmerSize);
+            private KmerBytesWritable preForwardKmer = new KmerBytesWritable();           
+            private KmerBytesWritable preReverseKmer = new KmerBytesWritable();
+            private KmerBytesWritable curForwardKmer = new KmerBytesWritable();
+            private KmerBytesWritable curReverseKmer = new KmerBytesWritable();
+            private KmerBytesWritable nextForwardKmer = new KmerBytesWritable();
+            private KmerBytesWritable nextReverseKmer = new KmerBytesWritable();
             
             private KmerDir preKmerDir = KmerDir.FORWARD;
             private KmerDir curKmerDir = KmerDir.FORWARD;
@@ -119,37 +120,37 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
 
             private void SplitReads(int readID, byte[] array, IFrameWriter writer) {
-                /** first kmer */
+                /*first kmer*/
                 if (kmerSize >= array.length) {
                     return;
                 }
-                outputNode.reset(kmerSize);
+                outputNode.reset();
                 curForwardKmer.setByRead(array, 0);
                 curReverseKmer.setByReadReverse(array, 0);
                 curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 setNextKmer(array[kmerSize]);
-                setnodeId(mateId, readID, 1);
+                setnodeId(mateId, readID, 0);
                 setEdgeListForNextKmer();
                 writeToFrame(writer);
 
-                /** middle kmer */
+                /*middle kmer*/
                 int i = kmerSize;
                 for (; i < array.length - 1; i++) {
-                    outputNode.reset(kmerSize);
+                    outputNode.reset();
                     setPreKmerByOldCurKmer();
                     setCurKmerByOldNextKmer();
                     setNextKmer(array[i]);
-                    setnodeId(mateId, readID, i - kmerSize + 1);
+                    setnodeId(mateId, readID, 0);//i - kmerSize + 1
                     setEdgeListForPreKmer();
                     setEdgeListForNextKmer();
                     writeToFrame(writer);
                 }
                 
-                /** last kmer */
-                outputNode.reset(kmerSize);
+                /*last kmer*/
+                outputNode.reset();
                 setPreKmerByOldCurKmer();
                 setCurKmerByOldNextKmer();
-                setnodeId(mateId, readID, array.length - kmerSize + 1);
+                setnodeId(mateId, readID, 0);//array.length - kmerSize + 1
                 setEdgeListForPreKmer();
                 writeToFrame(writer);
             }
@@ -162,7 +163,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
             
             public void setNextKmer(byte nextChar){
-                nextForwardKmer.set(curForwardKmer);
+                nextForwardKmer.setAsCopy(curForwardKmer);
                 nextForwardKmer.shiftKmerWithNextChar(nextChar);
                 nextReverseKmer.setByReadReverse(nextForwardKmer.toString().getBytes(), nextForwardKmer.getOffset());
                 nextKmerDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
@@ -170,14 +171,14 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             
             public void setPreKmerByOldCurKmer(){
                 preKmerDir = curKmerDir;
-                preForwardKmer.set(curForwardKmer);
-                preReverseKmer.set(curReverseKmer);
+                preForwardKmer.setAsCopy(curForwardKmer);
+                preReverseKmer.setAsCopy(curReverseKmer);
             }
 
             public void setCurKmerByOldNextKmer(){
                 curKmerDir = nextKmerDir;
-                curForwardKmer.set(nextForwardKmer);
-                curReverseKmer.set(nextReverseKmer);
+                curForwardKmer.setAsCopy(nextForwardKmer);
+                curReverseKmer.setAsCopy(nextReverseKmer);
             }
             
             public void writeToFrame(IFrameWriter writer) {
@@ -195,12 +196,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     case FORWARD:
                         switch(preKmerDir){
                             case FORWARD:
-                                edgeListForPreKmer.reset(kmerSize);
+                                edgeListForPreKmer.reset();
                                 edgeListForPreKmer.append(preForwardKmer);
                                 outputNode.setRRList(edgeListForPreKmer);
                                 break;
                             case REVERSE:
-                                edgeListForPreKmer.reset(kmerSize);
+                                edgeListForPreKmer.reset();
                                 edgeListForPreKmer.append(preReverseKmer);
                                 outputNode.setRFList(edgeListForPreKmer);
                                 break;
@@ -209,12 +210,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     case REVERSE:
                         switch(preKmerDir){
                             case FORWARD:
-                                edgeListForPreKmer.reset(kmerSize);
+                                edgeListForPreKmer.reset();
                                 edgeListForPreKmer.append(preForwardKmer);
                                 outputNode.setFRList(edgeListForPreKmer);
                                 break;
                             case REVERSE:
-                                edgeListForPreKmer.reset(kmerSize);
+                                edgeListForPreKmer.reset();
                                 edgeListForPreKmer.append(preReverseKmer);
                                 outputNode.setFFList(edgeListForPreKmer);
                                 break;
@@ -228,12 +229,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     case FORWARD:
                         switch(nextKmerDir){
                             case FORWARD:
-                                edgeListForNextKmer.reset(kmerSize);
+                                edgeListForNextKmer.reset();
                                 edgeListForNextKmer.append(nextForwardKmer);
                                 outputNode.setFFList(edgeListForNextKmer);
                                 break;
                             case REVERSE:
-                                edgeListForNextKmer.reset(kmerSize);
+                                edgeListForNextKmer.reset();
                                 edgeListForNextKmer.append(nextReverseKmer);
                                 outputNode.setFRList(edgeListForNextKmer);
                                 break;
@@ -242,12 +243,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     case REVERSE:
                         switch(nextKmerDir){
                             case FORWARD:
-                                edgeListForNextKmer.reset(kmerSize);
+                                edgeListForNextKmer.reset();
                                 edgeListForNextKmer.append(nextForwardKmer);
                                 outputNode.setRFList(edgeListForNextKmer);
                                 break;
                             case REVERSE:
-                                edgeListForNextKmer.reset(kmerSize);
+                                edgeListForNextKmer.reset();
                                 edgeListForNextKmer.append(nextReverseKmer);
                                 outputNode.setRRList(edgeListForNextKmer);
                                 break;
@@ -260,30 +261,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 try {
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-                    
-                    //tupleBuilder.addField(node.getnodeId().getByteArray(), node.getnodeId().getStartOffset(), node.getnodeId().getLength());
-//                    tupleBuilder.addField(node.getFFList().getByteArray(), node.getFFList().getStartOffset(), node.getFFList().getLength());
-//                    tupleBuilder.addField(node.getFRList().getByteArray(), node.getFRList().getStartOffset(), node.getFRList().getLength());
-//                    tupleBuilder.addField(node.getRFList().getByteArray(), node.getRFList().getStartOffset(), node.getRFList().getLength());
-//                    tupleBuilder.addField(node.getRRList().getByteArray(), node.getRRList().getStartOffset(), node.getRRList().getLength());
-
-                    tupleBuilder.addField(node.getNodeIdList().getByteArray(), node.getNodeIdList().getStartOffset(), node.getNodeIdList().getLength());
-                    
-                    tupleBuilder.addField(node.getFFList().getByteArray(), node.getFFList().getStartOffset(), node.getFFList().getLength());
-                    tupleBuilder.getDataOutput().writeInt(node.getFFList().getCountOfPosition());
-                    tupleBuilder.addFieldEndOffset();
-                    
-                    tupleBuilder.addField(node.getFRList().getByteArray(), node.getFRList().getStartOffset(), node.getFRList().getLength());
-                    tupleBuilder.getDataOutput().writeInt(node.getFRList().getCountOfPosition());
-                    tupleBuilder.addFieldEndOffset();
-                    
-                    tupleBuilder.addField(node.getRFList().getByteArray(), node.getRFList().getStartOffset(), node.getRFList().getLength());
-                    tupleBuilder.getDataOutput().writeInt(node.getRFList().getCountOfPosition());
-                    tupleBuilder.addFieldEndOffset();
-                    
-                    tupleBuilder.addField(node.getRRList().getByteArray(), node.getRRList().getStartOffset(), node.getRRList().getLength());
-                    tupleBuilder.getDataOutput().writeInt(node.getRRList().getCountOfPosition());
-                    tupleBuilder.addFieldEndOffset();
+                    tupleBuilder.addField(node.marshalToByteArray(), 0, node.getSerializedLength());
                     
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {

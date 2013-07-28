@@ -17,14 +17,12 @@ package edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators;
 
 import java.io.DataOutput;
 import java.io.IOException;
-
-import edu.uci.ics.genomix.hyracks.data.primitive.PositionReference;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
@@ -33,27 +31,23 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
     /**
-     * 
+     * local Aggregate
      */
     private static final long serialVersionUID = 1L;
-
-    private final int readLength;
     private final int kmerSize;
     
-    public AggregateKmerAggregateFactory(int readlength, int k) {
-        this.readLength = readlength;
+    public AggregateKmerAggregateFactory(int k) {
         this.kmerSize = k;
     }
-    
     
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
+        KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new IAggregatorDescriptor() {
-//            private PositionReference position = new PositionReference();
             
-            private NodeWritable readNode = new NodeWritable(kmerSize);
+            private NodeWritable readNode = new NodeWritable();
             
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -80,24 +74,23 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
-                localUniNode.reset(kmerSize);
-                readNode.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//????
+                localUniNode.reset();
+                readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 localUniNode.getFFList().appendList(readNode.getFFList());
                 localUniNode.getFRList().appendList(readNode.getFRList());
                 localUniNode.getRFList().appendList(readNode.getRFList());
                 localUniNode.getRRList().appendList(readNode.getRRList());
-//                inputVal.append(position);
 
                 // make an empty field
-                tupleBuilder.addFieldEndOffset();///???
+                tupleBuilder.addFieldEndOffset();// mark question?
             }
 
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
-                readNode.setNewReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));//????
+                readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 localUniNode.getFFList().appendList(readNode.getFFList());
                 localUniNode.getFRList().appendList(readNode.getFRList());
@@ -117,7 +110,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 try {
-                    fieldOutput.write(localUniNode.getByteArray(), localUniNode.getStartOffset(), localUniNode.getLength());
+                    fieldOutput.write(localUniNode.marshalToByteArray(), 0, localUniNode.getSerializedLength());
 
                     tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
