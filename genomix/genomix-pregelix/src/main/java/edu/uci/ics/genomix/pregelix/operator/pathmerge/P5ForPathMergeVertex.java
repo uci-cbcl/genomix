@@ -113,12 +113,12 @@ public class P5ForPathMergeVertex extends
      */
     protected boolean setNextInfo(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0) {
-            nextID.set(value.getFFList().getPosition(0));
+            nextID.setAsCopy(value.getFFList().getPosition(0));
             nextHead = isNodeRandomHead(nextID);
             return true;
         }
         if (value.getFRList().getCountOfPosition() > 0) {
-            nextID.set(value.getFRList().getPosition(0));
+            nextID.setAsCopy(value.getFRList().getPosition(0));
             nextHead = isNodeRandomHead(nextID);
             return true;
         }
@@ -130,12 +130,12 @@ public class P5ForPathMergeVertex extends
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
         if (value.getRRList().getCountOfPosition() > 0) {
-            prevID.set(value.getRRList().getPosition(0));
+            prevID.setAsCopy(value.getRRList().getPosition(0));
             prevHead = isNodeRandomHead(prevID);
             return true;
         }
         if (value.getRFList().getCountOfPosition() > 0) {
-            prevID.set(value.getRFList().getPosition(0));
+            prevID.setAsCopy(value.getRFList().getPosition(0));
             prevHead = isNodeRandomHead(prevID);
             return true;
         }

@@ -7,6 +7,7 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerListWritable;
 
 public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
@@ -39,8 +40,8 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     private AdjacencyListWritable incomingList;
     private AdjacencyListWritable outgoingList;
     private byte state;
-    private KmerBytesWritable kmer;
-    private KmerBytesWritable mergeDest;
+    private VKmerBytesWritable kmer;
+    private VKmerBytesWritable mergeDest;
     private int kmerlength = 0;
 
     public VertexValueWritable() {
@@ -53,13 +54,13 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         incomingList = new AdjacencyListWritable();
         outgoingList = new AdjacencyListWritable();
         state = State.IS_NON;
-        kmer = new KmerBytesWritable(kmerSize);
-        mergeDest = new KmerBytesWritable(kmerSize);
+        kmer = new VKmerBytesWritable();
+        mergeDest = new VKmerBytesWritable();
     }
 
     public VertexValueWritable(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
             KmerListWritable reverseForwardList, KmerListWritable reverseReverseList,
-            byte state, KmerBytesWritable kmer) {
+            byte state, VKmerBytesWritable kmer) {
         set(nodeIdList, forwardForwardList, forwardReverseList, 
                 reverseForwardList, reverseReverseList,
                 state, kmer);
@@ -67,14 +68,14 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     
     public void set(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
             KmerListWritable reverseForwardList, KmerListWritable reverseReverseList, 
-            byte state, KmerBytesWritable kmer) {
-        this.kmerlength = kmer.kmerByteSize;
+            byte state, VKmerBytesWritable kmer) {
+        this.kmerlength = kmer.getKmerLetterLength();
         this.incomingList.setForwardList(reverseForwardList);
         this.incomingList.setReverseList(reverseReverseList);
         this.outgoingList.setForwardList(forwardForwardList);
         this.outgoingList.setReverseList(forwardReverseList);
         this.state = state;
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
     }
     
     public void set(VertexValueWritable value) {
@@ -149,22 +150,22 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
 
     public int getLengthOfKmer() {
-        return kmer.getKmerLength();
+        return kmer.getKmerLetterLength();
     }
 
-    public KmerBytesWritable getKmer() {
+    public VKmerBytesWritable getKmer() {
         return kmer;
     }
 
-    public void setKmer(KmerBytesWritable kmer) {
-        this.kmer.set(kmer);
+    public void setKmer(VKmerBytesWritable kmer) {
+        this.kmer.setAsCopy(kmer);
     }
     
-    public KmerBytesWritable getMergeDest() {
+    public VKmerBytesWritable getMergeDest() {
         return mergeDest;
     }
 
-    public void setMergeDest(KmerBytesWritable mergeDest) {
+    public void setMergeDest(VKmerBytesWritable mergeDest) {
         this.mergeDest = mergeDest;
     }
     
@@ -180,11 +181,11 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public void reset(int kmerSize) {
         this.kmerlength = kmerSize;
         this.nodeIdList.reset();
-        this.incomingList.getForwardList().reset(kmerSize);
-        this.incomingList.getReverseList().reset(kmerSize);
-        this.outgoingList.getForwardList().reset(kmerSize);
-        this.outgoingList.getReverseList().reset(kmerSize);
-        this.kmer.reset(0);
+        this.incomingList.getForwardList().reset();
+        this.incomingList.getReverseList().reset();
+        this.outgoingList.getForwardList().reset();
+        this.outgoingList.getReverseList().reset();
+//        this.kmer.reset(0);
     }
     
     @Override

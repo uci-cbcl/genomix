@@ -230,7 +230,7 @@ public class P3ForPathMergeVertex extends
      * merge chain vertex
      */
     public void mergeChainVertex(){
-        lastKmer.set(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
+        lastKmer.setAsCopy(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
                 incomingMsg.getKmer()));
         getVertexValue().setKmer(
                 kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), 

@@ -60,7 +60,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     private MessageWritable outgoingMsg = new MessageWritable();
   
     private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
-    private KmerBytesWritable lastKmer = new KmerBytesWritable(1);
+    private KmerBytesWritable lastKmer = new KmerBytesWritable();
     
     private PositionWritable destVertexId = new PositionWritable();
     private Iterator<PositionWritable> posIterator;
@@ -184,7 +184,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
      */
     public void mergeChainVertex() {
         //merge chain
-        lastKmer.set(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
+        lastKmer.setAsCopy(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
                 incomingMsg.getKmer()));
         getVertexValue().setKmer(kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), lastKmer));
         getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
@@ -225,7 +225,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
         outgoingMsg.setChainVertexId(getVertexValue().getKmer());
         if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outgoingMsg.setFlag(Message.STOP);
-        destVertexId.set(incomingMsg.getSourceVertexId());
+        destVertexId.setAsCopy(incomingMsg.getSourceVertexId());
         sendMsg(destVertexId, outgoingMsg);
     }
 

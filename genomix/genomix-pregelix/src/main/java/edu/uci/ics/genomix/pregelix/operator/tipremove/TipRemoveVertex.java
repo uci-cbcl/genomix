@@ -71,7 +71,7 @@ public class TipRemoveVertex extends
             		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
             			outgoingMsg.setFlag(AdjMessage.FROMFR);
             		outgoingMsg.setSourceVertexId(getVertexId());
-            		destVertexId.set(getNextDestVertexId(getVertexValue()));
+            		destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
             		sendMsg(destVertexId, outgoingMsg);
             		deleteVertex(getVertexId());
             	}
@@ -83,7 +83,7 @@ public class TipRemoveVertex extends
                     else if(getVertexValue().getRRList().getCountOfPosition() > 0)
                         outgoingMsg.setFlag(AdjMessage.FROMRR);
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    destVertexId.set(getPreDestVertexId(getVertexValue()));
+                    destVertexId.setAsCopy(getPreDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                     deleteVertex(getVertexId());
                 }

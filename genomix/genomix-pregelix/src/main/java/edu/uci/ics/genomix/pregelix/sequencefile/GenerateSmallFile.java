@@ -28,7 +28,8 @@ public class GenerateSmallFile {
         SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, inFile, conf);
         SequenceFile.Writer writer = SequenceFile.createWriter(fileSys, conf, outFile, KmerBytesWritable.class,
                 NullWritable.class, CompressionType.NONE);
-        KmerBytesWritable outKey = new KmerBytesWritable(55);
+        KmerBytesWritable.setGlobalKmerLength(55);
+        KmerBytesWritable outKey = new KmerBytesWritable();
         int i = 0;
 
         for (i = 0; i < numOfLines; i++) {

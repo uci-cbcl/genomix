@@ -28,6 +28,7 @@ import edu.uci.ics.genomix.data.KmerUtil;
 import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
+
 /**
  * Variable-length kmer which stores its length internally.
  * Note: `offset` as used in this class is the offset at which the *kmer*
@@ -497,6 +498,11 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         clearLeadBit();
         saveHeader(lettersInKmer);
     }
+    
+    public void mergeWithFFKmer(int kmerSize, KmerBytesWritable kmer) {
+        // TODO make this more efficient
+        mergeWithFFKmer(kmerSize, new VKmerBytesWritable(kmer.toString()));
+    }
 
     /**
      * Merge Kmer with the next connected Kmer, when that Kmer needs to be
@@ -538,6 +544,11 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         }
         saveHeader(lettersInKmer);
     }
+    
+    public void mergeWithFRKmer(int kmerSize, KmerBytesWritable kmer) {
+        // TODO make this more efficient
+        mergeWithFRKmer(kmerSize, new VKmerBytesWritable(kmer.toString()));
+    }
 
     /**
      * Merge Kmer with the previous connected Kmer, when that kmer needs to be
@@ -550,9 +561,15 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      *            : the previous kmer
      */
     public void mergeWithRFKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
+        // TODO make this more efficient
         VKmerBytesWritable reversed = new VKmerBytesWritable(preKmer.lettersInKmer);
         reversed.setByReadReverse(preKmer.toString().getBytes(), 0);
         mergeWithRRKmer(initialKmerSize, reversed);
+    }
+    
+    public void mergeWithRFKmer(int kmerSize, KmerBytesWritable kmer) {
+        // TODO make this more efficient
+        mergeWithRFKmer(kmerSize, new VKmerBytesWritable(kmer.toString()));
     }
 
     /**
@@ -590,6 +607,11 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
                 bytes, kmerStartOffset, bytesUsed);
         clearLeadBit();
     }
+    
+    public void mergeWithRRKmer(int kmerSize, KmerBytesWritable kmer) {
+        // TODO make this more efficient
+        mergeWithRRKmer(kmerSize, new VKmerBytesWritable(kmer.toString()));
+    }
 
     public void mergeWithKmerInDir(byte dir, int initialKmerSize, VKmerBytesWritable kmer) {
         switch (dir & DirectionFlag.DIR_MASK) {
@@ -608,6 +630,17 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
             default:
                 throw new RuntimeException("Direction not recognized: " + dir);
         }
+    }
+    public void mergeWithKmerInDir(byte dir, int initialKmerSize, KmerBytesWritable kmer) {
+        // TODO make this more efficient
+        mergeWithKmerInDir(dir, initialKmerSize, new VKmerBytesWritable(kmer.toString()));
+    }
+
+    public KmerBytesWritable asFixedLengthKmer() {
+        if (lettersInKmer != KmerBytesWritable.getKmerLength()) {
+            throw new IllegalArgumentException("VKmer " + this.toString() + " is not of the same length as the fixed length Kmer (" + KmerBytesWritable.getKmerLength() + " )!");
+        }
+        return new KmerBytesWritable(bytes, kmerStartOffset);
     }
 
 }
