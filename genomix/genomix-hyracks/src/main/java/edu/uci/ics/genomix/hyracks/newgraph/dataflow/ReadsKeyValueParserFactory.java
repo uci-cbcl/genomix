@@ -79,6 +79,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private KmerListWritable edgeListForPreKmer = new KmerListWritable();
             private KmerListWritable edgeListForNextKmer = new KmerListWritable();
             private NodeWritable outputNode = new NodeWritable();
+            private NodeWritable outputNode2 = new NodeWritable();
 
             private KmerBytesWritable preForwardKmer = new KmerBytesWritable();           
             private KmerBytesWritable preReverseKmer = new KmerBytesWritable();
@@ -147,12 +148,64 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
                 
                 /*last kmer*/
-                outputNode.reset();
+/*                outputNode.reset();
                 setPreKmerByOldCurKmer();
                 setCurKmerByOldNextKmer();
                 setnodeId(mateId, readID, 0);//array.length - kmerSize + 1
                 setEdgeListForPreKmer();
-                writeToFrame(writer);
+                writeToFrame(writer);*/
+                preKmerDir = curKmerDir;
+                preForwardKmer.setAsCopy(curForwardKmer);
+                preReverseKmer.setAsCopy(curReverseKmer);
+                
+                curKmerDir = nextKmerDir;
+                curForwardKmer.setAsCopy(nextForwardKmer);
+                curReverseKmer.setAsCopy(nextReverseKmer);
+                
+                nodeId.set(mateId, readID, 0);
+                nodeIdList.reset();
+                nodeIdList.append(nodeId);
+                outputNode2.setNodeIdList(nodeIdList);
+                
+                switch(curKmerDir){
+                    case FORWARD:
+                        switch(preKmerDir){
+                            case FORWARD:
+                                edgeListForPreKmer.reset();
+                                edgeListForPreKmer.append(preForwardKmer);
+                                outputNode2.setRRList(edgeListForPreKmer);
+                                break;
+                            case REVERSE:
+                                edgeListForPreKmer.reset();
+                                edgeListForPreKmer.append(preReverseKmer);
+                                outputNode2.setRFList(edgeListForPreKmer);
+                                break;
+                        }
+                        break;
+                    case REVERSE:
+                        switch(preKmerDir){
+                            case FORWARD:
+                                edgeListForPreKmer.reset();
+                                edgeListForPreKmer.append(preForwardKmer);
+                                outputNode2.setFRList(edgeListForPreKmer);
+                                break;
+                            case REVERSE:
+                                edgeListForPreKmer.reset();
+                                edgeListForPreKmer.append(preReverseKmer);
+                                outputNode2.setFFList(edgeListForPreKmer);
+                                break;
+                        }
+                        break;
+                }
+                
+                switch(curKmerDir){
+                    case FORWARD:
+                        InsertToFrame(curForwardKmer, outputNode2, writer);
+                        break;
+                    case REVERSE:
+                        InsertToFrame(curReverseKmer, outputNode2, writer);
+                        break;
+                }
             }
             
             public void setnodeId(byte mateId, long readID, int posId){

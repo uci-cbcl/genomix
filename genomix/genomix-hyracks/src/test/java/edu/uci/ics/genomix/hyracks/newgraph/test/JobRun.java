@@ -32,7 +32,7 @@ import edu.uci.ics.genomix.hyracks.test.TestUtils;
 @SuppressWarnings("deprecation")
 public class JobRun {
     private static final int KmerSize = 5;
-    private static final int ReadLength = 8;
+    private static final int ReadLength = 6;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
