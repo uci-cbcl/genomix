@@ -209,13 +209,10 @@ public class JobGenBrujinGraph extends JobGen {
         logDebug("Group by Kmer");
         AbstractOperatorDescriptor lastOperator = generateGroupbyKmerJob(jobSpec, readOperator);
 
-        // logDebug("Write kmer to result");
-        // generateRootByWriteKmerGroupbyResult(jobSpec, lastOperator);
-
         logDebug("Write node to result");
         lastOperator = generateNodeWriterOpertator(jobSpec, lastOperator);
 
-        jobSpec.addRoot(lastOperator);
+        jobSpec.addRoot(readOperator);//what's this? why we need this? why I can't seet it in the JobGenCheckReader
         return jobSpec;
     }
 

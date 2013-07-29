@@ -52,7 +52,15 @@ public class JobRun {
     
     @Test
     public void TestAll() throws Exception {
-        TestGroupby();
+        TestReader();
+//        TestGroupby();
+    }
+    
+    public void TestReader() throws Exception {
+        cleanUpReEntry();
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
+        driver.runJob(new GenomixJobConf(conf), Plan.CHECK_KMERREADER, true);
+        dumpResult();
     }
     
     public void TestGroupby() throws Exception {
@@ -60,7 +68,7 @@ public class JobRun {
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-        dumpResult();
+//        dumpResult();
     }
     
     @Before

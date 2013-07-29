@@ -27,6 +27,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.newgraph.job.JobGen;
 import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenBrujinGraph;
+import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenCheckReader;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -40,6 +41,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 public class Driver {
     public static enum Plan {
         BUILD_DEBRUJIN_GRAPH,
+        CHECK_KMERREADER,
     }
 
     private static final String IS_PROFILING = "genomix.driver.profiling";
@@ -90,6 +92,9 @@ public class Driver {
                 default:
                     jobGen = new JobGenBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
+                case CHECK_KMERREADER:
+                    jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
+                    break;
             }
 
             start = System.currentTimeMillis();
@@ -115,8 +120,9 @@ public class Driver {
 
     private void execute(JobSpecification job) throws Exception {
         job.setUseConnectorPolicyForScheduling(false);
-        JobId jobId = hcc
-                .startJob(job, profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
+        if(profiling)
+            EnumSet.of(JobFlag.PROFILE_RUNTIME);
+        JobId jobId = hcc.startJob(job, EnumSet.of(JobFlag.PROFILE_RUNTIME));
         hcc.waitForCompletion(jobId);
     }
 
