@@ -15,7 +15,9 @@
 
 package edu.uci.ics.genomix.data.test;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
@@ -386,5 +388,31 @@ public class KmerBytesWritableTest {
         difference.addAll(s1);
         difference.removeAll(s2);
         System.out.println(difference.toString());
+        
+        Map<KmerBytesWritable, Set<Long>> map = new HashMap<KmerBytesWritable, Set<Long>>();
+        KmerBytesWritable k1 = new KmerBytesWritable(3);
+        Set<Long> set1 = new HashSet<Long>();
+        k1.setByRead(("CTA").getBytes(), 0);
+        set1.add((long)1);
+        map.put(k1, set1);
+        KmerBytesWritable k2 = new KmerBytesWritable(3);
+        k2.setByRead(("GTA").getBytes(), 0);
+        Set<Long> set2 = new HashSet<Long>();
+        set2.add((long) 2);
+        map.put(k2, set2);
+        KmerBytesWritable k3 = new KmerBytesWritable(3);
+        k3.setByRead(("ATG").getBytes(), 0);
+        Set<Long> set3 = new HashSet<Long>();
+        set3.add((long) 3);
+        map.put(k3, set3);
+        KmerBytesWritable k4 = new KmerBytesWritable(3);
+        k4.setByRead(("AAT").getBytes(), 0);
+        Set<Long> set4 = new HashSet<Long>();
+        set4.add((long) 4);
+        map.put(k4, set4);
+        System.out.println("CTA = " + map.get(k1).toString());
+        System.out.println("GTA = " + map.get(k2).toString());
+        System.out.println("ATG = " + map.get(k3).toString());
+        System.out.println("AAT = " + map.get(k4).toString());
     }
 }

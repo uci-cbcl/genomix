@@ -206,8 +206,10 @@ public class SplitRepeatVertex extends
                 }
                 for(KmerBytesWritable outgoingEdge : outgoingEdgeList){
                     for(KmerBytesWritable incomingEdge : incomingEdgeList){
-                        outgoingReadIdSet = kmerMap.get(outgoingEdge);
-                        incomingReadIdSet = kmerMap.get(incomingEdge);
+                        outgoingReadIdSet.clear();
+                        incomingReadIdSet.clear();
+                        outgoingReadIdSet.addAll(kmerMap.get(outgoingEdge));
+                        incomingReadIdSet.addAll(kmerMap.get(incomingEdge));
                         
                         //set all neighberEdge readId intersection
                         neighborEdgeIntersection.addAll(selfReadIdSet);
