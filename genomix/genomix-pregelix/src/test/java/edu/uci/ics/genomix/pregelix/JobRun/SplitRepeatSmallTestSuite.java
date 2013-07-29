@@ -40,25 +40,18 @@ import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
-public class PathMergeSmallTestSuite extends TestSuite {
-    private static final Logger LOGGER = Logger.getLogger(PathMergeSmallTestSuite.class.getName());
-
-    public static final String PreFix = "data/PathMergeTestSet"; //"graphbuildresult";
+public class SplitRepeatSmallTestSuite extends TestSuite {
+    private static final Logger LOGGER = Logger.getLogger(SplitRepeatSmallTestSuite.class.getName());
+    //P4ForMergeGraph/bin/read
+    public static final String PreFix = "data/SplitRepeat"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "2", PreFix + File.separator
-    + "3", PreFix + File.separator
-    + "4", PreFix + File.separator
-    + "5", PreFix + File.separator
-    + "6", PreFix + File.separator
-    + "7", PreFix + File.separator
-    + "8", PreFix + File.separator
-    + "9"};
-    private static final String ACTUAL_RESULT_DIR = "data/actual/pathmerge";
+    + "SimpleTest"};
+    private static final String ACTUAL_RESULT_DIR = "data/actual/splitrepeat";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
-    private static final String PATH_TO_ONLY = "src/test/resources/only_pathmerge.txt";
+    private static final String PATH_TO_ONLY = "src/test/resources/only_splitrepeat.txt";
 
     public static final String HDFS_INPUTPATH = "/PathTestSet";
 
@@ -130,7 +123,7 @@ public class PathMergeSmallTestSuite extends TestSuite {
         List<String> onlys = getFileList(PATH_TO_ONLY);
         File testData = new File(PATH_TO_JOBS);
         File[] queries = testData.listFiles();
-        PathMergeSmallTestSuite testSuite = new PathMergeSmallTestSuite();
+        SplitRepeatSmallTestSuite testSuite = new SplitRepeatSmallTestSuite();
         testSuite.setUp();
         boolean onlyEnabled = false;
         FileSystem dfs = FileSystem.get(testSuite.conf);

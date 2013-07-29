@@ -4,6 +4,7 @@ import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -83,7 +84,7 @@ public class BubbleAddVertex extends
                  * set the vertex value
                  */
                 byte[] array = { 'T', 'A', 'G', 'C', 'C', 'A', 'G'}; //TAGCCAG
-                KmerBytesWritable kmer = new KmerBytesWritable(array.length); 
+                VKmerBytesWritable kmer = new VKmerBytesWritable(array.length); 
                 kmer.setByRead(array, 0);
                 vertexValue.setKmer(kmer);
                 PositionListWritable plist = new PositionListWritable();

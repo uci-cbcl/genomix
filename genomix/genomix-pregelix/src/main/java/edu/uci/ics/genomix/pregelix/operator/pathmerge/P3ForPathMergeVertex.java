@@ -3,7 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+//import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -64,7 +64,7 @@ public class P3ForPathMergeVertex extends
     private MessageWritable outgoingMsg = new MessageWritable();
 
     private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
-    private KmerBytesWritable lastKmer = new KmerBytesWritable(1);
+    private VKmerBytesWritable lastKmer = new VKmerBytesWritable(1);
 
     private PositionWritable destVertexId = new PositionWritable();
     private Iterator<PositionWritable> posIterator;
@@ -231,7 +231,7 @@ public class P3ForPathMergeVertex extends
      */
     public void mergeChainVertex(){
         lastKmer.setAsCopy(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
-                incomingMsg.getKmer()));
+                incomingMsg.getActualKmer()));
         getVertexValue().setKmer(
                 kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), 
                         lastKmer));
@@ -271,7 +271,7 @@ public class P3ForPathMergeVertex extends
     public void responseMsgToHeadVertexMergePhase() {
         deleteVertex(getVertexId());
         outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-        outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+        outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
         if (getVertexValue().getState() == State2.END_VERTEX)
             outgoingMsg.setFlag(Message.STOP);
         sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
@@ -325,7 +325,7 @@ public class P3ForPathMergeVertex extends
         else {
             deleteVertex(getVertexId());
             outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList()); //incomingMsg.getNeighberNode()
-            outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+            outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
             if (getVertexValue().getState() == State2.PSEUDOREAR)
                 outgoingMsg.setFlag(Message.FROMPSEUDOREAR);
             else if (getVertexValue().getState() == State2.END_VERTEX)

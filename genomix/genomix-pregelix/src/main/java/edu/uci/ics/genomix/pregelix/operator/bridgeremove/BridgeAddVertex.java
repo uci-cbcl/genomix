@@ -3,7 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+//import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -14,6 +14,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /*
  * vertexId: BytesWritable
@@ -87,7 +88,7 @@ public class BridgeAddVertex extends
                  * set the vertex value
                  */
                 byte[] array = { 'T', 'A', 'G', 'C', 'C'};
-                KmerBytesWritable kmer = new KmerBytesWritable(array.length);
+                VKmerBytesWritable kmer = new VKmerBytesWritable(array.length);
                 kmer.setByRead(array, 0);
                 vertexValue.setKmer(kmer);
                 PositionListWritable plist = new PositionListWritable();

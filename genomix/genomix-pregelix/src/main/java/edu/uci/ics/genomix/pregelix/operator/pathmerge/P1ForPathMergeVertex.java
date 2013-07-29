@@ -3,7 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+//import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -49,10 +49,10 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 /**
  * Naive Algorithm for path merge graph
  */
-public class NaiveAlgorithmForPathMergeVertex extends
+public class P1ForPathMergeVertex extends
         Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
-    public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
+    public static final String KMER_SIZE = "P1ForPathMergeVertex.kmerSize";
+    public static final String ITERATIONS = "P1ForPathMergeVertex.iteration";
     public static int kmerSize = -1;
     private int maxIteration = -1;
 
@@ -60,7 +60,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     private MessageWritable outgoingMsg = new MessageWritable();
   
     private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
-    private KmerBytesWritable lastKmer = new KmerBytesWritable();
+    private VKmerBytesWritable lastKmer = new VKmerBytesWritable();
     
     private PositionWritable destVertexId = new PositionWritable();
     private Iterator<PositionWritable> posIterator;
@@ -185,7 +185,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     public void mergeChainVertex() {
         //merge chain
         lastKmer.setAsCopy(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
-                incomingMsg.getKmer()));
+                incomingMsg.getActualKmer()));
         getVertexValue().setKmer(kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), lastKmer));
         getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
     }
@@ -222,7 +222,7 @@ public class NaiveAlgorithmForPathMergeVertex extends
     public void responseMsgToHeadVertex() {
         deleteVertex(getVertexId());
         outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-        outgoingMsg.setChainVertexId(getVertexValue().getKmer());
+        outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
         if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outgoingMsg.setFlag(Message.STOP);
         destVertexId.setAsCopy(incomingMsg.getSourceVertexId());
@@ -251,8 +251,8 @@ public class NaiveAlgorithmForPathMergeVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(NaiveAlgorithmForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
+        PregelixJob job = new PregelixJob(P1ForPathMergeVertex.class.getSimpleName());
+        job.setVertexClass(P1ForPathMergeVertex.class);
         /**
          * BinaryInput and BinaryOutput
          */

@@ -9,8 +9,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.LogAlgorithmForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.NaiveAlgorithmForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P3ForPathMergeVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
@@ -34,7 +34,7 @@ public class Client {
         @Option(name = "-plan", usage = "query plan choice", required = false)
         public Plan planChoice = Plan.OUTER_JOIN;
 
-        @Option(name = "-kmer-kmerByteSize", usage = "the kmerByteSize of kmer", required = false)
+        @Option(name = "-tmpKmer-kmerByteSize", usage = "the kmerByteSize of tmpKmer", required = false)
         public int sizeKmer;
 
         @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
@@ -66,12 +66,12 @@ public class Client {
         for (int i = 1; i < inputs.length; i++)
             FileInputFormat.addInputPaths(job, inputs[0]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
-        job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
-        job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(P1ForPathMergeVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(P2ForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, options.sizeKmer);
         if (options.numIteration > 0) {
-            job.getConfiguration().setInt(NaiveAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
-            job.getConfiguration().setInt(LogAlgorithmForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(P1ForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(P2ForPathMergeVertex.ITERATIONS, options.numIteration);
             job.getConfiguration().setInt(P3ForPathMergeVertex.ITERATIONS, options.numIteration);
         }
         

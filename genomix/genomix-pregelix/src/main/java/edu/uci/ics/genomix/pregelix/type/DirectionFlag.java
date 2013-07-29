@@ -10,4 +10,6 @@ public class DirectionFlag extends State {
     public static final byte DIR_RR = 0b100 << 0;
     public static final byte DIR_MASK = 0b111 << 0;
     public static final byte DIR_CLEAR = 0b1111000 << 0;
+    
+    public static final byte DIR_FROM_DEADVERTEX = 0b101 << 0;
 }

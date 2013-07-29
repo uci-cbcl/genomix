@@ -12,10 +12,23 @@ import edu.uci.ics.genomix.type.KmerListWritable;
 
 public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
 
-    public static class VertexStateFlag {
+    public static class State extends VertexStateFlag{
+        public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b101 << 0;
+        public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b111 << 0;
+            
+        public static final byte NO_MERGE = 0b00 << 3;
+        public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
+        public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
+        public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
+        public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
+        
+        public static final byte KILL = 0b11 << 3;
+        public static final byte KILL_MASK = 0b11 << 3;
+    }
+    
+    public static class VertexStateFlag extends FakeFlag {
         public static final byte IS_NON = 0b00 << 5;
         public static final byte IS_RANDOMTAIL = 0b00 << 5;
-        public static final byte IS_STOP = 0b00 << 5;
         public static final byte IS_HEAD = 0b01 << 5;
         public static final byte IS_FINAL = 0b10 << 5;
         public static final byte IS_RANDOMHEAD = 0b11 << 5;
@@ -25,15 +38,11 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         public static final byte VERTEX_CLEAR = (byte) 11001111;
     }
     
-    public static class State extends VertexStateFlag{
-    	public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b101 << 0;
-	    public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b111 << 0;
-    	    
-        public static final byte NO_MERGE = 0b00 << 3;
-        public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
-        public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
-        public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
-        public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
+    public static class FakeFlag{
+        public static final byte IS_NONFAKE = 0 << 0;
+        public static final byte IS_FAKE = 1 << 0;
+        
+        public static final byte FAKEFLAG_MASK = (byte) 00000001;
     }
     
     private PositionListWritable nodeIdList;
@@ -41,8 +50,8 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     private AdjacencyListWritable outgoingList;
     private byte state;
     private VKmerBytesWritable kmer;
-    private VKmerBytesWritable mergeDest;
     private int kmerlength = 0;
+    private boolean isFakeVertex = false;
 
     public VertexValueWritable() {
         this(0);
@@ -55,7 +64,6 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         outgoingList = new AdjacencyListWritable();
         state = State.IS_NON;
         kmer = new VKmerBytesWritable();
-        mergeDest = new VKmerBytesWritable();
     }
 
     public VertexValueWritable(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
@@ -144,6 +152,15 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public byte getState() {
         return state;
     }
+    
+    
+    public boolean isFakeVertex() {
+        return isFakeVertex;
+    }
+
+    public void setFakeVertex(boolean isFakeVertex) {
+        this.isFakeVertex = isFakeVertex;
+    }
 
     public void setState(byte state) {
         this.state = state;
@@ -160,16 +177,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public void setKmer(VKmerBytesWritable kmer) {
         this.kmer.setAsCopy(kmer);
     }
-    
-    public VKmerBytesWritable getMergeDest() {
-        return mergeDest;
-    }
 
-    public void setMergeDest(VKmerBytesWritable mergeDest) {
-        this.mergeDest = mergeDest;
-    }
-    
-    
     public int getKmerlength() {
         return kmerlength;
     }
@@ -197,7 +205,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         this.outgoingList.readFields(in);
         this.state = in.readByte();
         this.kmer.readFields(in);
-        this.mergeDest.readFields(in);
+        this.isFakeVertex = in.readBoolean();
     }
 
     @Override
@@ -208,7 +216,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         this.outgoingList.write(out);
         out.writeByte(this.state);
         this.kmer.write(out);
-        this.mergeDest.write(out);
+        out.writeBoolean(this.isFakeVertex);
     }
 
     @Override
@@ -235,6 +243,10 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     
     public int outDegree(){
         return outgoingList.getForwardList().getCountOfPosition() + outgoingList.getReverseList().getCountOfPosition();
+    }
+    
+    public int getDegree(){
+        return inDegree() + outDegree();
     }
     
     /*

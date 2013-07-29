@@ -22,7 +22,7 @@ public class KmerListWritableTest {
         for (int i = 1; i < 200; i++) {
             KmerBytesWritable.setGlobalKmerLength(i);
             kmer = new KmerBytesWritable();
-            String randomString = generateString(i);
+            String randomString = generaterRandomString(i);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
             kmerList.reset();
@@ -36,7 +36,7 @@ public class KmerListWritableTest {
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
             kmer = new KmerBytesWritable();
-            String randomString = generateString(5);
+            String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
             kmerList.append(kmer);
@@ -63,7 +63,7 @@ public class KmerListWritableTest {
         for (i = 0; i < 200; i++) {
             KmerBytesWritable.setGlobalKmerLength(5);
             kmer = new KmerBytesWritable();
-            String randomString = generateString(5);
+            String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
             kmer.setByRead(array, 0);
             kmerList.append(kmer);
@@ -106,9 +106,20 @@ public class KmerListWritableTest {
         }
         
         Assert.assertEquals(0, kmerList.getCountOfPosition());
+        
+        KmerBytesWritable.setGlobalKmerLength(3);
+        KmerListWritable edgeList = new KmerListWritable();
+        KmerBytesWritable k = new KmerBytesWritable();
+        k.setByRead(("AAA").getBytes(), 0);
+        edgeList.append(k);
+        k.setByRead(("CCC").getBytes(), 0);
+        edgeList.append(k);
+        for(KmerBytesWritable edge : edgeList){
+        	System.out.println(edge.toString());
+        }
     }
     
-    public String generateString(int n){
+    public String generaterRandomString(int n){
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
         Random random = new Random();

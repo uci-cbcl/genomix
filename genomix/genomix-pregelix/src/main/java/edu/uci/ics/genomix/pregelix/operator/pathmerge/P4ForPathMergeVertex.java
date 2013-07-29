@@ -48,7 +48,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
  * Naive Algorithm for path merge graph
  */
 public class P4ForPathMergeVertex extends
-    BasicPathMergeVertex {
+    BasicGraphCleanVertex {
     public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
     public static final String PROBBEINGRANDOMHEAD = "P4ForPathMergeVertex.probBeingRandomHead";
 
@@ -93,7 +93,6 @@ public class P4ForPathMergeVertex extends
         inFlag = (byte)0;
         // Node may be marked as head b/c it's a real head or a real tail
         headFlag = (byte) (State.IS_HEAD & getVertexValue().getState());
-        outgoingMsg.reset();
     }
 
     protected boolean isNodeRandomHead(KmerBytesWritable nodeKmer) {
@@ -211,7 +210,7 @@ public class P4ForPathMergeVertex extends
             //send message to the merge object and kill self
             broadcastMergeMsg();
         } else if (getSuperstep() % 4 == 2){
-            //merge kmer
+            //merge tmpKmer
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());

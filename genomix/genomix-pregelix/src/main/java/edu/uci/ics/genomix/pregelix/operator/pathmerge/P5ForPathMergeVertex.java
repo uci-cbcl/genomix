@@ -113,7 +113,7 @@ public class P5ForPathMergeVertex extends
      */
     protected boolean setNextInfo(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0) {
-            nextID.setAsCopy(value.getFFList().getPosition(0));
+            nextID.set(value.getFFList().getPosition(0));
             nextHead = isNodeRandomHead(nextID);
             return true;
         }
