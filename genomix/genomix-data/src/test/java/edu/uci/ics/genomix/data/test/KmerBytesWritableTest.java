@@ -15,6 +15,9 @@
 
 package edu.uci.ics.genomix.data.test;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -360,5 +363,24 @@ public class KmerBytesWritableTest {
         kmer.reset(index + 1);
         kmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
         System.out.println(kmer.toString());
+        
+        String[][] connectedTable = new String[][]{
+                {"FF", "RF"},
+                {"FF", "RR"},
+                {"FR", "RF"},
+                {"FR", "RR"}
+        };
+        System.out.println(connectedTable[0][1]);
+        
+        Set<Long> s1 = new HashSet<Long>();
+        Set<Long> s2 = new HashSet<Long>();
+        s1.add((long) 1);
+        s1.add((long) 2);
+        s2.add((long) 2);
+        s2.add((long) 3);
+        Set<Long> intersection = new HashSet<Long>();
+        intersection = s1;
+        intersection.retainAll(s2);
+        System.out.println(intersection.toString());
     }
 }
