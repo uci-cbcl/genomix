@@ -379,8 +379,12 @@ public class KmerBytesWritableTest {
         s2.add((long) 2);
         s2.add((long) 3);
         Set<Long> intersection = new HashSet<Long>();
-        intersection = s1;
+        intersection.addAll(s1);
         intersection.retainAll(s2);
         System.out.println(intersection.toString());
+        Set<Long> difference = new HashSet<Long>();
+        difference = s1;
+        difference.removeAll(s2);
+        System.out.println(difference.toString());
     }
 }

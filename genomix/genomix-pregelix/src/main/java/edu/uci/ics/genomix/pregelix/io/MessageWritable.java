@@ -120,6 +120,17 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
     }
     
+    public KmerBytesWritable getCreatedVertexId() {
+        return kmer;
+    }
+
+    public void setCreatedVertexId(KmerBytesWritable actualKmer) {
+        if (actualKmer != null) {
+            checkMessage |= CheckMessage.CHAIN;
+            this.kmer.set(actualKmer);
+        }
+    }
+    
     public AdjacencyListWritable getNeighberNode() {
         return neighberNode;
     }
@@ -165,7 +176,10 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     }
 
     public void setNodeIdList(PositionListWritable nodeIdList) {
-        this.nodeIdList.set(nodeIdList);
+        if(nodeIdList != null){
+            checkMessage |= CheckMessage.NODEIDLIST;
+            this.nodeIdList.set(nodeIdList);
+        }
     }
 
     @Override

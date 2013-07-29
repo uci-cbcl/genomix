@@ -49,10 +49,10 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 /**
  * Naive Algorithm for path merge graph
  */
-public class NaiveAlgorithmForPathMergeVertex extends
+public class P1ForPathMergeVertex extends
         Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "NaiveAlgorithmForPathMergeVertex.kmerSize";
-    public static final String ITERATIONS = "NaiveAlgorithmForPathMergeVertex.iteration";
+    public static final String KMER_SIZE = "P1ForPathMergeVertex.kmerSize";
+    public static final String ITERATIONS = "P1ForPathMergeVertex.iteration";
     public static int kmerSize = -1;
     private int maxIteration = -1;
 
@@ -251,8 +251,8 @@ public class NaiveAlgorithmForPathMergeVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(NaiveAlgorithmForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(NaiveAlgorithmForPathMergeVertex.class);
+        PregelixJob job = new PregelixJob(P1ForPathMergeVertex.class.getSimpleName());
+        job.setVertexClass(P1ForPathMergeVertex.class);
         /**
          * BinaryInput and BinaryOutput
          */

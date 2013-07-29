@@ -4,14 +4,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class SplitRepeatVertex extends 
     BasicGraphCleanVertex{
@@ -86,6 +90,7 @@ public class SplitRepeatVertex extends
             {"FR", "RF"},
             {"FR", "RR"}
     };
+    public static Set<String> existKmerString = new HashSet<String>();
     private Set<Long> readIdSet = new HashSet<Long>();
     private Set<Long> incomingReadIdSet = new HashSet<Long>();
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
@@ -94,16 +99,60 @@ public class SplitRepeatVertex extends
     private Set<Long> outgoingEdgeIntersection = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
     private Map<KmerBytesWritable, Set<Long>> kmerMap = new HashMap<KmerBytesWritable, Set<Long>>();
-    private KmerListWritable incomingEdgeList = new KmerListWritable(kmerSize);
-    private KmerListWritable outgoingEdgeList = new KmerListWritable(kmerSize);
+    private KmerListWritable incomingEdgeList = null; 
+    private KmerListWritable outgoingEdgeList = null; 
     private byte incomingEdgeDir = 0;
     private byte outgoingEdgeDir = 0;
     
+    protected KmerBytesWritable createdVertexId = null;  
     private CreatedVertex createdVertex = new CreatedVertex();
     public static Set<CreatedVertex> createdVertexSet = new HashSet<CreatedVertex>();
     
+    /**
+     * initiate kmerSize, maxIteration
+     */
+    public void initVertex() {
+        if (kmerSize == -1)
+            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+        if (maxIteration < 0)
+            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable(kmerSize);
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable(kmerSize);
+        else
+            outgoingMsg.reset(kmerSize);
+        if(incomingEdgeList == null)
+            incomingEdgeList = new KmerListWritable(kmerSize);
+        if(outgoingEdgeList == null)
+            outgoingEdgeList = new KmerListWritable(kmerSize);
+        if(createdVertexId == null)
+            createdVertexId = new KmerBytesWritable(kmerSize + 1);
+    }
+    
+    /**
+     * Generate random string from [ACGT]
+     */
+    public String generaterRandomString(int n){
+        char[] chars = "ACGT".toCharArray();
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        while(true){
+            for (int i = 0; i < n; i++) {
+                char c = chars[random.nextInt(chars.length)];
+                sb.append(c);
+            }
+            if(!existKmerString.contains(sb.toString()))
+                break;
+        }
+        existKmerString.add(sb.toString());
+        return sb.toString();
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
+        initVertex();
         if(getSuperstep() == 1){
             if(getVertexValue().getDegree() > 2){
                 outgoingMsg.setSourceVertexId(getVertexId());
@@ -167,7 +216,7 @@ public class SplitRepeatVertex extends
                         //set outgoingEdge readId intersection
                         outgoingEdgeIntersection = selfReadIdSet;
                         outgoingEdgeIntersection.retainAll(outgoingReadIdSet);
-                        outgoingEdgeIntersection.removeAll(neighborEdgeIntersection);
+                        outgoingEdgeIntersection.removeAll(neighborEdgeIntersection); 
                         //set incomingEdge readId intersection
                         incomingEdgeIntersection = selfReadIdSet;
                         incomingEdgeIntersection.retainAll(incomingReadIdSet);
@@ -175,13 +224,15 @@ public class SplitRepeatVertex extends
                         
                         if(!neighborEdgeIntersection.isEmpty()){
                             createdVertex.clear();
-                            createdVertex.setCreatedVertexId(getVertexId());
+                            createdVertexId.setByRead(generaterRandomString(kmerSize + 1).getBytes(), 0);
+                            createdVertex.setCreatedVertexId(createdVertexId);
                             createdVertex.setIncomingDir(connectedTable[i][1]);
                             createdVertex.setOutgoingDir(connectedTable[i][0]);
                             createdVertex.setIncomingEdge(incomingEdge);
                             createdVertex.setOutgoingEdge(outgoingEdge);
                             createdVertexSet.add(createdVertex);
                             
+                            outgoingMsg.setCreatedVertexId(createdVertex.getCreatedVertexId());
                             outgoingMsg.setSourceVertexId(getVertexId());
                             outgoingMsg.setFlag(incomingEdgeDir);
                             sendMsg(incomingEdge, outgoingMsg);
@@ -191,11 +242,13 @@ public class SplitRepeatVertex extends
                         
                         if(!incomingEdgeIntersection.isEmpty()){
                             createdVertex.clear();
-                            createdVertex.setCreatedVertexId(getVertexId());
+                            createdVertexId.setByRead(generaterRandomString(kmerSize + 1).getBytes(), 0);
+                            createdVertex.setCreatedVertexId(createdVertexId);
                             createdVertex.setIncomingDir(connectedTable[i][1]);
                             createdVertex.setIncomingEdge(incomingEdge);
                             createdVertexSet.add(createdVertex);
                             
+                            outgoingMsg.setCreatedVertexId(createdVertex.getCreatedVertexId());
                             outgoingMsg.setSourceVertexId(getVertexId());
                             outgoingMsg.setFlag(incomingEdgeDir);
                             sendMsg(incomingEdge, outgoingMsg);
@@ -203,11 +256,13 @@ public class SplitRepeatVertex extends
                         
                         if(!outgoingEdgeIntersection.isEmpty()){
                             createdVertex.clear();
-                            createdVertex.setCreatedVertexId(getVertexId());
+                            createdVertexId.setByRead(generaterRandomString(kmerSize + 1).getBytes(), 0);
+                            createdVertex.setCreatedVertexId(createdVertexId);
                             createdVertex.setOutgoingDir(connectedTable[i][0]);
                             createdVertex.setOutgoingEdge(outgoingEdge);
                             createdVertexSet.add(createdVertex);
                             
+                            outgoingMsg.setCreatedVertexId(createdVertex.getCreatedVertexId());
                             outgoingMsg.setSourceVertexId(getVertexId());
                             outgoingMsg.setFlag(outgoingEdgeDir);
                             sendMsg(outgoingEdge, outgoingMsg);
@@ -216,7 +271,53 @@ public class SplitRepeatVertex extends
                 }
             }
         } else if(getSuperstep() == 4){
-            
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                /** update edgelist to new/created vertex **/
+                switch(incomingMsg.getFlag()){
+                    case MessageFlag.DIR_FF:
+                        getVertexValue().getFFList().remove(incomingMsg.getSourceVertexId());
+                        getVertexValue().getFFList().append(incomingMsg.getCreatedVertexId());
+                        break;
+                    case MessageFlag.DIR_FR:
+                        getVertexValue().getFRList().remove(incomingMsg.getSourceVertexId());
+                        getVertexValue().getFRList().append(incomingMsg.getCreatedVertexId());
+                        break;
+                    case MessageFlag.DIR_RF:
+                        getVertexValue().getRFList().remove(incomingMsg.getSourceVertexId());
+                        getVertexValue().getRFList().append(incomingMsg.getCreatedVertexId());
+                        break;
+                    case MessageFlag.DIR_RR:
+                        getVertexValue().getRRList().remove(incomingMsg.getSourceVertexId());
+                        getVertexValue().getRRList().append(incomingMsg.getCreatedVertexId());
+                        break;
+                }
+                /** add new/created vertex **/
+                for(CreatedVertex v : createdVertexSet){
+                    Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+                    vertex.getMsgList().clear();
+                    vertex.getEdges().clear();
+                    VertexValueWritable vertexValue = new VertexValueWritable();
+                    switch(v.incomingDir){
+                        case "RF":
+                            vertexValue.getRFList().append(v.incomingEdge);
+                            break;
+                        case "RR":
+                            vertexValue.getRRList().append(v.incomingEdge);
+                            break;
+                    }
+                    switch(v.outgoingDir){
+                        case "FF":
+                            vertexValue.getFFList().append(v.outgoingEdge);
+                            break;
+                        case "FR":
+                            vertexValue.getFRList().append(v.outgoingEdge);
+                            break;
+                    }
+                    vertex.setVertexId(v.getCreatedVertexId());
+                    vertex.setVertexValue(vertexValue);
+                }
+            }
         }
     }
 }
