@@ -383,7 +383,7 @@ public class KmerBytesWritableTest {
         intersection.retainAll(s2);
         System.out.println(intersection.toString());
         Set<Long> difference = new HashSet<Long>();
-        difference = s1;
+        difference.addAll(s1);
         difference.removeAll(s2);
         System.out.println(difference.toString());
     }

@@ -103,6 +103,16 @@ public class KmerListWritableTest {
         }
         
         Assert.assertEquals(0, kmerList.getCountOfPosition());
+        
+        KmerListWritable edgeList = new KmerListWritable(3);
+        KmerBytesWritable k = new KmerBytesWritable(3);
+        k.setByRead(("AAA").getBytes(), 0);
+        edgeList.append(k);
+        k.setByRead(("CCC").getBytes(), 0);
+        edgeList.append(k);
+        for(KmerBytesWritable edge : edgeList){
+        	System.out.println(edge.toString());
+        }
     }
     
     public String generaterRandomString(int n){

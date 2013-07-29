@@ -40,8 +40,8 @@ import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
-public class SplitRepeatmallTestSuite extends TestSuite {
-    private static final Logger LOGGER = Logger.getLogger(SplitRepeatmallTestSuite.class.getName());
+public class SplitRepeatSmallTestSuite extends TestSuite {
+    private static final Logger LOGGER = Logger.getLogger(SplitRepeatSmallTestSuite.class.getName());
     //P4ForMergeGraph/bin/read
     public static final String PreFix = "data/SplitRepeat"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
@@ -123,7 +123,7 @@ public class SplitRepeatmallTestSuite extends TestSuite {
         List<String> onlys = getFileList(PATH_TO_ONLY);
         File testData = new File(PATH_TO_JOBS);
         File[] queries = testData.listFiles();
-        SplitRepeatmallTestSuite testSuite = new SplitRepeatmallTestSuite();
+        SplitRepeatSmallTestSuite testSuite = new SplitRepeatSmallTestSuite();
         testSuite.setUp();
         boolean onlyEnabled = false;
         FileSystem dfs = FileSystem.get(testSuite.conf);

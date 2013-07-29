@@ -91,7 +91,7 @@ public class SplitRepeatVertex extends
             {"FR", "RR"}
     };
     public static Set<String> existKmerString = new HashSet<String>();
-    private Set<Long> readIdSet = new HashSet<Long>();
+    private Set<Long> readIdSet;
     private Set<Long> incomingReadIdSet = new HashSet<Long>();
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
     private Set<Long> selfReadIdSet = new HashSet<Long>();
@@ -172,7 +172,7 @@ public class SplitRepeatVertex extends
             createdVertexSet.clear();
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
-                readIdSet.clear();
+                readIdSet = new HashSet<Long>();
                 for(PositionWritable nodeId : incomingMsg.getNodeIdList()){
                     readIdSet.add(nodeId.getReadId());
                 }
@@ -210,15 +210,15 @@ public class SplitRepeatVertex extends
                         incomingReadIdSet = kmerMap.get(incomingEdge);
                         
                         //set all neighberEdge readId intersection
-                        neighborEdgeIntersection = selfReadIdSet;
+                        neighborEdgeIntersection.addAll(selfReadIdSet);
                         neighborEdgeIntersection.retainAll(outgoingReadIdSet);
                         neighborEdgeIntersection.retainAll(incomingReadIdSet);
                         //set outgoingEdge readId intersection
-                        outgoingEdgeIntersection = selfReadIdSet;
+                        outgoingEdgeIntersection.addAll(selfReadIdSet);
                         outgoingEdgeIntersection.retainAll(outgoingReadIdSet);
                         outgoingEdgeIntersection.removeAll(neighborEdgeIntersection); 
                         //set incomingEdge readId intersection
-                        incomingEdgeIntersection = selfReadIdSet;
+                        incomingEdgeIntersection.addAll(selfReadIdSet);
                         incomingEdgeIntersection.retainAll(incomingReadIdSet);
                         incomingEdgeIntersection.removeAll(neighborEdgeIntersection);
                         
@@ -274,7 +274,9 @@ public class SplitRepeatVertex extends
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
                 /** update edgelist to new/created vertex **/
-                switch(incomingMsg.getFlag()){
+                byte meToNeighborDir = incomingMsg.getFlag();
+                byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+                switch(neighborToMeDir){
                     case MessageFlag.DIR_FF:
                         getVertexValue().getFFList().remove(incomingMsg.getSourceVertexId());
                         getVertexValue().getFFList().append(incomingMsg.getCreatedVertexId());
@@ -317,6 +319,7 @@ public class SplitRepeatVertex extends
                     vertex.setVertexId(v.getCreatedVertexId());
                     vertex.setVertexValue(vertexValue);
                 }
+                createdVertexSet.clear();
             }
         }
     }
