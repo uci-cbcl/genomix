@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -99,6 +100,8 @@ public class SplitRepeatVertex extends
     private Set<Long> outgoingEdgeIntersection = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
     private Map<KmerBytesWritable, Set<Long>> kmerMap = new HashMap<KmerBytesWritable, Set<Long>>();
+    private KmerBytesWritable incomingEdge = null;
+    private KmerBytesWritable outgoingEdge = null;
     private KmerListWritable incomingEdgeList = null; 
     private KmerListWritable outgoingEdgeList = null; 
     private byte incomingEdgeDir = 0;
@@ -128,6 +131,10 @@ public class SplitRepeatVertex extends
             outgoingEdgeList = new KmerListWritable(kmerSize);
         if(createdVertexId == null)
             createdVertexId = new KmerBytesWritable(kmerSize + 1);
+        if(incomingEdge == null)
+            incomingEdge = new KmerBytesWritable(kmerSize);
+        if(outgoingEdge == null)
+            outgoingEdge = new KmerBytesWritable(kmerSize);
     }
     
     /**
@@ -203,26 +210,28 @@ public class SplitRepeatVertex extends
                 selfReadIdSet.clear();
                 for(PositionWritable nodeId : getVertexValue().getNodeIdList()){
                     selfReadIdSet.add(nodeId.getReadId());
-                }
-                for(KmerBytesWritable outgoingEdge : outgoingEdgeList){
-                    for(KmerBytesWritable incomingEdge : incomingEdgeList){
-                        outgoingReadIdSet.clear();
+                }     
+                for(KmerBytesWritable incomingEdge : incomingEdgeList){
+                    for(KmerBytesWritable outgoingEdge : outgoingEdgeList){
+                        outgoingReadIdSet.clear(); 
                         incomingReadIdSet.clear();
-                        outgoingReadIdSet.addAll(kmerMap.get(outgoingEdge));
-                        incomingReadIdSet.addAll(kmerMap.get(incomingEdge));
+                        tmpKmer.set(incomingEdge);
+                        incomingReadIdSet.addAll(kmerMap.get(tmpKmer));
+                        tmpKmer.set(outgoingEdge);
+                        outgoingReadIdSet.addAll(kmerMap.get(tmpKmer));
                         
                         //set all neighberEdge readId intersection
                         neighborEdgeIntersection.addAll(selfReadIdSet);
-                        neighborEdgeIntersection.retainAll(outgoingReadIdSet);
                         neighborEdgeIntersection.retainAll(incomingReadIdSet);
-                        //set outgoingEdge readId intersection
-                        outgoingEdgeIntersection.addAll(selfReadIdSet);
-                        outgoingEdgeIntersection.retainAll(outgoingReadIdSet);
-                        outgoingEdgeIntersection.removeAll(neighborEdgeIntersection); 
-                        //set incomingEdge readId intersection
-                        incomingEdgeIntersection.addAll(selfReadIdSet);
-                        incomingEdgeIntersection.retainAll(incomingReadIdSet);
-                        incomingEdgeIntersection.removeAll(neighborEdgeIntersection);
+                        neighborEdgeIntersection.retainAll(outgoingReadIdSet);
+//                        //set outgoingEdge readId intersection
+//                        outgoingEdgeIntersection.addAll(selfReadIdSet);
+//                        outgoingEdgeIntersection.retainAll(outgoingReadIdSet);
+//                        outgoingEdgeIntersection.removeAll(neighborEdgeIntersection); 
+//                        //set incomingEdge readId intersection
+//                        incomingEdgeIntersection.addAll(selfReadIdSet);
+//                        incomingEdgeIntersection.retainAll(incomingReadIdSet);
+//                        incomingEdgeIntersection.removeAll(neighborEdgeIntersection);
                         
                         if(!neighborEdgeIntersection.isEmpty()){
                             createdVertex.clear();
@@ -241,34 +250,33 @@ public class SplitRepeatVertex extends
                             outgoingMsg.setFlag(outgoingEdgeDir);
                             sendMsg(outgoingEdge, outgoingMsg);
                         }
-                        
-                        if(!incomingEdgeIntersection.isEmpty()){
-                            createdVertex.clear();
-                            createdVertexId.setByRead(generaterRandomString(kmerSize + 1).getBytes(), 0);
-                            createdVertex.setCreatedVertexId(createdVertexId);
-                            createdVertex.setIncomingDir(connectedTable[i][1]);
-                            createdVertex.setIncomingEdge(incomingEdge);
-                            createdVertexSet.add(createdVertex);
-                            
-                            outgoingMsg.setCreatedVertexId(createdVertex.getCreatedVertexId());
-                            outgoingMsg.setSourceVertexId(getVertexId());
-                            outgoingMsg.setFlag(incomingEdgeDir);
-                            sendMsg(incomingEdge, outgoingMsg);
-                        }
-                        
-                        if(!outgoingEdgeIntersection.isEmpty()){
-                            createdVertex.clear();
-                            createdVertexId.setByRead(generaterRandomString(kmerSize + 1).getBytes(), 0);
-                            createdVertex.setCreatedVertexId(createdVertexId);
-                            createdVertex.setOutgoingDir(connectedTable[i][0]);
-                            createdVertex.setOutgoingEdge(outgoingEdge);
-                            createdVertexSet.add(createdVertex);
-                            
-                            outgoingMsg.setCreatedVertexId(createdVertex.getCreatedVertexId());
-                            outgoingMsg.setSourceVertexId(getVertexId());
-                            outgoingMsg.setFlag(outgoingEdgeDir);
-                            sendMsg(outgoingEdge, outgoingMsg);
-                        }
+//                        if(!incomingEdgeIntersection.isEmpty()){
+//                            createdVertex.clear();
+//                            createdVertexId.setByRead(generaterRandomString(kmerSize + 1).getBytes(), 0);
+//                            createdVertex.setCreatedVertexId(createdVertexId);
+//                            createdVertex.setIncomingDir(connectedTable[i][1]);
+//                            createdVertex.setIncomingEdge(incomingEdge);
+//                            createdVertexSet.add(createdVertex);
+//                            
+//                            outgoingMsg.setCreatedVertexId(createdVertex.getCreatedVertexId());
+//                            outgoingMsg.setSourceVertexId(getVertexId());
+//                            outgoingMsg.setFlag(incomingEdgeDir);
+//                            sendMsg(incomingEdge, outgoingMsg);
+//                        }
+//                        
+//                        if(!outgoingEdgeIntersection.isEmpty()){
+//                            createdVertex.clear();
+//                            createdVertexId.setByRead(generaterRandomString(kmerSize + 1).getBytes(), 0);
+//                            createdVertex.setCreatedVertexId(createdVertexId);
+//                            createdVertex.setOutgoingDir(connectedTable[i][0]);
+//                            createdVertex.setOutgoingEdge(outgoingEdge);
+//                            createdVertexSet.add(createdVertex);
+//                            
+//                            outgoingMsg.setCreatedVertexId(createdVertex.getCreatedVertexId());
+//                            outgoingMsg.setSourceVertexId(getVertexId());
+//                            outgoingMsg.setFlag(outgoingEdgeDir);
+//                            sendMsg(outgoingEdge, outgoingMsg);
+//                        }
                     }
                 }
             }

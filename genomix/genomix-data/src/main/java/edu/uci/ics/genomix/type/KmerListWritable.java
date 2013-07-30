@@ -7,12 +7,14 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.KmerUtil;
 import edu.uci.ics.genomix.data.Marshal;
 
-public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable{
+public class KmerListWritable extends BinaryComparable
+    implements Writable, Iterable<KmerBytesWritable>, Serializable{
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
@@ -212,6 +214,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         return valueCount * kmerByteSize;
     }
     
+    
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
@@ -231,5 +234,11 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     @Override
     public int hashCode() {
         return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
+    }
+
+    @Override
+    public byte[] getBytes() {
+        
+        return null;
     }
 }

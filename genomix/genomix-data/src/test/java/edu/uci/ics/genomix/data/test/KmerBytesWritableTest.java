@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerListWritable;
 
 public class KmerBytesWritableTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
@@ -403,16 +404,26 @@ public class KmerBytesWritableTest {
         KmerBytesWritable k3 = new KmerBytesWritable(3);
         k3.setByRead(("ATG").getBytes(), 0);
         Set<Long> set3 = new HashSet<Long>();
-        set3.add((long) 3);
+        set3.add((long) 2);
         map.put(k3, set3);
         KmerBytesWritable k4 = new KmerBytesWritable(3);
         k4.setByRead(("AAT").getBytes(), 0);
         Set<Long> set4 = new HashSet<Long>();
-        set4.add((long) 4);
+        set4.add((long) 1);
         map.put(k4, set4);
+        KmerListWritable kmerList = new KmerListWritable(3);
+        kmerList.append(k1);
+        kmerList.append(k2);
         System.out.println("CTA = " + map.get(k1).toString());
         System.out.println("GTA = " + map.get(k2).toString());
         System.out.println("ATG = " + map.get(k3).toString());
         System.out.println("AAT = " + map.get(k4).toString());
+        System.out.println(k1.compareTo(k2));
+        System.out.println(k2.compareTo(k1));
+        
+        System.out.println("CTA = " + kmerList.getPosition(0).toString());
+        System.out.println("GTA = " + kmerList.getPosition(1).toString());
+        System.out.println("CTA = " + map.get(kmerList.getPosition(0)).toString());
+        System.out.println("GTA = " + map.get(kmerList.getPosition(1)).toString());
     }
 }
