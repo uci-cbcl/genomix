@@ -8,13 +8,13 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class KmerListWritableTest {
 
     @Test
     public void TestInitial() {
-        KmerListWritable kmerList = new KmerListWritable();
+        VKmerListWritable kmerList = new VKmerListWritable();
         Assert.assertEquals(kmerList.getCountOfPosition(), 0);
         
         //one kmer in list and reset each time
@@ -47,7 +47,7 @@ public class KmerListWritableTest {
         byte [] another = new byte [kmerList.getLength()*2];
         int start = 20;
         System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start, kmerList.getLength());
-        KmerListWritable plist2 = new KmerListWritable(another, start);
+        VKmerListWritable plist2 = new VKmerListWritable(another, start);
         for(int i = 0; i < plist2.getCountOfPosition(); i++){
             Assert.assertEquals(kmerList.getPosition(i).toString(), plist2.getPosition(i).toString());
         }
@@ -55,7 +55,7 @@ public class KmerListWritableTest {
     
     @Test
     public void TestRemove() {
-        KmerListWritable kmerList = new KmerListWritable();
+        VKmerListWritable kmerList = new VKmerListWritable();
         Assert.assertEquals(kmerList.getCountOfPosition(), 0);
         
         int i;
@@ -74,7 +74,7 @@ public class KmerListWritableTest {
         //delete one element each time
         KmerBytesWritable tmpKmer = new KmerBytesWritable();
         i = 0;
-        KmerListWritable copyList = new KmerListWritable();
+        VKmerListWritable copyList = new VKmerListWritable();
         copyList.setCopy(kmerList);
         Iterator<KmerBytesWritable> iterator;
         for(int j = 0; j < 5; j++){
@@ -108,7 +108,7 @@ public class KmerListWritableTest {
         Assert.assertEquals(0, kmerList.getCountOfPosition());
         
         KmerBytesWritable.setGlobalKmerLength(3);
-        KmerListWritable edgeList = new KmerListWritable();
+        VKmerListWritable edgeList = new VKmerListWritable();
         KmerBytesWritable k = new KmerBytesWritable();
         k.setByRead(("AAA").getBytes(), 0);
         edgeList.append(k);

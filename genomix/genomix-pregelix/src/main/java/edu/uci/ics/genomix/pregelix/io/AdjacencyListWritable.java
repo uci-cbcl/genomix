@@ -7,20 +7,20 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.oldtype.PositionListWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class AdjacencyListWritable implements WritableComparable<AdjacencyListWritable>{
-    private KmerListWritable forwardList;
-    private KmerListWritable reverseList;
+    private VKmerListWritable forwardList;
+    private VKmerListWritable reverseList;
     
     public AdjacencyListWritable(){
-        forwardList = new KmerListWritable();
-        reverseList = new KmerListWritable();
+        forwardList = new VKmerListWritable();
+        reverseList = new VKmerListWritable();
     }
     
     public AdjacencyListWritable(int kmerSize){
-        forwardList = new KmerListWritable();
-        reverseList = new KmerListWritable();
+        forwardList = new VKmerListWritable();
+        reverseList = new VKmerListWritable();
     }
 
     public void set(AdjacencyListWritable adjacencyList){
@@ -42,19 +42,19 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     	return forwardList.getCountOfPosition() + reverseList.getCountOfPosition();
     }
 
-    public KmerListWritable getForwardList() {
+    public VKmerListWritable getForwardList() {
         return forwardList;
     }
 
-    public void setForwardList(KmerListWritable forwardList) {
+    public void setForwardList(VKmerListWritable forwardList) {
         this.forwardList = forwardList;
     }
 
-    public KmerListWritable getReverseList() {
+    public VKmerListWritable getReverseList() {
         return reverseList;
     }
 
-    public void setReverseList(KmerListWritable reverseList) {
+    public void setReverseList(VKmerListWritable reverseList) {
         this.reverseList = reverseList;
     }
 

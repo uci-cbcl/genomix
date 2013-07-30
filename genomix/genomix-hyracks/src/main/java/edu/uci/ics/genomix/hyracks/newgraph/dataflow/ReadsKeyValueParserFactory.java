@@ -25,7 +25,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -76,8 +76,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             
             private PositionWritable nodeId = new PositionWritable();
             private PositionListWritable nodeIdList = new PositionListWritable();
-            private KmerListWritable edgeListForPreKmer = new KmerListWritable();
-            private KmerListWritable edgeListForNextKmer = new KmerListWritable();
+            private VKmerListWritable edgeListForPreKmer = new VKmerListWritable();
+            private VKmerListWritable edgeListForNextKmer = new VKmerListWritable();
             private NodeWritable outputNode = new NodeWritable();
 //            private NodeWritable outputNode2 = new NodeWritable();
 

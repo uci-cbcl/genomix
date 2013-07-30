@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.data.Marshal;
 /**
  * A list of fixed-length kmers. The length of this list is stored internally.
  */
-public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable {
+public class VKmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable {
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 };
     protected static final int HEADER_SIZE = 4;
@@ -27,18 +27,18 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
 
     private KmerBytesWritable posIter = new KmerBytesWritable();
 
-    public KmerListWritable() {
+    public VKmerListWritable() {
         storage = EMPTY_BYTES;
         valueCount = 0;
         offset = 0;
         storageMaxSize = storage.length; 
     }
 
-    public KmerListWritable(byte[] data, int offset) {
+    public VKmerListWritable(byte[] data, int offset) {
         setNewReference(data, offset);
     }
 
-    public KmerListWritable(List<KmerBytesWritable> kmers) {
+    public VKmerListWritable(List<KmerBytesWritable> kmers) {
         this();
         setSize(kmers.size() * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE); // reserve space for all elements
         for (KmerBytesWritable kmer : kmers) {
@@ -69,7 +69,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     /*
      * Append the otherList to the end of myList
      */
-    public void appendList(KmerListWritable otherList) {
+    public void appendList(VKmerListWritable otherList) {
         if (otherList.valueCount > 0) {
             setSize((valueCount + otherList.valueCount) * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
             // copy contents of otherList into the end of my storage
@@ -85,7 +85,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
      * Save the union of my list and otherList. Uses a temporary HashSet for
      * uniquefication
      */
-    public void unionUpdate(KmerListWritable otherList) {
+    public void unionUpdate(VKmerListWritable otherList) {
         int newSize = valueCount + otherList.valueCount;
         HashSet<KmerBytesWritable> uniqueElements = new HashSet<KmerBytesWritable>(newSize);
         for (KmerBytesWritable kmer : this) {
@@ -136,7 +136,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         return posIter;
     }
 
-    public void setCopy(KmerListWritable otherList) {
+    public void setCopy(VKmerListWritable otherList) {
         setCopy(otherList.storage, otherList.offset);
     }
 

@@ -17,10 +17,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
     
     private PositionListWritable nodeIdList;
-    private KmerListWritable forwardForwardList;
-    private KmerListWritable forwardReverseList;
-    private KmerListWritable reverseForwardList;
-    private KmerListWritable reverseReverseList;
+    private VKmerListWritable forwardForwardList;
+    private VKmerListWritable forwardReverseList;
+    private VKmerListWritable reverseForwardList;
+    private VKmerListWritable reverseReverseList;
     private VKmerBytesWritable kmer;
     
     // merge/update directions
@@ -34,15 +34,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     
     public NodeWritable() {
         nodeIdList = new PositionListWritable();
-        forwardForwardList = new KmerListWritable();
-        forwardReverseList = new KmerListWritable();
-        reverseForwardList = new KmerListWritable();
-        reverseReverseList = new KmerListWritable();
+        forwardForwardList = new VKmerListWritable();
+        forwardReverseList = new VKmerListWritable();
+        reverseForwardList = new VKmerListWritable();
+        reverseReverseList = new VKmerListWritable();
         kmer = new VKmerBytesWritable();  // in graph construction - not set kmerlength Optimization: VKmer
     }
     
-    public NodeWritable(PositionListWritable nodeIdList, KmerListWritable FFList, KmerListWritable FRList,
-            KmerListWritable RFList, KmerListWritable RRList, VKmerBytesWritable kmer) {
+    public NodeWritable(PositionListWritable nodeIdList, VKmerListWritable FFList, VKmerListWritable FRList,
+            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer) {
         this();
         set(nodeIdList, FFList, FRList, RFList, RRList, kmer);
     }
@@ -52,8 +52,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 node.reverseReverseList, node.kmer);
     }
     
-    public void set(PositionListWritable nodeIdList, KmerListWritable FFList, KmerListWritable FRList,
-            KmerListWritable RFList, KmerListWritable RRList, VKmerBytesWritable kmer2) {
+    public void set(PositionListWritable nodeIdList, VKmerListWritable FFList, VKmerListWritable FRList,
+            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer2) {
         this.nodeIdList.set(nodeIdList);
         this.forwardForwardList.setCopy(FFList);
         this.forwardReverseList.setCopy(FRList);
@@ -92,39 +92,39 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return kmer.getKmerLetterLength();
     }
     
-    public KmerListWritable getFFList() {
+    public VKmerListWritable getFFList() {
         return forwardForwardList;
     }
 
-    public KmerListWritable getFRList() {
+    public VKmerListWritable getFRList() {
         return forwardReverseList;
     }
 
-    public KmerListWritable getRFList() {
+    public VKmerListWritable getRFList() {
         return reverseForwardList;
     }
 
-    public KmerListWritable getRRList() {
+    public VKmerListWritable getRRList() {
         return reverseReverseList;
     }
     
-	public void setFFList(KmerListWritable forwardForwardList) {
+	public void setFFList(VKmerListWritable forwardForwardList) {
 		this.forwardForwardList.setCopy(forwardForwardList);
 	}
 
-	public void setFRList(KmerListWritable forwardReverseList) {
+	public void setFRList(VKmerListWritable forwardReverseList) {
 		this.forwardReverseList.setCopy(forwardReverseList);
 	}
 
-	public void setRFList(KmerListWritable reverseForwardList) {
+	public void setRFList(VKmerListWritable reverseForwardList) {
 		this.reverseForwardList.setCopy(reverseForwardList);
 	}
 
-	public void setRRList(KmerListWritable reverseReverseList) {
+	public void setRRList(VKmerListWritable reverseReverseList) {
 		this.reverseReverseList.setCopy(reverseReverseList);
 	}
 
-	public KmerListWritable getListFromDir(byte dir) {
+	public VKmerListWritable getListFromDir(byte dir) {
         switch (dir & DirectionFlag.DIR_MASK) {
             case DirectionFlag.DIR_FF:
                 return getFFList();
