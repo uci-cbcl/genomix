@@ -51,7 +51,7 @@ public class MapReduceVertex extends
             kmerList.reset();
         if(fakeVertex == null){
 //            fakeVertex = new KmerBytesWritable(kmerSize + 1); // TODO check if merge is correct
-            fakeVertex = new KmerBytesWritable();
+            fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(random.getBytes(), 0); 
         }
@@ -187,7 +187,7 @@ public class MapReduceVertex extends
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

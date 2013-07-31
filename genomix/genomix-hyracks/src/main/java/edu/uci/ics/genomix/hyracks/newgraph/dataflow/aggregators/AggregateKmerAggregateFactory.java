@@ -48,6 +48,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
         return new IAggregatorDescriptor() {
             
             private NodeWritable readNode = new NodeWritable();
+//            private KmerBytesWritable readKeyKmer = new KmerBytesWritable();
             
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -75,13 +76,14 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                     AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 localUniNode.reset();
+//                readKeyKmer.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 localUniNode.getFFList().appendList(readNode.getFFList());
                 localUniNode.getFRList().appendList(readNode.getFRList());
                 localUniNode.getRFList().appendList(readNode.getRFList());
                 localUniNode.getRRList().appendList(readNode.getRRList());
-
+                
                 // make an empty field
                 tupleBuilder.addFieldEndOffset();// mark question?
             }

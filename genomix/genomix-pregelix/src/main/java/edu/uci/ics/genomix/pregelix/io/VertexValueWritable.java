@@ -313,7 +313,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
      */
     public void processMerges(byte neighborToDeleteDir, KmerBytesWritable nodeToDelete,
             byte neighborToMergeDir, KmerBytesWritable nodeToAdd, 
-            int kmerSize, KmerBytesWritable kmer){
+            int kmerSize, VKmerBytesWritable kmer){
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
                 this.getFFList().remove(nodeToDelete); //set(null);

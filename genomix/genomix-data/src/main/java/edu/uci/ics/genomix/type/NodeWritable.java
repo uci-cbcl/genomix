@@ -71,7 +71,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.kmer.reset(0);
     }
     
-    
     public PositionListWritable getNodeIdList() {
         return nodeIdList;
     }

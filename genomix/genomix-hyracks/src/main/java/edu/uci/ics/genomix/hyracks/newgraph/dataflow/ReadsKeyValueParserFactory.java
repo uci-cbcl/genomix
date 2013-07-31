@@ -135,8 +135,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 writeToFrame(writer);
 
                 /*middle kmer*/
-                int i = kmerSize;
-                for (; i < array.length - 1; i++) {
+                int i = kmerSize + 1;
+                for (; i < array.length; i++) {
                     outputNode.reset();
                     setPreKmerByOldCurKmer();
                     setCurKmerByOldNextKmer();

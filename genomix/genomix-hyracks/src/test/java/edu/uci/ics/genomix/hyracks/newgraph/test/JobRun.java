@@ -32,7 +32,7 @@ import edu.uci.ics.genomix.hyracks.test.TestUtils;
 @SuppressWarnings("deprecation")
 public class JobRun {
     private static final int KmerSize = 5;
-    private static final int ReadLength = 6;
+    private static final int ReadLength = 7;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
@@ -52,8 +52,8 @@ public class JobRun {
     
     @Test
     public void TestAll() throws Exception {
-        TestReader();
-//        TestGroupby();
+//        TestReader();
+        TestGroupby();
     }
     
     public void TestReader() throws Exception {
@@ -68,7 +68,7 @@ public class JobRun {
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
-//        dumpResult();
+        dumpResult();
     }
     
     @Before

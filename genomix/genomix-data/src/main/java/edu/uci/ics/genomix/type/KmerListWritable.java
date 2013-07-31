@@ -59,7 +59,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
 
     public void append(KmerBytesWritable kmer) {
         setSize((1 + valueCount) * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
-        System.arraycopy(kmer.getBytes(), 0, storage,
+        System.arraycopy(kmer.getBytes(), kmer.offset, storage,
                 offset + HEADER_SIZE + valueCount * KmerBytesWritable.getBytesPerKmer(),
                 KmerBytesWritable.getBytesPerKmer());
         valueCount += 1;
@@ -96,7 +96,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
         }
         valueCount = 0;
         setSize(newSize * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE);
-        for (KmerBytesWritable kmer : uniqueElements) {
+        for (KmerBytesWritable kmer : uniqueElements) { // this point is not efficient
             append(kmer);
         }
         Marshal.putInt(valueCount, storage, offset);
@@ -126,6 +126,7 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
 
     public void reset() {
         valueCount = 0;
+        Marshal.putInt(valueCount, storage, offset);
     }
 
     public KmerBytesWritable getPosition(int i) {

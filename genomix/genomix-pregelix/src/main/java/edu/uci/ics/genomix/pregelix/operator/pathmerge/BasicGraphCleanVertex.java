@@ -95,7 +95,7 @@ public class BasicGraphCleanVertex extends
     /**
      * get destination vertex
      */
-    public KmerBytesWritable getNextDestVertexIdAndSetFlag(VertexValueWritable value) {
+    public VKmerBytesWritable getNextDestVertexIdAndSetFlag(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
             posIterator = value.getFFList().iterator();
             outFlag &= MessageFlag.DIR_CLEAR;
@@ -112,7 +112,7 @@ public class BasicGraphCleanVertex extends
         
     }
 
-    public KmerBytesWritable getPreDestVertexIdAndSetFlag(VertexValueWritable value) {
+    public VKmerBytesWritable getPreDestVertexIdAndSetFlag(VertexValueWritable value) {
         if (value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
             posIterator = value.getRFList().iterator();
             outFlag &= MessageFlag.DIR_CLEAR;
