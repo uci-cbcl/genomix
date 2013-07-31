@@ -128,22 +128,22 @@ public class JobGenerator {
     private static void genSplitRepeatGraph() throws IOException {
         generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
     }
-//    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(TipAddVertex.class);
-//        job.setVertexInputFormatClass(GraphCleanOutputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(TipAddVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genTipAddGraph() throws IOException {
-//        generateTipAddGraphJob("TipAddGraph", outputBase
-//                + "TipAddGraph.xml");
-//    }
+    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TipAddVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(TipAddVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genTipAddGraph() throws IOException {
+        generateTipAddGraphJob("TipAddGraph", outputBase
+                + "TipAddGraph.xml");
+    }
 //    
 //    private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(jobName);
@@ -243,6 +243,7 @@ public class JobGenerator {
 //        genP4ForMergeGraph();
 //        genMapReduceGraph();
         genSplitRepeatGraph();
+        genTipAddGraph();
     }
 
 }
