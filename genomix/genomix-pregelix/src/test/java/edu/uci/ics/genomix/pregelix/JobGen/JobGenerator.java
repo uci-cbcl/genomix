@@ -178,23 +178,23 @@ public class JobGenerator {
         generateBridgeAddGraphJob("BridgeAddGraph", outputBase
                 + "BridgeAddGraph.xml");
     }
-//
-//    private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(BridgeRemoveVertex.class);
-//        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 5);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genBridgeRemoveGraph() throws IOException {
-//        generateBridgeRemoveGraphJob("BridgeRemoveGraph", outputBase
-//                + "BridgeRemoveGraph.xml");
-//    }
+
+    private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(BridgeRemoveVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBridgeRemoveGraph() throws IOException {
+        generateBridgeRemoveGraphJob("BridgeRemoveGraph", outputBase
+                + "BridgeRemoveGraph.xml");
+    }
 //    
 //    private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(jobName);
@@ -246,6 +246,7 @@ public class JobGenerator {
         genTipAddGraph();
         genBridgeAddGraph();
         genTipRemoveGraph();
+        genBridgeRemoveGraph();
     }
 
 }

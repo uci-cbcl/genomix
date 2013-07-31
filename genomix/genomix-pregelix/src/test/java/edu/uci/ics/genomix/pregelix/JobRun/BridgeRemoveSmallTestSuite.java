@@ -43,9 +43,9 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class BridgeRemoveSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(BridgeRemoveSmallTestSuite.class.getName());
 
-    public static final String PreFix = "data/actual"; //"graphbuildresult";
+    public static final String PreFix = "data/actual/bridgeadd/BridgeAddGraph/bin"; 
     public static final String[] TestDir = { PreFix + File.separator
-    + "pathmerge/P4ForMergeGraph/bin/tworeads"};
+    + "SimpleTest"};
     private static final String ACTUAL_RESULT_DIR = "data/actual/bridgeremove";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

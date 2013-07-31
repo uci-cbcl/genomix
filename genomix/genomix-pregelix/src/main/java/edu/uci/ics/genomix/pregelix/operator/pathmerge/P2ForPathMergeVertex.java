@@ -266,7 +266,7 @@ public class P2ForPathMergeVertex extends
                 mapKeyByActualKmer(msgIterator);
                 /** Reducer **/
                 reduceKeyByActualKmer();
-                 voteToHalt();
+                voteToHalt();
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
