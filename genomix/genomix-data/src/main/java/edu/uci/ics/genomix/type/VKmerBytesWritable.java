@@ -133,6 +133,12 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.kmerStartOffset, bytesUsed);
     }
 
+    public void setAsCopy(int k, byte[] newData, int offset) {
+//        int k = Marshal.getInt(newData, offset);
+        reset(k);
+        System.arraycopy(newData, offset, bytes, this.kmerStartOffset, bytesUsed);
+    }
+    
     /**
      * Point this datablock to the given bytes array It works like the pointer
      * to new datablock.

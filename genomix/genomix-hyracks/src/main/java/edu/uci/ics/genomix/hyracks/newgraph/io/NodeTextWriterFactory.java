@@ -17,7 +17,7 @@ package edu.uci.ics.genomix.hyracks.newgraph.io;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.assembleKeyIntoNodeOperator;
+import edu.uci.ics.genomix.hyracks.newgraph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -33,7 +33,7 @@ public class NodeTextWriterFactory implements ITupleWriterFactory {
      */
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
-    public static final int OutputNodeField = assembleKeyIntoNodeOperator.OutputNodeField;
+    public static final int OutputNodeField = AssembleKeyIntoNodeOperator.OutputNodeField;
     
     public NodeTextWriterFactory(int k) {
         this.kmerSize = k;

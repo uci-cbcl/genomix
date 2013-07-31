@@ -20,8 +20,11 @@ import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -70,6 +73,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 localUniNode.reset();
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().unionUpdate(readNode.getNodeIdList());
+//                VKmerBytesWritable a = new VKmerBytesWritable();
+ //               a.setAsCopy(readNode.getFFList().getPosition(0));
+  //              int kRequested = Marshal.getInt(readNode.getFFList().getByteArray(), readNode.getFFList().getStartOffset() + 4);
                 localUniNode.getFFList().unionUpdate(readNode.getFFList());
                 localUniNode.getFRList().unionUpdate(readNode.getFRList());
                 localUniNode.getRFList().unionUpdate(readNode.getRFList());

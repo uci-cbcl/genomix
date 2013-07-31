@@ -29,7 +29,7 @@ import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.assembleKeyIntoNodeOperator;
+import edu.uci.ics.genomix.hyracks.newgraph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.AggregateKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.io.NodeTextWriterFactory;
@@ -185,8 +185,8 @@ public class JobGenBrujinGraph extends JobGen {
     public AbstractOperatorDescriptor generateKmerToFinalNode(JobSpecification jobSpec,
             AbstractOperatorDescriptor kmerCrossAggregator) {
 
-        AbstractOperatorDescriptor mapToFinalNode = new assembleKeyIntoNodeOperator(jobSpec,
-                assembleKeyIntoNodeOperator.nodeOutputRec, kmerSize);
+        AbstractOperatorDescriptor mapToFinalNode = new AssembleKeyIntoNodeOperator(jobSpec,
+                AssembleKeyIntoNodeOperator.nodeOutputRec, kmerSize);
         connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, mapToFinalNode, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
         return mapToFinalNode;

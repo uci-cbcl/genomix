@@ -35,9 +35,9 @@ import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
-public class assembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorDescriptor {
+public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorDescriptor {
 
-    public assembleKeyIntoNodeOperator(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc, int kmerSize) {
+    public AssembleKeyIntoNodeOperator(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc, int kmerSize) {
         super(spec, 1, 1);
         recordDescriptors[0] = outRecDesc;
         this.kmerSize = kmerSize;
@@ -102,7 +102,7 @@ public class assembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
             setKmer(readKmer, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputKmerField));
             readNode.reset();
             setNode(readNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputtempNodeField));
-
+            readNode.getKmer().setAsCopy(readKmer.getKmerLength(), readKmer.getBytes(), readKmer.getOffset());
             outputNode(readNode);
         }
 
