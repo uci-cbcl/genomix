@@ -45,7 +45,7 @@ public class SplitRepeatSmallTestSuite extends TestSuite {
     //P4ForMergeGraph/bin/read
     public static final String PreFix = "data/SplitRepeat"; //"graphbuildresult";
     public static final String[] TestDir = { PreFix + File.separator
-    + "SimpleTest"};
+    + "AdjSplitRepeat"};
     private static final String ACTUAL_RESULT_DIR = "data/actual/splitrepeat";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
@@ -59,7 +59,7 @@ public class SplitRepeatSmallTestSuite extends TestSuite {
     private MiniDFSCluster dfsCluster;
 
     private JobConf conf = new JobConf();
-    private int numberOfNC = 2;
+    private int numberOfNC = 1;
 
     public void setUp() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
