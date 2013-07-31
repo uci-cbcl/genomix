@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.util;
 
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.io.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;

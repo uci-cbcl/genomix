@@ -5,12 +5,10 @@ import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
 
-
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.GeneCode;
@@ -168,19 +166,47 @@ public class BasicGraphCleanVertex extends
     }
     
     /**
+     * tip send message with sourceId and dir to previous node 
+     * tip only has one incoming
+     */
+    public void sendSettledMsgToPreviousNode(){
+    	if(getVertexValue().getFFList().getCountOfPosition() > 0)
+			outgoingMsg.setFlag(MessageFlag.DIR_FF);
+		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
+			outgoingMsg.setFlag(MessageFlag.DIR_FR);
+		outgoingMsg.setSourceVertexId(getVertexId());
+		destVertexId.set(getNextDestVertexId(getVertexValue()));
+		sendMsg(destVertexId, outgoingMsg);
+    }
+    
+    /**
+     * tip send message with sourceId and dir to next node 
+     * tip only has one outgoing
+     */
+    public void sendSettledMsgToNextNode(){
+    	if(getVertexValue().getRFList().getCountOfPosition() > 0)
+            outgoingMsg.setFlag(MessageFlag.DIR_RF);
+        else if(getVertexValue().getRRList().getCountOfPosition() > 0)
+            outgoingMsg.setFlag(MessageFlag.DIR_RR);
+        outgoingMsg.setSourceVertexId(getVertexId());
+        destVertexId.set(getPreDestVertexId(getVertexValue()));
+        sendMsg(destVertexId, outgoingMsg);
+    }
+    
+    /**
      * head send message to all previous nodes
      */
     public void sendSettledMsgToAllPreviousNodes(VertexValueWritable value) {
         kmerIterator = value.getRFList().iterator(); // RFList
         while(kmerIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
+            outgoingMsg.setFlag(MessageFlag.DIR_RF);
             outgoingMsg.setSourceVertexId(getVertexId());
             destVertexId.set(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = value.getRRList().iterator(); // RRList
         while(kmerIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMRR);
+            outgoingMsg.setFlag(MessageFlag.DIR_RR);
             outgoingMsg.setSourceVertexId(getVertexId());
             destVertexId.set(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
@@ -193,14 +219,14 @@ public class BasicGraphCleanVertex extends
     public void sendSettledMsgToAllNextNodes(VertexValueWritable value) {
         kmerIterator = value.getFFList().iterator(); // FFList
         while(kmerIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMFF);
+            outgoingMsg.setFlag(MessageFlag.DIR_FF);
             outgoingMsg.setSourceVertexId(getVertexId());
             destVertexId.set(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = value.getFRList().iterator(); // FRList
         while(kmerIterator.hasNext()){
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
+            outgoingMsg.setFlag(MessageFlag.DIR_FR);
             outgoingMsg.setSourceVertexId(getVertexId());
             destVertexId.set(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
