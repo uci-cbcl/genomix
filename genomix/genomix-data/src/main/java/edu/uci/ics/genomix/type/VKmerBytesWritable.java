@@ -98,6 +98,16 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         this(other.lettersInKmer);
         setAsCopy(other);
     }
+    
+    /**
+     * deep copy of kmer in other
+     * 
+     * @param other
+     */
+    public VKmerBytesWritable(KmerBytesWritable other) {
+        this(other.lettersInKmer);
+        setAsCopy(other);
+    }
 
     /**
      * Deep copy of the given kmer
@@ -108,6 +118,18 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         reset(other.lettersInKmer);
         if (lettersInKmer > 0) {
             System.arraycopy(other.bytes, other.kmerStartOffset, bytes, this.kmerStartOffset, bytesUsed);
+        }
+    }
+    
+    /**
+     * Deep copy of the given kmer
+     * 
+     * @param other
+     */
+    public void setAsCopy(KmerBytesWritable other) {
+        reset(other.lettersInKmer);
+        if (lettersInKmer > 0) {
+            System.arraycopy(other.bytes, other.offset, bytes, this.kmerStartOffset, bytesUsed);
         }
     }
 

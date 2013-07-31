@@ -71,8 +71,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     /**
      * Set as reference to existing data
      */
-    public KmerBytesWritable(byte[] storage, int offset) {
-        setAsReference(storage, offset);
+    public KmerBytesWritable(byte[] newStorage, int newOffset) {
+        setAsReference(newStorage, newOffset);
     }
 
     /**
@@ -84,6 +84,16 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         this();
         setAsCopy(other);
     }
+    
+    /**
+     * copy kmer in other
+     * 
+     * @param other
+     */
+    public KmerBytesWritable(VKmerBytesWritable other) {
+        this();
+        setAsCopy(other);
+    }
 
     /**
      * Deep copy of the given kmer
@@ -92,22 +102,37 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public void setAsCopy(KmerBytesWritable other) {
         if (lettersInKmer > 0) {
-            System.arraycopy(other.bytes, other.offset, bytes, this.offset, bytesUsed);
+            System.arraycopy(other.bytes, other.offset, bytes, offset, bytesUsed);
         }
     }
+    
+    /**
+     * Deep copy of the given kmer
+     * 
+     * @param other
+     */
+    public void setAsCopy(VKmerBytesWritable other) {
+        if (other.lettersInKmer != lettersInKmer) {
+            throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was " + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
+        }
+        if (lettersInKmer > 0) {
+            System.arraycopy(other.bytes, other.kmerStartOffset, bytes, offset, bytesUsed);
+        }
+    }
+
 
     /**
      * Deep copy of the given bytes data
      * 
      * @param newData
-     * @param offset
+     * @param newOffset
      */
-    public void setAsCopy(byte[] newData, int offset) {
-        if (newData.length - offset < bytesUsed) {
+    public void setAsCopy(byte[] newData, int newOffset) {
+        if (newData.length - newOffset < bytesUsed) {
             throw new IllegalArgumentException("Requested " + bytesUsed + " bytes (k=" + lettersInKmer
-                    + ") but buffer has only " + (newData.length - offset) + " bytes");
+                    + ") but buffer has only " + (newData.length - newOffset) + " bytes");
         }
-        System.arraycopy(newData, offset, bytes, this.offset, bytesUsed);
+        System.arraycopy(newData, newOffset, bytes, offset, bytesUsed);
     }
 
     /**
@@ -115,15 +140,30 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * to new datablock.
      * 
      * @param newData
-     * @param offset
+     * @param newOffset
      */
-    public void setAsReference(byte[] newData, int offset) {
-        if (newData.length - offset < bytesUsed) {
+    public void setAsReference(byte[] newData, int newOffset) {
+        if (newData.length - newOffset < bytesUsed) {
             throw new IllegalArgumentException("Requested " + bytesUsed + " bytes (k=" + lettersInKmer
-                    + ") but buffer has only " + (newData.length - offset) + " bytes");
+                    + ") but buffer has only " + (newData.length - newOffset) + " bytes");
         }
         bytes = newData;
-        this.offset = offset;
+        offset = newOffset;
+    }
+    
+    /**
+     * Point this datablock to the given kmer's byte array It works like the pointer
+     * to new datablock.
+     * 
+     * @param newData
+     * @param offset
+     */
+    public void setAsReference(VKmerBytesWritable other) {
+        if (other.lettersInKmer != lettersInKmer) {
+            throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was " + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
+        }
+        bytes = other.bytes;
+        offset = other.kmerStartOffset;
     }
 
     /**

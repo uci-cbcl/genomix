@@ -69,6 +69,17 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
+    
+    public void append(KmerBytesWritable kmer) { // TODO optimize this into two separate containers...
+        setSize(getLength() + kmer.getLength() + VKmerBytesWritable.HEADER_SIZE);
+        int myLength = getLength();
+        Marshal.putInt(KmerBytesWritable.getKmerLength(), storage, offset + myLength); // write a new VKmer header
+        System.arraycopy(kmer.getBytes(), kmer.offset,
+                storage, offset + myLength + VKmerBytesWritable.HEADER_SIZE,
+                kmer.getLength());
+        valueCount += 1;
+        Marshal.putInt(valueCount, storage, offset);
+    }
 
     /*
      * Append the otherList to the end of myList
