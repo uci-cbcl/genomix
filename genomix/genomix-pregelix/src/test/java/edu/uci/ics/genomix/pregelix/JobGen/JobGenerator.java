@@ -162,22 +162,22 @@ public class JobGenerator {
 //                + "TipRemoveGraph.xml");
 //    }
 //    
-//    private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(BridgeAddVertex.class);
-//        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(BridgeAddVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genBridgeAddGraph() throws IOException {
-//        generateBridgeAddGraphJob("BridgeAddGraph", outputBase
-//                + "BridgeAddGraph.xml");
-//    }
+    private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(BridgeAddVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(BridgeAddVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBridgeAddGraph() throws IOException {
+        generateBridgeAddGraphJob("BridgeAddGraph", outputBase
+                + "BridgeAddGraph.xml");
+    }
 //
 //    private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(jobName);
@@ -244,6 +244,7 @@ public class JobGenerator {
 //        genMapReduceGraph();
         genSplitRepeatGraph();
         genTipAddGraph();
+        genBridgeAddGraph();
     }
 
 }

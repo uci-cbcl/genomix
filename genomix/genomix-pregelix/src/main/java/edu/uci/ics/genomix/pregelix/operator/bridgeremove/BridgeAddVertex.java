@@ -8,8 +8,6 @@ import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.genomix.oldtype.PositionListWritable;
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
@@ -79,7 +77,7 @@ public class BridgeAddVertex extends
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
                 vertex.getMsgList().clear();
                 vertex.getEdges().clear();
-                VertexValueWritable vertexValue = new VertexValueWritable();
+                VertexValueWritable vertexValue = new VertexValueWritable(kmerSize);
                 /**
                  * set the src vertex id
                  */
@@ -99,9 +97,12 @@ public class BridgeAddVertex extends
                 vertex.setVertexValue(vertexValue);
                 
                 addVertex(vertexId, vertex);
+            } 
+            else if(getVertexId().toString().equals("ACG")){
+                KmerBytesWritable brdgeVertexId = new KmerBytesWritable(kmerSize);
+                brdgeVertexId.setByRead("GTA".getBytes(), 0);
+                getVertexValue().getRFList().append(brdgeVertexId);
             }
-            if(getVertexId().getReadID() == 2 && getVertexId().getPosInRead() == 2)
-                getVertexValue().getRRList().append(3, (byte)1);
         }
         voteToHalt();
     }
@@ -115,7 +116,7 @@ public class BridgeAddVertex extends
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(PositionWritable.class);
+        job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }
