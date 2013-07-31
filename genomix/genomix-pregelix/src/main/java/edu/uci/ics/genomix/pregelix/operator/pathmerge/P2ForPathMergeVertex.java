@@ -78,6 +78,8 @@ public class P2ForPathMergeVertex extends
             fakeVertex.setByRead(random.getBytes(), 0); 
         }
         isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
+        if(destVertexId == null)
+            destVertexId = new KmerBytesWritable(kmerSize);
     }
 
     /**

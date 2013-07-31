@@ -11,6 +11,7 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 /*
  * vertexId: BytesWritable
@@ -56,7 +57,14 @@ public class TipRemoveVertex extends
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if(length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize); //kmerSize + 5
-        outgoingMsg.reset();
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable(kmerSize);
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable(kmerSize);
+        else
+            outgoingMsg.reset(kmerSize);
+        if(destVertexId == null)
+            destVertexId = new KmerBytesWritable(kmerSize);
     }
 
     @Override
@@ -81,7 +89,7 @@ public class TipRemoveVertex extends
             }
         }
         else if(getSuperstep() == 2){
-        	if(msgIterator.hasNext()){
+        	while(msgIterator.hasNext()){
         		incomingMsg = msgIterator.next();
         		responseToDeadVertex();
         	}

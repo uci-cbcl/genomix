@@ -144,24 +144,24 @@ public class JobGenerator {
         generateTipAddGraphJob("TipAddGraph", outputBase
                 + "TipAddGraph.xml");
     }
-//    
-//    private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(TipRemoveVertex.class);
-//        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 5);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genTipRemoveGraph() throws IOException {
-//        generateTipRemoveGraphJob("TipRemoveGraph", outputBase
-//                + "TipRemoveGraph.xml");
-//    }
-//    
+    
+    private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TipRemoveVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genTipRemoveGraph() throws IOException {
+        generateTipRemoveGraphJob("TipRemoveGraph", outputBase
+                + "TipRemoveGraph.xml");
+    }
+    
     private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(BridgeAddVertex.class);
@@ -245,6 +245,7 @@ public class JobGenerator {
         genSplitRepeatGraph();
         genTipAddGraph();
         genBridgeAddGraph();
+        genTipRemoveGraph();
     }
 
 }

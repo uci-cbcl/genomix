@@ -43,10 +43,9 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class TipRemoveSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(TipRemoveSmallTestSuite.class.getName());
     //P4ForMergeGraph/bin/read
-    public static final String PreFix = "data/input"; //"graphbuildresult";
+    public static final String PreFix = "data/actual/tipadd/TipAddGraph/bin";
     public static final String[] TestDir = { PreFix + File.separator
-    + "graphs/tipremove/fr_with_tip"};
-    //+ "bridgeadd/BridgeAddGraph/bin/tworeads"};
+    + "5"};
     private static final String ACTUAL_RESULT_DIR = "data/actual/tipremove";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

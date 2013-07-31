@@ -97,6 +97,8 @@ public class SplitRepeatVertex extends
             outgoingEdgeList = new KmerListWritable(kmerSize);
         if(createdVertexId == null)
             createdVertexId = new KmerBytesWritable(kmerSize);//kmerSize + 1
+        if(destVertexId == null)
+            destVertexId = new KmerBytesWritable(kmerSize);
     }
     
     /**

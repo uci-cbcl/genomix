@@ -53,6 +53,8 @@ public class MapReduceVertex extends
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(random.getBytes(), 0); 
         }
+        if(destVertexId == null)
+            destVertexId = new KmerBytesWritable(kmerSize);
     }
     
     /**

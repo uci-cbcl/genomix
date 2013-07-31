@@ -58,7 +58,7 @@ public class BridgeAddVertex extends
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
-        if(length == -1)
+        if (length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
     }
 

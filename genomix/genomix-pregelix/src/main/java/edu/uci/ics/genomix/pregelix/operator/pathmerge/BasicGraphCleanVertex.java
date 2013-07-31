@@ -26,7 +26,7 @@ public class BasicGraphCleanVertex extends
     
     protected MessageWritable incomingMsg = null; 
     protected MessageWritable outgoingMsg = null; 
-    protected KmerBytesWritable destVertexId = new KmerBytesWritable();
+    protected KmerBytesWritable destVertexId = null;
     protected Iterator<KmerBytesWritable> kmerIterator;
     protected KmerBytesWritable tmpKmer = new KmerBytesWritable(kmerSize);
     byte headFlag;
