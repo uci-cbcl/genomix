@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFromHead;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 /*
  * vertexId: BytesWritable
@@ -70,7 +70,7 @@ public class P2ForPathMergeVertex extends
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
         if(kmerList == null)
-            kmerList = new KmerListWritable();
+            kmerList = new VKmerListWritable();
         else
             kmerList.reset();
         if(fakeVertex == null){

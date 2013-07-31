@@ -8,7 +8,7 @@ import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
 
@@ -66,16 +66,16 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         kmer = new VKmerBytesWritable();
     }
 
-    public VertexValueWritable(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
-            KmerListWritable reverseForwardList, KmerListWritable reverseReverseList,
+    public VertexValueWritable(PositionListWritable nodeIdList, VKmerListWritable forwardForwardList, VKmerListWritable forwardReverseList,
+            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList,
             byte state, VKmerBytesWritable kmer) {
         set(nodeIdList, forwardForwardList, forwardReverseList, 
                 reverseForwardList, reverseReverseList,
                 state, kmer);
     }
     
-    public void set(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
-            KmerListWritable reverseForwardList, KmerListWritable reverseReverseList, 
+    public void set(PositionListWritable nodeIdList, VKmerListWritable forwardForwardList, VKmerListWritable forwardReverseList,
+            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList, 
             byte state, VKmerBytesWritable kmer) {
         this.kmerlength = kmer.getKmerLetterLength();
         this.incomingList.setForwardList(reverseForwardList);
@@ -101,35 +101,35 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         this.nodeIdList.set(nodeIdList);
     }
 
-    public KmerListWritable getFFList() {
+    public VKmerListWritable getFFList() {
         return outgoingList.getForwardList();
     }
 
-    public KmerListWritable getFRList() {
+    public VKmerListWritable getFRList() {
         return outgoingList.getReverseList();
     }
 
-    public KmerListWritable getRFList() {
+    public VKmerListWritable getRFList() {
         return incomingList.getForwardList();
     }
 
-    public KmerListWritable getRRList() {
+    public VKmerListWritable getRRList() {
         return incomingList.getReverseList();
     }
     
-    public void setFFList(KmerListWritable forwardForwardList){
+    public void setFFList(VKmerListWritable forwardForwardList){
         outgoingList.setForwardList(forwardForwardList);
     }
     
-    public void setFRList(KmerListWritable forwardReverseList){
+    public void setFRList(VKmerListWritable forwardReverseList){
         outgoingList.setReverseList(forwardReverseList);
     }
     
-    public void setRFList(KmerListWritable reverseForwardList){
+    public void setRFList(VKmerListWritable reverseForwardList){
         incomingList.setForwardList(reverseForwardList);
     }
 
-    public void setRRList(KmerListWritable reverseReverseList){
+    public void setRRList(VKmerListWritable reverseReverseList){
         incomingList.setReverseList(reverseReverseList);
     }
     

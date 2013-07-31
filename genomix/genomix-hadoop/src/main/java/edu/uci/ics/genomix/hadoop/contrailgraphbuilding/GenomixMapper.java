@@ -13,7 +13,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -37,8 +37,8 @@ public class GenomixMapper extends MapReduceBase implements
     private KmerBytesWritable nextReverseKmer;
     private PositionWritable nodeId;
     private PositionListWritable nodeIdList;
-    private KmerListWritable edgeListForPreKmer;
-    private KmerListWritable edgeListForNextKmer;
+    private VKmerListWritable edgeListForPreKmer;
+    private VKmerListWritable edgeListForNextKmer;
     private NodeWritable outputNode;
     
     private KmerDir preKmerDir;
@@ -59,8 +59,8 @@ public class GenomixMapper extends MapReduceBase implements
         nextReverseKmer = new KmerBytesWritable();
         nodeId = new PositionWritable();
         nodeIdList = new PositionListWritable();
-        edgeListForPreKmer = new KmerListWritable();
-        edgeListForNextKmer = new KmerListWritable();
+        edgeListForPreKmer = new VKmerListWritable();
+        edgeListForNextKmer = new VKmerListWritable();
         outputNode = new NodeWritable();
         preKmerDir = KmerDir.FORWARD;
         curKmerDir = KmerDir.FORWARD;

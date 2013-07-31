@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 //import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -26,8 +26,8 @@ public class MapReduceVertex extends
     protected static VKmerBytesWritable fakeVertex = null;
     
     protected VKmerBytesWritable reverseKmer;
-    protected KmerListWritable kmerList = null;
-    protected Map<VKmerBytesWritable, KmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, KmerListWritable>();
+    protected VKmerListWritable kmerList = null;
+    protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
 
     /**
      * initiate kmerSize, maxIteration
@@ -46,7 +46,7 @@ public class MapReduceVertex extends
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
         if(kmerList == null)
-            kmerList = new KmerListWritable();
+            kmerList = new VKmerListWritable();
         else
             kmerList.reset();
         if(fakeVertex == null){
