@@ -75,16 +75,15 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                     AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 localUniNode.reset();
-//                readKeyKmer.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 localUniNode.getFFList().appendList(readNode.getFFList());
                 localUniNode.getFRList().appendList(readNode.getFRList());
                 localUniNode.getRFList().appendList(readNode.getRFList());
                 localUniNode.getRRList().appendList(readNode.getRRList());
-                
+                localUniNode.addCoverage(readNode);
                 // make an empty field
-                tupleBuilder.addFieldEndOffset();// mark question?
+//                tupleBuilder.addFieldEndOffset();// mark question?
             }
 
             @Override
@@ -97,6 +96,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 localUniNode.getFRList().appendList(readNode.getFRList());
                 localUniNode.getRFList().appendList(readNode.getRFList());
                 localUniNode.getRRList().appendList(readNode.getRRList());
+                localUniNode.addCoverage(readNode);
             }
 
             @Override

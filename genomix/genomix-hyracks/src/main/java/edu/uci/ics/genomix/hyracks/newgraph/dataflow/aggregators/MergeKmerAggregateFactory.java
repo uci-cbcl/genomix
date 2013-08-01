@@ -75,9 +75,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 localUniNode.getFRList().unionUpdate(readNode.getFRList());
                 localUniNode.getRFList().unionUpdate(readNode.getRFList());
                 localUniNode.getRRList().unionUpdate(readNode.getRRList());
-                
+                localUniNode.addCoverage(readNode);
                 //make a fake feild to cheat caller
-                tupleBuilder.addFieldEndOffset();
+ //               tupleBuilder.addFieldEndOffset();
             }
 
             @Override
@@ -95,6 +95,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 localUniNode.getFRList().unionUpdate(readNode.getFRList());
                 localUniNode.getRFList().unionUpdate(readNode.getRFList());
                 localUniNode.getRRList().unionUpdate(readNode.getRRList());
+                localUniNode.addCoverage(readNode);
             }
 
             @Override

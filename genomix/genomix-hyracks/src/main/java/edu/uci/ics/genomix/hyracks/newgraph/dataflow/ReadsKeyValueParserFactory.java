@@ -124,8 +124,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
-                setnodeId(curNode, mateId, readID, 0);
-                setnodeId(nextNode, mateId, readID, 0);
+                setNodeBasicInfo(curNode, mateId, readID, 0, 1);
+                setNodeBasicInfo(nextNode, mateId, readID, 0, 1);
                 setEdgeListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode);
                 writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
 
@@ -138,7 +138,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     curNode.set(nextNode);
                     nextNode.reset();
                     nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
-                    setnodeId(nextNode, mateId, readID, 0);
+                    setNodeBasicInfo(nextNode, mateId, readID, 0, 1);
                     setEdgeListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode);
                     writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
                 }
@@ -147,11 +147,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 writeToFrame(nextForwardKmer, nextReverseKmer, nextKmerDir, nextNode, writer);
             }
 
-            public void setnodeId(NodeWritable node, byte mateId, long readID, int posId) {
+            public void setNodeBasicInfo(NodeWritable node, byte mateId, long readID, int posId, int iniCovergage) {
                 nodeId.set(mateId, readID, posId);
                 nodeIdList.reset();
                 nodeIdList.append(nodeId);
                 node.setNodeIdList(nodeIdList);
+                node.setAvgCoverage(iniCovergage);
             }
 
             public KmerDir setNextKmer(KmerBytesWritable forwardKmer, KmerBytesWritable ReverseKmer,

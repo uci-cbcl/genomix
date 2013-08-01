@@ -296,7 +296,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         sbuilder.append(forwardReverseList.toString()).append('\t');
         sbuilder.append(reverseForwardList.toString()).append('\t');
         sbuilder.append(reverseReverseList.toString()).append('\t');
-        sbuilder.append(kmer.toString()).append('}');
+        sbuilder.append(kmer.toString()).append('\t');
+        sbuilder.append(averageCoverage).append('x').append('}');
         return sbuilder.toString();
     }
 
