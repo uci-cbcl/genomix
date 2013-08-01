@@ -96,7 +96,7 @@ public class P2ForPathMergeVertex extends
         }
         
         //send wantToMerge to prev
-        tmpKmer = getPreDestVertexIdAndSetFlag(getVertexValue());
+        tmpKmer = getPrevDestVertexIdAndSetFlag(getVertexValue());
         if(tmpKmer != null){
             destVertexId.set(tmpKmer);
             outgoingMsg.setFlag(outFlag);
