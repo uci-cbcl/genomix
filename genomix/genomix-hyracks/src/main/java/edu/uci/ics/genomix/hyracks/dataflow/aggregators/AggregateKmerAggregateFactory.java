@@ -96,8 +96,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 ArrayBackedValueStorage inputVal = (ArrayBackedValueStorage) state.state;
                 try {
-                    fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());
-
+                    fieldOutput.write(inputVal.getByteArray(), inputVal.getStartOffset(), inputVal.getLength());                    
                     tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
