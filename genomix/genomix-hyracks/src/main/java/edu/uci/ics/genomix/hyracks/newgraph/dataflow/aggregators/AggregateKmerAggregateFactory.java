@@ -48,7 +48,6 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
         return new IAggregatorDescriptor() {
             
             private NodeWritable readNode = new NodeWritable();
-//            private KmerBytesWritable readKeyKmer = new KmerBytesWritable();
             
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);

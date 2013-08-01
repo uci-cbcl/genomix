@@ -98,11 +98,10 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
 
         private void generateNodeFromKmer(int tIndex) throws HyracksDataException {
             int offsetPoslist = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
-            
             setKmer(readKmer, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputKmerField));
             readNode.reset();
             setNode(readNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputtempNodeField));
-            readNode.getKmer().setAsCopy(readKmer.getKmerLength(), readKmer.getBytes(), readKmer.getOffset());
+            readNode.getKmer().setAsCopy(readKmer);
             outputNode(readNode);
         }
 

@@ -123,7 +123,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 curReverseKmer.setByReadReverse(array, 0);
                 curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 nextForwardKmer.setAsCopy(curForwardKmer);
-                setNextKmer(nextForwardKmer, nextReverseKmer, nextKmerDir, array[kmerSize]);
+                nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
                 setnodeId(curNode, mateId, readID, 0);
                 setnodeId(nextNode, mateId, readID, 0);
                 setEdgeListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode);
@@ -134,9 +134,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 for (; i < array.length; i++) {
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
+                    curKmerDir = nextKmerDir;
                     curNode.set(nextNode);
                     nextNode.reset();
-                    setNextKmer(nextForwardKmer, nextReverseKmer, nextKmerDir, array[kmerSize]);
+                    nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
                     setnodeId(nextNode, mateId, readID, 0);
                     setEdgeListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode);
                     writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
@@ -153,11 +154,11 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 node.setNodeIdList(nodeIdList);
             }
 
-            public void setNextKmer(KmerBytesWritable forwardKmer, KmerBytesWritable ReverseKmer, KmerDir nextKmerDir,
+            public KmerDir setNextKmer(KmerBytesWritable forwardKmer, KmerBytesWritable ReverseKmer,
                     byte nextChar) {
                 forwardKmer.shiftKmerWithNextChar(nextChar);
                 ReverseKmer.setByReadReverse(forwardKmer.toString().getBytes(), forwardKmer.getOffset());
-                nextKmerDir = forwardKmer.compareTo(ReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
+                return forwardKmer.compareTo(ReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             }
 
             public void writeToFrame(KmerBytesWritable forwardKmer, KmerBytesWritable reverseKmer, KmerDir curKmerDir,
@@ -167,7 +168,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                         InsertToFrame(forwardKmer, node, writer);
                         break;
                     case REVERSE:
-                        InsertToFrame(forwardKmer, node, writer);
+                        InsertToFrame(reverseKmer, node, writer);
                         break;
                 }
             }
