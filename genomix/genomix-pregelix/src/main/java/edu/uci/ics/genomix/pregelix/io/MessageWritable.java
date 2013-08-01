@@ -25,13 +25,15 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private boolean isFlip;
     private int kmerlength = 0;
     private boolean updateMsg = false;
-
+    private KmerBytesWritable startVertexId;
+    
     private byte checkMessage;
 
     public MessageWritable() {
         sourceVertexId = new KmerBytesWritable();
         kmer = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable();
+        startVertexId = new KmerBytesWritable();
         flag = Message.NON;
         isFlip = false;
         checkMessage = (byte) 0;
@@ -39,9 +41,10 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     
     public MessageWritable(int kmerSize) {
         kmerlength = kmerSize;
-        sourceVertexId = new KmerBytesWritable();
+        sourceVertexId = new KmerBytesWritable(kmerSize);
         kmer = new KmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable(kmerSize);
+        startVertexId = new KmerBytesWritable(kmerSize);
         flag = Message.NON;
         isFlip = false;
         checkMessage = (byte) 0;
@@ -55,12 +58,16 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             this.sourceVertexId.set(msg.getSourceVertexId());
         }
         if (kmer != null) {
-            checkMessage |= CheckMessage.CHAIN;
+            checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.set(msg.getActualKmer());
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
             this.neighberNode.set(msg.getNeighberNode());
+        }
+        if (startVertexId != null) {
+            checkMessage |= CheckMessage.START;
+            this.startVertexId.set(msg.getStartVertexId());
         }
         checkMessage |= CheckMessage.ADJMSG;
         this.flag = msg.getFlag();
@@ -75,7 +82,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             this.sourceVertexId.set(sourceVertexId);
         }
         if (chainVertexId != null) {
-            checkMessage |= CheckMessage.CHAIN;
+            checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.set(chainVertexId);
         }
         if (neighberNode != null) {
@@ -94,6 +101,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         kmerlength = kmerSize;
         kmer.reset(1);
         neighberNode.reset(kmerSize);
+        startVertexId.reset(kmerSize);
         flag = Message.NON;
         isFlip = false;
     }
@@ -115,7 +123,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
 
     public void setAcutalKmer(KmerBytesWritable actualKmer) {
         if (actualKmer != null) {
-            checkMessage |= CheckMessage.CHAIN;
+            checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.set(actualKmer);
         }
     }
@@ -126,7 +134,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
 
     public void setCreatedVertexId(KmerBytesWritable actualKmer) {
         if (actualKmer != null) {
-            checkMessage |= CheckMessage.CHAIN;
+            checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.set(actualKmer);
         }
     }
@@ -142,6 +150,17 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
     }
     
+    public KmerBytesWritable getStartVertexId() {
+        return startVertexId;
+    }
+
+    public void setStartVertexId(KmerBytesWritable startVertexId) {
+        if(startVertexId != null){
+            checkMessage |= CheckMessage.START;
+            this.startVertexId.set(startVertexId);
+        }
+    }
+
     public int getLengthOfChain() {
         return kmer.getKmerLength();
     }
@@ -188,12 +207,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         out.writeByte(checkMessage);
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.write(out);
-        if ((checkMessage & CheckMessage.CHAIN) != 0)
+        if ((checkMessage & CheckMessage.ACUTUALKMER) != 0)
             kmer.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
         if ((checkMessage & CheckMessage.NODEIDLIST) != 0)
             nodeIdList.write(out);
+        if ((checkMessage & CheckMessage.START) != 0)
+            startVertexId.write(out);
         out.writeBoolean(isFlip);
         out.writeByte(flag); 
         out.writeBoolean(updateMsg);
@@ -206,12 +227,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         checkMessage = in.readByte();
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.readFields(in);
-        if ((checkMessage & CheckMessage.CHAIN) != 0)
+        if ((checkMessage & CheckMessage.ACUTUALKMER) != 0)
             kmer.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
         if ((checkMessage & CheckMessage.NODEIDLIST) != 0)
             nodeIdList.readFields(in);
+        if ((checkMessage & CheckMessage.START) != 0)
+            startVertexId.readFields(in);
         isFlip = in.readBoolean();
         flag = in.readByte();
         updateMsg = in.readBoolean();

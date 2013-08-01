@@ -124,23 +124,7 @@ public class BasicGraphCleanVertex extends
             return null;
         }
     }
-
-    /**
-     * head send message to all next nodes
-     */
-    public void sendMsgToAllNextNodes(VertexValueWritable value) {
-        kmerIterator = value.getFFList().iterator(); // FFList
-        while(kmerIterator.hasNext()){
-            destVertexId.set(kmerIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        kmerIterator = value.getFRList().iterator(); // FRList
-        while(kmerIterator.hasNext()){
-            destVertexId.set(kmerIterator.next());
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-
+    
     /**
      * head send message to all previous nodes
      */
@@ -151,6 +135,22 @@ public class BasicGraphCleanVertex extends
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = value.getRRList().iterator(); // RRList
+        while(kmerIterator.hasNext()){
+            destVertexId.set(kmerIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+    }
+    
+    /**
+     * head send message to all next nodes
+     */
+    public void sendMsgToAllNextNodes(VertexValueWritable value) {
+        kmerIterator = value.getFFList().iterator(); // FFList
+        while(kmerIterator.hasNext()){
+            destVertexId.set(kmerIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        kmerIterator = value.getFRList().iterator(); // FRList
         while(kmerIterator.hasNext()){
             destVertexId.set(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
