@@ -12,13 +12,13 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Naive Algorithm for path merge graph
  */
 public class BasicGraphCleanVertex extends
-        Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static final String ITERATIONS = "BasicGraphCleanVertex.iteration";
     public static int kmerSize = -1;
@@ -26,9 +26,9 @@ public class BasicGraphCleanVertex extends
     
     protected MessageWritable incomingMsg = null; 
     protected MessageWritable outgoingMsg = null; 
-    protected KmerBytesWritable destVertexId = null;
-    protected Iterator<KmerBytesWritable> kmerIterator;
-    protected KmerBytesWritable tmpKmer = new KmerBytesWritable(kmerSize);
+    protected VKmerBytesWritable destVertexId = null;
+    protected Iterator<VKmerBytesWritable> kmerIterator;
+    protected VKmerBytesWritable tmpKmer = new VKmerBytesWritable(kmerSize);
     byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
@@ -65,7 +65,7 @@ public class BasicGraphCleanVertex extends
     /**
      * get destination vertex
      */
-    public KmerBytesWritable getNextDestVertexId(VertexValueWritable value) {
+    public VKmerBytesWritable getNextDestVertexId(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0){ //#FFList() > 0
             kmerIterator = value.getFFList().iterator();
             return kmerIterator.next();
@@ -77,7 +77,7 @@ public class BasicGraphCleanVertex extends
         }
     }
 
-    public KmerBytesWritable getPrevDestVertexId(VertexValueWritable value) {
+    public VKmerBytesWritable getPrevDestVertexId(VertexValueWritable value) {
         if (value.getRFList().getCountOfPosition() > 0){ //#RFList() > 0
             kmerIterator = value.getRFList().iterator();
             return kmerIterator.next();
@@ -92,7 +92,7 @@ public class BasicGraphCleanVertex extends
     /**
      * get destination vertex
      */
-    public KmerBytesWritable getNextDestVertexIdAndSetFlag(VertexValueWritable value) {
+    public VKmerBytesWritable getNextDestVertexIdAndSetFlag(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0){ // #FFList() > 0
             kmerIterator = value.getFFList().iterator();
             outFlag &= MessageFlag.DIR_CLEAR;
@@ -109,7 +109,7 @@ public class BasicGraphCleanVertex extends
         
     }
 
-    public KmerBytesWritable getPrevDestVertexIdAndSetFlag(VertexValueWritable value) {
+    public VKmerBytesWritable getPrevDestVertexIdAndSetFlag(VertexValueWritable value) {
         if (value.getRFList().getCountOfPosition() > 0){ // #RFList() > 0
             kmerIterator = value.getRFList().iterator();
             outFlag &= MessageFlag.DIR_CLEAR;
@@ -131,12 +131,12 @@ public class BasicGraphCleanVertex extends
     public void sendMsgToAllPreviousNodes(VertexValueWritable value) {
         kmerIterator = value.getRFList().iterator(); // RFList
         while(kmerIterator.hasNext()){
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = value.getRRList().iterator(); // RRList
         while(kmerIterator.hasNext()){
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -147,12 +147,12 @@ public class BasicGraphCleanVertex extends
     public void sendMsgToAllNextNodes(VertexValueWritable value) {
         kmerIterator = value.getFFList().iterator(); // FFList
         while(kmerIterator.hasNext()){
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = value.getFRList().iterator(); // FRList
         while(kmerIterator.hasNext()){
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -175,7 +175,7 @@ public class BasicGraphCleanVertex extends
 		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
 			outgoingMsg.setFlag(MessageFlag.DIR_FR);
 		outgoingMsg.setSourceVertexId(getVertexId());
-		destVertexId.set(getNextDestVertexId(getVertexValue()));
+		destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
 		sendMsg(destVertexId, outgoingMsg);
     }
     
@@ -189,7 +189,7 @@ public class BasicGraphCleanVertex extends
         else if(getVertexValue().getRRList().getCountOfPosition() > 0)
             outgoingMsg.setFlag(MessageFlag.DIR_RR);
         outgoingMsg.setSourceVertexId(getVertexId());
-        destVertexId.set(getPrevDestVertexId(getVertexValue()));
+        destVertexId.setAsCopy(getPrevDestVertexId(getVertexValue()));
         sendMsg(destVertexId, outgoingMsg);
     }
     
@@ -201,14 +201,14 @@ public class BasicGraphCleanVertex extends
         while(kmerIterator.hasNext()){
             outgoingMsg.setFlag(MessageFlag.DIR_RF);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = value.getRRList().iterator(); // RRList
         while(kmerIterator.hasNext()){
             outgoingMsg.setFlag(MessageFlag.DIR_RR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -221,14 +221,14 @@ public class BasicGraphCleanVertex extends
         while(kmerIterator.hasNext()){
             outgoingMsg.setFlag(MessageFlag.DIR_FF);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = value.getFRList().iterator(); // FRList
         while(kmerIterator.hasNext()){
             outgoingMsg.setFlag(MessageFlag.DIR_FR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.set(kmerIterator.next());
+            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -406,7 +406,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getNextDestVertexId(getVertexValue())
                 break;
             case MessageFlag.DIR_RF:
@@ -419,7 +419,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
@@ -444,7 +444,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getNextDestVertexId(getVertexValue())
                 break;
             case MessageFlag.DIR_RF:
@@ -457,7 +457,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
@@ -480,7 +480,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getKmer());
                 sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
                 deleteVertex(getVertexId());
                 break;
@@ -493,7 +493,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getKmer());
                 sendMsg(getPrevDestVertexId(getVertexValue()), outgoingMsg);
                 deleteVertex(getVertexId());
                 break; 
@@ -653,7 +653,7 @@ public class BasicGraphCleanVertex extends
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
                 msgString = msg.getActualKmer().toString();
                 index = msgString.indexOf(match);
-                tmpKmer.reset(msgString.length() - index);
+//                tmpKmer.reset(msgString.length() - index);
                 tmpKmer.setByRead(msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_FR:
@@ -661,7 +661,7 @@ public class BasicGraphCleanVertex extends
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
                 msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.indexOf(match);
-                tmpKmer.reset(msgString.length() - index);
+//                tmpKmer.reset(msgString.length() - index);
                 tmpKmer.setByReadReverse(msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RF:
@@ -669,7 +669,7 @@ public class BasicGraphCleanVertex extends
                 match = selfString.substring(0,kmerSize - 1); 
                 msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
-                tmpKmer.reset(index + 1);
+//                tmpKmer.reset(index + 1);
                 tmpKmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RR:
@@ -677,7 +677,7 @@ public class BasicGraphCleanVertex extends
                 match = selfString.substring(0,kmerSize - 1); 
                 msgString = msg.getActualKmer().toString();
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
-                tmpKmer.reset(index + 1);
+//                tmpKmer.reset(index + 1); // TODO: fix ALL of these resets (only if you need to)
                 tmpKmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
                 break;
         }

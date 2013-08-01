@@ -12,8 +12,8 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFromHead;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 /*
  * vertexId: BytesWritable
  * vertexValue: VertexValueWritable
@@ -46,7 +46,7 @@ public class P2ForPathMergeVertex extends
     MapReduceVertex {
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
-    KmerBytesWritable tmpKmer = new KmerBytesWritable();
+    VKmerBytesWritable tmpKmer = new VKmerBytesWritable();
     
     private boolean isFakeVertex = false;
     /**
@@ -67,19 +67,20 @@ public class P2ForPathMergeVertex extends
             outgoingMsg.reset(kmerSize);
         receivedMsgList.clear();
         if(reverseKmer == null)
-            reverseKmer = new KmerBytesWritable(kmerSize);
+            reverseKmer = new VKmerBytesWritable();
         if(kmerList == null)
-            kmerList = new KmerListWritable(kmerSize);
+            kmerList = new VKmerListWritable();
         else
-            kmerList.reset(kmerSize);
+            kmerList.reset();
         if(fakeVertex == null){
-            fakeVertex = new KmerBytesWritable(kmerSize + 1);
+//            fakeVertex = new KmerBytesWritable(kmerSize + 1);
+            fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(random.getBytes(), 0); 
         }
         isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
         if(destVertexId == null)
-            destVertexId = new KmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable(kmerSize);
     }
 
     /**
@@ -89,7 +90,7 @@ public class P2ForPathMergeVertex extends
         //send wantToMerge to next
         tmpKmer = getNextDestVertexIdAndSetFlag(getVertexValue());
         if(tmpKmer != null){
-            destVertexId.set(tmpKmer);
+            destVertexId.setAsCopy(tmpKmer);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
@@ -98,7 +99,7 @@ public class P2ForPathMergeVertex extends
         //send wantToMerge to prev
         tmpKmer = getPrevDestVertexIdAndSetFlag(getVertexValue());
         if(tmpKmer != null){
-            destVertexId.set(tmpKmer);
+            destVertexId.setAsCopy(tmpKmer);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
@@ -298,7 +299,7 @@ public class P2ForPathMergeVertex extends
          */
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.setDynamicVertexValueSize(true);
         Client.run(args, job);

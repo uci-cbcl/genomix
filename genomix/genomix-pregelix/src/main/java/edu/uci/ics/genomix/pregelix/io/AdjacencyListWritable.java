@@ -6,25 +6,25 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class AdjacencyListWritable implements WritableComparable<AdjacencyListWritable>{
-    private KmerListWritable forwardList;
-    private KmerListWritable reverseList;
+    private VKmerListWritable forwardList;
+    private VKmerListWritable reverseList;
     
     public AdjacencyListWritable(){
-        forwardList = new KmerListWritable();
-        reverseList = new KmerListWritable();
+        forwardList = new VKmerListWritable();
+        reverseList = new VKmerListWritable();
     }
     
     public AdjacencyListWritable(int kmerSize){
-        forwardList = new KmerListWritable(kmerSize);
-        reverseList = new KmerListWritable(kmerSize);
+        forwardList = new VKmerListWritable();
+        reverseList = new VKmerListWritable();
     }
 
     public void set(AdjacencyListWritable adjacencyList){
-        forwardList.set(adjacencyList.getForwardList());
-        reverseList.set(adjacencyList.getReverseList());
+        forwardList.setCopy(adjacencyList.getForwardList());
+        reverseList.setCopy(adjacencyList.getReverseList());
     }
     
     public void reset(){
@@ -33,27 +33,27 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     }
     
     public void reset(int kmerSize){
-        forwardList.reset(kmerSize);
-        reverseList.reset(kmerSize);
+        forwardList.reset();
+        reverseList.reset();
     }
     
     public int getCountOfPosition(){
     	return forwardList.getCountOfPosition() + reverseList.getCountOfPosition();
     }
 
-    public KmerListWritable getForwardList() {
+    public VKmerListWritable getForwardList() {
         return forwardList;
     }
 
-    public void setForwardList(KmerListWritable forwardList) {
+    public void setForwardList(VKmerListWritable forwardList) {
         this.forwardList = forwardList;
     }
 
-    public KmerListWritable getReverseList() {
+    public VKmerListWritable getReverseList() {
         return reverseList;
     }
 
-    public void setReverseList(KmerListWritable reverseList) {
+    public void setReverseList(VKmerListWritable reverseList) {
         this.reverseList = reverseList;
     }
 

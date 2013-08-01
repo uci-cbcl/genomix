@@ -12,8 +12,8 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -22,11 +22,11 @@ public class MapReduceVertex extends
     BasicGraphCleanVertex {
     
     public static boolean fakeVertexExist = false;
-    protected static KmerBytesWritable fakeVertex = null;
+    protected static VKmerBytesWritable fakeVertex = null;
     
-    protected KmerBytesWritable reverseKmer;
-    protected KmerListWritable kmerList = null;
-    protected Map<KmerBytesWritable, KmerListWritable> kmerMapper = new HashMap<KmerBytesWritable, KmerListWritable>();
+    protected VKmerBytesWritable reverseKmer;
+    protected VKmerListWritable kmerList = null;
+    protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
 
     /**
      * initiate kmerSize, maxIteration
@@ -43,18 +43,19 @@ public class MapReduceVertex extends
         else
             outgoingMsg.reset(kmerSize);
         if(reverseKmer == null)
-            reverseKmer = new KmerBytesWritable(kmerSize);
+            reverseKmer = new VKmerBytesWritable();
         if(kmerList == null)
-            kmerList = new KmerListWritable(kmerSize);
+            kmerList = new VKmerListWritable();
         else
-            kmerList.reset(kmerSize);
+            kmerList.reset();
         if(fakeVertex == null){
-            fakeVertex = new KmerBytesWritable(kmerSize + 1);
+//            fakeVertex = new KmerBytesWritable(kmerSize + 1); // TODO check if merge is correct
+            fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(random.getBytes(), 0); 
         }
         if(destVertexId == null)
-            destVertexId = new KmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable(kmerSize);
     }
     
     /**
@@ -96,7 +97,7 @@ public class MapReduceVertex extends
     public void sendMsgToFakeVertex(){
         if(!getVertexValue().isFakeVertex()){
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
+            outgoingMsg.setActualKmer(getVertexValue().getKmer());
             sendMsg(fakeVertex, outgoingMsg);
             voteToHalt();
         }
@@ -107,18 +108,18 @@ public class MapReduceVertex extends
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getActualKmer().toString();
             tmpKmer.reset(kmerString.length());
-            reverseKmer.reset(kmerString.length());
+//            reverseKmer.reset(kmerString.length());//kmerbyteswritable 
             tmpKmer.setByRead(kmerString.getBytes(), 0);
             reverseKmer.setByReadReverse(kmerString.getBytes(), 0);
 
             if(reverseKmer.compareTo(tmpKmer) < 0)
-                tmpKmer.set(reverseKmer);
+                tmpKmer.setAsCopy(reverseKmer);
             if(!kmerMapper.containsKey(tmpKmer)){
                 kmerList.reset();
                 kmerList.append(incomingMsg.getSourceVertexId());
                 kmerMapper.put(tmpKmer, kmerList);
             } else{
-                kmerList.set(kmerMapper.get(tmpKmer));
+                kmerList.setCopy(kmerMapper.get(tmpKmer));
                 kmerList.append(incomingMsg.getSourceVertexId());
                 kmerMapper.put(tmpKmer, kmerList);
             }
@@ -126,12 +127,12 @@ public class MapReduceVertex extends
     }
     
     public void reduceKeyByActualKmer(){
-        for(KmerBytesWritable key : kmerMapper.keySet()){
+        for(VKmerBytesWritable key : kmerMapper.keySet()){
             kmerList = kmerMapper.get(key);
             for(int i = 1; i < kmerList.getCountOfPosition(); i++){
                 //send kill message
                 outgoingMsg.setFlag(MessageFlag.KILL);
-                destVertexId.set(kmerList.getPosition(i));
+                destVertexId.setAsCopy(kmerList.getPosition(i));
                 sendMsg(destVertexId, outgoingMsg);
             }
         }
@@ -187,7 +188,7 @@ public class MapReduceVertex extends
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

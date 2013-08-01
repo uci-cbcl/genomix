@@ -11,6 +11,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
@@ -64,19 +65,20 @@ class BinaryLoadGraphReader extends
             /**
              * set the src vertex id
              */
-            vertexId.set(getRecordReader().getCurrentKey());
+            vertexId.setAsCopy(getRecordReader().getCurrentKey());
             vertex.setVertexId(vertexId);
             /**
              * set the vertex value
              */
             node.set(getRecordReader().getCurrentValue());
-            vertexValue.setKmerlength(node.getKmerlength());
+            vertexValue.setKmerlength(node.getKmerLength());
             vertexValue.setNodeIdList(node.getNodeIdList());
             vertexValue.setFFList(node.getFFList());
             vertexValue.setFRList(node.getFRList());
             vertexValue.setRFList(node.getRFList());
             vertexValue.setRRList(node.getRRList());
-            vertexValue.setKmer(getRecordReader().getCurrentKey());
+            // TODO make this more efficient (don't use toString)
+            vertexValue.setKmer(new VKmerBytesWritable(getRecordReader().getCurrentKey().toString()));
             vertexValue.setState(State.IS_NON);
             vertex.setVertexValue(vertexValue);
         }

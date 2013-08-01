@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /*
  * vertexId: BytesWritable
@@ -67,7 +67,7 @@ public class BridgeRemoveVertex extends
         else
             outgoingMsg.reset(kmerSize);
         if(destVertexId == null)
-            destVertexId = new KmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable(kmerSize);
         receivedMsgList.clear();
     }
 

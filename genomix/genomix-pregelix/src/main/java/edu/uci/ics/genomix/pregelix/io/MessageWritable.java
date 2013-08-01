@@ -8,8 +8,9 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class MessageWritable implements WritableComparable<MessageWritable> {
     /**
@@ -17,23 +18,23 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
      * stores neighber vertexValue when pathVertex sends the message
      * file stores the point to the file that stores the chains of connected DNA
      */
-    private KmerBytesWritable sourceVertexId;
-    private KmerBytesWritable kmer;
+    private VKmerBytesWritable sourceVertexId;
+    private VKmerBytesWritable kmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private PositionListWritable nodeIdList = new PositionListWritable();
     private byte flag;
     private boolean isFlip;
     private int kmerlength = 0;
     private boolean updateMsg = false;
-    private KmerBytesWritable startVertexId;
+    private VKmerBytesWritable startVertexId;
     
     private byte checkMessage;
 
     public MessageWritable() {
-        sourceVertexId = new KmerBytesWritable();
-        kmer = new KmerBytesWritable(0);
+        sourceVertexId = new VKmerBytesWritable();
+        kmer = new VKmerBytesWritable();
         neighberNode = new AdjacencyListWritable();
-        startVertexId = new KmerBytesWritable();
+        startVertexId = new VKmerBytesWritable();
         flag = Message.NON;
         isFlip = false;
         checkMessage = (byte) 0;
@@ -41,10 +42,10 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     
     public MessageWritable(int kmerSize) {
         kmerlength = kmerSize;
-        sourceVertexId = new KmerBytesWritable(kmerSize);
-        kmer = new KmerBytesWritable(0);
+        sourceVertexId = new VKmerBytesWritable(kmerSize);
+        kmer = new VKmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable(kmerSize);
-        startVertexId = new KmerBytesWritable(kmerSize);
+        startVertexId = new VKmerBytesWritable(kmerSize);
         flag = Message.NON;
         isFlip = false;
         checkMessage = (byte) 0;
@@ -55,11 +56,11 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(msg.getSourceVertexId());
+            this.sourceVertexId.setAsCopy(msg.getSourceVertexId());
         }
         if (kmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
-            this.kmer.set(msg.getActualKmer());
+            this.kmer.setAsCopy(msg.getActualKmer());
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -67,23 +68,23 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
         if (startVertexId != null) {
             checkMessage |= CheckMessage.START;
-            this.startVertexId.set(msg.getStartVertexId());
+            this.startVertexId.setAsCopy(msg.getStartVertexId());
         }
         checkMessage |= CheckMessage.ADJMSG;
         this.flag = msg.getFlag();
         updateMsg = msg.isUpdateMsg();
     }
 
-    public void set(int kmerlength, KmerBytesWritable sourceVertexId, KmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
+    public void set(int kmerlength, VKmerBytesWritable sourceVertexId, VKmerBytesWritable chainVertexId, AdjacencyListWritable neighberNode, byte message) {
         this.kmerlength = kmerlength;
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId);
+            this.sourceVertexId.setAsCopy(sourceVertexId);
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
-            this.kmer.set(chainVertexId);
+            this.kmer.setAsCopy(chainVertexId);
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -99,43 +100,43 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     public void reset(int kmerSize) {
         checkMessage = (byte) 0;
         kmerlength = kmerSize;
-        kmer.reset(1);
+//        kmer.reset();
         neighberNode.reset(kmerSize);
         startVertexId.reset(kmerSize);
         flag = Message.NON;
         isFlip = false;
     }
 
-    public KmerBytesWritable getSourceVertexId() {
+    public VKmerBytesWritable getSourceVertexId() {
         return sourceVertexId;
     }
 
-    public void setSourceVertexId(KmerBytesWritable sourceVertexId) {
+    public void setSourceVertexId(VKmerBytesWritable sourceVertexId) {
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId);
+            this.sourceVertexId.setAsCopy(sourceVertexId);
         }
     }
     
-    public KmerBytesWritable getActualKmer() {
+    public VKmerBytesWritable getActualKmer() {
         return kmer;
     }
 
-    public void setAcutalKmer(KmerBytesWritable actualKmer) {
+    public void setActualKmer(VKmerBytesWritable actualKmer) {
         if (actualKmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
-            this.kmer.set(actualKmer);
+            this.kmer.setAsCopy(actualKmer);
         }
     }
     
-    public KmerBytesWritable getCreatedVertexId() {
+    public VKmerBytesWritable getCreatedVertexId() {
         return kmer;
     }
 
-    public void setCreatedVertexId(KmerBytesWritable actualKmer) {
+    public void setCreatedVertexId(VKmerBytesWritable actualKmer) {
         if (actualKmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
-            this.kmer.set(actualKmer);
+            this.kmer.setAsCopy(actualKmer);
         }
     }
     
@@ -150,19 +151,19 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
     }
     
-    public KmerBytesWritable getStartVertexId() {
+    public VKmerBytesWritable getStartVertexId() {
         return startVertexId;
     }
 
-    public void setStartVertexId(KmerBytesWritable startVertexId) {
+    public void setStartVertexId(VKmerBytesWritable startVertexId) {
         if(startVertexId != null){
             checkMessage |= CheckMessage.START;
-            this.startVertexId.set(startVertexId);
+            this.startVertexId.setAsCopy(startVertexId);
         }
     }
 
     public int getLengthOfChain() {
-        return kmer.getKmerLength();
+        return kmer.getKmerLetterLength();
     }
 
     public byte getFlag() {

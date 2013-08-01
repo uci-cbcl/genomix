@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.oldtype;
+package edu.uci.ics.genomix.velvet.oldtype;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -22,24 +22,11 @@ import java.io.Serializable;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
-    public static final NodeWritable EMPTY_NODE = new NodeWritable(0);
-
-    // merge/update directions
-    public static class DirectionFlag {
-        public static final byte DIR_FF = 0b00 << 0;
-        public static final byte DIR_FR = 0b01 << 0;
-        public static final byte DIR_RF = 0b10 << 0;
-        public static final byte DIR_RR = 0b11 << 0;
-        public static final byte DIR_MASK = 0b11 << 0;
-    }
-
     private PositionWritable nodeID;
     private PositionListWritable forwardForwardList;
     private PositionListWritable forwardReverseList;
@@ -69,16 +56,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         reverseForwardList.set(RFList);
         reverseReverseList.set(RRList);
         kmer.set(kmer);
-    }
-
-    public void set(PositionWritable nodeID, PositionListWritable FFList, PositionListWritable FRList,
-            PositionListWritable RFList, PositionListWritable RRList, KmerBytesWritable kmer) {
-        this.nodeID.set(nodeID);
-        this.forwardForwardList.set(FFList);
-        this.forwardReverseList.set(FRList);
-        this.reverseForwardList.set(RFList);
-        this.reverseReverseList.set(RRList);
-        this.kmer.set(kmer);
     }
 
     public void setNodeID(PositionWritable ref) {
@@ -118,21 +95,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return reverseReverseList;
     }
 
-    public PositionListWritable getListFromDir(byte dir) {
-        switch (dir & DirectionFlag.DIR_MASK) {
-            case DirectionFlag.DIR_FF:
-                return getFFList();
-            case DirectionFlag.DIR_FR:
-                return getFRList();
-            case DirectionFlag.DIR_RF:
-                return getRFList();
-            case DirectionFlag.DIR_RR:
-                return getRRList();
-            default:
-                throw new RuntimeException("Unrecognized direction in getListFromDir: " + dir);
-        }
-    }
-
     public PositionWritable getNodeID() {
         return nodeID;
     }
@@ -148,13 +110,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void mergeForwardNext(NodeWritable nextNode, int initialKmerSize) {
         this.forwardForwardList.set(nextNode.forwardForwardList);
         this.forwardReverseList.set(nextNode.forwardReverseList);
-        kmer.mergeWithFFKmer(initialKmerSize, nextNode.getKmer());
+        kmer.mergeNextKmer(initialKmerSize, nextNode.getKmer());
     }
 
     public void mergeForwardPre(NodeWritable preNode, int initialKmerSize) {
         this.reverseForwardList.set(preNode.reverseForwardList);
         this.reverseReverseList.set(preNode.reverseReverseList);
-        kmer.mergeWithRRKmer(initialKmerSize, preNode.getKmer());
+        kmer.mergePreKmer(initialKmerSize, preNode.getKmer());
     }
 
     public void set(NodeWritable node) {
@@ -211,13 +173,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append('{');
+        sbuilder.append('(');
         sbuilder.append(nodeID.toString()).append('\t');
         sbuilder.append(forwardForwardList.toString()).append('\t');
         sbuilder.append(forwardReverseList.toString()).append('\t');
         sbuilder.append(reverseForwardList.toString()).append('\t');
         sbuilder.append(reverseReverseList.toString()).append('\t');
-        sbuilder.append(kmer.toString()).append('}');
+        sbuilder.append(kmer.toString()).append(')');
         return sbuilder.toString();
     }
 
@@ -234,10 +196,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
      */
     public boolean isPathNode() {
         return inDegree() == 1 && outDegree() == 1;
-    }
-
-    public boolean isSimpleOrTerminalPath() {
-        return isPathNode() || (inDegree() == 0 && outDegree() == 1) || (inDegree() == 1 && outDegree() == 0);
     }
 
 }

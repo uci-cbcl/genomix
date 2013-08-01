@@ -27,6 +27,7 @@ import edu.uci.ics.genomix.hadoop.pmcommon.NodeWithFlagWritable;
 import edu.uci.ics.genomix.hadoop.pmcommon.PathNodeInitial.PathNodeFlag;
 import edu.uci.ics.genomix.oldtype.NodeWritable;
 import edu.uci.ics.genomix.oldtype.PositionWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class MergePathsH3 extends Configured implements Tool {
@@ -58,12 +59,14 @@ public class MergePathsH3 extends Configured implements Tool {
         private boolean finalMerge;
 
         public void configure(JobConf conf) {
+            KMER_SIZE = conf.getInt("sizeKmer", 0);
+            KmerBytesWritable.setGlobalKmerLength(KMER_SIZE);
+            
             randSeed = conf.getLong("randomSeed", 0);
             randGenerator = new Random(randSeed);
             probBeingRandomHead = conf.getFloat("probBeingRandomHead", 0.5f);
             finalMerge = conf.getBoolean("finalMerge", false);
 
-            KMER_SIZE = conf.getInt("sizeKmer", 0);
             outputValue = new NodeWithFlagWritable(KMER_SIZE);
             outputKey = new PositionWritable();
             curNode = new NodeWritable(KMER_SIZE);

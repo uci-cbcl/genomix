@@ -14,9 +14,9 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -33,11 +33,11 @@ public class SplitRepeatVertex extends
     
     public class DeletedEdge{
         private byte dir;
-        private KmerBytesWritable edge;
+        private VKmerBytesWritable edge;
         
         public DeletedEdge(){
             dir = 0;
-            edge = new KmerBytesWritable(kmerSize);
+            edge = new VKmerBytesWritable(kmerSize);
         }
 
         public byte getDir() {
@@ -48,12 +48,12 @@ public class SplitRepeatVertex extends
             this.dir = dir;
         }
 
-        public KmerBytesWritable getEdge() {
+        public VKmerBytesWritable getEdge() {
             return edge;
         }
 
-        public void setEdge(KmerBytesWritable edge) {
-            this.edge.set(edge);
+        public void setEdge(VKmerBytesWritable edge) {
+            this.edge.setAsCopy(edge);
         }
     }
     
@@ -69,13 +69,13 @@ public class SplitRepeatVertex extends
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
     private Set<Long> selfReadIdSet = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
-    private Map<KmerBytesWritable, Set<Long>> kmerMap = new HashMap<KmerBytesWritable, Set<Long>>();
-    private KmerListWritable incomingEdgeList = null; 
-    private KmerListWritable outgoingEdgeList = null; 
+    private Map<VKmerBytesWritable, Set<Long>> kmerMap = new HashMap<VKmerBytesWritable, Set<Long>>();
+    private VKmerListWritable incomingEdgeList = null; 
+    private VKmerListWritable outgoingEdgeList = null; 
     private byte incomingEdgeDir = 0;
     private byte outgoingEdgeDir = 0;
     
-    protected KmerBytesWritable createdVertexId = null;  
+    protected VKmerBytesWritable createdVertexId = null;  
     
     /**
      * initiate kmerSize, maxIteration
@@ -92,13 +92,13 @@ public class SplitRepeatVertex extends
         else
             outgoingMsg.reset(kmerSize);
         if(incomingEdgeList == null)
-            incomingEdgeList = new KmerListWritable(kmerSize);
+            incomingEdgeList = new VKmerListWritable();
         if(outgoingEdgeList == null)
-            outgoingEdgeList = new KmerListWritable(kmerSize);
+            outgoingEdgeList = new VKmerListWritable();
         if(createdVertexId == null)
-            createdVertexId = new KmerBytesWritable(kmerSize);//kmerSize + 1
+            createdVertexId = new VKmerBytesWritable(kmerSize);//kmerSize + 1
         if(destVertexId == null)
-            destVertexId = new KmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable(kmerSize);
     }
     
     /**
@@ -152,11 +152,11 @@ public class SplitRepeatVertex extends
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void createNewVertex(int i, KmerBytesWritable incomingEdge, KmerBytesWritable outgoingEdge){
+    public void createNewVertex(int i, VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
-        KmerBytesWritable vertexId = new KmerBytesWritable(kmerSize);
+        VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
         VertexValueWritable vertexValue = new VertexValueWritable(kmerSize);
         //add the corresponding edge to new vertex
         switch(connectedTable[i][0]){
@@ -175,27 +175,27 @@ public class SplitRepeatVertex extends
                 vertexValue.getFRList().append(outgoingEdge);
                 break;
         }
-        vertexId.set(createdVertexId);
+        vertexId.setAsCopy(createdVertexId);
         vertex.setVertexId(vertexId);
         vertex.setVertexValue(vertexValue);
         
         addVertex(vertexId, vertex);
     }
     
-    public void sendMsgToUpdateEdge(KmerBytesWritable incomingEdge, KmerBytesWritable outgoingEdge){
+    public void sendMsgToUpdateEdge(VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
         outgoingMsg.setCreatedVertexId(createdVertexId);
         outgoingMsg.setSourceVertexId(getVertexId());
         
         outgoingMsg.setFlag(incomingEdgeDir);
-        destVertexId.set(incomingEdge);
+        destVertexId.setAsCopy(incomingEdge);
         sendMsg(destVertexId, outgoingMsg);
         
         outgoingMsg.setFlag(outgoingEdgeDir);
-        destVertexId.set(outgoingEdge);
+        destVertexId.setAsCopy(outgoingEdge);
         sendMsg(destVertexId, outgoingMsg);
     }
     
-    public void storeDeletedEdge(Set<DeletedEdge> deletedEdges, int i, KmerBytesWritable incomingEdge, KmerBytesWritable outgoingEdge){
+    public void storeDeletedEdge(Set<DeletedEdge> deletedEdges, int i, VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
         DeletedEdge deletedIncomingEdge = new DeletedEdge();
         DeletedEdge deletedOutgoingEdge = new DeletedEdge();
         switch(connectedTable[i][0]){
@@ -241,32 +241,32 @@ public class SplitRepeatVertex extends
     public void setEdgeListAndEdgeDir(int i){
         switch(connectedTable[i][0]){
             case EdgeDir.DIR_RF:
-                incomingEdgeList.set(getVertexValue().getRFList());
+                incomingEdgeList.setCopy(getVertexValue().getRFList());
                 incomingEdgeDir = MessageFlag.DIR_RF;
                 break;
             case EdgeDir.DIR_RR:
-                incomingEdgeList.set(getVertexValue().getRRList());
+                incomingEdgeList.setCopy(getVertexValue().getRRList());
                 incomingEdgeDir = MessageFlag.DIR_RR;
                 break;
         }
         switch(connectedTable[i][1]){
             case EdgeDir.DIR_FF:
-                outgoingEdgeList.set(getVertexValue().getFFList());
+                outgoingEdgeList.setCopy(getVertexValue().getFFList());
                 outgoingEdgeDir = MessageFlag.DIR_FF;
                 break;
             case EdgeDir.DIR_FR:
-                outgoingEdgeList.set(getVertexValue().getFRList());
+                outgoingEdgeList.setCopy(getVertexValue().getFRList());
                 outgoingEdgeDir = MessageFlag.DIR_FR;
                 break;
         }
     }
     
-    public void setNeighborEdgeIntersection(KmerBytesWritable incomingEdge, KmerBytesWritable outgoingEdge){
+    public void setNeighborEdgeIntersection(VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
         outgoingReadIdSet.clear(); 
         incomingReadIdSet.clear();
-        tmpKmer.set(incomingEdge);
+        tmpKmer.setAsCopy(incomingEdge);
         incomingReadIdSet.addAll(kmerMap.get(tmpKmer));
-        tmpKmer.set(outgoingEdge);
+        tmpKmer.setAsCopy(outgoingEdge);
         outgoingReadIdSet.addAll(kmerMap.get(tmpKmer));
         
         //set all neighberEdge readId intersection
@@ -330,12 +330,12 @@ public class SplitRepeatVertex extends
                 /** set edgeList and edgeDir based on connectedTable **/
                 setEdgeListAndEdgeDir(i);
                 
-                KmerBytesWritable incomingEdge = new KmerBytesWritable(kmerSize);
-                KmerBytesWritable outgoingEdge = new KmerBytesWritable(kmerSize);
+                VKmerBytesWritable incomingEdge = new VKmerBytesWritable(kmerSize);
+                VKmerBytesWritable outgoingEdge = new VKmerBytesWritable(kmerSize);
                 for(int x = 0; x < incomingEdgeList.getCountOfPosition(); x++){
                     for(int y = 0; y < outgoingEdgeList.getCountOfPosition(); y++){
-                        incomingEdge.set(incomingEdgeList.getPosition(x));
-                        outgoingEdge.set(outgoingEdgeList.getPosition(y));
+                        incomingEdge.setAsCopy(incomingEdgeList.getPosition(x));
+                        outgoingEdge.setAsCopy(outgoingEdgeList.getPosition(y));
                         /** set neighborEdge readId intersection **/
                         setNeighborEdgeIntersection(incomingEdge, outgoingEdge);
                         
@@ -411,7 +411,7 @@ public class SplitRepeatVertex extends
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

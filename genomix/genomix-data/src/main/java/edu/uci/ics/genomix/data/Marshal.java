@@ -34,6 +34,10 @@ public class Marshal {
 //                + ((bytes[offset + 6] & 0xff) << 8) + ((bytes[offset + 7] & 0xff) << 0);
     }
     
+    public static float getFloat(byte[] bytes, int offset) {   
+        return ByteBuffer.wrap(bytes, offset, 4).getFloat();
+    }
+    
     public static void putInt(int val, byte[] bytes, int offset) {
         bytes[offset] = (byte)((val >>> 24) & 0xFF);        
         bytes[offset + 1] = (byte)((val >>> 16) & 0xFF);
@@ -52,6 +56,11 @@ public class Marshal {
 //        bytes[offset + 5] = (byte)((val >>> 16) & 0xFF);
 //        bytes[offset + 6] = (byte)((val >>> 8) & 0xFF);
 //        bytes[offset + 7] = (byte)((val >>> 0) & 0xFF);
+    }
+    
+    public static void putFloat(float val, byte[] bytes, int offset) {
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+        System.arraycopy(byteBuffer.putFloat(val).array(), 0, bytes, offset, 4);
     }
     
     public static int hashBytes(byte[] bytes, int offset, int length) {

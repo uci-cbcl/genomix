@@ -15,18 +15,12 @@
 
 package edu.uci.ics.genomix.data.test;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import junit.framework.Assert;
 
 import org.junit.Test;
 
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
 
 public class KmerBytesWritableTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
@@ -34,7 +28,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestCompressKmer() {
-        KmerBytesWritable kmer = new KmerBytesWritable(k);
+        KmerBytesWritable.setGlobalKmerLength(k);
+        KmerBytesWritable kmer = new KmerBytesWritable();
         kmer.setByRead(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
@@ -44,7 +39,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestMoveKmer() {
-        KmerBytesWritable kmer = new KmerBytesWritable(k);
+        KmerBytesWritable.setGlobalKmerLength(k);
+        KmerBytesWritable kmer = new KmerBytesWritable();
         kmer.setByRead(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
@@ -60,7 +56,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestCompressKmerReverse() {
-        KmerBytesWritable kmer = new KmerBytesWritable(k);
+        KmerBytesWritable.setGlobalKmerLength(k);
+        KmerBytesWritable kmer = new KmerBytesWritable();
         kmer.setByRead(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
@@ -70,7 +67,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestMoveKmerReverse() {
-        KmerBytesWritable kmer = new KmerBytesWritable(k);
+        KmerBytesWritable.setGlobalKmerLength(k);
+        KmerBytesWritable kmer = new KmerBytesWritable();
         kmer.setByRead(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
@@ -86,7 +84,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestGetGene() {
-        KmerBytesWritable kmer = new KmerBytesWritable(9);
+        KmerBytesWritable.setGlobalKmerLength(9);
+        KmerBytesWritable kmer = new KmerBytesWritable();
         String text = "AGCTGACCG";
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G' };
         kmer.setByRead(array, 0);
@@ -101,8 +100,9 @@ public class KmerBytesWritableTest {
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
         String string = "AGCTGACCGT";
         for (int k = 3; k <= 10; k++) {
-            KmerBytesWritable kmer = new KmerBytesWritable(k);
-            KmerBytesWritable kmerAppend = new KmerBytesWritable(k);
+            KmerBytesWritable.setGlobalKmerLength(k);
+            KmerBytesWritable kmer = new KmerBytesWritable();
+            KmerBytesWritable kmerAppend = new KmerBytesWritable();
             kmer.setByRead(array, 0);
             Assert.assertEquals(string.substring(0, k), kmer.toString());
             for (int b = 0; b < k; b++) {
@@ -118,312 +118,5 @@ public class KmerBytesWritableTest {
             }
             Assert.assertEquals(kmer.toString(), kmerAppend.toString());
         }
-    }
-
-    @Test
-    public void TestMergeFFKmer() {
-        byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
-        String text = "AGCTGACCGT";
-        KmerBytesWritable kmer1 = new KmerBytesWritable(8);
-        kmer1.setByRead(array, 0);
-        String text1 = "AGCTGACC";
-        KmerBytesWritable kmer2 = new KmerBytesWritable(8);
-        kmer2.setByRead(array, 1);
-        String text2 = "GCTGACCG";
-        Assert.assertEquals(text2, kmer2.toString());
-        KmerBytesWritable merge = new KmerBytesWritable(kmer1);
-        int kmerSize = 8;
-        merge.mergeWithFFKmer(kmerSize, kmer2);
-        Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
-
-        for (int i = 1; i < 8; i++) {
-            merge.set(kmer1);
-            merge.mergeWithFFKmer(i, kmer2);
-            Assert.assertEquals(text1 + text2.substring(i - 1), merge.toString());
-        }
-
-        for (int ik = 1; ik <= 10; ik++) {
-            for (int jk = 1; jk <= 10; jk++) {
-                kmer1 = new KmerBytesWritable(ik);
-                kmer2 = new KmerBytesWritable(jk);
-                kmer1.setByRead(array, 0);
-                kmer2.setByRead(array, 0);
-                text1 = text.substring(0, ik);
-                text2 = text.substring(0, jk);
-                Assert.assertEquals(text1, kmer1.toString());
-                Assert.assertEquals(text2, kmer2.toString());
-                for (int x = 1; x < jk; x++) {
-                    merge.set(kmer1);
-                    merge.mergeWithFFKmer(x, kmer2);
-                    Assert.assertEquals(text1 + text2.substring(x - 1), merge.toString());
-                }
-            }
-        }
-    }
-    
-    @Test
-    public void TestMergeFRKmer() {
-        int kmerSize = 3;
-        String result = "AAGCTAACAACC";
-        byte[] resultArray = result.getBytes();
-        
-        String text1 = "AAGCTAA";
-        KmerBytesWritable kmer1 = new KmerBytesWritable(text1.length());
-        kmer1.setByRead(resultArray, 0);
-        Assert.assertEquals(text1, kmer1.toString());
-        
-        // kmer2 is the rc of the end of the read
-        String text2 = "GGTTGTT";
-        KmerBytesWritable kmer2 = new KmerBytesWritable(text2.length());
-        kmer2.setByReadReverse(resultArray, result.length() - text2.length());
-        Assert.assertEquals(text2, kmer2.toString());
-        
-        KmerBytesWritable merge = new KmerBytesWritable(kmer1);
-        merge.mergeWithFRKmer(kmerSize, kmer2);
-        Assert.assertEquals(result, merge.toString());
-        
-        int i = 1;
-        merge.set(kmer1);
-        merge.mergeWithFRKmer(i, kmer2);
-        Assert.assertEquals("AAGCTAAAACAACC", merge.toString());
-        
-        i = 2;
-        merge.set(kmer1);
-        merge.mergeWithFRKmer(i, kmer2);
-        Assert.assertEquals("AAGCTAAACAACC", merge.toString());
-        
-        i = 3;
-        merge.set(kmer1);
-        merge.mergeWithFRKmer(i, kmer2);
-        Assert.assertEquals("AAGCTAACAACC", merge.toString());
-    }
-    
-    
-    @Test
-    public void TestMergeRFKmer() {
-        int kmerSize = 3;
-        String result = "GGCACAACAACCC";
-        byte[] resultArray = result.getBytes();
-        
-        String text1 = "AACAACCC";
-        KmerBytesWritable kmer1 = new KmerBytesWritable(text1.length());
-        kmer1.setByRead(resultArray, 5);
-        Assert.assertEquals(text1, kmer1.toString());
-        
-        // kmer2 is the rc of the end of the read
-        String text2 = "TTGTGCC";
-        KmerBytesWritable kmer2 = new KmerBytesWritable(text2.length());
-        kmer2.setByReadReverse(resultArray, 0);
-        Assert.assertEquals(text2, kmer2.toString());
-        
-        KmerBytesWritable merge = new KmerBytesWritable(kmer1);
-        merge.mergeWithRFKmer(kmerSize, kmer2);
-        Assert.assertEquals(result, merge.toString());
-        
-        int i = 1;
-        merge.set(kmer1);
-        merge.mergeWithRFKmer(i, kmer2);
-        Assert.assertEquals("GGCACAAAACAACCC", merge.toString());
-        
-        i = 2;
-        merge.set(kmer1);
-        merge.mergeWithRFKmer(i, kmer2);
-        Assert.assertEquals("GGCACAAACAACCC", merge.toString());
-        
-        i = 3;
-        merge.set(kmer1);
-        merge.mergeWithRFKmer(i, kmer2);
-        Assert.assertEquals("GGCACAACAACCC", merge.toString());
-        
-        String test1;
-        String test2;
-        test1 = "CTA";
-        test2 = "AGA";
-        KmerBytesWritable k1 = new KmerBytesWritable(3);
-        KmerBytesWritable k2 = new KmerBytesWritable(3);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithRFKmer(3, k2);
-        Assert.assertEquals("TCTA", k1.toString());
-        
-        test1 = "CTA";
-        test2 = "ATA"; //TAT
-        k1 = new KmerBytesWritable(3);
-        k2 = new KmerBytesWritable(3);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithFRKmer(3, k2);
-        Assert.assertEquals("CTAT", k1.toString());
-        
-        test1 = "ATA";
-        test2 = "CTA"; //TAT
-        k1 = new KmerBytesWritable(3);
-        k2 = new KmerBytesWritable(3);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithFRKmer(3, k2);
-        Assert.assertEquals("ATAG", k1.toString());
-        
-        test1 = "TCTAT";
-        test2 = "GAAC";
-        k1 = new KmerBytesWritable(5);
-        k2 = new KmerBytesWritable(4);
-        k1.setByRead(test1.getBytes(), 0);
-        k2.setByRead(test2.getBytes(), 0);
-        k1.mergeWithRFKmer(3, k2);
-        Assert.assertEquals("GTTCTAT", k1.toString());
-    }
-    
-    
-
-    @Test
-    public void TestMergeRRKmer() {
-        byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
-        String text = "AGCTGACCGT";
-        KmerBytesWritable kmer1 = new KmerBytesWritable(8);
-        kmer1.setByRead(array, 0);
-        String text1 = "AGCTGACC";
-        KmerBytesWritable kmer2 = new KmerBytesWritable(8);
-        kmer2.setByRead(array, 1);
-        String text2 = "GCTGACCG";
-        Assert.assertEquals(text2, kmer2.toString());
-        KmerBytesWritable merge = new KmerBytesWritable(kmer2);
-        int kmerSize = 8;
-        merge.mergeWithRRKmer(kmerSize, kmer1);
-        Assert.assertEquals(text1 + text2.substring(kmerSize - 1), merge.toString());
-
-        for (int i = 1; i < 8; i++) {
-            merge.set(kmer2);
-            merge.mergeWithRRKmer(i, kmer1);
-            Assert.assertEquals(text1.substring(0, text1.length() - i + 1) + text2, merge.toString());
-        }
-
-        for (int ik = 1; ik <= 10; ik++) {
-            for (int jk = 1; jk <= 10; jk++) {
-                kmer1 = new KmerBytesWritable(ik);
-                kmer2 = new KmerBytesWritable(jk);
-                kmer1.setByRead(array, 0);
-                kmer2.setByRead(array, 0);
-                text1 = text.substring(0, ik);
-                text2 = text.substring(0, jk);
-                Assert.assertEquals(text1, kmer1.toString());
-                Assert.assertEquals(text2, kmer2.toString());
-                for (int x = 1; x < ik; x++) {
-                    merge.set(kmer2);
-                    merge.mergeWithRRKmer(x, kmer1);
-                    Assert.assertEquals(text1.substring(0, text1.length() - x + 1) + text2, merge.toString());
-                }
-            }
-        }
-    }
-    
-    @Test
-    public void TestFinalMerge() {
-        String selfString;
-        String match;
-        String msgString;
-        int index;
-        KmerBytesWritable kmer = new KmerBytesWritable();
-        int kmerSize = 3;
-        
-        String F1 = "AATAG";
-        String F2 = "TAGAA";
-        String R1 = "CTATT";
-        String R2 = "TTCTA";
-        
-        //FF test
-        selfString = F1;
-        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
-        msgString = F2;
-        index = msgString.indexOf(match);
-        kmer.reset(msgString.length() - index);
-        kmer.setByRead(msgString.substring(index).getBytes(), 0);
-        System.out.println(kmer.toString());
-        
-        //FR test
-        selfString = F1;
-        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
-        msgString = GeneCode.reverseComplement(R2);
-        index = msgString.indexOf(match);
-        kmer.reset(msgString.length() - index);
-        kmer.setByRead(msgString.substring(index).getBytes(), 0);
-        System.out.println(kmer.toString());
-        
-        //RF test
-        selfString = R1;
-        match = selfString.substring(0,kmerSize - 1); 
-        msgString = GeneCode.reverseComplement(F2);
-        index = msgString.lastIndexOf(match) + kmerSize - 2;
-        kmer.reset(index + 1);
-        kmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
-        System.out.println(kmer.toString());
-        
-        //RR test
-        selfString = R1;
-        match = selfString.substring(0,kmerSize - 1); 
-        msgString = R2;
-        index = msgString.lastIndexOf(match) + kmerSize - 2;
-        kmer.reset(index + 1);
-        kmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
-        System.out.println(kmer.toString());
-        
-        String[][] connectedTable = new String[][]{
-                {"FF", "RF"},
-                {"FF", "RR"},
-                {"FR", "RF"},
-                {"FR", "RR"}
-        };
-        System.out.println(connectedTable[0][1]);
-        
-        Set<Long> s1 = new HashSet<Long>();
-        Set<Long> s2 = new HashSet<Long>();
-        s1.add((long) 1);
-        s1.add((long) 2);
-        s2.add((long) 2);
-        s2.add((long) 3);
-        Set<Long> intersection = new HashSet<Long>();
-        intersection.addAll(s1);
-        intersection.retainAll(s2);
-        System.out.println(intersection.toString());
-        Set<Long> difference = new HashSet<Long>();
-        difference.addAll(s1);
-        difference.removeAll(s2);
-        System.out.println(difference.toString());
-        
-        Map<KmerBytesWritable, Set<Long>> map = new HashMap<KmerBytesWritable, Set<Long>>();
-        KmerBytesWritable k1 = new KmerBytesWritable(3);
-        Set<Long> set1 = new HashSet<Long>();
-        k1.setByRead(("CTA").getBytes(), 0);
-        set1.add((long)1);
-        map.put(k1, set1);
-        KmerBytesWritable k2 = new KmerBytesWritable(3);
-        k2.setByRead(("GTA").getBytes(), 0);
-        Set<Long> set2 = new HashSet<Long>();
-        set2.add((long) 2);
-        map.put(k2, set2);
-        KmerBytesWritable k3 = new KmerBytesWritable(3);
-        k3.setByRead(("ATG").getBytes(), 0);
-        Set<Long> set3 = new HashSet<Long>();
-        set3.add((long) 2);
-        map.put(k3, set3);
-        KmerBytesWritable k4 = new KmerBytesWritable(3);
-        k4.setByRead(("AAT").getBytes(), 0);
-        Set<Long> set4 = new HashSet<Long>();
-        set4.add((long) 1);
-        map.put(k4, set4);
-        KmerListWritable kmerList = new KmerListWritable(3);
-        kmerList.append(k1);
-        kmerList.append(k2);
-        System.out.println("CTA = " + map.get(k1).toString());
-        System.out.println("GTA = " + map.get(k2).toString());
-        System.out.println("ATG = " + map.get(k3).toString());
-        System.out.println("AAT = " + map.get(k4).toString());
-        System.out.println(k1.compareTo(k2));
-        System.out.println(k2.compareTo(k1));
-        
-        System.out.println("CTA = " + kmerList.getPosition(0).toString());
-        System.out.println("GTA = " + kmerList.getPosition(1).toString());
-        System.out.println("CTA = " + map.get(kmerList.getPosition(0)).toString());
-        System.out.println("GTA = " + map.get(kmerList.getPosition(1)).toString());
-    }
+    }    
 }

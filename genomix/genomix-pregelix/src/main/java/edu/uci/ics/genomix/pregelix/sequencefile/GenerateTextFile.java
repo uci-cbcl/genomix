@@ -19,6 +19,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 public class GenerateTextFile {
 
     public static void generateFromPathmergeResult(int kmerSize, String strSrcDir, String outPutDir) throws IOException {
+        KmerBytesWritable.setGlobalKmerLength(kmerSize);
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.getLocal(conf);
 
@@ -44,13 +45,14 @@ public class GenerateTextFile {
     }
 
     public static void generateSpecificLengthChainFromNaivePathmergeResult(int maxLength) throws IOException {
+        KmerBytesWritable.setGlobalKmerLength(55);
         BufferedWriter bw = new BufferedWriter(new FileWriter("naive_text_" + maxLength));
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.get(conf);
         for (int i = 0; i < 2; i++) {
             Path path = new Path("/home/anbangx/genomix_result/final_naive/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-            KmerBytesWritable key = new KmerBytesWritable(55);
+            KmerBytesWritable key = new KmerBytesWritable();
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
@@ -68,13 +70,14 @@ public class GenerateTextFile {
     }
 
     public static void generateSpecificLengthChainFromLogPathmergeResult(int maxLength) throws IOException {
+        KmerBytesWritable.setGlobalKmerLength(55);
         BufferedWriter bw = new BufferedWriter(new FileWriter("log_text_" + maxLength));
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.get(conf);
         for (int i = 0; i < 2; i++) {
             Path path = new Path("/home/anbangx/genomix_result/improvelog2/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-            KmerBytesWritable key = new KmerBytesWritable(55);
+            KmerBytesWritable key = new KmerBytesWritable();
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
@@ -93,12 +96,13 @@ public class GenerateTextFile {
     }
 
     public static void generateFromGraphbuildResult() throws IOException {
+        KmerBytesWritable.setGlobalKmerLength(55);
         BufferedWriter bw = new BufferedWriter(new FileWriter("textfile"));
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.get(conf);
         Path path = new Path("data/input/part-0-out-3000000");
         SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-        KmerBytesWritable key = new KmerBytesWritable(55);
+        KmerBytesWritable key = new KmerBytesWritable();
 
         while (reader.next(key, null)) {
             if (key == null) {

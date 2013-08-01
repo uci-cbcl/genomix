@@ -23,15 +23,16 @@ public class GenomixReducer extends MapReduceBase implements
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = GenomixMapper.KMER_SIZE;
-        outputNode = new NodeWritable(KMER_SIZE);
-        tmpNode = new NodeWritable(KMER_SIZE);
+        KmerBytesWritable.setGlobalKmerLength(KMER_SIZE);
+        outputNode = new NodeWritable();
+        tmpNode = new NodeWritable();
     }
     
 	@Override
 	public void reduce(KmerBytesWritable key, Iterator<NodeWritable> values,
 			OutputCollector<KmerBytesWritable, NodeWritable> output,
 			Reporter reporter) throws IOException {
-		outputNode.reset(KMER_SIZE);
+		outputNode.reset();
 		
 		while (values.hasNext()) {
 		    tmpNode.set(values.next());

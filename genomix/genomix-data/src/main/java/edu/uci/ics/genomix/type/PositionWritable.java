@@ -119,10 +119,10 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
     }
     
     /*
-     * String of form "(readId-posID_mate)" where mate is _1 or _2
+     * String of form "(readId-posID_mate)" where mate is _0 or _1
      */
     @Override
     public String toString() {
-        return "(" + this.getReadId() + "-" + this.getPosId() + "_" + (this.getMateId() + 1) + ")";
+        return "(" + this.getReadId() + "-" + this.getPosId() + "_" + (this.getMateId()) + ")";
     }
 }

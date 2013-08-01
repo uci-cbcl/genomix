@@ -41,7 +41,7 @@ public class PositionListWritableTest {
         byte [] another = new byte [plist.getLength()*2];
         int start = 20;
         System.arraycopy(plist.getByteArray(), 0, another, start, plist.getLength());
-        PositionListWritable plist2 = new PositionListWritable(plist.getCountOfPosition(),another,start);
+        PositionListWritable plist2 = new PositionListWritable(another,start);
         for( i = 0; i < plist2.getCountOfPosition(); i++){
             Assert.assertEquals(plist.getPosition(i), plist2.getPosition(i));
         }
@@ -84,19 +84,22 @@ public class PositionListWritableTest {
             iterator = copyList.iterator();
             PositionWritable deletePos = new PositionWritable();
             deletePos.set((byte)1, (long)j, j);
+            boolean removed = false;
             while(iterator.hasNext()){
                 pos = iterator.next();
                 if(pos.equals(deletePos)){
                     iterator.remove();
+                    removed = true;
                     break;
                 }
             }
+            Assert.assertTrue(removed);
             Assert.assertEquals(5 - 1 - j, copyList.getCountOfPosition());
             while(iterator.hasNext()){
                 pos = iterator.next();
-                Assert.assertTrue(pos.getUUID() != deletePos.getUUID());
-                Assert.assertTrue(pos.getReadId() != deletePos.getReadId());
-                Assert.assertTrue(pos.getPosId() != deletePos.getPosId());
+                Assert.assertTrue(! (pos.getUUID() == deletePos.getUUID() && 
+                                  pos.getReadId() == deletePos.getReadId() && 
+                                  pos.getPosId() == deletePos.getPosId()));
                 i++;
             }
         }

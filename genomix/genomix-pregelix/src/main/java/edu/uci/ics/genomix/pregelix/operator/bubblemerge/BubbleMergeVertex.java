@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -30,7 +30,7 @@ public class BubbleMergeVertex extends
 
     private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
     
-    private Map<KmerBytesWritable, ArrayList<MessageWritable>> receivedMsgMap = new HashMap<KmerBytesWritable, ArrayList<MessageWritable>>();
+    private Map<VKmerBytesWritable, ArrayList<MessageWritable>> receivedMsgMap = new HashMap<VKmerBytesWritable, ArrayList<MessageWritable>>();
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
     
     /**
@@ -65,8 +65,8 @@ public class BubbleMergeVertex extends
                             if(hasNextDest(getVertexValue())){
                                 outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                                 outgoingMsg.setSourceVertexId(getVertexId());
-                                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
-                                destVertexId.set(getNextDestVertexId(getVertexValue()));
+                                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                                destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
                                 sendMsg(destVertexId, outgoingMsg);
                             }
                             break;
@@ -75,8 +75,8 @@ public class BubbleMergeVertex extends
                             if(hasPrevDest(getVertexValue())){
                                 outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                                 outgoingMsg.setSourceVertexId(getVertexId());
-                                outgoingMsg.setAcutalKmer(getVertexValue().getKmer());
-                                destVertexId.set(getPrevDestVertexId(getVertexValue()));
+                                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                                destVertexId.setAsCopy(getPrevDestVertexId(getVertexValue()));
                                 sendMsg(destVertexId, outgoingMsg);
                             }
                             break;
@@ -98,7 +98,7 @@ public class BubbleMergeVertex extends
                     receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
                 }
             }
-            for(KmerBytesWritable prevId : receivedMsgMap.keySet()){
+            for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
                 receivedMsgList = receivedMsgMap.get(prevId);
                 if(receivedMsgList.size() > 1){
                     /** for each startVertex, sort the node by decreasing order of coverage **/
@@ -173,7 +173,7 @@ public class BubbleMergeVertex extends
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

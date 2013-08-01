@@ -15,7 +15,7 @@
 
 package edu.uci.ics.genomix.hyracks.data.primitive;
 
-import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.velvet.oldtype.NodeWritable;
 
 public class NodeReference extends NodeWritable {
 

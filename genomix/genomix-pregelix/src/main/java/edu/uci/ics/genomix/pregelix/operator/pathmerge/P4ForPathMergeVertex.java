@@ -5,7 +5,6 @@ import java.util.Random;
 
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
@@ -14,7 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /*
  * vertexId: BytesWritable
@@ -56,9 +55,9 @@ public class P4ForPathMergeVertex extends
     private float probBeingRandomHead = -1;
     private Random randGenerator;
     
-    private KmerBytesWritable curKmer = new KmerBytesWritable();
-    private KmerBytesWritable nextKmer = new KmerBytesWritable();
-    private KmerBytesWritable prevKmer = new KmerBytesWritable();
+    private VKmerBytesWritable curKmer = new VKmerBytesWritable();
+    private VKmerBytesWritable nextKmer = new VKmerBytesWritable();
+    private VKmerBytesWritable prevKmer = new VKmerBytesWritable();
     private boolean hasNext;
     private boolean hasPrev;
     private boolean curHead;
@@ -81,7 +80,7 @@ public class P4ForPathMergeVertex extends
         else
             outgoingMsg.reset(kmerSize);
         if(destVertexId == null)
-            destVertexId = new KmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable(kmerSize);
         randSeed = getSuperstep();
         randGenerator = new Random(randSeed);
         if (probBeingRandomHead < 0)
@@ -97,7 +96,7 @@ public class P4ForPathMergeVertex extends
         headFlag = (byte) (State.IS_HEAD & getVertexValue().getState());
     }
 
-    protected boolean isNodeRandomHead(KmerBytesWritable nodeKmer) {
+    protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
         // "deterministically random", based on node id
         //randGenerator.setSeed(randSeed);
         //randSeed = randGenerator.nextInt();
@@ -112,12 +111,12 @@ public class P4ForPathMergeVertex extends
      */
     protected boolean setNextInfo(VertexValueWritable value) {
         if (value.getFFList().getCountOfPosition() > 0) {
-            nextKmer.set(value.getFFList().getPosition(0));
+            nextKmer.setAsCopy(value.getFFList().getPosition(0));
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
         if (value.getFRList().getCountOfPosition() > 0) {
-            nextKmer.set(value.getFRList().getPosition(0));
+            nextKmer.setAsCopy(value.getFRList().getPosition(0));
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
@@ -129,12 +128,12 @@ public class P4ForPathMergeVertex extends
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
         if (value.getRRList().getCountOfPosition() > 0) {
-            prevKmer.set(value.getRRList().getPosition(0));
+            prevKmer.setAsCopy(value.getRRList().getPosition(0));
             prevHead = isNodeRandomHead(prevKmer);
             return true;
         }
         if (value.getRFList().getCountOfPosition() > 0) {
-            prevKmer.set(value.getRFList().getPosition(0));
+            prevKmer.setAsCopy(value.getRFList().getPosition(0));
             prevHead = isNodeRandomHead(prevKmer);
             return true;
         }
@@ -157,7 +156,7 @@ public class P4ForPathMergeVertex extends
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
-            curKmer.set(getVertexId());
+            curKmer.setAsCopy(getVertexId());
             
             curHead = isNodeRandomHead(curKmer);
             
@@ -234,7 +233,7 @@ public class P4ForPathMergeVertex extends
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(PositionWritable.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

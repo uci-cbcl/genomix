@@ -3,8 +3,8 @@ package edu.uci.ics.genomix.pregelix.operator.tipremove;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -46,7 +46,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
  *  Remove tip or single node when l > constant
  */
 public class TipAddVertex extends
-        Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "TipAddVertex.kmerSize";
     public static int kmerSize = -1;
    
@@ -68,7 +68,7 @@ public class TipAddVertex extends
         initVertex(); 
         if(getSuperstep() == 1){
             if(getVertexId().toString().equals("CTA")){
-                KmerBytesWritable vertexId = new KmerBytesWritable(kmerSize);
+                VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
                 vertexId.setByRead("AGC".getBytes(), 0);
                 getVertexValue().getRFList().append(vertexId);
                 
@@ -86,7 +86,7 @@ public class TipAddVertex extends
                 /**
                  * set the vertex value
                  */
-                KmerListWritable kmerList = new KmerListWritable(kmerSize);
+                VKmerListWritable kmerList = new VKmerListWritable();
                 kmerList.append(getVertexId());
                 vertexValue.setRFList(kmerList);
                 vertexValue.setKmer(vertexId);
@@ -107,7 +107,7 @@ public class TipAddVertex extends
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

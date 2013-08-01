@@ -6,8 +6,8 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
 
@@ -47,7 +47,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     private AdjacencyListWritable incomingList;
     private AdjacencyListWritable outgoingList;
     private byte state;
-    private KmerBytesWritable kmer;
+    private VKmerBytesWritable kmer;
     private int kmerlength = 0;
     private boolean isFakeVertex = false;
 
@@ -61,27 +61,27 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         incomingList = new AdjacencyListWritable();
         outgoingList = new AdjacencyListWritable();
         state = State.IS_NON;
-        kmer = new KmerBytesWritable(kmerSize);
+        kmer = new VKmerBytesWritable();
     }
 
-    public VertexValueWritable(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
-            KmerListWritable reverseForwardList, KmerListWritable reverseReverseList,
-            byte state, KmerBytesWritable kmer) {
+    public VertexValueWritable(PositionListWritable nodeIdList, VKmerListWritable forwardForwardList, VKmerListWritable forwardReverseList,
+            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList,
+            byte state, VKmerBytesWritable kmer) {
         set(nodeIdList, forwardForwardList, forwardReverseList, 
                 reverseForwardList, reverseReverseList,
                 state, kmer);
     }
     
-    public void set(PositionListWritable nodeIdList, KmerListWritable forwardForwardList, KmerListWritable forwardReverseList,
-            KmerListWritable reverseForwardList, KmerListWritable reverseReverseList, 
-            byte state, KmerBytesWritable kmer) {
-        this.kmerlength = kmer.kmerByteSize;
+    public void set(PositionListWritable nodeIdList, VKmerListWritable forwardForwardList, VKmerListWritable forwardReverseList,
+            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList, 
+            byte state, VKmerBytesWritable kmer) {
+        this.kmerlength = kmer.getKmerLetterLength();
         this.incomingList.setForwardList(reverseForwardList);
         this.incomingList.setReverseList(reverseReverseList);
         this.outgoingList.setForwardList(forwardForwardList);
         this.outgoingList.setReverseList(forwardReverseList);
         this.state = state;
-        this.kmer.set(kmer);
+        this.kmer.setAsCopy(kmer);
     }
     
     public void set(VertexValueWritable value) {
@@ -99,35 +99,35 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         this.nodeIdList.set(nodeIdList);
     }
 
-    public KmerListWritable getFFList() {
+    public VKmerListWritable getFFList() {
         return outgoingList.getForwardList();
     }
 
-    public KmerListWritable getFRList() {
+    public VKmerListWritable getFRList() {
         return outgoingList.getReverseList();
     }
 
-    public KmerListWritable getRFList() {
+    public VKmerListWritable getRFList() {
         return incomingList.getForwardList();
     }
 
-    public KmerListWritable getRRList() {
+    public VKmerListWritable getRRList() {
         return incomingList.getReverseList();
     }
     
-    public void setFFList(KmerListWritable forwardForwardList){
+    public void setFFList(VKmerListWritable forwardForwardList){
         outgoingList.setForwardList(forwardForwardList);
     }
     
-    public void setFRList(KmerListWritable forwardReverseList){
+    public void setFRList(VKmerListWritable forwardReverseList){
         outgoingList.setReverseList(forwardReverseList);
     }
     
-    public void setRFList(KmerListWritable reverseForwardList){
+    public void setRFList(VKmerListWritable reverseForwardList){
         incomingList.setForwardList(reverseForwardList);
     }
 
-    public void setRRList(KmerListWritable reverseReverseList){
+    public void setRRList(VKmerListWritable reverseReverseList){
         incomingList.setReverseList(reverseReverseList);
     }
     
@@ -165,17 +165,17 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
 
     public int getLengthOfKmer() {
-        return kmer.getKmerLength();
+        return kmer.getKmerLetterLength();
     }
 
-    public KmerBytesWritable getKmer() {
+    public VKmerBytesWritable getKmer() {
         return kmer;
     }
 
-    public void setKmer(KmerBytesWritable kmer) {
-        this.kmer.set(kmer);
+    public void setKmer(VKmerBytesWritable kmer) {
+        this.kmer.setAsCopy(kmer);
     }
-        
+
     public int getKmerlength() {
         return kmerlength;
     }
@@ -187,11 +187,11 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     public void reset(int kmerSize) {
         this.kmerlength = kmerSize;
         this.nodeIdList.reset();
-        this.incomingList.getForwardList().reset(kmerSize);
-        this.incomingList.getReverseList().reset(kmerSize);
-        this.outgoingList.getForwardList().reset(kmerSize);
-        this.outgoingList.getReverseList().reset(kmerSize);
-        this.kmer.reset(0);
+        this.incomingList.getForwardList().reset();
+        this.incomingList.getReverseList().reset();
+        this.outgoingList.getForwardList().reset();
+        this.outgoingList.getReverseList().reset();
+//        this.kmer.reset(0);
     }
     
     @Override
@@ -250,7 +250,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     /*
      * Delete the corresponding edge
      */
-    public void processDelete(byte neighborToDeleteDir, KmerBytesWritable nodeToDelete){
+    public void processDelete(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete){
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
                 this.getFFList().remove(nodeToDelete);
@@ -270,8 +270,8 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     /*
      * Process any changes to value.  This is for edge updates
      */
-    public void processUpdates(byte neighborToDeleteDir, KmerBytesWritable nodeToDelete,
-            byte neighborToMergeDir, KmerBytesWritable nodeToAdd){
+    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
+            byte neighborToMergeDir, VKmerBytesWritable nodeToAdd){
 //        TODO
 //        this.getListFromDir(neighborToDeleteDir).remove(nodeToDelete);
 //        this.getListFromDir(neighborToMergeDir).append(nodeToDelete);
@@ -309,9 +309,9 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     /*
      * Process any changes to value.  This is for merging
      */
-    public void processMerges(byte neighborToDeleteDir, KmerBytesWritable nodeToDelete,
-            byte neighborToMergeDir, KmerBytesWritable nodeToAdd, 
-            int kmerSize, KmerBytesWritable kmer){
+    public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
+            byte neighborToMergeDir, VKmerBytesWritable nodeToAdd, 
+            int kmerSize, VKmerBytesWritable kmer){
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
                 this.getFFList().remove(nodeToDelete); //set(null);

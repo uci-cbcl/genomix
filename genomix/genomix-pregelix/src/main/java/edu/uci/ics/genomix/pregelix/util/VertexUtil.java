@@ -2,7 +2,7 @@ package edu.uci.ics.genomix.pregelix.util;
 
 import edu.uci.ics.genomix.pregelix.io.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class VertexUtil {
     /**
@@ -67,7 +67,7 @@ public class VertexUtil {
     /**
      * check if mergeChain is cycle
      */
-    public static boolean isCycle(KmerBytesWritable kmer, KmerBytesWritable mergeChain, int kmerSize) {
+    public static boolean isCycle(VKmerBytesWritable kmer, VKmerBytesWritable mergeChain, int kmerSize) {
         String chain = mergeChain.toString().substring(1);
         return chain.contains(kmer.toString());
 
@@ -116,7 +116,7 @@ public class VertexUtil {
     /**
      * get nodeId from Ad
      */
-    public static KmerBytesWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
+    public static VKmerBytesWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
         if(adj.getForwardList().getCountOfPosition() > 0)
             return adj.getForwardList().getPosition(0);
         else if(adj.getReverseList().getCountOfPosition() > 0)
