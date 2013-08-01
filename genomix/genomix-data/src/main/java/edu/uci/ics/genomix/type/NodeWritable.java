@@ -6,9 +6,12 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Comparator;
 
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.WritableComparable;
+
+import edu.uci.ics.genomix.data.Marshal;
 
 
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable{
@@ -16,12 +19,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
     
+    private static final int SIZE_FLOAT = 4;
+    
     private PositionListWritable nodeIdList;
     private VKmerListWritable forwardForwardList;
     private VKmerListWritable forwardReverseList;
     private VKmerListWritable reverseForwardList;
     private VKmerListWritable reverseReverseList;
     private VKmerBytesWritable kmer;
+    private float averageCoverage;
     
     // merge/update directions
     public static class DirectionFlag {
@@ -39,27 +45,29 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         reverseForwardList = new VKmerListWritable();
         reverseReverseList = new VKmerListWritable();
         kmer = new VKmerBytesWritable();  // in graph construction - not set kmerlength Optimization: VKmer
+        averageCoverage = 0;
     }
     
     public NodeWritable(PositionListWritable nodeIdList, VKmerListWritable FFList, VKmerListWritable FRList,
-            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer) {
+            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer, float coverage) {
         this();
-        set(nodeIdList, FFList, FRList, RFList, RRList, kmer);
+        set(nodeIdList, FFList, FRList, RFList, RRList, kmer, coverage);
     }
     
     public void set(NodeWritable node){
         set(node.nodeIdList, node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
-                node.reverseReverseList, node.kmer);
+                node.reverseReverseList, node.kmer, node.averageCoverage);
     }
     
     public void set(PositionListWritable nodeIdList, VKmerListWritable FFList, VKmerListWritable FRList,
-            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer2) {
+            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer2, float coverage) {
         this.nodeIdList.set(nodeIdList);
         this.forwardForwardList.setCopy(FFList);
         this.forwardReverseList.setCopy(FRList);
         this.reverseForwardList.setCopy(RFList);
         this.reverseReverseList.setCopy(RRList);
         this.kmer.setAsCopy(kmer2);
+        this.averageCoverage = coverage;
     }
 
     public void reset() {
@@ -69,6 +77,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.reverseForwardList.reset();
         this.reverseReverseList.reset();
         this.kmer.reset(0);
+        averageCoverage = 0;
     }
     
     public PositionListWritable getNodeIdList() {
@@ -139,11 +148,40 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 	
 	/**
+	 * Update my coverage to be the average of this and other. Used when merging paths.
+	 */
+	public void mergeCoverage(NodeWritable other) {
+	    // sequence considered in the average doesn't include anything overlapping with other kmers
+	    float adjustedLength = kmer.getKmerLetterLength() + other.kmer.getKmerLetterLength() - (KmerBytesWritable.getKmerLength() - 1) * 2;
+	    
+	    float myCount = (kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * averageCoverage;
+	    float otherCount = (other.kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * other.averageCoverage;
+	    averageCoverage = (myCount + otherCount) / adjustedLength;
+	}
+	
+	/**
+	 * Update my coverage as if all the reads in other became my own 
+	 */
+	public void addCoverage(NodeWritable other) {
+	    float myAdjustedLength = kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
+	    float otherAdjustedLength = other.kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1; 
+	    averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
+	}
+	
+	public void setAvgCoverage(float coverage) {
+	    averageCoverage = coverage;
+	}
+	
+	public float getAvgCoverage() {
+	    return averageCoverage;
+	}
+	
+	/**
 	 * Returns the length of the byte-array version of this node
 	 */
 	public int getSerializedLength() {
 	    return nodeIdList.getLength() + forwardForwardList.getLength() + forwardReverseList.getLength() + 
-	            reverseForwardList.getLength() + reverseReverseList.getLength() + kmer.getLength();
+	            reverseForwardList.getLength() + reverseReverseList.getLength() + kmer.getLength() + SIZE_FLOAT;
 	}
 	
 	/**
@@ -171,6 +209,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         
         curOffset += reverseReverseList.getLength();
         kmer.setAsCopy(data, curOffset);
+        
+        curOffset += kmer.getLength();
+        averageCoverage = Marshal.getFloat(data, curOffset);
     }
     
     public void setAsReference(byte[] data, int offset) {
@@ -188,6 +229,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         
         curOffset += reverseReverseList.getLength();
         kmer.setAsReference(data, curOffset);
+        
+        curOffset += kmer.getLength();
+        averageCoverage = Marshal.getFloat(data, curOffset);
     }
 	
     @Override
@@ -198,6 +242,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.reverseForwardList.write(out);
         this.reverseReverseList.write(out);
         this.kmer.write(out);
+        out.writeFloat(averageCoverage);
     }
 
     @Override
@@ -209,11 +254,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this.reverseForwardList.readFields(in);
         this.reverseReverseList.readFields(in);
         this.kmer.readFields(in);
+        averageCoverage = in.readFloat();
     }
 
     @Override
     public int compareTo(NodeWritable other) {
         return this.kmer.compareTo(other.kmer);
+    }
+    
+    public class SortByCoverage implements Comparator<NodeWritable> {
+        @Override
+        public int compare(NodeWritable left, NodeWritable right) {
+            return Float.compare(left.averageCoverage, right.averageCoverage);
+        }
     }
     
     @Override
