@@ -6,6 +6,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Comparator;
 
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.WritableComparable;
@@ -260,6 +261,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     @Override
     public int compareTo(NodeWritable other) {
         return this.kmer.compareTo(other.kmer);
+    }
+    
+    public class SortByCoverage implements Comparator<NodeWritable> {
+        @Override
+        public int compare(NodeWritable left, NodeWritable right) {
+            return Float.compare(left.averageCoverage, right.averageCoverage);
+        }
     }
     
     @Override
