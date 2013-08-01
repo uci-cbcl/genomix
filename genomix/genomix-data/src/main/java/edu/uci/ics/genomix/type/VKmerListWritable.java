@@ -247,13 +247,12 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
-        valueCount = in.readInt();
-        Marshal.putInt(valueCount, storage, offset);
+        int newValueCount = in.readInt();
         int curOffset = offset + HEADER_SIZE;
         int elemBytes = 0;
         int elemLetters = 0;
         int curLength = getLength();
-        for (int i = 0; i < valueCount; i++) {
+        for (int i = 0; i < newValueCount; i++) {
             elemLetters = in.readInt();
             elemBytes = KmerUtil.getByteNumFromK(elemLetters) + VKmerBytesWritable.HEADER_SIZE;
             setSize(curLength + elemBytes); // make sure we have room for the new element
@@ -262,6 +261,8 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
             curOffset += elemBytes;
             curLength += elemBytes;
         }
+        valueCount = newValueCount;
+        Marshal.putInt(valueCount, storage, offset);
     }
 
     @Override

@@ -243,9 +243,10 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        this.valueCount = in.readInt();
-        setSize(valueCount * PositionWritable.LENGTH + HEADER_SIZE);
-        in.readFully(storage, offset + HEADER_SIZE, valueCount * PositionWritable.LENGTH);
+        int newValueCount = in.readInt();
+        setSize(newValueCount * PositionWritable.LENGTH + HEADER_SIZE);
+        in.readFully(storage, offset + HEADER_SIZE, newValueCount * PositionWritable.LENGTH);
+        valueCount = newValueCount;
         Marshal.putInt(valueCount, storage, offset);
     }
 

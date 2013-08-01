@@ -362,6 +362,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
             }
             in.readFully(bytes, kmerStartOffset, bytesUsed);
         }
+        saveHeader(lettersInKmer);
     }
 
     /**
