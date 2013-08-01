@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.type.State2;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class MergePathTest {
     public static final String PATH_TO_TESTSTORE = "testcase/pathmerge/";
@@ -50,7 +50,7 @@ public class MergePathTest {
         for (int i = 0; i < nc; i++) {
             Path path = new Path(input + "/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-            KmerBytesWritable key = new KmerBytesWritable(kmerSize);
+            VKmerBytesWritable key = new VKmerBytesWritable(kmerSize);
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
@@ -90,7 +90,7 @@ public class MergePathTest {
         for (int i = 0; i < nc; i++) {
             Path path = new Path(input + "/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-            KmerBytesWritable key = new KmerBytesWritable(kmerSize);
+            VKmerBytesWritable key = new VKmerBytesWritable(kmerSize);
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
@@ -115,7 +115,7 @@ public class MergePathTest {
         for (int i = 0; i < nc; i++) {
             Path path = new Path(input + "/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-            KmerBytesWritable key = new KmerBytesWritable(kmerSize);
+            VKmerBytesWritable key = new VKmerBytesWritable(kmerSize);
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {

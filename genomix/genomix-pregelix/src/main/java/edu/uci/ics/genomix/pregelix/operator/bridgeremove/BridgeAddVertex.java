@@ -72,7 +72,7 @@ public class BridgeAddVertex extends
         if(getSuperstep() == 1){
             if(getVertexId().toString().equals("ATA")){
             	VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
-                vertexId.setByRead("GTA".getBytes(), 0);
+                vertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
                 getVertexValue().getFRList().append(vertexId);
                 
                 //add bridge vertex
@@ -92,7 +92,7 @@ public class BridgeAddVertex extends
                 kmerFRList.append(getVertexId());
                 vertexValue.setFRList(kmerFRList);
                 VKmerBytesWritable otherVertexId = new VKmerBytesWritable(kmerSize);
-                otherVertexId.setByRead("ACG".getBytes(), 0);
+                otherVertexId.setByRead(kmerSize, "ACG".getBytes(), 0);
                 VKmerListWritable kmerRFList = new VKmerListWritable();
                 kmerRFList.append(otherVertexId);
                 vertexValue.setRFList(kmerRFList);
@@ -103,7 +103,7 @@ public class BridgeAddVertex extends
             } 
             else if(getVertexId().toString().equals("ACG")){
                 VKmerBytesWritable brdgeVertexId = new VKmerBytesWritable(kmerSize);
-                brdgeVertexId.setByRead("GTA".getBytes(), 0);
+                brdgeVertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
                 getVertexValue().getRFList().append(brdgeVertexId);
             }
         }

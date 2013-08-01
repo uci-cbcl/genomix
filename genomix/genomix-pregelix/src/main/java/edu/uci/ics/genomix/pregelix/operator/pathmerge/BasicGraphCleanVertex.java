@@ -653,32 +653,28 @@ public class BasicGraphCleanVertex extends
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
                 msgString = msg.getActualKmer().toString();
                 index = msgString.indexOf(match);
-//                tmpKmer.reset(msgString.length() - index);
-                tmpKmer.setByRead(msgString.substring(index).getBytes(), 0);
+                tmpKmer.setByRead(msgString.length() - index, msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_FR:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
                 msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.indexOf(match);
-//                tmpKmer.reset(msgString.length() - index);
-                tmpKmer.setByReadReverse(msgString.substring(index).getBytes(), 0);
+                tmpKmer.setByReadReverse(msgString.length() - index, msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RF:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(0,kmerSize - 1); 
                 msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
-//                tmpKmer.reset(index + 1);
-                tmpKmer.setByReadReverse(msgString.substring(0, index + 1).getBytes(), 0);
+                tmpKmer.setByReadReverse(index + 1, msgString.substring(0, index + 1).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RR:
                 selfString = getVertexValue().getKmer().toString();
                 match = selfString.substring(0,kmerSize - 1); 
                 msgString = msg.getActualKmer().toString();
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
-//                tmpKmer.reset(index + 1); // TODO: fix ALL of these resets (only if you need to)
-                tmpKmer.setByRead(msgString.substring(0, index + 1).getBytes(), 0);
+                tmpKmer.setByRead(index + 1, msgString.substring(0, index + 1).getBytes(), 0);
                 break;
         }
        

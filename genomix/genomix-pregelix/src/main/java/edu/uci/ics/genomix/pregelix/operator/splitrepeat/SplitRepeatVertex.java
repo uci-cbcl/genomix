@@ -341,9 +341,9 @@ public class SplitRepeatVertex extends
                         
                         if(!neighborEdgeIntersection.isEmpty()){
                             if(count == 0)
-                                createdVertexId.setByRead("AAA".getBytes(), 0);//kmerSize + 1 generaterRandomString(kmerSize).getBytes()
+                                createdVertexId.setByRead("AAA".length(), "AAA".getBytes(), 0);//kmerSize + 1 generaterRandomString(kmerSize).getBytes()
                             else
-                                createdVertexId.setByRead("GGG".getBytes(), 0);
+                                createdVertexId.setByRead("GGG".length(), "GGG".getBytes(), 0);
                             count++;
                             
                             /** create new/created vertex **/

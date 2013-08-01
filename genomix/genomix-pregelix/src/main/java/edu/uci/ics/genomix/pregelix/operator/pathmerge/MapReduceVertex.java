@@ -49,10 +49,9 @@ public class MapReduceVertex extends
         else
             kmerList.reset();
         if(fakeVertex == null){
-//            fakeVertex = new KmerBytesWritable(kmerSize + 1); // TODO check if merge is correct
             fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setByRead(random.getBytes(), 0); 
+            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable(kmerSize);
@@ -108,9 +107,8 @@ public class MapReduceVertex extends
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getActualKmer().toString();
             tmpKmer.reset(kmerString.length());
-//            reverseKmer.reset(kmerString.length());//kmerbyteswritable 
-            tmpKmer.setByRead(kmerString.getBytes(), 0);
-            reverseKmer.setByReadReverse(kmerString.getBytes(), 0);
+            tmpKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
+            reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
 
             if(reverseKmer.compareTo(tmpKmer) < 0)
                 tmpKmer.setAsCopy(reverseKmer);

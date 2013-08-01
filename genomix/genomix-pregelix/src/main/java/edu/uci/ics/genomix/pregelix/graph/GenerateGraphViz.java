@@ -11,7 +11,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class GenerateGraphViz {
 
@@ -31,7 +31,7 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            KmerBytesWritable key = new KmerBytesWritable();
+            VKmerBytesWritable key = new VKmerBytesWritable();
             VertexValueWritable value = new VertexValueWritable();
             
             while (reader.next(key, value)) {
@@ -58,25 +58,25 @@ public class GenerateGraphViz {
     
     public String convertEdgeToGraph(String outputNode, VertexValueWritable value){
         String outputEdge = "";
-        Iterator<KmerBytesWritable> kmerIterator;
+        Iterator<VKmerBytesWritable> kmerIterator;
         kmerIterator = value.getFFList().iterator();
         while(kmerIterator.hasNext()){
-            KmerBytesWritable edge = kmerIterator.next(); 
+            VKmerBytesWritable edge = kmerIterator.next(); 
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FF\"]\n";
         }
         kmerIterator = value.getFRList().iterator();
         while(kmerIterator.hasNext()){
-            KmerBytesWritable edge = kmerIterator.next();
+            VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FR\"]\n";
         }
         kmerIterator = value.getRFList().iterator();
         while(kmerIterator.hasNext()){
-            KmerBytesWritable edge = kmerIterator.next();
+            VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RF\"]\n";
         }
         kmerIterator = value.getRRList().iterator();
         while(kmerIterator.hasNext()){
-            KmerBytesWritable edge = kmerIterator.next();
+            VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR\"]\n";
         }
         return outputEdge;
