@@ -41,8 +41,9 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
             this.sourceVertexId.set(msg.getSourceVertexId());
         }
         if (chainVertexId != null) {
-            checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.setAsCopy(msg.getChainVertexId());
+
+            checkMessage |= CheckMessage.ACUTUALKMER;
+            this.chainVertexId.set(msg.getChainVertexId());
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -62,8 +63,8 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
             this.sourceVertexId.set(sourceVertexId.getReadID(),sourceVertexId.getPosInRead());
         }
         if (chainVertexId != null) {
-            checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.setAsCopy(chainVertexId);
+            checkMessage |= CheckMessage.ACUTUALKMER;
+            this.chainVertexId.set(chainVertexId);
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -100,8 +101,8 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
 
     public void setChainVertexId(KmerBytesWritable chainVertexId) {
         if (chainVertexId != null) {
-            checkMessage |= CheckMessage.CHAIN;
-            this.chainVertexId.setAsCopy(chainVertexId);
+            checkMessage |= CheckMessage.ACUTUALKMER;
+            this.chainVertexId.set(chainVertexId);
         }
     }
     
@@ -144,7 +145,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         out.writeByte(checkMessage);
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.write(out);
-        if ((checkMessage & CheckMessage.CHAIN) != 0)
+        if ((checkMessage & CheckMessage.ACUTUALKMER) != 0)
             chainVertexId.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
@@ -159,7 +160,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         checkMessage = in.readByte();
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.readFields(in);
-        if ((checkMessage & CheckMessage.CHAIN) != 0)
+        if ((checkMessage & CheckMessage.ACUTUALKMER) != 0)
             chainVertexId.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);

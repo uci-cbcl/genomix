@@ -128,90 +128,90 @@ public class JobGenerator {
     private static void genSplitRepeatGraph() throws IOException {
         generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
     }
-//    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(TipAddVertex.class);
-//        job.setVertexInputFormatClass(GraphCleanOutputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(TipAddVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genTipAddGraph() throws IOException {
-//        generateTipAddGraphJob("TipAddGraph", outputBase
-//                + "TipAddGraph.xml");
-//    }
-//    
-//    private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(TipRemoveVertex.class);
-//        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 5);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genTipRemoveGraph() throws IOException {
-//        generateTipRemoveGraphJob("TipRemoveGraph", outputBase
-//                + "TipRemoveGraph.xml");
-//    }
-//    
-//    private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(BridgeAddVertex.class);
-//        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(BridgeAddVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genBridgeAddGraph() throws IOException {
-//        generateBridgeAddGraphJob("BridgeAddGraph", outputBase
-//                + "BridgeAddGraph.xml");
-//    }
-//
-//    private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(BridgeRemoveVertex.class);
-//        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 5);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genBridgeRemoveGraph() throws IOException {
-//        generateBridgeRemoveGraphJob("BridgeRemoveGraph", outputBase
-//                + "BridgeRemoveGraph.xml");
-//    }
-//    
-//    private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(BubbleAddVertex.class);
-//        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(BubbleAddVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genBubbleAddGraph() throws IOException {
-//        generateBubbleAddGraphJob("BubbleAddGraph", outputBase
-//                + "BubbleAddGraph.xml");
-//    }
+    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TipAddVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(TipAddVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genTipAddGraph() throws IOException {
+        generateTipAddGraphJob("TipAddGraph", outputBase
+                + "TipAddGraph.xml");
+    }
+    
+    private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(TipRemoveVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genTipRemoveGraph() throws IOException {
+        generateTipRemoveGraphJob("TipRemoveGraph", outputBase
+                + "TipRemoveGraph.xml");
+    }
+    
+    private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(BridgeAddVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(BridgeAddVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBridgeAddGraph() throws IOException {
+        generateBridgeAddGraphJob("BridgeAddGraph", outputBase
+                + "BridgeAddGraph.xml");
+    }
+
+    private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(BridgeRemoveVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(TipRemoveVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBridgeRemoveGraph() throws IOException {
+        generateBridgeRemoveGraphJob("BridgeRemoveGraph", outputBase
+                + "BridgeRemoveGraph.xml");
+    }
+    
+    private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(BubbleAddVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(BubbleAddVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBubbleAddGraph() throws IOException {
+        generateBubbleAddGraphJob("BubbleAddGraph", outputBase
+                + "BubbleAddGraph.xml");
+    }
 //    
 //    private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(jobName);
@@ -243,6 +243,11 @@ public class JobGenerator {
 //        genP4ForMergeGraph();
 //        genMapReduceGraph();
         genSplitRepeatGraph();
+        genTipAddGraph();
+        genBridgeAddGraph();
+        genTipRemoveGraph();
+        genBridgeRemoveGraph();
+        genBubbleAddGraph();
     }
 
 }

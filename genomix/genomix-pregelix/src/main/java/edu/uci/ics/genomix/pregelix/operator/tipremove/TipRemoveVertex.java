@@ -10,8 +10,8 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 /*
  * vertexId: BytesWritable
@@ -57,7 +57,14 @@ public class TipRemoveVertex extends
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if(length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize); //kmerSize + 5
-        outgoingMsg.reset();
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable(kmerSize);
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable(kmerSize);
+        else
+            outgoingMsg.reset(kmerSize);
+        if(destVertexId == null)
+            destVertexId = new KmerBytesWritable(kmerSize);
     }
 
     @Override
@@ -66,35 +73,27 @@ public class TipRemoveVertex extends
         if(getSuperstep() == 1){
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
             	if(getVertexValue().getLengthOfKmer() <= length){
-            		if(getVertexValue().getFFList().getCountOfPosition() > 0)
-            			outgoingMsg.setFlag(AdjMessage.FROMFF);
-            		else if(getVertexValue().getFRList().getCountOfPosition() > 0)
-            			outgoingMsg.setFlag(AdjMessage.FROMFR);
-            		outgoingMsg.setSourceVertexId(getVertexId());
-            		destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
-            		sendMsg(destVertexId, outgoingMsg);
+
+            		sendSettledMsgToPreviousNode();
             		deleteVertex(getVertexId());
             	}
             }
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
                 if(getVertexValue().getLengthOfKmer() <= length){
-                    if(getVertexValue().getRFList().getCountOfPosition() > 0)
-                        outgoingMsg.setFlag(AdjMessage.FROMRF);
-                    else if(getVertexValue().getRRList().getCountOfPosition() > 0)
-                        outgoingMsg.setFlag(AdjMessage.FROMRR);
-                    outgoingMsg.setSourceVertexId(getVertexId());
-                    destVertexId.setAsCopy(getPreDestVertexId(getVertexValue()));
-                    sendMsg(destVertexId, outgoingMsg);
+                	sendSettledMsgToNextNode();
                     deleteVertex(getVertexId());
                 }
             }
             else if(VertexUtil.isSingleVertex(getVertexValue())){
-                if(getVertexValue().getLengthOfKmer() > length)
+                if(getVertexValue().getLengthOfKmer() <= length)
                     deleteVertex(getVertexId());
             }
         }
         else if(getSuperstep() == 2){
-            responseToDeadVertex(msgIterator);
+        	while(msgIterator.hasNext()){
+        		incomingMsg = msgIterator.next();
+        		responseToDeadVertex();
+        	}
         }
         voteToHalt();
     }

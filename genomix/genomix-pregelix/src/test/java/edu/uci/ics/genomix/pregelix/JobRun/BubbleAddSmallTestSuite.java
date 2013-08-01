@@ -40,18 +40,18 @@ import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
-public class BridgeRemoveSmallTestSuite extends TestSuite {
-    private static final Logger LOGGER = Logger.getLogger(BridgeRemoveSmallTestSuite.class.getName());
+public class BubbleAddSmallTestSuite extends TestSuite {
+    private static final Logger LOGGER = Logger.getLogger(BubbleAddSmallTestSuite.class.getName());
 
-    public static final String PreFix = "data/actual/bridgeadd/BridgeAddGraph/bin"; 
+    public static final String PreFix = "data/PathMergeTestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-    + "SimpleTest"};
-    private static final String ACTUAL_RESULT_DIR = "data/actual/bridgeremove";
+    + "5"};
+    private static final String ACTUAL_RESULT_DIR = "data/actual/bubbleadd";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
-    private static final String PATH_TO_ONLY = "src/test/resources/only_bridgeremove.txt";
+    private static final String PATH_TO_ONLY = "src/test/resources/only_bubbleadd.txt";
 
     public static final String HDFS_INPUTPATH = "/PathTestSet";
 
@@ -123,7 +123,7 @@ public class BridgeRemoveSmallTestSuite extends TestSuite {
         List<String> onlys = getFileList(PATH_TO_ONLY);
         File testData = new File(PATH_TO_JOBS);
         File[] queries = testData.listFiles();
-        BridgeRemoveSmallTestSuite testSuite = new BridgeRemoveSmallTestSuite();
+        BubbleAddSmallTestSuite testSuite = new BubbleAddSmallTestSuite();
         testSuite.setUp();
         boolean onlyEnabled = false;
         FileSystem dfs = FileSystem.get(testSuite.conf);

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.hadoop.io.NullWritable;
 
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -51,7 +52,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class BubbleMergeVertex extends
-        Vertex<PositionWritable, VertexValueWritable, NullWritable, MergeBubbleMessageWritable> {
+        Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MergeBubbleMessageWritable> {
     public static final String KMER_SIZE = "BubbleMergeVertex.kmerSize";
     public static final String ITERATIONS = "BubbleMergeVertex.iteration";
     public static int kmerSize = -1;

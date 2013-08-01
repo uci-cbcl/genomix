@@ -11,8 +11,8 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 /*
  * vertexId: BytesWritable
@@ -59,75 +59,16 @@ public class BridgeRemoveVertex extends
         if (kmerSize == -1)
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if(length == -1)
-            length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
-        outgoingMsg.reset();
+            length = getContext().getConfiguration().getInt(LENGTH, kmerSize);
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable(kmerSize);
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable(kmerSize);
+        else
+            outgoingMsg.reset(kmerSize);
+        if(destVertexId == null)
+            destVertexId = new KmerBytesWritable(kmerSize);
         receivedMsgList.clear();
-    }
-    
-    /**
-     * broadcast kill self to all neighbers 
-     */
-    public void broadcaseKillself(){
-        outgoingMsg.setSourceVertexId(getVertexId());
-        if(receivedMsgList.get(0).getFlag() == AdjMessage.FROMFF 
-                && receivedMsgList.get(1).getFlag() == AdjMessage.FROMRR){
-            outgoingMsg.setFlag(AdjMessage.FROMRR);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMFF);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } else if (receivedMsgList.get(0).getFlag() == AdjMessage.FROMFF 
-                && receivedMsgList.get(1).getFlag() == AdjMessage.FROMRF) {
-            outgoingMsg.setFlag(AdjMessage.FROMRR);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } else if (receivedMsgList.get(0).getFlag() == AdjMessage.FROMFR 
-                && receivedMsgList.get(1).getFlag() == AdjMessage.FROMRR) {
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMFF);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } else if (receivedMsgList.get(0).getFlag() == AdjMessage.FROMFR 
-                && receivedMsgList.get(1).getFlag() == AdjMessage.FROMRF) {
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } // RR
-        else if(receivedMsgList.get(1).getFlag() == AdjMessage.FROMFF 
-                && receivedMsgList.get(0).getFlag() == AdjMessage.FROMRR){
-            outgoingMsg.setFlag(AdjMessage.FROMRR);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMFF);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } else if (receivedMsgList.get(1).getFlag() == AdjMessage.FROMFF 
-                && receivedMsgList.get(0).getFlag() == AdjMessage.FROMRF) {
-            outgoingMsg.setFlag(AdjMessage.FROMRR);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } else if (receivedMsgList.get(1).getFlag() == AdjMessage.FROMFR 
-                && receivedMsgList.get(0).getFlag() == AdjMessage.FROMRR) {
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMFF);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } else if (receivedMsgList.get(1).getFlag() == AdjMessage.FROMFR 
-                && receivedMsgList.get(0).getFlag() == AdjMessage.FROMRF) {
-            outgoingMsg.setFlag(AdjMessage.FROMFR);
-            sendMsg(receivedMsgList.get(1).getSourceVertexId(), outgoingMsg);
-            outgoingMsg.setFlag(AdjMessage.FROMRF);
-            sendMsg(receivedMsgList.get(0).getSourceVertexId(), outgoingMsg);
-            deleteVertex(getVertexId());
-        } else
-            voteToHalt();
     }
 
     @Override
@@ -150,13 +91,17 @@ public class BridgeRemoveVertex extends
                 i++;
             }
             if(receivedMsgList.size() == 2){
-                if(getVertexValue().getLengthOfKmer() <= length){
+                if(getVertexValue().getLengthOfKmer() <= length 
+                        && getVertexValue().getDegree() == 2){
                     broadcaseKillself();
                 }
             }
         }
         else if(getSuperstep() == 3){
-            responseToDeadVertex(msgIterator);
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                responseToDeadVertex();
+            }
         }
         voteToHalt();
     }

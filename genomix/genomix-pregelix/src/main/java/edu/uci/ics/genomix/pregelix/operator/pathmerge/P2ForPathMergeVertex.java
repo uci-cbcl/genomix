@@ -80,6 +80,8 @@ public class P2ForPathMergeVertex extends
             fakeVertex.setByRead(random.getBytes(), 0); 
         }
         isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
+        if(destVertexId == null)
+            destVertexId = new KmerBytesWritable(kmerSize);
     }
 
     /**
@@ -266,7 +268,7 @@ public class P2ForPathMergeVertex extends
                 mapKeyByActualKmer(msgIterator);
                 /** Reducer **/
                 reduceKeyByActualKmer();
-                 voteToHalt();
+                voteToHalt();
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){

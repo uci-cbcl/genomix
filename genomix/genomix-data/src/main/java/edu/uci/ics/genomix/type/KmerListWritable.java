@@ -8,14 +8,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-/**
- * A list of fixed-length kmers. The length of this list is stored internally.
- */
-public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, Serializable {
+
+public class KmerListWritable extends BinaryComparable
+    implements Writable, Iterable<KmerBytesWritable>, Serializable{
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 };
     protected static final int HEADER_SIZE = 4;
@@ -236,7 +236,6 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     public int getLength() {
         return valueCount * KmerBytesWritable.getBytesPerKmer() + HEADER_SIZE;
     }
-
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
@@ -256,5 +255,11 @@ public class KmerListWritable implements Writable, Iterable<KmerBytesWritable>, 
     @Override
     public int hashCode() {
         return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
+    }
+
+    @Override
+    public byte[] getBytes() {
+        
+        return null;
     }
 }

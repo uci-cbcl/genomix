@@ -3,12 +3,11 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
-//import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.KmerListWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.genomix.oldtype.PositionListWritable;
-import edu.uci.ics.genomix.oldtype.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
@@ -48,7 +47,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  * Naive Algorithm for path merge graph
  */
 public class BridgeAddVertex extends
-        Vertex<PositionWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String KMER_SIZE = "BridgeRemoveVertex.kmerSize";
     public static final String LENGTH = "BridgeRemoveVertex.length";
     public static int kmerSize = -1;
@@ -60,7 +59,7 @@ public class BridgeAddVertex extends
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
-        if(length == -1)
+        if (length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5);
     }
 
@@ -69,40 +68,42 @@ public class BridgeAddVertex extends
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
-            if(getVertexId().getReadID() == 1 && getVertexId().getPosInRead() == 2){
-                getVertexValue().getFFList().append(3, (byte)1);
+            if(getVertexId().toString().equals("ATA")){
+            	KmerBytesWritable vertexId = new KmerBytesWritable(kmerSize);
+                vertexId.setByRead("GTA".getBytes(), 0);
+                getVertexValue().getFRList().append(vertexId);
                 
                 //add bridge vertex
                 @SuppressWarnings("rawtypes")
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
                 vertex.getMsgList().clear();
                 vertex.getEdges().clear();
-                PositionWritable vertexId = new PositionWritable();
-                VertexValueWritable vertexValue = new VertexValueWritable();
+                VertexValueWritable vertexValue = new VertexValueWritable(kmerSize);
                 /**
                  * set the src vertex id
                  */
-                vertexId.set(3, (byte)1);
                 vertex.setVertexId(vertexId);
                 /**
                  * set the vertex value
                  */
-                byte[] array = { 'T', 'A', 'G', 'C', 'C'};
-                VKmerBytesWritable kmer = new VKmerBytesWritable(array.length);
-                kmer.setByRead(array, 0);
-                vertexValue.setKmer(kmer);
-                PositionListWritable plist = new PositionListWritable();
-                plist.append(new PositionWritable(1, (byte)2));
-                vertexValue.setRRList(plist);
-                PositionListWritable plist2 = new PositionListWritable();
-                plist2.append(new PositionWritable(2, (byte)2));
-                vertexValue.setFFList(plist2);
+                KmerListWritable kmerFRList = new KmerListWritable(kmerSize);
+                kmerFRList.append(getVertexId());
+                vertexValue.setFRList(kmerFRList);
+                KmerBytesWritable otherVertexId = new KmerBytesWritable(kmerSize);
+                otherVertexId.setByRead("ACG".getBytes(), 0);
+                KmerListWritable kmerRFList = new KmerListWritable(kmerSize);
+                kmerRFList.append(otherVertexId);
+                vertexValue.setRFList(kmerRFList);
+                vertexValue.setKmer(vertexId);
                 vertex.setVertexValue(vertexValue);
                 
                 addVertex(vertexId, vertex);
+            } 
+            else if(getVertexId().toString().equals("ACG")){
+                KmerBytesWritable brdgeVertexId = new KmerBytesWritable(kmerSize);
+                brdgeVertexId.setByRead("GTA".getBytes(), 0);
+                getVertexValue().getRFList().append(brdgeVertexId);
             }
-            if(getVertexId().getReadID() == 2 && getVertexId().getPosInRead() == 2)
-                getVertexValue().getRRList().append(3, (byte)1);
         }
         voteToHalt();
     }
@@ -116,7 +117,7 @@ public class BridgeAddVertex extends
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(PositionWritable.class);
+        job.setOutputKeyClass(KmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

@@ -37,7 +37,7 @@ public class GenomixReducer extends MapReduceBase implements
 		while (values.hasNext()) {
 		    tmpNode.set(values.next());
 		    outputNode.getNodeIdList().appendList(tmpNode.getNodeIdList());
-		    outputNode.getFFList().appendList(tmpNode.getFFList());
+		    outputNode.getFFList().appendList(tmpNode.getFFList()); //appendList need to check if insert node exists
 		    outputNode.getFRList().appendList(tmpNode.getFRList());
 		    outputNode.getRFList().appendList(tmpNode.getRFList());
 		    outputNode.getRRList().appendList(tmpNode.getRRList());
