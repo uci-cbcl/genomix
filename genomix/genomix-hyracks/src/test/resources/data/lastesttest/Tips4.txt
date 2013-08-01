@@ -1,0 +1,2 @@
+1	CAGGCA
+2	CAGGCC
