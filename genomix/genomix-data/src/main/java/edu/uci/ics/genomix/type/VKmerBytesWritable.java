@@ -441,7 +441,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * @param stringBytes
      * @param start
      */
-    public void setByRead(byte[] stringBytes, int start) {
+    private void setByRead(byte[] stringBytes, int start) {
         byte l = 0;
         int bytecount = 0;
         int bcount = this.bytesUsed - 1;
@@ -474,7 +474,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * @param start
      *            position
      */
-    public void setByReadReverse(byte[] array, int start) {
+    private void setByReadReverse(byte[] array, int start) {
         byte l = 0;
         int bytecount = 0;
         int bcount = bytesUsed - 1;

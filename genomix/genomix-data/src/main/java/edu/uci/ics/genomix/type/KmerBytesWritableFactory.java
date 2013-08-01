@@ -31,8 +31,7 @@ public class KmerBytesWritableFactory {
      * @param start
      */
     public VKmerBytesWritable getKmerByRead(int k, byte[] array, int start) {
-        kmer.reset(k);
-        kmer.setByRead(array, start);
+        kmer.setByRead(k, array, start);
         return kmer;
     }
 
@@ -44,8 +43,7 @@ public class KmerBytesWritableFactory {
      * @param start
      */
     public VKmerBytesWritable getKmerByReadReverse(int k, byte[] array, int start) {
-        kmer.reset(k);
-        kmer.setByReadReverse(array, start);
+        kmer.setByReadReverse(k, array, start);
         return kmer;
     }
 
