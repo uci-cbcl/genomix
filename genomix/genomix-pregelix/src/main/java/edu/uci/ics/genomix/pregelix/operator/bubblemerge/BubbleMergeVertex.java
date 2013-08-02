@@ -34,7 +34,14 @@ public class BubbleMergeVertex extends
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
-        outgoingMsg.reset();
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable();
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable();
+        else
+            outgoingMsg.reset(kmerSize);
+        if(destVertexId == null)
+            destVertexId = new VKmerBytesWritable();
     }
     
     public void sendBubbleAndMajorVertexMsgToMinorVertex(){
@@ -64,7 +71,24 @@ public class BubbleMergeVertex extends
         }
     }
     
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked" })
+    public void aggregateBubbleNodesByMajorNode(Iterator<MessageWritable> msgIterator){
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if(!receivedMsgMap.containsKey(incomingMsg.getStartVertexId())){
+                receivedMsgList.clear();
+                receivedMsgList.add(incomingMsg);
+                receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+            }
+            else{
+                receivedMsgList.clear();
+                receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getStartVertexId()));
+                receivedMsgList.add(incomingMsg);
+                receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+            }
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
@@ -82,20 +106,9 @@ public class BubbleMergeVertex extends
                 }
             }
         } else if (getSuperstep() == 3){
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                if(!receivedMsgMap.containsKey(incomingMsg.getStartVertexId())){
-                    receivedMsgList.clear();
-                    receivedMsgList.add(incomingMsg);
-                    receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
-                }
-                else{
-                    receivedMsgList.clear();
-                    receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getStartVertexId()));
-                    receivedMsgList.add(incomingMsg);
-                    receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
-                }
-            }
+            /** aggregate bubble nodes and grouped by major vertex **/ 
+            aggregateBubbleNodesByMajorNode(msgIterator);
+            
             for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
                 if(receivedMsgList.size() > 1){ // filter bubble
                     /** for each startVertex, sort the node by decreasing order of coverage **/
