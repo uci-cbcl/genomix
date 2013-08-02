@@ -157,7 +157,7 @@ public class VKmerBytesWritableTest {
                 text2 = text.substring(0, jk);
                 Assert.assertEquals(text1, kmer1.toString());
                 Assert.assertEquals(text2, kmer2.toString());
-                for (int x = 1; x < jk; x++) {
+                for (int x = 1; x < (jk < ik ? jk : ik); x++) {
                     merge.setAsCopy(kmer1);
                     merge.mergeWithFFKmer(x, kmer2);
                     Assert.assertEquals(text1 + text2.substring(x - 1), merge.toString());
@@ -335,7 +335,7 @@ public class VKmerBytesWritableTest {
                 text2 = text.substring(0, jk);
                 Assert.assertEquals(text1, kmer1.toString());
                 Assert.assertEquals(text2, kmer2.toString());
-                for (int x = 1; x < ik; x++) {
+                for (int x = 1; x < (ik < jk ? ik : jk); x++) {
                     merge.setAsCopy(kmer2);
                     merge.mergeWithRRKmer(x, kmer1);
                     Assert.assertEquals(text1.substring(0, text1.length() - x + 1) + text2, merge.toString());
