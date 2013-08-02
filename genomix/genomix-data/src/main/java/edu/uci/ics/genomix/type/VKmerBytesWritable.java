@@ -675,7 +675,12 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         }
         return new KmerBytesWritable(bytes, kmerStartOffset);
     }
-        
+    
+    /**
+     * return the edit distance required to transform kemr1 into kmer2 using substitutions, insertions, and deletions.
+     * 
+     * This uses the classic dynamic programming algorithm and takes O(length_1 * length_2) time and space. 
+     */
     public static int editDistance(VKmerBytesWritable kmer1, VKmerBytesWritable kmer2) {
     	int rows = kmer1.getKmerLetterLength() + 1, columns = kmer2.getKmerLetterLength() + 1, r=0, c=0, match=0;
     	int[][] distMat = new int[rows][columns];
@@ -703,9 +708,25 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     private static int min(int a, int b, int c) {
     	return a <= b ? (a <= c ? a : c) : (b <= c ? b : c);
     }
+    private static int min(int a, int b) {
+        return a <= b ? a : b;
+    }
     
     public int editDistance(VKmerBytesWritable other) {
     	return editDistance(this, other);
+    }
+    
+    /**
+     * return the fractional difference between the given kmers.  This is the edit distance divided by the smaller length.
+     * 
+     * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)
+     */
+    public static float fracDissimilar(VKmerBytesWritable kmer1, VKmerBytesWritable kmer2) {
+        return editDistance(kmer1, kmer2) / (float) min(kmer1.getKmerLetterLength(), kmer2.getKmerLetterLength());
+    }
+    
+    public float fracDissimilar(VKmerBytesWritable other) {
+        return fracDissimilar(this, other);
     }
 
 }
