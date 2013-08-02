@@ -96,7 +96,7 @@ public class MapReduceVertex extends
     public void sendMsgToFakeVertex(){
         if(!getVertexValue().isFakeVertex()){
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setActualKmer(getVertexValue().getKmer());
+            outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
             sendMsg(fakeVertex, outgoingMsg);
             voteToHalt();
         }

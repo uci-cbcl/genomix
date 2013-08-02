@@ -96,7 +96,7 @@ public class BridgeAddVertex extends
                 VKmerListWritable kmerRFList = new VKmerListWritable();
                 kmerRFList.append(otherVertexId);
                 vertexValue.setRFList(kmerRFList);
-                vertexValue.setKmer(vertexId);
+                vertexValue.setActualKmer(vertexId);
                 vertex.setVertexValue(vertexValue);
                 
                 addVertex(vertexId, vertex);

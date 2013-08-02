@@ -17,16 +17,15 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.api.io.binary.InitialGraphCleanVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.InitialGraphCleanVertexInputFormat.BinaryVertexReader;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class InitialGraphCleanInputFormat extends
-        InitialGraphCleanVertexInputFormat<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        InitialGraphCleanVertexInputFormat<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
@@ -34,14 +33,14 @@ public class InitialGraphCleanInputFormat extends
 
 @SuppressWarnings("rawtypes")
 class BinaryLoadGraphReader extends
-        BinaryVertexReader<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        BinaryVertexReader<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     
     private Vertex vertex;
-    private KmerBytesWritable vertexId = new KmerBytesWritable();
+    private VKmerBytesWritable vertexId = new VKmerBytesWritable();
     private NodeWritable node = new NodeWritable();
     private VertexValueWritable vertexValue = new VertexValueWritable();
 
-    public BinaryLoadGraphReader(RecordReader<KmerBytesWritable, NodeWritable> recordReader) {
+    public BinaryLoadGraphReader(RecordReader<VKmerBytesWritable, NodeWritable> recordReader) {
         super(recordReader);
     }
 
@@ -52,7 +51,7 @@ class BinaryLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
+    public Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
             throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -71,14 +70,13 @@ class BinaryLoadGraphReader extends
              * set the vertex value
              */
             node.set(getRecordReader().getCurrentValue());
-            vertexValue.setKmerlength(node.getKmerLength());
             vertexValue.setNodeIdList(node.getNodeIdList());
             vertexValue.setFFList(node.getFFList());
             vertexValue.setFRList(node.getFRList());
             vertexValue.setRFList(node.getRFList());
             vertexValue.setRRList(node.getRRList());
             // TODO make this more efficient (don't use toString)
-            vertexValue.setKmer(new VKmerBytesWritable(getRecordReader().getCurrentKey().toString()));
+            vertexValue.setActualKmer(new VKmerBytesWritable(getRecordReader().getCurrentKey().toString()));
             vertexValue.setState(State.IS_NON);
             vertex.setVertexValue(vertexValue);
         }

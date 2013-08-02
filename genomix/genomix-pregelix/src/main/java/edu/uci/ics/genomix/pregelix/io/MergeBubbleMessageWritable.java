@@ -117,7 +117,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
     }
     
     public int getLengthOfChain() {
-        return chainVertexId.getKmerLength();
+        return KmerBytesWritable.getKmerLength();
     }
 
     public PositionWritable getStartVertexId() {

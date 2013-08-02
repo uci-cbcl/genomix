@@ -244,7 +244,7 @@ public class P5ForPathMergeVertex extends
             getVertexValue().setState(MessageFlag.IS_HEAD); //State.START_VERTEX
         } else if (incomingMsg.getFlag() == Message.END && getVertexValue().getState() != State.IS_HEAD) {
             getVertexValue().setState(MessageFlag.IS_HEAD);
-            getVertexValue().setKmer(getVertexValue().getKmer());
+            getVertexValue().setActualKmer(getVertexValue().getActualKmer());
             //voteToHalt();
         } //else
             //voteToHalt();

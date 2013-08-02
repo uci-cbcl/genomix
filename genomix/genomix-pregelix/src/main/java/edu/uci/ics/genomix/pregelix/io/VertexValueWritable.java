@@ -46,9 +46,9 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     private PositionListWritable nodeIdList;
     private AdjacencyListWritable incomingList;
     private AdjacencyListWritable outgoingList;
+    private VKmerBytesWritable actualKmer;
+    private float averageCoverage;
     private byte state;
-    private VKmerBytesWritable kmer;
-    private int kmerlength = 0;
     private boolean isFakeVertex = false;
 
     public VertexValueWritable() {
@@ -56,38 +56,37 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
     
     public VertexValueWritable(int kmerSize){
-        kmerlength = kmerSize;
         nodeIdList = new PositionListWritable();
         incomingList = new AdjacencyListWritable();
         outgoingList = new AdjacencyListWritable();
+        actualKmer = new VKmerBytesWritable();
         state = State.IS_NON;
-        kmer = new VKmerBytesWritable();
+        averageCoverage = 0;
     }
 
     public VertexValueWritable(PositionListWritable nodeIdList, VKmerListWritable forwardForwardList, VKmerListWritable forwardReverseList,
-            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList,
-            byte state, VKmerBytesWritable kmer) {
+            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList, VKmerBytesWritable actualKmer,
+            float averageCoverage, byte state) {
         set(nodeIdList, forwardForwardList, forwardReverseList, 
-                reverseForwardList, reverseReverseList,
-                state, kmer);
+                reverseForwardList, reverseReverseList, actualKmer,
+                averageCoverage, state);
     }
     
     public void set(PositionListWritable nodeIdList, VKmerListWritable forwardForwardList, VKmerListWritable forwardReverseList,
-            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList, 
-            byte state, VKmerBytesWritable kmer) {
-        this.kmerlength = kmer.getKmerLetterLength();
+            VKmerListWritable reverseForwardList, VKmerListWritable reverseReverseList, VKmerBytesWritable actualKmer,
+            float averageCoverage, byte state) {
         this.incomingList.setForwardList(reverseForwardList);
         this.incomingList.setReverseList(reverseReverseList);
         this.outgoingList.setForwardList(forwardForwardList);
         this.outgoingList.setReverseList(forwardReverseList);
+        this.actualKmer.setAsCopy(actualKmer);
+        this.averageCoverage = averageCoverage;
         this.state = state;
-        this.kmer.setAsCopy(kmer);
     }
     
     public void set(VertexValueWritable value) {
-        this.kmerlength = value.kmerlength;
-        set(value.getNodeIdList(), value.getFFList(),value.getFRList(),value.getRFList(),value.getRRList(),value.getState(),
-                value.getKmer());
+        set(value.getNodeIdList(), value.getFFList(),value.getFRList(),value.getRFList(),value.getRRList(),
+                value.getActualKmer(), value.getAverageCoverage(), value.getState());
     }
     
     
@@ -151,7 +150,22 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         return state;
     }
     
-    
+    public VKmerBytesWritable getActualKmer() {
+        return actualKmer;
+    }
+
+    public void setActualKmer(VKmerBytesWritable kmer) {
+        this.actualKmer.setAsCopy(kmer);
+    }
+
+    public float getAverageCoverage() {
+        return averageCoverage;
+    }
+
+    public void setAverageCoverage(float averageCoverage) {
+        this.averageCoverage = averageCoverage;
+    }
+
     public boolean isFakeVertex() {
         return isFakeVertex;
     }
@@ -165,55 +179,47 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     }
 
     public int getLengthOfKmer() {
-        return kmer.getKmerLetterLength();
+        return actualKmer.getKmerLetterLength();
     }
-
-    public VKmerBytesWritable getKmer() {
-        return kmer;
+    
+    public void reset() {
+        this.reset(0);
     }
-
-    public void setKmer(VKmerBytesWritable kmer) {
-        this.kmer.setAsCopy(kmer);
-    }
-
-    public int getKmerlength() {
-        return kmerlength;
-    }
-
-    public void setKmerlength(int kmerlength) {
-        this.kmerlength = kmerlength;
-    }
-
+    
     public void reset(int kmerSize) {
-        this.kmerlength = kmerSize;
         this.nodeIdList.reset();
         this.incomingList.getForwardList().reset();
         this.incomingList.getReverseList().reset();
         this.outgoingList.getForwardList().reset();
         this.outgoingList.getReverseList().reset();
-//        this.kmer.reset(0);
+        this.actualKmer.reset(0);
+        averageCoverage = 0;
     }
     
     @Override
     public void readFields(DataInput in) throws IOException {
-        this.kmerlength = in.readInt();
-        this.reset(kmerlength);
+        reset();
         this.nodeIdList.readFields(in);
-        this.incomingList.readFields(in);
-        this.outgoingList.readFields(in);
+        this.outgoingList.getForwardList().readFields(in);
+        this.outgoingList.getReverseList().readFields(in);
+        this.incomingList.getForwardList().readFields(in);
+        this.incomingList.getReverseList().readFields(in);
+        this.actualKmer.readFields(in);
+        averageCoverage = in.readFloat();
         this.state = in.readByte();
-        this.kmer.readFields(in);
         this.isFakeVertex = in.readBoolean();
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeInt(this.kmerlength);
         this.nodeIdList.write(out);
-        this.incomingList.write(out);
-        this.outgoingList.write(out);
+        this.outgoingList.getForwardList().write(out);
+        this.outgoingList.getReverseList().write(out);
+        this.incomingList.getForwardList().write(out);
+        this.incomingList.getReverseList().write(out);
+        this.actualKmer.write(out);
+        out.writeFloat(averageCoverage);
         out.writeByte(this.state);
-        this.kmer.write(out);
         out.writeBoolean(this.isFakeVertex);
     }
 
@@ -231,7 +237,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         sbuilder.append(outgoingList.getReverseList().toString()).append('\t');
         sbuilder.append(incomingList.getForwardList().toString()).append('\t');
         sbuilder.append(incomingList.getReverseList().toString()).append('\t');
-        sbuilder.append(kmer.toString()).append('}');
+        sbuilder.append(actualKmer.toString()).append('}');
         return sbuilder.toString();
     }
     
@@ -315,19 +321,19 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
                 this.getFFList().remove(nodeToDelete); //set(null);
-                this.getKmer().mergeWithFFKmer(kmerSize, kmer);
+                this.getActualKmer().mergeWithFFKmer(kmerSize, kmer);
                 break;
             case MessageFlag.DIR_FR:
                 this.getFRList().remove(nodeToDelete);
-                this.getKmer().mergeWithFRKmer(kmerSize, kmer);
+                this.getActualKmer().mergeWithFRKmer(kmerSize, kmer);
                 break;
             case MessageFlag.DIR_RF:
                 this.getRFList().remove(nodeToDelete);
-                this.getKmer().mergeWithRFKmer(kmerSize, kmer);
+                this.getActualKmer().mergeWithRFKmer(kmerSize, kmer);
                 break;
             case MessageFlag.DIR_RR:
                 this.getRRList().remove(nodeToDelete);
-                this.getKmer().mergeWithRRKmer(kmerSize, kmer);
+                this.getActualKmer().mergeWithRRKmer(kmerSize, kmer);
                 break;
         }
         // TODO: remove switch below and replace with general direction merge

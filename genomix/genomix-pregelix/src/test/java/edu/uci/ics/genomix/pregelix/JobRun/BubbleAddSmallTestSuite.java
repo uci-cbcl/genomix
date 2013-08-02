@@ -143,9 +143,11 @@ public class BubbleAddSmallTestSuite extends TestSuite {
                                 + File.separator + "bin" + File.separator + testDir.getName();
                         String textFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
                                 + File.separator + "txt" + File.separator + testDir.getName();
+                        String graphvizFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
+                                + File.separator + "graphviz" + File.separator + testDir.getName();
                         testSuite.addTest(new BasicSmallTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile
                                 .getAbsolutePath().toString(), dfs,
-                                HDFS_INPUTPATH + File.separator + testDir.getName(), resultFileName, textFileName));
+                                HDFS_INPUTPATH + File.separator + testDir.getName(), resultFileName, textFileName, graphvizFileName));
                     }
                 }
             }

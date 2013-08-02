@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
         extends VertexInputFormat<I, V, E, M> {
@@ -38,7 +38,7 @@ public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>,
     public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<KmerBytesWritable, NodeWritable> lineRecordReader;
+        private final RecordReader<VKmerBytesWritable, NodeWritable> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -48,7 +48,7 @@ public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>,
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryVertexReader(RecordReader<KmerBytesWritable, NodeWritable> recordReader) {
+        public BinaryVertexReader(RecordReader<VKmerBytesWritable, NodeWritable> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -74,7 +74,7 @@ public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>,
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<KmerBytesWritable, NodeWritable> getRecordReader() {
+        protected RecordReader<VKmerBytesWritable, NodeWritable> getRecordReader() {
             return lineRecordReader;
         }
 
@@ -98,7 +98,6 @@ public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>,
 
     @Override
     public VertexReader<I, V, E, M> createVertexReader(InputSplit split, TaskAttemptContext context) throws IOException {
-        // TODO Auto-generated method stub
         return null;
     }
 

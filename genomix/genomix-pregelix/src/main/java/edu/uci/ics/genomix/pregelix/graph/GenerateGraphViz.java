@@ -19,7 +19,7 @@ public class GenerateGraphViz {
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
      */
-    private void convertGraphCleanOutputToGraphViz(String srcDir, String destDir) throws Exception {
+    public static void convertGraphCleanOutputToGraphViz(String srcDir, String destDir) throws Exception {
         GraphViz gv = new GraphViz();
         gv.addln(gv.start_graph());
         
@@ -52,11 +52,13 @@ public class GenerateGraphViz {
         System.out.println(gv.getDotSource());
 
         String type = "ps";
-        File out = new File("graphtest/" + "test_out." + type); // Linux
+        File folder = new File(destDir);
+        folder.mkdirs();
+        File out = new File(destDir + "/result." + type); // Linux
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
     
-    public String convertEdgeToGraph(String outputNode, VertexValueWritable value){
+    public static String convertEdgeToGraph(String outputNode, VertexValueWritable value){
         String outputEdge = "";
         Iterator<VKmerBytesWritable> kmerIterator;
         kmerIterator = value.getFFList().iterator();
@@ -83,11 +85,6 @@ public class GenerateGraphViz {
     }
 
     public static void main(String[] args) throws Exception {
-        GenerateGraphViz g = new GenerateGraphViz();
-        g.convertGraphCleanOutputToGraphViz("data/actual/bubbleadd/BubbleAddGraph/bin/5", "graphtest");
-//        g.start("CyclePath_7");
-//        g.start("SimplePath_7");
-//        g.start("SinglePath_7");
-//        g.start("TreePath_7");
+        GenerateGraphViz.convertGraphCleanOutputToGraphViz("data/actual/bubbleadd/BubbleAddGraph/bin/5", "graphtest");
     }
 }

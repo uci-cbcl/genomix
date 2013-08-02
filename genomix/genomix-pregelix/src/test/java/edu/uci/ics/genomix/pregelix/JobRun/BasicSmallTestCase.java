@@ -23,6 +23,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.pregelix.graph.GenerateGraphViz;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
@@ -33,12 +34,13 @@ public class BasicSmallTestCase extends TestCase {
     private final PregelixJob job;
     private final String resultFileDir;
     private final String textFileDir;
+    private final String graphvizFileDir;
     private final String jobFile;
     private final Driver driver = new Driver(this.getClass());
     private final FileSystem dfs;
 
     public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs,
-            String hdfsInput, String resultFile, String textFile) throws Exception {
+            String hdfsInput, String resultFile, String textFile, String graphvizFile) throws Exception {
         super("test");
         this.jobFile = jobFile;
         this.job = new PregelixJob("test");
@@ -46,9 +48,10 @@ public class BasicSmallTestCase extends TestCase {
         this.job.getConfiguration().addResource(new Path(hadoopConfPath));
         FileInputFormat.setInputPaths(job, hdfsInput);
         FileOutputFormat.setOutputPath(job, new Path(hdfsInput + "_result"));
-        this.textFileDir = textFile;
         job.setJobName(jobName);
         this.resultFileDir = resultFile;
+        this.textFileDir = textFile;
+        this.graphvizFileDir = graphvizFile;
 
         this.dfs = dfs;
     }
@@ -75,6 +78,7 @@ public class BasicSmallTestCase extends TestCase {
     private void compareResults() throws Exception {
         dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(resultFileDir));
         GenerateTextFile.generateFromPathmergeResult(3, resultFileDir, textFileDir);
+        GenerateGraphViz.convertGraphCleanOutputToGraphViz(resultFileDir, graphvizFileDir);
     }
 
     public String toString() {

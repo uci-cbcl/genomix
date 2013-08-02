@@ -14,16 +14,16 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryDataCleanVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryDataCleanVertexInputFormat.BinaryDataCleanVertexReader;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class GraphCleanInputFormat extends
-    BinaryDataCleanVertexInputFormat<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+    BinaryDataCleanVertexInputFormat<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryDataCleanLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
@@ -31,12 +31,12 @@ public class GraphCleanInputFormat extends
 
 @SuppressWarnings("rawtypes")
 class BinaryDataCleanLoadGraphReader extends
-    BinaryDataCleanVertexReader<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+    BinaryDataCleanVertexReader<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     private Vertex vertex;
-    private KmerBytesWritable vertexId = new KmerBytesWritable();
+    private VKmerBytesWritable vertexId = new VKmerBytesWritable();
     private VertexValueWritable vertexValue = new VertexValueWritable();
 
-    public BinaryDataCleanLoadGraphReader(RecordReader<KmerBytesWritable, VertexValueWritable> recordReader) {
+    public BinaryDataCleanLoadGraphReader(RecordReader<VKmerBytesWritable, VertexValueWritable> recordReader) {
         super(recordReader);
     }
 
@@ -47,7 +47,7 @@ class BinaryDataCleanLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<KmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
+    public Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
             throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -66,7 +66,6 @@ class BinaryDataCleanLoadGraphReader extends
              * set the vertex value
              */
             vertexValue.set(getRecordReader().getCurrentValue());
-            vertexValue.setKmerlength(getRecordReader().getCurrentValue().getKmerlength());
             vertex.setVertexValue(vertexValue);
         }
 

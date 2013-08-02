@@ -41,7 +41,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hyracks.driver.Driver;
 import edu.uci.ics.genomix.hyracks.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.job.GenomixJobConf;
-import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 
 @SuppressWarnings("deprecation")
 public class JobRunStepByStepTest {
@@ -175,7 +175,7 @@ public class JobRunStepByStepTest {
                 }
                 SequenceFile.Reader reader = new SequenceFile.Reader(dfs, path, conf);
 
-                NodeWritable node = new NodeWritable(conf.getInt(GenomixJobConf.KMER_LENGTH, KmerSize));
+                NodeWritable node = new NodeWritable();
                 NullWritable value = NullWritable.get();
                 while (reader.next(node, value)) {
                     if (node == null) {

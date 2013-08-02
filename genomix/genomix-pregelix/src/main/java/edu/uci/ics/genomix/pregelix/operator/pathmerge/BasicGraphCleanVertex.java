@@ -406,7 +406,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getNextDestVertexId(getVertexValue())
                 break;
             case MessageFlag.DIR_RF:
@@ -419,7 +419,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
@@ -444,7 +444,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getNextDestVertexId(getVertexValue())
                 break;
             case MessageFlag.DIR_RF:
@@ -457,7 +457,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); //getPreDestVertexId(getVertexValue())
                 break; 
         }
@@ -480,7 +480,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                 sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
                 deleteVertex(getVertexId());
                 break;
@@ -493,7 +493,7 @@ public class BasicGraphCleanVertex extends
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                 sendMsg(getPrevDestVertexId(getVertexValue()), outgoingMsg);
                 deleteVertex(getVertexId());
                 break; 
@@ -649,28 +649,28 @@ public class BasicGraphCleanVertex extends
         int index;
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
-                selfString = getVertexValue().getKmer().toString();
+                selfString = getVertexValue().getActualKmer().toString();
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
                 msgString = msg.getActualKmer().toString();
                 index = msgString.indexOf(match);
                 tmpKmer.setByRead(msgString.length() - index, msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_FR:
-                selfString = getVertexValue().getKmer().toString();
+                selfString = getVertexValue().getActualKmer().toString();
                 match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
                 msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.indexOf(match);
                 tmpKmer.setByReadReverse(msgString.length() - index, msgString.substring(index).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RF:
-                selfString = getVertexValue().getKmer().toString();
+                selfString = getVertexValue().getActualKmer().toString();
                 match = selfString.substring(0,kmerSize - 1); 
                 msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
                 tmpKmer.setByReadReverse(index + 1, msgString.substring(0, index + 1).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RR:
-                selfString = getVertexValue().getKmer().toString();
+                selfString = getVertexValue().getActualKmer().toString();
                 match = selfString.substring(0,kmerSize - 1); 
                 msgString = msg.getActualKmer().toString();
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
