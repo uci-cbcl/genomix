@@ -26,7 +26,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.newgraph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.newgraph.driver.Driver.Plan;
-import edu.uci.ics.genomix.hyracks.test.TestUtils;
+//import edu.uci.ics.genomix.hyracks.test.TestUtils;
 //import edu.uci.ics.genomix.oldtype.NodeWritable;
 
 @SuppressWarnings("deprecation")
