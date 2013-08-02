@@ -505,8 +505,8 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      *            : the next kmer
      */
     public void mergeWithFFKmer(int initialKmerSize, VKmerBytesWritable kmer) {
-    	if (lettersInKmer == 0 || kmer.lettersInKmer == 0) {
-    		throw new IllegalStateException("Trying to merge an empty kmer! merge: '" + this + "' with '" + kmer + "'.");
+    	if (lettersInKmer < initialKmerSize - 1 || kmer.lettersInKmer < initialKmerSize - 1) {
+    		throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K=" + initialKmerSize + ", merge '" + this + "' with '" + kmer + "'.");
     	}
         int preKmerLength = lettersInKmer;
         int preSize = bytesUsed;
@@ -541,8 +541,8 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      *            : the next kmer
      */
     public void mergeWithFRKmer(int initialKmerSize, VKmerBytesWritable kmer) {
-    	if (lettersInKmer == 0 || kmer.lettersInKmer == 0) {
-    		throw new IllegalStateException("Trying to merge an empty kmer! merge: '" + this + "' with '" + kmer + "'.");
+    	if (lettersInKmer < initialKmerSize - 1 || kmer.lettersInKmer < initialKmerSize - 1) {
+    		throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K=" + initialKmerSize + ", merge '" + this + "' with '" + kmer + "'.");
     	}
         int preSize = bytesUsed;
         int preKmerLength = lettersInKmer;
@@ -611,8 +611,8 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      *            : the previous kmer
      */
     public void mergeWithRRKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
-    	if (lettersInKmer == 0 || preKmer.lettersInKmer == 0) {
-    		throw new IllegalStateException("Trying to merge an empty kmer! merge: '" + this + "' with '" + preKmer + "'.");
+    	if (lettersInKmer < initialKmerSize - 1 || preKmer.lettersInKmer < initialKmerSize - 1) {
+    		throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K=" + initialKmerSize + ", merge '" + this + "' with '" + preKmer + "'.");
     	}
         int preKmerLength = lettersInKmer;
         int preSize = bytesUsed;
