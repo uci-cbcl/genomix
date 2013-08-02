@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.oldtype.PositionWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -59,7 +59,8 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         checkMessage = 0;
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId.getReadID(),sourceVertexId.getPosInRead());
+            
+            this.sourceVertexId.set((byte)0, sourceVertexId.getReadId(),sourceVertexId.getPosId());
         }
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
@@ -91,7 +92,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
     public void setSourceVertexId(PositionWritable sourceVertexId) {
         if (sourceVertexId != null) {
             checkMessage |= CheckMessage.SOURCE;
-            this.sourceVertexId.set(sourceVertexId.getReadID(),sourceVertexId.getPosInRead());
+            this.sourceVertexId.set((byte)0, sourceVertexId.getReadId(),sourceVertexId.getPosId());
         }
     }
     
