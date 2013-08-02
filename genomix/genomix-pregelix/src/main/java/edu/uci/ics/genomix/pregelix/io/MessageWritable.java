@@ -46,6 +46,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         kmerlength = kmerSize;
         sourceVertexId = new VKmerBytesWritable(kmerSize);
         kmer = new VKmerBytesWritable(0);
+
         neighberNode = new AdjacencyListWritable(kmerSize);
         startVertexId = new VKmerBytesWritable(kmerSize);
         averageCoverage = 0;
@@ -64,6 +65,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         if (kmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.setAsCopy(msg.getActualKmer());
+
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -88,6 +90,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.setAsCopy(chainVertexId);
+
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -130,6 +133,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         if (actualKmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.setAsCopy(actualKmer);
+
         }
     }
     
@@ -141,6 +145,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         if (actualKmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.kmer.setAsCopy(actualKmer);
+
         }
     }
     

@@ -6,6 +6,7 @@ import org.apache.hadoop.io.NullWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
+
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -89,6 +90,7 @@ public class BridgeAddVertex extends
                  * set the vertex value
                  */
                 VKmerListWritable kmerFRList = new VKmerListWritable();
+
                 kmerFRList.append(getVertexId());
                 vertexValue.setFRList(kmerFRList);
                 VKmerBytesWritable otherVertexId = new VKmerBytesWritable(kmerSize);

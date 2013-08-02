@@ -64,6 +64,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.chainVertexId.setAsCopy(chainVertexId);
+
         }
         if (neighberNode != null) {
             checkMessage |= CheckMessage.NEIGHBER;
@@ -102,6 +103,7 @@ public class MergeBubbleMessageWritable implements WritableComparable<MergeBubbl
         if (chainVertexId != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.chainVertexId.setAsCopy(chainVertexId);
+
         }
     }
     

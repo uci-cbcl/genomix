@@ -29,6 +29,7 @@ import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.hyracks.newgraph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.AggregateKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.io.NodeTextWriterFactory;
@@ -181,6 +182,16 @@ public class JobGenBrujinGraph extends JobGen {
         return kmerCrossAggregator;
     }
 
+    public AbstractOperatorDescriptor generateKmerToFinalNode(JobSpecification jobSpec,
+            AbstractOperatorDescriptor kmerCrossAggregator) {
+
+        AbstractOperatorDescriptor mapToFinalNode = new AssembleKeyIntoNodeOperator(jobSpec,
+                AssembleKeyIntoNodeOperator.nodeOutputRec, kmerSize);
+        connectOperators(jobSpec, kmerCrossAggregator, ncNodeNames, mapToFinalNode, ncNodeNames,
+                new OneToOneConnectorDescriptor(jobSpec));
+        return mapToFinalNode;
+    }
+    
     public AbstractOperatorDescriptor generateNodeWriterOpertator(JobSpecification jobSpec,
             AbstractOperatorDescriptor mapEachReadToNode) throws HyracksException {
         ITupleWriterFactory nodeWriter = null;
@@ -209,10 +220,15 @@ public class JobGenBrujinGraph extends JobGen {
         logDebug("Group by Kmer");
         AbstractOperatorDescriptor lastOperator = generateGroupbyKmerJob(jobSpec, readOperator);
 
+        logDebug("Generate final node");
+        lastOperator = generateKmerToFinalNode(jobSpec, lastOperator);
+
+        jobSpec.addRoot(lastOperator);
+        
         logDebug("Write node to result");
         lastOperator = generateNodeWriterOpertator(jobSpec, lastOperator);
 
-        jobSpec.addRoot(readOperator);//what's this? why we need this? why I can't seet it in the JobGenCheckReader
+        jobSpec.addRoot(lastOperator);
         return jobSpec;
     }
 

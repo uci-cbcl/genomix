@@ -46,7 +46,7 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     }
 
     public void setForwardList(VKmerListWritable forwardList) {
-        this.forwardList.setCopy(forwardList);
+        this.forwardList = forwardList;
     }
 
     public VKmerListWritable getReverseList() {
@@ -54,7 +54,7 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     }
 
     public void setReverseList(VKmerListWritable reverseList) {
-        this.reverseList.setCopy(reverseList);
+        this.reverseList = reverseList;
     }
 
     @Override

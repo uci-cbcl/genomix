@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -50,7 +51,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
         return new IAggregatorDescriptor() {
 
             private NodeWritable readNode = new NodeWritable();
-            
+
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, fieldId);
@@ -74,9 +75,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 localUniNode.getFRList().unionUpdate(readNode.getFRList());
                 localUniNode.getRFList().unionUpdate(readNode.getRFList());
                 localUniNode.getRRList().unionUpdate(readNode.getRRList());
-                
+                localUniNode.addCoverage(readNode);
                 //make a fake feild to cheat caller
-                tupleBuilder.addFieldEndOffset();
+ //               tupleBuilder.addFieldEndOffset();
             }
 
             @Override
@@ -94,6 +95,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 localUniNode.getFRList().unionUpdate(readNode.getFRList());
                 localUniNode.getRFList().unionUpdate(readNode.getRFList());
                 localUniNode.getRRList().unionUpdate(readNode.getRRList());
+                localUniNode.addCoverage(readNode);
             }
 
             @Override

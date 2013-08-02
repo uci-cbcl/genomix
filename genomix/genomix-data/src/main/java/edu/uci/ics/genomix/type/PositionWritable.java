@@ -32,6 +32,10 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
         set(mateId, readId, posId);
     }
     
+    public PositionWritable(PositionWritable other) {
+        this();
+        set(other);
+    }
     public PositionWritable(byte[] storage, int offset) {
         setNewReference(storage, offset);
     }

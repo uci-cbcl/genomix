@@ -92,7 +92,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         int newSize = valueCount + otherList.valueCount;
         HashSet<PositionWritable> uniqueElements = new HashSet<PositionWritable>(newSize);
         for (PositionWritable pos : this) {
-            uniqueElements.add(pos);
+            uniqueElements.add(new PositionWritable(pos));
         }
         for (PositionWritable pos : otherList) {
             uniqueElements.add(pos);
