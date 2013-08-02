@@ -665,5 +665,37 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         }
         return new KmerBytesWritable(bytes, kmerStartOffset);
     }
+        
+    public static int editDistance(VKmerBytesWritable kmer1, VKmerBytesWritable kmer2) {
+    	int rows = kmer1.getKmerLetterLength() + 1, columns = kmer2.getKmerLetterLength() + 1, r=0, c=0, match=0;
+    	int[][] distMat = new int[rows][columns];
+    	
+    	// initialize top row and left column
+    	for (r = 0; r < rows; r++) {
+    		distMat[r][0] = r;
+    	}
+    	for (c = 0; c < columns; c++) {
+    		distMat[0][c] = c;
+    	}
+    	
+    	// fill out the matrix as the min of left+1, up+1, and diag+nomatch
+    	for (r = 1; r < rows; r++) {
+    		for (c = 1; c < columns; c++) {
+    			match = kmer1.getGeneCodeAtPosition(r-1) == kmer2.getGeneCodeAtPosition(c-1) ? 0 : 1;
+    			distMat[r][c] = min(distMat[r-1][c] + 1,
+    								distMat[r][c-1] + 1,
+    								distMat[r-1][c-1] + match);
+    		}
+    	}
+    	return distMat[rows - 1][columns - 1];
+    }
+    
+    private static int min(int a, int b, int c) {
+    	return a <= b ? (a <= c ? a : c) : (b <= c ? b : c);
+    }
+    
+    public int editDistance(VKmerBytesWritable other) {
+    	return editDistance(this, other);
+    }
 
 }

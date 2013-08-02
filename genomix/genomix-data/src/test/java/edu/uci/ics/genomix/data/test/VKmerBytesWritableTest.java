@@ -104,7 +104,7 @@ public class VKmerBytesWritableTest {
         String string = "AGCTGACCGT";
         for (int k = 3; k <= 10; k++) {
             VKmerBytesWritable kmer = new VKmerBytesWritable();
-            VKmerBytesWritable kmerAppend = new VKmerBytesWritable();
+            VKmerBytesWritable kmerAppend = new VKmerBytesWritable(k);
             kmer.setByRead(k, array, 0);
             Assert.assertEquals(string.substring(0, k), kmer.toString());
             for (int b = 0; b < k; b++) {
@@ -553,6 +553,23 @@ public class VKmerBytesWritableTest {
         System.out.println("GTA = " + kmerList.getPosition(1).toString());
         System.out.println("CTA = " + map.get(kmerList.getPosition(0)).toString());
         System.out.println("GTA = " + map.get(kmerList.getPosition(1)).toString());
+    }
+    
+    @Test
+    public void TestEditDistance() {
+    	VKmerBytesWritable kmer1 = new VKmerBytesWritable("ACGT");
+    	VKmerBytesWritable kmer2 = new VKmerBytesWritable("AAAACGT");
+    	
+    	Assert.assertEquals(kmer1.editDistance(kmer2), 3);
+    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
+    	
+    	kmer1.setAsCopy("");
+    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
+    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
+    	
+    	kmer2.setAsCopy("");
+    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
+    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
     }
 
 }
