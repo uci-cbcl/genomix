@@ -505,6 +505,9 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      *            : the next kmer
      */
     public void mergeWithFFKmer(int initialKmerSize, VKmerBytesWritable kmer) {
+    	if (lettersInKmer == 0 || kmer.lettersInKmer == 0) {
+    		throw new IllegalStateException("Trying to merge an empty kmer! merge: '" + this + "' with '" + kmer + "'.");
+    	}
         int preKmerLength = lettersInKmer;
         int preSize = bytesUsed;
         lettersInKmer += kmer.lettersInKmer - initialKmerSize + 1;
@@ -538,6 +541,9 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      *            : the next kmer
      */
     public void mergeWithFRKmer(int initialKmerSize, VKmerBytesWritable kmer) {
+    	if (lettersInKmer == 0 || kmer.lettersInKmer == 0) {
+    		throw new IllegalStateException("Trying to merge an empty kmer! merge: '" + this + "' with '" + kmer + "'.");
+    	}
         int preSize = bytesUsed;
         int preKmerLength = lettersInKmer;
         lettersInKmer += kmer.lettersInKmer - initialKmerSize + 1;
@@ -605,6 +611,9 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      *            : the previous kmer
      */
     public void mergeWithRRKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
+    	if (lettersInKmer == 0 || preKmer.lettersInKmer == 0) {
+    		throw new IllegalStateException("Trying to merge an empty kmer! merge: '" + this + "' with '" + preKmer + "'.");
+    	}
         int preKmerLength = lettersInKmer;
         int preSize = bytesUsed;
         lettersInKmer += preKmer.lettersInKmer - initialKmerSize + 1;

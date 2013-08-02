@@ -184,6 +184,7 @@ public class VKmerBytesWritableTest {
         Assert.assertEquals(text2, kmer2.toString());
 
         VKmerBytesWritable merge = new VKmerBytesWritable();
+        merge.setAsCopy(kmer1);
         merge.mergeWithFRKmer(kmerSize, kmer2);
         Assert.assertEquals(result, merge.toString());
 
@@ -221,6 +222,7 @@ public class VKmerBytesWritableTest {
         Assert.assertEquals(text2, kmer2.toString());
 
         VKmerBytesWritable merge = new VKmerBytesWritable();
+        merge.setAsCopy(kmer1);
         merge.mergeWithRFKmer(kmerSize, kmer2);
         Assert.assertEquals(result, merge.toString());
 
