@@ -260,6 +260,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
             in.readFully(storage, curOffset + VKmerBytesWritable.HEADER_SIZE, elemBytes - VKmerBytesWritable.HEADER_SIZE); // write kmer
             curOffset += elemBytes;
             curLength += elemBytes;
+            valueCount++;
         }
         valueCount = newValueCount;
         Marshal.putInt(valueCount, storage, offset);

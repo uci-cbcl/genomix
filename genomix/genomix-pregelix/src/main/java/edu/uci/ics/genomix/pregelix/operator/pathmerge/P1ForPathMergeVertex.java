@@ -185,7 +185,7 @@ public class P1ForPathMergeVertex extends
         //merge chain
         lastKmer.setAsCopy(kmerFactory.getLastKmerFromChain(incomingMsg.getLengthOfChain() - kmerSize + 1,
                 incomingMsg.getActualKmer()));
-        getVertexValue().setKmer(kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), lastKmer));
+        getVertexValue().setActualKmer(kmerFactory.mergeTwoKmer(getVertexValue().getActualKmer(), lastKmer));
         getVertexValue().setOutgoingList(incomingMsg.getNeighberNode());
     }
 
@@ -221,7 +221,7 @@ public class P1ForPathMergeVertex extends
     public void responseMsgToHeadVertex() {
         deleteVertex(getVertexId());
         outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-        outgoingMsg.setActualKmer(getVertexValue().getKmer());
+        outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
         if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outgoingMsg.setFlag(Message.STOP);
         destVertexId.setAsCopy(incomingMsg.getSourceVertexId());

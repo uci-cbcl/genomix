@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
         extends VertexInputFormat<I, V, E, M> {
@@ -38,7 +38,7 @@ public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V
     public static abstract class BinaryDataCleanVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<KmerBytesWritable, VertexValueWritable> lineRecordReader;
+        private final RecordReader<VKmerBytesWritable, VertexValueWritable> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -48,7 +48,7 @@ public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryDataCleanVertexReader(RecordReader<KmerBytesWritable, VertexValueWritable> recordReader) {
+        public BinaryDataCleanVertexReader(RecordReader<VKmerBytesWritable, VertexValueWritable> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -74,7 +74,7 @@ public class BinaryDataCleanVertexInputFormat<I extends WritableComparable<?>, V
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<KmerBytesWritable, VertexValueWritable> getRecordReader() {
+        protected RecordReader<VKmerBytesWritable, VertexValueWritable> getRecordReader() {
             return lineRecordReader;
         }
 

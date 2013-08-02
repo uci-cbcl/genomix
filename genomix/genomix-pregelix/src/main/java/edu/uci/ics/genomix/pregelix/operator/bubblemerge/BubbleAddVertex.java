@@ -64,7 +64,7 @@ public class BubbleAddVertex extends
         initVertex(); 
         if(getSuperstep() == 1){
             if(getVertexId().toString().equals("ATA")){
-                VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
+                VKmerBytesWritable vertexId = new VKmerBytesWritable();
                 vertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
                 getVertexValue().getFRList().append(vertexId);
                 
@@ -84,18 +84,18 @@ public class BubbleAddVertex extends
                 VKmerListWritable kmerFRList = new VKmerListWritable();
                 kmerFRList.append(getVertexId());
                 vertexValue.setFRList(kmerFRList);
-                VKmerBytesWritable otherVertexId = new VKmerBytesWritable(kmerSize);
+                VKmerBytesWritable otherVertexId = new VKmerBytesWritable();
                 otherVertexId.setByRead(kmerSize, "AGA".getBytes(), 0);
                 VKmerListWritable kmerRFList = new VKmerListWritable();
                 kmerRFList.append(otherVertexId);
                 vertexValue.setRFList(kmerRFList);
-                vertexValue.setKmer(vertexId);
+                vertexValue.setActualKmer(vertexId);
                 vertex.setVertexValue(vertexValue);
                 
                 addVertex(vertexId, vertex);
             } 
             else if(getVertexId().toString().equals("AGA")){
-                VKmerBytesWritable brdgeVertexId = new VKmerBytesWritable(kmerSize);
+                VKmerBytesWritable brdgeVertexId = new VKmerBytesWritable();
                 brdgeVertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
                 getVertexValue().getRFList().append(brdgeVertexId);
             }

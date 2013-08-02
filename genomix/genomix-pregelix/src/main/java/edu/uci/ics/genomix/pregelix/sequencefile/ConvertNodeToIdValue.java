@@ -39,7 +39,7 @@ public class ConvertNodeToIdValue {
             outputValue.setFRList(node.getFRList());
             outputValue.setRFList(node.getRFList());
             outputValue.setRRList(node.getRRList());
-            outputValue.setKmer(node.getKmer());
+            outputValue.setActualKmer(node.getKmer());
             outputValue.setState(State.IS_HEAD);
             writer.append(outputKey, outputValue);
         }

@@ -6,20 +6,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.hadoop.io.NullWritable;
-
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritableFactory;
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.MergeBubbleMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.AdjMessage;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
@@ -29,8 +23,6 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 public class BubbleMergeVertex extends
     BasicGraphCleanVertex {
 
-    private KmerBytesWritableFactory kmerFactory = new KmerBytesWritableFactory(1);
-    
     private Map<VKmerBytesWritable, ArrayList<MessageWritable>> receivedMsgMap = new HashMap<VKmerBytesWritable, ArrayList<MessageWritable>>();
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
     
@@ -54,7 +46,7 @@ public class BubbleMergeVertex extends
                 if(hasNextDest(getVertexValue())){
                     outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                    outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                     destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 }
@@ -64,7 +56,7 @@ public class BubbleMergeVertex extends
                 if(hasPrevDest(getVertexValue())){
                     outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                    outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
                     destVertexId.setAsCopy(getPrevDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 }
@@ -109,7 +101,7 @@ public class BubbleMergeVertex extends
                     /** for each startVertex, sort the node by decreasing order of coverage **/
                     receivedMsgList = receivedMsgMap.get(prevId);
                     Collections.sort(receivedMsgList, new MessageWritable.SortByCoverage());
-                
+                    System.out.println("");
                     
                     
                     /** process similarSet, keep the unchanged set and deleted set & add coverage to unchange node **/
