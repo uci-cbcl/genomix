@@ -70,7 +70,7 @@ public class LogAlgorithmLogFormatter extends Formatter {
         builder.append("Step: " + step + "\r\n");
         builder.append("Source Code: " + source + "\r\n");
         if (operation == 0) {
-            if (destVertexId.getKmerLength() != -1) {
+            if (KmerBytesWritable.getKmerLength() != -1) {
                 String dest = destVertexId.toString();
                 builder.append("Send message to " + "\r\n");
                 builder.append("Destination Code: " + dest + "\r\n");
@@ -88,7 +88,7 @@ public class LogAlgorithmLogFormatter extends Formatter {
         if (operation == 2) {
             chain = mergeChain.toString();
             builder.append("Merge Chain: " + chain + "\r\n");
-            builder.append("Merge Chain Length: " + mergeChain.getKmerLength() + "\r\n");
+            builder.append("Merge Chain Length: " + KmerBytesWritable.getKmerLength() + "\r\n");
         }
         if (operation == 3)
             builder.append("Vote to halt!");

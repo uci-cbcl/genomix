@@ -14,8 +14,8 @@ import org.apache.hadoop.mapred.TextOutputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 
 @SuppressWarnings("deprecation")
@@ -51,7 +51,7 @@ public class GenomixDriver {
         conf.setMapperClass(GenomixMapper.class);
         conf.setReducerClass(GenomixReducer.class);
 
-        conf.setMapOutputKeyClass(KmerBytesWritable.class);
+        conf.setMapOutputKeyClass(VKmerBytesWritable.class);
         conf.setMapOutputValueClass(NodeWritable.class);
         
         //InputFormat and OutputFormat for Reducer
@@ -62,7 +62,7 @@ public class GenomixDriver {
             conf.setOutputFormat(TextOutputFormat.class);
         
         //Output Key/Value Class
-        conf.setOutputKeyClass(KmerBytesWritable.class);
+        conf.setOutputKeyClass(VKmerBytesWritable.class);
         conf.setOutputValueClass(NodeWritable.class);
         
         FileInputFormat.setInputPaths(conf, new Path(inputPath));

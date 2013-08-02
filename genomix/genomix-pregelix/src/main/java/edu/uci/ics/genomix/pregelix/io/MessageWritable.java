@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Comparator;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -10,7 +11,6 @@ import edu.uci.ics.genomix.pregelix.type.CheckMessage;
 import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class MessageWritable implements WritableComparable<MessageWritable> {
     /**
@@ -22,6 +22,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     private VKmerBytesWritable kmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private PositionListWritable nodeIdList = new PositionListWritable();
+    private float averageCoverage;
     private byte flag;
     private boolean isFlip;
     private int kmerlength = 0;
@@ -35,6 +36,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         kmer = new VKmerBytesWritable();
         neighberNode = new AdjacencyListWritable();
         startVertexId = new VKmerBytesWritable();
+        averageCoverage = 0;
         flag = Message.NON;
         isFlip = false;
         checkMessage = (byte) 0;
@@ -46,6 +48,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         kmer = new VKmerBytesWritable(0);
         neighberNode = new AdjacencyListWritable(kmerSize);
         startVertexId = new VKmerBytesWritable(kmerSize);
+        averageCoverage = 0;
         flag = Message.NON;
         isFlip = false;
         checkMessage = (byte) 0;
@@ -103,6 +106,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
 //        kmer.reset();
         neighberNode.reset(kmerSize);
         startVertexId.reset(kmerSize);
+        averageCoverage = 0;
         flag = Message.NON;
         isFlip = false;
     }
@@ -161,6 +165,14 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             this.startVertexId.setAsCopy(startVertexId);
         }
     }
+    
+    public float getAverageCoverage() {
+        return averageCoverage;
+    }
+
+    public void setAverageCoverage(float averageCoverage) {
+        this.averageCoverage = averageCoverage;
+    }
 
     public int getLengthOfChain() {
         return kmer.getKmerLetterLength();
@@ -216,6 +228,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             nodeIdList.write(out);
         if ((checkMessage & CheckMessage.START) != 0)
             startVertexId.write(out);
+        out.writeFloat(averageCoverage);
         out.writeBoolean(isFlip);
         out.writeByte(flag); 
         out.writeBoolean(updateMsg);
@@ -236,6 +249,7 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
             nodeIdList.readFields(in);
         if ((checkMessage & CheckMessage.START) != 0)
             startVertexId.readFields(in);
+        averageCoverage = in.readFloat();
         isFlip = in.readBoolean();
         flag = in.readByte();
         updateMsg = in.readBoolean();
@@ -263,5 +277,12 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
     @Override
     public int compareTo(MessageWritable tp) {
         return sourceVertexId.compareTo(tp.sourceVertexId);
+    }
+    
+    public static final class SortByCoverage implements Comparator<MessageWritable> {
+        @Override
+        public int compare(MessageWritable left, MessageWritable right) {
+            return Float.compare(left.averageCoverage, right.averageCoverage);
+        }
     }
 }

@@ -12,16 +12,15 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 @SuppressWarnings("deprecation")
 public class GenomixMapper extends MapReduceBase implements
-    Mapper<LongWritable, Text, KmerBytesWritable, NodeWritable>{
+    Mapper<LongWritable, Text, VKmerBytesWritable, NodeWritable>{
     
     public static enum KmerDir{
         FORWARD,
@@ -29,12 +28,12 @@ public class GenomixMapper extends MapReduceBase implements
     }
     
     public static int KMER_SIZE;
-    private KmerBytesWritable preForwardKmer;
-    private KmerBytesWritable preReverseKmer;
-    private KmerBytesWritable curForwardKmer;
-    private KmerBytesWritable curReverseKmer;
-    private KmerBytesWritable nextForwardKmer;
-    private KmerBytesWritable nextReverseKmer;
+    private VKmerBytesWritable preForwardKmer;
+    private VKmerBytesWritable preReverseKmer;
+    private VKmerBytesWritable curForwardKmer;
+    private VKmerBytesWritable curReverseKmer;
+    private VKmerBytesWritable nextForwardKmer;
+    private VKmerBytesWritable nextReverseKmer;
     private PositionWritable nodeId;
     private PositionListWritable nodeIdList;
     private VKmerListWritable edgeListForPreKmer;
@@ -50,13 +49,12 @@ public class GenomixMapper extends MapReduceBase implements
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
-        KmerBytesWritable.setGlobalKmerLength(KMER_SIZE);
-        preForwardKmer = new KmerBytesWritable();
-        preReverseKmer = new KmerBytesWritable();
-        curForwardKmer = new KmerBytesWritable();
-        curReverseKmer = new KmerBytesWritable();
-        nextForwardKmer = new KmerBytesWritable();
-        nextReverseKmer = new KmerBytesWritable();
+        preForwardKmer = new VKmerBytesWritable();
+        preReverseKmer = new VKmerBytesWritable();
+        curForwardKmer = new VKmerBytesWritable();
+        curReverseKmer = new VKmerBytesWritable();
+        nextForwardKmer = new VKmerBytesWritable();
+        nextReverseKmer = new VKmerBytesWritable();
         nodeId = new PositionWritable();
         nodeIdList = new PositionListWritable();
         edgeListForPreKmer = new VKmerListWritable();
@@ -68,9 +66,8 @@ public class GenomixMapper extends MapReduceBase implements
     }
     
     @Override
-    public void map(LongWritable key, Text value, OutputCollector<KmerBytesWritable, NodeWritable> output,
+    public void map(LongWritable key, Text value, OutputCollector<VKmerBytesWritable, NodeWritable> output,
             Reporter reporter) throws IOException {
-        /** first kmer */
         String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
         if (rawLine.length != 2) {
             throw new IOException("invalid data");
@@ -86,11 +83,10 @@ public class GenomixMapper extends MapReduceBase implements
             if (KMER_SIZE >= array.length) {
                 throw new IOException("short read");
             }
-            
             /** first kmer **/
             outputNode.reset();
-            curForwardKmer.setByRead(array, 0);
-            curReverseKmer.setByReadReverse(array, 0);
+            curForwardKmer.setByRead(KMER_SIZE, array, 0);
+            curReverseKmer.setByReadReverse(KMER_SIZE, array, 0);
             curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             setNextKmer(array[KMER_SIZE]);
             //set value.nodeId
@@ -205,7 +201,7 @@ public class GenomixMapper extends MapReduceBase implements
     public void setPreKmer(byte preChar){
         preForwardKmer.setAsCopy(curForwardKmer);
         preForwardKmer.shiftKmerWithPreChar(preChar);
-        preReverseKmer.setByReadReverse(preForwardKmer.toString().getBytes(), preForwardKmer.getOffset());
+        preReverseKmer.setByReadReverse(KMER_SIZE, preForwardKmer.toString().getBytes(), preForwardKmer.getBlockOffset());
         preKmerDir = preForwardKmer.compareTo(preReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
     }
     
@@ -213,7 +209,7 @@ public class GenomixMapper extends MapReduceBase implements
     public void setNextKmer(byte nextChar){
         nextForwardKmer.setAsCopy(curForwardKmer);
         nextForwardKmer.shiftKmerWithNextChar(nextChar);
-        nextReverseKmer.setByReadReverse(nextForwardKmer.toString().getBytes(), nextForwardKmer.getOffset());
+        nextReverseKmer.setByReadReverse(KMER_SIZE, nextForwardKmer.toString().getBytes(), nextForwardKmer.getBlockOffset());
         nextKmerDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
     }
     
@@ -231,7 +227,7 @@ public class GenomixMapper extends MapReduceBase implements
     	curReverseKmer.setAsCopy(nextReverseKmer);
     }
     
-    public void setMapperOutput(OutputCollector<KmerBytesWritable, NodeWritable> output) throws IOException{
+    public void setMapperOutput(OutputCollector<VKmerBytesWritable, NodeWritable> output) throws IOException{
     	switch(curKmerDir){
     	case FORWARD:
     		output.collect(curForwardKmer, outputNode);

@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,6 +45,33 @@ public class BubbleMergeVertex extends
         outgoingMsg.reset();
     }
     
+    public void sendBubbleAndMajorVertexMsgToMinorVertex(){
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        switch(neighborToMeDir){
+            case MessageFlag.DIR_RF:
+            case MessageFlag.DIR_RR:
+                if(hasNextDest(getVertexValue())){
+                    outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
+                    outgoingMsg.setSourceVertexId(getVertexId());
+                    outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                    destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
+                    sendMsg(destVertexId, outgoingMsg);
+                }
+                break;
+            case MessageFlag.DIR_FF:
+            case MessageFlag.DIR_FR:
+                if(hasPrevDest(getVertexValue())){
+                    outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
+                    outgoingMsg.setSourceVertexId(getVertexId());
+                    outgoingMsg.setActualKmer(getVertexValue().getKmer());
+                    destVertexId.setAsCopy(getPrevDestVertexId(getVertexValue()));
+                    sendMsg(destVertexId, outgoingMsg);
+                }
+                break;
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
@@ -57,30 +85,8 @@ public class BubbleMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 if(VertexUtil.isPathVertex(getVertexValue())){
-                    byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-                    byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-                    switch(neighborToMeDir){
-                        case MessageFlag.DIR_RF:
-                        case MessageFlag.DIR_RR:
-                            if(hasNextDest(getVertexValue())){
-                                outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
-                                outgoingMsg.setSourceVertexId(getVertexId());
-                                outgoingMsg.setActualKmer(getVertexValue().getKmer());
-                                destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
-                                sendMsg(destVertexId, outgoingMsg);
-                            }
-                            break;
-                        case MessageFlag.DIR_FF:
-                        case MessageFlag.DIR_FR:
-                            if(hasPrevDest(getVertexValue())){
-                                outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
-                                outgoingMsg.setSourceVertexId(getVertexId());
-                                outgoingMsg.setActualKmer(getVertexValue().getKmer());
-                                destVertexId.setAsCopy(getPrevDestVertexId(getVertexValue()));
-                                sendMsg(destVertexId, outgoingMsg);
-                            }
-                            break;
-                    }
+                    /** send bubble and major vertex msg to minor vertex **/
+                    sendBubbleAndMajorVertexMsgToMinorVertex();
                 }
             }
         } else if (getSuperstep() == 3){
@@ -99,67 +105,33 @@ public class BubbleMergeVertex extends
                 }
             }
             for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
-                receivedMsgList = receivedMsgMap.get(prevId);
-                if(receivedMsgList.size() > 1){
+                if(receivedMsgList.size() > 1){ // filter bubble
                     /** for each startVertex, sort the node by decreasing order of coverage **/
+                    receivedMsgList = receivedMsgMap.get(prevId);
+                    Collections.sort(receivedMsgList, new MessageWritable.SortByCoverage());
+                
+                    
                     
                     /** process similarSet, keep the unchanged set and deleted set & add coverage to unchange node **/
                     
                     /** send message to the unchanged set for updating coverage & send kill message to the deleted set **/ 
-                    //send unchange or merge Message to node with largest length
-                    if(flag == true){
-                        //1. send unchange Message to node with largest length
-                        //   we can send no message to complete this step
-                        //2. send delete Message to node which doesn't have largest length
-                        for(int i = 0; i < receivedMsgList.size(); i++){
-                            //if(receivedMsgList.get(i).getSourceVertexId().compareTo(max) != 0)
-                            if(receivedMsgList.get(i).getSourceVertexId().compareTo(secondMax) == 0){ 
-                                outgoingMsg.setMessage(AdjMessage.KILL);
-                                outgoingMsg.setStartVertexId(prevId);
-                                outgoingMsg.setSourceVertexId(getVertexId());
-                                sendMsg(secondMax, outgoingMsg);
-                            } else if(receivedMsgList.get(i).getSourceVertexId().compareTo(max) == 0){
-                                outgoingMsg.setMessage(AdjMessage.UNCHANGE);
-                                sendMsg(max, outgoingMsg);
-                            }
-                        }
-                    } else{
-                        //send merge Message to node with largest length
-                        for(int i = 0; i < receivedMsgList.size(); i++){
-                            //if(receivedMsgList.get(i).getSourceVertexId().compareTo(max) != 0)
-                            if(receivedMsgList.get(i).getSourceVertexId().compareTo(secondMax) == 0){
-                                outgoingMsg.setMessage(AdjMessage.KILL);
-                                outgoingMsg.setStartVertexId(prevId);
-                                outgoingMsg.setSourceVertexId(getVertexId());
-                                sendMsg(receivedMsgList.get(i).getSourceVertexId(), outgoingMsg);
-                            } else if(receivedMsgList.get(i).getSourceVertexId().compareTo(max) == 0){
-                                outgoingMsg.setMessage(AdjMessage.MERGE);
-                                /* add other node in message */
-                                for(int j = 0; j < receivedMsgList.size(); i++){
-                                    if(receivedMsgList.get(j).getSourceVertexId().compareTo(secondMax) == 0){
-                                        outgoingMsg.setChainVertexId(receivedMsgList.get(j).getChainVertexId());
-                                        break;
-                                    }
-                                }
-                                sendMsg(receivedMsgList.get(i).getSourceVertexId(), outgoingMsg);
-                            }
-                        }
-                    }
+                    
                 }
             }
         } else if (getSuperstep() == 4){
             if(msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if(incomingMsg.getMessage() == AdjMessage.KILL){
+                if(incomingMsg.getFlag() == MessageFlag.KILL){
                     broadcaseKillself();
-                } else if (incomingMsg.getMessage() == AdjMessage.MERGE){
-                    //merge with small node
-                    getVertexValue().setKmer(kmerFactory.mergeTwoKmer(getVertexValue().getKmer(), 
-                            incomingMsg.getChainVertexId()));
-                }
+                } 
             }
         } else if(getSuperstep() == 5){
-            responseToDeadVertex(msgIterator);
+            if(msgIterator.hasNext()) {
+                incomingMsg = msgIterator.next();
+                if(incomingMsg.getFlag() == MessageFlag.KILL){
+                    responseToDeadVertex();
+                }
+            }
         }
         voteToHalt();
     }

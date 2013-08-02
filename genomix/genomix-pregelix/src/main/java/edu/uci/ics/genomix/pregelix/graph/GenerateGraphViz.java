@@ -84,7 +84,7 @@ public class GenerateGraphViz {
 
     public static void main(String[] args) throws Exception {
         GenerateGraphViz g = new GenerateGraphViz();
-        g.convertGraphCleanOutputToGraphViz("data/actual/tipadd/TipAddGraph/bin/5", "graphtest");
+        g.convertGraphCleanOutputToGraphViz("data/actual/bubbleadd/BubbleAddGraph/bin/5", "graphtest");
 //        g.start("CyclePath_7");
 //        g.start("SimplePath_7");
 //        g.start("SinglePath_7");

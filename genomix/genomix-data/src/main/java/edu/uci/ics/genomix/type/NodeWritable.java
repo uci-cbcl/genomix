@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
