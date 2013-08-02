@@ -112,7 +112,6 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 try {
                     fieldOutput.write(localUniNode.marshalToByteArray(), 0, localUniNode.getSerializedLength());
-
                     tupleBuilder.addFieldEndOffset();
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
