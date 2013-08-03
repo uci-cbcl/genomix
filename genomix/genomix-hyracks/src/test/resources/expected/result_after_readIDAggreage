@@ -1,6 +1,0 @@
-1	1	[]	AATAG	-1	[]		2	[]	ATAGA	-2	[]		3	[]	TAGAA	-3	[]		4	[(6,1)]	AGAAG	-4	[(6,-1)]		
-2	1	[]	AATAG	-1	[]		2	[]	ATAGC	-2	[]		3	[]	TAGCT	-3	[]		4	[]	AGCTT	-4	[]		
-3	1	[]	AATAG	-1	[]		2	[]	ATAGA	-2	[]		3	[]	TAGAA	-3	[]		4	[(6,1)]	AGAAG	-4	[(6,-1)]		
-4	1	[]	AATAG	-1	[]		2	[]	ATAGC	-2	[]		3	[]	TAGCT	-3	[]		4	[]	AGCTT	-4	[]		
-5	1	[]	AATAG	-1	[]		2	[]	ATAGA	-2	[]		3	[]	TAGAA	-3	[]		4	[(6,1)]	AGAAG	-4	[(6,-1)]		
-6	1	[(3,4),(1,4),(5,4)]	AGAAG	-1	[(1,-4),(3,-4),(5,-4)]		2	[]	GAAGA	-2	[]		3	[]	AAGAA	-3	[]		4	[]	AGAAG	-4	[]		
