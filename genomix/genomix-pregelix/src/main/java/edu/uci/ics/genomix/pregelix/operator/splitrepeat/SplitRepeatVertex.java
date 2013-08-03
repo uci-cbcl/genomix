@@ -96,9 +96,11 @@ public class SplitRepeatVertex extends
         if(outgoingEdgeList == null)
             outgoingEdgeList = new VKmerListWritable();
         if(createdVertexId == null)
-            createdVertexId = new VKmerBytesWritable(kmerSize);//kmerSize + 1
+            createdVertexId = new VKmerBytesWritable(kmerSize + 1);
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable(kmerSize);
+        if(tmpKmer == null)
+            tmpKmer = new VKmerBytesWritable();
     }
     
     /**
@@ -130,6 +132,11 @@ public class SplitRepeatVertex extends
         }
         else
             return "GGG";
+    }
+    
+    public void randomGenerateVertexId(int numOfSuffix){
+        String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);;
+        createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
     }
     
     public void generateKmerMap(Iterator<MessageWritable> msgIterator){
@@ -322,7 +329,6 @@ public class SplitRepeatVertex extends
             /** set self readId set **/
             setSelfReadIdSet();
             
-            int count = 0;
             //A set storing deleted edges
             Set<DeletedEdge> deletedEdges = new HashSet<DeletedEdge>();
             /** process connectedTable **/
@@ -330,8 +336,8 @@ public class SplitRepeatVertex extends
                 /** set edgeList and edgeDir based on connectedTable **/
                 setEdgeListAndEdgeDir(i);
                 
-                VKmerBytesWritable incomingEdge = new VKmerBytesWritable(kmerSize);
-                VKmerBytesWritable outgoingEdge = new VKmerBytesWritable(kmerSize);
+                VKmerBytesWritable incomingEdge = new VKmerBytesWritable();
+                VKmerBytesWritable outgoingEdge = new VKmerBytesWritable();
                 for(int x = 0; x < incomingEdgeList.getCountOfPosition(); x++){
                     for(int y = 0; y < outgoingEdgeList.getCountOfPosition(); y++){
                         incomingEdge.setAsCopy(incomingEdgeList.getPosition(x));
@@ -340,11 +346,8 @@ public class SplitRepeatVertex extends
                         setNeighborEdgeIntersection(incomingEdge, outgoingEdge);
                         
                         if(!neighborEdgeIntersection.isEmpty()){
-                            if(count == 0)
-                                createdVertexId.setByRead("AAA".length(), "AAA".getBytes(), 0);//kmerSize + 1 generaterRandomString(kmerSize).getBytes()
-                            else
-                                createdVertexId.setByRead("GGG".length(), "GGG".getBytes(), 0);
-                            count++;
+                            /** random generate vertexId of new vertex **/
+                            randomGenerateVertexId(3);
                             
                             /** create new/created vertex **/
                             createNewVertex(i, incomingEdge, outgoingEdge);
@@ -356,31 +359,7 @@ public class SplitRepeatVertex extends
                             storeDeletedEdge(deletedEdges, i, incomingEdge, outgoingEdge);
                         }
                     }
-                }
-                
-//                for(KmerBytesWritable incomingEdge : incomingEdgeList){
-//                    for(KmerBytesWritable outgoingEdge : outgoingEdgeList){
-//                        /** set neighborEdge readId intersection **/
-//                        setNeighborEdgeIntersection(incomingEdge, outgoingEdge);
-//                        
-//                        if(!neighborEdgeIntersection.isEmpty()){
-//                            if(count == 0)
-//                                createdVertexId.setByRead("AAA".getBytes(), 0);//kmerSize + 1 generaterRandomString(kmerSize).getBytes()
-//                            else
-//                                createdVertexId.setByRead("GGG".getBytes(), 0);
-//                            count++;
-//                            
-//                            /** create new/created vertex **/
-//                            createNewVertex(i, incomingEdge, outgoingEdge);
-//                            
-//                            /** send msg to neighbors to update their edges to new vertex **/
-//                            sendMsgToUpdateEdge(incomingEdge, outgoingEdge);
-//                            
-//                            /** store deleted edge **/
-//                            storeDeletedEdge(deletedEdges, i, incomingEdge, outgoingEdge);
-//                        }
-//                    }
-//                }
+                }                
             }
             /** delete extra edges from old vertex **/
             for(DeletedEdge deletedEdge : deletedEdges){

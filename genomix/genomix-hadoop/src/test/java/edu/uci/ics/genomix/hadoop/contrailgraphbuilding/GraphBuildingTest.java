@@ -22,13 +22,12 @@ public class GraphBuildingTest {
     private JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/pathmerge_TestSet/5";
+    private static final String DATA_PATH = "data/webmap/AdjSplitRepeat.txt";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result";
     
-//    private static final int COUNT_REDUCER = 2;
+    private static final int COUNT_REDUCER = 1;
     private static final int SIZE_KMER = 3;
-    private static final int READ_LENGTH = 7;
     
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -45,7 +44,7 @@ public class GraphBuildingTest {
     
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
-        driver.run(HDFS_PATH, RESULT_PATH, 1, SIZE_KMER, READ_LENGTH, true, HADOOP_CONF_PATH);
+        driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, true, HADOOP_CONF_PATH);
         dumpResult();
     }
     

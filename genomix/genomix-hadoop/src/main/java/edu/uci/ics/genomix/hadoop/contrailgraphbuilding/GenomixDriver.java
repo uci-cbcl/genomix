@@ -34,15 +34,14 @@ public class GenomixDriver {
         @Option(name = "-kmer-size", usage = "the size of kmer", required = true)
         public int sizeKmer;
         
-        @Option(name = "-read-length", usage = "the length of read", required = true)
-        public int readLength;
+//        @Option(name = "-read-length", usage = "the length of read", required = true)
+//        public int readLength;
     }
     
-    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int readLength,
+    public void run(String inputPath, String outputPath, int numReducers, int sizeKmer,
             boolean seqOutput, String defaultConfPath) throws IOException{
         JobConf conf = new JobConf(GenomixDriver.class);
         conf.setInt("sizeKmer", sizeKmer);
-        conf.setInt("readLength", readLength);
         if (defaultConfPath != null) {
             conf.addResource(new Path(defaultConfPath));
         }
@@ -79,7 +78,6 @@ public class GenomixDriver {
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         GenomixDriver driver = new GenomixDriver();
-        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, 
-                options.readLength, true, null);
+        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, true, null);
     }
 }
