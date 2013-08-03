@@ -3,8 +3,10 @@ package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -22,10 +24,12 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  */
 public class BubbleMergeVertex extends
     BasicGraphCleanVertex {
-
+    public static final String DISSIMILARITY_THRESHOLD = "BubbleMergeVertex.dissimilarThreshold";
+    private float dissimilarThreshold = -1;
+    
     private Map<VKmerBytesWritable, ArrayList<MessageWritable>> receivedMsgMap = new HashMap<VKmerBytesWritable, ArrayList<MessageWritable>>();
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
-    
+
     /**
      * initiate kmerSize, maxIteration
      */
@@ -34,7 +38,17 @@ public class BubbleMergeVertex extends
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
-        outgoingMsg.reset();
+        if(dissimilarThreshold == -1)
+            dissimilarThreshold = getContext().getConfiguration().getFloat(DISSIMILARITY_THRESHOLD, (float) 0.05);
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable();
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable();
+        else
+            outgoingMsg.reset(kmerSize);
+        if(destVertexId == null)
+            destVertexId = new VKmerBytesWritable();
+        outFlag = 0;
     }
     
     public void sendBubbleAndMajorVertexMsgToMinorVertex(){
@@ -64,7 +78,24 @@ public class BubbleMergeVertex extends
         }
     }
     
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked" })
+    public void aggregateBubbleNodesByMajorNode(Iterator<MessageWritable> msgIterator){
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if(!receivedMsgMap.containsKey(incomingMsg.getStartVertexId())){
+                receivedMsgList.clear();
+                receivedMsgList.add(incomingMsg);
+                receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+            }
+            else{
+                receivedMsgList.clear();
+                receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getStartVertexId()));
+                receivedMsgList.add(incomingMsg);
+                receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+            }
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
@@ -82,32 +113,50 @@ public class BubbleMergeVertex extends
                 }
             }
         } else if (getSuperstep() == 3){
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                if(!receivedMsgMap.containsKey(incomingMsg.getStartVertexId())){
-                    receivedMsgList.clear();
-                    receivedMsgList.add(incomingMsg);
-                    receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
-                }
-                else{
-                    receivedMsgList.clear();
-                    receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getStartVertexId()));
-                    receivedMsgList.add(incomingMsg);
-                    receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
-                }
-            }
+            /** aggregate bubble nodes and grouped by major vertex **/ 
+            aggregateBubbleNodesByMajorNode(msgIterator);
+            
+            Set<MessageWritable> unchangedSet = new HashSet<MessageWritable>();
+            Set<MessageWritable> deletedSet = new HashSet<MessageWritable>();
             for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
                 if(receivedMsgList.size() > 1){ // filter bubble
                     /** for each startVertex, sort the node by decreasing order of coverage **/
                     receivedMsgList = receivedMsgMap.get(prevId);
                     Collections.sort(receivedMsgList, new MessageWritable.SortByCoverage());
-                    System.out.println("");
-                    
                     
                     /** process similarSet, keep the unchanged set and deleted set & add coverage to unchange node **/
+                    MessageWritable topCoverageMessage = new MessageWritable();
+                    MessageWritable tmpMessage = new MessageWritable();
+                    Iterator<MessageWritable> it;
+                    while(!receivedMsgList.isEmpty()){
+                        it = receivedMsgList.iterator();
+                        topCoverageMessage.set(it.next());
+                        it.remove(); //delete topCoverage node
+                        while(it.hasNext()){
+                            tmpMessage.set(it.next());
+                            //compute the similarity  
+                            float fracDissimilar = (float) 0.02;
+                            if(fracDissimilar < dissimilarThreshold){ //If similar with top node, delete this node and put it in deletedSet 
+                                //TODO add coverage to top node
+                                deletedSet.add(tmpMessage);
+                                it.remove();
+                            }
+                        }
+                        unchangedSet.add(topCoverageMessage);
+                    }
                     
                     /** send message to the unchanged set for updating coverage & send kill message to the deleted set **/ 
-                    
+                    for(MessageWritable msg : unchangedSet){
+                        outFlag = MessageFlag.UNCHANGE;
+                        outgoingMsg.setFlag(outFlag);
+                        outgoingMsg.setAverageCoverage(msg.getAverageCoverage());
+                        sendMsg(msg.getSourceVertexId(), outgoingMsg);
+                    }
+                    for(MessageWritable msg : deletedSet){
+                        outFlag = MessageFlag.KILL;
+                        outgoingMsg.setFlag(outFlag);
+                        sendMsg(msg.getSourceVertexId(), outgoingMsg);
+                    }
                 }
             }
         } else if (getSuperstep() == 4){
@@ -115,12 +164,14 @@ public class BubbleMergeVertex extends
                 incomingMsg = msgIterator.next();
                 if(incomingMsg.getFlag() == MessageFlag.KILL){
                     broadcaseKillself();
-                } 
+                } else if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
+                    getVertexValue().setAverageCoverage(incomingMsg.getAverageCoverage());
+                }
             }
         } else if(getSuperstep() == 5){
             if(msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if(incomingMsg.getFlag() == MessageFlag.KILL){
+                if(isResponseKillMsg()){
                     responseToDeadVertex();
                 }
             }

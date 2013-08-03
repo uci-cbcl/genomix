@@ -9,9 +9,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P3ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
@@ -43,11 +41,11 @@ public class Client {
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
         
-        @Option(name = "-pseudo-rate", usage = "the rate of pseduHead", required = false)
-        public float pseudoRate = -1;
-        
-        @Option(name = "-max-patitionround", usage = "max rounds in partition phase", required = false)
-        public int maxRound = -1;
+//        @Option(name = "-pseudo-rate", usage = "the rate of pseduHead", required = false)
+//        public float pseudoRate = -1;
+//        
+//        @Option(name = "-max-patitionround", usage = "max rounds in partition phase", required = false)
+//        public int maxRound = -1;
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -66,19 +64,15 @@ public class Client {
         for (int i = 1; i < inputs.length; i++)
             FileInputFormat.addInputPaths(job, inputs[0]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
-        job.getConfiguration().setInt(P1ForPathMergeVertex.KMER_SIZE, options.sizeKmer);
-        job.getConfiguration().setInt(P2ForPathMergeVertex.KMER_SIZE, options.sizeKmer);
-        job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(BasicGraphCleanVertex.KMER_SIZE, options.sizeKmer);
         if (options.numIteration > 0) {
-            job.getConfiguration().setInt(P1ForPathMergeVertex.ITERATIONS, options.numIteration);
-            job.getConfiguration().setInt(P2ForPathMergeVertex.ITERATIONS, options.numIteration);
-            job.getConfiguration().setInt(P3ForPathMergeVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(BasicGraphCleanVertex.ITERATIONS, options.numIteration);
         }
         
-        if (options.pseudoRate > 0 && options.pseudoRate <= 1)
-           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
-        if (options.maxRound > 0)
-            job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
+//        if (options.pseudoRate > 0 && options.pseudoRate <= 1)
+//           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
+//        if (options.maxRound > 0)
+//            job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
         return options;
         
     }

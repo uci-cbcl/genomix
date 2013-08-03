@@ -22,14 +22,14 @@ public class BasicGraphCleanVertex extends
     public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static final String ITERATIONS = "BasicGraphCleanVertex.iteration";
     public static int kmerSize = -1;
-    protected int maxIteration = -1;
+    public static int maxIteration = -1;
     
     protected MessageWritable incomingMsg = null; 
     protected MessageWritable outgoingMsg = null; 
     protected VKmerBytesWritable destVertexId = null;
     protected Iterator<VKmerBytesWritable> kmerIterator;
-    protected VKmerBytesWritable tmpKmer = new VKmerBytesWritable(kmerSize);
-    byte headFlag;
+    protected VKmerBytesWritable tmpKmer = null;
+    protected byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
     protected byte selfFlag;
@@ -814,9 +814,16 @@ public class BasicGraphCleanVertex extends
         }
     }
     
-    public boolean isKillMsg(){
+    public boolean isReceiveKillMsg(){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
-        return killFlag == MessageFlag.KILL;
+        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
+        return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
+    }
+    
+    public boolean isResponseKillMsg(){
+        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
+        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
+        return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
     }
     
     @Override
