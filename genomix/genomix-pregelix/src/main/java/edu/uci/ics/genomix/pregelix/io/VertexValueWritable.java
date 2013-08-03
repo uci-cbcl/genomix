@@ -9,7 +9,9 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 
-public class VertexValueWritable implements WritableComparable<VertexValueWritable> {
+public class VertexValueWritable implements WritableComparable<VertexValueWritable>, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public static class State extends VertexStateFlag{            
         public static final byte NO_MERGE = 0b00 << 3;
@@ -18,10 +20,12 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
         public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
         
+        public static final byte UNCHANGE = 0b0 << 3;
         public static final byte KILL = 0b1 << 3;
         public static final byte KILL_MASK = 0b1 << 3;
         
         public static final byte DIR_FROM_DEADVERTEX = 0b10 << 3;
+        public static final byte DEAD_MASK = 0b10 << 3;
     }
     
     public static class VertexStateFlag extends FakeFlag {
