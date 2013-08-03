@@ -6,6 +6,8 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 
@@ -360,5 +362,4 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         }
     }
     
-
 }
