@@ -81,6 +81,9 @@ public class GenerateGraphViz {
             VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR\"]\n";
         }
+        //TODO should output actualKmer instead of kmer
+        if(outputEdge == "")
+            outputEdge += outputNode;
         return outputEdge;
     }
 

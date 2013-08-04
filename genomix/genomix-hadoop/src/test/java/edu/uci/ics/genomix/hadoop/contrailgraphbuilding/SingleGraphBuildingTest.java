@@ -17,7 +17,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 
 @SuppressWarnings("deprecation")
-public class GraphBuildingTest {
+public class SingleGraphBuildingTest {
 
     private JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";

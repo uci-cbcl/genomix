@@ -15,6 +15,7 @@ import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
@@ -77,22 +78,22 @@ public class JobGenerator {
 //                + "P3ForMergeGraph.xml");
 //    }
     
-//    private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(P4ForPathMergeVertex.class);
-//        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(KmerBytesWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(P4ForPathMergeVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genP4ForMergeGraph() throws IOException {
-//        generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase
-//                + "P4ForMergeGraph.xml");
-//    }
+    private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(P4ForPathMergeVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(P4ForPathMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genP4ForMergeGraph() throws IOException {
+        generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase
+                + "P4ForMergeGraph.xml");
+    }
     
     private static void generateMapReduceGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
@@ -228,13 +229,16 @@ public class JobGenerator {
     }
     
     public static void main(String[] args) throws IOException {
-        genSplitRepeatGraph();
+        genMapReduceGraph();
+        genLogAlgorithmForMergeGraph();
+        genP4ForMergeGraph();
         genTipAddGraph();
-        genBridgeAddGraph();
         genTipRemoveGraph();
+        genBridgeAddGraph();
         genBridgeRemoveGraph();
         genBubbleAddGraph();
         genBubbleMergeGraph();
+        genSplitRepeatGraph();
     }
 
 }

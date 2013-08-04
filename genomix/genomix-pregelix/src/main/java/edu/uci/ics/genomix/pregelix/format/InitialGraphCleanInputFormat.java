@@ -76,7 +76,7 @@ class BinaryLoadGraphReader extends
             vertexValue.setRFList(node.getRFList());
             vertexValue.setRRList(node.getRRList());
             // TODO make this more efficient (don't use toString)
-            vertexValue.setActualKmer(new VKmerBytesWritable(getRecordReader().getCurrentKey().toString()));
+            vertexValue.setActualKmer(new VKmerBytesWritable(vertexId));
             vertexValue.setState(State.IS_NON);
             vertex.setVertexValue(vertexValue);
         }

@@ -17,6 +17,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 
+
 @SuppressWarnings("deprecation")
 public class GraphBuildingTestSuite extends TestSuite{
 
@@ -24,9 +25,15 @@ public class GraphBuildingTestSuite extends TestSuite{
     public static final String PreFix = "data/webmap/pathmerge_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
         + "2", PreFix + File.separator
-        + "3"};
+        + "3", PreFix + File.separator
+        + "4", PreFix + File.separator
+        + "5", PreFix + File.separator
+        + "6", PreFix + File.separator
+        + "7", PreFix + File.separator
+        + "8", PreFix + File.separator
+        + "9"};
     
-    private JobConf conf = new JobConf();
+    private static JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String HDFS_INPUTPATH = "/webmap";
@@ -35,7 +42,7 @@ public class GraphBuildingTestSuite extends TestSuite{
     private MiniMRCluster mrCluster;
     private static FileSystem dfs;
     
-    public void setup() throws Exception{
+    public void setUp() throws Exception{
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
@@ -80,12 +87,14 @@ public class GraphBuildingTestSuite extends TestSuite{
     
     public static Test suite() throws Exception {
         GraphBuildingTestSuite testSuite = new GraphBuildingTestSuite();
+        testSuite.setUp();
+//        FileSystem dfs = FileSystem.get(testSuite.conf);
         for (String testPathStr : TestDir) {
             File testDir = new File(testPathStr);
             String resultFileName = ACTUAL_RESULT_DIR + File.separator + 
                     "bin" + File.separator + testDir.getName();
             testSuite.addTest(new GraphBuildingTestCase(resultFileName, HADOOP_CONF_PATH, 
-                    HDFS_INPUTPATH + File.separator + testDir.getName(), SIZE_KMER, dfs));
+                    HDFS_INPUTPATH + File.separator + testDir.getName(), SIZE_KMER, dfs, conf));
         }
         return testSuite;
     }

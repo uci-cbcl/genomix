@@ -6,8 +6,6 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 
@@ -323,7 +321,6 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
      */
     public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
             byte neighborToMergeDir, VKmerBytesWritable nodeToAdd, 
-
             int kmerSize, VKmerBytesWritable kmer){
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
@@ -345,20 +342,21 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         }
         // TODO: remove switch below and replace with general direction merge
 //        this.getKmer().mergeWithDirKmer(neighborToMergeDir);
-        
-        switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
-            case MessageFlag.DIR_FF:
-                this.getFFList().append(nodeToAdd);
-                break;
-            case MessageFlag.DIR_FR:
-                this.getFRList().append(nodeToAdd);
-                break;
-            case MessageFlag.DIR_RF:
-                this.getRFList().append(nodeToAdd);
-                break;
-            case MessageFlag.DIR_RR:
-                this.getRRList().append(nodeToAdd);
-                break;
+        if(nodeToAdd != null){ //if null, nodeToAdd is empty and so another node may be head or tail
+            switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
+                case MessageFlag.DIR_FF:
+                    this.getFFList().append(nodeToAdd);
+                    break;
+                case MessageFlag.DIR_FR:
+                    this.getFRList().append(nodeToAdd);
+                    break;
+                case MessageFlag.DIR_RF:
+                    this.getRFList().append(nodeToAdd);
+                    break;
+                case MessageFlag.DIR_RR:
+                    this.getRRList().append(nodeToAdd);
+                    break;
+            }
         }
     }
     
