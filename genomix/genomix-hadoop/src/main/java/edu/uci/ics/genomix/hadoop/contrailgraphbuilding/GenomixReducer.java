@@ -19,6 +19,7 @@ public class GenomixReducer extends MapReduceBase implements
     public static int KMER_SIZE;
     private NodeWritable outputNode;
     private NodeWritable tmpNode;
+    private float averageCoverage;
     
     @Override
     public void configure(JobConf job) {
@@ -32,15 +33,18 @@ public class GenomixReducer extends MapReduceBase implements
 			OutputCollector<VKmerBytesWritable, NodeWritable> output,
 			Reporter reporter) throws IOException {
 		outputNode.reset();
+		averageCoverage = 0;
 		
 		while (values.hasNext()) {
 		    tmpNode.set(values.next());
-		    outputNode.getNodeIdList().appendList(tmpNode.getNodeIdList());
+		    outputNode.getNodeIdList().unionUpdate(tmpNode.getNodeIdList());
 		    outputNode.getFFList().unionUpdate(tmpNode.getFFList()); //appendList need to check if insert node exists
 		    outputNode.getFRList().unionUpdate(tmpNode.getFRList());
 		    outputNode.getRFList().unionUpdate(tmpNode.getRFList());
 		    outputNode.getRRList().unionUpdate(tmpNode.getRRList());
+		    averageCoverage += tmpNode.getAvgCoverage();
 		}
+		outputNode.setAvgCoverage(averageCoverage);
 		output.collect(key,outputNode);
 	}
 

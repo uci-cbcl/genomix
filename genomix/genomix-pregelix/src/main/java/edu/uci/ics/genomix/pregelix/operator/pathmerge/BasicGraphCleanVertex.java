@@ -283,7 +283,7 @@ public class BasicGraphCleanVertex extends
      * check if A need to be flipped with successor
      */
     public boolean ifFilpWithSuccessor(){
-        if(getVertexValue().getFRList().getLength() > 0)
+        if(getVertexValue().getFRList().getCountOfPosition() > 0)
             return true;
         else
             return false;
@@ -293,7 +293,7 @@ public class BasicGraphCleanVertex extends
      * check if A need to be filpped with predecessor
      */
     public boolean ifFlipWithPredecessor(){
-        if(getVertexValue().getRFList().getLength() > 0)
+        if(getVertexValue().getRFList().getCountOfPosition() > 0)
             return true;
         else
             return false;
@@ -304,9 +304,9 @@ public class BasicGraphCleanVertex extends
      */
     public void setSuccessorAdjMsg(){
         outFlag &= MessageFlag.DIR_CLEAR;
-        if(getVertexValue().getFFList().getLength() > 0)
+        if(getVertexValue().getFFList().getCountOfPosition() > 0)
             outFlag |= MessageFlag.DIR_FF;
-        else if(getVertexValue().getFRList().getLength() > 0)
+        else if(getVertexValue().getFRList().getCountOfPosition() > 0)
             outFlag |= MessageFlag.DIR_FR;
         else
             outFlag |= MessageFlag.DIR_NO;
@@ -317,9 +317,9 @@ public class BasicGraphCleanVertex extends
      */
     public void setPredecessorAdjMsg(){
         outFlag &= MessageFlag.DIR_CLEAR;
-        if(getVertexValue().getRFList().getLength() > 0)
+        if(getVertexValue().getRFList().getCountOfPosition() > 0)
             outFlag |= MessageFlag.DIR_RF;
-        else if(getVertexValue().getRRList().getLength() > 0)
+        else if(getVertexValue().getRRList().getCountOfPosition() > 0)
             outFlag |= MessageFlag.DIR_RR;
         else
             outFlag |= MessageFlag.DIR_NO;
@@ -664,14 +664,14 @@ public class BasicGraphCleanVertex extends
                 break;
             case MessageFlag.DIR_RF:
                 selfString = getVertexValue().getActualKmer().toString();
-                match = selfString.substring(0,kmerSize - 1); 
+                match = selfString.substring(0, kmerSize - 1); 
                 msgString = GeneCode.reverseComplement(msg.getActualKmer().toString());
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
                 tmpKmer.setByReadReverse(index + 1, msgString.substring(0, index + 1).getBytes(), 0);
                 break;
             case MessageFlag.DIR_RR:
                 selfString = getVertexValue().getActualKmer().toString();
-                match = selfString.substring(0,kmerSize - 1); 
+                match = selfString.substring(0, kmerSize - 1); 
                 msgString = msg.getActualKmer().toString();
                 index = msgString.lastIndexOf(match) + kmerSize - 2;
                 tmpKmer.setByRead(index + 1, msgString.substring(0, index + 1).getBytes(), 0);

@@ -639,6 +639,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         KmerBytesWritable.appendOneByteAtPosition(preKmer.lettersInKmer - initialKmerSize + k - 4 + 1, cacheByte,
                 bytes, kmerStartOffset, bytesUsed);
         clearLeadBit();
+        saveHeader(lettersInKmer);
     }
     
     public void mergeWithRRKmer(int kmerSize, KmerBytesWritable kmer) {

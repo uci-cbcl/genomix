@@ -29,6 +29,8 @@ public class BubbleMergeVertex extends
     
     private Map<VKmerBytesWritable, ArrayList<MessageWritable>> receivedMsgMap = new HashMap<VKmerBytesWritable, ArrayList<MessageWritable>>();
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
+    private Set<MessageWritable> unchangedSet = new HashSet<MessageWritable>();
+    private Set<MessageWritable> deletedSet = new HashSet<MessageWritable>();
 
     /**
      * initiate kmerSize, maxIteration
@@ -96,6 +98,48 @@ public class BubbleMergeVertex extends
         }
     }
     
+    public void processSimilarSetToUnchangeSetAndDeletedSet(){
+        unchangedSet.clear();
+        deletedSet.clear();
+        MessageWritable topCoverageMessage = new MessageWritable();
+        MessageWritable tmpMessage = new MessageWritable();
+        Iterator<MessageWritable> it;
+        while(!receivedMsgList.isEmpty()){
+            it = receivedMsgList.iterator();
+            topCoverageMessage.set(it.next());
+            it.remove(); //delete topCoverage node
+            while(it.hasNext()){
+                tmpMessage.set(it.next());
+                //compute the similarity  
+                float fracDissimilar = topCoverageMessage.getSourceVertexId().fracDissimilar(tmpMessage.getSourceVertexId());
+                if(fracDissimilar < dissimilarThreshold){ //If similar with top node, delete this node and put it in deletedSet 
+                    //add coverage to top node
+                    topCoverageMessage.mergeCoverage(tmpMessage);
+                    deletedSet.add(tmpMessage);
+                    it.remove();
+                }
+            }
+            unchangedSet.add(topCoverageMessage);
+        }
+    }
+    
+    public void processUnchangedSet(){
+        for(MessageWritable msg : unchangedSet){
+            outFlag = MessageFlag.UNCHANGE;
+            outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setAverageCoverage(msg.getAverageCoverage());
+            sendMsg(msg.getSourceVertexId(), outgoingMsg);
+        }
+    }
+    
+    public void processDeletedSet(){
+        for(MessageWritable msg : deletedSet){
+            outFlag = MessageFlag.KILL;
+            outgoingMsg.setFlag(outFlag);
+            sendMsg(msg.getSourceVertexId(), outgoingMsg);
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
@@ -116,8 +160,7 @@ public class BubbleMergeVertex extends
             /** aggregate bubble nodes and grouped by major vertex **/ 
             aggregateBubbleNodesByMajorNode(msgIterator);
             
-            Set<MessageWritable> unchangedSet = new HashSet<MessageWritable>();
-            Set<MessageWritable> deletedSet = new HashSet<MessageWritable>();
+            
             for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
                 if(receivedMsgList.size() > 1){ // filter bubble
                     /** for each startVertex, sort the node by decreasing order of coverage **/
@@ -125,38 +168,11 @@ public class BubbleMergeVertex extends
                     Collections.sort(receivedMsgList, new MessageWritable.SortByCoverage());
                     
                     /** process similarSet, keep the unchanged set and deleted set & add coverage to unchange node **/
-                    MessageWritable topCoverageMessage = new MessageWritable();
-                    MessageWritable tmpMessage = new MessageWritable();
-                    Iterator<MessageWritable> it;
-                    while(!receivedMsgList.isEmpty()){
-                        it = receivedMsgList.iterator();
-                        topCoverageMessage.set(it.next());
-                        it.remove(); //delete topCoverage node
-                        while(it.hasNext()){
-                            tmpMessage.set(it.next());
-                            //compute the similarity  
-                            float fracDissimilar = (float) 0.02;
-                            if(fracDissimilar < dissimilarThreshold){ //If similar with top node, delete this node and put it in deletedSet 
-                                //TODO add coverage to top node
-                                deletedSet.add(tmpMessage);
-                                it.remove();
-                            }
-                        }
-                        unchangedSet.add(topCoverageMessage);
-                    }
+                    processSimilarSetToUnchangeSetAndDeletedSet();
                     
                     /** send message to the unchanged set for updating coverage & send kill message to the deleted set **/ 
-                    for(MessageWritable msg : unchangedSet){
-                        outFlag = MessageFlag.UNCHANGE;
-                        outgoingMsg.setFlag(outFlag);
-                        outgoingMsg.setAverageCoverage(msg.getAverageCoverage());
-                        sendMsg(msg.getSourceVertexId(), outgoingMsg);
-                    }
-                    for(MessageWritable msg : deletedSet){
-                        outFlag = MessageFlag.KILL;
-                        outgoingMsg.setFlag(outFlag);
-                        sendMsg(msg.getSourceVertexId(), outgoingMsg);
-                    }
+                    processUnchangedSet();
+                    processDeletedSet();
                 }
             }
         } else if (getSuperstep() == 4){
@@ -165,6 +181,7 @@ public class BubbleMergeVertex extends
                 if(incomingMsg.getFlag() == MessageFlag.KILL){
                     broadcaseKillself();
                 } else if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
+                    /** update average coverage **/
                     getVertexValue().setAverageCoverage(incomingMsg.getAverageCoverage());
                 }
             }

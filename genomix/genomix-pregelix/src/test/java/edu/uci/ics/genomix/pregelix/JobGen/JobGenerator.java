@@ -15,6 +15,9 @@ import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
@@ -24,7 +27,23 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 public class JobGenerator {
 
     public static String outputBase = "src/test/resources/jobs/";
+    
+    private static void generateMapReduceGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(MapReduceVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(MapReduceVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
 
+    private static void genMapReduceGraph() throws IOException {
+        generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
+    }
+    
 //    private static void generateNaiveAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(jobName);
 //        job.setVertexClass(P1ForPathMergeVertex.class);
@@ -77,54 +96,40 @@ public class JobGenerator {
 //                + "P3ForMergeGraph.xml");
 //    }
     
-//    private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(P4ForPathMergeVertex.class);
-//        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(KmerBytesWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(P4ForPathMergeVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genP4ForMergeGraph() throws IOException {
-//        generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase
-//                + "P4ForMergeGraph.xml");
-//    }
-    
-    private static void generateMapReduceGraphJob(String jobName, String outputPath) throws IOException {
+    private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(MapReduceVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(MapReduceVertex.KMER_SIZE, 3);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genMapReduceGraph() throws IOException {
-        generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
-    }
-    
-    private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(SplitRepeatVertex.class);
+        job.setVertexClass(P4ForPathMergeVertex.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(SplitRepeatVertex.KMER_SIZE, 3);
+        job.getConfiguration().setInt(P4ForPathMergeVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
-    private static void genSplitRepeatGraph() throws IOException {
-        generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
+    private static void genP4ForMergeGraph() throws IOException {
+        generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase
+                + "P4ForMergeGraph.xml");
     }
+    
+    private static void generateRemoveLowCoverageGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(RemoveLowCoverageVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(RemoveLowCoverageVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genRemoveLowCoverageGraph() throws IOException {
+        generateRemoveLowCoverageGraphJob("RemoveLowCoverageGraph", outputBase
+                + "RemoveLowCoverageGraph.xml");
+    }
+    
     private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(TipAddVertex.class);
@@ -158,6 +163,23 @@ public class JobGenerator {
         generateTipRemoveGraphJob("TipRemoveGraph", outputBase
                 + "TipRemoveGraph.xml");
     }
+    
+    private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(SplitRepeatVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(SplitRepeatVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genSplitRepeatGraph() throws IOException {
+        generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
+    }
+    
     
     private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
@@ -227,14 +249,36 @@ public class JobGenerator {
                 + "BubbleMergeGraph.xml");
     }
     
+    private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(ScaffoldingVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(ScaffoldingVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genScaffoldingGraph() throws IOException {
+        generateScaffoldingGraphJob("ScaffoldingGraph", outputBase
+                + "ScaffoldingGraph.xml");
+    }
+    
     public static void main(String[] args) throws IOException {
-        genSplitRepeatGraph();
+        genMapReduceGraph();
+        genLogAlgorithmForMergeGraph();
+        genP4ForMergeGraph();
+        genRemoveLowCoverageGraph();
         genTipAddGraph();
-        genBridgeAddGraph();
         genTipRemoveGraph();
+        genBridgeAddGraph();
         genBridgeRemoveGraph();
         genBubbleAddGraph();
         genBubbleMergeGraph();
+        genSplitRepeatGraph();
+        genScaffoldingGraph();
     }
 
 }

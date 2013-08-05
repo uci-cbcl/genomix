@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
-
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.type.PositionListWritable;
@@ -54,6 +53,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     private float averageCoverage;
     private byte state;
     private boolean isFakeVertex = false;
+    private HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap = new HashMapWritable<VKmerBytesWritable, VKmerListWritable>();
 
     public VertexValueWritable() {
         this(0);
@@ -96,6 +96,11 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
     
     public PositionListWritable getNodeIdList() {
         return nodeIdList;
+    }
+    
+    //for testing 
+    public long getHeadReadId(){
+        return 1;
     }
 
     public void setNodeIdList(PositionListWritable nodeIdList) {
@@ -186,6 +191,15 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         return actualKmer.getKmerLetterLength();
     }
     
+    
+    public HashMapWritable<VKmerBytesWritable, VKmerListWritable> getTraverseMap() {
+        return traverseMap;
+    }
+
+    public void setTraverseMap(HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap) {
+        this.traverseMap = traverseMap;
+    }
+
     public void reset() {
         this.reset(0);
     }
@@ -212,6 +226,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         averageCoverage = in.readFloat();
         this.state = in.readByte();
         this.isFakeVertex = in.readBoolean();
+        this.traverseMap.readFields(in);
     }
 
     @Override
@@ -225,6 +240,7 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         out.writeFloat(averageCoverage);
         out.writeByte(this.state);
         out.writeBoolean(this.isFakeVertex);
+        this.traverseMap.write(out);
     }
 
     @Override
@@ -321,7 +337,6 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
      */
     public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
             byte neighborToMergeDir, VKmerBytesWritable nodeToAdd, 
-
             int kmerSize, VKmerBytesWritable kmer){
         switch (neighborToDeleteDir & MessageFlag.DIR_MASK) {
             case MessageFlag.DIR_FF:
@@ -343,22 +358,22 @@ public class VertexValueWritable implements WritableComparable<VertexValueWritab
         }
         // TODO: remove switch below and replace with general direction merge
 //        this.getKmer().mergeWithDirKmer(neighborToMergeDir);
-        
-        switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
-            case MessageFlag.DIR_FF:
-                this.getFFList().append(nodeToAdd);
-                break;
-            case MessageFlag.DIR_FR:
-                this.getFRList().append(nodeToAdd);
-                break;
-            case MessageFlag.DIR_RF:
-                this.getRFList().append(nodeToAdd);
-                break;
-            case MessageFlag.DIR_RR:
-                this.getRRList().append(nodeToAdd);
-                break;
+        if(nodeToAdd != null){ //if null, nodeToAdd is empty and so another node may be head or tail
+            switch (neighborToMergeDir & MessageFlag.DIR_MASK) {
+                case MessageFlag.DIR_FF:
+                    this.getFFList().append(nodeToAdd);
+                    break;
+                case MessageFlag.DIR_FR:
+                    this.getFRList().append(nodeToAdd);
+                    break;
+                case MessageFlag.DIR_RF:
+                    this.getRFList().append(nodeToAdd);
+                    break;
+                case MessageFlag.DIR_RR:
+                    this.getRRList().append(nodeToAdd);
+                    break;
+            }
         }
     }
     
-
 }
