@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.oldtype.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionListWritable;
 
 public class IncomingListWritable implements WritableComparable<IncomingListWritable>{
     private PositionListWritable reverseForwardList;

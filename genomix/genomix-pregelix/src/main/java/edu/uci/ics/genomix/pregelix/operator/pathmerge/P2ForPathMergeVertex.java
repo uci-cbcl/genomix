@@ -249,7 +249,7 @@ public class P2ForPathMergeVertex extends
                         processFinalMerge(incomingMsg);
                         /** NON-FAKE and Final vertice send msg to FAKE vertex **/
                         sendMsgToFakeVertex();
-                    } else if(isKillMsg()){
+                    } else if(isReceiveKillMsg()){
                         responseToDeadVertex();
                     }
                 }

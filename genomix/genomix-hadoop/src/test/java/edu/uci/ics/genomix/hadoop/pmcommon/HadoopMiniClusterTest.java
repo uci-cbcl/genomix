@@ -29,8 +29,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import edu.uci.ics.genomix.hadoop.velvetgraphbuilding.GraphBuildingDriver;
-import edu.uci.ics.genomix.hyracks.test.TestUtils;
+//import edu.uci.ics.genomix.hadoop.velvetgraphbuilding.GraphBuildingDriver;
+import edu.uci.ics.genomix.hyracks.newgraph.test.TestUtils;
 
 /*
  * A base class providing most of the boilerplate for Hadoop-based tests

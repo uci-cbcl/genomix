@@ -160,6 +160,8 @@
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>genomix-hyracks</artifactId>
 			<version>0.2.6-SNAPSHOT</version>
+			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>

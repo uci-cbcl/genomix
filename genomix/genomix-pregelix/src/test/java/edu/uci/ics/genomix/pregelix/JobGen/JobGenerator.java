@@ -12,10 +12,9 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P3ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
@@ -210,42 +209,32 @@ public class JobGenerator {
         generateBubbleAddGraphJob("BubbleAddGraph", outputBase
                 + "BubbleAddGraph.xml");
     }
-//    
-//    private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(BubbleMergeVertex.class);
-//        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(BubbleMergeVertex.KMER_SIZE, 5);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genBubbleMergeGraph() throws IOException {
-//        generateBubbleMergeGraphJob("BubbleMergeGraph", outputBase
-//                + "BubbleMergeGraph.xml");
-//    }
+    
+    private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(BubbleMergeVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(BubbleMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBubbleMergeGraph() throws IOException {
+        generateBubbleMergeGraphJob("BubbleMergeGraph", outputBase
+                + "BubbleMergeGraph.xml");
+    }
     
     public static void main(String[] args) throws IOException {
-        //genNaiveAlgorithmForMergeGraph();
-//        genLogAlgorithmForMergeGraph();
-        //genP3ForMergeGraph();
-        //genTipAddGraph();
-//        genTipRemoveGraph();
-//        genBridgeAddGraph();
-//        genBridgeRemoveGraph();
-//        genBubbleAddGraph();
-//        genBubbleMergeGraph();
-//        genP4ForMergeGraph();
-//        genMapReduceGraph();
         genSplitRepeatGraph();
         genTipAddGraph();
         genBridgeAddGraph();
         genTipRemoveGraph();
         genBridgeRemoveGraph();
         genBubbleAddGraph();
+        genBubbleMergeGraph();
     }
 
 }

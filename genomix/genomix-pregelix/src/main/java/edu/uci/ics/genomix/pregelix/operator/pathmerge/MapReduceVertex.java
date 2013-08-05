@@ -171,7 +171,7 @@ public class MapReduceVertex extends
         } else if(getSuperstep() == 5){
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if(isKillMsg())
+                if(isReceiveKillMsg())
                     responseToDeadVertex();
             }
         }

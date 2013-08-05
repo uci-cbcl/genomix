@@ -564,6 +564,7 @@ public class VKmerBytesWritableTest {
     	
     	Assert.assertEquals(kmer1.editDistance(kmer2), 3);
     	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
+    	Assert.assertEquals(kmer1.fracDissimilar(kmer2), .75f);
     	
     	kmer1.setAsCopy("");
     	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
@@ -572,6 +573,8 @@ public class VKmerBytesWritableTest {
     	kmer2.setAsCopy("");
     	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
     	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
+    	
+    	
     }
 
 }

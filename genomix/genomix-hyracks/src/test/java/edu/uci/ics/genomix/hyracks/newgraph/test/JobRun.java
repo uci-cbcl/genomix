@@ -26,7 +26,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.newgraph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.newgraph.driver.Driver.Plan;
-import edu.uci.ics.genomix.hyracks.test.TestUtils;
+//import edu.uci.ics.genomix.hyracks.test.TestUtils;
 //import edu.uci.ics.genomix.oldtype.NodeWritable;
 
 @SuppressWarnings("deprecation")
@@ -40,7 +40,7 @@ public class JobRun {
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
 
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/merged.txt";
+    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/Tips4.txt";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";;
     private MiniDFSCluster dfsCluster;
     
