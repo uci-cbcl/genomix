@@ -93,6 +93,8 @@ public class GenomixMapper extends MapReduceBase implements
             setNodeId(mateId, readID, 1);
             //set value.edgeList
             setEdgeListForNextKmer();
+            //set coverage = 1
+            outputNode.setAvgCoverage(1);
             //output mapper result
             setMapperOutput(output);
             
@@ -107,6 +109,8 @@ public class GenomixMapper extends MapReduceBase implements
                 //set value.edgeList
                 setEdgeListForPreKmer();
                 setEdgeListForNextKmer();
+                //set coverage = 1
+                outputNode.setAvgCoverage(1);
                 //output mapper result
                 setMapperOutput(output);
             }
@@ -119,6 +123,8 @@ public class GenomixMapper extends MapReduceBase implements
         	setNodeId(mateId, readID, array.length - KMER_SIZE + 1);
             //set value.edgeList
             setEdgeListForPreKmer();
+            //set coverage = 1
+            outputNode.setAvgCoverage(1);
             //output mapper result
             setMapperOutput(output);
         }

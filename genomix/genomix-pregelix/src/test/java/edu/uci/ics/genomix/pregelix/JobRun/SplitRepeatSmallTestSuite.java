@@ -43,9 +43,10 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class SplitRepeatSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(SplitRepeatSmallTestSuite.class.getName());
     //P4ForMergeGraph/bin/read
-    public static final String PreFix = "data/SplitRepeat"; //"graphbuildresult";
+    public static final String PreFix = "data/SplitRepeat"; 
     public static final String[] TestDir = { PreFix + File.separator
-    + "AdjSplitRepeat"};
+    + "SplitOnce", PreFix + File.separator
+    + "SplitTwice"};
     private static final String ACTUAL_RESULT_DIR = "data/actual/splitrepeat";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

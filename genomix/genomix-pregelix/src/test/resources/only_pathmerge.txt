@@ -1,1 +1,1 @@
-LogAlgorithmForMergeGraph.xml
+P4ForMergeGraph.xml

@@ -2,6 +2,7 @@ package edu.uci.ics.genomix.pregelix.util;
 
 import edu.uci.ics.genomix.pregelix.io.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class VertexUtil {
@@ -124,4 +125,5 @@ public class VertexUtil {
         else
             return null;
     }
+    
 }
