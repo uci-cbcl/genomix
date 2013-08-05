@@ -11,6 +11,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.hadoop.graph.GenerateGraphViz;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 
 
@@ -59,10 +60,11 @@ public class GraphBuildingTestCase extends TestCase{
     
     
     
-    private void dumpResult() throws IOException {
+    private void dumpResult() throws Exception {
 //        Path src = new Path(RESULT_PATH);
 //        Path dest = new Path(RESULT_PATH);
 //        dfs.copyToLocalFile(src, dest);
         HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, RESULT_PATH + "/test.txt", false, conf, true, dfs);
+        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(RESULT_PATH + "/test.txt.bindir", RESULT_PATH + "/graphviz");
     }
 }
