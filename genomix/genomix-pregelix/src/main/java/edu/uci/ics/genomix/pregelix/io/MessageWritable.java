@@ -172,6 +172,18 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         }
     }
     
+    /** for Scaffolding, startVertexId is used as seekedVertexId **/  
+    public VKmerBytesWritable getSeekedVertexId() {
+        return startVertexId;
+    }
+
+    public void setSeekedVertexId(VKmerBytesWritable startVertexId) {
+        if(startVertexId != null){
+            checkMessage |= CheckMessage.START;
+            this.startVertexId.setAsCopy(startVertexId);
+        }
+    }
+    
     public float getAverageCoverage() {
         return averageCoverage;
     }
