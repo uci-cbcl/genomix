@@ -20,11 +20,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     
     private static final int SIZE_FLOAT = 4;
     
-    private PositionListWritable nodeIdList;
-    private VKmerListWritable forwardForwardList;
-    private VKmerListWritable forwardReverseList;
-    private VKmerListWritable reverseForwardList;
-    private VKmerListWritable reverseReverseList;
+    // edge list
+    private VKmerListWritable edges[] = {null, null, null, null};
+    
+    // connections within the same read -- used for resolving repeats and scaffolding
+    private PositionListWritable threads[] = {null, null, null, null};
+    
+    private PositionListWritable startReads;  // first kmer in read (or last but kmer was flipped)
+    private PositionListWritable endReads;  //last kmer in read (or first but kmer was flipped)
+    
     private VKmerBytesWritable kmer;
     private float averageCoverage;
     
@@ -37,44 +41,59 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         public static final byte DIR_MASK = 0b11 << 0;
     }
     
+    public enum Dir {
+        FF(0b00 << 0),
+        FR(0b01 << 0),
+        RF(0b10 << 0),
+        RR(0b11 << 0);
+        
+		private byte value;
+        private Dir(int val) {
+            value = (byte) val;
+        }
+        public byte getValue() {
+        	return value;
+        }
+    }
+    
     public NodeWritable() {
-        nodeIdList = new PositionListWritable();
-        forwardForwardList = new VKmerListWritable();
-        forwardReverseList = new VKmerListWritable();
-        reverseForwardList = new VKmerListWritable();
-        reverseReverseList = new VKmerListWritable();
+        for (Dir d: Dir.values()) {
+            edges[d.getValue()] = new VKmerListWritable();
+            threads[d.getValue()] = new PositionListWritable();
+        }
+        startReads = new PositionListWritable();
+        endReads = new PositionListWritable();
         kmer = new VKmerBytesWritable();  // in graph construction - not set kmerlength Optimization: VKmer
         averageCoverage = 0;
     }
     
-    public NodeWritable(PositionListWritable nodeIdList, VKmerListWritable FFList, VKmerListWritable FRList,
-            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer, float coverage) {
+    public NodeWritable(VKmerListWritable[] edges, PositionListWritable[] threads,
+            PositionListWritable startReads, PositionListWritable endReads,
+            VKmerBytesWritable kmer, float coverage) {
         this();
-        set(nodeIdList, FFList, FRList, RFList, RRList, kmer, coverage);
+        set(edges, threads, startReads, endReads, kmer, coverage);
     }
     
     public void set(NodeWritable node){
-        set(node.nodeIdList, node.forwardForwardList, node.forwardReverseList, node.reverseForwardList, 
-                node.reverseReverseList, node.kmer, node.averageCoverage);
+        set(node.edges, node.threads, node.startReads, node.endReads, node.kmer, node.averageCoverage);
     }
     
-    public void set(PositionListWritable nodeIdList, VKmerListWritable FFList, VKmerListWritable FRList,
-            VKmerListWritable RFList, VKmerListWritable RRList, VKmerBytesWritable kmer2, float coverage) {
-        this.nodeIdList.set(nodeIdList);
-        this.forwardForwardList.setCopy(FFList);
-        this.forwardReverseList.setCopy(FRList);
-        this.reverseForwardList.setCopy(RFList);
-        this.reverseReverseList.setCopy(RRList);
+    public void set(VKmerListWritable[] edges, PositionListWritable[] threads,
+            PositionListWritable startReads, PositionListWritable endReads, 
+            VKmerBytesWritable kmer2, float coverage) {
+        for (Dir d: Dir.values()) {
+            this.edges[d.getValue()].setCopy(edges[d.getValue()]);
+            this.threads[d.getValue()].set(threads[d.getValue()]);
+        }
         this.kmer.setAsCopy(kmer2);
         this.averageCoverage = coverage;
     }
 
     public void reset() {
-        this.nodeIdList.reset();
-        this.forwardForwardList.reset();
-        this.forwardReverseList.reset();
-        this.reverseForwardList.reset();
-        this.reverseReverseList.reset();
+        for (Dir d: Dir.values()) {
+            edges[d.getValue()].reset();
+            threads[d.getValue()].reset();
+        }
         this.kmer.reset(0);
         averageCoverage = 0;
     }
