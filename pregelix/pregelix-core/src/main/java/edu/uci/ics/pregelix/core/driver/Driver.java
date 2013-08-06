@@ -136,7 +136,6 @@ public class Driver implements IDriver {
                 terminate = IterationUtils.readTerminationState(job.getConfiguration(), jobGen.getJobId())
                         || IterationUtils.readForceTerminationState(job.getConfiguration(), jobGen.getJobId());
                 i++;
-                
             } while (!terminate);
 
             start = System.currentTimeMillis();
