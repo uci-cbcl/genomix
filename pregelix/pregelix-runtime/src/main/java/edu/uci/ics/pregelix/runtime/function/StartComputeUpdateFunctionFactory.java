@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -172,6 +172,10 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 tbAlive.reset();
 
                 vertex = (Vertex) tuple[1];
+                if (vertex.isPartitionTerminated()) {
+                    vertex.voteToHalt();
+                    return;
+                }
                 vertex.setOutputWriters(writers);
                 vertex.setOutputAppenders(appenders);
                 vertex.setOutputTupleBuilders(tbs);
@@ -184,12 +188,13 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                 }
 
                 try {
+                    vertex.open();
                     vertex.compute(msgIterator);
+                    vertex.close();
                     vertex.finishCompute();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new HyracksDataException(e);
                 }
-
                 /**
                  * this partition should not terminate
                  */
@@ -200,6 +205,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                  * call the global aggregator
                  */
                 aggregator.step(vertex);
+
             }
 
             @Override
@@ -253,13 +259,10 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                     if (vertex != null && vertex.hasUpdate()) {
                         if (!dynamicStateLength) {
                             // in-place update
-                            int fieldCount = tupleRef.getFieldCount();
-                            for (int i = 1; i < fieldCount; i++) {
-                                byte[] data = tupleRef.getFieldData(i);
-                                int offset = tupleRef.getFieldStart(i);
-                                bbos.setByteArray(data, offset);
-                                vertex.write(output);
-                            }
+                            byte[] data = tupleRef.getFieldData(1);
+                            int offset = tupleRef.getFieldStart(1);
+                            bbos.setByteArray(data, offset);
+                            vertex.write(output);
                         } else {
                             // write the vertex id
                             DataOutput tbOutput = cloneUpdateTb.getDataOutput();

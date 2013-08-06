@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -69,7 +69,6 @@ public class IndexPage extends AbstractPage {
                 JSONObject o = item.getModelObject();
                 try {
                     item.add(new Label("job-id", o.getString("job-id")));
-                    item.add(new Label("application-name", o.getString("application-name")));
                     item.add(new Label("status", o.getString("status")));
                     item.add(new Label("create-time", o.getString("create-time")));
                     item.add(new Label("start-time", o.getString("start-time")));

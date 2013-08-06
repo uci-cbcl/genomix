@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -104,14 +104,10 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                             getSocketAddress(knownRecords[lastReadPartition]), jobId, resultSetId, lastReadPartition,
                             NUM_READ_BUFFERS);
                     lastMonitor = getMonitor(lastReadPartition);
-                    resultChannel.open(datasetClientCtx);
                     resultChannel.registerMonitor(lastMonitor);
-                } catch (HyracksException e) {
-                    throw new HyracksDataException(e);
-                } catch (UnknownHostException e) {
-                    throw new HyracksDataException(e);
+                    resultChannel.open(datasetClientCtx);
                 } catch (Exception e) {
-                    // Do nothing here.
+                    throw new HyracksDataException(e);
                 }
             }
         }
@@ -146,8 +142,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                                 getSocketAddress(knownRecords[lastReadPartition]), jobId, resultSetId,
                                 lastReadPartition, NUM_READ_BUFFERS);
                         lastMonitor = getMonitor(lastReadPartition);
-                        resultChannel.open(datasetClientCtx);
                         resultChannel.registerMonitor(lastMonitor);
+                        resultChannel.open(datasetClientCtx);
                     } catch (Exception e) {
                         throw new HyracksDataException(e);
                     }

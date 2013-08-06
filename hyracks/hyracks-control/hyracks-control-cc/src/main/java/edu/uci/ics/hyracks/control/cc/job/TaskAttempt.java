@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 package edu.uci.ics.hyracks.control.cc.job;
+
+import java.util.List;
 
 import edu.uci.ics.hyracks.api.dataflow.TaskAttemptId;
 
@@ -35,7 +37,7 @@ public class TaskAttempt {
 
     private TaskStatus status;
 
-    private String failureDetails;
+    private List<Exception> exceptions;
 
     private long startTime;
 
@@ -73,13 +75,13 @@ public class TaskAttempt {
         return status;
     }
 
-    public String getFailureDetails() {
-        return failureDetails;
+    public List<Exception> getExceptions() {
+        return exceptions;
     }
 
-    public void setStatus(TaskStatus status, String details) {
+    public void setStatus(TaskStatus status, List<Exception> exceptions) {
         this.status = status;
-        this.failureDetails = details;
+        this.exceptions = exceptions;
     }
 
     public long getStartTime() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -48,6 +48,7 @@ public class LSMIndexFileManagerTest {
     private static final int DEFAULT_PAGE_SIZE = 256;
     private static final int DEFAULT_NUM_PAGES = 100;
     private static final int DEFAULT_MAX_OPEN_FILES = 10;
+    private static final int DEFAULT_IO_DEVICE_ID = 0;
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected IOManager ioManager;
@@ -60,7 +61,8 @@ public class LSMIndexFileManagerTest {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
         fileMapProvider = TestStorageManagerComponentHolder.getFileMapProvider(null);
-        baseDir = "lsm_tree" + simpleDateFormat.format(new Date()) + sep;
+        baseDir = ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getPath() + sep + "lsm_tree"
+                + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);
         f.mkdirs();
         file = new FileReference(f);
@@ -73,8 +75,7 @@ public class LSMIndexFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(ioManager, fileMapProvider, file,
-                new DummyTreeFactory());
+        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(fileMapProvider, file, new DummyTreeFactory());
         LinkedList<String> fileNames = new LinkedList<String>();
 
         int numFileNames = 100;
@@ -114,8 +115,7 @@ public class LSMIndexFileManagerTest {
     }
 
     public void cleanInvalidFilesTest(IOManager ioManager) throws InterruptedException, IOException, IndexException {
-        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(ioManager, fileMapProvider, file,
-                new DummyTreeFactory());
+        ILSMIndexFileManager fileManager = new DummyLSMIndexFileManager(fileMapProvider, file, new DummyTreeFactory());
         fileManager.createDirs();
 
         List<FileReference> flushFiles = new ArrayList<FileReference>();
@@ -187,20 +187,18 @@ public class LSMIndexFileManagerTest {
                     .getFile().getName());
         }
 
-        // Make sure invalid files were removed from all IODevices.
+        // Make sure invalid files were removed from the IODevices.
         ArrayList<String> remainingFiles = new ArrayList<String>();
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File dir = new File(dev.getPath(), baseDir);
-            FilenameFilter filter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".");
-                }
-            };
-            String[] files = dir.list(filter);
-            for (String file : files) {
-                File f = new File(file);
-                remainingFiles.add(f.getName());
+        File dir = new File(baseDir);
+        FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".");
             }
+        };
+        String[] files = dir.list(filter);
+        for (String file : files) {
+            File f = new File(file);
+            remainingFiles.add(f.getName());
         }
 
         Collections.sort(remainingFiles, fileManager.getFileNameComparator());
@@ -218,34 +216,19 @@ public class LSMIndexFileManagerTest {
         cleanDirs(singleDeviceIOManager);
     }
 
-    @Test
-    public void twoIODevicesTest() throws InterruptedException, IOException, IndexException {
-        IOManager twoDevicesIOManager = createIOManager(2);
-        cleanInvalidFilesTest(twoDevicesIOManager);
-        cleanDirs(twoDevicesIOManager);
-    }
-
-    @Test
-    public void fourIODevicesTest() throws InterruptedException, IOException, IndexException {
-        IOManager fourDevicesIOManager = createIOManager(4);
-        cleanInvalidFilesTest(fourDevicesIOManager);
-        cleanDirs(fourDevicesIOManager);
-    }
-
     private void cleanDirs(IOManager ioManager) {
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            File dir = new File(dev.getPath(), baseDir);
-            FilenameFilter filter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return !name.startsWith(".");
-                }
-            };
-            String[] files = dir.list(filter);
-            for (String file : files) {
-                File f = new File(file);
-                f.delete();
+        File dir = new File(baseDir);
+        FilenameFilter filter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return !name.startsWith(".");
             }
+        };
+        String[] files = dir.list(filter);
+        for (String file : files) {
+            File f = new File(file);
+            f.delete();
         }
+
     }
 
     private IOManager createIOManager(int numDevices) throws HyracksException {

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hivesterix.runtime.factory.evaluator;
 
 import java.util.ArrayList;
@@ -25,6 +39,7 @@ import edu.uci.ics.hivesterix.runtime.jobgen.Schema;
 import edu.uci.ics.hivesterix.serde.lazy.LazyFactory;
 import edu.uci.ics.hivesterix.serde.lazy.LazyObject;
 import edu.uci.ics.hivesterix.serde.lazy.LazySerDe;
+import edu.uci.ics.hivesterix.serde.lazy.LazyUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -32,6 +47,7 @@ import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunction;
 import edu.uci.ics.hyracks.algebricks.runtime.base.ICopyAggregateFunctionFactory;
 import edu.uci.ics.hyracks.data.std.api.IDataOutputProvider;
 
+@SuppressWarnings("deprecation")
 public class AggregationFunctionFactory implements ICopyAggregateFunctionFactory {
 
     private static final long serialVersionUID = 1L;
@@ -171,8 +187,9 @@ public class AggregationFunctionFactory implements ICopyAggregateFunctionFactory
             TypeInfo type = input.getTypeInfo();
             if (type instanceof StructTypeInfo) {
                 types.add(TypeInfoFactory.doubleTypeInfo);
-            } else
+            } else {
                 types.add(type);
+            }
 
             String s = Utilities.serializeExpression(input);
             parametersSerialization.add(s);
@@ -182,6 +199,14 @@ public class AggregationFunctionFactory implements ICopyAggregateFunctionFactory
     @Override
     public synchronized ICopyAggregateFunction createAggregateFunction(IDataOutputProvider provider)
             throws AlgebricksException {
+        /**
+         * list of object inspectors correlated to types
+         */
+        List<ObjectInspector> oiListForTypes = new ArrayList<ObjectInspector>();
+        for (TypeInfo type : types) {
+            oiListForTypes.add(LazyUtils.getLazyObjectInspectorFromTypeInfo(type, false));
+        }
+
         if (parametersOrigin == null) {
             Configuration config = new Configuration();
             config.setClassLoader(this.getClass().getClassLoader());
@@ -316,7 +341,8 @@ public class AggregationFunctionFactory implements ICopyAggregateFunctionFactory
             udafComplete = udafsComplete.get(threadId);
             if (udafComplete == null) {
                 try {
-                    udafComplete = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, types, distinct, false);
+                    udafComplete = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, oiListForTypes, distinct,
+                            false);
                 } catch (HiveException e) {
                     throw new AlgebricksException(e);
                 }
@@ -340,7 +366,8 @@ public class AggregationFunctionFactory implements ICopyAggregateFunctionFactory
             udafPartial = udafsPartial.get(threadId);
             if (udafPartial == null) {
                 try {
-                    udafPartial = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, types, distinct, false);
+                    udafPartial = FunctionRegistry.getGenericUDAFEvaluator(genericUDAFName, oiListForTypes, distinct,
+                            false);
                 } catch (HiveException e) {
                     throw new AlgebricksException(e);
                 }

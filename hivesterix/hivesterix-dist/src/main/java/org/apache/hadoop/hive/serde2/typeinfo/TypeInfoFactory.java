@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -22,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.hadoop.hive.serde.Constants;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils;
 
 /**
@@ -51,15 +65,18 @@ public final class TypeInfoFactory {
         return result;
     }
 
-    public static final TypeInfo voidTypeInfo = getPrimitiveTypeInfo(Constants.VOID_TYPE_NAME);
-    public static final TypeInfo booleanTypeInfo = getPrimitiveTypeInfo(Constants.BOOLEAN_TYPE_NAME);
-    public static final TypeInfo intTypeInfo = getPrimitiveTypeInfo(Constants.INT_TYPE_NAME);
-    public static final TypeInfo longTypeInfo = getPrimitiveTypeInfo(Constants.BIGINT_TYPE_NAME);
-    public static final TypeInfo stringTypeInfo = getPrimitiveTypeInfo(Constants.STRING_TYPE_NAME);
-    public static final TypeInfo floatTypeInfo = getPrimitiveTypeInfo(Constants.FLOAT_TYPE_NAME);
-    public static final TypeInfo doubleTypeInfo = getPrimitiveTypeInfo(Constants.DOUBLE_TYPE_NAME);
-    public static final TypeInfo byteTypeInfo = getPrimitiveTypeInfo(Constants.TINYINT_TYPE_NAME);
-    public static final TypeInfo shortTypeInfo = getPrimitiveTypeInfo(Constants.SMALLINT_TYPE_NAME);
+    public static final TypeInfo voidTypeInfo = getPrimitiveTypeInfo(serdeConstants.VOID_TYPE_NAME);
+    public static final TypeInfo booleanTypeInfo = getPrimitiveTypeInfo(serdeConstants.BOOLEAN_TYPE_NAME);
+    public static final TypeInfo intTypeInfo = getPrimitiveTypeInfo(serdeConstants.INT_TYPE_NAME);
+    public static final TypeInfo longTypeInfo = getPrimitiveTypeInfo(serdeConstants.BIGINT_TYPE_NAME);
+    public static final TypeInfo stringTypeInfo = getPrimitiveTypeInfo(serdeConstants.STRING_TYPE_NAME);
+    public static final TypeInfo floatTypeInfo = getPrimitiveTypeInfo(serdeConstants.FLOAT_TYPE_NAME);
+    public static final TypeInfo doubleTypeInfo = getPrimitiveTypeInfo(serdeConstants.DOUBLE_TYPE_NAME);
+    public static final TypeInfo byteTypeInfo = getPrimitiveTypeInfo(serdeConstants.TINYINT_TYPE_NAME);
+    public static final TypeInfo shortTypeInfo = getPrimitiveTypeInfo(serdeConstants.SMALLINT_TYPE_NAME);
+    public static final TypeInfo timestampTypeInfo = getPrimitiveTypeInfo(serdeConstants.TIMESTAMP_TYPE_NAME);
+    public static final TypeInfo binaryTypeInfo = getPrimitiveTypeInfo(serdeConstants.BINARY_TYPE_NAME);
+    public static final TypeInfo decimalTypeInfo = getPrimitiveTypeInfo(serdeConstants.DECIMAL_TYPE_NAME);
 
     public static final TypeInfo unknownTypeInfo = getPrimitiveTypeInfo("unknown");
 

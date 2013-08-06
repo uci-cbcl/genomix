@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -38,7 +38,7 @@ public class InvertedListMerger {
     protected SearchResult prevSearchResult;
     protected SearchResult newSearchResult;
 
-    public InvertedListMerger(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
+    public InvertedListMerger(IHyracksCommonContext ctx, IInvertedIndex invIndex) throws HyracksDataException {
         this.invListCmp = MultiComparator.createIgnoreFieldLength(invIndex.getInvListCmpFactories());
         this.prevSearchResult = new SearchResult(invIndex.getInvListTypeTraits(), ctx);
         this.newSearchResult = new SearchResult(prevSearchResult);
@@ -72,11 +72,9 @@ public class InvertedListMerger {
                 int currentNumResults = prevSearchResult.getNumResults();
                 // Should we binary search the next list or should we sort-merge it?
                 if (currentNumResults * Math.log(numInvListElements) < currentNumResults + numInvListElements) {
-                    mergeSuffixListProbe(invListCursor, prevSearchResult, result, i, numInvLists,
-                            occurrenceThreshold);
+                    mergeSuffixListProbe(invListCursor, prevSearchResult, result, i, numInvLists, occurrenceThreshold);
                 } else {
-                    mergeSuffixListScan(invListCursor, prevSearchResult, result, i, numInvLists,
-                            occurrenceThreshold);
+                    mergeSuffixListScan(invListCursor, prevSearchResult, result, i, numInvLists, occurrenceThreshold);
                 }
             }
             invListCursor.unpinPages();
@@ -319,7 +317,7 @@ public class InvertedListMerger {
         }
     }
 
-    public SearchResult createSearchResult() {
+    public SearchResult createSearchResult() throws HyracksDataException {
         return new SearchResult(prevSearchResult);
     }
 

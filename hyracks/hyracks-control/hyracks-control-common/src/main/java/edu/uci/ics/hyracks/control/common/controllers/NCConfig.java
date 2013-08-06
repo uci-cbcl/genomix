@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,6 +16,7 @@ package edu.uci.ics.hyracks.control.common.controllers;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -51,8 +52,11 @@ public class NCConfig implements Serializable {
     @Option(name = "-max-memory", usage = "Maximum memory usable at this Node Controller in bytes (default: -1 auto)")
     public int maxMemory = -1;
 
-    @Option(name = "-result-history-size", usage = "Limits the number of jobs whose results should be remembered by the system to the specified value. (default: 10)")
-    public int resultHistorySize = 100;
+    @Option(name = "-result-time-to-live", usage = "Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds. (default: 24 hours)")
+    public long resultTTL = 86400000;
+
+    @Option(name = "-result-sweep-threshold", usage = "The duration within which an instance of the result cleanup should be invoked in milliseconds. (default: 1 minute)")
+    public long resultSweepThreshold = 60000;
 
     @Option(name = "-result-manager-memory", usage = "Memory usable for result caching at this Node Controller in bytes (default: -1 auto)")
     public int resultManagerMemory = -1;
@@ -82,8 +86,10 @@ public class NCConfig implements Serializable {
         cList.add(String.valueOf(nNetThreads));
         cList.add("-max-memory");
         cList.add(String.valueOf(maxMemory));
-        cList.add("-result-history-size");
-        cList.add(String.valueOf(resultHistorySize));
+        cList.add("-result-time-to-live");
+        cList.add(String.valueOf(resultTTL));
+        cList.add("-result-sweep-threshold");
+        cList.add(String.valueOf(resultSweepThreshold));
         cList.add("-result-manager-memory");
         cList.add(String.valueOf(resultManagerMemory));
 
@@ -97,5 +103,24 @@ public class NCConfig implements Serializable {
                 cList.add(appArg);
             }
         }
+    }
+
+    public void toMap(Map<String, String> configuration) {
+        configuration.put("cc-host", ccHost);
+        configuration.put("cc-port", (String.valueOf(ccPort)));
+        configuration.put("cluster-net-ip-address", clusterNetIPAddress);
+        configuration.put("node-id", nodeId);
+        configuration.put("data-ip-address", dataIPAddress);
+        configuration.put("iodevices", ioDevices);
+        configuration.put("net-thread-count", String.valueOf(nNetThreads));
+        configuration.put("max-memory", String.valueOf(maxMemory));
+        configuration.put("result-time-to-live", String.valueOf(resultTTL));
+        configuration.put("result-sweep-threshold", String.valueOf(resultSweepThreshold));
+        configuration.put("result-manager-memory", String.valueOf(resultManagerMemory));
+
+        if (appNCMainClass != null) {
+            configuration.put("app-nc-main-class", appNCMainClass);
+        }
+
     }
 }

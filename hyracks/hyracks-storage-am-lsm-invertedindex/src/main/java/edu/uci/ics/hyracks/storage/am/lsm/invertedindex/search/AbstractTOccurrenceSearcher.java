@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -68,7 +68,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     protected final IObjectFactory<IInvertedListCursor> invListCursorFactory;
     protected final ObjectCache<IInvertedListCursor> invListCursorCache;
 
-    public AbstractTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) {
+    public AbstractTOccurrenceSearcher(IHyracksCommonContext ctx, IInvertedIndex invIndex) throws HyracksDataException {
         this.ctx = ctx;
         this.invListMerger = new InvertedListMerger(ctx, invIndex);
         this.searchResult = new SearchResult(invIndex.getInvListTypeTraits(), ctx);

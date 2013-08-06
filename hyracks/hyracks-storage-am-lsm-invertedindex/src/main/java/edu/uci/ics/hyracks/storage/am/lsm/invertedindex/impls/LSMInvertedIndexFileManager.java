@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -26,8 +26,6 @@ import java.util.List;
 
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.io.IODeviceHandle;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import edu.uci.ics.hyracks.storage.am.lsm.common.impls.BTreeFactory;
@@ -62,9 +60,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         }
     };
 
-    public LSMInvertedIndexFileManager(IIOManager ioManager, IFileMapProvider fileMapProvider, FileReference file,
-            BTreeFactory btreeFactory, int startIODeviceIndex) {
-        super(ioManager, fileMapProvider, file, null, startIODeviceIndex);
+    public LSMInvertedIndexFileManager(IFileMapProvider fileMapProvider, FileReference file, BTreeFactory btreeFactory) {
+        super(fileMapProvider, file, null);
         this.btreeFactory = btreeFactory;
     }
 
@@ -100,20 +97,19 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<ComparableFileName>();
         ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<ComparableFileName>();
 
-        // Gather files from all IODeviceHandles.
-        for (IODeviceHandle dev : ioManager.getIODevices()) {
-            cleanupAndGetValidFilesInternal(dev, deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
-            HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
-            for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
-                int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
-                deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
-            }
-
-            // TODO: do we really need to validate the inverted lists files or is validating the dict. BTrees is enough?
-            validateFiles(dev, deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null);
-            validateFiles(dev, deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory);
-            validateFiles(dev, deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
+        // Gather files.
+        cleanupAndGetValidFilesInternal(deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
+        HashSet<String> deletedKeysBTreeFilesSet = new HashSet<String>();
+        for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
+            int index = cmpFileName.fileName.lastIndexOf(SPLIT_STRING);
+            deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
+
+        // TODO: do we really need to validate the inverted lists files or is validating the dict. BTrees is enough?
+        validateFiles(deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null);
+        validateFiles(deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory);
+        validateFiles(deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
+
         // Sanity check.
         if (allDictBTreeFiles.size() != allInvListsFiles.size()
                 || allDictBTreeFiles.size() != allDeletedKeysBTreeFiles.size()
@@ -153,30 +149,30 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         validComparableBloomFilterFiles.add(lastBloomFilter);
 
         for (int i = 1; i < allDictBTreeFiles.size(); i++) {
-            ComparableFileName currentRTree = allDictBTreeFiles.get(i);
-            ComparableFileName currentBTree = allDictBTreeFiles.get(i);
+            ComparableFileName currentDeletedKeysBTree = allDeletedKeysBTreeFiles.get(i);
+            ComparableFileName CurrentDictBTree = allDictBTreeFiles.get(i);
             ComparableFileName currentBloomFilter = allBloomFilterFiles.get(i);
             // Current start timestamp is greater than last stop timestamp.
-            if (currentRTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
-                    && currentBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
+            if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
+                    && CurrentDictBTree.interval[0].compareTo(lastDictBTree.interval[1]) > 0
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[1]) > 0) {
-                validComparableDictBTreeFiles.add(currentRTree);
-                validComparableDeletedKeysBTreeFiles.add(currentBTree);
+                validComparableDictBTreeFiles.add(CurrentDictBTree);
+                validComparableDeletedKeysBTreeFiles.add(currentDeletedKeysBTree);
                 validComparableBloomFilterFiles.add(currentBloomFilter);
-                lastDictBTree = currentRTree;
-                lastDeletedKeysBTree = currentBTree;
+                lastDictBTree = CurrentDictBTree;
+                lastDeletedKeysBTree = currentDeletedKeysBTree;
                 lastBloomFilter = currentBloomFilter;
-            } else if (currentRTree.interval[0].compareTo(lastDictBTree.interval[0]) >= 0
-                    && currentRTree.interval[1].compareTo(lastDictBTree.interval[1]) <= 0
-                    && currentBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[0]) >= 0
-                    && currentBTree.interval[1].compareTo(lastDeletedKeysBTree.interval[1]) <= 0
+            } else if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[0]) >= 0
+                    && currentDeletedKeysBTree.interval[1].compareTo(lastDeletedKeysBTree.interval[1]) <= 0
+                    && CurrentDictBTree.interval[0].compareTo(lastDictBTree.interval[0]) >= 0
+                    && CurrentDictBTree.interval[1].compareTo(lastDictBTree.interval[1]) <= 0
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
                     && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
-                File invalidRTreeFile = new File(currentRTree.fullPath);
-                invalidRTreeFile.delete();
-                File invalidBTreeFile = new File(currentBTree.fullPath);
-                invalidBTreeFile.delete();
+                File invalidDeletedBTreeFile = new File(currentDeletedKeysBTree.fullPath);
+                invalidDeletedBTreeFile.delete();
+                File invalidDictBTreeFile = new File(CurrentDictBTree.fullPath);
+                invalidDictBTreeFile.delete();
                 File invalidBloomFilterFile = new File(currentBloomFilter.fullPath);
                 invalidBloomFilterFile.delete();
             } else {

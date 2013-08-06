@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -56,7 +56,7 @@ public class SerializationDeserializationTest {
             buffers = new ArrayList<ByteBuffer>();
         }
 
-        public IOpenableDataWriter<Object[]> createWriter() {
+        public IOpenableDataWriter<Object[]> createWriter() throws HyracksDataException {
             return new SerializingDataWriter(ctx, rDes, new IFrameWriter() {
                 @Override
                 public void open() throws HyracksDataException {
@@ -79,7 +79,7 @@ public class SerializationDeserializationTest {
             });
         }
 
-        public IOpenableDataReader<Object[]> createDataReader() {
+        public IOpenableDataReader<Object[]> createDataReader() throws HyracksDataException {
             return new FrameDeserializingDataReader(ctx, new IFrameReader() {
                 private int i;
 

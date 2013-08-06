@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hivesterix.logical.plan.visitor;
 
 import java.util.ArrayList;
@@ -32,8 +46,8 @@ public class UnionVisitor extends DefaultVisitor {
         List<LogicalVariable> leftVars = new ArrayList<LogicalVariable>();
         List<LogicalVariable> rightVars = new ArrayList<LogicalVariable>();
 
-        VariableUtilities.getUsedVariables(parents.get(0).getValue(), leftVars);
-        VariableUtilities.getUsedVariables(parents.get(1).getValue(), rightVars);
+        VariableUtilities.getLiveVariables(parents.get(0).getValue(), leftVars);
+        VariableUtilities.getLiveVariables(parents.get(1).getValue(), rightVars);
 
         List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> triples = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>();
         List<LogicalVariable> unionVars = new ArrayList<LogicalVariable>();

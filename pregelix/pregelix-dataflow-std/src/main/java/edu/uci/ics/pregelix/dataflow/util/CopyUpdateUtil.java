@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -19,23 +19,34 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.storage.am.btree.impls.RangePredicate;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexAccessor;
+import edu.uci.ics.hyracks.storage.am.common.api.IIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 
 public class CopyUpdateUtil {
 
     public static void copyUpdate(SearchKeyTupleReference tempTupleReference, ITupleReference frameTuple,
-            UpdateBuffer updateBuffer, ArrayTupleBuilder cloneUpdateTb, ITreeIndexAccessor indexAccessor,
-            ITreeIndexCursor cursor, RangePredicate rangePred) throws HyracksDataException, IndexException {
+            UpdateBuffer updateBuffer, ArrayTupleBuilder cloneUpdateTb, IIndexAccessor indexAccessor,
+            IIndexCursor cursor, RangePredicate rangePred) throws HyracksDataException, IndexException {
         if (cloneUpdateTb.getSize() > 0) {
+            int[] fieldEndOffsets = cloneUpdateTb.getFieldEndOffsets();
+            int srcStart = fieldEndOffsets[0];
+            int srcLen = fieldEndOffsets[1] - fieldEndOffsets[0]; // the updated vertex size
+            int frSize = frameTuple.getFieldLength(1); // the vertex binary size in the leaf page
+            if (srcLen <= frSize) {
+                //doing in-place update if possible, save the "real update" overhead
+                System.arraycopy(cloneUpdateTb.getByteArray(), srcStart, frameTuple.getFieldData(1),
+                        frameTuple.getFieldStart(1), srcLen);
+                cloneUpdateTb.reset();
+                return;
+            }
             if (!updateBuffer.appendTuple(cloneUpdateTb)) {
                 tempTupleReference.reset(frameTuple.getFieldData(0), frameTuple.getFieldStart(0),
                         frameTuple.getFieldLength(0));
                 //release the cursor/latch
                 cursor.close();
                 //batch update
-                updateBuffer.updateBTree(indexAccessor);
+                updateBuffer.updateIndex(indexAccessor);
                 //try append the to-be-updated tuple again
                 if (!updateBuffer.appendTuple(cloneUpdateTb)) {
                     throw new HyracksDataException("cannot append tuple builder!");
@@ -49,5 +60,4 @@ public class CopyUpdateUtil {
             cloneUpdateTb.reset();
         }
     }
-
 }

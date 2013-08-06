@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -141,9 +141,6 @@ public abstract class ArrayListWritable<M extends Writable> extends ArrayList<M>
         used = 0;
         this.clear();
         int numValues = in.readInt(); // read number of values
-        if (numValues > 100) {
-            System.out.println("num values: " + numValues);
-        }
         for (int i = 0; i < numValues; i++) {
             M value = allocateValue();
             value.readFields(in); // read a value
@@ -153,9 +150,6 @@ public abstract class ArrayListWritable<M extends Writable> extends ArrayList<M>
 
     public void write(DataOutput out) throws IOException {
         int numValues = size();
-        if (numValues > 100) {
-            System.out.println("write num values: " + numValues);
-        }
         out.writeInt(numValues); // write number of values
         for (int i = 0; i < numValues; i++) {
             get(i).write(out);

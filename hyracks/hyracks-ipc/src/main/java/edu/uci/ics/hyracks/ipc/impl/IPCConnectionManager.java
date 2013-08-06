@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -17,6 +17,7 @@ package edu.uci.ics.hyracks.ipc.impl;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
@@ -175,6 +176,7 @@ public class IPCConnectionManager {
                     if (!workingPendingConnections.isEmpty()) {
                         for (IPCHandle handle : workingPendingConnections) {
                             SocketChannel channel = SocketChannel.open();
+                            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                             channel.configureBlocking(false);
                             SelectionKey cKey = null;
                             if (channel.connect(handle.getRemoteAddress())) {
@@ -267,6 +269,7 @@ public class IPCConnectionManager {
                             } else if (key.isAcceptable()) {
                                 assert sc == serverSocketChannel;
                                 SocketChannel channel = serverSocketChannel.accept();
+                                channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
                                 channel.configureBlocking(false);
                                 IPCHandle handle = new IPCHandle(system, null);
                                 SelectionKey cKey = channel.register(selector, SelectionKey.OP_READ);

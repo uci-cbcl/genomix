@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -35,7 +35,8 @@ public abstract class AbstractIndexTestWorker extends Thread implements ITreeInd
 
     protected final IIndexAccessor indexAccessor;
 
-    public AbstractIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches) {
+    public AbstractIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches)
+            throws HyracksDataException {
         this.dataGen = dataGen;
         this.opSelector = opSelector;
         this.numBatches = numBatches;

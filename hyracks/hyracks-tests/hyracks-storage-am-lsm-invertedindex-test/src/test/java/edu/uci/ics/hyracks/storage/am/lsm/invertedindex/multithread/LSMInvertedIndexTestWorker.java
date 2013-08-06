@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2012 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -50,7 +50,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
             new ConjunctiveSearchModifier(), new JaccardSearchModifier(0.8f), new JaccardSearchModifier(0.5f) };
 
     public LSMInvertedIndexTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
-            int numBatches) {
+            int numBatches) throws HyracksDataException {
         super(dataGen, opSelector, index, numBatches);
         invIndex = (LSMInvertedIndex) index;
     }

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hivesterix.logical.plan;
 
 import java.io.OutputStreamWriter;
@@ -174,7 +188,7 @@ public class HiveAlgebricksTranslator implements Translator {
         return fieldToLogicalVariableMap.get(fieldName);
     }
 
-    private void updateVariable(String fieldName, LogicalVariable variable) {
+    public void updateVariable(String fieldName, LogicalVariable variable) {
         LogicalVariable var = fieldToLogicalVariableMap.get(fieldName);
         if (var == null) {
             fieldToLogicalVariableMap.put(fieldName, variable);
@@ -506,7 +520,6 @@ public class HiveAlgebricksTranslator implements Translator {
      */
     public void rewriteOperatorOutputSchema(Operator operator) {
         List<ColumnInfo> columns = operator.getSchema().getSignature();
-
         for (ColumnInfo column : columns) {
             String columnName = column.getTabAlias() + "." + column.getInternalName();
             if (columnName.indexOf("$$") < 0) {
@@ -518,14 +531,13 @@ public class HiveAlgebricksTranslator implements Translator {
 
     @Override
     public void rewriteOperatorOutputSchema(List<LogicalVariable> variables, Operator operator) {
-
-        //printOperatorSchema(operator);
+        // printOperatorSchema(operator);
         List<ColumnInfo> columns = operator.getSchema().getSignature();
-        if (variables.size() != columns.size()) {
-            throw new IllegalStateException("output cardinality error " + operator.getName() + " variable size: "
-                    + variables.size() + " expected " + columns.size());
-        }
-
+        // if (variables.size() != columns.size()) {
+        // throw new IllegalStateException("output cardinality error " +
+        // operator.getName() + " variable size: "
+        // + variables.size() + " expected " + columns.size());
+        // }
         for (int i = 0; i < variables.size(); i++) {
             LogicalVariable var = variables.get(i);
             ColumnInfo column = columns.get(i);
@@ -535,7 +547,8 @@ public class HiveAlgebricksTranslator implements Translator {
                 column.setInternalName(var.toString());
             }
         }
-        //printOperatorSchema(operator);
+
+        // printOperatorSchema(operator);
     }
 
     /**

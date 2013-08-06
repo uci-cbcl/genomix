@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -143,8 +143,10 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
 
         Set<LogicalVariable> pkVars = computeGbyVars(outerNts, free, context);
         if (pkVars == null || pkVars.size() < 1) {
-            // could not group only by primary keys
-            return false;
+            // there is no non-trivial primary key, group-by keys are all live variables
+            ILogicalOperator subplanInput = subplan.getInputs().get(0).getValue();
+            pkVars = new HashSet<LogicalVariable>();
+            VariableUtilities.getLiveVariables(subplanInput, pkVars);
         }
         AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Found FD for introducing group-by: " + pkVars);
 

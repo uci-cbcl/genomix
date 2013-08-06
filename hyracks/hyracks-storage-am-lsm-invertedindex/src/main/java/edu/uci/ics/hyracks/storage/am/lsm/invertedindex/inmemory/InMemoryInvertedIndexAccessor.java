@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -43,7 +43,8 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
     protected InMemoryInvertedIndex index;
     protected BTreeAccessor btreeAccessor;
 
-    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx) {
+    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx)
+            throws HyracksDataException {
         this.opCtx = opCtx;
         this.index = index;
         this.searcher = createSearcher();
@@ -110,7 +111,7 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         throw new UnsupportedOperationException("Upsert not supported by in-memory inverted index.");
     }
 
-    protected IInvertedIndexSearcher createSearcher() {
+    protected IInvertedIndexSearcher createSearcher() throws HyracksDataException {
         return new TOccurrenceSearcher(hyracksCtx, index);
     }
 }

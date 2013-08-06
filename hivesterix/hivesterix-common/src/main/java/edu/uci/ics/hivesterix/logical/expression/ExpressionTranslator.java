@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.hivesterix.logical.expression;
 
 import java.util.ArrayList;
@@ -17,10 +31,12 @@ import org.apache.hadoop.hive.ql.plan.UDTFDesc;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFEvaluator;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDTF;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
+import edu.uci.ics.hivesterix.serde.lazy.LazyUtils;
 import edu.uci.ics.hyracks.algebricks.common.exceptions.AlgebricksException;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -165,9 +181,12 @@ public class ExpressionTranslator {
                         originalParameterTypeInfos.add(parameter.getTypeInfo());
                 }
 
+                List<ObjectInspector> originalParameterOIs = new ArrayList<ObjectInspector>();
+                for (TypeInfo type : originalParameterTypeInfos) {
+                    originalParameterOIs.add(LazyUtils.getLazyObjectInspectorFromTypeInfo(type, false));
+                }
                 GenericUDAFEvaluator eval = FunctionRegistry.getGenericUDAFEvaluator(
-                        aggregateDesc.getGenericUDAFName(), originalParameterTypeInfos, aggregateDesc.getDistinct(),
-                        false);
+                        aggregateDesc.getGenericUDAFName(), originalParameterOIs, aggregateDesc.getDistinct(), false);
 
                 AggregationDesc newAggregateDesc = new AggregationDesc(aggregateDesc.getGenericUDAFName(), eval,
                         aggregateDesc.getParameters(), aggregateDesc.getDistinct(), aggregateDesc.getMode());
