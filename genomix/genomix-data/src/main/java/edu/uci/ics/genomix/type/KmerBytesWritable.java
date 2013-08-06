@@ -38,7 +38,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     protected static final byte[] EMPTY_BYTES = {};
 
     protected static int lettersInKmer;
-    protected static int bytesUsed;
+    private static int bytesUsed;
     protected byte[] bytes;
     protected int offset;
 
@@ -48,7 +48,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * should be called before any kmers are created
      */
     public static void setGlobalKmerLength(int k) {
-        bytesUsed = KmerUtil.getByteNumFromK(k);
+        setBytesUsed(KmerUtil.getByteNumFromK(k));
         lettersInKmer = k;
     }
 
@@ -56,7 +56,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * Initialize as empty kmer
      */
     public KmerBytesWritable() {
-        bytes = new byte[bytesUsed];
+        bytes = new byte[getBytesUsed()];
         offset = 0;
     }
 
@@ -102,7 +102,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public void setAsCopy(KmerBytesWritable other) {
         if (lettersInKmer > 0) {
-            System.arraycopy(other.bytes, other.offset, bytes, offset, bytesUsed);
+            System.arraycopy(other.bytes, other.offset, bytes, offset, getBytesUsed());
         }
     }
     
@@ -116,7 +116,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
             throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was " + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
         }
         if (lettersInKmer > 0) {
-            System.arraycopy(other.bytes, other.kmerStartOffset, bytes, offset, bytesUsed);
+            System.arraycopy(other.bytes, other.kmerStartOffset, bytes, offset, getBytesUsed());
         }
     }
 
@@ -128,11 +128,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param newOffset
      */
     public void setAsCopy(byte[] newData, int newOffset) {
-        if (newData.length - newOffset < bytesUsed) {
-            throw new IllegalArgumentException("Requested " + bytesUsed + " bytes (k=" + lettersInKmer
+        if (newData.length - newOffset < getBytesUsed()) {
+            throw new IllegalArgumentException("Requested " + getBytesUsed() + " bytes (k=" + lettersInKmer
                     + ") but buffer has only " + (newData.length - newOffset) + " bytes");
         }
-        System.arraycopy(newData, newOffset, bytes, offset, bytesUsed);
+        System.arraycopy(newData, newOffset, bytes, offset, getBytesUsed());
     }
 
     /**
@@ -143,8 +143,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param newOffset
      */
     public void setAsReference(byte[] newData, int newOffset) {
-        if (newData.length - newOffset < bytesUsed) {
-            throw new IllegalArgumentException("Requested " + bytesUsed + " bytes (k=" + lettersInKmer
+        if (newData.length - newOffset < getBytesUsed()) {
+            throw new IllegalArgumentException("Requested " + getBytesUsed() + " bytes (k=" + lettersInKmer
                     + ") but buffer has only " + (newData.length - newOffset) + " bytes");
         }
         bytes = newData;
@@ -187,7 +187,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     private byte geneCodeAtPosition(int pos) {
         int posByte = pos / 4;
         int shift = (pos % 4) << 1;
-        return (byte) ((bytes[offset + bytesUsed - 1 - posByte] >> shift) & 0x3);
+        return (byte) ((bytes[offset + getBytesUsed() - 1 - posByte] >> shift) & 0x3);
     }
 
     public static int getKmerLength() {
@@ -195,7 +195,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     }
     
     public static int getBytesPerKmer() {
-        return bytesUsed;
+        return getBytesUsed();
     }
 
     @Override
@@ -209,7 +209,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     @Override
     public int getLength() {
-        return bytesUsed;
+        return getBytesUsed();
     }
 
     /**
@@ -219,10 +219,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param stringBytes
      * @param start
      */
+    @SuppressWarnings("static-access")
     public void setByRead(byte[] stringBytes, int start) {
         byte l = 0;
         int bytecount = 0;
-        int bcount = this.bytesUsed - 1;
+        int bcount = this.getBytesUsed() - 1;
         for (int i = start; i < start + lettersInKmer && i < stringBytes.length; i++) {
             byte code = GeneCode.getCodeFromSymbol(stringBytes[i]);
             l |= (byte) (code << bytecount);
@@ -250,7 +251,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public void setByReadReverse(byte[] array, int start) {
         byte l = 0;
         int bytecount = 0;
-        int bcount = bytesUsed - 1;
+        int bcount = getBytesUsed() - 1;
         // for (int i = start + kmerlength - 1; i >= 0 && i < array.length; i--)
         // {
         for (int i = start + lettersInKmer - 1; i >= start && i < array.length; i--) {
@@ -287,8 +288,8 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @return the shift out gene, in gene code format
      */
     public byte shiftKmerWithNextCode(byte c) {
-        byte output = (byte) (bytes[offset + bytesUsed - 1] & 0x03);
-        for (int i = bytesUsed - 1; i > 0; i--) {
+        byte output = (byte) (bytes[offset + getBytesUsed() - 1] & 0x03);
+        for (int i = getBytesUsed() - 1; i > 0; i--) {
             byte in = (byte) (bytes[offset + i - 1] & 0x03);
             bytes[offset + i] = (byte) (((bytes[offset + i] >>> 2) & 0x3f) | (in << 6));
         }
@@ -320,11 +321,11 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     public byte shiftKmerWithPreCode(byte c) {
         int pos = ((lettersInKmer - 1) % 4) << 1;
         byte output = (byte) ((bytes[offset] >> pos) & 0x03);
-        for (int i = 0; i < bytesUsed - 1; i++) {
+        for (int i = 0; i < getBytesUsed() - 1; i++) {
             byte in = (byte) ((bytes[offset + i + 1] >> 6) & 0x03);
             bytes[offset + i] = (byte) ((bytes[offset + i] << 2) | in);
         }
-        bytes[offset + bytesUsed - 1] = (byte) ((bytes[offset + bytesUsed - 1] << 2) | c);
+        bytes[offset + getBytesUsed() - 1] = (byte) ((bytes[offset + getBytesUsed() - 1] << 2) | c);
         clearLeadBit();
         return output;
     }
@@ -364,17 +365,17 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        in.readFully(bytes, offset, bytesUsed);
+        in.readFully(bytes, offset, getBytesUsed());
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.write(bytes, offset, bytesUsed);
+        out.write(bytes, offset, getBytesUsed());
     }
 
     @Override
     public int hashCode() {
-        return Marshal.hashBytes(bytes, offset, bytesUsed);
+        return Marshal.hashBytes(bytes, offset, getBytesUsed());
     }
 
     @Override
@@ -382,7 +383,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         if (right_obj instanceof KmerBytesWritable) {
             // since these may be backed by storage of different sizes, we have to manually check each byte
             KmerBytesWritable right = (KmerBytesWritable) right_obj;
-            for (int i=0; i < bytesUsed; i++) {
+            for (int i=0; i < getBytesUsed(); i++) {
                 if (bytes[offset + i] != right.bytes[right.offset + i]) {
                     return false;
                 }
@@ -394,7 +395,15 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     @Override
     public String toString() {
-        return KmerUtil.recoverKmerFrom(lettersInKmer, bytes, offset, bytesUsed);
+        return KmerUtil.recoverKmerFrom(lettersInKmer, bytes, offset, getBytesUsed());
+    }
+
+    public static int getBytesUsed() {
+        return bytesUsed;
+    }
+
+    public static void setBytesUsed(int bytesUsed) {
+        KmerBytesWritable.bytesUsed = bytesUsed;
     }
 
     public static class Comparator extends WritableComparator {
