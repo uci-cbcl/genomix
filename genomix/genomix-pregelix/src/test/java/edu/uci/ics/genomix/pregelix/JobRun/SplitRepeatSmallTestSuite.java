@@ -66,7 +66,7 @@ public class SplitRepeatSmallTestSuite extends TestSuite {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         cleanupStores();
-        PregelixHyracksIntegrationUtil.init("src/test/resources/topology.xml");
+        PregelixHyracksIntegrationUtil.init();
         LOGGER.info("Hyracks mini-cluster started");
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));

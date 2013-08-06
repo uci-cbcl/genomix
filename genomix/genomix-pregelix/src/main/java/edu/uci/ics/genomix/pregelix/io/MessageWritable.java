@@ -12,8 +12,9 @@ import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 
-public class MessageWritable implements WritableComparable<MessageWritable> {
+public class MessageWritable implements WritableComparable<MessageWritable>, WritableSizable {
     /**
      * sourceVertexId stores source vertexId when headVertex sends the message
      * stores neighber vertexValue when pathVertex sends the message
@@ -314,5 +315,11 @@ public class MessageWritable implements WritableComparable<MessageWritable> {
         float myCount = (actualKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * averageCoverage;
         float otherCount = (other.actualKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * other.averageCoverage;
         averageCoverage = (myCount + otherCount) / adjustedLength;
+    }
+
+    @Override
+    public int sizeInBytes() {
+        // TODO Auto-generated method stub
+        return 0;
     }
 }
