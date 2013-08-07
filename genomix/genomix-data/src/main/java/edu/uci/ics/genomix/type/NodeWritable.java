@@ -148,7 +148,23 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	    return averageCoverage;
 	}
 	
-	/**
+	public PositionListWritable getStartReads() {
+        return startReads;
+    }
+
+    public void setStartReads(PositionListWritable startReads) {
+        this.startReads = startReads;
+    }
+
+    public PositionListWritable getEndReads() {
+        return endReads;
+    }
+
+    public void setEndReads(PositionListWritable endReads) {
+        this.endReads = endReads;
+    }
+
+    /**
 	 * Returns the length of the byte-array version of this node
 	 */
 	public int getSerializedLength() {

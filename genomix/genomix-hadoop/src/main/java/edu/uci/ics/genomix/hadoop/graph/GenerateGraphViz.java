@@ -49,7 +49,7 @@ public class GenerateGraphViz {
                 gv.addln(outputEdge);
                 /** add readIdSet **/
                 outputNode += " [shape=record, label = \"<f0> " + key.toString() 
-                        + "|<f1> " + value.getNodeIdList().printReadIdSet()
+                        + "|<f1> " + value.getThreadList(DirectionFlag.DIR_FF).printReadIdSet()
                         + "\"]\n";
                 gv.addln(outputNode);
             }
