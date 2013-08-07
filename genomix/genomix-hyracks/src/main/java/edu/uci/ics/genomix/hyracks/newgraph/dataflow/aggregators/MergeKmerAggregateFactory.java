@@ -73,7 +73,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().unionUpdate(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
-                    localUniNode.getListFromDir(d).unionUpdate(readNode.getListFromDir(d));
+                    localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
                 localUniNode.addCoverage(readNode);
                 //make a fake feild to cheat caller
@@ -92,7 +92,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().unionUpdate(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
-                    localUniNode.getListFromDir(d).unionUpdate(readNode.getListFromDir(d));
+                    localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
                 localUniNode.addCoverage(readNode);
             }

@@ -103,7 +103,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return kmer.getKmerLetterLength();
     }
     
-    public VKmerListWritable getListFromDir(byte dir) {
+    public VKmerListWritable getEdgeList(byte dir) {
         return edges[dir & DirectionFlag.DIR_MASK];
     }
     
