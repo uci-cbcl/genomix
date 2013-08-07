@@ -22,23 +22,23 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 public class GraphBuildingTestSuite extends TestSuite{
 
     private static int SIZE_KMER = 3;
-    public static final String PreFix = "data/webmap/lastesttest"; 
+    public static final String PreFix = "data/webmap/pathmerge_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-//        + "2", PreFix + File.separator
-//        + "3", PreFix + File.separator
-//        + "4", PreFix + File.separator
-//        + "5", PreFix + File.separator
-//        + "6", PreFix + File.separator
-//        + "7", PreFix + File.separator
-//        + "8", PreFix + File.separator
-//        + "9"};
-        + "HighSplitRepeat", PreFix + File.separator
-        + "LowSplitRepeat", PreFix + File.separator
-        + "MidSplitRepeat", PreFix + File.separator
-        + "Tips1", PreFix + File.separator
-        + "Tips2", PreFix + File.separator
-        + "Tips3", PreFix + File.separator
-        + "Tips4"};
+        + "2", PreFix + File.separator
+        + "3", PreFix + File.separator
+        + "4", PreFix + File.separator
+        + "5", PreFix + File.separator
+        + "6", PreFix + File.separator
+        + "7", PreFix + File.separator
+        + "8", PreFix + File.separator
+        + "9"};
+//        + "HighSplitRepeat", PreFix + File.separator
+//        + "LowSplitRepeat", PreFix + File.separator
+//        + "MidSplitRepeat", PreFix + File.separator
+//        + "Tips1", PreFix + File.separator
+//        + "Tips2", PreFix + File.separator
+//        + "Tips3", PreFix + File.separator
+//        + "Tips4"};
     
     private static JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";
