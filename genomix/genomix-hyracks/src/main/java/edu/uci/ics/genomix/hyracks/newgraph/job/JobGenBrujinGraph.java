@@ -32,6 +32,7 @@ import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.AggregateKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.MergeKmerAggregateFactory;
+import edu.uci.ics.genomix.hyracks.newgraph.io.NodeSequenceWriterFactory;
 import edu.uci.ics.genomix.hyracks.newgraph.io.NodeTextWriterFactory;
 
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -198,6 +199,10 @@ public class JobGenBrujinGraph extends JobGen {
         switch (outputFormat) {
             case TEXT:
                 nodeWriter = new NodeTextWriterFactory(kmerSize);
+                break;
+            case BINARY:
+            default:
+                nodeWriter = new NodeSequenceWriterFactory(hadoopJobConfFactory.getConf());
                 break;
         }
         logDebug("WriteOperator");

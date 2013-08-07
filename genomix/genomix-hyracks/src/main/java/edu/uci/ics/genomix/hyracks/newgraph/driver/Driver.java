@@ -97,7 +97,7 @@ public class Driver {
                     jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
                 case BUILD_UNMERGED_GRAPH:
-                    jobGen = new JobGenUnMerged
+                    jobGen = new JobGenUnMergedGraph(job, scheduler, ncMap, numPartitionPerMachine);
             }
 
             start = System.currentTimeMillis();
