@@ -160,7 +160,6 @@ public class P4ForPathMergeVertex extends
             
             curHead = isNodeRandomHead(curKmer);
             
-            
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
             hasNext = setNextInfo(getVertexValue());//&& headFlag == 0;
@@ -198,12 +197,14 @@ public class P4ForPathMergeVertex extends
                     }
                 }
             }
+            this.activate();
         }
         else if (getSuperstep() % 4 == 0){
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 processUpdate();
+                this.activate();
                 if(VertexUtil.isHeadOrRearVertexWithDegree(getVertexValue()))
                     voteToHalt();
             }
@@ -216,7 +217,7 @@ public class P4ForPathMergeVertex extends
                 incomingMsg = msgIterator.next();
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
                 processMerge();
-                
+                this.activate();
                 //head meets head, stop
                 if(getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)
                     voteToHalt();

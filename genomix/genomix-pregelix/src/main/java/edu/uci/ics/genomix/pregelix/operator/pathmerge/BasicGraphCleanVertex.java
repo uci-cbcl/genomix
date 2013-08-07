@@ -308,8 +308,8 @@ public class BasicGraphCleanVertex extends
             outFlag |= MessageFlag.DIR_FF;
         else if(getVertexValue().getFRList().getCountOfPosition() > 0)
             outFlag |= MessageFlag.DIR_FR;
-        else
-            outFlag |= MessageFlag.DIR_NO;
+//        else
+//            outFlag |= MessageFlag.DIR_NO;
     }
     
     /**
@@ -321,8 +321,8 @@ public class BasicGraphCleanVertex extends
             outFlag |= MessageFlag.DIR_RF;
         else if(getVertexValue().getRRList().getCountOfPosition() > 0)
             outFlag |= MessageFlag.DIR_RR;
-        else
-            outFlag |= MessageFlag.DIR_NO;
+//        else
+//            outFlag |= MessageFlag.DIR_NO;
     }
     
     /**
@@ -334,24 +334,26 @@ public class BasicGraphCleanVertex extends
             outFlag |= MessageFlag.IS_HEAD;
         switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK){
             case State.SHOULD_MERGEWITHPREV:
-                setSuccessorAdjMsg();
-                if(ifFlipWithPredecessor())
-                    outgoingMsg.setFlip(true);
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                if(getNextDestVertexId(getVertexValue()) != null)
+                if(getNextDestVertexId(getVertexValue()) != null){
+                    setSuccessorAdjMsg();
+                    if(ifFlipWithPredecessor())
+                        outgoingMsg.setFlip(true);
+                    outgoingMsg.setFlag(outFlag);
+                    outgoingMsg.setNeighberNode(getVertexValue().getIncomingList());
+                    outgoingMsg.setSourceVertexId(getVertexId());
                     sendMsg(getNextDestVertexId(getVertexValue()), outgoingMsg);
+                }
                 break;
             case State.SHOULD_MERGEWITHNEXT:
-                setPredecessorAdjMsg();
-                if(ifFilpWithSuccessor())
-                    outgoingMsg.setFlip(true);
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                if(getPrevDestVertexId(getVertexValue()) != null)
+                if(getPrevDestVertexId(getVertexValue()) != null){
+                    setPredecessorAdjMsg();
+                    if(ifFilpWithSuccessor())
+                        outgoingMsg.setFlip(true);
+                    outgoingMsg.setFlag(outFlag);
+                    outgoingMsg.setNeighberNode(getVertexValue().getOutgoingList());
+                    outgoingMsg.setSourceVertexId(getVertexId());
                     sendMsg(getPrevDestVertexId(getVertexValue()), outgoingMsg);
+                }
                 break; 
         }
     }
