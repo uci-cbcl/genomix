@@ -28,6 +28,7 @@ import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.newgraph.job.JobGen;
 import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenBrujinGraph;
 import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenCheckReader;
+import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenUnMergedGraph;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
