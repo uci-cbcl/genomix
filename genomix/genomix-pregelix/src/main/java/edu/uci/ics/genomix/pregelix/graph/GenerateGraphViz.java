@@ -13,6 +13,7 @@ import org.apache.hadoop.io.SequenceFile;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 public class GenerateGraphViz {
 
@@ -121,22 +122,22 @@ public class GenerateGraphViz {
     public static String convertEdgeToGraph(String outputNode, NodeWritable value){
         String outputEdge = "";
         Iterator<VKmerBytesWritable> kmerIterator;
-        kmerIterator = value.getFFList().iterator();
+        kmerIterator = value.getListFromDir(DirectionFlag.DIR_FF).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next(); 
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FF\"]\n";
         }
-        kmerIterator = value.getFRList().iterator();
+        kmerIterator = value.getListFromDir(DirectionFlag.DIR_FR).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"blue\" label =\"FR\"]\n";
         }
-        kmerIterator = value.getRFList().iterator();
+        kmerIterator = value.getListFromDir(DirectionFlag.DIR_RF).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"green\" label =\"RF\"]\n";
         }
-        kmerIterator = value.getRRList().iterator();
+        kmerIterator = value.getListFromDir(DirectionFlag.DIR_RR).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR\"]\n";
