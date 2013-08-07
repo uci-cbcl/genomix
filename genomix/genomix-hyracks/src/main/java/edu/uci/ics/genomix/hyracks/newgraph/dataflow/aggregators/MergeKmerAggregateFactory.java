@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -71,10 +72,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 localUniNode.reset();
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().unionUpdate(readNode.getNodeIdList());
-                localUniNode.getFFList().unionUpdate(readNode.getFFList());
-                localUniNode.getFRList().unionUpdate(readNode.getFRList());
-                localUniNode.getRFList().unionUpdate(readNode.getRFList());
-                localUniNode.getRRList().unionUpdate(readNode.getRRList());
+                for (byte d: DirectionFlag.values) {
+                    localUniNode.getListFromDir(d).unionUpdate(readNode.getListFromDir(d));
+                }
                 localUniNode.addCoverage(readNode);
                 //make a fake feild to cheat caller
  //               tupleBuilder.addFieldEndOffset();
@@ -91,10 +91,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().unionUpdate(readNode.getNodeIdList());
-                localUniNode.getFFList().unionUpdate(readNode.getFFList());
-                localUniNode.getFRList().unionUpdate(readNode.getFRList());
-                localUniNode.getRFList().unionUpdate(readNode.getRFList());
-                localUniNode.getRRList().unionUpdate(readNode.getRRList());
+                for (byte d: DirectionFlag.values) {
+                    localUniNode.getListFromDir(d).unionUpdate(readNode.getListFromDir(d));
+                }
                 localUniNode.addCoverage(readNode);
             }
 
