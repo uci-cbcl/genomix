@@ -1,6 +1,6 @@
 package edu.uci.ics.genomix.pregelix.type;
 
-public class MessageFlag extends DirectionFlag {
+public class MessageFlag extends DirFlag {
     
     public static String getFlagAsString(byte code) {
         // TODO: allow multiple flags to be set
