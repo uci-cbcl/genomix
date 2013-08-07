@@ -41,6 +41,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         public static final byte DIR_RF = 0b10 << 0;
         public static final byte DIR_RR = 0b11 << 0;
         public static final byte DIR_MASK = 0b11 << 0;
+        public static final byte DIR_CLEAR = 0b1111100 << 0;
         
         public static final byte[] values = {DIR_FF, DIR_FR, DIR_RF, DIR_RR};
     }
