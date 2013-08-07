@@ -96,6 +96,8 @@ public class Driver {
                 case CHECK_KMERREADER:
                     jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
+                case BUILD_UNMERGED_GRAPH:
+                    jobGen = new JobGenUnMerged
             }
 
             start = System.currentTimeMillis();
