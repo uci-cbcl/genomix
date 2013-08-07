@@ -26,10 +26,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     // connections within the same read -- used for resolving repeats and scaffolding
     private PositionListWritable threads[] = {null, null, null, null};
     
-    private PositionListWritable startReads;  // first kmer in read (or last but kmer was flipped)
-    private PositionListWritable endReads;  //last kmer in read (or first but kmer was flipped)
+    private PositionListWritable startReads;  // first internalKmer in read (or last but internalKmer was flipped)
+    private PositionListWritable endReads;  //last internalKmer in read (or first but internalKmer was flipped)
     
-    private VKmerBytesWritable kmer;
+    private VKmerBytesWritable internalKmer;
     private float averageCoverage;
     
     // merge/update directions
@@ -53,7 +53,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
         startReads = new PositionListWritable();
         endReads = new PositionListWritable();
-        kmer = new VKmerBytesWritable();  // in graph construction - not set kmerlength Optimization: VKmer
+        internalKmer = new VKmerBytesWritable();  // in graph construction - not set kmerlength Optimization: VKmer
         averageCoverage = 0;
     }
     
@@ -65,7 +65,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public void set(NodeWritable node){
-        set(node.edges, node.threads, node.startReads, node.endReads, node.kmer, node.averageCoverage);
+        set(node.edges, node.threads, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
     }
     
     public void set(VKmerListWritable[] edges, PositionListWritable[] threads,
@@ -77,7 +77,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
         this.startReads.set(startReads);
         this.endReads.set(endReads);
-        this.kmer.setAsCopy(kmer2);
+        this.internalKmer.setAsCopy(kmer2);
         this.averageCoverage = coverage;
     }
 
@@ -88,20 +88,20 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
         startReads.reset();
         endReads.reset();
-        kmer.reset(0);
+        internalKmer.reset(0);
         averageCoverage = 0;
     }
-
-    public VKmerBytesWritable getKmer() {
-        return kmer;
-    }
-
-    public void setKmer(VKmerBytesWritable kmer) {
-        this.kmer.setAsCopy(kmer);
-    }
     
+    public VKmerBytesWritable getInternalKmer() {
+        return internalKmer;
+    }
+
+    public void setInternalKmer(VKmerBytesWritable internalKmer) {
+        this.internalKmer.setAsCopy(internalKmer);
+    }
+
     public int getKmerLength() {
-        return kmer.getKmerLetterLength();
+        return internalKmer.getKmerLetterLength();
     }
     
     public VKmerListWritable getEdgeList(byte dir) {
@@ -125,10 +125,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	 */
 	public void mergeCoverage(NodeWritable other) {
 	    // sequence considered in the average doesn't include anything overlapping with other kmers
-	    float adjustedLength = kmer.getKmerLetterLength() + other.kmer.getKmerLetterLength() - (KmerBytesWritable.getKmerLength() - 1) * 2;
+	    float adjustedLength = internalKmer.getKmerLetterLength() + other.internalKmer.getKmerLetterLength() - (KmerBytesWritable.getKmerLength() - 1) * 2;
 	    
-	    float myCount = (kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * averageCoverage;
-	    float otherCount = (other.kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * other.averageCoverage;
+	    float myCount = (internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * averageCoverage;
+	    float otherCount = (other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * other.averageCoverage;
 	    averageCoverage = (myCount + otherCount) / adjustedLength;
 	}
 	
@@ -136,8 +136,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	 * Update my coverage as if all the reads in other became my own 
 	 */
 	public void addCoverage(NodeWritable other) {
-	    float myAdjustedLength = kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
-	    float otherAdjustedLength = other.kmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1; 
+	    float myAdjustedLength = internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
+	    float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1; 
 	    averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
 	}
 	
@@ -174,7 +174,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	        length += edges[d].getLength();
 	        length += threads[d].getLength();
 	    }
-	    length += kmer.getLength() + SIZE_FLOAT;
+	    length += internalKmer.getLength() + SIZE_FLOAT;
 	    return length;
 	}
 	
@@ -202,8 +202,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         curOffset += startReads.getLength();
         endReads.set(data, curOffset);
         curOffset += endReads.getLength();
-        kmer.setAsCopy(data, curOffset);
-        curOffset += kmer.getLength();
+        internalKmer.setAsCopy(data, curOffset);
+        curOffset += internalKmer.getLength();
         averageCoverage = Marshal.getFloat(data, curOffset);
     }
     
@@ -222,8 +222,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         endReads.setNewReference(data, curOffset);
         curOffset += endReads.getLength();
         
-        kmer.setAsReference(data, curOffset);        
-        curOffset += kmer.getLength();
+        internalKmer.setAsReference(data, curOffset);        
+        curOffset += internalKmer.getLength();
         averageCoverage = Marshal.getFloat(data, curOffset);
     }
 	
@@ -237,7 +237,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
         startReads.write(out);
         endReads.write(out);
-        this.kmer.write(out);
+        this.internalKmer.write(out);
         out.writeFloat(averageCoverage);
     }
 
@@ -252,13 +252,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
         startReads.readFields(in);
         endReads.readFields(in);
-        this.kmer.readFields(in);
+        this.internalKmer.readFields(in);
         averageCoverage = in.readFloat();
     }
 
     @Override
     public int compareTo(NodeWritable other) {
-        return this.kmer.compareTo(other.kmer);
+        return this.internalKmer.compareTo(other.internalKmer);
     }
     
     public class SortByCoverage implements Comparator<NodeWritable> {
@@ -270,7 +270,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     
     @Override
     public int hashCode() {
-        return this.kmer.hashCode();
+        return this.internalKmer.hashCode();
     }
     
     @Override
@@ -283,7 +283,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             if (!edges[d].equals(nw.edges[d]) || !threads[d].equals(nw.threads[d]))
                 return false;
         }
-        return averageCoverage == nw.averageCoverage && kmer.equals(nw.kmer);
+        return averageCoverage == nw.averageCoverage && internalKmer.equals(nw.internalKmer);
     }
     
     @Override
@@ -296,7 +296,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         for (byte d: DirectionFlag.values) {
             sbuilder.append(threads[d].toString()).append('\t');
         }
-        sbuilder.append(kmer.toString()).append('\t');
+        sbuilder.append(internalKmer.toString()).append('\t');
         sbuilder.append(averageCoverage).append('x').append('}');
         return sbuilder.toString();
     }
@@ -304,13 +304,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void mergeForwardNext(final NodeWritable nextNode, int initialKmerSize) {
         edges[DirectionFlag.DIR_FF].setCopy(nextNode.edges[DirectionFlag.DIR_FF]);
         edges[DirectionFlag.DIR_FR].setCopy(nextNode.edges[DirectionFlag.DIR_FR]);
-        kmer.mergeWithFFKmer(initialKmerSize, nextNode.getKmer());
+        internalKmer.mergeWithFFKmer(initialKmerSize, nextNode.getInternalKmer());
     }
 
     public void mergeForwardPre(final NodeWritable preNode, int initialKmerSize) {
         edges[DirectionFlag.DIR_RF].setCopy(preNode.edges[DirectionFlag.DIR_RF]);
         edges[DirectionFlag.DIR_RR].setCopy(preNode.edges[DirectionFlag.DIR_RR]);
-        kmer.mergeWithRRKmer(initialKmerSize, preNode.getKmer());
+        internalKmer.mergeWithRRKmer(initialKmerSize, preNode.getInternalKmer());
     }
     
     public int inDegree() {

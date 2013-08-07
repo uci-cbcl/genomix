@@ -57,7 +57,7 @@ public class GenerateTextFile {
                 if (key == null || value == null) {
                     break;
                 }
-                if (value.getLengthOfKmer() != -1 && value.getLengthOfKmer() <= maxLength) {
+                if (value.getKmerLength() != -1 && value.getKmerLength() <= maxLength) {
                     bw.write(value.toString());
                     bw.newLine();
                 }
@@ -81,7 +81,7 @@ public class GenerateTextFile {
                 if (key == null || value == null) {
                     break;
                 }
-                if (value.getLengthOfKmer() != -1 && value.getLengthOfKmer() <= maxLength
+                if (value.getKmerLength() != -1 && value.getKmerLength() <= maxLength
                         && value.getState() == State.IS_FINAL) {
                     bw.write(key.toString() + "\t" + value.toString());
                     bw.newLine();

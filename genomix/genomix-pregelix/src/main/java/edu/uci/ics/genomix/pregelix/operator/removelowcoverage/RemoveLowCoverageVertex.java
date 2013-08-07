@@ -33,7 +33,7 @@ public class RemoveLowCoverageVertex extends
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
-        if(getVertexValue().getAverageCoverage() < minAverageCoverage)
+        if(getVertexValue().getAvgCoverage() < minAverageCoverage)
             deleteVertex(getVertexId());
         else
             voteToHalt();

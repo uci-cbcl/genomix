@@ -62,7 +62,7 @@ public class BubbleMergeVertex extends
                 if(hasNextDest(getVertexValue())){
                     outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
+                    outgoingMsg.setActualKmer(getVertexValue().getInternalKmer());
                     destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 }
@@ -72,7 +72,7 @@ public class BubbleMergeVertex extends
                 if(hasPrevDest(getVertexValue())){
                     outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
+                    outgoingMsg.setActualKmer(getVertexValue().getInternalKmer());
                     destVertexId.setAsCopy(getPrevDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 }
@@ -182,7 +182,7 @@ public class BubbleMergeVertex extends
                     broadcaseKillself();
                 } else if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
                     /** update average coverage **/
-                    getVertexValue().setAverageCoverage(incomingMsg.getAverageCoverage());
+                    getVertexValue().setAvgCoverage(incomingMsg.getAverageCoverage());
                 }
             }
         } else if(getSuperstep() == 5){

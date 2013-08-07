@@ -71,19 +71,19 @@ public class TipRemoveVertex extends
         initVertex(); 
         if(getSuperstep() == 1){
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
-            	if(getVertexValue().getLengthOfKmer() <= length){
+            	if(getVertexValue().getKmerLength() <= length){
             		sendSettledMsgToPreviousNode();
             		deleteVertex(getVertexId());
             	}
             }
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
-                if(getVertexValue().getLengthOfKmer() <= length){
+                if(getVertexValue().getKmerLength() <= length){
                 	sendSettledMsgToNextNode();
                     deleteVertex(getVertexId());
                 }
             }
             else if(VertexUtil.isSingleVertex(getVertexValue())){
-                if(getVertexValue().getLengthOfKmer() <= length)
+                if(getVertexValue().getKmerLength() <= length)
                     deleteVertex(getVertexId());
             }
         }

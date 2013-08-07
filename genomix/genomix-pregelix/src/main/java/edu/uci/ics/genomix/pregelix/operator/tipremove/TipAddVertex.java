@@ -78,7 +78,7 @@ public class TipAddVertex extends
                 vertex.getMsgList().clear();
                 vertex.getEdges().clear();
                 
-                VertexValueWritable vertexValue = new VertexValueWritable(kmerSize);
+                VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
                 /**
                  * set the src vertex id
                  */
@@ -89,7 +89,7 @@ public class TipAddVertex extends
                 VKmerListWritable kmerList = new VKmerListWritable();
                 kmerList.append(getVertexId());
                 vertexValue.setRFList(kmerList);
-                vertexValue.setActualKmer(vertexId);
+                vertexValue.setInternalKmer(vertexId);
                 vertex.setVertexValue(vertexValue);
                 
                 addVertex(vertexId, vertex);

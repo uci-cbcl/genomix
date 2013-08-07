@@ -81,7 +81,7 @@ public class MapReduceVertex extends
             Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
             vertex.getMsgList().clear();
             vertex.getEdges().clear();
-            VertexValueWritable vertexValue = new VertexValueWritable(kmerSize + 1);
+            VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
             vertexValue.setState(State.IS_FAKE);
             vertexValue.setFakeVertex(true);
             
@@ -96,7 +96,7 @@ public class MapReduceVertex extends
     public void sendMsgToFakeVertex(){
         if(!getVertexValue().isFakeVertex()){
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setActualKmer(getVertexValue().getActualKmer());
+            outgoingMsg.setActualKmer(getVertexValue().getInternalKmer());
             sendMsg(fakeVertex, outgoingMsg);
             voteToHalt();
         }

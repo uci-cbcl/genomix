@@ -153,9 +153,9 @@ public class SplitRepeatVertex extends
     
     public void setSelfReadIdSet(){
         selfReadIdSet.clear();
-        for(PositionWritable nodeId : getVertexValue().getNodeIdList()){
-            selfReadIdSet.add(nodeId.getReadId());
-        }    
+//        for(PositionWritable nodeId : getVertexValue().getNodeIdList()){
+//            selfReadIdSet.add(nodeId.getReadId());
+//        }    
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -164,7 +164,7 @@ public class SplitRepeatVertex extends
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
         VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
-        VertexValueWritable vertexValue = new VertexValueWritable(kmerSize);
+        VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
         //add the corresponding edge to new vertex
         switch(connectedTable[i][0]){
             case EdgeDir.DIR_RF:
@@ -317,7 +317,7 @@ public class SplitRepeatVertex extends
         } else if(getSuperstep() == 2){
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
-                outgoingMsg.setNodeIdList(getVertexValue().getNodeIdList());
+//                outgoingMsg.setNodeIdList(getVertexValue().getNodeIdList());
                 outgoingMsg.setSourceVertexId(getVertexId());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
             }

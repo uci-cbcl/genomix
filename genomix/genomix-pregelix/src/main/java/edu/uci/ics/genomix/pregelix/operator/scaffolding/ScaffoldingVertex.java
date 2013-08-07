@@ -45,8 +45,8 @@ public class ScaffoldingVertex extends
         if(getSuperstep() == 1){
             /** add a fake vertex **/
             addFakeVertex();
-            /** grouped by 5' readId **/
-            long mainReadId = getVertexValue().getHeadReadId();
+            /** grouped by 5' readId **/ //TODO
+            long mainReadId = getVertexValue().getStartReads().getPosition(0).getReadId();
             if(mainReadId != 0){ //empty or not
                 if(scaffoldingMap.containsKey(mainReadId)){
                     kmerList.setCopy(scaffoldingMap.get(mainReadId));

@@ -74,7 +74,7 @@ public class BubbleAddVertex extends
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
                 vertex.getMsgList().clear();
                 vertex.getEdges().clear();
-                VertexValueWritable vertexValue = new VertexValueWritable(kmerSize);
+                VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
                 /**
                  * set the src vertex id
                  */
@@ -91,7 +91,7 @@ public class BubbleAddVertex extends
                 VKmerListWritable kmerRFList = new VKmerListWritable();
                 kmerRFList.append(otherVertexId);
                 vertexValue.setRFList(kmerRFList);
-                vertexValue.setActualKmer(vertexId);
+                vertexValue.setInternalKmer(vertexId);
 
                 vertex.setVertexValue(vertexValue);
                 
