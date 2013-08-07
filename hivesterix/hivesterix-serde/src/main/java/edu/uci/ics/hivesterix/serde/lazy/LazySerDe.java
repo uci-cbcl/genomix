@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -32,6 +46,7 @@ import org.apache.hadoop.hive.serde2.ByteStream;
 import org.apache.hadoop.hive.serde2.ByteStream.Output;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
+import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -60,6 +75,7 @@ import org.apache.hadoop.io.Writable;
  * deserialized until required. Binary means a field is serialized in binary
  * compact format.
  */
+@SuppressWarnings("deprecation")
 public class LazySerDe implements SerDe {
 
     public static final Log LOG = LogFactory.getLog(LazySerDe.class.getName());
@@ -126,7 +142,6 @@ public class LazySerDe implements SerDe {
     /**
      * Deserialize a table record to a Lazy struct.
      */
-    @SuppressWarnings("deprecation")
     @Override
     public Object deserialize(Writable field) throws SerDeException {
         if (byteArrayRef == null) {
@@ -457,4 +472,9 @@ public class LazySerDe implements SerDe {
             }
         }
     }
+
+	@Override
+	public SerDeStats getSerDeStats() {
+		return null;
+	}
 }

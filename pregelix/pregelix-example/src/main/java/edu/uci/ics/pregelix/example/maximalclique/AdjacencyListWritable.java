@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -23,14 +23,13 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.hadoop.io.Writable;
-
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.example.io.VLongWritable;
 
 /**
  * The adjacency list contains <src, list-of-neighbors>
  */
-public class AdjacencyListWritable implements Writable {
+public class AdjacencyListWritable implements WritableSizable {
 
     private VLongWritable sourceVertex = new VLongWritable();
     private Set<VLongWritable> destinationVertexes = new TreeSet<VLongWritable>();
@@ -94,6 +93,15 @@ public class AdjacencyListWritable implements Writable {
 
     public boolean isNeighbor(VLongWritable v) {
         return destinationVertexes.contains(v);
+    }
+
+    @Override
+    public int sizeInBytes() {
+        int size = 4; // the size of list bytes
+        for (VLongWritable dest : destinationVertexes) {
+            size += dest.sizeInBytes();
+        }
+        return size;
     }
 
 }

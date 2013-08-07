@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -48,10 +48,10 @@ public class PrinterOperatorDescriptor extends AbstractSingleActivityOperatorDes
         @Override
         public void writeData(Object[] data) throws HyracksDataException {
             for (int i = 0; i < data.length; ++i) {
-            //    System.err.print(StringSerializationUtils.toString(data[i]));
-            //    System.err.print(", ");
+                System.err.print(StringSerializationUtils.toString(data[i]));
+                System.err.print(", ");
             }
-            //System.err.println();
+            System.err.println();
         }
 
         @Override

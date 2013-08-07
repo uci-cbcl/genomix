@@ -13,10 +13,11 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
+public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
         extends VertexInputFormat<I, V, E, M> {
 
     /** Uses the SequenceFileInputFormat to do everything */
@@ -35,7 +36,7 @@ public class InitialGraphCleanVertexInputFormat<I extends WritableComparable<?>,
      * @param <E>
      *            Edge value
      */
-    public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends Writable>
+    public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
         private final RecordReader<VKmerBytesWritable, NodeWritable> lineRecordReader;

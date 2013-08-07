@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,11 +15,13 @@
 package edu.uci.ics.hyracks.test.support;
 
 import java.io.Serializable;
+import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.application.INCApplicationContext;
 import edu.uci.ics.hyracks.api.context.IHyracksRootContext;
 import edu.uci.ics.hyracks.api.job.IJobSerializerDeserializerContainer;
 import edu.uci.ics.hyracks.api.messages.IMessageBroker;
+import edu.uci.ics.hyracks.api.resources.memory.IMemoryManager;
 
 public class TestNCApplicationContext implements INCApplicationContext {
     private final IHyracksRootContext rootCtx;
@@ -28,9 +30,32 @@ public class TestNCApplicationContext implements INCApplicationContext {
     private Serializable distributedState;
     private Object appObject;
 
+    private final IMemoryManager mm;
+
     public TestNCApplicationContext(IHyracksRootContext rootCtx, String nodeId) {
         this.rootCtx = rootCtx;
         this.nodeId = nodeId;
+        mm = new IMemoryManager() {
+            @Override
+            public long getMaximumMemory() {
+                return Long.MAX_VALUE;
+            }
+
+            @Override
+            public long getAvailableMemory() {
+                return Long.MAX_VALUE;
+            }
+
+            @Override
+            public void deallocate(long memory) {
+
+            }
+
+            @Override
+            public boolean allocate(long memory) {
+                return true;
+            }
+        };
     }
 
     @Override
@@ -66,7 +91,6 @@ public class TestNCApplicationContext implements INCApplicationContext {
 
     @Override
     public IMessageBroker getMessageBroker() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -75,4 +99,21 @@ public class TestNCApplicationContext implements INCApplicationContext {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+    @Override
+    public IMemoryManager getMemoryManager() {
+        return mm;
+    }
+
+    @Override
+    public ThreadFactory getThreadFactory() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setThreadFactory(ThreadFactory threadFactory) {
+        // TODO Auto-generated method stub
+
+    }
 }

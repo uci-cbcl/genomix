@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.Collections;
 import java.util.EnumSet;
 
 import edu.uci.ics.hyracks.api.deployment.DeploymentId;
@@ -62,7 +63,8 @@ public class JobStartWork extends SynchronizableWork {
             try {
                 run.getScheduler().startJob();
             } catch (Exception e) {
-                ccs.getWorkQueue().schedule(new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, e));
+                ccs.getWorkQueue().schedule(
+                        new JobCleanupWork(ccs, run.getJobId(), JobStatus.FAILURE, Collections.singletonList(e)));
             }
             callback.setValue(jobId);
         } catch (Exception e) {

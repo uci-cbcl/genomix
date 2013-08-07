@@ -63,7 +63,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     }
 
     @Override
-    public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx) {
+    public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx) throws HyracksDataException {
         final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(2);
         final ByteBuffer outputBuffer = ctx.allocateFrame();
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());

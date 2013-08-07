@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -366,8 +366,9 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
              * When frames are already created, they are recycled.
              * 
              * @return Whether a new frame is added successfully.
+             * @throws HyracksDataException
              */
-            private boolean nextAvailableFrame() {
+            private boolean nextAvailableFrame() throws HyracksDataException {
                 // Return false if the number of frames is equal to the limit.
                 if (lastBufIndex + 1 >= framesLimit)
                     return false;

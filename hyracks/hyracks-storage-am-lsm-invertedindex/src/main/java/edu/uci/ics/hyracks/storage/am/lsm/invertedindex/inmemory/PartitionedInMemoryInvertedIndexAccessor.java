@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -15,17 +15,19 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.invertedindex.inmemory;
 
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.storage.am.common.api.IIndexOperationContext;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import edu.uci.ics.hyracks.storage.am.lsm.invertedindex.search.PartitionedTOccurrenceSearcher;
 
 public class PartitionedInMemoryInvertedIndexAccessor extends InMemoryInvertedIndexAccessor {
 
-    public PartitionedInMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx) {
+    public PartitionedInMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx)
+            throws HyracksDataException {
         super(index, opCtx);
     }
 
-    protected IInvertedIndexSearcher createSearcher() {
+    protected IInvertedIndexSearcher createSearcher() throws HyracksDataException {
         return new PartitionedTOccurrenceSearcher(hyracksCtx, index);
     }
 }

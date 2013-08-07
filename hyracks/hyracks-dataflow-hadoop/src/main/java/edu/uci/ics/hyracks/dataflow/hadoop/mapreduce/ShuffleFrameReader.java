@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -134,7 +134,7 @@ public class ShuffleFrameReader implements IFrameReader {
         private RunFileWriter rfw;
         private int blockId;
 
-        public RunInfo() {
+        public RunInfo() throws HyracksDataException {
             buffer = ctx.allocateFrame();
             fta = new FrameTupleAppender(ctx.getFrameSize());
         }
@@ -154,7 +154,9 @@ public class ShuffleFrameReader implements IFrameReader {
             if (!fta.append(accessor, tIdx)) {
                 flush();
                 if (!fta.append(accessor, tIdx)) {
-                    throw new IllegalStateException();
+                    throw new HyracksDataException("Record size ("
+                            + (accessor.getTupleEndOffset(tIdx) - accessor.getTupleStartOffset(tIdx))
+                            + ") larger than frame size (" + fta.getBuffer().capacity() + ")");
                 }
             }
         }

@@ -104,6 +104,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * 
      * @param other
      */
+    @SuppressWarnings("static-access")
     public VKmerBytesWritable(KmerBytesWritable other) {
         this(other.lettersInKmer);
         setAsCopy(other);
@@ -126,6 +127,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * 
      * @param other
      */
+    @SuppressWarnings("static-access")
     public void setAsCopy(KmerBytesWritable other) {
         reset(other.lettersInKmer);
         if (lettersInKmer > 0) {

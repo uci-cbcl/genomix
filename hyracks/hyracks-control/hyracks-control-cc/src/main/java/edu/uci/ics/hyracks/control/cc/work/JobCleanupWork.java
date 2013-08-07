@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -14,6 +14,7 @@
  */
 package edu.uci.ics.hyracks.control.cc.work;
 
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -36,13 +37,13 @@ public class JobCleanupWork extends AbstractWork {
     private ClusterControllerService ccs;
     private JobId jobId;
     private JobStatus status;
-    private Exception exception;
+    private List<Exception> exceptions;
 
-    public JobCleanupWork(ClusterControllerService ccs, JobId jobId, JobStatus status, Exception exception) {
+    public JobCleanupWork(ClusterControllerService ccs, JobId jobId, JobStatus status, List<Exception> exceptions) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.status = status;
-        this.exception = exception;
+        this.exceptions = exceptions;
     }
 
     @Override
@@ -58,7 +59,7 @@ public class JobCleanupWork extends AbstractWork {
         }
         Set<String> targetNodes = run.getParticipatingNodeIds();
         run.getCleanupPendingNodeIds().addAll(targetNodes);
-        run.setPendingStatus(status, exception);
+        run.setPendingStatus(status, exceptions);
         if (targetNodes != null && !targetNodes.isEmpty()) {
             for (String n : targetNodes) {
                 NodeControllerState ncs = ccs.getNodeMap().get(n);
@@ -77,9 +78,10 @@ public class JobCleanupWork extends AbstractWork {
                     e.printStackTrace();
                 }
             }
-            run.setStatus(run.getPendingStatus(), run.getPendingException());
+            run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
             ccs.getActiveRunMap().remove(jobId);
             ccs.getRunMapArchive().put(jobId, run);
+            ccs.getRunHistory().put(jobId, run.getExceptions());
             try {
                 ccs.getJobLogFile().log(createJobLogObject(run));
             } catch (Exception e) {

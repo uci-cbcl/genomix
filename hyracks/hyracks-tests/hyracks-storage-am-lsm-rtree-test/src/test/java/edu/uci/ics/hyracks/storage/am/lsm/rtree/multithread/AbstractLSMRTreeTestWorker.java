@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -36,7 +36,7 @@ public abstract class AbstractLSMRTreeTestWorker extends AbstractIndexTestWorker
     protected final ArrayTupleReference rearrangedTuple = new ArrayTupleReference();
 
     public AbstractLSMRTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index,
-            int numBatches) {
+            int numBatches) throws HyracksDataException {
         super(dataGen, opSelector, index, numBatches);
         lsmRTree = (ITreeIndex) index;
         numFields = lsmRTree.getFieldCount();

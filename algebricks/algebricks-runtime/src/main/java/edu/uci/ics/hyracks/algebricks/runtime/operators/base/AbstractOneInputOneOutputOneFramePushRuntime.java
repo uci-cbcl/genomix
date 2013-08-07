@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -85,7 +85,7 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
         }
     }
 
-    protected final void initAccessAppend(IHyracksTaskContext ctx) {
+    protected final void initAccessAppend(IHyracksTaskContext ctx) throws HyracksDataException {
         // if (allocFrame) {
         frame = ctx.allocateFrame();
         appender = new FrameTupleAppender(ctx.getFrameSize());
@@ -94,7 +94,7 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
         tAccess = new FrameTupleAccessor(ctx.getFrameSize(), inputRecordDesc);
     }
 
-    protected final void initAccessAppendRef(IHyracksTaskContext ctx) {
+    protected final void initAccessAppendRef(IHyracksTaskContext ctx) throws HyracksDataException {
         initAccessAppend(ctx);
         tRef = new FrameTupleReference();
     }

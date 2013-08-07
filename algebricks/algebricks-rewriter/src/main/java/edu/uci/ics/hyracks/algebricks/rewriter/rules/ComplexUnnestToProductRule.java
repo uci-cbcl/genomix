@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -52,6 +52,11 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN
                 && op.getOperatorTag() != LogicalOperatorTag.UNNEST) {
+            return false;
+        }
+
+        //stop rewriting if the operators originates from a nested tuple source
+        if (insideSubplan(opRef)) {
             return false;
         }
 
@@ -285,5 +290,25 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
         }
         return findPlanPartition((AbstractLogicalOperator) op.getInputs().get(0).getValue(), innerUsedVars,
                 outerUsedVars, innerOps, outerOps, topSelects, belowSecondUnnest);
+    }
+
+    /**
+     * check whether the operator is inside a sub-plan
+     * 
+     * @param nestedRootRef
+     * @return true-if it is; false otherwise.
+     */
+    private boolean insideSubplan(Mutable<ILogicalOperator> nestedRootRef) {
+        AbstractLogicalOperator nestedRoot = (AbstractLogicalOperator) nestedRootRef.getValue();
+        if (nestedRoot.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            return true;
+        }
+        List<Mutable<ILogicalOperator>> inputs = nestedRoot.getInputs();
+        for (Mutable<ILogicalOperator> input : inputs) {
+            if (insideSubplan(input)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

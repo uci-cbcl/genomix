@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -51,14 +51,14 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     }
 
     public class PartitionedOnDiskInvertedIndexAccessor extends OnDiskInvertedIndexAccessor {
-        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) {
+        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) throws HyracksDataException {
             super(index, new PartitionedTOccurrenceSearcher(ctx, index));
         }
     }
 
     @Override
     public IIndexAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+            ISearchOperationCallback searchCallback) throws HyracksDataException {
         return new PartitionedOnDiskInvertedIndexAccessor(this);
     }
 

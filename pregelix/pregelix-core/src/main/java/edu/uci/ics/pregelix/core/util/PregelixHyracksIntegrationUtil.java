@@ -1,11 +1,11 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,10 @@
  */
 package edu.uci.ics.pregelix.core.util;
 
+import java.io.File;
 import java.util.EnumSet;
+
+import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -45,7 +48,11 @@ public class PregelixHyracksIntegrationUtil {
     private static NodeControllerService nc2;
     private static IHyracksClientConnection hcc;
 
-    public static void init(String topologyFilePath) throws Exception {
+    public static void init() throws Exception {
+        FileUtils.forceMkdir(new File("dev1"));
+        FileUtils.forceMkdir(new File("dev2"));
+        FileUtils.forceMkdir(new File("dev3"));
+        FileUtils.forceMkdir(new File("dev4"));
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = CC_HOST;
         ccConfig.clusterNetIpAddress = CC_HOST;
@@ -67,6 +74,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig1.dataIPAddress = "127.0.0.1";
         ncConfig1.datasetIPAddress = "127.0.0.1";
         ncConfig1.nodeId = NC1_ID;
+        ncConfig1.ioDevices="dev1,dev2";
         ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
@@ -79,6 +87,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig2.datasetIPAddress = "127.0.0.1";
         ncConfig2.nodeId = NC2_ID;
         ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
+        ncConfig2.ioDevices="dev3,dev4";
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 

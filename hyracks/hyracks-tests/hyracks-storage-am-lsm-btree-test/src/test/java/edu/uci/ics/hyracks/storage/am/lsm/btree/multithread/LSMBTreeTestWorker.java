@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 by The Regents of the University of California
+ * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -41,7 +41,8 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
     private final ArrayTupleBuilder deleteTb;
     private final ArrayTupleReference deleteTuple = new ArrayTupleReference();
 
-    public LSMBTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches) {
+    public LSMBTreeTestWorker(DataGenThread dataGen, TestOperationSelector opSelector, IIndex index, int numBatches)
+            throws HyracksDataException {
         super(dataGen, opSelector, index, numBatches);
         lsmBTree = (LSMBTree) index;
         numKeyFields = lsmBTree.getComparatorFactories().length;
