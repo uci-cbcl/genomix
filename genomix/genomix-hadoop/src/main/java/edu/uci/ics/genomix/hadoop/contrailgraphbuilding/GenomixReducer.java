@@ -10,6 +10,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 @SuppressWarnings("deprecation")
@@ -38,10 +39,9 @@ public class GenomixReducer extends MapReduceBase implements
 		while (values.hasNext()) {
 		    tmpNode.set(values.next());
 		    outputNode.getNodeIdList().unionUpdate(tmpNode.getNodeIdList());
-		    outputNode.getFFList().unionUpdate(tmpNode.getFFList()); //appendList need to check if insert node exists
-		    outputNode.getFRList().unionUpdate(tmpNode.getFRList());
-		    outputNode.getRFList().unionUpdate(tmpNode.getRFList());
-		    outputNode.getRRList().unionUpdate(tmpNode.getRRList());
+		    for (byte d: DirectionFlag.values) {
+		        outputNode.getListFromDir(d).unionUpdate(tmpNode.getListFromDir(d));
+		    }
 		    averageCoverage += tmpNode.getAvgCoverage();
 		}
 		outputNode.setAvgCoverage(averageCoverage);

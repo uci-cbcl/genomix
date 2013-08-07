@@ -87,7 +87,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
         startReads.reset();
         endReads.reset();
-        this.kmer.reset(0);
+        kmer.reset(0);
         averageCoverage = 0;
     }
 
@@ -103,51 +103,20 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return kmer.getKmerLetterLength();
     }
     
-    public VKmerListWritable getFFList() {
-        return edges[DirectionFlag.DIR_FF];
-    }
-
-    public VKmerListWritable getFRList() {
-        return edges[DirectionFlag.DIR_FR];
-    }
-
-    public VKmerListWritable getRFList() {
-        return edges[DirectionFlag.DIR_RF];
-    }
-
-    public VKmerListWritable getRRList() {
-        return edges[DirectionFlag.DIR_RR];
+    public VKmerListWritable getListFromDir(byte dir) {
+        return edges[dir & DirectionFlag.DIR_MASK];
     }
     
-	public void setFFList(VKmerListWritable forwardForwardList) {
-		this.edges[DirectionFlag.DIR_FF].setCopy(forwardForwardList);
-	}
-
-	public void setFRList(VKmerListWritable forwardReverseList) {
-		this.edges[DirectionFlag.DIR_FR].setCopy(forwardReverseList);
-	}
-
-	public void setRFList(VKmerListWritable reverseForwardList) {
-		this.edges[DirectionFlag.DIR_RF].setCopy(reverseForwardList);
-	}
-
-	public void setRRList(VKmerListWritable reverseReverseList) {
-		this.edges[DirectionFlag.DIR_RR].setCopy(reverseReverseList);
-	}
-
-	public VKmerListWritable getListFromDir(byte dir) {
-        switch (dir & DirectionFlag.DIR_MASK) {
-            case DirectionFlag.DIR_FF:
-                return getFFList();
-            case DirectionFlag.DIR_FR:
-                return getFRList();
-            case DirectionFlag.DIR_RF:
-                return getRFList();
-            case DirectionFlag.DIR_RR:
-                return getRRList();
-            default:
-                throw new RuntimeException("Unrecognized direction in getListFromDir: " + dir);
-        }
+    public void setEdgeList(byte dir, VKmerListWritable edgeList) {
+        this.edges[dir & DirectionFlag.DIR_MASK].setCopy(edgeList);
+    }
+    
+    public PositionListWritable getThreadList(byte dir) {
+        return threads[dir & DirectionFlag.DIR_MASK];
+    }
+    
+    public void setThreadList(byte dir, PositionListWritable threadList) {
+        this.threads[dir & DirectionFlag.DIR_MASK].set(threadList);
     }
 	
 	/**

@@ -18,6 +18,7 @@ package edu.uci.ics.genomix.hyracks.newgraph.dataflow;
 import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
@@ -27,7 +28,7 @@ import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
-
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -177,20 +178,20 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             public void setEdgeListForCurAndNextKmer(KmerDir curKmerDir, NodeWritable curNode, KmerDir nextKmerDir,
                     NodeWritable nextNode) {
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.FORWARD) {
-                    curNode.getFFList().append(kmerSize, nextForwardKmer);
-                    nextNode.getRRList().append(kmerSize, curForwardKmer);
+                    curNode.getListFromDir(DirectionFlag.DIR_FF).append(kmerSize, nextForwardKmer);
+                    nextNode.getListFromDir(DirectionFlag.DIR_RR).append(kmerSize, curForwardKmer);
                 }
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.REVERSE) {
-                    curNode.getFRList().append(kmerSize, nextReverseKmer);
-                    nextNode.getFRList().append(kmerSize, curForwardKmer);
+                    curNode.getListFromDir(DirectionFlag.DIR_FR).append(kmerSize, nextReverseKmer);
+                    nextNode.getListFromDir(DirectionFlag.DIR_FR).append(kmerSize, curForwardKmer);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.FORWARD) {
-                    curNode.getRFList().append(kmerSize, nextForwardKmer);
-                    nextNode.getRFList().append(kmerSize, curReverseKmer);
+                    curNode.getListFromDir(DirectionFlag.DIR_RF).append(kmerSize, nextForwardKmer);
+                    nextNode.getListFromDir(DirectionFlag.DIR_RF).append(kmerSize, curReverseKmer);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.REVERSE) {
-                    curNode.getRRList().append(kmerSize, nextReverseKmer);
-                    nextNode.getFFList().append(kmerSize, curReverseKmer);
+                    curNode.getListFromDir(DirectionFlag.DIR_RR).append(kmerSize, nextReverseKmer);
+                    nextNode.getListFromDir(DirectionFlag.DIR_FF).append(kmerSize, curReverseKmer);
                 }
             }
 
