@@ -40,7 +40,7 @@ public class GenomixReducer extends MapReduceBase implements
 		    tmpNode.set(values.next());
 		    outputNode.getNodeIdList().unionUpdate(tmpNode.getNodeIdList());
 		    for (byte d: DirectionFlag.values) {
-		        outputNode.getListFromDir(d).unionUpdate(tmpNode.getListFromDir(d));
+		        outputNode.getEdgeList(d).unionUpdate(tmpNode.getEdgeList(d));
 		    }
 		    averageCoverage += tmpNode.getAvgCoverage();
 		}

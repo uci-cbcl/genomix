@@ -122,22 +122,22 @@ public class GenerateGraphViz {
     public static String convertEdgeToGraph(String outputNode, NodeWritable value){
         String outputEdge = "";
         Iterator<VKmerBytesWritable> kmerIterator;
-        kmerIterator = value.getListFromDir(DirectionFlag.DIR_FF).iterator();
+        kmerIterator = value.getEdgeList(DirectionFlag.DIR_FF).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next(); 
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FF\"]\n";
         }
-        kmerIterator = value.getListFromDir(DirectionFlag.DIR_FR).iterator();
+        kmerIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"blue\" label =\"FR\"]\n";
         }
-        kmerIterator = value.getListFromDir(DirectionFlag.DIR_RF).iterator();
+        kmerIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"green\" label =\"RF\"]\n";
         }
-        kmerIterator = value.getListFromDir(DirectionFlag.DIR_RR).iterator();
+        kmerIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
         while(kmerIterator.hasNext()){
             VKmerBytesWritable edge = kmerIterator.next();
             outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR\"]\n";

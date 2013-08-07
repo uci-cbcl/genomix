@@ -178,20 +178,20 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             public void setEdgeListForCurAndNextKmer(KmerDir curKmerDir, NodeWritable curNode, KmerDir nextKmerDir,
                     NodeWritable nextNode) {
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.FORWARD) {
-                    curNode.getListFromDir(DirectionFlag.DIR_FF).append(kmerSize, nextForwardKmer);
-                    nextNode.getListFromDir(DirectionFlag.DIR_RR).append(kmerSize, curForwardKmer);
+                    curNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, nextForwardKmer);
+                    nextNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, curForwardKmer);
                 }
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.REVERSE) {
-                    curNode.getListFromDir(DirectionFlag.DIR_FR).append(kmerSize, nextReverseKmer);
-                    nextNode.getListFromDir(DirectionFlag.DIR_FR).append(kmerSize, curForwardKmer);
+                    curNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, nextReverseKmer);
+                    nextNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, curForwardKmer);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.FORWARD) {
-                    curNode.getListFromDir(DirectionFlag.DIR_RF).append(kmerSize, nextForwardKmer);
-                    nextNode.getListFromDir(DirectionFlag.DIR_RF).append(kmerSize, curReverseKmer);
+                    curNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, nextForwardKmer);
+                    nextNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, curReverseKmer);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.REVERSE) {
-                    curNode.getListFromDir(DirectionFlag.DIR_RR).append(kmerSize, nextReverseKmer);
-                    nextNode.getListFromDir(DirectionFlag.DIR_FF).append(kmerSize, curReverseKmer);
+                    curNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, nextReverseKmer);
+                    nextNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, curReverseKmer);
                 }
             }
 

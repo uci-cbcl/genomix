@@ -80,7 +80,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
-                    localUniNode.getListFromDir(d).appendList(readNode.getListFromDir(d));
+                    localUniNode.getEdgeList(d).appendList(readNode.getEdgeList(d));
                 }
                 localUniNode.addCoverage(readNode);
                 // make an empty field
@@ -94,7 +94,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
-                    localUniNode.getListFromDir(d).appendList(readNode.getListFromDir(d));
+                    localUniNode.getEdgeList(d).appendList(readNode.getEdgeList(d));
                 }
                 localUniNode.addCoverage(readNode);
             }
