@@ -223,8 +223,6 @@ public class JobGenBrujinGraph extends JobGen {
         logDebug("Generate final node");
         lastOperator = generateKmerToFinalNode(jobSpec, lastOperator);
 
-        jobSpec.addRoot(lastOperator);
-        
         logDebug("Write node to result");
         lastOperator = generateNodeWriterOpertator(jobSpec, lastOperator);
 

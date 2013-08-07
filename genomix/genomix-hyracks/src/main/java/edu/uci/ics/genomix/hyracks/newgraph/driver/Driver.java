@@ -42,6 +42,7 @@ public class Driver {
     public static enum Plan {
         BUILD_DEBRUJIN_GRAPH,
         CHECK_KMERREADER,
+        BUILD_UNMERGED_GRAPH,
     }
 
     private static final String IS_PROFILING = "genomix.driver.profiling";

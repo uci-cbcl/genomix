@@ -78,10 +78,14 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 localUniNode.reset();
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
                     localUniNode.getEdgeList(d).appendList(readNode.getEdgeList(d));
                 }
+                for (byte d: DirectionFlag.values) {
+                    localUniNode.getThreadList(d).appendList(readNode.getThreadList(d));
+                }
+                localUniNode.getStartReads().appendList(readNode.getStartReads());
+                localUniNode.getEndReads().appendList(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
                 // make an empty field
 //                tupleBuilder.addFieldEndOffset();// mark question?
@@ -92,10 +96,14 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                localUniNode.getNodeIdList().appendList(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
                     localUniNode.getEdgeList(d).appendList(readNode.getEdgeList(d));
                 }
+                for (byte d: DirectionFlag.values) {
+                    localUniNode.getThreadList(d).appendList(readNode.getThreadList(d));
+                }
+                localUniNode.getStartReads().appendList(readNode.getStartReads());
+                localUniNode.getEndReads().appendList(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
             }
 

@@ -71,10 +71,14 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 localUniNode.reset();
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                localUniNode.getNodeIdList().unionUpdate(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
                     localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
+                for (byte d: DirectionFlag.values) {
+                    localUniNode.getThreadList(d).unionUpdate(readNode.getThreadList(d));
+                }
+                localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
+                localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
                 //make a fake feild to cheat caller
  //               tupleBuilder.addFieldEndOffset();
@@ -90,10 +94,14 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                localUniNode.getNodeIdList().unionUpdate(readNode.getNodeIdList());
                 for (byte d: DirectionFlag.values) {
                     localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
+                for (byte d: DirectionFlag.values) {
+                    localUniNode.getThreadList(d).unionUpdate(readNode.getThreadList(d));
+                }
+                localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
+                localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
             }
 
