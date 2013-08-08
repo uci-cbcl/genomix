@@ -78,7 +78,8 @@ public class JobRun {
     @Before
     public void setUp() throws Exception {
         cleanupStores();
-        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
+//        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
+        HyracksUtils.init();
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHDFS();
@@ -88,8 +89,8 @@ public class JobRun {
 
         conf.setInt(GenomixJobConf.KMER_LENGTH, KmerSize);
         conf.setInt(GenomixJobConf.READ_LENGTH, ReadLength);
-        driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
-                edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
+        driver = new Driver(HyracksUtils.CC_HOST,
+                HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
     
     private void cleanupStores() throws IOException {
