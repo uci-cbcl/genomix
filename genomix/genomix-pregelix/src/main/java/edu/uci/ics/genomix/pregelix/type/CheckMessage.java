@@ -5,7 +5,7 @@ public class CheckMessage {
     public static final byte SOURCE = 1 << 0;
     public static final byte ACUTUALKMER = 1 << 1;
     public static final byte NEIGHBER = 1 << 2;
-    public static final byte MESSAGE = 1 << 3;
+    public static final byte PATHLIST = 1 << 3;
     public static final byte NODEIDLIST = 1 << 4;
     public static final byte ADJMSG = 1 << 5;
     public static final byte START = 1 << 6;
@@ -24,8 +24,8 @@ public class CheckMessage {
                 case NEIGHBER:
                     r = "NEIGHBER";
                     break;
-                case MESSAGE:
-                    r = "MESSAGE";
+                case PATHLIST:
+                    r = "PATHLIST";
                     break;
                 case NODEIDLIST:
                     r = "READID";

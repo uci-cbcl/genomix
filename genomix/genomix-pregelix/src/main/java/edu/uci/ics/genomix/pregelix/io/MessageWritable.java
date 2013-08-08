@@ -12,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements WritableComparable<MessageWritable>, WritableSizable {
@@ -26,10 +27,11 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
     private PositionListWritable nodeIdList = new PositionListWritable();
     private float averageCoverage;
     private byte flag;
-    private boolean isFlip;
+    private boolean isFlip; // also use for odd or even
     private int kmerlength = 0;
     private boolean updateMsg = false;
     private VKmerBytesWritable startVertexId;
+    private VKmerListWritable pathList;
     
     private byte checkMessage;
 
@@ -42,6 +44,7 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         flag = Message.NON;
         isFlip = false;
         checkMessage = (byte) 0;
+        pathList = new VKmerListWritable();
     }
     
     public MessageWritable(int kmerSize) {
@@ -77,7 +80,6 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
             checkMessage |= CheckMessage.START;
             this.startVertexId.setAsCopy(msg.getStartVertexId());
         }
-        checkMessage |= CheckMessage.ADJMSG;
         this.flag = msg.getFlag();
         updateMsg = msg.isUpdateMsg();
     }
@@ -135,7 +137,18 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         if (actualKmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.actualKmer.setAsCopy(actualKmer);
+        }
+    }
+    
+    // use for scaffolding
+    public VKmerBytesWritable getMiddleVertexId() {
+        return actualKmer;
+    }
 
+    public void setMiddleVertexId(VKmerBytesWritable middleKmer) {
+        if (middleKmer != null) {
+            checkMessage |= CheckMessage.ACUTUALKMER;
+            this.actualKmer.setAsCopy(middleKmer);
         }
     }
     
@@ -147,7 +160,6 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         if (actualKmer != null) {
             checkMessage |= CheckMessage.ACUTUALKMER;
             this.actualKmer.setAsCopy(actualKmer);
-
         }
     }
     
@@ -212,6 +224,14 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
     public void setFlip(boolean isFlip) {
         this.isFlip = isFlip;
     }
+    
+    public boolean isEven() {
+        return isFlip;
+    }
+
+    public void setEven(boolean isEven) {
+        this.isFlip = isEven;
+    }
 
     
     public boolean isUpdateMsg() {
@@ -233,6 +253,17 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         }
     }
 
+    public VKmerListWritable getPathList() {
+        return pathList;
+    }
+
+    public void setPathList(VKmerListWritable pathList) {
+        if(pathList != null){
+            checkMessage |= CheckMessage.PATHLIST;
+            this.pathList.setCopy(pathList);
+        }
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(kmerlength);
@@ -247,6 +278,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
             nodeIdList.write(out);
         if ((checkMessage & CheckMessage.START) != 0)
             startVertexId.write(out);
+        if ((checkMessage & CheckMessage.PATHLIST) != 0)
+            pathList.write(out);
         out.writeFloat(averageCoverage);
         out.writeBoolean(isFlip);
         out.writeByte(flag); 
@@ -268,6 +301,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
             nodeIdList.readFields(in);
         if ((checkMessage & CheckMessage.START) != 0)
             startVertexId.readFields(in);
+        if ((checkMessage & CheckMessage.PATHLIST) != 0)
+            pathList.readFields(in);
         averageCoverage = in.readFloat();
         isFlip = in.readBoolean();
         flag = in.readByte();

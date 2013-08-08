@@ -48,6 +48,7 @@ public class VertexValueWritable
     
     private byte state;
     private boolean isFakeVertex = false;
+    
     private HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap = new HashMapWritable<VKmerBytesWritable, VKmerListWritable>();
 
     public VertexValueWritable() {
@@ -142,9 +143,6 @@ public class VertexValueWritable
         this.traverseMap.clear();
     }
     
-//    public void reset(int kmerSize) {
-//    }
-    
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
@@ -174,7 +172,7 @@ public class VertexValueWritable
         return inDegree() + outDegree();
     }
     
-    /*
+    /**
      * Delete the corresponding edge
      */
     public void processDelete(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete){
@@ -182,7 +180,7 @@ public class VertexValueWritable
         this.getEdgeList(dir).remove(nodeToDelete);
     }
     
-    /*
+    /**
      * Process any changes to value.  This is for edge updates
      */
     public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
@@ -194,7 +192,7 @@ public class VertexValueWritable
         this.getEdgeList(mergeDir).append(nodeToAdd);
     }
     
-    /*
+    /**
      * Process any changes to value.  This is for merging
      */
     public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
@@ -208,6 +206,10 @@ public class VertexValueWritable
             byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
             this.getEdgeList(mergeDir).append(nodeToAdd);
         }
+    }
+    
+    public boolean hasPathTo(VKmerBytesWritable nodeToSeek){
+        return traverseMap.containsKey(nodeToSeek);
     }
     
 }
