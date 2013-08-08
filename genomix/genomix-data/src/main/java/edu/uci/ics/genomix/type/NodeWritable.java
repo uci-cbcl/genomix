@@ -172,7 +172,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             length += edges[d].getLength();
             length += threads[d].getLength();
         }
-        length += kmer.getLength() + SIZE_FLOAT;
+        length += kmer.getLength();
+        length += startReads.getLength();
+        length += endReads.getLength();
+        length += SIZE_FLOAT;  // coverage 
         return length;
     }
 
@@ -295,6 +298,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             sbuilder.append(threads[d].toString()).append('\t');
         }
         sbuilder.append(kmer.toString()).append('\t');
+        sbuilder.append(this.startReads.toString()).append('\t');
+        sbuilder.append(this.endReads.toString()).append('\t');
         sbuilder.append(averageCoverage).append('x').append('}');
         return sbuilder.toString();
     }

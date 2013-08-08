@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.driver;
+package edu.uci.ics.genomix.hyracks.graph.driver;
 
 import java.net.URL;
 import java.util.EnumSet;
@@ -24,11 +24,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
-import edu.uci.ics.genomix.hyracks.newgraph.job.JobGen;
-import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenBrujinGraph;
-import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenCheckReader;
-import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenUnMergedGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenBrujinGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenCheckReader;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenUnMergedGraph;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;

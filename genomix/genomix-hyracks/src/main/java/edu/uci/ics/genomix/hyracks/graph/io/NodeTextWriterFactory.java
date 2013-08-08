@@ -12,31 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hyracks.newgraph.io;
+package edu.uci.ics.genomix.hyracks.graph.io;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.AssembleKeyIntoNodeOperator;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 
-public class KeyValueTextWriterFactory implements ITupleWriterFactory {
+public class NodeTextWriterFactory implements ITupleWriterFactory {
 
     /**
      * Write the node to Text
      */
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
-
-    public KeyValueTextWriterFactory(int k) {
+    public static final int OutputNodeField = AssembleKeyIntoNodeOperator.OutputNodeField;
+    
+    public NodeTextWriterFactory(int k) {
         this.kmerSize = k;
     }
 
@@ -44,10 +43,8 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) throws HyracksDataException {
         KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new ITupleWriter() {
-            private NodeWritable outputNode = new NodeWritable();
-            private KmerBytesWritable tempKmer = new KmerBytesWritable();
-            private VKmerBytesWritable outputKey = new VKmerBytesWritable();
-
+            NodeWritable node = new NodeWritable();
+            
             @Override
             public void open(DataOutput output) throws HyracksDataException {
 
@@ -55,18 +52,9 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
 
             @Override
             public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
+                node.setAsReference(tuple.getFieldData(OutputNodeField), tuple.getFieldStart(OutputNodeField));
                 try {
-                    if (tempKmer.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
-                        throw new IllegalArgumentException("Not enough kmer bytes");
-                    }
-                    tempKmer.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
-                            tuple.getFieldStart(ReadsKeyValueParserFactory.OutputKmerField));
-                    outputNode.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
-                            tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-                    outputKey.setAsCopy(tempKmer);
-                    output.write(outputKey.toString().getBytes());
-                    output.writeByte('\t');
-                    output.write(outputNode.toString().getBytes());
+                    output.write(node.toString().getBytes());
                     output.writeByte('\n');
                 } catch (IOException e) {
                     throw new HyracksDataException(e);
@@ -80,4 +68,5 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
 
         };
     }
+
 }

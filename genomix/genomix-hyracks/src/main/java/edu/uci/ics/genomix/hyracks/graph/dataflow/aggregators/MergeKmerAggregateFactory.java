@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators;
+package edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators;
 
 import java.io.DataOutput;
 import java.io.IOException;

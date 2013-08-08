@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.job;
+package edu.uci.ics.genomix.hyracks.graph.job;
 
 import java.io.IOException;
 import java.util.Map;
@@ -27,13 +27,13 @@ import org.apache.hadoop.mapred.JobConf;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ConnectorPolicyAssignmentPolicy;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.AssembleKeyIntoNodeOperator;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.AggregateKmerAggregateFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.aggregators.MergeKmerAggregateFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.io.NodeSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.io.NodeTextWriterFactory;
+import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
+import edu.uci.ics.genomix.hyracks.graph.dataflow.ConnectorPolicyAssignmentPolicy;
+import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.AggregateKmerAggregateFactory;
+import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.MergeKmerAggregateFactory;
+import edu.uci.ics.genomix.hyracks.graph.io.NodeSequenceWriterFactory;
+import edu.uci.ics.genomix.hyracks.graph.io.NodeTextWriterFactory;
 
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;

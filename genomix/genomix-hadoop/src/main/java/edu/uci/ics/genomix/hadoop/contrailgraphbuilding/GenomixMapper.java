@@ -135,7 +135,7 @@ public class GenomixMapper extends MapReduceBase implements
         nodeId.set(mateId, readID, posId);
         nodeIdList.reset();
         nodeIdList.append(nodeId);
-        outputNode.setNodeIdList(nodeIdList);
+//        outputNode.setNodeIdList(nodeIdList);
     }
     
     public void setEdgeListForPreKmer(){

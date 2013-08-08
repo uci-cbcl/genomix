@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.dataflow;
+package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
@@ -119,19 +119,20 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
                 curNode.reset();
                 nextNode.reset();
+                curNode.setAvgCoverage(1);
+                nextNode.setAvgCoverage(1);
                 curForwardKmer.setByRead(array, 0);
                 curReverseKmer.setByReadReverse(array, 0);
                 curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
-                setReadIdAndIniCoverage(readId, mateId, readID, 0);
+                setThisReadId(readId, mateId, readID, 0);
                 if(curKmerDir == KmerDir.FORWARD)
                     curNode.getStartReads().append(readId);
                 else
                     curNode.getEndReads().append(readId);
                 setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readId);
                 writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
-
                 /*middle kmer*/
                 int i = kmerSize + 1;
                 for (; i < array.length; i++) {
@@ -140,6 +141,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     curKmerDir = nextKmerDir;
                     curNode.set(nextNode);
                     nextNode.reset();
+                    nextNode.setAvgCoverage(1);
                     nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
                     setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readId);
                     writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
@@ -149,10 +151,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 writeToFrame(nextForwardKmer, nextReverseKmer, nextKmerDir, nextNode, writer);
             }
 
-            public void setReadIdAndIniCoverage(PositionWritable readId, byte mateId, long readID, int posId) {
+            public void setThisReadId(PositionWritable readId, byte mateId, long readID, int posId) {
                 readId.set(mateId, readID, posId);
-                curNode.setAvgCoverage(1);
-                nextNode.setAvgCoverage(1);
             }
 
             public KmerDir setNextKmer(KmerBytesWritable forwardKmer, KmerBytesWritable ReverseKmer,

@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hyracks.newgraph.test;
+package edu.uci.ics.genomix.hyracks.graph.test;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -18,11 +18,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
-import edu.uci.ics.genomix.hyracks.newgraph.driver.Driver;
-import edu.uci.ics.genomix.hyracks.newgraph.driver.Driver.Plan;
-//import edu.uci.ics.genomix.hyracks.test.TestUtils;
-//import edu.uci.ics.genomix.oldtype.NodeWritable;
+import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
+import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 
 @SuppressWarnings("deprecation")
 public class JobRun {
@@ -31,11 +29,11 @@ public class JobRun {
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/Tips1.txt";
+    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/test.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
 
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/Tips1.txt";
+    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/test.txt";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";;
     private MiniDFSCluster dfsCluster;
     
@@ -47,9 +45,9 @@ public class JobRun {
     
     @Test
     public void TestAll() throws Exception {
-        TestReader();
+//        TestReader();
 //        TestGroupby();
-//        TestGroupbyUnMerged();
+        TestGroupbyUnMerged();
     }
     
     public void TestReader() throws Exception {
@@ -78,8 +76,7 @@ public class JobRun {
     @Before
     public void setUp() throws Exception {
         cleanupStores();
-//        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
-        HyracksUtils.init();
+        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHDFS();
@@ -89,8 +86,8 @@ public class JobRun {
 
         conf.setInt(GenomixJobConf.KMER_LENGTH, KmerSize);
         conf.setInt(GenomixJobConf.READ_LENGTH, ReadLength);
-        driver = new Driver(HyracksUtils.CC_HOST,
-                HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
+        driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
+                edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
     
     private void cleanupStores() throws IOException {

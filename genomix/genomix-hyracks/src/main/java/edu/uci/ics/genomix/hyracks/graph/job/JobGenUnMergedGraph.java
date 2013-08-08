@@ -1,11 +1,11 @@
-package edu.uci.ics.genomix.hyracks.newgraph.job;
+package edu.uci.ics.genomix.hyracks.graph.job;
 
 import java.util.Map;
 
-import edu.uci.ics.genomix.hyracks.newgraph.io.KeyValueSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.io.KeyValueTextWriterFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.io.NodeSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.newgraph.io.NodeTextWriterFactory;
+import edu.uci.ics.genomix.hyracks.graph.io.KeyValueSequenceWriterFactory;
+import edu.uci.ics.genomix.hyracks.graph.io.KeyValueTextWriterFactory;
+import edu.uci.ics.genomix.hyracks.graph.io.NodeSequenceWriterFactory;
+import edu.uci.ics.genomix.hyracks.graph.io.NodeTextWriterFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;

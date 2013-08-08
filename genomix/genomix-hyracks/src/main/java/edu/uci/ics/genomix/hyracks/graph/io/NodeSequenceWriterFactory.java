@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hyracks.newgraph.io;
+package edu.uci.ics.genomix.hyracks.graph.io;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -22,12 +22,11 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.JobConf;
-import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.AssembleKeyIntoNodeOperator;
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
+
+import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
+import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -36,7 +35,7 @@ import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 @SuppressWarnings("deprecation")
-public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
+public class NodeSequenceWriterFactory implements ITupleWriterFactory {
 
     /**
      * Write the node to Text
@@ -45,7 +44,9 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
     private final int kmerSize;
     private ConfFactory confFactory;
     
-    public KeyValueSequenceWriterFactory(JobConf conf) throws HyracksDataException {
+    public static final int OutputNodeField = AssembleKeyIntoNodeOperator.OutputNodeField;
+    
+    public NodeSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
         this.kmerSize = conf.getInt(GenomixJobConf.KMER_LENGTH, GenomixJobConf.DEFAULT_KMERLEN);
     }
@@ -58,15 +59,13 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
 
         ConfFactory cf;
         Writer writer = null;
-        private NodeWritable outputNode = new NodeWritable();
-        private KmerBytesWritable tempKmer = new KmerBytesWritable();
-        private VKmerBytesWritable outputKey = new VKmerBytesWritable();
+        NodeWritable node = new NodeWritable();
 
         @Override
         public void open(DataOutput output) throws HyracksDataException {
             try {
-                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, VKmerBytesWritable.class,
-                        NodeWritable.class, CompressionType.NONE, null);
+                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, NodeWritable.class,
+                        NullWritable.class, CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -74,16 +73,9 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
 
         @Override
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
+            node.setAsReference(tuple.getFieldData(OutputNodeField), tuple.getFieldStart(OutputNodeField));
             try {
-                if (tempKmer.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
-                    throw new IllegalArgumentException("Not enough kmer bytes");
-                }
-                tempKmer.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
-                        tuple.getFieldStart(ReadsKeyValueParserFactory.OutputKmerField));
-                outputNode.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
-                        tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-                outputKey.setAsCopy(tempKmer);
-                writer.append(outputKey, outputNode);
+                writer.append(node, NullWritable.get());
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
