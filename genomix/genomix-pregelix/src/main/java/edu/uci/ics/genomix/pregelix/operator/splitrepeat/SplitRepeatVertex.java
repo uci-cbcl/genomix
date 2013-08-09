@@ -269,8 +269,8 @@ public class SplitRepeatVertex extends
     }
     
     public void setNeighborEdgeIntersection(VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
-        outgoingReadIdSet.clear(); 
         incomingReadIdSet.clear();
+        outgoingReadIdSet.clear(); 
         tmpKmer.setAsCopy(incomingEdge);
         incomingReadIdSet.addAll(kmerMap.get(tmpKmer));
         tmpKmer.setAsCopy(outgoingEdge);
