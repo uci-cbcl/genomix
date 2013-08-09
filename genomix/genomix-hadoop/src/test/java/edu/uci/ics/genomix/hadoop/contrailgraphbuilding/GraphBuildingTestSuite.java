@@ -24,19 +24,19 @@ public class GraphBuildingTestSuite extends TestSuite{
     private static int SIZE_KMER = 3;
     public static final String PreFix = "data/webmap/pathmerge_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-//        + "2", PreFix + File.separator
-//        + "3", PreFix + File.separator
-//        + "4", PreFix + File.separator
-//        + "5", PreFix + File.separator
-//        + "6", PreFix + File.separator
-//        + "7", PreFix + File.separator
-//        + "8", PreFix + File.separator
-//        + "9", PreFix + File.separator
-//        + "SimplePath", PreFix + File.separator
-//        + "BridgePath", PreFix + File.separator
-//        + "TreePath", PreFix + File.separator
-//        + "CyclePath", PreFix + File.separator
-        + "BridgePath"};
+        + "2", PreFix + File.separator
+        + "3", PreFix + File.separator
+        + "4", PreFix + File.separator
+        + "5", PreFix + File.separator
+        + "6", PreFix + File.separator
+        + "7", PreFix + File.separator
+        + "8", PreFix + File.separator
+        + "9", PreFix + File.separator
+        + "SimplePath", PreFix + File.separator
+        + "BridgePath", PreFix + File.separator
+        + "TreePath", PreFix + File.separator
+        + "CyclePath", PreFix + File.separator
+        + "ThreeDuplicate"};
 //        + "HighSplitRepeat", PreFix + File.separator
 //        + "LowSplitRepeat", PreFix + File.separator
 //        + "MidSplitRepeat", PreFix + File.separator

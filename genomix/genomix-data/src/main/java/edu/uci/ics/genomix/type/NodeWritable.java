@@ -154,7 +154,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void setStartReads(PositionListWritable startReads) {
-        this.startReads = startReads;
+        this.startReads.set(startReads);
     }
 
     public PositionListWritable getEndReads() {
@@ -162,7 +162,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void setEndReads(PositionListWritable endReads) {
-        this.endReads = endReads;
+        this.endReads.set(endReads);
     }
 
     /**
