@@ -32,6 +32,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
     private boolean updateMsg = false;
     private VKmerBytesWritable startVertexId;
     private VKmerListWritable pathList;
+    private boolean srcFlip = false;
+    private boolean destFlip = false;
     
     private byte checkMessage;
 
@@ -264,6 +266,22 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         }
     }
 
+    public boolean isSrcFlip() {
+        return srcFlip;
+    }
+
+    public void setSrcFlip(boolean srcFlip) {
+        this.srcFlip = srcFlip;
+    }
+
+    public boolean isDestFlip() {
+        return destFlip;
+    }
+
+    public void setDestFlip(boolean destFlip) {
+        this.destFlip = destFlip;
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(kmerlength);
@@ -284,6 +302,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         out.writeBoolean(isFlip);
         out.writeByte(flag); 
         out.writeBoolean(updateMsg);
+        out.writeBoolean(srcFlip);
+        out.writeBoolean(destFlip);
     }
 
     @Override
@@ -307,6 +327,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         isFlip = in.readBoolean();
         flag = in.readByte();
         updateMsg = in.readBoolean();
+        srcFlip = in.readBoolean();
+        destFlip = in.readBoolean();
     }
 
     @Override

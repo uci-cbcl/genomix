@@ -6,11 +6,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
+import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class BFSTraverseVertex extends
     MapReduceVertex {
@@ -63,11 +70,11 @@ public class BFSTraverseVertex extends
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable(kmerSize);
+            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable(kmerSize);
+            outgoingMsg = new MessageWritable();
         else
-            outgoingMsg.reset(kmerSize);
+            outgoingMsg.reset();
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
         if(kmerList == null)
@@ -82,6 +89,8 @@ public class BFSTraverseVertex extends
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable(kmerSize);
         isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
+        if(tmpKmer == null)
+            tmpKmer = new VKmerBytesWritable();
     }
     
     public void aggregateMsgAndGroupedByReadIdInReachedNode(Iterator<MessageWritable> msgIterator){
@@ -124,6 +133,7 @@ public class BFSTraverseVertex extends
     }
     
     public void initialBroadcaseBFSTraverse(){
+        outgoingMsg.reset();
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setSeekedVertexId(incomingMsg.getSeekedVertexId());
         outgoingMsg.getPathList().append(getVertexId());
@@ -135,6 +145,7 @@ public class BFSTraverseVertex extends
     }
     
     public void broadcastBFSTraverse(){
+        outgoingMsg.reset();
         outgoingMsg.setSourceVertexId(incomingMsg.getSourceVertexId());
         outgoingMsg.setSeekedVertexId(incomingMsg.getSeekedVertexId());
         outgoingMsg.getPathList().append(getVertexId());
@@ -153,12 +164,19 @@ public class BFSTraverseVertex extends
             voteToHalt();
         }
         else if(getSuperstep() == 2){
-            kmerList.append(new VKmerBytesWritable("Kmer1"));
-            kmerList.append(new VKmerBytesWritable("Kmer2"));
+            tmpKmer.setByRead(kmerSize, "AAT".getBytes(), 0);
+            kmerList.append(tmpKmer);
+            tmpKmer.setByRead(kmerSize, "CTA".getBytes(), 0);
+            kmerList.append(tmpKmer);
             /** initiate two nodes -- srcNode and destNode **/
             srcNode.setAsCopy(kmerList.getPosition(0));
             destNode.setAsCopy(kmerList.getPosition(1));
             // outgoingMsg.setNodeIdList(); set as common readId
+            PositionWritable nodeId = new PositionWritable();
+            nodeId.set((byte) 0, 1, 0);
+            PositionListWritable nodeIdList = new PositionListWritable();
+            nodeIdList.append(nodeId);
+            outgoingMsg.setNodeIdList(nodeIdList);
             outgoingMsg.setSeekedVertexId(destNode);
             sendMsg(srcNode, outgoingMsg);
             outgoingMsg.setSeekedVertexId(srcNode);
@@ -203,4 +221,17 @@ public class BFSTraverseVertex extends
         
     }
     
+    public static void main(String[] args) throws Exception {
+        PregelixJob job = new PregelixJob(BFSTraverseVertex.class.getSimpleName());
+        job.setVertexClass(BFSTraverseVertex.class);
+        /**
+         * BinaryInput and BinaryOutput
+         */
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        Client.run(args, job);
+    }
 }

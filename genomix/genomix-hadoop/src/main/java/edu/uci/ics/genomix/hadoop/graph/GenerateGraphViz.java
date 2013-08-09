@@ -49,7 +49,9 @@ public class GenerateGraphViz {
                 gv.addln(outputEdge);
                 /** add readIdSet **/
                 outputNode += " [shape=record, label = \"<f0> " + key.toString() 
-//                        + "|<f1> " + value.getThreadList(DirectionFlag.DIR_FF).printReadIdSet()
+                        + "|<f1> " + value.getStartReads().printReadIdSet()
+                        + "|<f2> " + value.getEndReads().printReadIdSet()
+                        + "|<f3> " + value.getAvgCoverage()
                         + "\"]\n";
                 gv.addln(outputNode);
             }
