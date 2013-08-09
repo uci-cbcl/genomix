@@ -72,7 +72,7 @@ public class TipRemoveVertex extends
         if(getSuperstep() == 1){
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
             	if(getVertexValue().getKmerLength() <= length){
-            		sendSettledMsgToPreviousNode();
+            		sendSettledMsgToPrevNode();
             		deleteVertex(getVertexId());
             	}
             }

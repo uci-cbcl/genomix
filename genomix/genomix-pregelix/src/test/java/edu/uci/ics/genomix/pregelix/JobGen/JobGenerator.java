@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
@@ -45,24 +46,24 @@ public class JobGenerator {
         generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
     }
     
-//    private static void generateNaiveAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
-//        job.setVertexClass(P1ForPathMergeVertex.class);
-//        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class); //GraphCleanInputFormat
-//        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-//        job.setDynamicVertexValueSize(true);
-//        job.setOutputKeyClass(PositionWritable.class);
-//        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(P1ForPathMergeVertex.KMER_SIZE, 3);
-//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-//    }
-//
-//    private static void genNaiveAlgorithmForMergeGraph() throws IOException {
-//        generateNaiveAlgorithmForMergeGraphJob("NaiveAlgorithmForMergeGraph", outputBase
-//                + "NaiveAlgorithmForMergeGraph.xml");
-//    }
+    private static void generateP1ForMergeGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(P1ForPathMergeVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class); //GraphCleanInputFormat
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(P1ForPathMergeVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
 
-    private static void generateLogAlgorithmForMergeGraphJob(String jobName, String outputPath) throws IOException {
+    private static void genP1ForMergeGraph() throws IOException {
+        generateP1ForMergeGraphJob("P1ForMergeGraph", outputBase
+                + "P1ForMergeGraph.xml");
+    }
+
+    private static void generateP2ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(P2ForPathMergeVertex.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
@@ -74,8 +75,8 @@ public class JobGenerator {
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
-    private static void genLogAlgorithmForMergeGraph() throws IOException {
-        generateLogAlgorithmForMergeGraphJob("LogAlgorithmForMergeGraph", outputBase + "LogAlgorithmForMergeGraph.xml");
+    private static void genP2ForMergeGraph() throws IOException {
+        generateP2ForMergeGraphJob("LogAlgorithmForMergeGraph", outputBase + "LogAlgorithmForMergeGraph.xml");
     }
 //    
 //    private static void generateP3ForMergeGraphJob(String jobName, String outputPath) throws IOException {
@@ -286,7 +287,8 @@ public class JobGenerator {
     
     public static void main(String[] args) throws IOException {
         genMapReduceGraph();
-        genLogAlgorithmForMergeGraph();
+        genP1ForMergeGraph();
+        genP2ForMergeGraph();
         genP4ForMergeGraph();
         genRemoveLowCoverageGraph();
         genTipAddGraph();

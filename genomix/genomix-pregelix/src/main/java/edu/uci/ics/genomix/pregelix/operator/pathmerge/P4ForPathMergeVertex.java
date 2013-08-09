@@ -74,13 +74,13 @@ public class P4ForPathMergeVertex extends
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable(kmerSize);
+            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable(kmerSize);
+            outgoingMsg = new MessageWritable();
         else
-            outgoingMsg.reset(kmerSize);
+            outgoingMsg.reset();
         if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable();
         randSeed = getSuperstep();
         randGenerator = new Random(randSeed);
         if (probBeingRandomHead < 0)

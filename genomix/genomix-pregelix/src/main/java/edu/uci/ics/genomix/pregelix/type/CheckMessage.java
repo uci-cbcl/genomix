@@ -3,7 +3,7 @@ package edu.uci.ics.genomix.pregelix.type;
 public class CheckMessage {
 
     public static final byte SOURCE = 1 << 0;
-    public static final byte ACUTUALKMER = 1 << 1;
+    public static final byte INTERNALKMER = 1 << 1;
     public static final byte NEIGHBER = 1 << 2;
     public static final byte PATHLIST = 1 << 3;
     public static final byte NODEIDLIST = 1 << 4;
@@ -18,8 +18,8 @@ public class CheckMessage {
                 case SOURCE:
                     r = "SOURCE";
                     break;
-                case ACUTUALKMER:
-                    r = "ACUTUALKMER";
+                case INTERNALKMER:
+                    r = "INTERNALKMER";
                     break;
                 case NEIGHBER:
                     r = "NEIGHBER";

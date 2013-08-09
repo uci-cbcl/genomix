@@ -96,7 +96,7 @@ public class MapReduceVertex extends
     public void sendMsgToFakeVertex(){
         if(!getVertexValue().isFakeVertex()){
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setActualKmer(getVertexValue().getInternalKmer());
+            outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
             sendMsg(fakeVertex, outgoingMsg);
             voteToHalt();
         }
@@ -105,7 +105,7 @@ public class MapReduceVertex extends
     public void mapKeyByActualKmer(Iterator<MessageWritable> msgIterator){
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
-            String kmerString = incomingMsg.getActualKmer().toString();
+            String kmerString = incomingMsg.getInternalKmer().toString();
             tmpKmer.reset(kmerString.length());
             tmpKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
             reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);

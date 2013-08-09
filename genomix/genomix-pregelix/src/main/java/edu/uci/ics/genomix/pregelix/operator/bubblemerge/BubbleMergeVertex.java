@@ -62,7 +62,7 @@ public class BubbleMergeVertex extends
                 if(hasNextDest(getVertexValue())){
                     outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setActualKmer(getVertexValue().getInternalKmer());
+                    outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
                     destVertexId.setAsCopy(getNextDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 }
@@ -72,7 +72,7 @@ public class BubbleMergeVertex extends
                 if(hasPrevDest(getVertexValue())){
                     outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setActualKmer(getVertexValue().getInternalKmer());
+                    outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
                     destVertexId.setAsCopy(getPrevDestVertexId(getVertexValue()));
                     sendMsg(destVertexId, outgoingMsg);
                 }

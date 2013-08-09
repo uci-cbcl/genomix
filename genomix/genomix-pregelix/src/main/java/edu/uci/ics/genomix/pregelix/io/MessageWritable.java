@@ -22,7 +22,7 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
      * file stores the point to the file that stores the chains of connected DNA
      */
     private VKmerBytesWritable sourceVertexId;
-    private VKmerBytesWritable actualKmer;
+    private VKmerBytesWritable internalKmer;
     private AdjacencyListWritable neighberNode; //incoming or outgoing
     private PositionListWritable nodeIdList = new PositionListWritable();
     private float averageCoverage;
@@ -39,7 +39,7 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
 
     public MessageWritable() {
         sourceVertexId = new VKmerBytesWritable();
-        actualKmer = new VKmerBytesWritable();
+        internalKmer = new VKmerBytesWritable();
         neighberNode = new AdjacencyListWritable();
         startVertexId = new VKmerBytesWritable();
         averageCoverage = 0;
@@ -52,7 +52,7 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
     public MessageWritable(int kmerSize) {
         kmerlength = kmerSize;
         sourceVertexId = new VKmerBytesWritable(kmerSize);
-        actualKmer = new VKmerBytesWritable(0);
+        internalKmer = new VKmerBytesWritable(0);
 
         neighberNode = new AdjacencyListWritable(kmerSize);
         startVertexId = new VKmerBytesWritable(kmerSize);
@@ -69,9 +69,9 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
             checkMessage |= CheckMessage.SOURCE;
             this.sourceVertexId.setAsCopy(msg.getSourceVertexId());
         }
-        if (actualKmer != null) {
-            checkMessage |= CheckMessage.ACUTUALKMER;
-            this.actualKmer.setAsCopy(msg.getActualKmer());
+        if (internalKmer != null) {
+            checkMessage |= CheckMessage.INTERNALKMER;
+            this.internalKmer.setAsCopy(msg.getInternalKmer());
 
         }
         if (neighberNode != null) {
@@ -94,8 +94,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
             this.sourceVertexId.setAsCopy(sourceVertexId);
         }
         if (chainVertexId != null) {
-            checkMessage |= CheckMessage.ACUTUALKMER;
-            this.actualKmer.setAsCopy(chainVertexId);
+            checkMessage |= CheckMessage.INTERNALKMER;
+            this.internalKmer.setAsCopy(chainVertexId);
 
         }
         if (neighberNode != null) {
@@ -112,7 +112,7 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
     public void reset(int kmerSize) {
         checkMessage = (byte) 0;
         kmerlength = kmerSize;
-//        actualKmer.reset();
+//        internalKmer.reset();
         neighberNode.reset(kmerSize);
         startVertexId.reset(kmerSize);
         averageCoverage = 0;
@@ -131,37 +131,37 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         }
     }
     
-    public VKmerBytesWritable getActualKmer() {
-        return actualKmer;
+    public VKmerBytesWritable getInternalKmer() {
+        return internalKmer;
     }
 
-    public void setActualKmer(VKmerBytesWritable actualKmer) {
-        if (actualKmer != null) {
-            checkMessage |= CheckMessage.ACUTUALKMER;
-            this.actualKmer.setAsCopy(actualKmer);
+    public void setInternalKmer(VKmerBytesWritable internalKmer) {
+        if (internalKmer != null) {
+            checkMessage |= CheckMessage.INTERNALKMER;
+            this.internalKmer.setAsCopy(internalKmer);
         }
     }
     
     // use for scaffolding
     public VKmerBytesWritable getMiddleVertexId() {
-        return actualKmer;
+        return internalKmer;
     }
 
     public void setMiddleVertexId(VKmerBytesWritable middleKmer) {
         if (middleKmer != null) {
-            checkMessage |= CheckMessage.ACUTUALKMER;
-            this.actualKmer.setAsCopy(middleKmer);
+            checkMessage |= CheckMessage.INTERNALKMER;
+            this.internalKmer.setAsCopy(middleKmer);
         }
     }
     
     public VKmerBytesWritable getCreatedVertexId() {
-        return actualKmer;
+        return internalKmer;
     }
 
     public void setCreatedVertexId(VKmerBytesWritable actualKmer) {
         if (actualKmer != null) {
-            checkMessage |= CheckMessage.ACUTUALKMER;
-            this.actualKmer.setAsCopy(actualKmer);
+            checkMessage |= CheckMessage.INTERNALKMER;
+            this.internalKmer.setAsCopy(actualKmer);
         }
     }
     
@@ -208,7 +208,7 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
     }
 
     public int getLengthOfChain() {
-        return actualKmer.getKmerLetterLength();
+        return internalKmer.getKmerLetterLength();
     }
 
     public byte getFlag() {
@@ -288,8 +288,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         out.writeByte(checkMessage);
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.write(out);
-        if ((checkMessage & CheckMessage.ACUTUALKMER) != 0)
-            actualKmer.write(out);
+        if ((checkMessage & CheckMessage.INTERNALKMER) != 0)
+            internalKmer.write(out);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.write(out);
         if ((checkMessage & CheckMessage.NODEIDLIST) != 0)
@@ -313,8 +313,8 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
         checkMessage = in.readByte();
         if ((checkMessage & CheckMessage.SOURCE) != 0)
             sourceVertexId.readFields(in);
-        if ((checkMessage & CheckMessage.ACUTUALKMER) != 0)
-            actualKmer.readFields(in);
+        if ((checkMessage & CheckMessage.INTERNALKMER) != 0)
+            internalKmer.readFields(in);
         if ((checkMessage & CheckMessage.NEIGHBER) != 0)
             neighberNode.readFields(in);
         if ((checkMessage & CheckMessage.NODEIDLIST) != 0)
@@ -367,10 +367,10 @@ public class MessageWritable implements WritableComparable<MessageWritable>, Wri
      */
     public void mergeCoverage(MessageWritable other) {
         // sequence considered in the average doesn't include anything overlapping with other kmers
-        float adjustedLength = actualKmer.getKmerLetterLength() + other.actualKmer.getKmerLetterLength() - (KmerBytesWritable.getKmerLength() - 1) * 2;
+        float adjustedLength = internalKmer.getKmerLetterLength() + other.internalKmer.getKmerLetterLength() - (KmerBytesWritable.getKmerLength() - 1) * 2;
         
-        float myCount = (actualKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * averageCoverage;
-        float otherCount = (other.actualKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * other.averageCoverage;
+        float myCount = (internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * averageCoverage;
+        float otherCount = (other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * other.averageCoverage;
         averageCoverage = (myCount + otherCount) / adjustedLength;
     }
 

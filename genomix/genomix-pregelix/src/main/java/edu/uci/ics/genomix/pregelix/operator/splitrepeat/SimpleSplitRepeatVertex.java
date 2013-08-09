@@ -2,13 +2,12 @@ package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex.DeletedEdge;
-import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex.EdgeDir;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -58,6 +57,7 @@ public class SimpleSplitRepeatVertex extends
             {EdgeDir.DIR_RR, EdgeDir.DIR_FR}
     };
     
+    public static Set<String> existKmerString = new HashSet<String>();
     protected VKmerBytesWritable createdVertexId = null;  
     private Set<Long> incomingReadIdSet = new HashSet<Long>();
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
@@ -91,6 +91,30 @@ public class SimpleSplitRepeatVertex extends
             outgoingEdgeList = new VKmerListWritable();
         if(createdVertexId == null)
             createdVertexId = new VKmerBytesWritable();
+    }
+    
+    /**
+     * Generate random string from [ACGT]
+     */
+    public String generaterRandomString(int n){
+        char[] chars = "ACGT".toCharArray();
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        while(true){
+            for (int i = 0; i < n; i++) {
+                char c = chars[random.nextInt(chars.length)];
+                sb.append(c);
+            }
+            if(!existKmerString.contains(sb.toString()))
+                break;
+        }
+        existKmerString.add(sb.toString());
+        return sb.toString();
+    }
+    
+    public void randomGenerateVertexId(int numOfSuffix){
+        String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);;
+        createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -203,7 +227,7 @@ public class SimpleSplitRepeatVertex extends
         }
     }
     
-//    public void setNeighborEdgeIntersection(VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
+    public void setNeighborEdgeIntersection(VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
 //        incomingReadIdSet.clear();
 //        outgoingReadIdSet.clear(); 
 //        tmpKmer.setAsCopy(incomingEdge);
@@ -213,9 +237,9 @@ public class SimpleSplitRepeatVertex extends
 //        
 //        //set all neighberEdge readId intersection
 //        neighborEdgeIntersection.addAll(selfReadIdSet);
-//        neighborEdgeIntersection.retainAll(incomingReadIdSet);
-//        neighborEdgeIntersection.retainAll(outgoingReadIdSet);
-//    }
+        neighborEdgeIntersection.retainAll(incomingReadIdSet);
+        neighborEdgeIntersection.retainAll(outgoingReadIdSet);
+    }
     
     public void updateEdgeListPointToNewVertex(){
         byte meToNeighborDir = incomingMsg.getFlag();
@@ -255,11 +279,11 @@ public class SimpleSplitRepeatVertex extends
                     for(VKmerBytesWritable incomingEdge : incomingEdgeList){
                         for(VKmerBytesWritable outgoingEdge : outgoingEdgeList){
                             /** set neighborEdge readId intersection **/
-//                            setNeighborEdgeIntersection(incomingEdge, outgoingEdge);
+                            setNeighborEdgeIntersection(incomingEdge, outgoingEdge);
                             
                             if(!neighborEdgeIntersection.isEmpty()){
                                 /** random generate vertexId of new vertex **/
-//                                randomGenerateVertexId(3);
+                                randomGenerateVertexId(3);
                                 
                                 /** create new/created vertex **/
                                 createNewVertex(i, incomingEdge, outgoingEdge);
