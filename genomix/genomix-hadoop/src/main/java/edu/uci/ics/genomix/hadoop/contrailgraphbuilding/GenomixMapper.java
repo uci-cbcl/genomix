@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,6 +13,8 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
+import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -146,29 +149,38 @@ public class GenomixMapper extends MapReduceBase implements
     	switch(curKmerDir){
     		case FORWARD:
     			switch(preKmerDir){
-    				case FORWARD:
-    				    edgeListForPreKmer.reset();
-    				    edgeListForPreKmer.append(preForwardKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
+    				case FORWARD:    				    
+//    				    //TODO NOTE this is one way to fix these entries... or you can refactor your code to have these edgeList and edges sitting around
+//    				    edgeListForPreKmer.reset();
+//    				    edgeListForPreKmer.append(preForwardKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
+//    				    outputNode.setThreadList(DirectionFlag.DIR_RR, nodeIdList);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_RR, new EdgeListWritable(Arrays.asList(new EdgeWritable(preForwardKmer, nodeIdList))));
     					break;
     				case REVERSE:
-    				    edgeListForPreKmer.reset();
-    				    edgeListForPreKmer.append(preReverseKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
+//    				    edgeListForPreKmer.reset();
+//    				    edgeListForPreKmer.append(preReverseKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
+//    					outputNode.setThreadList(DirectionFlag.DIR_RF, nodeIdList);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_RF, new EdgeListWritable(Arrays.asList(new EdgeWritable(preReverseKmer, nodeIdList))));
     					break;
     			}
     			break;
     		case REVERSE:
     			switch(preKmerDir){
     				case FORWARD:
-    				    edgeListForPreKmer.reset();
-    				    edgeListForPreKmer.append(preForwardKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
+//    				    edgeListForPreKmer.reset();
+//    				    edgeListForPreKmer.append(preForwardKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
+//    					outputNode.setThreadList(DirectionFlag.DIR_FR, nodeIdList);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, new EdgeListWritable(Arrays.asList(new EdgeWritable(preForwardKmer, nodeIdList))));
     					break;
     				case REVERSE:
-    				    edgeListForPreKmer.reset();
-    				    edgeListForPreKmer.append(preReverseKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
+//    				    edgeListForPreKmer.reset();
+//    				    edgeListForPreKmer.append(preReverseKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
+//    					outputNode.setThreadList(DirectionFlag.DIR_FF, nodeIdList);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, new EdgeListWritable(Arrays.asList(new EdgeWritable(preReverseKmer, nodeIdList))));
     					break;
     			}
     			break;
@@ -180,28 +192,36 @@ public class GenomixMapper extends MapReduceBase implements
     		case FORWARD:
     			switch(nextKmerDir){
     				case FORWARD:
-    					edgeListForNextKmer.reset();
-    					edgeListForNextKmer.append(nextForwardKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
+//    					edgeListForNextKmer.reset();
+//    					edgeListForNextKmer.append(nextForwardKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
+//    					outputNode.setThreadList(DirectionFlag.DIR_FF, nodeIdList);
+    					outputNode.setEdgeList(DirectionFlag.DIR_FF, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList))));
     					break;
     				case REVERSE:
-    					edgeListForNextKmer.reset();
-    					edgeListForNextKmer.append(nextReverseKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
+//    					edgeListForNextKmer.reset();
+//    					edgeListForNextKmer.append(nextReverseKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
+//    					outputNode.setThreadList(DirectionFlag.DIR_FR, nodeIdList);
+    					outputNode.setEdgeList(DirectionFlag.DIR_FR, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextReverseKmer, nodeIdList))));
     					break;
     			}
     			break;
     		case REVERSE:
     			switch(nextKmerDir){
     				case FORWARD:
-    					edgeListForNextKmer.reset();
-    					edgeListForNextKmer.append(nextForwardKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
+//    					edgeListForNextKmer.reset();
+//    					edgeListForNextKmer.append(nextForwardKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
+//    					outputNode.setThreadList(DirectionFlag.DIR_RF, nodeIdList);
+    					outputNode.setEdgeList(DirectionFlag.DIR_RF, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList))));
     					break;
     				case REVERSE:
-    					edgeListForNextKmer.reset();
-    					edgeListForNextKmer.append(nextReverseKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
+//    					edgeListForNextKmer.reset();
+//    					edgeListForNextKmer.append(nextReverseKmer);
+//    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
+//    					outputNode.setThreadList(DirectionFlag.DIR_RR, nodeIdList);
+    					outputNode.setEdgeList(DirectionFlag.DIR_RR, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextReverseKmer, nodeIdList))));
     					break;
     			}
     			break;

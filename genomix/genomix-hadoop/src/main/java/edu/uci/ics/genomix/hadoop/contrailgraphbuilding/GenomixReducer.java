@@ -37,10 +37,12 @@ public class GenomixReducer extends MapReduceBase implements
 		averageCoverage = 0;
 		
 		while (values.hasNext()) {
-		    tmpNode.set(values.next());
+		    tmpNode.setAsCopy(values.next());
 		    for (byte d: DirectionFlag.values) {
+		        // TODO NOTE why a *unionupdate* on the edges here?  why not just a simple append?
+//		        outputNode.getEdgeList(d).unionUpdate(tmpNode.getEdgeList(d));
+//		        outputNode.getThreadList(d).unionUpdate(tmpNode.getThreadList(d));
 		        outputNode.getEdgeList(d).unionUpdate(tmpNode.getEdgeList(d));
-		        outputNode.getThreadList(d).unionUpdate(tmpNode.getThreadList(d));
 		    }
 		    outputNode.getStartReads().unionUpdate(tmpNode.getStartReads());
 		    outputNode.getEndReads().unionUpdate(tmpNode.getEndReads());

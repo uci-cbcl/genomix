@@ -139,7 +139,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
                     curKmerDir = nextKmerDir;
-                    curNode.set(nextNode);
+                    curNode.setAsCopy(nextNode);
                     nextNode.reset();
                     nextNode.setAvgCoverage(1);
                     nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);

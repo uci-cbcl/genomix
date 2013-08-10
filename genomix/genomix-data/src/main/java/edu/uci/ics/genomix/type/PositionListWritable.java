@@ -45,6 +45,11 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         }
     }
   
+    public PositionListWritable(PositionListWritable other) {
+        this();
+        set(other);
+    }
+
     public void setNewReference(byte[] data, int offset) {
         this.valueCount = Marshal.getInt(data, offset);
         this.storage = data;

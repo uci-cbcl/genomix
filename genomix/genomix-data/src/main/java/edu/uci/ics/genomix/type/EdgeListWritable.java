@@ -24,7 +24,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -50,6 +53,13 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     public EdgeListWritable(EdgeListWritable other) {
         this();
         setAsCopy(other);
+    }
+    
+    public EdgeListWritable(List<EdgeWritable> otherList) {
+        this();
+        for (EdgeWritable e : otherList) {
+            add(e);
+        }
     }
     
     public void setAsCopy(EdgeListWritable otherEdge){
@@ -211,5 +221,37 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
 
     public void remove(EdgeWritable toRemove) {
         remove(toRemove, false);
+    }
+
+    /**
+     * Adds all edges in edgeList to me.  If I have the same edge as `other`, that entry will be the union of both sets of readIDs.
+     */
+    public void unionUpdate(EdgeListWritable other) {
+        // TODO test this function properly
+        // TODO perhaps there's a more efficient way to do this?
+        HashMap<VKmerBytesWritable, PositionListWritable> unionEdges = new HashMap<VKmerBytesWritable, PositionListWritable>(edges.size() + other.edges.size());
+        
+        for (EdgeWritable e : edges) {
+            VKmerBytesWritable key = e.getKey();
+            if (unionEdges.containsKey(key)) {
+                unionEdges.get(key).unionUpdate(e.getReadIDs());
+            }
+            else {
+                unionEdges.put(key, new PositionListWritable(e.getReadIDs())); // make a new copy of their list
+            }
+        }
+        for (EdgeWritable e : other.edges) {
+            VKmerBytesWritable key = e.getKey();
+            if (unionEdges.containsKey(key)) {
+                unionEdges.get(key).unionUpdate(e.getReadIDs());
+            }
+            else {
+                unionEdges.put(key, new PositionListWritable(e.getReadIDs())); // make a new copy of their list
+            }
+        }
+        edges.clear();
+        for (VKmerBytesWritable key : unionEdges.keySet()) {
+            edges.add(new EdgeWritable(key, unionEdges.get(key)));
+        }
     }
 }
