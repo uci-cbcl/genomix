@@ -734,5 +734,15 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     public float fracDissimilar(VKmerBytesWritable other) {
         return fracDissimilar(this, other);
     }
+    
+    @Override
+    public int compareTo(BinaryComparable other) {
+        Comparator c = new Comparator();
+        if (other instanceof VKmerBytesWritable) {
+            VKmerBytesWritable otherVK = (VKmerBytesWritable) other; 
+            return c.compare(getBlockBytes(), getBlockOffset(), getLength(), otherVK.getBlockBytes(), otherVK.getBlockOffset(), otherVK.getLength());
+        }
+        return c.compare(getBlockBytes(), getBlockOffset(), getLength(), other.getBytes(), 0, other.getLength());
+    }
 
 }

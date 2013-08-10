@@ -222,6 +222,8 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
 
     /**
      * Adds all edges in edgeList to me.  If I have the same edge as `other`, that entry will be the union of both sets of readIDs.
+     * 
+     * NOTE: This function may change the order of the original list!
      */
     public void unionUpdate(EdgeListWritable other) {
         // TODO test this function properly
