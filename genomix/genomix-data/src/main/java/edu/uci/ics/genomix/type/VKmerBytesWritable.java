@@ -735,10 +735,4 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         return fracDissimilar(this, other);
     }
 
-    @Override
-    public int compareTo(BinaryComparable o) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
 }
