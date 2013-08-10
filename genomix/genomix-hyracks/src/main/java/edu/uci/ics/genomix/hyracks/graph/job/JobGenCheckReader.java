@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hyracks.newgraph.job;
+package edu.uci.ics.genomix.hyracks.graph.job;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
 
-import edu.uci.ics.genomix.hyracks.newgraph.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
@@ -94,7 +94,7 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
                                     outputNode.setAsReference(
                                             tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-
+                                    System.out.println(outputNode.getEndReads().getLength());
                                     output.write(outputKmer.toString().getBytes());
                                     output.writeByte('\t');
                                     output.write(outputNode.toString().getBytes());

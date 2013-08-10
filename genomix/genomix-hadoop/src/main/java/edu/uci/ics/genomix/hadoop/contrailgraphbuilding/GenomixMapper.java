@@ -150,13 +150,11 @@ public class GenomixMapper extends MapReduceBase implements
     				    edgeListForPreKmer.reset();
     				    edgeListForPreKmer.append(preForwardKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_RR, nodeIdList);
     					break;
     				case REVERSE:
     				    edgeListForPreKmer.reset();
     				    edgeListForPreKmer.append(preReverseKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_RF, nodeIdList);
     					break;
     			}
     			break;
@@ -166,13 +164,11 @@ public class GenomixMapper extends MapReduceBase implements
     				    edgeListForPreKmer.reset();
     				    edgeListForPreKmer.append(preForwardKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_FR, nodeIdList);
     					break;
     				case REVERSE:
     				    edgeListForPreKmer.reset();
     				    edgeListForPreKmer.append(preReverseKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_FF, nodeIdList);
     					break;
     			}
     			break;
@@ -187,13 +183,11 @@ public class GenomixMapper extends MapReduceBase implements
     					edgeListForNextKmer.reset();
     					edgeListForNextKmer.append(nextForwardKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_FF, nodeIdList);
     					break;
     				case REVERSE:
     					edgeListForNextKmer.reset();
     					edgeListForNextKmer.append(nextReverseKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_FR, nodeIdList);
     					break;
     			}
     			break;
@@ -203,13 +197,11 @@ public class GenomixMapper extends MapReduceBase implements
     					edgeListForNextKmer.reset();
     					edgeListForNextKmer.append(nextForwardKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_RF, nodeIdList);
     					break;
     				case REVERSE:
     					edgeListForNextKmer.reset();
     					edgeListForNextKmer.append(nextReverseKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
-    					outputNode.setThreadList(DirectionFlag.DIR_RR, nodeIdList);
     					break;
     			}
     			break;

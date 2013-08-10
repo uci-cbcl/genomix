@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.dataflow;
+package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.connectors.IConnectorPolicy;

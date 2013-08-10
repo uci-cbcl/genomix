@@ -30,7 +30,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         storage = EMPTY_BYTES;
         valueCount = 0;
         offset = 0;
-        maxStorageSize = storage.length; 
+        maxStorageSize = storage.length;
     }
 
     public PositionListWritable(byte[] data, int offset) {

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.dataflow;
+package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -101,7 +101,7 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
             setKmer(readKmer, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputKmerField));
             readNode.reset();
             setNode(readNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputtempNodeField));
-            readNode.getKmer().setAsCopy(readKmer);
+            readNode.getInternalKmer().setAsCopy(readKmer);
             outputNode(readNode);
         }
 

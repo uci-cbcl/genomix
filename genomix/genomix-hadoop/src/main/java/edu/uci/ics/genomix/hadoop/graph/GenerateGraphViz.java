@@ -16,14 +16,14 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 public class GenerateGraphViz {
 
-	/**
+    /**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
      */
     public static void convertGraphBuildingOutputToGraphViz(String srcDir, String destDir) throws Exception {
         GraphViz gv = new GraphViz();
         gv.addln(gv.start_graph());
-        
+
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.getLocal(conf);
         File srcPath = new File(srcDir);
@@ -34,7 +34,7 @@ public class GenerateGraphViz {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
             VKmerBytesWritable key = new VKmerBytesWritable();
             NodeWritable value = new NodeWritable();
-            
+
             gv.addln("rankdir=LR\n");
 
             while (reader.next(key, value)) {
@@ -48,16 +48,14 @@ public class GenerateGraphViz {
                 outputEdge = convertEdgeToGraph(outputNode, value);
                 gv.addln(outputEdge);
                 /** add readIdSet **/
-                outputNode += " [shape=record, label = \"<f0> " + key.toString() 
-                        + "|<f1> " + value.getStartReads().printReadIdSet()
-                        + "|<f2> " + value.getEndReads().printReadIdSet()
-                        + "|<f3> " + value.getAvgCoverage()
-                        + "\"]\n";
+                outputNode += " [shape=record, label = \"<f0> " + key.toString() + "|<f1> "
+                        + value.getStartReads().printReadIdSet() + "|<f2> " + value.getEndReads().printReadIdSet()
+                        + "|<f3> " + value.getAvgCoverage() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
         }
-        
+
         gv.addln(gv.end_graph());
         System.out.println(gv.getDotSource());
 
@@ -67,36 +65,36 @@ public class GenerateGraphViz {
         File out = new File(destDir + "/result." + type); // Linux
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
-    
-    public static String convertEdgeToGraph(String outputNode, NodeWritable value){
+
+    public static String convertEdgeToGraph(String outputNode, NodeWritable value) {
         String outputEdge = "";
         Iterator<VKmerBytesWritable> kmerIterator;
         kmerIterator = value.getEdgeList(DirectionFlag.DIR_FF).iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next(); 
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FF: " +
-                    value.getThreadList(DirectionFlag.DIR_FF).printReadIdSet() + "\"]\n";
+        while (kmerIterator.hasNext()) {
+            VKmerBytesWritable edge = kmerIterator.next();
+            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FF: "
+                    + value.getThreadList(DirectionFlag.DIR_FF).printReadIdSet() + "\"]\n";
         }
         kmerIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
-        while(kmerIterator.hasNext()){
+        while (kmerIterator.hasNext()) {
             VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"blue\" label =\"FR: " +
-                    value.getThreadList(DirectionFlag.DIR_FR).printReadIdSet() + "\"]\n";
+            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"blue\" label =\"FR: "
+                    + value.getThreadList(DirectionFlag.DIR_FR).printReadIdSet() + "\"]\n";
         }
         kmerIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
-        while(kmerIterator.hasNext()){
+        while (kmerIterator.hasNext()) {
             VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"green\" label =\"RF: " +
-                    value.getThreadList(DirectionFlag.DIR_RF).printReadIdSet() + "\"]\n";
+            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"green\" label =\"RF: "
+                    + value.getThreadList(DirectionFlag.DIR_RF).printReadIdSet() + "\"]\n";
         }
         kmerIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
-        while(kmerIterator.hasNext()){
+        while (kmerIterator.hasNext()) {
             VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR: " +
-                    value.getThreadList(DirectionFlag.DIR_RR).printReadIdSet() + "\"]\n";
+            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR: "
+                    + value.getThreadList(DirectionFlag.DIR_RR).printReadIdSet() + "\"]\n";
         }
         //TODO should output actualKmer instead of kmer
-        if(outputEdge == "")
+        if (outputEdge == "")
             outputEdge += outputNode;
         return outputEdge;
     }

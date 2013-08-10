@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.driver;
+package edu.uci.ics.genomix.hyracks.graph.driver;
 
 import java.net.URL;
 import java.util.EnumSet;
@@ -24,10 +24,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import edu.uci.ics.genomix.hyracks.newgraph.job.GenomixJobConf;
-import edu.uci.ics.genomix.hyracks.newgraph.job.JobGen;
-import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenBrujinGraph;
-import edu.uci.ics.genomix.hyracks.newgraph.job.JobGenCheckReader;
+import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenBrujinGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenCheckReader;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenUnMergedGraph;
 
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
@@ -42,6 +43,7 @@ public class Driver {
     public static enum Plan {
         BUILD_DEBRUJIN_GRAPH,
         CHECK_KMERREADER,
+        BUILD_UNMERGED_GRAPH,
     }
 
     private static final String IS_PROFILING = "genomix.driver.profiling";
@@ -95,6 +97,8 @@ public class Driver {
                 case CHECK_KMERREADER:
                     jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
+                case BUILD_UNMERGED_GRAPH:
+                    jobGen = new JobGenUnMergedGraph(job, scheduler, ncMap, numPartitionPerMachine);
             }
 
             start = System.currentTimeMillis();

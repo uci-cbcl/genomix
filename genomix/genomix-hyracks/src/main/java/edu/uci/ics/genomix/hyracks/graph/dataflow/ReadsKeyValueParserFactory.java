@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.dataflow;
+package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
@@ -72,8 +72,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new IKeyValueParser<LongWritable, Text>() {
 
-            private PositionWritable nodeId = new PositionWritable();
-            private PositionListWritable nodeIdList = new PositionListWritable();
+            private PositionWritable readId = new PositionWritable();
             private NodeWritable curNode = new NodeWritable();
             private NodeWritable nextNode = new NodeWritable();
 
@@ -120,16 +119,20 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
                 curNode.reset();
                 nextNode.reset();
+                curNode.setAvgCoverage(1);
+                nextNode.setAvgCoverage(1);
                 curForwardKmer.setByRead(array, 0);
                 curReverseKmer.setByReadReverse(array, 0);
                 curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
-                setNodeBasicInfo(curNode, mateId, readID, 0, 1);
-                setNodeBasicInfo(nextNode, mateId, readID, 0, 1);
-                setEdgeListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode);
+                setThisReadId(readId, mateId, readID, 0);
+                if(curKmerDir == KmerDir.FORWARD)
+                    curNode.getStartReads().append(readId);
+                else
+                    curNode.getEndReads().append(readId);
+                setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readId);
                 writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
-
                 /*middle kmer*/
                 int i = kmerSize + 1;
                 for (; i < array.length; i++) {
@@ -138,9 +141,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     curKmerDir = nextKmerDir;
                     curNode.set(nextNode);
                     nextNode.reset();
+                    nextNode.setAvgCoverage(1);
                     nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
-                    setNodeBasicInfo(nextNode, mateId, readID, 0, 1);
-                    setEdgeListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode);
+                    setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readId);
                     writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
                 }
 
@@ -148,12 +151,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 writeToFrame(nextForwardKmer, nextReverseKmer, nextKmerDir, nextNode, writer);
             }
 
-            public void setNodeBasicInfo(NodeWritable node, byte mateId, long readID, int posId, int iniCovergage) {
-                nodeId.set(mateId, readID, posId);
-                nodeIdList.reset();
-                nodeIdList.append(nodeId);
-                node.setNodeIdList(nodeIdList);
-                node.setAvgCoverage(iniCovergage);
+            public void setThisReadId(PositionWritable readId, byte mateId, long readID, int posId) {
+                readId.set(mateId, readID, posId);
             }
 
             public KmerDir setNextKmer(KmerBytesWritable forwardKmer, KmerBytesWritable ReverseKmer,
@@ -175,23 +174,31 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
             }
 
-            public void setEdgeListForCurAndNextKmer(KmerDir curKmerDir, NodeWritable curNode, KmerDir nextKmerDir,
-                    NodeWritable nextNode) {
+            public void setEdgeAndThreadListForCurAndNextKmer(KmerDir curKmerDir, NodeWritable curNode, KmerDir nextKmerDir,
+                    NodeWritable nextNode, PositionWritable readId) {
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.FORWARD) {
                     curNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, nextForwardKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_FF).append(readId);
                     nextNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, curForwardKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_RR).append(readId);
                 }
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.REVERSE) {
                     curNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, nextReverseKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_FR).append(readId);
                     nextNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, curForwardKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_FR).append(readId);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.FORWARD) {
                     curNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, nextForwardKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_RF).append(readId);
                     nextNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, curReverseKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_RF).append(readId);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.REVERSE) {
                     curNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, nextReverseKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_RR).append(readId);
                     nextNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, curReverseKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_FF).append(readId);
                 }
             }
 

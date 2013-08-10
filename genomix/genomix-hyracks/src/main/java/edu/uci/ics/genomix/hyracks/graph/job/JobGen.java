@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.newgraph.job;
+package edu.uci.ics.genomix.hyracks.graph.job;
 
 import java.io.Serializable;
 import java.util.UUID;

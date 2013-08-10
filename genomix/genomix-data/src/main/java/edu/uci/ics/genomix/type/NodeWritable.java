@@ -12,12 +12,11 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-
-public class NodeWritable implements WritableComparable<NodeWritable>, Serializable{
+public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
 
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
-    
+
     private static final int SIZE_FLOAT = 4;
     
     // edge list
@@ -30,8 +29,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private PositionListWritable endReads;  //last internalKmer in read (or first but internalKmer was flipped)
     
     private VKmerBytesWritable internalKmer;
+
     private float averageCoverage;
-    
+
+    // merge/update directions
+
     // merge/update directions
     
     // merge/update directions
@@ -174,7 +176,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	        length += edges[d].getLength();
 	        length += threads[d].getLength();
 	    }
-	    length += internalKmer.getLength() + SIZE_FLOAT;
+	    length += internalKmer.getLength();
+	    length += this.startReads.getLength();
+	    length += this.endReads.getLength();
+	    length += SIZE_FLOAT;
 	    return length;
 	}
 	
@@ -187,7 +192,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         write(out);
         return baos.toByteArray();
     }
-    
+
     public void setAsCopy(byte[] data, int offset) {
         int curOffset = offset;
         for (byte d:DirectionFlag.values) {
@@ -206,7 +211,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         curOffset += internalKmer.getLength();
         averageCoverage = Marshal.getFloat(data, curOffset);
     }
-    
+
     public void setAsReference(byte[] data, int offset) {
         int curOffset = offset;
         for (byte d:DirectionFlag.values) {
@@ -226,7 +231,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         curOffset += internalKmer.getLength();
         averageCoverage = Marshal.getFloat(data, curOffset);
     }
-	
+
     @Override
     public void write(DataOutput out) throws IOException {
         for (byte d:DirectionFlag.values) {
@@ -260,19 +265,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public int compareTo(NodeWritable other) {
         return this.internalKmer.compareTo(other.internalKmer);
     }
-    
+
     public class SortByCoverage implements Comparator<NodeWritable> {
         @Override
         public int compare(NodeWritable left, NodeWritable right) {
             return Float.compare(left.averageCoverage, right.averageCoverage);
         }
     }
-    
+
     @Override
     public int hashCode() {
         return this.internalKmer.hashCode();
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (! (o instanceof NodeWritable))
@@ -285,7 +290,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
         return averageCoverage == nw.averageCoverage && internalKmer.equals(nw.internalKmer);
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
@@ -312,7 +317,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         edges[DirectionFlag.DIR_RR].setCopy(preNode.edges[DirectionFlag.DIR_RR]);
         internalKmer.mergeWithRRKmer(initialKmerSize, preNode.getInternalKmer());
     }
-    
+
     public int inDegree() {
         return edges[DirectionFlag.DIR_RR].getCountOfPosition() + edges[DirectionFlag.DIR_RF].getCountOfPosition();
     }
