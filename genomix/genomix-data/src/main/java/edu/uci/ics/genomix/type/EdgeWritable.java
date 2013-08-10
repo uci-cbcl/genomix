@@ -24,9 +24,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.data.KmerUtil;
 import edu.uci.ics.genomix.data.Marshal;
 
 
@@ -121,6 +123,35 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     public void appendReadID(long readID) {
         readIDs.append((byte)0, readID, 0);
     }
+    
+    public long[] readIDArray() {
+        return readIDs.toReadIDArray();
+    }
+    
+    public Iterator<Long> readIDIter() {
+        Iterator<Long> it = new Iterator<Long>() {
+            private int currentIndex = 0;
+            
+            @Override
+            public boolean hasNext() {
+                return currentIndex < readIDs.getCountOfPosition();
+            }
+            
+            @Override
+            public Long next() {
+                return new Long(readIDs.getPosition(currentIndex++).getReadId());
+            }
+            
+            @Override
+            public void remove() {
+                if (currentIndex <= 0) 
+                    throw new IllegalStateException("You must advance the iterator using .next() before calling remove()!");
+                readIDs.removePosition(--currentIndex);
+            }
+        };
+        return it;
+    }
+    
     
     public int getLength() {
         return key.getLength() + readIDs.getLength();

@@ -182,6 +182,16 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         }
         Marshal.putLong(uuid, storage, offset + i * PositionWritable.LENGTH + HEADER_SIZE);
     }
+    
+    public void removePosition(int i) {
+        if (i < 0 || i > valueCount)
+            throw new IllegalArgumentException("Invalid position specified in removePosition! Should be 0 <= " + i + " <= " + valueCount + ").");
+        System.arraycopy(storage, offset + i * PositionWritable.LENGTH + HEADER_SIZE, storage, offset
+                + (i - 1) * PositionWritable.LENGTH + HEADER_SIZE, (valueCount - i)
+                * PositionWritable.LENGTH);
+        valueCount--;
+        Marshal.putInt(valueCount, storage, offset);
+    }
 
     public int getCountOfPosition() {
         return valueCount;
@@ -296,6 +306,29 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             result[i] = getPosition(i).getReadId();
         }
         return result;
+    }
+    
+    public class readIDIterator implements Iterator<Long> {
+        private int index = 0;
+
+        @Override
+        public boolean hasNext() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public Long next() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public void remove() {
+            // TODO Auto-generated method stub
+            
+        }
+        
     }
 
     @Override

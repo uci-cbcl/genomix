@@ -100,4 +100,26 @@ public class EdgeWritableTest {
             Assert.assertEquals(e2.getReadIDs().getPosition(i), e4.getReadIDs().getPosition(i));
         }
     }
+    
+    @Test
+    public void TestIterator() {
+        EdgeListWritable elist = new EdgeListWritable();
+        VKmerBytesWritable kmer1 = new VKmerBytesWritable("ACCGCTTAGATACC");
+        PositionListWritable plist1 = new PositionListWritable();
+        plist1.append((byte)1, (long)50, 20);
+        plist1.append((byte)0, (long)500, 200);
+        plist1.append((byte)1, (long)20, 10);
+        EdgeWritable e1 = new EdgeWritable(kmer1, plist1);
+        elist.add(e1);
+        
+        long[] expected = {50, 500, 20}, readIDs = elist.get(0).readIDArray();
+        Iterator<Long> it = elist.get(0).readIDIter();
+        for (int i=0; i < expected.length; i++) {
+            Assert.assertEquals(expected[i], readIDs[i]);
+            Assert.assertTrue(it.hasNext());
+            long actual = it.next();
+            Assert.assertEquals(expected[i], actual);
+        }
+        Assert.assertFalse(it.hasNext());
+    }
 }
