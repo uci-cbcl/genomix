@@ -21,15 +21,10 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.WritableComparable;
-
-import edu.uci.ics.genomix.data.KmerUtil;
-import edu.uci.ics.genomix.data.Marshal;
 
 
 public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializable{
@@ -213,6 +208,21 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
         return key.equals(ew.key) && readIDs.equals(ew.readIDs);
     }
     
+    public String printReadIdSet(){
+        StringBuilder sbuilder = new StringBuilder();
+        String delim = "";
+        long[] ids = readIDs.toReadIDArray();
+        if(ids.length > 0){
+            Arrays.sort(ids);
+            for(int i = 0; i < ids.length - 1; i++){
+                sbuilder.append(delim).append(ids[i]);
+                delim = ",";
+            }
+            sbuilder.append(ids.length);
+        }
+        sbuilder.append("]}");
+        return sbuilder.toString();
+    }
     /**
      * this version of toString sorts the readIds so they're a little easier to see
      */

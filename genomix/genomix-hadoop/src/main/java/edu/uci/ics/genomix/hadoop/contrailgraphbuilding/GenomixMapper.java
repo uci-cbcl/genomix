@@ -17,7 +17,6 @@ import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -40,8 +39,12 @@ public class GenomixMapper extends MapReduceBase implements
     private VKmerBytesWritable nextReverseKmer;
     private PositionWritable nodeId;
     private PositionListWritable nodeIdList;
-    private VKmerListWritable edgeListForPreKmer;
-    private VKmerListWritable edgeListForNextKmer;
+    private EdgeWritable edgeForPreKmer;
+    private EdgeWritable edgeForNextKmer;
+    private EdgeListWritable edgeListForPreKmer;
+    private EdgeListWritable edgeListForNextKmer;
+//    private VKmerListWritable edgeListForPreKmer;
+//    private VKmerListWritable edgeListForNextKmer;
     private NodeWritable outputNode;
     
     private KmerDir preKmerDir;
@@ -61,8 +64,10 @@ public class GenomixMapper extends MapReduceBase implements
         nextReverseKmer = new VKmerBytesWritable();
         nodeId = new PositionWritable();
         nodeIdList = new PositionListWritable();
-        edgeListForPreKmer = new VKmerListWritable();
-        edgeListForNextKmer = new VKmerListWritable();
+        edgeForPreKmer = new EdgeWritable();
+        edgeForNextKmer = new EdgeWritable();
+        edgeListForPreKmer = new EdgeListWritable();
+        edgeListForNextKmer = new EdgeListWritable();
         outputNode = new NodeWritable();
         preKmerDir = KmerDir.FORWARD;
         curKmerDir = KmerDir.FORWARD;
@@ -155,14 +160,22 @@ public class GenomixMapper extends MapReduceBase implements
 //    				    edgeListForPreKmer.append(preForwardKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
 //    				    outputNode.setThreadList(DirectionFlag.DIR_RR, nodeIdList);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_RR, new EdgeListWritable(Arrays.asList(new EdgeWritable(preForwardKmer, nodeIdList))));
+    				    edgeListForPreKmer.reset();
+    				    edgeForPreKmer.setKey(preForwardKmer);
+    				    edgeForPreKmer.setReadIDs(nodeIdList);
+    				    edgeListForPreKmer.add(edgeForPreKmer);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
     					break;
     				case REVERSE:
 //    				    edgeListForPreKmer.reset();
 //    				    edgeListForPreKmer.append(preReverseKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
 //    					outputNode.setThreadList(DirectionFlag.DIR_RF, nodeIdList);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_RF, new EdgeListWritable(Arrays.asList(new EdgeWritable(preReverseKmer, nodeIdList))));
+                        edgeListForPreKmer.reset();
+                        edgeForPreKmer.setKey(preReverseKmer);
+                        edgeForPreKmer.setReadIDs(nodeIdList);
+                        edgeListForPreKmer.add(edgeForPreKmer);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
     					break;
     			}
     			break;
@@ -173,14 +186,22 @@ public class GenomixMapper extends MapReduceBase implements
 //    				    edgeListForPreKmer.append(preForwardKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
 //    					outputNode.setThreadList(DirectionFlag.DIR_FR, nodeIdList);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, new EdgeListWritable(Arrays.asList(new EdgeWritable(preForwardKmer, nodeIdList))));
+    				    edgeListForPreKmer.reset();
+                        edgeForPreKmer.setKey(preForwardKmer);
+                        edgeForPreKmer.setReadIDs(nodeIdList);
+                        edgeListForPreKmer.add(edgeForPreKmer);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
     					break;
     				case REVERSE:
 //    				    edgeListForPreKmer.reset();
 //    				    edgeListForPreKmer.append(preReverseKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
 //    					outputNode.setThreadList(DirectionFlag.DIR_FF, nodeIdList);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, new EdgeListWritable(Arrays.asList(new EdgeWritable(preReverseKmer, nodeIdList))));
+    				    edgeListForPreKmer.reset();
+                        edgeForPreKmer.setKey(preReverseKmer);
+                        edgeForPreKmer.setReadIDs(nodeIdList);
+                        edgeListForPreKmer.add(edgeForPreKmer);
+    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
     					break;
     			}
     			break;
@@ -196,14 +217,22 @@ public class GenomixMapper extends MapReduceBase implements
 //    					edgeListForNextKmer.append(nextForwardKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
 //    					outputNode.setThreadList(DirectionFlag.DIR_FF, nodeIdList);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FF, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList))));
+    				    edgeListForNextKmer.reset();
+    				    edgeForNextKmer.setKey(nextForwardKmer);
+    				    edgeForNextKmer.setReadIDs(nodeIdList);
+    				    edgeListForNextKmer.add(edgeForNextKmer);
+    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
     					break;
     				case REVERSE:
 //    					edgeListForNextKmer.reset();
 //    					edgeListForNextKmer.append(nextReverseKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
 //    					outputNode.setThreadList(DirectionFlag.DIR_FR, nodeIdList);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FR, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextReverseKmer, nodeIdList))));
+    				    edgeListForNextKmer.reset();
+                        edgeForNextKmer.setKey(nextReverseKmer);
+                        edgeForNextKmer.setReadIDs(nodeIdList);
+                        edgeListForNextKmer.add(edgeForNextKmer);
+    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
     					break;
     			}
     			break;
@@ -214,14 +243,23 @@ public class GenomixMapper extends MapReduceBase implements
 //    					edgeListForNextKmer.append(nextForwardKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
 //    					outputNode.setThreadList(DirectionFlag.DIR_RF, nodeIdList);
-    					outputNode.setEdgeList(DirectionFlag.DIR_RF, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList))));
+    				    edgeListForNextKmer.reset();
+                        edgeForNextKmer.setKey(nextForwardKmer);
+                        edgeForNextKmer.setReadIDs(nodeIdList);
+                        edgeListForNextKmer.add(edgeForNextKmer);
+    				    new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList)));
+    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
     					break;
     				case REVERSE:
 //    					edgeListForNextKmer.reset();
 //    					edgeListForNextKmer.append(nextReverseKmer);
 //    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
 //    					outputNode.setThreadList(DirectionFlag.DIR_RR, nodeIdList);
-    					outputNode.setEdgeList(DirectionFlag.DIR_RR, new EdgeListWritable(Arrays.asList(new EdgeWritable(nextReverseKmer, nodeIdList))));
+    				    edgeListForNextKmer.reset();
+                        edgeForNextKmer.setKey(nextReverseKmer);
+                        edgeForNextKmer.setReadIDs(nodeIdList);
+                        edgeListForNextKmer.add(edgeForNextKmer);
+    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
     					break;
     			}
     			break;

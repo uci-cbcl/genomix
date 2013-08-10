@@ -145,8 +145,19 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         return maxStorageSize - offset;
     }
     
-    public String printReadIdSet(){
-        String output = "[";
+    public String printStartReadIdSet(){
+        String output = "5':[";
+        if(valueCount > 0){
+            for(int i = 0; i < valueCount - 1; i++)
+                output += getPosition(i).getReadId() + ",";
+            output += getPosition(valueCount - 1).getReadId();
+        }
+        output += "]";
+        return output;
+    }
+    
+    public String printEndReadIdSet(){
+        String output = "~5':[";
         if(valueCount > 0){
             for(int i = 0; i < valueCount - 1; i++)
                 output += getPosition(i).getReadId() + ",";
@@ -309,7 +320,6 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
     
     public class readIDIterator implements Iterator<Long> {
-        private int index = 0;
 
         @Override
         public boolean hasNext() {
