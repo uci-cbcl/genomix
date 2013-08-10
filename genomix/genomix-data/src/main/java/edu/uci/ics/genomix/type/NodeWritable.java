@@ -288,6 +288,28 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return sbuilder.toString();
     }
 
+    /**
+     * merge this node with another node.  If a flip is necessary, `other` will flip.
+     * According to `dir`:
+     *  * kmers are concatenated
+     *  * coverage becomes a weighted average
+     *  * startReads and endReads are merged
+     *  * my edges are replaced with some subset of `other`'s edges
+     *  
+     *  Raises an error when:
+     *  1) non-overlapping kmers
+     *  2) `other` has degree > 1 towards me
+     * 
+     * @param dir: one of the DirectionFlag.DIR_*
+     * @param other: the node to merge with.  I should have a `dir` edge towards `other`
+     */
+    public void mergeWithNode(byte dir, final NodeWritable other) {
+        switch(dir & DirectionFlag.DIR_MASK) {
+            case DIR_FF:
+                
+        }
+    }
+    
     public int inDegree() {
         return edges[DirectionFlag.DIR_RR].getCountOfPosition() + edges[DirectionFlag.DIR_RF].getCountOfPosition();
     }
