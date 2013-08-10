@@ -33,20 +33,17 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
 
     private static final int SIZE_FLOAT = 4;
-    
-    private EdgeListWritable[] edges = {null, null, null, null};
-    
-    private PositionListWritable startReads;  // first internalKmer in read
-    private PositionListWritable endReads;  //first internalKmer in read (but internalKmer was flipped)
-    
+
+    private EdgeListWritable[] edges = { null, null, null, null };
+
+    private PositionListWritable startReads; // first internalKmer in read
+    private PositionListWritable endReads; // first internalKmer in read (but
+                                           // internalKmer was flipped)
+
     private VKmerBytesWritable internalKmer;
 
     private float averageCoverage;
 
-    // merge/update directions
-
-    // merge/update directions
-    
     // merge/update directions
     public static class DirectionFlag {
         public static final byte DIR_FF = 0b00 << 0;
@@ -55,35 +52,40 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         public static final byte DIR_RR = 0b11 << 0;
         public static final byte DIR_MASK = 0b11 << 0;
         public static final byte DIR_CLEAR = 0b1111100 << 0;
-        
-        public static final byte[] values = {DIR_FF, DIR_FR, DIR_RF, DIR_RR};
+
+        public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
     }
-        
+
     public NodeWritable() {
-        for (byte d: DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             edges[d] = new EdgeListWritable();
         }
         startReads = new PositionListWritable();
         endReads = new PositionListWritable();
-        internalKmer = new VKmerBytesWritable();  // in graph construction - not set kmerlength Optimization: VKmer
+        internalKmer = new VKmerBytesWritable(); // in graph construction - not
+                                                 // set kmerlength
+                                                 // Optimization: VKmer
         averageCoverage = 0;
     }
-    
-    public NodeWritable(EdgeListWritable[] edges,
-            PositionListWritable startReads, PositionListWritable endReads,
+
+    public NodeWritable(EdgeListWritable[] edges, PositionListWritable startReads, PositionListWritable endReads,
             VKmerBytesWritable kmer, float coverage) {
         this();
         setAsCopy(edges, startReads, endReads, kmer, coverage);
     }
-    
-    public void setAsCopy(NodeWritable node){
+
+    public NodeWritable(byte[] data, int offset) {
+        this();
+        setAsReference(data, offset);
+    }
+
+    public void setAsCopy(NodeWritable node) {
         setAsCopy(node.edges, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
     }
-    
-    public void setAsCopy(EdgeListWritable[] edges,
-            PositionListWritable startReads, PositionListWritable endReads, 
+
+    public void setAsCopy(EdgeListWritable[] edges, PositionListWritable startReads, PositionListWritable endReads,
             VKmerBytesWritable kmer2, float coverage) {
-        for (byte d: DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             this.edges[d].setAsCopy(edges[d]);
         }
         this.startReads.set(startReads);
@@ -93,7 +95,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void reset() {
-        for (byte d: DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             edges[d].reset();
         }
         startReads.reset();
@@ -101,7 +103,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         internalKmer.reset(0);
         averageCoverage = 0;
     }
-    
+
     public VKmerBytesWritable getInternalKmer() {
         return internalKmer;
     }
@@ -113,45 +115,48 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public int getKmerLength() {
         return internalKmer.getKmerLetterLength();
     }
-    
+
     public EdgeListWritable getEdgeList(byte dir) {
         return edges[dir & DirectionFlag.DIR_MASK];
     }
-    
+
     public void setEdgeList(byte dir, EdgeListWritable edgeList) {
         this.edges[dir & DirectionFlag.DIR_MASK].setAsCopy(edgeList);
     }
-	
-	/**
-	 * Update my coverage to be the average of this and other. Used when merging paths.
-	 */
-	public void mergeCoverage(NodeWritable other) {
-	    // sequence considered in the average doesn't include anything overlapping with other kmers
-	    float adjustedLength = internalKmer.getKmerLetterLength() + other.internalKmer.getKmerLetterLength() - (KmerBytesWritable.getKmerLength() - 1) * 2;
-	    
-	    float myCount = (internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * averageCoverage;
-	    float otherCount = (other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1) * other.averageCoverage;
-	    averageCoverage = (myCount + otherCount) / adjustedLength;
-	}
-	
-	/**
-	 * Update my coverage as if all the reads in other became my own 
-	 */
-	public void addCoverage(NodeWritable other) {
-	    float myAdjustedLength = internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
-	    float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1; 
-	    averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
-	}
-	
-	public void setAvgCoverage(float coverage) {
-	    averageCoverage = coverage;
-	}
-	
-	public float getAvgCoverage() {
-	    return averageCoverage;
-	}
-	
-	public PositionListWritable getStartReads() {
+
+    /**
+     * Update my coverage to be the average of this and other. Used when merging
+     * paths.
+     */
+    public void mergeCoverage(NodeWritable other) {
+        // sequence considered in the average doesn't include anything
+        // overlapping with other kmers
+        float adjustedLength = internalKmer.getKmerLetterLength() + other.internalKmer.getKmerLetterLength()
+                - (KmerBytesWritable.getKmerLength() - 1) * 2;
+
+        float myCount = (internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() + 1) * averageCoverage;
+        float otherCount = (other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() + 1) * other.averageCoverage;
+        averageCoverage = (myCount + otherCount) / adjustedLength;
+    }
+
+    /**
+     * Update my coverage as if all the reads in other became my own
+     */
+    public void addCoverage(NodeWritable other) {
+        float myAdjustedLength = internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
+        float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
+        averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
+    }
+
+    public void setAvgCoverage(float coverage) {
+        averageCoverage = coverage;
+    }
+
+    public float getAvgCoverage() {
+        return averageCoverage;
+    }
+
+    public PositionListWritable getStartReads() {
         return startReads;
     }
 
@@ -168,22 +173,22 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     /**
-	 * Returns the length of the byte-array version of this node
-	 */
-	public int getSerializedLength() {
-	    int length = 0;
-	    for (byte d:DirectionFlag.values) {
-	        length += edges[d].getLength();
-	    }
-	    length += internalKmer.getLength();
-	    length += this.startReads.getLength();
-	    length += this.endReads.getLength();
-	    length += SIZE_FLOAT;
-	    return length;
-	}
-	
-	/**
-     * Return this Node's representation as a new byte array 
+     * Returns the length of the byte-array version of this node
+     */
+    public int getSerializedLength() {
+        int length = 0;
+        for (byte d : DirectionFlag.values) {
+            length += edges[d].getLength();
+        }
+        length += startReads.getLength();
+        length += endReads.getLength();
+        length += internalKmer.getLength();
+        length += SIZE_FLOAT; // avgCoverage
+        return length;
+    }
+
+    /**
+     * Return this Node's representation as a new byte array
      */
     public byte[] marshalToByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(getSerializedLength());
@@ -194,7 +199,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     public void setAsCopy(byte[] data, int offset) {
         int curOffset = offset;
-        for (byte d:DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             edges[d].setAsCopy(data, curOffset);
             curOffset += edges[d].getLength();
         }
@@ -209,7 +214,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     public void setAsReference(byte[] data, int offset) {
         int curOffset = offset;
-        for (byte d:DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             edges[d].setAsReference(data, curOffset);
             curOffset += edges[d].getLength();
         }
@@ -217,15 +222,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         curOffset += startReads.getLength();
         endReads.setNewReference(data, curOffset);
         curOffset += endReads.getLength();
-        
-        internalKmer.setAsReference(data, curOffset);        
+
+        internalKmer.setAsReference(data, curOffset);
         curOffset += internalKmer.getLength();
         averageCoverage = Marshal.getFloat(data, curOffset);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-        for (byte d:DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             edges[d].write(out);
         }
         startReads.write(out);
@@ -237,7 +242,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
-        for (byte d:DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             edges[d].readFields(in);
         }
         startReads.readFields(in);
@@ -265,51 +270,153 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     @Override
     public boolean equals(Object o) {
-        if (! (o instanceof NodeWritable))
+        if (!(o instanceof NodeWritable))
             return false;
-            
+
         NodeWritable nw = (NodeWritable) o;
-        for (byte d:DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             if (!edges[d].equals(nw.edges[d]))
                 return false;
         }
-        return averageCoverage == nw.averageCoverage && internalKmer.equals(nw.internalKmer);
+        
+        return (averageCoverage == nw.averageCoverage && startReads.equals(nw.startReads) &&
+                endReads.equals(nw.endReads) && internalKmer.equals(nw.internalKmer));
     }
 
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        for (byte d: DirectionFlag.values) {
+        for (byte d : DirectionFlag.values) {
             sbuilder.append(edges[d].toString()).append('\t');
         }
+        sbuilder.append("{5':" + startReads.toString() + ", ~5':" + endReads.toString() + "}");
         sbuilder.append(internalKmer.toString()).append('\t');
         sbuilder.append(averageCoverage).append('x').append('}');
         return sbuilder.toString();
     }
 
     /**
-     * merge this node with another node.  If a flip is necessary, `other` will flip.
+     * merge this node with another node. If a flip is necessary, `other` will flip.
      * According to `dir`:
-     *  * kmers are concatenated
-     *  * coverage becomes a weighted average
-     *  * startReads and endReads are merged
-     *  * my edges are replaced with some subset of `other`'s edges
-     *  
-     *  Raises an error when:
-     *  1) non-overlapping kmers
-     *  2) `other` has degree > 1 towards me
+     * 1) kmers are concatenated/prepended/flipped
+     * 2) coverage becomes a weighted average of the two spans
+     * 3) startReads and endReads are merged and possibly flipped
+     * 4) my edges are replaced with some subset of `other`'s edges
      * 
-     * @param dir: one of the DirectionFlag.DIR_*
-     * @param other: the node to merge with.  I should have a `dir` edge towards `other`
+     * An error is raised when:
+     * 1) non-overlapping kmers  // TODO
+     * 2) `other` has degree > 1 towards me
+     * 
+     * @param dir
+     *            : one of the DirectionFlag.DIR_*
+     * @param other
+     *            : the node to merge with. I should have a `dir` edge towards `other`
      */
     public void mergeWithNode(byte dir, final NodeWritable other) {
-        switch(dir & DirectionFlag.DIR_MASK) {
-            case DIR_FF:
-                
+        mergeEdges(dir, other);
+        mergeStartAndEndReadIDs(dir, other);
+        mergeCoverage(other);
+        internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
+    }
+
+    /**
+     * merge my edge list (both kmers and readIDs) with those of `other`.  Assumes that `other` is doing the flipping, if any.
+     */
+    private void mergeEdges(byte dir, NodeWritable other) {
+        switch (dir & DirectionFlag.DIR_MASK) {
+            case DirectionFlag.DIR_FF:
+                if (outDegree() > 1)
+                    throw new IllegalArgumentException("Illegal FF merge attempted! My outgoing degree is " + outDegree() + " in " + toString());
+                if (other.inDegree() > 1)
+                    throw new IllegalArgumentException("Illegal FF merge attempted! Other incoming degree is " + other.inDegree() + " in " + other.toString());
+                edges[DirectionFlag.DIR_FF].setAsCopy(other.edges[DirectionFlag.DIR_FF]);
+                edges[DirectionFlag.DIR_FR].setAsCopy(other.edges[DirectionFlag.DIR_FR]);
+                break;
+            case DirectionFlag.DIR_FR:
+                if (outDegree() > 1)
+                    throw new IllegalArgumentException("Illegal FR merge attempted! My outgoing degree is " + outDegree() + " in " + toString());
+                if (other.outDegree() > 1)
+                    throw new IllegalArgumentException("Illegal FR merge attempted! Other outgoing degree is " + other.outDegree() + " in " + other.toString());
+                edges[DirectionFlag.DIR_FF].setAsCopy(other.edges[DirectionFlag.DIR_RF]);
+                edges[DirectionFlag.DIR_FR].setAsCopy(other.edges[DirectionFlag.DIR_RR]);
+                break;
+            case DirectionFlag.DIR_RF:
+                if (inDegree() > 1)
+                    throw new IllegalArgumentException("Illegal RF merge attempted! My incoming degree is " + inDegree() + " in " + toString());
+                if (other.inDegree() > 1)
+                    throw new IllegalArgumentException("Illegal RF merge attempted! Other incoming degree is " + other.inDegree() + " in " + other.toString());
+                edges[DirectionFlag.DIR_RF].setAsCopy(other.edges[DirectionFlag.DIR_FF]);
+                edges[DirectionFlag.DIR_RR].setAsCopy(other.edges[DirectionFlag.DIR_FR]);
+                break;
+            case DirectionFlag.DIR_RR:
+                if (inDegree() > 1)
+                    throw new IllegalArgumentException("Illegal RR merge attempted! My incoming degree is " + inDegree() + " in " + toString());
+                if (other.outDegree() > 1)
+                    throw new IllegalArgumentException("Illegal RR merge attempted! Other outgoing degree is " + other.outDegree() + " in " + other.toString());
+                edges[DirectionFlag.DIR_RF].setAsCopy(other.edges[DirectionFlag.DIR_RF]);
+                edges[DirectionFlag.DIR_RR].setAsCopy(other.edges[DirectionFlag.DIR_RR]);
+                break;
         }
     }
-    
+
+    private void mergeStartAndEndReadIDs(byte dir, NodeWritable other) {
+        int K = KmerBytesWritable.lettersInKmer;
+        int otherLength = other.internalKmer.lettersInKmer;
+        int thisLength = internalKmer.lettersInKmer;
+        int newOtherOffset, newThisOffset;
+        switch (dir & DirectionFlag.DIR_MASK) {
+            case DirectionFlag.DIR_FF:
+                newOtherOffset = thisLength - K + 1;
+                // stream theirs in with my offset
+                for (PositionWritable p : other.startReads) {
+                    startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                }
+                for (PositionWritable p : other.endReads) {
+                    endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                }
+                break;
+            case DirectionFlag.DIR_FR:
+                newOtherOffset = thisLength - K + 1 + otherLength - K;
+                // stream theirs in, offset and flipped
+                for (PositionWritable p : other.startReads) {
+                    endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                }
+                for (PositionWritable p : other.endReads) {
+                    startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                }
+                break;
+            case DirectionFlag.DIR_RF:
+                newThisOffset = otherLength - K + 1;
+                newOtherOffset = otherLength - K;
+                // shift my offsets (other is prepended)
+                for (PositionWritable p : startReads) {
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                }
+                for (PositionWritable p : other.endReads) {
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                }
+                //stream theirs in, not offset (they are first now) but flipped
+                for (PositionWritable p : other.startReads) {
+                    endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                }
+                for (PositionWritable p : other.endReads) {
+                    startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                }
+                break;
+            case DirectionFlag.DIR_RR:
+                newThisOffset = otherLength - K + 1;
+                // shift my offsets (other is prepended)
+                for (PositionWritable p : startReads) {
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                }
+                for (PositionWritable p : other.endReads) {
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                }
+                break;
+        }
+    }
+
     public int inDegree() {
         return edges[DirectionFlag.DIR_RR].getCountOfPosition() + edges[DirectionFlag.DIR_RF].getCountOfPosition();
     }
@@ -319,7 +426,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     /*
-     * Return if this node is a "path" compressible node, that is, it has an in-degree and out-degree of 1 
+     * Return if this node is a "path" compressible node, that is, it has an
+     * in-degree and out-degree of 1
      */
     public boolean isPathNode() {
         return inDegree() == 1 && outDegree() == 1;

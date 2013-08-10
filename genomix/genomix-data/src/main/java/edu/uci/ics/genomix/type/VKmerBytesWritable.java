@@ -19,6 +19,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 
 import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
@@ -34,7 +35,7 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
  * Note: `offset` as used in this class is the offset at which the *kmer*
  * begins. There is a {@value HEADER_SIZE}-byte header preceding the kmer
  */
-public class VKmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
+public class VKmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { 
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 }; // int indicating 0 length
     protected static final int HEADER_SIZE = 4; // number of bytes for header info
@@ -289,6 +290,10 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
 
     @Override
     public byte[] getBytes() {
+        return ByteBuffer.wrap(bytes, getBlockOffset(), getLength()).array();
+    }
+    
+    public byte[] getBlockBytes() {
         return bytes;
     }
 
@@ -309,7 +314,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     /**
      * Return the number of bytes used by both header and kmer chain
      */
-    @Override
+//    @Override
     public int getLength() {
         return bytesUsed + HEADER_SIZE;
     }
@@ -728,6 +733,12 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     
     public float fracDissimilar(VKmerBytesWritable other) {
         return fracDissimilar(this, other);
+    }
+
+    @Override
+    public int compareTo(BinaryComparable o) {
+        // TODO Auto-generated method stub
+        return 0;
     }
 
 }
