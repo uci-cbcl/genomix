@@ -139,9 +139,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * set from String kmer
      */
     public void setAsCopy(String kmer) {
-        int k = kmer.length();
-        reset(k);
-        System.arraycopy(kmer.getBytes(), 0, bytes, kmerStartOffset, bytesUsed);
+        setByRead(kmer.length(), kmer.getBytes(), 0);
     }
 
     /**

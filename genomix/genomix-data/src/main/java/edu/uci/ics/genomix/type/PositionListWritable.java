@@ -276,6 +276,22 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         }
         return sbuilder.toString();
     }
+    
+    public long[] toUUIDArray() {
+        long[] result = new long[valueCount];
+        for (int i=0; i < valueCount; i++) {
+            result[i] = getPosition(i).getUUID();
+        }
+        return result;
+    }
+    
+    public long[] toReadIDArray() {
+        long[] result = new long[valueCount];
+        for (int i=0; i < valueCount; i++) {
+            result[i] = getPosition(i).getReadId();
+        }
+        return result;
+    }
 
     @Override
     public int hashCode() {

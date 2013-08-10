@@ -43,6 +43,14 @@ public class VKmerBytesWritableTest {
         kmer.setByRead(k, array, 1);
         Assert.assertEquals(kmer.toString(), "ATAGAAG");
     }
+    
+    @Test
+    public void TestConstructorFromRead() {
+        String kmerStr = "ACTAGCTAGCTAGTCGATCGACTAGCTGATCGATCGATCGTAGCTAGC";
+        VKmerBytesWritable kmer = new VKmerBytesWritable(kmerStr);
+        Assert.assertEquals(kmerStr.length(), kmer.getKmerLetterLength());
+        Assert.assertEquals(kmerStr.toString(), kmer.toString());
+    }
 
     @Test
     public void TestMoveKmer() {

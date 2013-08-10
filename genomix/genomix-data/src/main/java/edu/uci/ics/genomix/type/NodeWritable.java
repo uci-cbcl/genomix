@@ -34,14 +34,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     private static final int SIZE_FLOAT = 4;
     
-    // edge list
-    private VKmerListWritable edges[] = {null, null, null, null};
+    private EdgeListWritable[] edges = {null, null, null, null};
     
-    // connections within the same read -- used for resolving repeats and scaffolding
-    private PositionListWritable threads[] = {null, null, null, null};
-    
-    private PositionListWritable startReads;  // first internalKmer in read (or last but internalKmer was flipped)
-    private PositionListWritable endReads;  //last internalKmer in read (or first but internalKmer was flipped)
+    private PositionListWritable startReads;  // first internalKmer in read
+    private PositionListWritable endReads;  //first internalKmer in read (but internalKmer was flipped)
     
     private VKmerBytesWritable internalKmer;
 
@@ -65,8 +61,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         
     public NodeWritable() {
         for (byte d: DirectionFlag.values) {
-            edges[d] = new VKmerListWritable();
-            threads[d] = new PositionListWritable();
+            edges[d] = new EdgeListWritable();
         }
         startReads = new PositionListWritable();
         endReads = new PositionListWritable();
@@ -74,23 +69,22 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         averageCoverage = 0;
     }
     
-    public NodeWritable(VKmerListWritable[] edges, PositionListWritable[] threads,
+    public NodeWritable(EdgeListWritable[] edges,
             PositionListWritable startReads, PositionListWritable endReads,
             VKmerBytesWritable kmer, float coverage) {
         this();
-        set(edges, threads, startReads, endReads, kmer, coverage);
+        setAsCopy(edges, startReads, endReads, kmer, coverage);
     }
     
-    public void set(NodeWritable node){
-        set(node.edges, node.threads, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
+    public void setAsCopy(NodeWritable node){
+        setAsCopy(node.edges, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
     }
     
-    public void set(VKmerListWritable[] edges, PositionListWritable[] threads,
+    public void setAsCopy(EdgeListWritable[] edges,
             PositionListWritable startReads, PositionListWritable endReads, 
             VKmerBytesWritable kmer2, float coverage) {
         for (byte d: DirectionFlag.values) {
-            this.edges[d].setCopy(edges[d]);
-            this.threads[d].set(threads[d]);
+            this.edges[d].setAsCopy(edges[d]);
         }
         this.startReads.set(startReads);
         this.endReads.set(endReads);
@@ -101,7 +95,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void reset() {
         for (byte d: DirectionFlag.values) {
             edges[d].reset();
-            threads[d].reset();
         }
         startReads.reset();
         endReads.reset();
@@ -121,20 +114,12 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return internalKmer.getKmerLetterLength();
     }
     
-    public VKmerListWritable getEdgeList(byte dir) {
+    public EdgeListWritable getEdgeList(byte dir) {
         return edges[dir & DirectionFlag.DIR_MASK];
     }
     
-    public void setEdgeList(byte dir, VKmerListWritable edgeList) {
-        this.edges[dir & DirectionFlag.DIR_MASK].setCopy(edgeList);
-    }
-    
-    public PositionListWritable getThreadList(byte dir) {
-        return threads[dir & DirectionFlag.DIR_MASK];
-    }
-    
-    public void setThreadList(byte dir, PositionListWritable threadList) {
-        this.threads[dir & DirectionFlag.DIR_MASK].set(threadList);
+    public void setEdgeList(byte dir, EdgeListWritable edgeList) {
+        this.edges[dir & DirectionFlag.DIR_MASK].setAsCopy(edgeList);
     }
 	
 	/**
@@ -189,7 +174,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	    int length = 0;
 	    for (byte d:DirectionFlag.values) {
 	        length += edges[d].getLength();
-	        length += threads[d].getLength();
 	    }
 	    length += internalKmer.getLength();
 	    length += this.startReads.getLength();
@@ -211,12 +195,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void setAsCopy(byte[] data, int offset) {
         int curOffset = offset;
         for (byte d:DirectionFlag.values) {
-            edges[d].setCopy(data, curOffset);
+            edges[d].setAsCopy(data, curOffset);
             curOffset += edges[d].getLength();
-        }
-        for (byte d:DirectionFlag.values) {
-            threads[d].set(data, curOffset);
-            curOffset += threads[d].getLength();
         }
         startReads.set(data, curOffset);
         curOffset += startReads.getLength();
@@ -230,12 +210,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void setAsReference(byte[] data, int offset) {
         int curOffset = offset;
         for (byte d:DirectionFlag.values) {
-            edges[d].setNewReference(data, curOffset);
+            edges[d].setAsReference(data, curOffset);
             curOffset += edges[d].getLength();
-        }
-        for (byte d:DirectionFlag.values) {
-            threads[d].setNewReference(data, curOffset);
-            curOffset += threads[d].getLength();
         }
         startReads.setNewReference(data, curOffset);
         curOffset += startReads.getLength();
@@ -252,9 +228,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         for (byte d:DirectionFlag.values) {
             edges[d].write(out);
         }
-        for (byte d:DirectionFlag.values) {
-            threads[d].write(out);
-        }
         startReads.write(out);
         endReads.write(out);
         this.internalKmer.write(out);
@@ -266,9 +239,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         reset();
         for (byte d:DirectionFlag.values) {
             edges[d].readFields(in);
-        }
-        for (byte d:DirectionFlag.values) {
-            threads[d].readFields(in);
         }
         startReads.readFields(in);
         endReads.readFields(in);
@@ -300,7 +270,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             
         NodeWritable nw = (NodeWritable) o;
         for (byte d:DirectionFlag.values) {
-            if (!edges[d].equals(nw.edges[d]) || !threads[d].equals(nw.threads[d]))
+            if (!edges[d].equals(nw.edges[d]))
                 return false;
         }
         return averageCoverage == nw.averageCoverage && internalKmer.equals(nw.internalKmer);
@@ -313,24 +283,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         for (byte d: DirectionFlag.values) {
             sbuilder.append(edges[d].toString()).append('\t');
         }
-        for (byte d: DirectionFlag.values) {
-            sbuilder.append(threads[d].toString()).append('\t');
-        }
         sbuilder.append(internalKmer.toString()).append('\t');
         sbuilder.append(averageCoverage).append('x').append('}');
         return sbuilder.toString();
-    }
-
-    public void mergeForwardNext(final NodeWritable nextNode, int initialKmerSize) {
-        edges[DirectionFlag.DIR_FF].setCopy(nextNode.edges[DirectionFlag.DIR_FF]);
-        edges[DirectionFlag.DIR_FR].setCopy(nextNode.edges[DirectionFlag.DIR_FR]);
-        internalKmer.mergeWithFFKmer(initialKmerSize, nextNode.getInternalKmer());
-    }
-
-    public void mergeForwardPre(final NodeWritable preNode, int initialKmerSize) {
-        edges[DirectionFlag.DIR_RF].setCopy(preNode.edges[DirectionFlag.DIR_RF]);
-        edges[DirectionFlag.DIR_RR].setCopy(preNode.edges[DirectionFlag.DIR_RR]);
-        internalKmer.mergeWithRRKmer(initialKmerSize, preNode.getInternalKmer());
     }
 
     public int inDegree() {
