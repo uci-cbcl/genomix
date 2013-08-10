@@ -118,6 +118,10 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
         readIDs.append((byte)0, readID, 0);
     }
     
+    public void appendReadID(long readID) {
+        readIDs.append((byte)0, readID, 0);
+    }
+    
     public int getLength() {
         return key.getLength() + readIDs.getLength();
     }
