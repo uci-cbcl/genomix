@@ -65,7 +65,7 @@ class BinaryDataCleanLoadGraphReader extends
             /**
              * set the vertex value
              */
-            vertexValue.set(getRecordReader().getCurrentValue());
+            vertexValue.setAsCopy(getRecordReader().getCurrentValue());
             vertex.setVertexValue(vertexValue);
         }
 
