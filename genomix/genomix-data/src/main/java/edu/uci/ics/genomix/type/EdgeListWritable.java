@@ -80,6 +80,10 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         return edges.set(i, element);
     }
     
+    public boolean isEmpty(){
+        return getCountOfPosition() > 0;
+    }
+    
     public int getCountOfPosition() {
         return edges.size();
     }
@@ -222,6 +226,29 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             }
         };
         return it;
+    }
+    
+    /*
+     * remove the first instance of `toRemove`. Uses a linear scan. Throws an
+     * exception if not in this list.
+     */
+    public void remove(VKmerBytesWritable toRemove, boolean ignoreMissing) {
+        Iterator<VKmerBytesWritable> posIterator = this.getKeys();
+        while (posIterator.hasNext()) {
+            if (toRemove.equals(posIterator.next())) {
+                posIterator.remove();
+                return; // break as soon as the element is found 
+            }
+        }
+        // element was not found
+        if (!ignoreMissing) {
+            throw new ArrayIndexOutOfBoundsException("the KmerBytesWritable `" + toRemove.toString()
+                    + "` was not found in this list.");
+        }
+    }
+
+    public void remove(VKmerBytesWritable toRemove) {
+        remove(toRemove, false);
     }
 
     /*

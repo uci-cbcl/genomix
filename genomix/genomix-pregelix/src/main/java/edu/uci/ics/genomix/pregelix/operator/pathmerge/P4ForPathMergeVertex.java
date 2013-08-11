@@ -9,6 +9,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
@@ -48,7 +49,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  * Naive Algorithm for path merge graph
  */
 public class P4ForPathMergeVertex extends
-    BasicGraphCleanVertex {
+    BasicPathMergeVertex {
     public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
     public static final String PROBBEINGRANDOMHEAD = "P4ForPathMergeVertex.probBeingRandomHead";
 
@@ -75,9 +76,9 @@ public class P4ForPathMergeVertex extends
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
+            incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable();
+            outgoingMsg = new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
         if(destVertexId == null)
@@ -111,13 +112,13 @@ public class P4ForPathMergeVertex extends
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
-        if (value.getFFList().getCountOfPosition() > 0) {
-            nextKmer.setAsCopy(value.getFFList().getPosition(0));
+        if (!value.getFFList().isEmpty()) {
+            nextKmer.setAsCopy(value.getFFList().get(0).getKey());
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
         if (value.getFRList().getCountOfPosition() > 0) {
-            nextKmer.setAsCopy(value.getFRList().getPosition(0));
+            nextKmer.setAsCopy(value.getFRList().get(0).getKey());
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
@@ -129,12 +130,12 @@ public class P4ForPathMergeVertex extends
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
         if (value.getRRList().getCountOfPosition() > 0) {
-            prevKmer.setAsCopy(value.getRRList().getPosition(0));
+            prevKmer.setAsCopy(value.getRRList().get(0).getKey());
             prevHead = isNodeRandomHead(prevKmer);
             return true;
         }
         if (value.getRFList().getCountOfPosition() > 0) {
-            prevKmer.setAsCopy(value.getRFList().getPosition(0));
+            prevKmer.setAsCopy(value.getRFList().get(0).getKey());
             prevHead = isNodeRandomHead(prevKmer);
             return true;
         }
@@ -142,7 +143,7 @@ public class P4ForPathMergeVertex extends
     }
     
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1)
             startSendMsg();

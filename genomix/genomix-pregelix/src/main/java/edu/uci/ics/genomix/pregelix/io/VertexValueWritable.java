@@ -49,15 +49,29 @@ public class VertexValueWritable
     }
     
     private byte state;
-    private boolean isFakeVertex = false;
+    private boolean isFakeVertex;
     
-    private HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap = new HashMapWritable<VKmerBytesWritable, VKmerListWritable>();
+    private HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap;
 
     public VertexValueWritable() {
-        
+        super();
+        state = 0;
+        isFakeVertex = false;
+        traverseMap  = new HashMapWritable<VKmerBytesWritable, VKmerListWritable>();
     }
     
-
+    public NodeWritable getNode(){
+        NodeWritable node = new NodeWritable();
+        node.setAsCopy(this.getEdges(), this.getStartReads(), this.getEndReads(), 
+                this.getInternalKmer(), this.getAverageCoverage());
+        return node;
+    }
+    
+    public void setNode(NodeWritable node){
+        this.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
+                node.getInternalKmer(), node.getAverageCoverage());
+    }
+    
     public EdgeListWritable getFFList() {
         return getEdgeList(DirectionFlag.DIR_FF);
     }
@@ -162,16 +176,19 @@ public class VertexValueWritable
         this.traverseMap.write(out);
     }
     
-    public int inDegree(){
-        return getRFList().getCountOfPosition() + getRRList().getCountOfPosition();
-    }
-    
-    public int outDegree(){
-        return getFFList().getCountOfPosition() + getFRList().getCountOfPosition();
-    }
-    
     public int getDegree(){
         return inDegree() + outDegree();
+    }
+    
+    /**
+     * check if prev/next destination exists
+     */
+    public boolean hasPrevDest(){
+        return !getRFList().isEmpty() || !getRRList().isEmpty();
+    }
+    
+    public boolean hasNextDest(){
+        return getFFList().isEmpty() || getFRList().isEmpty();
     }
     
     /**
@@ -183,9 +200,9 @@ public class VertexValueWritable
     }
     
     /**
-     * Process any changes to value.  This is for edge updates
+     * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
      */
-    public void processUpdates(byte neighborToDeleteDir, EdgeWritable nodeToDelete,
+    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
             byte neighborToMergeDir, EdgeWritable nodeToAdd){
         byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
         this.getEdgeList(deleteDir).remove(nodeToDelete);
@@ -195,9 +212,9 @@ public class VertexValueWritable
     }
     
     /**
-     * Process any changes to value.  This is for merging
+     * Process any changes to value.  This is for merging.  nodeToAdd should be only edge
      */
-    public void processMerges(byte neighborToDeleteDir, EdgeWritable nodeToDelete,
+    public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
             byte neighborToMergeDir, EdgeWritable nodeToAdd, 
             int kmerSize, VKmerBytesWritable kmer){
         byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);

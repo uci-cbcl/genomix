@@ -2,6 +2,8 @@ package edu.uci.ics.genomix.pregelix.operator.tipremove;
 
 import java.util.Iterator;
 
+import org.apache.hadoop.io.NullWritable;
+
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
@@ -44,7 +46,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  *  Remove tip or single node when l > constant
  */
 public class TipRemoveVertex extends
-        BasicGraphCleanVertex {
+        BasicGraphCleanVertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String LENGTH = "TipRemoveVertex.length";
     private int length = -1;
     
@@ -57,11 +59,11 @@ public class TipRemoveVertex extends
         if(length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize); //kmerSize + 5
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable(kmerSize);
+            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable(kmerSize);
+            outgoingMsg = new MessageWritable();
         else
-            outgoingMsg.reset(kmerSize);
+            outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable(kmerSize);
     }

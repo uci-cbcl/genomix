@@ -70,7 +70,7 @@ public class TipAddVertex extends
             if(getVertexId().toString().equals("CTA")){
                 VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
                 vertexId.setByRead(kmerSize, "AGC".getBytes(), 0);
-                getVertexValue().getRFList().append(vertexId);
+                getVertexValue().getRFList().add(vertexId);
                 
                 //add tip vertex
                 @SuppressWarnings("rawtypes")

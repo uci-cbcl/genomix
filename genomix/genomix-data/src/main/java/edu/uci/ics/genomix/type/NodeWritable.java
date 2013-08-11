@@ -137,6 +137,22 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public void setEdgeList(byte dir, EdgeListWritable edgeList) {
         this.edges[dir & DirectionFlag.DIR_MASK].setAsCopy(edgeList);
     }
+    
+    public EdgeListWritable[] getEdges() {
+        return edges;
+    }
+
+    public void setEdges(EdgeListWritable[] edges) {
+        this.edges = edges;
+    }
+
+    public float getAverageCoverage() {
+        return averageCoverage;
+    }
+
+    public void setAverageCoverage(float averageCoverage) {
+        this.averageCoverage = averageCoverage;
+    }
 
     /**
      * Update my coverage to be the average of this and other. Used when merging

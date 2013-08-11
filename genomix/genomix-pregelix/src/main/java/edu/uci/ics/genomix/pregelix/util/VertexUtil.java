@@ -2,6 +2,7 @@ package edu.uci.ics.genomix.pregelix.util;
 
 import edu.uci.ics.genomix.pregelix.io.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class VertexUtil {
@@ -116,11 +117,11 @@ public class VertexUtil {
     /**
      * get nodeId from Ad
      */
-    public static VKmerBytesWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
+    public static EdgeWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
         if(adj.getForwardList().getCountOfPosition() > 0)
-            return adj.getForwardList().getPosition(0);
+            return adj.getForwardList().get(0);
         else if(adj.getReverseList().getCountOfPosition() > 0)
-            return adj.getReverseList().getPosition(0);
+            return adj.getReverseList().get(0);
         else
             return null;
     }

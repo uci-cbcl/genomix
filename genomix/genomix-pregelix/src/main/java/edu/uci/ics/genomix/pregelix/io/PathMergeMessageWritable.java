@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -40,6 +41,14 @@ public class PathMergeMessageWritable extends MessageWritable{
     
     public EdgeListWritable getEdgeList(byte dir) {
         return node.getEdgeList((byte) (dir & DirectionFlag.DIR_MASK));
+    }
+    
+    public EdgeWritable getNeighborEdge(){
+        for(byte d : DirectionFlag.values){
+            if(!getEdgeList(d).isEmpty())
+                return getEdgeList(d).get(0);
+        }
+        return null;
     }
 
     public void setEdgeList(byte dir, EdgeListWritable edgeList) {
@@ -86,6 +95,14 @@ public class PathMergeMessageWritable extends MessageWritable{
         this.updateMsg = updateMsg;
     }
     
+    public NodeWritable getNode() {
+        return node;
+    }
+
+    public void setNode(NodeWritable node) {
+        this.node.setAsCopy(node);
+    }
+
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
