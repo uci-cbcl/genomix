@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.io.test;
+package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -45,7 +45,7 @@ public class PathMergeMessageWritable extends MessageWritable{
     public void setEdgeList(byte dir, EdgeListWritable edgeList) {
         this.node.setEdgeList((byte) (dir & DirectionFlag.DIR_MASK), edgeList);
     }
-
+    
     public PositionListWritable getStartReads() {
         return this.node.getStartReads();
     }

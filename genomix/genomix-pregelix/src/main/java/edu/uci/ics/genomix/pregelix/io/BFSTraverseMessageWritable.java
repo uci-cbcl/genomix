@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.io.test;
+package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.DataInput;
 import java.io.DataOutput;
