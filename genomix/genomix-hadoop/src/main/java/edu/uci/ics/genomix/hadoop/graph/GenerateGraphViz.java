@@ -49,7 +49,10 @@ public class GenerateGraphViz {
                 outputEdge = convertEdgeToGraph(outputNode, value);
                 gv.addln(outputEdge);
                 /** add readIdSet **/
-                outputNode += " [shape=record, label = \"<f0> " + key.toString() 
+                String fillColor = "";
+                if(value.isStartReadOrEndRead())
+                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
+                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() 
                         + "|<f1> " + value.getStartReads().printStartReadIdSet() 
                         + "|<f2> " + value.getEndReads().printEndReadIdSet()
                         + "|<f3> " + value.getAvgCoverage() + "\"]\n";
@@ -80,19 +83,19 @@ public class GenerateGraphViz {
         edgeIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"blue\" label =\"FR: " +
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"blue\" label =\"FR: " +
                     edge.printReadIdSet() + "\"]\n";
         }
         edgeIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"green\" label =\"RF: " +
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"green\" label =\"RF: " +
                     edge.printReadIdSet() + "\"]\n";
         }
         edgeIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR: " +
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"red\" label =\"RR: " +
                     edge.printReadIdSet() + "\"]\n";
         }
         //TODO should output actualKmer instead of kmer

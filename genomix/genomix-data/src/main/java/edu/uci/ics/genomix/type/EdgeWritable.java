@@ -73,7 +73,7 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     /**
      * Set the internal readIDs when the given positionList has readid, position, and mateid set
      */
-    private void setFromPositions(PositionListWritable otherPositions) {
+    public void setFromPositions(PositionListWritable otherPositions) {
         readIDs.reset();
         for (PositionWritable p : otherPositions) {
             appendIDFromPosition(p);
@@ -212,15 +212,15 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
         StringBuilder sbuilder = new StringBuilder();
         String delim = "";
         long[] ids = readIDs.toReadIDArray();
+        sbuilder.append("[");
         if(ids.length > 0){
             Arrays.sort(ids);
-            for(int i = 0; i < ids.length - 1; i++){
+            for(int i = 0; i < ids.length; i++){
                 sbuilder.append(delim).append(ids[i]);
                 delim = ",";
             }
-            sbuilder.append(ids.length);
         }
-        sbuilder.append("]}");
+        sbuilder.append("]");
         return sbuilder.toString();
     }
     /**
