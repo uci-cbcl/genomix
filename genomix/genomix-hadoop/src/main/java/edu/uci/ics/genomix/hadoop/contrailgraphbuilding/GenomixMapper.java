@@ -15,6 +15,7 @@ import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
@@ -54,6 +55,7 @@ public class GenomixMapper extends MapReduceBase implements
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
+        KmerBytesWritable.setGlobalKmerLength(KMER_SIZE);
         preForwardKmer = new VKmerBytesWritable();
         preReverseKmer = new VKmerBytesWritable();
         curForwardKmer = new VKmerBytesWritable();
@@ -70,6 +72,15 @@ public class GenomixMapper extends MapReduceBase implements
         preKmerDir = KmerDir.FORWARD;
         curKmerDir = KmerDir.FORWARD;
         nextKmerDir = KmerDir.FORWARD;
+        
+        // paired-end reads should be named something like dsm3757.01-31-2011.ln6_1.fastq
+        // when we have a proper driver, we will set a config field instead of reading in the filename
+        String filename = job.get("map.input.file");
+        if (filename.endsWith("_2")) {
+            mateId = (byte) 1;
+        } else {
+            mateId = (byte) 0;
+        }
     }
     
     @Override

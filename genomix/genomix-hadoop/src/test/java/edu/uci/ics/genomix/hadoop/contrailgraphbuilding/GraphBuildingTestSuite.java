@@ -37,7 +37,8 @@ public class GraphBuildingTestSuite extends TestSuite{
         + "TreePath", PreFix + File.separator
         + "CyclePath", PreFix + File.separator
         + "ThreeDuplicate", PreFix + File.separator
-        + "SelfPath"};
+        + "SelfPath", PreFix + File.separator
+        + "PairedEndTest" };//, PreFix + File.separator};
 //        + "HighSplitRepeat", PreFix + File.separator
 //        + "LowSplitRepeat", PreFix + File.separator
 //        + "MidSplitRepeat", PreFix + File.separator
