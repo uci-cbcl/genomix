@@ -58,12 +58,12 @@ public class EdgeWritableTest {
             mateId = (byte) (i % 2);
             readId = (long)i + 5;
             posId = i + 3;
-            e1.appendIDFromPosition(mateId, readId, posId);
+            e1.appendReadID(readId);
             Assert.assertEquals(0, e1.getReadIDs().getPosition(i).getMateId());
             Assert.assertEquals(readId, e1.getReadIDs().getPosition(i).getReadId());
             Assert.assertEquals(0, e1.getReadIDs().getPosition(i).getPosId());
             if (i % 2 == 0) {
-                e2.appendIDFromPosition(new PositionWritable(mateId, readId, posId));
+                e2.appendReadID(new PositionWritable(mateId, readId, posId));
                 Assert.assertEquals(0, e2.getReadIDs().getPosition(i / 2).getMateId());
                 Assert.assertEquals(readId, e2.getReadIDs().getPosition(i / 2).getReadId());
                 Assert.assertEquals(0, e2.getReadIDs().getPosition(i / 2).getPosId());

@@ -44,7 +44,7 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
      */
     public EdgeWritable(VKmerBytesWritable otherKey, PositionListWritable otherPositions) {
         this();
-        setFromPositions(otherKey, otherPositions);
+        setAsCopy(otherKey, otherPositions);
     }
     
     public EdgeWritable(byte[] newStorage, int newOffset) {
@@ -54,7 +54,7 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     
     public EdgeWritable(EdgeWritable other) {
         this();
-        setFromPositions(other.key, other.readIDs);
+        setAsCopy(other.key, other.readIDs);
     }
 
     public void setAsCopy(EdgeWritable otherEdge){
@@ -65,18 +65,18 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     /**
      * Set the key and internal readIDs when the given positionList has readid, position, and mateid set
      */
-    public void setFromPositions(VKmerBytesWritable otherKey, PositionListWritable otherPositions) {
+    public void setAsCopy(VKmerBytesWritable otherKey, PositionListWritable otherPositions) {
         key.setAsCopy(otherKey);
-        setFromPositions(otherPositions);
+        setReadIDs(otherPositions);
     }
 
     /**
      * Set the internal readIDs when the given positionList has readid, position, and mateid set
      */
-    public void setFromPositions(PositionListWritable otherPositions) {
+    public void setReadIDs(PositionListWritable otherPositions) {
         readIDs.reset();
         for (PositionWritable p : otherPositions) {
-            appendIDFromPosition(p);
+            appendReadID(p);
         }
     }
 
@@ -96,23 +96,12 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     public PositionListWritable getReadIDs() {
         return readIDs;
     }
-    
-    /**
-     * set my readIDs.  NOTE: this assumes otherReadIDs is already cleared of position and mate info 
-     */
-    public void setReadIDs(PositionListWritable otherReadIDs) {
-        readIDs.set(otherReadIDs);
-    }
-    
+        
     /**
      * clear the given PositionWritable of its position & mate info, then append it
      */
-    public void appendIDFromPosition(PositionWritable posn) {
+    public void appendReadID(PositionWritable posn) {
         readIDs.append((byte)0, posn.getReadId(), 0);
-    }
-    
-    public void appendIDFromPosition(byte mateID, long readID, int posID) {
-        readIDs.append((byte)0, readID, 0);
     }
     
     public void appendReadID(long readID) {

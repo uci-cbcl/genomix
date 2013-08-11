@@ -155,14 +155,14 @@ public class GenomixMapper extends MapReduceBase implements
     				case FORWARD:    				    
     				    edgeListForPreKmer.reset();
     				    edgeForPreKmer.setKey(preForwardKmer);
-    				    edgeForPreKmer.setFromPositions(nodeIdList);
+    				    edgeForPreKmer.setReadIDs(nodeIdList);
     				    edgeListForPreKmer.add(edgeForPreKmer);
     				    outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
     					break;
     				case REVERSE:
                         edgeListForPreKmer.reset();
                         edgeForPreKmer.setKey(preReverseKmer);
-                        edgeForPreKmer.setFromPositions(nodeIdList);
+                        edgeForPreKmer.setReadIDs(nodeIdList);
                         edgeListForPreKmer.add(edgeForPreKmer);
     				    outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
     					break;
@@ -173,14 +173,14 @@ public class GenomixMapper extends MapReduceBase implements
     				case FORWARD:
     				    edgeListForPreKmer.reset();
                         edgeForPreKmer.setKey(preForwardKmer);
-                        edgeForPreKmer.setFromPositions(nodeIdList);
+                        edgeForPreKmer.setReadIDs(nodeIdList);
                         edgeListForPreKmer.add(edgeForPreKmer);
     				    outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
     					break;
     				case REVERSE:
     				    edgeListForPreKmer.reset();
                         edgeForPreKmer.setKey(preReverseKmer);
-                        edgeForPreKmer.setFromPositions(nodeIdList);
+                        edgeForPreKmer.setReadIDs(nodeIdList);
                         edgeListForPreKmer.add(edgeForPreKmer);
     				    outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
     					break;
@@ -196,14 +196,14 @@ public class GenomixMapper extends MapReduceBase implements
     				case FORWARD:
     				    edgeListForNextKmer.reset();
     				    edgeForNextKmer.setKey(nextForwardKmer);
-    				    edgeForNextKmer.setFromPositions(nodeIdList);
+    				    edgeForNextKmer.setReadIDs(nodeIdList);
     				    edgeListForNextKmer.add(edgeForNextKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
     					break;
     				case REVERSE:
     				    edgeListForNextKmer.reset();
                         edgeForNextKmer.setKey(nextReverseKmer);
-                        edgeForNextKmer.setFromPositions(nodeIdList);
+                        edgeForNextKmer.setReadIDs(nodeIdList);
                         edgeListForNextKmer.add(edgeForNextKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
     					break;
@@ -214,7 +214,7 @@ public class GenomixMapper extends MapReduceBase implements
     				case FORWARD:
     				    edgeListForNextKmer.reset();
                         edgeForNextKmer.setKey(nextForwardKmer);
-                        edgeForNextKmer.setFromPositions(nodeIdList);
+                        edgeForNextKmer.setReadIDs(nodeIdList);
                         edgeListForNextKmer.add(edgeForNextKmer);
     				    new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList)));
     					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
@@ -222,7 +222,7 @@ public class GenomixMapper extends MapReduceBase implements
     				case REVERSE:
     				    edgeListForNextKmer.reset();
                         edgeForNextKmer.setKey(nextReverseKmer);
-                        edgeForNextKmer.setFromPositions(nodeIdList);
+                        edgeForNextKmer.setReadIDs(nodeIdList);
                         edgeListForNextKmer.add(edgeForNextKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
     					break;
