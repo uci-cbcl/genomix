@@ -35,7 +35,7 @@ public class Client {
         @Option(name = "-tmpKmer-kmerByteSize", usage = "the kmerByteSize of tmpKmer", required = false)
         public int sizeKmer;
 
-        @Option(name = "-num-iteration", usage = "max number of iterations, for pagerank job only", required = false)
+        @Option(name = "-num-iteration", usage = "max number of iterations", required = false)
         public int numIteration = -1;
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
