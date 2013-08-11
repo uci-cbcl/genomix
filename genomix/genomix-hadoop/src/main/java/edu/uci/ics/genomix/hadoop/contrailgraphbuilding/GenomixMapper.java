@@ -1,25 +1,20 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
@@ -42,10 +37,8 @@ public class GenomixMapper extends MapReduceBase implements
     private VKmerBytesWritable nextReverseKmer;
     private PositionWritable nodeId;
     private PositionListWritable nodeIdList;
-    private EdgeWritable edgeForPreKmer;
-    private EdgeWritable edgeForNextKmer;
-    private EdgeListWritable edgeListForPreKmer;
-    private EdgeListWritable edgeListForNextKmer;
+    private VKmerListWritable edgeListForPreKmer;
+    private VKmerListWritable edgeListForNextKmer;
     private NodeWritable outputNode;
     
     private KmerDir preKmerDir;
@@ -53,13 +46,10 @@ public class GenomixMapper extends MapReduceBase implements
     private KmerDir nextKmerDir;
     
     byte mateId = (byte)0;
-    boolean fastqFormat = false;
-    int lineCount = 0;
     
     @Override
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
-        KmerBytesWritable.setGlobalKmerLength(KMER_SIZE);
         preForwardKmer = new VKmerBytesWritable();
         preReverseKmer = new VKmerBytesWritable();
         curForwardKmer = new VKmerBytesWritable();
@@ -68,65 +58,24 @@ public class GenomixMapper extends MapReduceBase implements
         nextReverseKmer = new VKmerBytesWritable();
         nodeId = new PositionWritable();
         nodeIdList = new PositionListWritable();
-        edgeForPreKmer = new EdgeWritable();
-        edgeForNextKmer = new EdgeWritable();
-        edgeListForPreKmer = new EdgeListWritable();
-        edgeListForNextKmer = new EdgeListWritable();
+        edgeListForPreKmer = new VKmerListWritable();
+        edgeListForNextKmer = new VKmerListWritable();
         outputNode = new NodeWritable();
         preKmerDir = KmerDir.FORWARD;
         curKmerDir = KmerDir.FORWARD;
         nextKmerDir = KmerDir.FORWARD;
-        lineCount = 0;
-        
-        // paired-end reads should be named something like dsm3757.01-31-2011.ln6_1.fastq
-        // when we have a proper driver, we will set a config field instead of reading in the filename
-        String filename = job.get("map.input.file");
-        String[] tokens = filename.split("\\.(?=[^\\.]+$)");  // split on the last "." to get the basename and the extension
-        if (tokens.length > 2) 
-            throw new IllegalStateException("Parse error trying to parse filename... split extension tokens are: " + tokens.toString());
-        String basename = tokens[0];
-        String extension = tokens.length == 2 ? tokens[1] : ""; 
-        
-        if (basename.endsWith("_2")) {
-            mateId = (byte) 1;
-        } else {
-            mateId = (byte) 0;
-        }
-        
-        if (extension.equals("fastq") || extension.equals("fq")) {
-            if (! (job.getInputFormat() instanceof NLineInputFormat)) {
-                throw new IllegalStateException("Fastq files require the NLineInputFormat (was " + job.getInputFormat() + " ).");
-            }
-            if (job.getInt("mapred.line.input.format.linespermap", -1) % 4 != 0) {
-                throw new IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was " + job.get("mapred.line.input.format.linespermap") + ").");
-            }
-            fastqFormat = true;
-        }
     }
     
     @Override
     public void map(LongWritable key, Text value, OutputCollector<VKmerBytesWritable, NodeWritable> output,
             Reporter reporter) throws IOException {
-        lineCount++;
-        long readID = 0;
-        String geneLine;
-        
-        if (fastqFormat) {
-            if ((lineCount - 1) % 4 == 1) {
-                readID = key.get();  // this is actually the offset into the file... will it be the same across all files?? //TODO test this
-                geneLine = value.toString().trim();
-            } else {
-                return;  //skip all other lines
-            }
-        } else {
-            String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
-            if (rawLine.length != 2) {
-                throw new IOException("invalid data");
-            }
-            readID = Long.parseLong(rawLine[0]);
-            geneLine = rawLine[1];
+        String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
+        if (rawLine.length != 2) {
+            throw new IOException("invalid data");
         }
-        
+        int readID = 0;
+        readID = Integer.parseInt(rawLine[0]);
+        String geneLine = rawLine[1];
         Pattern genePattern = Pattern.compile("[AGCT]+");
         Matcher geneMatcher = genePattern.matcher(geneLine);
         boolean isValid = geneMatcher.matches();
@@ -197,19 +146,15 @@ public class GenomixMapper extends MapReduceBase implements
     	switch(curKmerDir){
     		case FORWARD:
     			switch(preKmerDir){
-    				case FORWARD:    				    
+    				case FORWARD:
     				    edgeListForPreKmer.reset();
-    				    edgeForPreKmer.setKey(preForwardKmer);
-    				    edgeForPreKmer.setReadIDs(nodeIdList);
-    				    edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
+    				    edgeListForPreKmer.append(preForwardKmer);
+    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
     					break;
     				case REVERSE:
-                        edgeListForPreKmer.reset();
-                        edgeForPreKmer.setKey(preReverseKmer);
-                        edgeForPreKmer.setReadIDs(nodeIdList);
-                        edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
+    				    edgeListForPreKmer.reset();
+    				    edgeListForPreKmer.append(preReverseKmer);
+    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
     					break;
     			}
     			break;
@@ -217,17 +162,13 @@ public class GenomixMapper extends MapReduceBase implements
     			switch(preKmerDir){
     				case FORWARD:
     				    edgeListForPreKmer.reset();
-                        edgeForPreKmer.setKey(preForwardKmer);
-                        edgeForPreKmer.setReadIDs(nodeIdList);
-                        edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
+    				    edgeListForPreKmer.append(preForwardKmer);
+    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
     					break;
     				case REVERSE:
     				    edgeListForPreKmer.reset();
-                        edgeForPreKmer.setKey(preReverseKmer);
-                        edgeForPreKmer.setReadIDs(nodeIdList);
-                        edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
+    				    edgeListForPreKmer.append(preReverseKmer);
+    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
     					break;
     			}
     			break;
@@ -239,17 +180,13 @@ public class GenomixMapper extends MapReduceBase implements
     		case FORWARD:
     			switch(nextKmerDir){
     				case FORWARD:
-    				    edgeListForNextKmer.reset();
-    				    edgeForNextKmer.setKey(nextForwardKmer);
-    				    edgeForNextKmer.setReadIDs(nodeIdList);
-    				    edgeListForNextKmer.add(edgeForNextKmer);
+    					edgeListForNextKmer.reset();
+    					edgeListForNextKmer.append(nextForwardKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
     					break;
     				case REVERSE:
-    				    edgeListForNextKmer.reset();
-                        edgeForNextKmer.setKey(nextReverseKmer);
-                        edgeForNextKmer.setReadIDs(nodeIdList);
-                        edgeListForNextKmer.add(edgeForNextKmer);
+    					edgeListForNextKmer.reset();
+    					edgeListForNextKmer.append(nextReverseKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
     					break;
     			}
@@ -257,18 +194,13 @@ public class GenomixMapper extends MapReduceBase implements
     		case REVERSE:
     			switch(nextKmerDir){
     				case FORWARD:
-    				    edgeListForNextKmer.reset();
-                        edgeForNextKmer.setKey(nextForwardKmer);
-                        edgeForNextKmer.setReadIDs(nodeIdList);
-                        edgeListForNextKmer.add(edgeForNextKmer);
-    				    new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList)));
+    					edgeListForNextKmer.reset();
+    					edgeListForNextKmer.append(nextForwardKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
     					break;
     				case REVERSE:
-    				    edgeListForNextKmer.reset();
-                        edgeForNextKmer.setKey(nextReverseKmer);
-                        edgeForNextKmer.setReadIDs(nodeIdList);
-                        edgeListForNextKmer.add(edgeForNextKmer);
+    					edgeListForNextKmer.reset();
+    					edgeListForNextKmer.append(nextReverseKmer);
     					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
     					break;
     			}

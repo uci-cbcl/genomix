@@ -11,7 +11,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
-import org.apache.hadoop.mapred.lib.NLineInputFormat;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
@@ -55,8 +54,7 @@ public class GenomixDriver {
         conf.setMapOutputValueClass(NodeWritable.class);
         
         //InputFormat and OutputFormat for Reducer
-        conf.setInputFormat(NLineInputFormat.class);
-        conf.setInt("mapred.line.input.format.linespermap", 4 * 10);
+        conf.setInputFormat(TextInputFormat.class);
         if (seqOutput == true)
             conf.setOutputFormat(SequenceFileOutputFormat.class);
         else

@@ -45,11 +45,6 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         }
     }
   
-    public PositionListWritable(PositionListWritable other) {
-        this();
-        set(other);
-    }
-
     public void setNewReference(byte[] data, int offset) {
         this.valueCount = Marshal.getInt(data, offset);
         this.storage = data;
@@ -145,19 +140,8 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         return maxStorageSize - offset;
     }
     
-    public String printStartReadIdSet(){
-        String output = "5':[";
-        if(valueCount > 0){
-            for(int i = 0; i < valueCount - 1; i++)
-                output += getPosition(i).getReadId() + ",";
-            output += getPosition(valueCount - 1).getReadId();
-        }
-        output += "]";
-        return output;
-    }
-    
-    public String printEndReadIdSet(){
-        String output = "~5':[";
+    public String printReadIdSet(){
+        String output = "[";
         if(valueCount > 0){
             for(int i = 0; i < valueCount - 1; i++)
                 output += getPosition(i).getReadId() + ",";
@@ -192,16 +176,6 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             throw new ArrayIndexOutOfBoundsException("No such positions");
         }
         Marshal.putLong(uuid, storage, offset + i * PositionWritable.LENGTH + HEADER_SIZE);
-    }
-    
-    public void removePosition(int i) {
-        if (i < 0 || i > valueCount)
-            throw new IllegalArgumentException("Invalid position specified in removePosition! Should be 0 <= " + i + " <= " + valueCount + ").");
-        System.arraycopy(storage, offset + i * PositionWritable.LENGTH + HEADER_SIZE, storage, offset
-                + (i - 1) * PositionWritable.LENGTH + HEADER_SIZE, (valueCount - i)
-                * PositionWritable.LENGTH);
-        valueCount--;
-        Marshal.putInt(valueCount, storage, offset);
     }
 
     public int getCountOfPosition() {
@@ -301,44 +275,6 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             sbuilder.append(']');
         }
         return sbuilder.toString();
-    }
-    
-    public long[] toUUIDArray() {
-        long[] result = new long[valueCount];
-        for (int i=0; i < valueCount; i++) {
-            result[i] = getPosition(i).getUUID();
-        }
-        return result;
-    }
-    
-    public long[] toReadIDArray() {
-        long[] result = new long[valueCount];
-        for (int i=0; i < valueCount; i++) {
-            result[i] = getPosition(i).getReadId();
-        }
-        return result;
-    }
-    
-    public class readIDIterator implements Iterator<Long> {
-
-        @Override
-        public boolean hasNext() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public Long next() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public void remove() {
-            // TODO Auto-generated method stub
-            
-        }
-        
     }
 
     @Override

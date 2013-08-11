@@ -43,14 +43,6 @@ public class VKmerBytesWritableTest {
         kmer.setByRead(k, array, 1);
         Assert.assertEquals(kmer.toString(), "ATAGAAG");
     }
-    
-    @Test
-    public void TestConstructorFromRead() {
-        String kmerStr = "ACTAGCTAGCTAGTCGATCGACTAGCTGATCGATCGATCGTAGCTAGC";
-        VKmerBytesWritable kmer = new VKmerBytesWritable(kmerStr);
-        Assert.assertEquals(kmerStr.length(), kmer.getKmerLetterLength());
-        Assert.assertEquals(kmerStr.toString(), kmer.toString());
-    }
 
     @Test
     public void TestMoveKmer() {
@@ -116,14 +108,14 @@ public class VKmerBytesWritableTest {
             kmer.setByRead(k, array, 0);
             Assert.assertEquals(string.substring(0, k), kmer.toString());
             for (int b = 0; b < k; b++) {
-                byte byteActual = KmerBytesWritable.getOneByteFromKmerAtPosition(b, kmer.getBlockBytes(),
+                byte byteActual = KmerBytesWritable.getOneByteFromKmerAtPosition(b, kmer.getBytes(),
                         kmer.getKmerOffset(), kmer.getKmerByteLength());
                 byte byteExpect = GeneCode.getCodeFromSymbol(array[b]);
                 for (int i = 1; i < 4 && b + i < k; i++) {
                     byteExpect += GeneCode.getCodeFromSymbol(array[b + i]) << (i * 2);
                 }
                 Assert.assertEquals(byteActual, byteExpect);
-                KmerBytesWritable.appendOneByteAtPosition(b, byteActual, kmerAppend.getBlockBytes(),
+                KmerBytesWritable.appendOneByteAtPosition(b, byteActual, kmerAppend.getBytes(),
                         kmerAppend.getKmerOffset(), kmerAppend.getKmerByteLength());
             }
             Assert.assertEquals(kmer.toString(), kmerAppend.toString());

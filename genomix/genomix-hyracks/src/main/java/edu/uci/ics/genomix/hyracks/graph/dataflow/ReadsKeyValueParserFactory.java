@@ -16,7 +16,6 @@
 package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,14 +24,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -143,7 +139,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
                     curKmerDir = nextKmerDir;
-                    curNode.setAsCopy(nextNode);
+                    curNode.set(nextNode);
                     nextNode.reset();
                     nextNode.setAvgCoverage(1);
                     nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
@@ -181,38 +177,28 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             public void setEdgeAndThreadListForCurAndNextKmer(KmerDir curKmerDir, NodeWritable curNode, KmerDir nextKmerDir,
                     NodeWritable nextNode, PositionWritable readId) {
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.FORWARD) {
-//                    // TODO: clean up this section!  I'm going to leave a syntax error here for you so you can take care of it...
-                    hi = Nan!  Clean this section up, please!
-//                    curNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, nextForwardKmer);
-//                    curNode.getThreadList(DirectionFlag.DIR_FF).append(readId);
-                    curNode.getEdgeList(DirectionFlag.DIR_FF).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(nextForwardKmer), new PositionListWritable(Arrays.asList(readId))))));
-//                    nextNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, curForwardKmer);
-//                    nextNode.getThreadList(DirectionFlag.DIR_RR).append(readId);
-                    nextNode.getEdgeList(DirectionFlag.DIR_RR).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(curForwardKmer), new PositionListWritable(Arrays.asList(readId))))));
+                    curNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, nextForwardKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_FF).append(readId);
+                    nextNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, curForwardKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_RR).append(readId);
                 }
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.REVERSE) {
-//                    curNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, nextReverseKmer);
-//                    curNode.getThreadList(DirectionFlag.DIR_FR).append(readId);
-                    curNode.getEdgeList(DirectionFlag.DIR_FR).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(nextReverseKmer), new PositionListWritable(Arrays.asList(readId))))));
-//                    nextNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, curForwardKmer);
-//                    nextNode.getThreadList(DirectionFlag.DIR_FR).append(readId);
-                    nextNode.getEdgeList(DirectionFlag.DIR_FR).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(curForwardKmer), new PositionListWritable(Arrays.asList(readId))))));
+                    curNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, nextReverseKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_FR).append(readId);
+                    nextNode.getEdgeList(DirectionFlag.DIR_FR).append(kmerSize, curForwardKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_FR).append(readId);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.FORWARD) {
-//                    curNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, nextForwardKmer);
-//                    curNode.getThreadList(DirectionFlag.DIR_RF).append(readId);
-                    curNode.getEdgeList(DirectionFlag.DIR_RF).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(nextForwardKmer), new PositionListWritable(Arrays.asList(readId))))));
-//                    nextNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, curReverseKmer);
-//                    nextNode.getThreadList(DirectionFlag.DIR_RF).append(readId);
-                    nextNode.getEdgeList(DirectionFlag.DIR_RF).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(curReverseKmer), new PositionListWritable(Arrays.asList(readId))))));
+                    curNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, nextForwardKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_RF).append(readId);
+                    nextNode.getEdgeList(DirectionFlag.DIR_RF).append(kmerSize, curReverseKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_RF).append(readId);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.REVERSE) {
-//                    curNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, nextReverseKmer);
-//                    curNode.getThreadList(DirectionFlag.DIR_RR).append(readId);
-                    curNode.getEdgeList(DirectionFlag.DIR_RR).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(nextReverseKmer), new PositionListWritable(Arrays.asList(readId))))));
-//                    nextNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, curReverseKmer);
-//                    nextNode.getThreadList(DirectionFlag.DIR_FF).append(readId);
-                    nextNode.getEdgeList(DirectionFlag.DIR_FF).unionUpdate(new EdgeListWritable(Arrays.asList(new EdgeWritable(new VKmerBytesWritable(curReverseKmer), new PositionListWritable(Arrays.asList(readId))))));
+                    curNode.getEdgeList(DirectionFlag.DIR_RR).append(kmerSize, nextReverseKmer);
+                    curNode.getThreadList(DirectionFlag.DIR_RR).append(readId);
+                    nextNode.getEdgeList(DirectionFlag.DIR_FF).append(kmerSize, curReverseKmer);
+                    nextNode.getThreadList(DirectionFlag.DIR_FF).append(readId);
                 }
             }
 

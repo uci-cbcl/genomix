@@ -147,6 +147,7 @@ public class HadoopMiniClusterTest {
     }
 
     protected static boolean checkResults(String expectedPath, String actualPath, int[] poslistField) throws Exception {
+        File dumped = new File(actualPath);
         if (poslistField != null) {
 //            TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
         } else {

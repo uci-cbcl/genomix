@@ -55,7 +55,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
 
     public void append(VKmerBytesWritable kmer) {
         setSize(getLength() + kmer.getLength());
-        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmerBytesWritable.HEADER_SIZE, storage, offset
+        System.arraycopy(kmer.getBytes(), kmer.kmerStartOffset - VKmerBytesWritable.HEADER_SIZE, storage, offset
                 + getLength(), kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);

@@ -92,7 +92,7 @@ public class KmerListWritableTest {
             Assert.assertEquals(200 - 1 - j, copyList.getCountOfPosition());
             while(iterator.hasNext()){
                 tmpKmer = iterator.next();
-                Assert.assertTrue(!tmpKmer.getBlockBytes().equals(deletePos.getBlockBytes()));
+                Assert.assertTrue(!tmpKmer.getBytes().equals(deletePos.getBytes()));
                 i++;
             }
         }
