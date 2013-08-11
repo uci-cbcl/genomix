@@ -197,6 +197,32 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     public Iterator<EdgeWritable> iterator() {
         return edges.iterator();
     }
+    
+    /**
+     * return an iterator over the keys of this edgeList.  Using the iterator.remove() function will remove the entire edge (not just the keys you're iterating over!) 
+     */
+    public Iterator<VKmerBytesWritable> getKeys() {
+        Iterator<VKmerBytesWritable> it = new Iterator<VKmerBytesWritable>() {
+
+            private int currentIndex = 0;
+
+            @Override
+            public boolean hasNext() {
+                return currentIndex < edges.size();
+            }
+
+            @Override
+            public VKmerBytesWritable next() {
+                return edges.get(currentIndex++).getKey();
+            }
+
+            @Override
+            public void remove() {
+                edges.remove(--currentIndex);
+            }
+        };
+        return it;
+    }
 
     /*
      * remove the first instance of @toRemove. Uses a linear scan.  Throws an exception if not in this list.

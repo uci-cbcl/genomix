@@ -111,6 +111,15 @@ public class EdgeWritableTest {
         plist1.append((byte)1, (long)20, 10);
         EdgeWritable e1 = new EdgeWritable(kmer1, plist1);
         elist.add(e1);
+        VKmerBytesWritable kmer2 = new VKmerBytesWritable("ATAGCTGAC");
+        elist.add(new EdgeWritable(kmer2, plist1));
+        
+        Iterator<VKmerBytesWritable> keyIter = elist.getKeys();
+        Assert.assertTrue(keyIter.hasNext());
+        Assert.assertEquals(kmer1, keyIter.next());
+        Assert.assertEquals(kmer2, keyIter.next());
+        Assert.assertFalse(keyIter.hasNext());
+        keyIter.remove();
         
         long[] expected = {50, 500, 20}, readIDs = elist.get(0).readIDArray();
         Iterator<Long> it = elist.get(0).readIDIter();
