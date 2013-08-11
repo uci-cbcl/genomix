@@ -3,6 +3,8 @@ package edu.uci.ics.genomix.pregelix.io;
 import java.io.*;
 
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -56,35 +58,35 @@ public class VertexValueWritable
     }
     
 
-    public VKmerListWritable getFFList() {
+    public EdgeListWritable getFFList() {
         return getEdgeList(DirectionFlag.DIR_FF);
     }
 
-    public VKmerListWritable getFRList() {
+    public EdgeListWritable getFRList() {
         return getEdgeList(DirectionFlag.DIR_FR);
     }
 
-    public VKmerListWritable getRFList() {
+    public EdgeListWritable getRFList() {
         return getEdgeList(DirectionFlag.DIR_RF);
     }
 
-    public VKmerListWritable getRRList() {
+    public EdgeListWritable getRRList() {
         return getEdgeList(DirectionFlag.DIR_RR);
     }
     
-    public void setFFList(VKmerListWritable forwardForwardList){
+    public void setFFList(EdgeListWritable forwardForwardList){
         setEdgeList(DirectionFlag.DIR_FF, forwardForwardList);
     }
     
-    public void setFRList(VKmerListWritable forwardReverseList){
+    public void setFRList(EdgeListWritable forwardReverseList){
         setEdgeList(DirectionFlag.DIR_FR, forwardReverseList);
     }
     
-    public void setRFList(VKmerListWritable reverseForwardList){
+    public void setRFList(EdgeListWritable reverseForwardList){
         setEdgeList(DirectionFlag.DIR_RF, reverseForwardList);
     }
 
-    public void setRRList(VKmerListWritable reverseReverseList){
+    public void setRRList(EdgeListWritable reverseReverseList){
         setEdgeList(DirectionFlag.DIR_RR, reverseReverseList);
     }
     
@@ -175,7 +177,7 @@ public class VertexValueWritable
     /**
      * Delete the corresponding edge
      */
-    public void processDelete(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete){
+    public void processDelete(byte neighborToDeleteDir, EdgeWritable nodeToDelete){
         byte dir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
         this.getEdgeList(dir).remove(nodeToDelete);
     }
@@ -183,20 +185,20 @@ public class VertexValueWritable
     /**
      * Process any changes to value.  This is for edge updates
      */
-    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
-            byte neighborToMergeDir, VKmerBytesWritable nodeToAdd){
+    public void processUpdates(byte neighborToDeleteDir, EdgeWritable nodeToDelete,
+            byte neighborToMergeDir, EdgeWritable nodeToAdd){
         byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
         this.getEdgeList(deleteDir).remove(nodeToDelete);
         
         byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
-        this.getEdgeList(mergeDir).append(nodeToAdd);
+        this.getEdgeList(mergeDir).add(nodeToAdd);
     }
     
     /**
      * Process any changes to value.  This is for merging
      */
-    public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
-            byte neighborToMergeDir, VKmerBytesWritable nodeToAdd, 
+    public void processMerges(byte neighborToDeleteDir, EdgeWritable nodeToDelete,
+            byte neighborToMergeDir, EdgeWritable nodeToAdd, 
             int kmerSize, VKmerBytesWritable kmer){
         byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
         this.getEdgeList(deleteDir).remove(nodeToDelete);
@@ -204,7 +206,7 @@ public class VertexValueWritable
         
         if(nodeToAdd != null){
             byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
-            this.getEdgeList(mergeDir).append(nodeToAdd);
+            this.getEdgeList(mergeDir).add(nodeToAdd);
         }
     }
     

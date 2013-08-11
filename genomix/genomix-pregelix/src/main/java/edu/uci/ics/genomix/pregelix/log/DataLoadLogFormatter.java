@@ -10,7 +10,7 @@ public class DataLoadLogFormatter extends Formatter {
     private NodeWritable key;
 
     public void set(NodeWritable key) {
-        this.key.set(key);
+        this.key.setAsCopy(key);
     }
 
     public String format(LogRecord record) {

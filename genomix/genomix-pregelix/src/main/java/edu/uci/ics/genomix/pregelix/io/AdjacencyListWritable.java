@@ -6,25 +6,25 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.EdgeListWritable;
 
 public class AdjacencyListWritable implements WritableComparable<AdjacencyListWritable>{
-    private VKmerListWritable forwardList;
-    private VKmerListWritable reverseList;
+    private EdgeListWritable forwardList;
+    private EdgeListWritable reverseList;
     
     public AdjacencyListWritable(){
-        forwardList = new VKmerListWritable();
-        reverseList = new VKmerListWritable();
+        forwardList = new EdgeListWritable();
+        reverseList = new EdgeListWritable();
     }
     
     public AdjacencyListWritable(int kmerSize){
-        forwardList = new VKmerListWritable();
-        reverseList = new VKmerListWritable();
+        forwardList = new EdgeListWritable();
+        reverseList = new EdgeListWritable();
     }
 
     public void set(AdjacencyListWritable adjacencyList){
-        forwardList.setCopy(adjacencyList.getForwardList());
-        reverseList.setCopy(adjacencyList.getReverseList());
+        forwardList.setAsCopy(adjacencyList.getForwardList());
+        reverseList.setAsCopy(adjacencyList.getReverseList());
     }
     
     public void reset(){
@@ -41,20 +41,20 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     	return forwardList.getCountOfPosition() + reverseList.getCountOfPosition();
     }
 
-    public VKmerListWritable getForwardList() {
+    public EdgeListWritable getForwardList() {
         return forwardList;
     }
 
-    public void setForwardList(VKmerListWritable forwardList) {
-        this.forwardList = forwardList;
+    public void setForwardList(EdgeListWritable forwardList) {
+        this.forwardList.setAsCopy(forwardList);
     }
 
-    public VKmerListWritable getReverseList() {
+    public EdgeListWritable getReverseList() {
         return reverseList;
     }
 
-    public void setReverseList(VKmerListWritable reverseList) {
-        this.reverseList = reverseList;
+    public void setReverseList(EdgeListWritable reverseList) {
+        this.reverseList.setAsCopy(reverseList);
     }
 
     @Override
