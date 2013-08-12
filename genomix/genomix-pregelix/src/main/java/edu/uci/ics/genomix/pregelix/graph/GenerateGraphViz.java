@@ -11,6 +11,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
@@ -49,8 +50,13 @@ public class GenerateGraphViz {
                 outputEdge = convertEdgeToGraph(outputNode, value);
                 gv.addln(outputEdge);
                 /** add readIdSet **/
-                outputNode += " [shape=record, label = \"<f0> " + key.toString() 
-                        + "\"]\n";
+                String fillColor = "";
+                if(value.isStartReadOrEndRead())
+                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
+                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() 
+                        + "|<f1> " + value.getStartReads().printStartReadIdSet() 
+                        + "|<f2> " + value.getEndReads().printEndReadIdSet()
+                        + "|<f3> " + value.getAvgCoverage() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
@@ -94,9 +100,14 @@ public class GenerateGraphViz {
                 outputEdge = convertEdgeToGraph(outputNode, value);
                 gv.addln(outputEdge);
                 /** add readIdSet **/
-                outputNode += " [shape=record, label = \"<f0> " + key.toString() 
-//                        + "|<f1> " + value.getNodeIdList().printReadIdSet()
-                        + "\"]\n";
+                String fillColor = "";
+                if(value.isStartReadOrEndRead())
+                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
+                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() 
+                        + "|<f1> " + value.getStartReads().printStartReadIdSet() 
+                        + "|<f2> " + value.getEndReads().printEndReadIdSet()
+                        + "|<f3> " + value.getAvgCoverage()
+                        + "|<f4> " + value.getInternalKmer() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
@@ -120,26 +131,30 @@ public class GenerateGraphViz {
      */
     public static String convertEdgeToGraph(String outputNode, NodeWritable value){
         String outputEdge = "";
-        Iterator<VKmerBytesWritable> kmerIterator;
-        kmerIterator = value.getEdgeList(DirectionFlag.DIR_FF).iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next(); 
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FF\"]\n";
+        Iterator<EdgeWritable> edgeIterator;
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FF).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next(); 
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"black\" label =\"FF: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
-        kmerIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"blue\" label =\"FR\"]\n";
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next();
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"blue\" label =\"FR: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
-        kmerIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"green\" label =\"RF\"]\n";
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next();
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"green\" label =\"RF: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
-        kmerIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR\"]\n";
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next();
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"red\" label =\"RR: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
         //TODO should output actualKmer instead of kmer
         if(outputEdge == "")
@@ -155,26 +170,30 @@ public class GenerateGraphViz {
      */
     public static String convertEdgeToGraph(String outputNode, VertexValueWritable value){
         String outputEdge = "";
-        Iterator<VKmerBytesWritable> kmerIterator;
-        kmerIterator = value.getFFList().iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next(); 
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"black\" label =\"FF\"]\n";
+        Iterator<EdgeWritable> edgeIterator;
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FF).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next(); 
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"black\" label =\"FF: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
-        kmerIterator = value.getFRList().iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"blue\" label =\"FR\"]\n";
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next();
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"blue\" label =\"FR: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
-        kmerIterator = value.getRFList().iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"green\" label =\"RF\"]\n";
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next();
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"green\" label =\"RF: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
-        kmerIterator = value.getRRList().iterator();
-        while(kmerIterator.hasNext()){
-            VKmerBytesWritable edge = kmerIterator.next();
-            outputEdge += outputNode + " -> " + edge.toString() + "[color = \"red\" label =\"RR\"]\n";
+        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
+        while(edgeIterator.hasNext()){
+            EdgeWritable edge = edgeIterator.next();
+            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"red\" label =\"RR: " +
+                    edge.printReadIdSet() + "\"]\n";
         }
         //TODO should output actualKmer instead of kmer
         if(outputEdge == "")

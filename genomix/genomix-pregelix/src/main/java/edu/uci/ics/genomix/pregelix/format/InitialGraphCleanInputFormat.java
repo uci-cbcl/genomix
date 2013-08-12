@@ -71,11 +71,7 @@ class BinaryLoadGraphReader extends
              * set the vertex value
              */
             node.setAsCopy(getRecordReader().getCurrentValue());
-            vertexValue.setFFList(node.getEdgeList(DirectionFlag.DIR_FF));
-            vertexValue.setFRList(node.getEdgeList(DirectionFlag.DIR_FR));
-            vertexValue.setRFList(node.getEdgeList(DirectionFlag.DIR_RF));
-            vertexValue.setRRList(node.getEdgeList(DirectionFlag.DIR_RR));
-            vertexValue.setInternalKmer(new VKmerBytesWritable(vertexId));
+            vertexValue.setNode(node);
             vertexValue.setState(State.IS_NON);
             vertex.setVertexValue(vertexValue);
         }

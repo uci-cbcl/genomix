@@ -3,15 +3,17 @@ package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 
@@ -48,9 +50,14 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
  */
 public class BubbleAddVertex extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "BubbleAddVertex.kmerSize";
+    public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static int kmerSize = -1;
    
+    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable("ATA"); //forward
+    private VKmerBytesWritable middleVertexId = new VKmerBytesWritable("CTA"); //reverse
+    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable("AGA"); //forward
+    private VKmerBytesWritable insertedBubble = new VKmerBytesWritable("GTA"); //reverse
+    
     /**
      * initiate kmerSize, length
      */
@@ -58,49 +65,55 @@ public class BubbleAddVertex extends
         if (kmerSize == -1)
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
     }
-
+    
+    /**
+     * add a bubble
+     */
     @SuppressWarnings("unchecked")
+    public void insertBubble(EdgeListWritable[] edges, VKmerBytesWritable insertedBubble, VKmerBytesWritable internalKmer){
+        //add bubble vertex
+        @SuppressWarnings("rawtypes")
+        Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+        vertex.getMsgList().clear();
+        vertex.getEdges().clear();
+        VertexValueWritable vertexValue = new VertexValueWritable();
+        /**
+         * set the src vertex id
+         */
+        vertex.setVertexId(insertedBubble);
+        /**
+         * set the vertex value
+         */
+        vertexValue.setEdges(edges);
+        vertexValue.setInternalKmer(internalKmer);
+
+        vertex.setVertexValue(vertexValue);
+        
+        addVertex(insertedBubble, vertex);
+    }
+    
+    public void addEdgeToInsertedBubble(byte dir, VKmerBytesWritable insertedBubble){
+        EdgeWritable newEdge = new EdgeWritable();
+        newEdge.setKey(insertedBubble);
+        newEdge.appendReadID(0);
+        getVertexValue().getEdgeList(dir).add(newEdge);
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
         if(getSuperstep() == 1){
-            if(getVertexId().toString().equals("ATA")){
-                VKmerBytesWritable vertexId = new VKmerBytesWritable();
-                vertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
-                getVertexValue().getFRList().append(vertexId);
-                
-                //add bridge vertex
-                @SuppressWarnings("rawtypes")
-                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-                vertex.getMsgList().clear();
-                vertex.getEdges().clear();
-                VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
-                /**
-                 * set the src vertex id
-                 */
-                vertex.setVertexId(vertexId);
-                /**
-                 * set the vertex value
-                 */
-                VKmerListWritable kmerFRList = new VKmerListWritable();
-
-                kmerFRList.append(getVertexId());
-                vertexValue.setFRList(kmerFRList);
-                VKmerBytesWritable otherVertexId = new VKmerBytesWritable();
-                otherVertexId.setByRead(kmerSize, "AGA".getBytes(), 0);
-                VKmerListWritable kmerRFList = new VKmerListWritable();
-                kmerRFList.append(otherVertexId);
-                vertexValue.setRFList(kmerRFList);
-                vertexValue.setInternalKmer(vertexId);
-
-                vertex.setVertexValue(vertexValue);
-                
-                addVertex(vertexId, vertex);
+            if(getVertexId().equals(majorVertexId)){
+                /** add edge pointing to insertedBubble **/
+                addEdgeToInsertedBubble(DirectionFlag.DIR_FR, insertedBubble);
             } 
-            else if(getVertexId().toString().equals("AGA")){
-                VKmerBytesWritable brdgeVertexId = new VKmerBytesWritable();
-                brdgeVertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
-                getVertexValue().getRFList().append(brdgeVertexId);
+            else if(getVertexId().equals(minorVertexId)){
+                /** add edge pointing to insertedBubble **/
+                addEdgeToInsertedBubble(DirectionFlag.DIR_FR, insertedBubble);
+            } 
+            else if(getVertexId().equals(middleVertexId)){
+                /** insert new bubble **/
+                insertBubble(getVertexValue().getEdges(), insertedBubble, getVertexValue().getInternalKmer());
             }
         }
         voteToHalt();
@@ -112,7 +125,7 @@ public class BubbleAddVertex extends
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);

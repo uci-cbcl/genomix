@@ -44,8 +44,9 @@ public class BubbleAddSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(BubbleAddSmallTestSuite.class.getName());
 
     public static final String PreFix = "data/PathMergeTestSet"; 
+    public static final String SufFix = "bin";
     public static final String[] TestDir = { PreFix + File.separator
-    + "5"};
+    + "5" + File.separator + SufFix};
     private static final String ACTUAL_RESULT_DIR = "data/actual/bubbleadd";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";

@@ -22,7 +22,6 @@
 <property><name>fs.ramfs.impl</name><value>org.apache.hadoop.fs.InMemoryFileSystem</value></property>
 <property><name>mapred.jobtracker.restart.recover</name><value>false</value></property>
 <property><name>fs.hftp.impl</name><value>org.apache.hadoop.hdfs.HftpFileSystem</value></property>
-<property><name>BridgeRemoveVertex.kmerSize</name><value>3</value></property>
 <property><name>fs.checkpoint.period</name><value>3600</value></property>
 <property><name>mapred.child.tmp</name><value>./tmp</value></property>
 <property><name>mapred.local.dir.minspacekill</name><value>0</value></property>
@@ -85,6 +84,7 @@
 <property><name>fs.har.impl</name><value>org.apache.hadoop.fs.HarFileSystem</value></property>
 <property><name>io.mapfile.bloom.error.rate</name><value>0.005</value></property>
 <property><name>mapred.job.tracker</name><value>local</value></property>
+<property><name>BasicGraphCleanVertex.kmerSize</name><value>3</value></property>
 <property><name>io.skip.checksum.errors</name><value>false</value></property>
 <property><name>mapred.reduce.max.attempts</name><value>4</value></property>
 <property><name>fs.s3.maxRetries</name><value>4</value></property>

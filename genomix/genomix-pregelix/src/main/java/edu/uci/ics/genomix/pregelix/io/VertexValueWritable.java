@@ -68,7 +68,7 @@ public class VertexValueWritable
     }
     
     public void setNode(NodeWritable node){
-        this.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
+        super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
                 node.getInternalKmer(), node.getAverageCoverage());
     }
     

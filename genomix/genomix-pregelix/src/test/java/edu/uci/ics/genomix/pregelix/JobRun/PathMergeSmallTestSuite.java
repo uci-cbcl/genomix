@@ -43,7 +43,8 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class PathMergeSmallTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(PathMergeSmallTestSuite.class.getName());
 
-    public static final String PreFix = "data/PathMergeTestSet"; //"graphbuildresult";
+    public static final String PreFix = "data/PathMergeTestSet"; 
+    public static final String SufFix = "bin";
     public static final String[] TestDir = { PreFix + File.separator
 //    + "2", PreFix + File.separator
 //    + "3", PreFix + File.separator
@@ -52,7 +53,7 @@ public class PathMergeSmallTestSuite extends TestSuite {
 //    + "6", PreFix + File.separator
 //    + "7", PreFix + File.separator
 //    + "8", PreFix + File.separator
-    + "8"};
+    + "8" + File.separator + SufFix};
     private static final String ACTUAL_RESULT_DIR = "data/actual/pathmerge";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
