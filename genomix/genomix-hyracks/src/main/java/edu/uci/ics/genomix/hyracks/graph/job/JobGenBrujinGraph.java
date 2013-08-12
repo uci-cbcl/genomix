@@ -262,6 +262,7 @@ public class JobGenBrujinGraph extends JobGen {
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
             readSchedule = scheduler.getLocationConstraints(splits);
+            
         } catch (IOException ex) {
             throw new HyracksDataException(ex);
         }
