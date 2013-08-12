@@ -40,28 +40,28 @@ import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
-public class BubbleAddSmallTestSuite extends TestSuite {
-    private static final Logger LOGGER = Logger.getLogger(BubbleAddSmallTestSuite.class.getName());
+public class BasicGraphCleanTestSuite extends TestSuite {
+    private static final Logger LOGGER = Logger.getLogger(BasicGraphCleanTestSuite.class.getName());
 
-    public static final String PreFix = "data/PathMergeTestSet"; 
-    public static final String SufFix = "bin";
-    public static final String[] TestDir = { PreFix + File.separator
-    + "5" + File.separator + SufFix};
-    private static final String ACTUAL_RESULT_DIR = "data/actual/bubbleadd";
+    protected static String PreFix; //parameter
+    protected static String SufFix; //parameter
+    protected static ArrayList<String> TestDir = new ArrayList<String>(); //parameter
+    protected static String PATH_TO_ONLY;  //parameter
+    protected static String ACTUAL_RESULT_DIR; //parameter
+    protected static String HADOOP_CONF_PATH; //initiated by ACTUAL_RESULT_DIR
+    
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
-    private static final String PATH_TO_ONLY = "src/test/resources/only_bubbleadd.txt";
 
     public static final String HDFS_INPUTPATH = "/PathTestSet";
-
-    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
+    
     private MiniDFSCluster dfsCluster;
 
     private JobConf conf = new JobConf();
     private int numberOfNC = 2;
-
+    
     public void setUp() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
@@ -120,12 +120,11 @@ public class BubbleAddSmallTestSuite extends TestSuite {
         cleanupHDFS();
     }
 
-    public static Test suite() throws Exception {
+    public static Test makeTestSuite(BasicGraphCleanTestSuite testSuite) throws Exception{
+        testSuite.setUp();
         List<String> onlys = getFileList(PATH_TO_ONLY);
         File testData = new File(PATH_TO_JOBS);
         File[] queries = testData.listFiles();
-        BubbleAddSmallTestSuite testSuite = new BubbleAddSmallTestSuite();
-        testSuite.setUp();
         boolean onlyEnabled = false;
         FileSystem dfs = FileSystem.get(testSuite.conf);
 
@@ -155,6 +154,11 @@ public class BubbleAddSmallTestSuite extends TestSuite {
         }
         return testSuite;
     }
+    
+//    public static Test suite() throws Exception {
+//        BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
+//        return makeTestSuite(testSuite);
+//    }
 
     /**
      * Runs the tests and collects their result in a TestResult.
@@ -204,6 +208,54 @@ public class BubbleAddSmallTestSuite extends TestSuite {
             if (name.indexOf(only) >= 0)
                 return true;
         return false;
+    }
+
+    public static String getPreFix() {
+        return PreFix;
+    }
+
+    public static void setPreFix(String preFix) {
+        PreFix = preFix;
+    }
+
+    public static String getSufFix() {
+        return SufFix;
+    }
+
+    public static void setSufFix(String sufFix) {
+        SufFix = sufFix;
+    }
+
+    public static ArrayList<String> getTestDir() {
+        return TestDir;
+    }
+
+    public static void setTestDir(ArrayList<String> testDir) {
+        TestDir = testDir;
+    }
+
+    public static String getPATH_TO_ONLY() {
+        return PATH_TO_ONLY;
+    }
+
+    public static void setPATH_TO_ONLY(String pATH_TO_ONLY) {
+        PATH_TO_ONLY = pATH_TO_ONLY;
+    }
+
+    public static String getACTUAL_RESULT_DIR() {
+        return ACTUAL_RESULT_DIR;
+    }
+
+    public static void setACTUAL_RESULT_DIR(String aCTUAL_RESULT_DIR) {
+        ACTUAL_RESULT_DIR = aCTUAL_RESULT_DIR;
+    }
+
+    public static String getHADOOP_CONF_PATH() {
+        return HADOOP_CONF_PATH;
+    }
+
+    public static void setHADOOP_CONF_PATH(String hADOOP_CONF_PATH) {
+        HADOOP_CONF_PATH = hADOOP_CONF_PATH;
     }
 
 }
