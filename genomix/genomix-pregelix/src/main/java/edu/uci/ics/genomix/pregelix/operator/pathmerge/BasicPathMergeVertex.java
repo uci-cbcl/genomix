@@ -365,7 +365,7 @@ public class BasicPathMergeVertex extends
     }
 	
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
     
     }
 }

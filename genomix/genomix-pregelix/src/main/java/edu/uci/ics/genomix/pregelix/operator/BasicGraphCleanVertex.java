@@ -12,18 +12,15 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-/**
- * Naive Algorithm for path merge graph
- */
 public abstract class BasicGraphCleanVertex<I extends VKmerBytesWritable, V extends VertexValueWritable, E extends NullWritable, M extends MessageWritable> extends
-        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, M> {
     public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static final String ITERATIONS = "BasicGraphCleanVertex.iteration";
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
-    protected MessageWritable incomingMsg = null; 
-    protected MessageWritable outgoingMsg = null; 
+    protected M incomingMsg = null; 
+    protected M outgoingMsg = null; 
     protected VKmerBytesWritable destVertexId = null;
     protected Iterator<VKmerBytesWritable> kmerIterator;
     protected VKmerBytesWritable tmpKmer = null;
@@ -321,7 +318,7 @@ public abstract class BasicGraphCleanVertex<I extends VKmerBytesWritable, V exte
     /**
      * initiate head, rear and path node
      */
-    public void initState(Iterator<MessageWritable> msgIterator) {
+    public void initState(Iterator<M> msgIterator) {
         while (msgIterator.hasNext()) {
             if (!VertexUtil.isPathVertex(getVertexValue())
                     && !VertexUtil.isHeadWithoutIndegree(getVertexValue())
@@ -453,7 +450,7 @@ public abstract class BasicGraphCleanVertex<I extends VKmerBytesWritable, V exte
     }
     
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<M> msgIterator) {
     }
 
 }

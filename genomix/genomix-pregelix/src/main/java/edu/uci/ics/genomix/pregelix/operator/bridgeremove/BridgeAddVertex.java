@@ -3,9 +3,10 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.Iterator;
 import org.apache.hadoop.io.NullWritable;
 
+import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -49,8 +50,8 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
  */
 public class BridgeAddVertex extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "BridgeRemoveVertex.kmerSize"; // TODO consolidate config options
-    public static final String LENGTH = "BridgeRemoveVertex.length";
+    public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
+    public static final String LENGTH = "BasicGraphCleanVertex.length";
     public static int kmerSize = -1;
     private int length = -1;
     
@@ -72,9 +73,12 @@ public class BridgeAddVertex extends
         initVertex();
         if(getSuperstep() == 1){
             if(getVertexId().toString().equals("ATA")){
-            	VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
+            	VKmerBytesWritable vertexId = new VKmerBytesWritable();
                 vertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
-                getVertexValue().getFRList().append(vertexId);
+                EdgeWritable edge = new EdgeWritable();
+                edge.setKey(vertexId);
+                edge.appendReadID(5);
+                getVertexValue().getFRList().add(edge);
                 
                 //add bridge vertex
                 @SuppressWarnings("rawtypes")
@@ -89,14 +93,19 @@ public class BridgeAddVertex extends
                 /**
                  * set the vertex value
                  */
-                VKmerListWritable kmerFRList = new VKmerListWritable();
-
-                kmerFRList.append(getVertexId());
+                EdgeListWritable kmerFRList = new EdgeListWritable();
+                edge = new EdgeWritable();
+                edge.setKey(getVertexId());
+                edge.appendReadID(0);
+                kmerFRList.add(edge);
                 vertexValue.setFRList(kmerFRList);
-                VKmerBytesWritable otherVertexId = new VKmerBytesWritable(kmerSize);
+                VKmerBytesWritable otherVertexId = new VKmerBytesWritable();
                 otherVertexId.setByRead(kmerSize, "ACG".getBytes(), 0);
-                VKmerListWritable kmerRFList = new VKmerListWritable();
-                kmerRFList.append(otherVertexId);
+                EdgeListWritable kmerRFList = new EdgeListWritable();
+                edge = new EdgeWritable();
+                edge.setKey(otherVertexId);
+                edge.appendReadID(0);
+                kmerFRList.add(edge);
                 vertexValue.setRFList(kmerRFList);
                 vertexValue.setInternalKmer(vertexId);
                 vertex.setVertexValue(vertexValue);
@@ -104,9 +113,12 @@ public class BridgeAddVertex extends
                 addVertex(vertexId, vertex);
             } 
             else if(getVertexId().toString().equals("ACG")){
-                VKmerBytesWritable brdgeVertexId = new VKmerBytesWritable(kmerSize);
-                brdgeVertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
-                getVertexValue().getRFList().append(brdgeVertexId);
+                VKmerBytesWritable bridgeVertexId = new VKmerBytesWritable();
+                bridgeVertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
+                EdgeWritable edge = new EdgeWritable();
+                edge.setKey(bridgeVertexId);
+                edge.appendReadID(0);
+                getVertexValue().getRFList().add(edge);
             }
         }
         voteToHalt();

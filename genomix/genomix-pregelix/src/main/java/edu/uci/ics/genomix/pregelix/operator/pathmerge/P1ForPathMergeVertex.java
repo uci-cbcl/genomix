@@ -8,10 +8,9 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
@@ -47,9 +46,9 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class P1ForPathMergeVertex extends
-        BasicGraphCleanVertex {
+    BasicPathMergeVertex {
     
-    private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
+    private ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -59,9 +58,9 @@ public class P1ForPathMergeVertex extends
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
+            incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable();
+            outgoingMsg = new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
         if(destVertexId == null)
@@ -88,11 +87,11 @@ public class P1ForPathMergeVertex extends
     /**
      * head node sends message to path node
      */
-    public void sendMsgToPathVertex(Iterator<MessageWritable> msgIterator) {
+    public void sendMsgToPathVertex(Iterator<PathMergeMessageWritable> msgIterator) {
         if (getSuperstep() == 3) {
             if(getVertexValue().getState() == State.IS_HEAD)
                 outFlag |= MessageFlag.IS_HEAD;
-            sendSettledMsgToAllNextNodes(getVertexValue());
+            sendSettledMsgToAllNextNodes();
         } else {
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
@@ -114,7 +113,7 @@ public class P1ForPathMergeVertex extends
     }
 
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
             startSendMsg();

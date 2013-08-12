@@ -77,12 +77,6 @@ public class LogAlgorithmLogFormatter extends Formatter {
             }
             builder.append("Message is: " + Message.MESSAGE_CONTENT.getContentFromCode(msg.getFlag()) + "\r\n");
 
-            if (msg.getLengthOfChain() != -1) {
-                chain = msg.getInternalKmer().toString();
-                builder.append("Chain Message: " + chain + "\r\n");
-                builder.append("Chain Length: " + msg.getLengthOfChain() + "\r\n");
-            }
-
             builder.append("State is: " + State2.STATE_CONTENT.getContentFromCode(state) + "\r\n");
         }
         if (operation == 2) {

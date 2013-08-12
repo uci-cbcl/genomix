@@ -3,6 +3,8 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.apache.hadoop.io.NullWritable;
+
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -46,7 +48,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  * Naive Algorithm for path merge graph
  */
 public class BridgeRemoveVertex extends
-    BasicGraphCleanVertex {
+    BasicGraphCleanVertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
     public static final String LENGTH = "BridgeRemoveVertex.length";
     private int length = -1;
 
@@ -61,13 +63,13 @@ public class BridgeRemoveVertex extends
         if(length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable(kmerSize);
+            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable(kmerSize);
+            outgoingMsg = new MessageWritable();
         else
-            outgoingMsg.reset(kmerSize);
+            outgoingMsg.reset();
         if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable();
         receivedMsgList.clear();
     }
 
@@ -76,10 +78,10 @@ public class BridgeRemoveVertex extends
         initVertex();
         if (getSuperstep() == 1) {
             if(VertexUtil.isUpBridgeVertex(getVertexValue())){
-                sendSettledMsgToAllNextNodes(getVertexValue());
+                sendSettledMsgToAllNextNodes();
             }
             else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
-                sendSettledMsgToAllPreviousNodes(getVertexValue());
+                sendSettledMsgToAllPreviousNodes();
             }
         }
         else if (getSuperstep() == 2){

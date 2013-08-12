@@ -7,7 +7,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -45,7 +45,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class P2ForPathMergeVertex extends
     MapReduceVertex {
 
-    private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
+    private ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
     
     private boolean isFakeVertex = false;
     /**
@@ -59,9 +59,9 @@ public class P2ForPathMergeVertex extends
         headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
+            incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable();
+            outgoingMsg = new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
         receivedMsgList.clear();
@@ -89,7 +89,7 @@ public class P2ForPathMergeVertex extends
      */
     public void sendOutMsg() {
         //send wantToMerge to next
-        tmpKmer = getNextDestVertexIdAndSetFlag(getVertexValue());
+        tmpKmer = getNextDestVertexIdAndSetFlag();
         if(tmpKmer != null){
             destVertexId.setAsCopy(tmpKmer);
             outgoingMsg.setFlag(outFlag);
@@ -98,7 +98,7 @@ public class P2ForPathMergeVertex extends
         }
         
         //send wantToMerge to prev
-        tmpKmer = getPrevDestVertexIdAndSetFlag(getVertexValue());
+        tmpKmer = getPrevDestVertexIdAndSetFlag();
         if(tmpKmer != null){
             destVertexId.setAsCopy(tmpKmer);
             outgoingMsg.setFlag(outFlag);
@@ -139,7 +139,7 @@ public class P2ForPathMergeVertex extends
     /**
      * head send message to path
      */
-    public void sendMsgToPathVertex(Iterator<MessageWritable> msgIterator) {
+    public void sendMsgToPathVertex(Iterator<PathMergeMessageWritable> msgIterator) {
         //send out wantToMerge msg
         if(selfFlag != State.IS_HEAD && selfFlag != State.IS_OLDHEAD){
                 sendOutMsg();
@@ -149,7 +149,7 @@ public class P2ForPathMergeVertex extends
     /**
      * path response message to head
      */
-    public void responseMsgToHeadVertex(Iterator<MessageWritable> msgIterator) {
+    public void responseMsgToHeadVertex(Iterator<PathMergeMessageWritable> msgIterator) {
         if(!msgIterator.hasNext() && selfFlag == State.IS_HEAD){
             outFlag |= MessageFlag.IS_FINAL;
             sendOutMsg();
@@ -167,7 +167,7 @@ public class P2ForPathMergeVertex extends
                 processMerge(incomingMsg);
                 getVertexValue().setState(State.IS_FINAL);
             }else{
-                sendUpdateMsg();
+                sendUpdateMsg(incomingMsg);
                 outFlag = 0;
                 sendMergeMsg();
             }
@@ -177,7 +177,7 @@ public class P2ForPathMergeVertex extends
     /**
      * head vertex process merge
      */
-    public void processMergeInHeadVertex(Iterator<MessageWritable> msgIterator){
+    public void processMergeInHeadVertex(Iterator<PathMergeMessageWritable> msgIterator){
       //process merge when receiving msg
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
@@ -229,7 +229,7 @@ public class P2ForPathMergeVertex extends
         }
     }
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1){
             addFakeVertex();
