@@ -19,7 +19,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class MapReduceVertex extends
-	BasicPathMergeVertex{
+	BasicPathMergeVertex<PathMergeMessageWritable>{
     
     public static boolean fakeVertexExist = false;
     protected static VKmerBytesWritable fakeVertex = null;
@@ -55,6 +55,8 @@ public class MapReduceVertex extends
         }
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
+        if(tmpKmer == null)
+            tmpKmer = new VKmerBytesWritable();
     }
     
     /**
@@ -106,20 +108,23 @@ public class MapReduceVertex extends
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
-            tmpKmer.reset(kmerString.length());
             tmpKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
             reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
 
-            if(reverseKmer.compareTo(tmpKmer) < 0)
-                tmpKmer.setAsCopy(reverseKmer);
+            VKmerBytesWritable kmer = new VKmerBytesWritable();
+            kmerList = new VKmerListWritable();
+            if(reverseKmer.compareTo(tmpKmer) > 0)
+                kmer.setAsCopy(tmpKmer);
+            else
+                kmer.setAsCopy(reverseKmer);
             if(!kmerMapper.containsKey(tmpKmer)){
-                kmerList.reset();
+                //kmerList.reset();
                 kmerList.append(incomingMsg.getSourceVertexId());
-                kmerMapper.put(tmpKmer, kmerList);
+                kmerMapper.put(kmer, kmerList);
             } else{
                 kmerList.setCopy(kmerMapper.get(tmpKmer));
                 kmerList.append(incomingMsg.getSourceVertexId());
-                kmerMapper.put(tmpKmer, kmerList);
+                kmerMapper.put(kmer, kmerList);
             }
         }
     }
@@ -190,4 +195,5 @@ public class MapReduceVertex extends
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }
+
 }

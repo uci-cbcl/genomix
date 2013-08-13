@@ -119,7 +119,19 @@ public class BasicGraphCleanTestSuite extends TestSuite {
         LOGGER.info("Hyracks mini-cluster shut down");
         cleanupHDFS();
     }
-
+    
+    public static void init(String pattern, String[] testSet){
+        PreFix = "data/TestSet/" + pattern; 
+        SufFix = "bin";
+        PATH_TO_ONLY = "src/test/resources/only_" + pattern + ".txt";
+        ACTUAL_RESULT_DIR = "data/actual/" + pattern;
+        HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
+        /** Multiple Tests **/
+        TestDir.clear();
+        for(String testcase : testSet)
+            TestDir.add(PreFix + File.separator + testcase + File.separator + SufFix);
+    }
+    
     public static Test makeTestSuite(BasicGraphCleanTestSuite testSuite) throws Exception{
         testSuite.setUp();
         List<String> onlys = getFileList(PATH_TO_ONLY);
@@ -159,7 +171,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
 //        BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
 //        return makeTestSuite(testSuite);
 //    }
-
+    
     /**
      * Runs the tests and collects their result in a TestResult.
      */
@@ -208,54 +220,6 @@ public class BasicGraphCleanTestSuite extends TestSuite {
             if (name.indexOf(only) >= 0)
                 return true;
         return false;
-    }
-
-    public static String getPreFix() {
-        return PreFix;
-    }
-
-    public static void setPreFix(String preFix) {
-        PreFix = preFix;
-    }
-
-    public static String getSufFix() {
-        return SufFix;
-    }
-
-    public static void setSufFix(String sufFix) {
-        SufFix = sufFix;
-    }
-
-    public static ArrayList<String> getTestDir() {
-        return TestDir;
-    }
-
-    public static void setTestDir(ArrayList<String> testDir) {
-        TestDir = testDir;
-    }
-
-    public static String getPATH_TO_ONLY() {
-        return PATH_TO_ONLY;
-    }
-
-    public static void setPATH_TO_ONLY(String pATH_TO_ONLY) {
-        PATH_TO_ONLY = pATH_TO_ONLY;
-    }
-
-    public static String getACTUAL_RESULT_DIR() {
-        return ACTUAL_RESULT_DIR;
-    }
-
-    public static void setACTUAL_RESULT_DIR(String aCTUAL_RESULT_DIR) {
-        ACTUAL_RESULT_DIR = aCTUAL_RESULT_DIR;
-    }
-
-    public static String getHADOOP_CONF_PATH() {
-        return HADOOP_CONF_PATH;
-    }
-
-    public static void setHADOOP_CONF_PATH(String hADOOP_CONF_PATH) {
-        HADOOP_CONF_PATH = hADOOP_CONF_PATH;
     }
 
 }

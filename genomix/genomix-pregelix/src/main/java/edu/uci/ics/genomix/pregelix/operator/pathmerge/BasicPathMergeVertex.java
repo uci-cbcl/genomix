@@ -1,27 +1,21 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.io.IOException;
-import java.util.Iterator;
-
-import org.apache.hadoop.io.NullWritable;
-
 
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 
-public class BasicPathMergeVertex extends
-	BasicGraphCleanVertex<VKmerBytesWritable, VertexValueWritable, NullWritable, PathMergeMessageWritable>{
+public abstract class BasicPathMergeVertex<M extends PathMergeMessageWritable> extends
+	BasicGraphCleanVertex<M>{
 	
-	protected PathMergeMessageWritable incomingMsg = null; 
-    protected PathMergeMessageWritable outgoingMsg = null;
+	protected M incomingMsg = null; 
+    protected M outgoingMsg = null;
     
     public void setStateAsMergeWithPrev(){
         byte state = getVertexValue().getState();
@@ -362,10 +356,5 @@ public class BasicPathMergeVertex extends
                 configureMergeMsgForPredecessor();
                 break; 
         }
-    }
-	
-    @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
-    
     }
 }

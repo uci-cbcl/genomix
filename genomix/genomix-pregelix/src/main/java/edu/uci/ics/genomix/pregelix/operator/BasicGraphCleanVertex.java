@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public abstract class BasicGraphCleanVertex<I extends VKmerBytesWritable, V extends VertexValueWritable, E extends NullWritable, M extends MessageWritable> extends
+public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, M> {
     public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static final String ITERATIONS = "BasicGraphCleanVertex.iteration";
@@ -451,6 +451,6 @@ public abstract class BasicGraphCleanVertex<I extends VKmerBytesWritable, V exte
     
     @Override
     public void compute(Iterator<M> msgIterator) {
+        
     }
-
 }
