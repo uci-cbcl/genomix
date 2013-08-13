@@ -195,6 +195,7 @@ public abstract class BasicPathMergeVertex extends
      * send update message to neighber for P2
      */
     public void sendUpdateMsg(MessageWritable msg){
+        outgoingMsg.reset();
         outgoingMsg.setUpdateMsg(true);
         byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
@@ -269,6 +270,7 @@ public abstract class BasicPathMergeVertex extends
      * @throws IOException 
      */
     public void sendMergeMsg(){
+        outgoingMsg.reset();
         outgoingMsg.setUpdateMsg(false);
         if(selfFlag == State.IS_HEAD){
             byte newState = getVertexValue().getState(); 
@@ -299,6 +301,7 @@ public abstract class BasicPathMergeVertex extends
         if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outFlag |= MessageFlag.STOP;
         configureMergeMsgForPredecessor();
+        deleteVertex(getVertexId());
     }
     
     /**
@@ -309,6 +312,7 @@ public abstract class BasicPathMergeVertex extends
         if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outFlag |= MessageFlag.STOP;
         configureMergeMsgForSuccessor();
+        deleteVertex(getVertexId());
     }
     
     /**
@@ -323,7 +327,7 @@ public abstract class BasicPathMergeVertex extends
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(getPrevDestVertexId(), outgoingMsg);
-        deleteVertex(getVertexId());
+//        deleteVertex(getVertexId());
     }
     
     public void configureMergeMsgForSuccessor(){
@@ -335,7 +339,7 @@ public abstract class BasicPathMergeVertex extends
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(getNextDestVertexId(), outgoingMsg);
-        deleteVertex(getVertexId());
+//        deleteVertex(getVertexId());
     }
     /**
      * send merge message to neighber for P4
@@ -347,10 +351,12 @@ public abstract class BasicPathMergeVertex extends
             case State.SHOULD_MERGEWITHNEXT:
                 /** configure merge msg for successor **/
                 configureMergeMsgForSuccessor();
+                deleteVertex(getVertexId());
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
                 configureMergeMsgForPredecessor();
+                deleteVertex(getVertexId());
                 break; 
         }
     }

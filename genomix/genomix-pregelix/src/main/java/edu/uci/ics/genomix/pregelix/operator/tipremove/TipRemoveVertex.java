@@ -2,8 +2,6 @@ package edu.uci.ics.genomix.pregelix.operator.tipremove;
 
 import java.util.Iterator;
 
-import org.apache.hadoop.io.NullWritable;
-
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
@@ -65,7 +63,7 @@ public class TipRemoveVertex extends
         else
             outgoingMsg.reset();
         if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable();
     }
 
     @Override
@@ -74,13 +72,14 @@ public class TipRemoveVertex extends
         if(getSuperstep() == 1){
             if(VertexUtil.isIncomingTipVertex(getVertexValue())){
             	if(getVertexValue().getKmerLength() <= length){
-            		sendSettledMsgToPrevNode();
+            	    sendSettledMsgToNextNode();
             		deleteVertex(getVertexId());
             	}
             }
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
                 if(getVertexValue().getKmerLength() <= length){
-                	sendSettledMsgToNextNode();
+
+                    sendSettledMsgToPrevNode();
                     deleteVertex(getVertexId());
                 }
             }

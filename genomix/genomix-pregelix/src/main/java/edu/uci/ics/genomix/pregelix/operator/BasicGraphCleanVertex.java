@@ -441,6 +441,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         sendSettledMsgToAllNeighborNodes();
         
         deleteVertex(getVertexId());
+        this.activate();
     }
     
     /**

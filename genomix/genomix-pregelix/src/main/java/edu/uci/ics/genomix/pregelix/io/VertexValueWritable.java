@@ -188,7 +188,7 @@ public class VertexValueWritable
     }
     
     public boolean hasNextDest(){
-        return getFFList().isEmpty() || getFRList().isEmpty();
+        return !getFFList().isEmpty() || !getFRList().isEmpty();
     }
     
     /**

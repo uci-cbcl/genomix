@@ -72,7 +72,6 @@ public class P2ForPathMergeVertex extends
         else
             kmerList.reset();
         if(fakeVertex == null){
-//            fakeVertex = new KmerBytesWritable(kmerSize + 1);
             fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
@@ -157,12 +156,10 @@ public class P2ForPathMergeVertex extends
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             /** final Vertex Responses To FakeVertex **/
-            if((byte)(incomingMsg.getFlag() & MessageFlag.KILL_MASK) == MessageFlag.KILL){
-                if((byte)(incomingMsg.getFlag() & MessageFlag.DIR_MASK) == MessageFlag.DIR_FROM_DEADVERTEX){
-                    responseToDeadVertex();
-                } else{
-                    broadcaseKillself();
-                }
+            if(isReceiveKillMsg()){
+                broadcaseKillself();
+            }else if(isResponseKillMsg()){
+                responseToDeadVertex();
             }else if(getMsgFlag() == MessageFlag.IS_FINAL){
                 processMerge(incomingMsg);
                 getVertexValue().setState(State.IS_FINAL);
@@ -214,6 +211,7 @@ public class P2ForPathMergeVertex extends
                     for(int i = 0; i < 2; i++)
                         processFinalMerge(receivedMsgList.get(i));
                     setHeadState();
+                    this.activate();
                     break;
                 case MessageFromHead.BothMsgsFromNonHead:
                     for(int i = 0; i < 2; i++)
@@ -251,6 +249,7 @@ public class P2ForPathMergeVertex extends
                     } else if(isReceiveKillMsg()){
                         responseToDeadVertex();
                     }
+                    this.activate();
                 }
                 /** processing general case **/
                 else{
@@ -273,6 +272,8 @@ public class P2ForPathMergeVertex extends
                 responseMsgToHeadVertex(msgIterator);
                 if(selfFlag != State.IS_HEAD)
                     voteToHalt();
+                else
+                    this.activate();
             } 
             /** Fake vertex agregates message and group them by actual kmer (1) **/
             else{
@@ -284,8 +285,9 @@ public class P2ForPathMergeVertex extends
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
-            if(!isFakeVertex)
+            if(!isFakeVertex){
                 processMergeInHeadVertex(msgIterator);
+            }
         } else
             voteToHalt();
     }
