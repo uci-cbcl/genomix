@@ -246,6 +246,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     public void sendSettledMsgToAllPreviousNodes() {
         kmerIterator = getVertexValue().getRFList().getKeys(); // RFList
         while(kmerIterator.hasNext()){
+            outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_RF;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
@@ -254,6 +255,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         }
         kmerIterator = getVertexValue().getRRList().getKeys(); // RRList
         while(kmerIterator.hasNext()){
+            outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_RR;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
@@ -268,6 +270,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     public void sendSettledMsgToAllNextNodes() {
         kmerIterator = getVertexValue().getFFList().getKeys(); // FFList
         while(kmerIterator.hasNext()){
+            outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_FF;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
@@ -276,6 +279,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         }
         kmerIterator = getVertexValue().getFRList().getKeys(); // FRList
         while(kmerIterator.hasNext()){
+            outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_FR;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());

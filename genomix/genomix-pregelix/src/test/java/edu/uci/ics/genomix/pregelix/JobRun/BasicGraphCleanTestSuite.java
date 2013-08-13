@@ -55,7 +55,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
 
-    public static final String HDFS_INPUTPATH = "/PathTestSet";
+    public static final String HDFS_INPUTPATH = "/TestSet";
     
     private MiniDFSCluster dfsCluster;
 
@@ -85,7 +85,8 @@ public class BasicGraphCleanTestSuite extends TestSuite {
 
         for (String testDir : TestDir) {
             File src = new File(testDir);
-            Path dest = new Path(HDFS_INPUTPATH + File.separator + src.getName());
+            Path dest = new Path(HDFS_INPUTPATH + File.separator + getTestCaseName(testDir));
+//                    + File.separator + src.getName());
             dfs.mkdirs(dest);
             //src.listFiles()
             //src.listFiles((FilenameFilter)(new WildcardFileFilter("part*")))
@@ -150,16 +151,19 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                     continue;
                 } else {
                     for (String testPathStr : TestDir) {
-                        File testDir = new File(testPathStr);
+//                        File testDir = new File(testPathStr);
                         String resultFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) + File.separator + "bin";
+                                + File.separator + getTestCaseName(testPathStr) 
+                                + File.separator + "bin";
                         String textFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) + File.separator + "txt" ;
+                                + File.separator + getTestCaseName(testPathStr) 
+                                + File.separator + "txt" ;
                         String graphvizFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) + File.separator + "graphviz";
+                                + File.separator + getTestCaseName(testPathStr) 
+                                + File.separator + "graphviz";
                         testSuite.addTest(new BasicSmallTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile
                                 .getAbsolutePath().toString(), dfs,
-                                HDFS_INPUTPATH + File.separator + testDir.getName(), resultFileName, textFileName, graphvizFileName));
+                                HDFS_INPUTPATH + File.separator + getTestCaseName(testPathStr) , resultFileName, textFileName, graphvizFileName));
                     }
                 }
             }

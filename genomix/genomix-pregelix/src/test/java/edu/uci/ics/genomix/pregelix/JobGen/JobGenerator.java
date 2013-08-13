@@ -34,7 +34,7 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(MapReduceVertex.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -76,7 +76,7 @@ public class JobGenerator {
     }
 
     private static void genP2ForMergeGraph() throws IOException {
-        generateP2ForMergeGraphJob("LogAlgorithmForMergeGraph", outputBase + "LogAlgorithmForMergeGraph.xml");
+        generateP2ForMergeGraphJob("P2ForMergeGraph", outputBase + "P2ForMergeGraph.xml");
     }
 //    
 //    private static void generateP3ForMergeGraphJob(String jobName, String outputPath) throws IOException {

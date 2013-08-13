@@ -109,7 +109,7 @@ public class BubbleAddVertex extends
             } 
             else if(getVertexId().equals(minorVertexId)){
                 /** add edge pointing to insertedBubble **/
-                addEdgeToInsertedBubble(DirectionFlag.DIR_FR, insertedBubble);
+                addEdgeToInsertedBubble(DirectionFlag.DIR_RF, insertedBubble);
             } 
             else if(getVertexId().equals(middleVertexId)){
                 /** insert new bubble **/

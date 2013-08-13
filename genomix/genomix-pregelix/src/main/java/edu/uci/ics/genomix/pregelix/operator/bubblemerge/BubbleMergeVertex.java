@@ -25,7 +25,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class BubbleMergeVertex extends
-    BasicGraphCleanVertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+    BasicGraphCleanVertex {
     public static final String DISSIMILARITY_THRESHOLD = "BubbleMergeVertex.dissimilarThreshold";
     private float dissimilarThreshold = -1;
     

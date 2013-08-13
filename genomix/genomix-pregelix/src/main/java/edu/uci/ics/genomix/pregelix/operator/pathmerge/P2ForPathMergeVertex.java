@@ -182,13 +182,11 @@ public class P2ForPathMergeVertex extends
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             /** final Vertex Responses To FakeVertex **/
-            if((byte)(incomingMsg.getFlag() & MessageFlag.KILL_MASK) == MessageFlag.KILL){
-                if((byte)(incomingMsg.getFlag() & MessageFlag.DEAD_MASK) == MessageFlag.DIR_FROM_DEADVERTEX){
-                    responseToDeadVertex();
-                } else{
-                    broadcaseKillself();
-                }
-            } else {
+            if(isReceiveKillMsg()){
+                broadcaseKillself();
+            } else if(isResponseKillMsg()){
+                responseToDeadVertex();
+            } else{
                 /** for final processing (2) **/
                 if(getMsgFlag() == MessageFlag.IS_FINAL){
                     sendFinalMergeMsg();
@@ -265,9 +263,9 @@ public class P2ForPathMergeVertex extends
             else{
                 kmerMapper.clear();
                 /** Mapper **/
-                mapKeyByActualKmer(msgIterator);
+                mapKeyByInternalKmer(msgIterator);
                 /** Reducer **/
-                reduceKeyByActualKmer();
+                reduceKeyByInternalKmer();
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
@@ -280,15 +278,15 @@ public class P2ForPathMergeVertex extends
             else{
                 kmerMapper.clear();
                 /** Mapper **/
-                mapKeyByActualKmer(msgIterator);
+                mapKeyByInternalKmer(msgIterator);
                 /** Reducer **/
-                reduceKeyByActualKmer();
+                reduceKeyByInternalKmer();
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
             if(!isFakeVertex)
                 processMergeInHeadVertex(msgIterator);
-        }else
+        } else
             voteToHalt();
     }
 

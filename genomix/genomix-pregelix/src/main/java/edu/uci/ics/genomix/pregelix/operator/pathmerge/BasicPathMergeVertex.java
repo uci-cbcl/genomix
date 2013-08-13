@@ -11,12 +11,9 @@ import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 
-public abstract class BasicPathMergeVertex<M extends PathMergeMessageWritable> extends
-	BasicGraphCleanVertex<M>{
+public abstract class BasicPathMergeVertex extends
+	BasicGraphCleanVertex<PathMergeMessageWritable>{
 	
-	protected M incomingMsg = null; 
-    protected M outgoingMsg = null;
-    
     public void setStateAsMergeWithPrev(){
         byte state = getVertexValue().getState();
         state &= State.SHOULD_MERGE_CLEAR;
@@ -324,7 +321,7 @@ public abstract class BasicPathMergeVertex<M extends PathMergeMessageWritable> e
         outgoingMsg.setFlip(ifFilpWithSuccessor());
         for(byte d: OutgoingListFlag.values)
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setNode(getVertexValue().getNode());
+        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(getPrevDestVertexId(), outgoingMsg);
         deleteVertex(getVertexId());
     }
@@ -336,7 +333,7 @@ public abstract class BasicPathMergeVertex<M extends PathMergeMessageWritable> e
         outgoingMsg.setFlip(ifFlipWithPredecessor());
         for(byte d: IncomingListFlag.values)
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setNode(getVertexValue().getNode());
+        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(getNextDestVertexId(), outgoingMsg);
         deleteVertex(getVertexId());
     }

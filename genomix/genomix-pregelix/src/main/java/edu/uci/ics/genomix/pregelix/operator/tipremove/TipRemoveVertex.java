@@ -46,7 +46,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  *  Remove tip or single node when l > constant
  */
 public class TipRemoveVertex extends
-        BasicGraphCleanVertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        BasicGraphCleanVertex<MessageWritable> {
     public static final String LENGTH = "TipRemoveVertex.length";
     private int length = -1;
     

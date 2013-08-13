@@ -64,8 +64,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public static class OutgoingListFlag {
-        public static final byte DIR_FF = 0b10 << 0;
-        public static final byte DIR_FR = 0b11 << 0;
+        public static final byte DIR_FF = 0b00 << 0;
+        public static final byte DIR_FR = 0b01 << 0;
 
         public static final byte[] values = {DIR_FF, DIR_FR };
     }

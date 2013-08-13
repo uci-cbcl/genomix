@@ -81,7 +81,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     }
     
     public boolean isEmpty(){
-        return getCountOfPosition() > 0;
+        return getCountOfPosition() == 0;
     }
     
     public int getCountOfPosition() {

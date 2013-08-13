@@ -7,7 +7,7 @@ import java.util.Random;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
@@ -19,7 +19,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class MapReduceVertex extends
-	BasicPathMergeVertex<PathMergeMessageWritable>{
+	BasicPathMergeVertex{
     
     public static boolean fakeVertexExist = false;
     protected static VKmerBytesWritable fakeVertex = null;
@@ -104,7 +104,7 @@ public class MapReduceVertex extends
         }
     }
     
-    public void mapKeyByActualKmer(Iterator<PathMergeMessageWritable> msgIterator){
+    public void mapKeyByInternalKmer(Iterator<PathMergeMessageWritable> msgIterator){
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
@@ -129,7 +129,7 @@ public class MapReduceVertex extends
         }
     }
     
-    public void reduceKeyByActualKmer(){
+    public void reduceKeyByInternalKmer(){
         for(VKmerBytesWritable key : kmerMapper.keySet()){
             kmerList = kmerMapper.get(key);
             for(int i = 1; i < kmerList.getCountOfPosition(); i++){
@@ -163,9 +163,9 @@ public class MapReduceVertex extends
         } else if(getSuperstep() == 3){
             kmerMapper.clear();
             /** Mapper **/
-            mapKeyByActualKmer(msgIterator);
+            mapKeyByInternalKmer(msgIterator);
             /** Reducer **/
-            reduceKeyByActualKmer();
+            reduceKeyByInternalKmer();
         } else if(getSuperstep() == 4){
             /** only for test single MapReduce job**/
             if(!msgIterator.hasNext() && getVertexValue().getState() == State.IS_FAKE){
@@ -176,9 +176,10 @@ public class MapReduceVertex extends
         } else if(getSuperstep() == 5){
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if(isReceiveKillMsg())
+                if(isResponseKillMsg())
                     responseToDeadVertex();
             }
+            voteToHalt();
         }
     }
     
@@ -189,7 +190,7 @@ public class MapReduceVertex extends
          * BinaryInput and BinaryOutput
          */
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
