@@ -126,24 +126,24 @@ public class Driver {
     }
 
     public static void main(String[] args) throws Exception {
-        GenomixJobConf jobConf = new GenomixJobConf();
-        String[] otherArgs = new GenericOptionsParser(jobConf, args).getRemainingArgs();
-        if (otherArgs.length < 4) {
-            System.err.println("Need <serverIP> <port> <input> <output>");
+        GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
+        String[] otherArgs = jobConf.getExtraArguments();
+        if (otherArgs.length < 2) {
+            System.err.println("Need <input> <output> as additional arguments!");
             System.exit(-1);
         }
-        String ipAddress = otherArgs[0];
-        int port = Integer.parseInt(otherArgs[1]);
+        String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
+        int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));
         int numOfDuplicate = jobConf.getInt(GenomixJobConf.CPARTITION_PER_MACHINE, 2);
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
         // FileInputFormat.setInputPaths(job, otherArgs[2]);
         {
             @SuppressWarnings("deprecation")
-            Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[2]);
+            Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[0]);
             jobConf.set("mapred.input.dir", path.toString());
 
             @SuppressWarnings("deprecation")
-            Path outputDir = new Path(jobConf.getWorkingDirectory(), otherArgs[3]);
+            Path outputDir = new Path(jobConf.getWorkingDirectory(), otherArgs[1]);
             jobConf.set("mapred.output.dir", outputDir.toString());
         }
         // FileInputFormat.addInputPath(jobConf, new Path(otherArgs[2]));

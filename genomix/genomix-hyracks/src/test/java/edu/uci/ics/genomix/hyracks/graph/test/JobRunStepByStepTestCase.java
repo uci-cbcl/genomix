@@ -51,7 +51,7 @@ public class JobRunStepByStepTestCase {
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
     
-    private JobConf conf = GenomixJobConf.getDefaultConf();
+    private GenomixJobConf conf = new GenomixJobConf(KmerSize);
     private int numberOfNC = 2;
     private int numPartitionPerMachine = 2;
     
@@ -69,7 +69,7 @@ public class JobRunStepByStepTestCase {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
-        driver.runJob(GenomixJobConf.getDefaultConf(), Plan.CHECK_KMERREADER, true);
+        driver.runJob(conf, Plan.CHECK_KMERREADER, true);
         dumpResult();
     }
     
@@ -77,7 +77,7 @@ public class JobRunStepByStepTestCase {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
+        driver.runJob(conf, Plan.BUILD_DEBRUJIN_GRAPH, true);
         dumpResult();
     }
     
@@ -85,7 +85,7 @@ public class JobRunStepByStepTestCase {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(new GenomixJobConf(conf), Plan.BUILD_UNMERGED_GRAPH, true);
+        driver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, true);
         dumpResult();
     }
     

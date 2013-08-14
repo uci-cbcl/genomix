@@ -16,6 +16,7 @@
 package org.genomix.driver;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -24,9 +25,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+
+import com.sun.tools.javac.util.List;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
@@ -41,7 +45,7 @@ public class GenomixJobConf extends JobConf {
     
     private static class Options {
         // Global config
-        @Option(name = "-kmerlength", usage = "The kmer length for this graph.", required = true)
+        @Option(name = "-kmerLength", usage = "The kmer length for this graph.", required = true)
         private int kmerLength = -1;
 
         // Graph cleaning
@@ -68,14 +72,19 @@ public class GenomixJobConf extends JobConf {
         
         // Hyracks/Pregelix Advanced Setup
         @Option(name = "-ip", usage = "IP address of the cluster controller", required = true)
-        private String ipAddress;
+        private String ipAddress = "";
         
-        @Option(name = "-port", usage = "port of the cluster controller", required = false)
-        private int port;
+        @Option(name = "-port", usage = "port of the cluster controller", required = true)
+        private int port = -1;
         
         @Option(name = "-profile", usage = "whether to do runtime profifling", required = false)
-        private String profile;
+        private boolean profile = false;
+        
+        @Argument
+        private ArrayList<String> arguments = new ArrayList<String>();
     }
+    
+    
 
     // Global config
     public static final String KMER_LENGTH = "genomix.kmerlength";
@@ -128,97 +137,111 @@ public class GenomixJobConf extends JobConf {
     public static final String OUTPUT_FORMAT_BINARY = "genomix.outputformat.binary";
     public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
     
-    public GenomixJobConf() {
+    private String[] extraArguments = {};
+    
+    public GenomixJobConf(int kmerLength) {
         super(new Configuration());
+        setInt(KMER_LENGTH, kmerLength);
+        fillMissingDefaults();
+        validateConf(this);
     }
-
-    public GenomixJobConf(Configuration conf) {
-        super(conf);
+    
+    public GenomixJobConf(Configuration other) {
+        super(other);
+        if (other.get(KMER_LENGTH) == null)
+            throw new IllegalArgumentException("Configuration must define KMER_LENGTH!");
+        fillMissingDefaults();
+        validateConf(this);
     }
     
     /**
      * Populate a JobConf with default values overridden by command-line options specified in `args`.
      * 
-     * Due to the weird way Options are parsed, this requires a throw-away instance of GenomixJobConf
+     * Any command-line options that were unparsed are available via conf.getExtraArguments().
      */
-    public void parseArguments(String[] args) throws CmdLineException {
+    public static GenomixJobConf fromArguments(String[] args) throws CmdLineException {
         Options opts = new Options();
         CmdLineParser parser = new CmdLineParser(opts);
         parser.parseArgument(args);
-        
-        fillDefaultValues(opts);
-        validateArgs(opts);
-        setFromOptions(opts);
+        GenomixJobConf conf = new GenomixJobConf(opts.kmerLength);
+        conf.extraArguments = opts.arguments.toArray(new String[opts.arguments.size()]);
+        conf.setFromOpts(opts);
+        conf.fillMissingDefaults();
+        validateConf(conf);
+        return conf;
     }
     
-    public static GenomixJobConf getDefaultConf() {
-        Options opts = new Options();
-        GenomixJobConf.fillDefaultValues(opts);
-        GenomixJobConf defaults = new GenomixJobConf();
-        defaults.setFromOptions(opts);
-        return defaults;
+    /**
+     * retrieve any unparsed arguments from parseArguments. Returns an empty array if we weren't initialized use fromArguments()
+     */
+    public String[] getExtraArguments() {
+        return extraArguments;
     }
-
-    private static void validateArgs(Options opts) throws CmdLineException {
+       
+    public static void validateConf(GenomixJobConf conf) throws IllegalArgumentException {
         // Global config
-        if (opts.kmerLength < 3)
-            throw new CmdLineException("kmerLength must be at least 3!");
+        int kmerLength = Integer.parseInt(conf.get(KMER_LENGTH));
+        if (kmerLength == -1)
+            throw new IllegalArgumentException("kmerLength is unset!");
+        if (kmerLength < 3)
+            throw new IllegalArgumentException("kmerLength must be at least 3!");
         
         // Graph cleaning
-        if (opts.bridgeRemove_maxLength < opts.kmerLength)
-            throw new CmdLineException("bridgeRemove_maxLength must be at least as long as kmerLength!"); 
+        if (Integer.parseInt(conf.get(BRIDGE_REMOVE_MAX_LENGTH)) < kmerLength)
+            throw new IllegalArgumentException("bridgeRemove_maxLength must be at least as long as kmerLength!"); 
 
-        if (opts.bubbleMerge_maxDissimilarity < 0f)
-            throw new CmdLineException("bubbleMerge_maxDissimilarity cannot be negative!");
-        if (opts.bubbleMerge_maxDissimilarity > 1f)
-            throw new CmdLineException("bubbleMerge_maxDissimilarity cannot be greater than 1.0!");
+        if (Float.parseFloat(conf.get(BUBBLE_MERGE_MAX_DISSIMILARITY)) < 0f)
+            throw new IllegalArgumentException("bubbleMerge_maxDissimilarity cannot be negative!");
+        if (Float.parseFloat(conf.get(BUBBLE_MERGE_MAX_DISSIMILARITY)) > 1f)
+            throw new IllegalArgumentException("bubbleMerge_maxDissimilarity cannot be greater than 1.0!");
         
-        if (opts.graphCleanMaxIterations < 0)
-            throw new CmdLineException("graphCleanMaxIterations cannot be negative!");
+        if (Integer.parseInt(conf.get(GRAPH_CLEAN_MAX_ITERATIONS)) < 0)
+            throw new IllegalArgumentException("graphCleanMaxIterations cannot be negative!");
         
-        if (opts.pathMergeRandom_probBeingRandomHead <= 0)
-            throw new CmdLineException("pathMergeRandom_probBeingRandomHead greater than 0.0!");
-        if (opts.pathMergeRandom_probBeingRandomHead >= 1.0)
-            throw new CmdLineException("pathMergeRandom_probBeingRandomHead must be less than 1.0!");
+        if (Float.parseFloat(conf.get(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD)) <= 0)
+            throw new IllegalArgumentException("pathMergeRandom_probBeingRandomHead greater than 0.0!");
+        if (Float.parseFloat(conf.get(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD)) >= 1.0)
+            throw new IllegalArgumentException("pathMergeRandom_probBeingRandomHead must be less than 1.0!");
                 
-        if (opts.removeLowCoverage_maxCoverage < 0)
-            throw new CmdLineException("removeLowCoverage_maxCoverage cannot be negative!");
+        if (Float.parseFloat(conf.get(REMOVE_LOW_COVERAGE_MAX_COVERAGE)) < 0)
+            throw new IllegalArgumentException("removeLowCoverage_maxCoverage cannot be negative!");
         
-        if (opts.tipRemove_maxLength < opts.kmerLength)
-            throw new CmdLineException("tipRemove_maxLength must be at least as long as kmerLength!");
+        if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
+            throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
 
         // Hyracks/Pregelix Advanced Setup
-        if (opts.ipAddress == null)
-            throw new CmdLineException("ipAddress was not specified!");        
+        if (conf.get(IP_ADDRESS) == "")
+            throw new IllegalArgumentException("ipAddress was not specified!");        
     }
     
-    private static void fillDefaultValues(Options opts) {
+    private void fillMissingDefaults() {
         // Global config
+        int kmerLength = getInt(KMER_LENGTH, -1);
         
         // Graph cleaning
-        if (opts.bridgeRemove_maxLength == -1)
-            opts.bridgeRemove_maxLength = opts.kmerLength + 1;
+        if (getInt(BRIDGE_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
+            setInt(BRIDGE_REMOVE_MAX_LENGTH, kmerLength + 1);
         
-        if (opts.bubbleMerge_maxDissimilarity == -1)
-            opts.bubbleMerge_maxDissimilarity = .05f;
+        if (getFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, -1) == -1)
+            setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .05f);
         
-        if (opts.graphCleanMaxIterations == -1)
-            opts.graphCleanMaxIterations = 10000000;
+        if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
+            setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
         
-        if (opts.pathMergeRandom_randSeed == -1)
-            opts.pathMergeRandom_randSeed = System.currentTimeMillis();
+        if (getFloat(PATHMERGE_RANDOM_RANDSEED, -1) == -1)
+            setFloat(PATHMERGE_RANDOM_RANDSEED, System.currentTimeMillis());
         
-        if (opts.pathMergeRandom_probBeingRandomHead == -1)
-            opts.pathMergeRandom_probBeingRandomHead = 0.5f;
+        if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
+            setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
         
-        if (opts.removeLowCoverage_maxCoverage == -1)
-            opts.removeLowCoverage_maxCoverage = 1.0f;
+        if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
+            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 1.0f);
         
-        if (opts.tipRemove_maxLength == -1)
-            opts.tipRemove_maxLength = opts.kmerLength + 1;
+        if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
+            setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);
     }
 
-    private void setFromOptions(Options opts) {
+    private void setFromOpts(Options opts) {
         // Global config
         setInt(KMER_LENGTH, opts.kmerLength);
                 
@@ -234,6 +257,6 @@ public class GenomixJobConf extends JobConf {
         // Hyracks/Pregelix Advanced Setup
         set(IP_ADDRESS, opts.ipAddress);
         setInt(PORT, opts.port);
-        set(PROFILE, opts.profile);
+        setBoolean(PROFILE, opts.profile);
     }
 }
