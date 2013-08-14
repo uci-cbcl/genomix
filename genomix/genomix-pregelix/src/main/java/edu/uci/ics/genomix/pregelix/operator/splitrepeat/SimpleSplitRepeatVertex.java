@@ -15,7 +15,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class SimpleSplitRepeatVertex extends 
-    BasicGraphCleanVertex{
+    BasicGraphCleanVertex<MessageWritable>{
     
     public class EdgeDir{
         public static final byte DIR_FF = 0 << 0;
@@ -80,7 +80,7 @@ public class SimpleSplitRepeatVertex extends
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
-            outgoingMsg.reset(kmerSize);
+            outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
         if(tmpKmer == null)
@@ -127,7 +127,7 @@ public class SimpleSplitRepeatVertex extends
         //add the corresponding edge to new vertex
         switch(connectedTable[i][0]){
             case EdgeDir.DIR_RF:
-                vertexValue.getRFList().append(incomingEdge);
+                vertexValue.getRFList().add(incomingEdge);
                 break;
             case EdgeDir.DIR_RR:
                 vertexValue.getRRList().append(incomingEdge);
