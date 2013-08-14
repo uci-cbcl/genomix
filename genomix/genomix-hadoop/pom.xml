@@ -180,5 +180,10 @@
 			<version>1.0.0</version>
 			<classifier>hadoop1</classifier>
 		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>genomix-driver</artifactId>
+			<version>0.2.10-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

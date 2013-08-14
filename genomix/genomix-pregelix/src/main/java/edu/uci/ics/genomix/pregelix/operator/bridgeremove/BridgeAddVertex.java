@@ -1,13 +1,14 @@
 package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
 import java.util.Iterator;
+
 import org.apache.hadoop.io.NullWritable;
+import org.genomix.driver.GenomixJobConf;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -51,8 +52,6 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
  */
 public class BridgeAddVertex extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
-    public static final String LENGTH = "BasicGraphCleanVertex.length";
     public static int kmerSize = -1;
     private int length = -1;
     
@@ -67,11 +66,11 @@ public class BridgeAddVertex extends
      */
     public void initVertex() {
         if (kmerSize == -1) {
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
             KmerBytesWritable.setGlobalKmerLength(kmerSize);
         }
         if (length == -1)
-            length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5); // TODO fail on parse
+            length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })

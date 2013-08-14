@@ -18,6 +18,8 @@ package edu.uci.ics.genomix.hyracks.graph.job;
 import java.io.Serializable;
 import java.util.UUID;
 
+import org.genomix.driver.GenomixJobConf;
+
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobSpecification;

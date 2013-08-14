@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.genomix.driver.GenomixJobConf;
+
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -25,7 +27,6 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  */
 public class BubbleMergeVertex extends
     BasicGraphCleanVertex<BubbleMergeMessageWritable> {
-    public static final String DISSIMILARITY_THRESHOLD = "BubbleMergeVertex.dissimilarThreshold";
     private float dissimilarThreshold = -1;
     
     private Map<VKmerBytesWritable, ArrayList<BubbleMergeMessageWritable>> receivedMsgMap = new HashMap<VKmerBytesWritable, ArrayList<BubbleMergeMessageWritable>>();
@@ -43,11 +44,11 @@ public class BubbleMergeVertex extends
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         if (maxIteration < 0)
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         if(dissimilarThreshold == -1)
-            dissimilarThreshold = getContext().getConfiguration().getFloat(DISSIMILARITY_THRESHOLD, (float) 0.5);
+            dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if(incomingMsg == null)
             incomingMsg = new BubbleMergeMessageWritable();
         if(outgoingMsg == null)

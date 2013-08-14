@@ -16,6 +16,8 @@ package edu.uci.ics.genomix.hyracks.graph.job;
 
 import java.util.Map;
 
+import org.genomix.driver.GenomixJobConf;
+
 import edu.uci.ics.genomix.hyracks.graph.io.KeyValueSequenceWriterFactory;
 import edu.uci.ics.genomix.hyracks.graph.io.KeyValueTextWriterFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;

@@ -23,13 +23,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.GenericOptionsParser;
+import org.genomix.driver.GenomixJobConf;
 
-import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenBrujinGraph;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenCheckReader;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenUnMergedGraph;
-
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -46,8 +45,6 @@ public class Driver {
         BUILD_UNMERGED_GRAPH,
     }
 
-    private static final String IS_PROFILING = "genomix.driver.profiling";
-    private static final String CPARTITION_PER_MACHINE = "genomix.driver.duplicate.num";
     private static final Log LOG = LogFactory.getLog(Driver.class);
     private JobGen jobGen;
     private boolean profiling;
@@ -137,8 +134,8 @@ public class Driver {
         }
         String ipAddress = otherArgs[0];
         int port = Integer.parseInt(otherArgs[1]);
-        int numOfDuplicate = jobConf.getInt(CPARTITION_PER_MACHINE, 2);
-        boolean bProfiling = jobConf.getBoolean(IS_PROFILING, true);
+        int numOfDuplicate = jobConf.getInt(GenomixJobConf.CPARTITION_PER_MACHINE, 2);
+        boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
         // FileInputFormat.setInputPaths(job, otherArgs[2]);
         {
             @SuppressWarnings("deprecation")

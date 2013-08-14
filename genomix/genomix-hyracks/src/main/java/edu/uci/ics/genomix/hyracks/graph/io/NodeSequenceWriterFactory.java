@@ -16,15 +16,16 @@ package edu.uci.ics.genomix.hyracks.graph.io;
 
 import java.io.DataOutput;
 import java.io.IOException;
+
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.JobConf;
+import org.genomix.driver.GenomixJobConf;
 
 import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
-import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -48,7 +49,7 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
     
     public NodeSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
-        this.kmerSize = conf.getInt(GenomixJobConf.KMER_LENGTH, GenomixJobConf.DEFAULT_KMERLEN);
+        this.kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
     }
 
     public class TupleWriter implements ITupleWriter {

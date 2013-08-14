@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import org.genomix.driver.GenomixJobConf;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
@@ -15,8 +16,6 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RemoveLowCoverageVertex extends
     BasicGraphCleanVertex<MessageWritable> {
-    public static final String KMER_SIZE = "RemoveLowCoverageVertex.kmerSize";
-    public static final String MIN_AVERAGECOVERAGE = "RemoveLowCoverageVertex.minAverageCoverage";
     public static int kmerSize = -1;
     private static float minAverageCoverage = -1;
     
@@ -26,9 +25,9 @@ public class RemoveLowCoverageVertex extends
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         if(minAverageCoverage == -1)
-            minAverageCoverage = getContext().getConfiguration().getFloat(MIN_AVERAGECOVERAGE, 3);
+            minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)

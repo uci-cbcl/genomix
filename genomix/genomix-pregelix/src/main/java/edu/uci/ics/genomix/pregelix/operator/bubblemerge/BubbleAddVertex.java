@@ -1,13 +1,14 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
 import java.util.Iterator;
+
 import org.apache.hadoop.io.NullWritable;
+import org.genomix.driver.GenomixJobConf;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -50,7 +51,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
  */
 public class BubbleAddVertex extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
-    public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static int kmerSize = -1;
    
     private VKmerBytesWritable majorVertexId = new VKmerBytesWritable("ATA"); //forward
@@ -63,7 +63,7 @@ public class BubbleAddVertex extends
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
     }
     
     /**

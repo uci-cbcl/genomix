@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.genomix.driver.GenomixJobConf;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -64,9 +65,9 @@ public class Client {
         for (int i = 1; i < inputs.length; i++)
             FileInputFormat.addInputPaths(job, inputs[0]);
         FileOutputFormat.setOutputPath(job, new Path(options.outputPath));
-        job.getConfiguration().setInt(BasicGraphCleanVertex.KMER_SIZE, options.sizeKmer);
+        job.getConfiguration().setInt(GenomixJobConf.KMER_LENGTH, options.sizeKmer);
         if (options.numIteration > 0) {
-            job.getConfiguration().setInt(BasicGraphCleanVertex.ITERATIONS, options.numIteration);
+            job.getConfiguration().setInt(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS, options.numIteration);
         }
         
 //        if (options.pseudoRate > 0 && options.pseudoRate <= 1)

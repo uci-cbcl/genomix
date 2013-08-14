@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.Set;
 
 import edu.uci.ics.genomix.pregelix.io.SplitRepeatMessageWritable;
+import org.genomix.driver.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -66,9 +67,9 @@ public class SplitRepeatVertex extends
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         if (maxIteration < 0)
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         if(incomingMsg == null)
             incomingMsg = new SplitRepeatMessageWritable();
         if(outgoingMsg == null)

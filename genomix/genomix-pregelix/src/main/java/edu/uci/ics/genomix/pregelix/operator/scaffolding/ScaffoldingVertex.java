@@ -10,6 +10,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import org.genomix.driver.GenomixJobConf;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -61,9 +62,9 @@ public class ScaffoldingVertex extends
     
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         if (maxIteration < 0)
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         if(incomingMsg == null)
             incomingMsg = new BFSTraverseMessageWritable();
         if(outgoingMsg == null)

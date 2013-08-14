@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<artifactId>genomix-hyracks</artifactId>
-	<name>genomix-hyracks</name>
-
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>genomix</artifactId>
 		<version>0.2.10-SNAPSHOT</version>
 	</parent>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
-	<build>
+  <artifactId>genomix-driver</artifactId>
+  <name>genomix-driver</name>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  <build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -176,8 +174,8 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<dependencies>
+  
+<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -185,64 +183,11 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-dataflow-std</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-api</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-dataflow-common</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-data-std</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-control-cc</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-control-nc</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.kenai.nbpwr</groupId>
 			<artifactId>org-apache-commons-io</artifactId>
 			<version>1.3.1-201002241208</version>
 			<type>nbm</type>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks.examples</groupId>
-			<artifactId>hyracks-integration-tests</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-ipc</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
@@ -255,30 +200,10 @@
 			<version>0.20.2</version>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>genomix-data</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<groupId>org.kohsuke.args4j</groupId>
+			<artifactId>args4j-maven-plugin</artifactId>
+			<version>2.0.25</version>
+			<type>maven-plugin</type>
 		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>genomix-driver</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-		</dependency>
-	</dependencies>
+</dependencies>
 </project>

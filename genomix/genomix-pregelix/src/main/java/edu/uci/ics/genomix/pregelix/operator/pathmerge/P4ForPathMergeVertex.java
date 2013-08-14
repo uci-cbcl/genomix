@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.genomix.driver.GenomixJobConf;
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -48,8 +49,6 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex {
-    public static final String RANDSEED = "P4ForPathMergeVertex.randSeed";
-    public static final String PROBBEINGRANDOMHEAD = "P4ForPathMergeVertex.probBeingRandomHead";
 
     private static long randSeed = 1;
     private float probBeingRandomHead = -1;
@@ -70,9 +69,9 @@ public class P4ForPathMergeVertex extends
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         if (maxIteration < 0)
-            maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
+            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         if(incomingMsg == null)
             incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
@@ -84,7 +83,7 @@ public class P4ForPathMergeVertex extends
         randSeed = getSuperstep();
         randGenerator = new Random(randSeed);
         if (probBeingRandomHead < 0)
-            probBeingRandomHead = getContext().getConfiguration().getFloat("probBeingRandomHead", 0.5f);
+            probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
         hasNext = false;
         hasPrev = false;
         curHead = false;

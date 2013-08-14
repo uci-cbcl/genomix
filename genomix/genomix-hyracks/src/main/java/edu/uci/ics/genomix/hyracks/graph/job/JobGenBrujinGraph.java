@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.genomix.driver.GenomixJobConf;
 
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory;
@@ -34,7 +35,6 @@ import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.AggregateKmerAggre
 import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.graph.io.NodeSequenceWriterFactory;
 import edu.uci.ics.genomix.hyracks.graph.io.NodeTextWriterFactory;
-
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -234,10 +234,9 @@ public class JobGenBrujinGraph extends JobGen {
 
     protected void initJobConfiguration(Scheduler scheduler) throws HyracksDataException {
         Configuration conf = confFactory.getConf();
-        kmerSize = conf.getInt(GenomixJobConf.KMER_LENGTH, GenomixJobConf.DEFAULT_KMERLEN);
+        kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
         if (kmerSize % 2 == 0) {
-            kmerSize--;
-            conf.setInt(GenomixJobConf.KMER_LENGTH, kmerSize);
+            throw new IllegalArgumentException("kmerLength cannot be even!");
         }
         frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, GenomixJobConf.DEFAULT_FRAME_LIMIT);
         tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);

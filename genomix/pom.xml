@@ -44,5 +44,6 @@
         <module>genomix-hyracks</module>
         <module>genomix-hadoop</module>
 	<module>genomix-pregelix</module>
-    </modules>
+    <module>genomix-driver</module>
+  </modules>
 </project>

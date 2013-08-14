@@ -3,6 +3,8 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.genomix.driver.GenomixJobConf;
+
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -47,7 +49,6 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 public class BridgeRemoveVertex extends
     BasicGraphCleanVertex<MessageWritable> {
-    public static final String LENGTH = "BridgeRemoveVertex.length";
     private int length = -1;
 
     private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
@@ -57,9 +58,9 @@ public class BridgeRemoveVertex extends
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         if(length == -1)
-            length = getContext().getConfiguration().getInt(LENGTH, kmerSize);
+            length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)

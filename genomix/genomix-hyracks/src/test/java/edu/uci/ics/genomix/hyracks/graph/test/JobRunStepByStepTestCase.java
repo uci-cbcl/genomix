@@ -28,13 +28,13 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+import org.genomix.driver.GenomixJobConf;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
-import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 
 @SuppressWarnings("deprecation")
 public class JobRunStepByStepTestCase {
@@ -51,7 +51,7 @@ public class JobRunStepByStepTestCase {
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
     
-    private JobConf conf = new JobConf();
+    private JobConf conf = GenomixJobConf.getDefaultConf();
     private int numberOfNC = 2;
     private int numPartitionPerMachine = 2;
     
@@ -69,7 +69,7 @@ public class JobRunStepByStepTestCase {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
-        driver.runJob(new GenomixJobConf(conf), Plan.CHECK_KMERREADER, true);
+        driver.runJob(GenomixJobConf.getDefaultConf(), Plan.CHECK_KMERREADER, true);
         dumpResult();
     }
     
@@ -101,7 +101,6 @@ public class JobRunStepByStepTestCase {
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
         conf.setInt(GenomixJobConf.KMER_LENGTH, KmerSize);
-        conf.setInt(GenomixJobConf.READ_LENGTH, ReadLength);
         driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
                 edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
