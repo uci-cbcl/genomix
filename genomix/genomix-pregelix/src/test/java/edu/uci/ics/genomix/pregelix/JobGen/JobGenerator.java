@@ -166,23 +166,6 @@ public class JobGenerator {
                 + "TipRemoveGraph.xml");
     }
     
-    private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(SplitRepeatVertex.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(SplitRepeatVertex.KMER_SIZE, 3);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genSplitRepeatGraph() throws IOException {
-        generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
-    }
-    
-    
     private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(BridgeAddVertex.class);
@@ -249,6 +232,22 @@ public class JobGenerator {
     private static void genBubbleMergeGraph() throws IOException {
         generateBubbleMergeGraphJob("BubbleMergeGraph", outputBase
                 + "BubbleMergeGraph.xml");
+    }
+    
+    private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(SplitRepeatVertex.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(SplitRepeatVertex.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genSplitRepeatGraph() throws IOException {
+        generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
     }
     
     private static void generateNaiveBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {

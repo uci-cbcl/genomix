@@ -16,6 +16,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
 /*
  * vertexId: BytesWritable
@@ -55,6 +56,12 @@ public class BridgeAddVertex extends
     public static int kmerSize = -1;
     private int length = -1;
     
+    private VKmerBytesWritable upBridge = new VKmerBytesWritable("ATA");
+    private VKmerBytesWritable downBridge = new VKmerBytesWritable("ACG");
+    private VKmerBytesWritable insertedBridge = new VKmerBytesWritable("GTA");
+    private byte bridgeToUpDir = MessageFlag.DIR_FR; 
+    private byte bridgeToDownDir = MessageFlag.DIR_RF; 
+    
     /**
      * initiate kmerSize, maxIteration
      */
@@ -66,59 +73,81 @@ public class BridgeAddVertex extends
         if (length == -1)
             length = getContext().getConfiguration().getInt(LENGTH, kmerSize + 5); // TODO fail on parse
     }
-
-    @SuppressWarnings("unchecked")
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void insertBridge(byte dirToUp, EdgeListWritable edgeListToUp, byte dirToDown,
+            EdgeListWritable edgeListToDown, VKmerBytesWritable insertedBridge){
+        Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+        vertex.getMsgList().clear();
+        vertex.getEdges().clear();
+        
+        VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
+        /**
+         * set the src vertex id
+         */
+        vertex.setVertexId(insertedBridge);
+        /**
+         * set the vertex value
+         */
+        vertexValue.setEdgeList(dirToUp, edgeListToUp);
+        vertexValue.setEdgeList(dirToDown, edgeListToDown);
+        vertex.setVertexValue(vertexValue);
+        
+        addVertex(insertedBridge, vertex);
+    }
+    
+    public EdgeListWritable getEdgeListFromKmer(VKmerBytesWritable kmer){
+        EdgeListWritable edgeList = new EdgeListWritable();
+        EdgeWritable newEdge = new EdgeWritable();
+        newEdge.setKey(kmer);
+        newEdge.appendReadID(0);
+        edgeList.add(newEdge);
+        return edgeList;
+    }
+    
+    public void addEdgeToInsertedBridge(byte dir, VKmerBytesWritable insertedBridge){
+        EdgeWritable newEdge = new EdgeWritable();
+        newEdge.setKey(insertedBridge);
+        newEdge.appendReadID(0);
+        getVertexValue().getEdgeList(dir).add(newEdge);
+    }
+    
+    /**
+     * Returns the edge dir for B->A when the A->B edge is type @dir
+     */
+    public byte mirrorDirection(byte dir) {
+        switch (dir) {
+            case MessageFlag.DIR_FF:
+                return MessageFlag.DIR_RR;
+            case MessageFlag.DIR_FR:
+                return MessageFlag.DIR_FR;
+            case MessageFlag.DIR_RF:
+                return MessageFlag.DIR_RF;
+            case MessageFlag.DIR_RR:
+                return MessageFlag.DIR_FF;
+            default:
+                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
             if(getVertexId().toString().equals("ATA")){
-            	VKmerBytesWritable vertexId = new VKmerBytesWritable();
-                vertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
-                EdgeWritable edge = new EdgeWritable();
-                edge.setKey(vertexId);
-                edge.appendReadID(5);
-                getVertexValue().getFRList().add(edge);
+                /** add edge pointing to inserted bridge **/
+                byte upToBridgeDir = mirrorDirection(bridgeToUpDir);
+                addEdgeToInsertedBridge(upToBridgeDir, insertedBridge);
                 
-                //add bridge vertex
-                @SuppressWarnings("rawtypes")
-                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-                vertex.getMsgList().clear();
-                vertex.getEdges().clear();
-                VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
-                /**
-                 * set the src vertex id
-                 */
-                vertex.setVertexId(vertexId);
-                /**
-                 * set the vertex value
-                 */
-                EdgeListWritable kmerFRList = new EdgeListWritable();
-                edge = new EdgeWritable();
-                edge.setKey(getVertexId());
-                edge.appendReadID(0);
-                kmerFRList.add(edge);
-                vertexValue.setFRList(kmerFRList);
-                VKmerBytesWritable otherVertexId = new VKmerBytesWritable();
-                otherVertexId.setByRead(kmerSize, "ACG".getBytes(), 0);
-                EdgeListWritable kmerRFList = new EdgeListWritable();
-                edge = new EdgeWritable();
-                edge.setKey(otherVertexId);
-                edge.appendReadID(0);
-                kmerFRList.add(edge);
-                vertexValue.setRFList(kmerRFList);
-                vertexValue.setInternalKmer(vertexId);
-                vertex.setVertexValue(vertexValue);
-                
-                addVertex(vertexId, vertex);
+                /** insert bridge **/
+                insertBridge(bridgeToUpDir, getEdgeListFromKmer(upBridge),
+                        bridgeToDownDir, getEdgeListFromKmer(downBridge), 
+                        insertedBridge);
             } 
             else if(getVertexId().toString().equals("ACG")){
-                VKmerBytesWritable bridgeVertexId = new VKmerBytesWritable();
-                bridgeVertexId.setByRead(kmerSize, "GTA".getBytes(), 0);
-                EdgeWritable edge = new EdgeWritable();
-                edge.setKey(bridgeVertexId);
-                edge.appendReadID(0);
-                getVertexValue().getRFList().add(edge);
+                /** add edge pointing to new bridge **/
+                byte downToBridgeDir = mirrorDirection(bridgeToDownDir);
+                addEdgeToInsertedBridge(downToBridgeDir, insertedBridge);
             }
         }
         voteToHalt();

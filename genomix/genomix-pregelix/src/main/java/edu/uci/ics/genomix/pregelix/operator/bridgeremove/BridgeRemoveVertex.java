@@ -3,8 +3,6 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.NullWritable;
-
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -48,7 +46,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  * Naive Algorithm for path merge graph
  */
 public class BridgeRemoveVertex extends
-    BasicGraphCleanVertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+    BasicGraphCleanVertex<MessageWritable> {
     public static final String LENGTH = "BridgeRemoveVertex.length";
     private int length = -1;
 

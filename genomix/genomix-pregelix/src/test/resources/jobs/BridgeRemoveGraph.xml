@@ -35,7 +35,7 @@
 <property><name>mapred.reduce.parallel.copies</name><value>5</value></property>
 <property><name>fs.checkpoint.size</name><value>67108864</value></property>
 <property><name>mapred.job.reduce.input.buffer.percent</name><value>0.0</value></property>
-<property><name>mapred.job.name</name><value>TipAddGraph</value></property>
+<property><name>mapred.job.name</name><value>BridgeRemoveGraph</value></property>
 <property><name>local.cache.size</name><value>10737418240</value></property>
 <property><name>fs.s3n.impl</name><value>org.apache.hadoop.fs.s3native.NativeS3FileSystem</value></property>
 <property><name>mapred.userlog.limit.kb</name><value>0</value></property>
@@ -64,7 +64,7 @@
 <property><name>hadoop.rpc.socket.factory.class.default</name><value>org.apache.hadoop.net.StandardSocketFactory</value></property>
 <property><name>mapred.reduce.tasks</name><value>1</value></property>
 <property><name>topology.node.switch.mapping.impl</name><value>org.apache.hadoop.net.ScriptBasedMapping</value></property>
-<property><name>pregelix.vertexClass</name><value>edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex</value></property>
+<property><name>pregelix.vertexClass</name><value>edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex</value></property>
 <property><name>mapred.skip.reduce.max.skip.groups</name><value>0</value></property>
 <property><name>io.file.buffer.size</name><value>4096</value></property>
 <property><name>mapred.jobtracker.maxtasks.per.job</name><value>-1</value></property>
@@ -122,7 +122,7 @@
 <property><name>mapred.map.tasks.speculative.execution</name><value>true</value></property>
 <property><name>mapred.inmem.merge.threshold</name><value>1000</value></property>
 <property><name>hadoop.logfile.size</name><value>10000000</value></property>
-<property><name>pregelix.vertexInputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat</value></property>
+<property><name>pregelix.vertexInputFormatClass</name><value>edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat</value></property>
 <property><name>mapred.job.queue.name</name><value>default</value></property>
 <property><name>mapred.job.tracker.persist.jobstatus.active</name><value>false</value></property>
 <property><name>pregelix.incStateLength</name><value>true</value></property>
