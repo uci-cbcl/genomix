@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class ScaffoldingVertex extends 
-    NaiveBFSTraverseVertex{
+    BFSTraverseVertex{
 
     public class KmerListAndFlagList{
         private ArrayList<Boolean> flagList;

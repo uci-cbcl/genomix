@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Random;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
@@ -14,18 +13,12 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class MapReduceVertex extends
 	BasicPathMergeVertex{
     
-    public static boolean fakeVertexExist = false;
-    protected static VKmerBytesWritable fakeVertex = null;
-    
     protected VKmerBytesWritable reverseKmer;
-    protected VKmerListWritable kmerList = null;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
 
     /**
@@ -57,42 +50,6 @@ public class MapReduceVertex extends
             destVertexId = new VKmerBytesWritable();
         if(tmpKmer == null)
             tmpKmer = new VKmerBytesWritable();
-    }
-    
-    /**
-     * Generate random string from [ACGT]
-     */
-    public String generaterRandomString(int n){
-        char[] chars = "ACGT".toCharArray();
-        StringBuilder sb = new StringBuilder();
-        Random random = new Random();
-        for (int i = 0; i < n; i++) {
-            char c = chars[random.nextInt(chars.length)];
-            sb.append(c);
-        }
-        return sb.toString();
-    }
-    
-    /**
-     * add fake vertex
-     */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void addFakeVertex(){
-        if(!fakeVertexExist){
-            //add a fake vertex
-            Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-            vertex.getMsgList().clear();
-            vertex.getEdges().clear();
-            VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
-            vertexValue.setState(State.IS_FAKE);
-            vertexValue.setFakeVertex(true);
-            
-            vertex.setVertexId(fakeVertex);
-            vertex.setVertexValue(vertexValue);
-            
-            addVertex(fakeVertex, vertex);
-            fakeVertexExist = true;
-        }
     }
     
     public void sendMsgToFakeVertex(){

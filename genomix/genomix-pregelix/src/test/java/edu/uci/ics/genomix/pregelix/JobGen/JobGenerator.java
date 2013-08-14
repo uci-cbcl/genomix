@@ -18,7 +18,7 @@ import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.NaiveBFSTraverseVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
@@ -250,21 +250,21 @@ public class JobGenerator {
         generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
     }
     
-    private static void generateNaiveBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
+    private static void generateBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
-        job.setVertexClass(NaiveBFSTraverseVertex.class);
+        job.setVertexClass(BFSTraverseVertex.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(ScaffoldingVertex.KMER_SIZE, 3);
+        job.getConfiguration().setInt(BFSTraverseVertex.KMER_SIZE, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
-    private static void genNaiveBFSTraverseGraph() throws IOException {
-        generateNaiveBFSTraverseGraphJob("NaiveBFSTraversegGraph", outputBase
-                + "NaiveBFSTraverseGraph.xml");
+    private static void getBFSTraverseGraph() throws IOException {
+        generateBFSTraverseGraphJob("BFSTraversegGraph", outputBase
+                + "BFSTraverseGraph.xml");
     }
     
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
@@ -297,7 +297,7 @@ public class JobGenerator {
         genBubbleAddGraph();
         genBubbleMergeGraph();
         genSplitRepeatGraph();
-        genNaiveBFSTraverseGraph();
+        getBFSTraverseGraph();
         genScaffoldingGraph();
     }
 
