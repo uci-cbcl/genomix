@@ -63,7 +63,7 @@ public class BubbleMergeVertex extends
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
                 if(hasNextDest()){
-                    outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
+                    outgoingMsg.setMajorVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
                     outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
                     destVertexId.setAsCopy(getNextDestVertexId());
@@ -73,7 +73,7 @@ public class BubbleMergeVertex extends
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
                 if(hasPrevDest()){
-                    outgoingMsg.setStartVertexId(incomingMsg.getSourceVertexId());
+                    outgoingMsg.setMajorVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
                     outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
                     destVertexId.setAsCopy();
@@ -87,16 +87,16 @@ public class BubbleMergeVertex extends
     public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessageWritable> msgIterator){
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            if(!receivedMsgMap.containsKey(incomingMsg.getStartVertexId())){
+            if(!receivedMsgMap.containsKey(incomingMsg.getMajorVertexId())){
                 receivedMsgList.clear();
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
             }
             else{
                 receivedMsgList.clear();
-                receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getStartVertexId()));
+                receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getMajorVertexId()));
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getStartVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
             }
         }
     }
