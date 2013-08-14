@@ -228,6 +228,15 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         return it;
     }
     
+    public PositionListWritable getReadIDs(VKmerBytesWritable key) {
+        for (EdgeWritable e : this) {
+            if (e.getKey().equals(key))
+                return e.getReadIDs();
+        }
+        throw new IllegalArgumentException("Cannot get readIDs for VKmer \""+ key +"\". They key was not in the edgeList!");
+    }
+    
+    
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.
