@@ -24,6 +24,15 @@ public class MessageWritable implements Writable, WritableSizable {
         flag = 0;
     }
     
+    @Override
+    public String toString(){
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append('{');
+        sbuilder.append(sourceVertexId.toString());
+        sbuilder.append('}');
+        return sbuilder.toString();
+    }
+    
     public VKmerBytesWritable getSourceVertexId() {
         return sourceVertexId;
     }

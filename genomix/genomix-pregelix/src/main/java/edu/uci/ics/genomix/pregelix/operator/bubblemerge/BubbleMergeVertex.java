@@ -8,15 +8,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hadoop.io.NullWritable;
-
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -44,7 +41,7 @@ public class BubbleMergeVertex extends
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         if(dissimilarThreshold == -1)
-            dissimilarThreshold = getContext().getConfiguration().getFloat(DISSIMILARITY_THRESHOLD, (float) 0.05);
+            dissimilarThreshold = getContext().getConfiguration().getFloat(DISSIMILARITY_THRESHOLD, (float) 0.5);
         if(incomingMsg == null)
             incomingMsg = new BubbleMergeMessageWritable();
         if(outgoingMsg == null)
@@ -62,21 +59,21 @@ public class BubbleMergeVertex extends
         switch(neighborToMeDir){
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
-                if(hasNextDest()){
+                if(getVertexValue().hasNextDest()){
                     outgoingMsg.setMajorVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+                    outgoingMsg.setNode(getVertexValue().getNode());
                     destVertexId.setAsCopy(getNextDestVertexId());
                     sendMsg(destVertexId, outgoingMsg);
                 }
                 break;
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                if(hasPrevDest()){
+                if(getVertexValue().hasPrevDest()){
                     outgoingMsg.setMajorVertexId(incomingMsg.getSourceVertexId());
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-                    destVertexId.setAsCopy();
+                    outgoingMsg.setNode(getVertexValue().getNode());
+                    destVertexId.setAsCopy(getPrevDestVertexId());
                     sendMsg(destVertexId, outgoingMsg);
                 }
                 break;
@@ -90,13 +87,13 @@ public class BubbleMergeVertex extends
             if(!receivedMsgMap.containsKey(incomingMsg.getMajorVertexId())){
                 receivedMsgList.clear();
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessageWritable>)receivedMsgList.clone());
             }
             else{
                 receivedMsgList.clear();
                 receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getMajorVertexId()));
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<MessageWritable>)receivedMsgList.clone());
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessageWritable>)receivedMsgList.clone());
             }
         }
     }
@@ -104,20 +101,20 @@ public class BubbleMergeVertex extends
     public void processSimilarSetToUnchangeSetAndDeletedSet(){
         unchangedSet.clear();
         deletedSet.clear();
-        MessageWritable topCoverageMessage = new MessageWritable();
-        MessageWritable tmpMessage = new MessageWritable();
-        Iterator<MessageWritable> it;
+        BubbleMergeMessageWritable topCoverageMessage = new BubbleMergeMessageWritable();
+        BubbleMergeMessageWritable tmpMessage = new BubbleMergeMessageWritable();
+        Iterator<BubbleMergeMessageWritable> it;
         while(!receivedMsgList.isEmpty()){
             it = receivedMsgList.iterator();
             topCoverageMessage.set(it.next());
             it.remove(); //delete topCoverage node
             while(it.hasNext()){
                 tmpMessage.set(it.next());
-                //compute the similarity  
+                //compute the similarity  TODO take care of if flip
                 float fracDissimilar = topCoverageMessage.getSourceVertexId().fracDissimilar(tmpMessage.getSourceVertexId());
                 if(fracDissimilar < dissimilarThreshold){ //If similar with top node, delete this node and put it in deletedSet 
                     //add coverage to top node
-                    topCoverageMessage.mergeCoverage(tmpMessage);
+                    topCoverageMessage.getNode().mergeCoverage(tmpMessage.getNode());
                     deletedSet.add(tmpMessage);
                     it.remove();
                 }
@@ -127,16 +124,16 @@ public class BubbleMergeVertex extends
     }
     
     public void processUnchangedSet(){
-        for(MessageWritable msg : unchangedSet){
+        for(BubbleMergeMessageWritable msg : unchangedSet){
             outFlag = MessageFlag.UNCHANGE;
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setAverageCoverage(msg.getAverageCoverage());
+            outgoingMsg.setNode(msg.getNode());
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
         }
     }
     
     public void processDeletedSet(){
-        for(MessageWritable msg : deletedSet){
+        for(BubbleMergeMessageWritable msg : deletedSet){
             outFlag = MessageFlag.KILL;
             outgoingMsg.setFlag(outFlag);
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
@@ -163,10 +160,9 @@ public class BubbleMergeVertex extends
             /** aggregate bubble nodes and grouped by major vertex **/ 
             aggregateBubbleNodesByMajorNode(msgIterator);
             
-            
             for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
                 if(receivedMsgList.size() > 1){ // filter bubble
-                    /** for each startVertex, sort the node by decreasing order of coverage **/
+                    /** for each majorVertex, sort the node by decreasing order of coverage **/
                     receivedMsgList = receivedMsgMap.get(prevId);
                     Collections.sort(receivedMsgList, new BubbleMergeMessageWritable.SortByCoverage());
                     
@@ -185,7 +181,7 @@ public class BubbleMergeVertex extends
                     broadcaseKillself();
                 } else if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
                     /** update average coverage **/
-                    getVertexValue().setAvgCoverage(incomingMsg.getAverageCoverage());
+                    getVertexValue().setAvgCoverage(incomingMsg.getNode().getAverageCoverage());
                 }
             }
         } else if(getSuperstep() == 5){

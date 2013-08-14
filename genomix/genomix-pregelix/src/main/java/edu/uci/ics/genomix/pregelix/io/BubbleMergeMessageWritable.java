@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Comparator;
 
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -16,6 +17,13 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         super();
         majorVertexId = new VKmerBytesWritable();
         node = new NodeWritable();
+    }
+    
+    public void set(BubbleMergeMessageWritable msg){
+        this.setSourceVertexId(msg.getSourceVertexId());
+        this.setFlag(msg.getFlag());
+        this.setMajorVertexId(msg.getMajorVertexId());
+        this.setNode(msg.node);
     }
     
     public void reset(){
@@ -53,5 +61,12 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         super.write(out);
         majorVertexId.write(out);
         node.write(out);
+    }
+    
+    public static class SortByCoverage implements Comparator<BubbleMergeMessageWritable> {
+        @Override
+        public int compare(BubbleMergeMessageWritable left, BubbleMergeMessageWritable right) {
+            return Float.compare(left.node.getAverageCoverage(), right.node.getAverageCoverage());
+        }
     }
 }
