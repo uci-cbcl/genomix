@@ -1,43 +1,30 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class SplitRepeatVertex extends 
-    BasicGraphCleanVertex{
-    
-    public class EdgeDir{
-        public static final byte DIR_FF = 0 << 0;
-        public static final byte DIR_FR = 1 << 0;
-        public static final byte DIR_RF = 2 << 0;
-        public static final byte DIR_RR = 3 << 0;
-    }
+    BasicGraphCleanVertex<SplitRepeatMessageWritable>{
     
     public class DeletedEdge{
         private byte dir;
-        private VKmerBytesWritable edge;
+        private EdgeWritable edge;
         
         public DeletedEdge(){
             dir = 0;
-            edge = new VKmerBytesWritable(kmerSize);
+            edge = new EdgeWritable();
         }
 
         public byte getDir() {
@@ -48,34 +35,31 @@ public class SplitRepeatVertex extends
             this.dir = dir;
         }
 
-        public VKmerBytesWritable getEdge() {
+        public EdgeWritable getEdge() {
             return edge;
         }
 
-        public void setEdge(VKmerBytesWritable edge) {
+        public void setEdge(EdgeWritable edge) {
             this.edge.setAsCopy(edge);
         }
     }
     
     private byte[][] connectedTable = new byte[][]{
-            {EdgeDir.DIR_RF, EdgeDir.DIR_FF},
-            {EdgeDir.DIR_RF, EdgeDir.DIR_FR},
-            {EdgeDir.DIR_RR, EdgeDir.DIR_FF},
-            {EdgeDir.DIR_RR, EdgeDir.DIR_FR}
+            {MessageFlag.DIR_RF, MessageFlag.DIR_FF},
+            {MessageFlag.DIR_RF, MessageFlag.DIR_FR},
+            {MessageFlag.DIR_RR, MessageFlag.DIR_FF},
+            {MessageFlag.DIR_RR, MessageFlag.DIR_FR}
     };
+    
     public static Set<String> existKmerString = new HashSet<String>();
-    private Set<Long> readIdSet;
+    protected VKmerBytesWritable createdVertexId = null;  
     private Set<Long> incomingReadIdSet = new HashSet<Long>();
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
-    private Set<Long> selfReadIdSet = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
-    private Map<VKmerBytesWritable, Set<Long>> kmerMap = new HashMap<VKmerBytesWritable, Set<Long>>();
-    private VKmerListWritable incomingEdgeList = null; 
-    private VKmerListWritable outgoingEdgeList = null; 
+    private EdgeListWritable incomingEdgeList = null; 
+    private EdgeListWritable outgoingEdgeList = null; 
     private byte incomingEdgeDir = 0;
     private byte outgoingEdgeDir = 0;
-    
-    protected VKmerBytesWritable createdVertexId = null;  
     
     /**
      * initiate kmerSize, maxIteration
@@ -86,21 +70,21 @@ public class SplitRepeatVertex extends
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable(kmerSize);
+            incomingMsg = new SplitRepeatMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable(kmerSize);
+            outgoingMsg = new SplitRepeatMessageWritable();
         else
-            outgoingMsg.reset(kmerSize);
-        if(incomingEdgeList == null)
-            incomingEdgeList = new VKmerListWritable();
-        if(outgoingEdgeList == null)
-            outgoingEdgeList = new VKmerListWritable();
-        if(createdVertexId == null)
-            createdVertexId = new VKmerBytesWritable(kmerSize + 1);
+            outgoingMsg.reset();
         if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable(kmerSize);
+            destVertexId = new VKmerBytesWritable();
         if(tmpKmer == null)
             tmpKmer = new VKmerBytesWritable();
+        if(incomingEdgeList == null)
+            incomingEdgeList = new EdgeListWritable();
+        if(outgoingEdgeList == null)
+            outgoingEdgeList = new EdgeListWritable();
+        if(createdVertexId == null)
+            createdVertexId = new VKmerBytesWritable();
     }
     
     /**
@@ -122,66 +106,23 @@ public class SplitRepeatVertex extends
         return sb.toString();
     }
     
-    /**
-     * GenerateString only for test
-     */
-    public String generateString(){
-        if(existKmerString.isEmpty()){
-            existKmerString.add("AAA");
-            return "AAA";
-        }
-        else
-            return "GGG";
-    }
-    
     public void randomGenerateVertexId(int numOfSuffix){
         String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);;
         createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
     }
     
-    public void generateKmerMap(Iterator<MessageWritable> msgIterator){
-        kmerMap.clear();
-        while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
-            readIdSet = new HashSet<Long>();
-            for(PositionWritable nodeId : incomingMsg.getNodeIdList()){
-                readIdSet.add(nodeId.getReadId());
-            }
-            kmerMap.put(incomingMsg.getSourceVertexId(), readIdSet);
-        }
-    }
-    
-    public void setSelfReadIdSet(){
-        selfReadIdSet.clear();
-//        for(PositionWritable nodeId : getVertexValue().getNodeIdList()){
-//            selfReadIdSet.add(nodeId.getReadId());
-//        }    
-    }
-    
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void createNewVertex(int i, VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
+    public void createNewVertex(int i, EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
-        VKmerBytesWritable vertexId = new VKmerBytesWritable(kmerSize);
-        VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
+        VKmerBytesWritable vertexId = new VKmerBytesWritable();
+        VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
-        switch(connectedTable[i][0]){
-            case EdgeDir.DIR_RF:
-                vertexValue.getRFList().append(incomingEdge);
-                break;
-            case EdgeDir.DIR_RR:
-                vertexValue.getRRList().append(incomingEdge);
-                break;
-        }
-        switch(connectedTable[i][1]){
-            case EdgeDir.DIR_FF:
-                vertexValue.getFFList().append(outgoingEdge);
-                break;
-            case EdgeDir.DIR_FR:
-                vertexValue.getFRList().append(outgoingEdge);
-                break;
-        }
+        vertexValue.getEdgeList(connectedTable[i][0]).add(incomingEdge);
+        
+        vertexValue.getEdgeList(connectedTable[i][1]).add(outgoingEdge);
+        
         vertexId.setAsCopy(createdVertexId);
         vertex.setVertexId(vertexId);
         vertex.setVertexValue(vertexValue);
@@ -189,189 +130,118 @@ public class SplitRepeatVertex extends
         addVertex(vertexId, vertex);
     }
     
-    public void sendMsgToUpdateEdge(VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
-        outgoingMsg.setCreatedVertexId(createdVertexId);
+    public void sendMsgToUpdateEdge(EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
+        EdgeWritable createdEdge = new EdgeWritable();
+        createdEdge.setKey(createdVertexId);
+        for(Long readId: neighborEdgeIntersection)
+            createdEdge.appendReadID(readId);
+        outgoingMsg.setCreatedEdge(createdEdge);
         outgoingMsg.setSourceVertexId(getVertexId());
         
         outgoingMsg.setFlag(incomingEdgeDir);
-        destVertexId.setAsCopy(incomingEdge);
+        destVertexId.setAsCopy(incomingEdge.getKey());
         sendMsg(destVertexId, outgoingMsg);
         
         outgoingMsg.setFlag(outgoingEdgeDir);
-        destVertexId.setAsCopy(outgoingEdge);
+        destVertexId.setAsCopy(outgoingEdge.getKey());
         sendMsg(destVertexId, outgoingMsg);
     }
     
-    public void storeDeletedEdge(Set<DeletedEdge> deletedEdges, int i, VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
+    public void storeDeletedEdge(Set<DeletedEdge> deletedEdges, int i, EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
         DeletedEdge deletedIncomingEdge = new DeletedEdge();
         DeletedEdge deletedOutgoingEdge = new DeletedEdge();
-        switch(connectedTable[i][0]){
-            case EdgeDir.DIR_RF:
-                deletedIncomingEdge.setDir(EdgeDir.DIR_RF);
-                deletedIncomingEdge.setEdge(incomingEdge);
-                break;
-            case EdgeDir.DIR_RR:
-                deletedIncomingEdge.setDir(EdgeDir.DIR_RR);
-                deletedIncomingEdge.setEdge(incomingEdge);
-                break;
-        }
-        switch(connectedTable[i][1]){
-            case EdgeDir.DIR_FF:
-                deletedOutgoingEdge.setDir(EdgeDir.DIR_FF);
-                deletedOutgoingEdge.setEdge(outgoingEdge);
-                break;
-            case EdgeDir.DIR_FR:
-                deletedOutgoingEdge.setDir(EdgeDir.DIR_FR);
-                deletedOutgoingEdge.setEdge(outgoingEdge);
-                break;
-        }
+        
+        deletedIncomingEdge.setDir(connectedTable[i][0]);
+        deletedIncomingEdge.setEdge(incomingEdge);
+        
+        deletedOutgoingEdge.setDir(connectedTable[i][1]);
+        deletedOutgoingEdge.setEdge(outgoingEdge);
+        
         deletedEdges.add(deletedIncomingEdge);
         deletedEdges.add(deletedOutgoingEdge);
     }
+    
     public void deleteEdgeFromOldVertex(DeletedEdge deleteEdge){
-        switch(deleteEdge.dir){
-            case EdgeDir.DIR_RF:
-                getVertexValue().getRFList().remove(deleteEdge.getEdge());
-                break;
-            case EdgeDir.DIR_RR:
-                getVertexValue().getRRList().remove(deleteEdge.getEdge());
-                break;
-            case EdgeDir.DIR_FF:
-                getVertexValue().getFFList().remove(deleteEdge.getEdge());
-                break;
-            case EdgeDir.DIR_FR:
-                getVertexValue().getFRList().remove(deleteEdge.getEdge());
-                break;
-        }
+        getVertexValue().getEdgeList(deleteEdge.dir).remove(deleteEdge.getEdge());
     }
     
     public void setEdgeListAndEdgeDir(int i){
-        switch(connectedTable[i][0]){
-            case EdgeDir.DIR_RF:
-                incomingEdgeList.setCopy(getVertexValue().getRFList());
-                incomingEdgeDir = MessageFlag.DIR_RF;
-                break;
-            case EdgeDir.DIR_RR:
-                incomingEdgeList.setCopy(getVertexValue().getRRList());
-                incomingEdgeDir = MessageFlag.DIR_RR;
-                break;
-        }
-        switch(connectedTable[i][1]){
-            case EdgeDir.DIR_FF:
-                outgoingEdgeList.setCopy(getVertexValue().getFFList());
-                outgoingEdgeDir = MessageFlag.DIR_FF;
-                break;
-            case EdgeDir.DIR_FR:
-                outgoingEdgeList.setCopy(getVertexValue().getFRList());
-                outgoingEdgeDir = MessageFlag.DIR_FR;
-                break;
-        }
+        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
+        incomingEdgeDir = connectedTable[i][0];
+        
+        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
+        outgoingEdgeDir = connectedTable[i][1];
     }
     
-    public void setNeighborEdgeIntersection(VKmerBytesWritable incomingEdge, VKmerBytesWritable outgoingEdge){
+    public void setNeighborEdgeIntersection(EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
         incomingReadIdSet.clear();
-        outgoingReadIdSet.clear(); 
-        tmpKmer.setAsCopy(incomingEdge);
-        incomingReadIdSet.addAll(kmerMap.get(tmpKmer));
-        tmpKmer.setAsCopy(outgoingEdge);
-        outgoingReadIdSet.addAll(kmerMap.get(tmpKmer));
-        
-        //set all neighberEdge readId intersection
-        neighborEdgeIntersection.addAll(selfReadIdSet);
-        neighborEdgeIntersection.retainAll(incomingReadIdSet);
+        long[] incomingReadIds = incomingEdge.getReadIDs().toReadIDArray();
+        for(long readId : incomingReadIds){
+            incomingReadIdSet.add(readId);
+        }
+        outgoingReadIdSet.clear();
+        long[] outgoingReadIds = outgoingEdge.getReadIDs().toReadIDArray();
+        for(long readId : outgoingReadIds){
+            outgoingReadIdSet.add(readId);
+        }
+        neighborEdgeIntersection.clear();
+        neighborEdgeIntersection.addAll(incomingReadIdSet);
         neighborEdgeIntersection.retainAll(outgoingReadIdSet);
     }
     
     public void updateEdgeListPointToNewVertex(){
         byte meToNeighborDir = incomingMsg.getFlag();
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-                getVertexValue().getFFList().remove(incomingMsg.getSourceVertexId());
-                getVertexValue().getFFList().append(incomingMsg.getCreatedVertexId());
-                break;
-            case MessageFlag.DIR_FR:
-                getVertexValue().getFRList().remove(incomingMsg.getSourceVertexId());
-                getVertexValue().getFRList().append(incomingMsg.getCreatedVertexId());
-                break;
-            case MessageFlag.DIR_RF:
-                getVertexValue().getRFList().remove(incomingMsg.getSourceVertexId());
-                getVertexValue().getRFList().append(incomingMsg.getCreatedVertexId());
-                break;
-            case MessageFlag.DIR_RR:
-                getVertexValue().getRRList().remove(incomingMsg.getSourceVertexId());
-                getVertexValue().getRRList().append(incomingMsg.getCreatedVertexId());
-                break;
-        }
+        
+        getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
+        getVertexValue().getEdgeList(neighborToMeDir).add(incomingMsg.getCreatedEdge());
     }
     
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<SplitRepeatMessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
             if(getVertexValue().getDegree() > 2){
-                outgoingMsg.setSourceVertexId(getVertexId());
-                sendMsgToAllNeighborNodes(getVertexValue());
-            }
-            voteToHalt();
-        } else if(getSuperstep() == 2){
-            while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-//                outgoingMsg.setNodeIdList(getVertexValue().getNodeIdList());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
-            }
-            voteToHalt();
-        } else if(getSuperstep() == 3){
-            /** generate KmerMap map kmer(key) to readIdSet(value) **/
-            generateKmerMap(msgIterator);
-            
-            /** set self readId set **/
-            setSelfReadIdSet();
-            
-            //A set storing deleted edges
-            Set<DeletedEdge> deletedEdges = new HashSet<DeletedEdge>();
-            /** process connectedTable **/
-            for(int i = 0; i < 4; i++){
-                /** set edgeList and edgeDir based on connectedTable **/
-                setEdgeListAndEdgeDir(i);
-                
-                VKmerBytesWritable incomingEdge = new VKmerBytesWritable();
-                VKmerBytesWritable outgoingEdge = new VKmerBytesWritable();
-                for(int x = 0; x < incomingEdgeList.getCountOfPosition(); x++){
-                    for(int y = 0; y < outgoingEdgeList.getCountOfPosition(); y++){
-                        incomingEdge.setAsCopy(incomingEdgeList.getPosition(x));
-                        outgoingEdge.setAsCopy(outgoingEdgeList.getPosition(y));
-                        /** set neighborEdge readId intersection **/
-                        setNeighborEdgeIntersection(incomingEdge, outgoingEdge);
-                        
-                        if(!neighborEdgeIntersection.isEmpty()){
-                            /** random generate vertexId of new vertex **/
-                            randomGenerateVertexId(3);
+                //A set storing deleted edges
+                Set<DeletedEdge> deletedEdges = new HashSet<DeletedEdge>();
+                /** process connectedTable **/
+                for(int i = 0; i < 4; i++){
+                    /** set edgeList and edgeDir based on connectedTable **/
+                    setEdgeListAndEdgeDir(i);
+                    
+                    for(EdgeWritable incomingEdge : incomingEdgeList){
+                        for(EdgeWritable outgoingEdge : outgoingEdgeList){
+                            /** set neighborEdge readId intersection **/
+                            setNeighborEdgeIntersection(incomingEdge, outgoingEdge);
                             
-                            /** create new/created vertex **/
-                            createNewVertex(i, incomingEdge, outgoingEdge);
-                            
-                            /** send msg to neighbors to update their edges to new vertex **/
-                            sendMsgToUpdateEdge(incomingEdge, outgoingEdge);
-                            
-                            /** store deleted edge **/
-                            storeDeletedEdge(deletedEdges, i, incomingEdge, outgoingEdge);
+                            if(!neighborEdgeIntersection.isEmpty()){
+                                /** random generate vertexId of new vertex **/
+                                randomGenerateVertexId(3);
+                                
+                                /** create new/created vertex **/
+                                createNewVertex(i, incomingEdge, outgoingEdge);
+                                
+                                /** send msg to neighbors to update their edges to new vertex **/
+                                sendMsgToUpdateEdge(incomingEdge, outgoingEdge);
+                                
+                                /** store deleted edge **/
+                                storeDeletedEdge(deletedEdges, i, incomingEdge, outgoingEdge);
+                            }
                         }
-                    }
-                }                
+                    }                
+                }
+                /** delete extra edges from old vertex **/
+                for(DeletedEdge deletedEdge : deletedEdges){
+                    deleteEdgeFromOldVertex(deletedEdge);
+                }
+                
+                /** Old vertex delete or voteToHalt **/
+                if(getVertexValue().getDegree() == 0)//if no any edge, delete
+                    deleteVertex(getVertexId());
+                else
+                    voteToHalt();
             }
-            /** delete extra edges from old vertex **/
-            for(DeletedEdge deletedEdge : deletedEdges){
-                deleteEdgeFromOldVertex(deletedEdge);
-            }
-            
-            /** Old vertex delete or voteToHalt **/
-            if(getVertexValue().getDegree() == 0)//if no any edge, delete
-                deleteVertex(getVertexId());
-            else
-                voteToHalt();
-        } else if(getSuperstep() == 4){
+        } else if(getSuperstep() == 2){
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
                 /** update edgelist to new/created vertex **/
@@ -379,19 +249,5 @@ public class SplitRepeatVertex extends
             }
             voteToHalt();
         }
-    }
-    
-    public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(SplitRepeatVertex.class.getSimpleName());
-        job.setVertexClass(SplitRepeatVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
-    }
+    } 
 }
