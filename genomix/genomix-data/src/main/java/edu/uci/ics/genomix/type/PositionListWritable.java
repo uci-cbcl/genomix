@@ -74,6 +74,10 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         else
             throw new RuntimeException("This position is null pointer!");
     }
+    
+    public void appendReadId(long readId){
+        append((byte)0, readId, 0);
+    }
 
     /*
      * Append the otherList to the end of myList

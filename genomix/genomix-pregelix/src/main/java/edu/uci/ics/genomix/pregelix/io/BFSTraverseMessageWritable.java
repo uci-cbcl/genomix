@@ -4,62 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.Writable;
-
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class BFSTraverseMessageWritable extends MessageWritable{
-    
-    public static class EdgeDirs implements Writable{
-        
-        private byte prevToMeDir;
-        private byte nextToMeDir;
-        
-        public EdgeDirs(){
-            prevToMeDir = 0;
-            nextToMeDir = 0;
-        }
-        
-        public void set(EdgeDirs edgeDirs){
-            prevToMeDir = edgeDirs.prevToMeDir;
-            nextToMeDir = edgeDirs.nextToMeDir;
-        }
-        
-        public void reset(){
-            prevToMeDir = 0;
-            nextToMeDir = 0;
-        }
-        
-        public byte getPrevToMeDir() {
-            return prevToMeDir;
-        }
-
-        public void setPrevToMeDir(byte prevToMeDir) {
-            this.prevToMeDir = prevToMeDir;
-        }
-
-        public byte getNextToMeDir() {
-            return nextToMeDir;
-        }
-
-        public void setNextToMeDir(byte nextToMeDir) {
-            this.nextToMeDir = nextToMeDir;
-        }
-
-        @Override
-        public void readFields(DataInput in) throws IOException {
-            this.prevToMeDir = in.readByte();
-            this.nextToMeDir = in.readByte();
-        }
-
-        @Override
-        public void write(DataOutput out) throws IOException {
-            out.writeByte(this.prevToMeDir);
-            out.writeByte(this.nextToMeDir);
-        }
-        
-    }
     
     private VKmerListWritable pathList; //use for BFSTravese
     private ArrayListWritable<EdgeDirs> edgeDirsList;
@@ -104,6 +52,7 @@ public class BFSTraverseMessageWritable extends MessageWritable{
     }
 
     public void setEdgeDirsList(ArrayListWritable<EdgeDirs> edgeDirsList) {
+        this.edgeDirsList.clear();
         this.edgeDirsList.addAll(edgeDirsList);
     }
 

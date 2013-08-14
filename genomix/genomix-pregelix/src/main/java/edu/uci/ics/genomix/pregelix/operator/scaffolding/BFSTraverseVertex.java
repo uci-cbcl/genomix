@@ -1,17 +1,14 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.EdgeDirs;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable.EdgeDirs;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -110,26 +107,28 @@ public class BFSTraverseVertex extends
     }
     
     public void setEdgeDirs(byte meToNeighborDir, byte neighborToMeDir){
+        edgeDirsList.clear();
         edgeDirsList.addAll(incomingMsg.getEdgeDirsList());
         if(edgeDirsList.isEmpty()){ //first time from srcNode
             /** set srcNode's next dir **/
             edgeDirs.reset();
             edgeDirs.setNextToMeDir(meToNeighborDir);
-            edgeDirsList.add(edgeDirs);
+            edgeDirsList.add(new EdgeDirs(edgeDirs)); 
             /** set curNode's prev dir **/
             edgeDirs.reset();
             edgeDirs.setPrevToMeDir(neighborToMeDir);
-            edgeDirsList.add(edgeDirs);
+            edgeDirsList.add(new EdgeDirs(edgeDirs));
         } else {
             /** set preNode's next dir **/
             edgeDirs.set(edgeDirsList.get(edgeDirsList.size() - 1));
             edgeDirs.setNextToMeDir(meToNeighborDir);
-            edgeDirsList.set(edgeDirsList.size() - 1, edgeDirs);
+            edgeDirsList.set(edgeDirsList.size() - 1, new EdgeDirs(edgeDirs));
             /** set curNode's prev dir **/
             edgeDirs.reset();
             edgeDirs.setPrevToMeDir(neighborToMeDir);
-            edgeDirsList.add(edgeDirs);
+            edgeDirsList.add(new EdgeDirs(edgeDirs));
         }
+        outgoingMsg.setEdgeDirsList(edgeDirsList);
     }
     
     public boolean isValidDestination(){
@@ -145,12 +144,48 @@ public class BFSTraverseVertex extends
         outgoingMsg.reset();
         outgoingMsg.setTraverseMsg(false);
         outgoingMsg.setReadId(incomingMsg.getReadId());
-        int count = incomingMsg.getEdgeDirsList().size();
+        int count = kmerList.getCountOfPosition();
         for(int i = 0; i < count; i++){
+            outgoingMsg.getEdgeDirsList().clear();
             outgoingMsg.getEdgeDirsList().add(incomingMsg.getEdgeDirsList().get(i));
-            destVertexId.setAsCopy(incomingMsg.getPathList().getPosition(i));
+            outgoingMsg.getPathList().reset();
+            if(i == 0){
+                outgoingMsg.getPathList().append(new VKmerBytesWritable());
+                outgoingMsg.getPathList().append(kmerList.getPosition(i + 1));
+            } else if(i == count - 1){
+                outgoingMsg.getPathList().append(kmerList.getPosition(i - 1));
+                outgoingMsg.getPathList().append(new VKmerBytesWritable());
+            } else{
+                outgoingMsg.getPathList().append(kmerList.getPosition(i - 1));
+                outgoingMsg.getPathList().append(kmerList.getPosition(i + 1));  
+            }
+            destVertexId.setAsCopy(kmerList.getPosition(i));
             sendMsg(destVertexId, outgoingMsg);
         }
+    }
+    
+    public void finalProcessBTS(){
+        kmerList.setCopy(incomingMsg.getPathList());
+        kmerList.append(getVertexId());
+        incomingMsg.setPathList(kmerList);
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        setEdgeDirs(meToNeighborDir, neighborToMeDir);
+        incomingMsg.setEdgeDirsList(outgoingMsg.getEdgeDirsList());
+    }
+    
+    public void appendCommonReadId(){
+        long readId = incomingMsg.getReadId();
+        //add readId to prev edge 
+        byte prevToMeDir = incomingMsg.getEdgeDirsList().get(0).getPrevToMeDir();
+        tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(0));
+        if(tmpKmer.getKmerLetterLength() != 0)
+            getVertexValue().getEdgeList(prevToMeDir).getReadIDs(tmpKmer).appendReadId(readId);
+        //set readId to next edge
+        byte nextToMeDir = incomingMsg.getEdgeDirsList().get(0).getNextToMeDir();
+        tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(1));
+        if(tmpKmer.getKmerLetterLength() != 0)
+            getVertexValue().getEdgeList(nextToMeDir).getReadIDs(tmpKmer).appendReadId(readId);
     }
     
     @Override
@@ -165,7 +200,7 @@ public class BFSTraverseVertex extends
             kmerList.append(srcNode);
             kmerList.append(destNode);
             /** initiate two nodes -- srcNode and destNode **/
-            initiateSrcAndDestNode(kmerList, commonReadId, true, false);
+            initiateSrcAndDestNode(kmerList, commonReadId, false, true);
             sendMsg(srcNode, outgoingMsg);
             
             deleteVertex(getVertexId());
@@ -183,8 +218,8 @@ public class BFSTraverseVertex extends
                     /** check if find destination **/
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                         if(isValidDestination()){
-                            kmerList.setCopy(incomingMsg.getPathList());
-                            kmerList.append(getVertexId());
+                            /** final step to process BFS -- pathList and dirList **/
+                            finalProcessBTS();
                             /** send message to all the path nodes to add this common readId **/
                             sendMsgToPathNodeToAddCommondReadId();
                         }
@@ -197,8 +232,8 @@ public class BFSTraverseVertex extends
                         broadcaseBFSTraverse();
                     }
                 } else{
-                    /** add common readId to the corresponding edge **/
-//                    getVertexValue().getEdgeList(incomingMsg.getEdgeDirsList().get(0).getPrevToMeDir())
+                    /** append common readId to the corresponding edge **/
+                    appendCommonReadId();
                 }
             }
             voteToHalt();
