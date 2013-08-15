@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-package org.genomix.driver;
+package edu.uci.ics.genomix.data.config;
 
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 import org.junit.Assert;
 import org.kohsuke.args4j.CmdLineException;
+
+import edu.uci.ics.genomix.config.GenomixJobConf;
 
 public class GenomixJobConfTest {
     

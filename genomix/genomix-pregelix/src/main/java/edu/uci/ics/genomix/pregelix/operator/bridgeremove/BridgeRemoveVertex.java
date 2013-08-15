@@ -3,10 +3,9 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.genomix.driver.GenomixJobConf;
-
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;

@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.Set;
 
 import edu.uci.ics.genomix.pregelix.io.SplitRepeatMessageWritable;
-import org.genomix.driver.GenomixJobConf;
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.genomix.driver;
+package edu.uci.ics.genomix.config;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -80,14 +81,60 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-profile", usage = "whether to do runtime profifling", required = false)
         private boolean profile = false;
         
+        @Option(name = "-pipelineOrder", usage = "Change the order of the graph cleaning process", required = false)
+        String pipelineOrder;
+        
+        @Option(name = "-inputDir", usage = "Input directory for the first job that will be run", required = false)
+        String inputDir;
+        
+        @Option(name = "-outputDir", usage = "Output directory for the final job that will be run", required = false)
+        String outputDir;
+        
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
+    }
+    
+    /**
+     * the set of patterns that can be applied to the graph 
+     */
+    public static enum Patterns {
+        BUILD,
+        MERGE,
+        MERGE_P1,
+        MERGE_P2,
+        MERGE_P4,
+        BRIDGE,
+        BUBBLE,
+        LOW_COVERAGE,
+        TIP_REMOVE,
+        SCAFFOLD,
+        SPLIT_REPEAT;
+        
+        /**
+         * Get a comma-separated pipeline from the given array of Patterns
+         */
+        public static String stringFromArray(Patterns[] steps) {
+            return StringUtils.join(steps, ",");
+        }
+        /**
+         * Get a Pattern array from a comma-separated list of pipeline steps
+         */
+        public static Patterns[] arrayFromString(String steps) {
+            ArrayList<Patterns> result = new ArrayList<Patterns>();
+            for (String p : steps.split(",")) {
+                result.add(Patterns.valueOf(p));
+            }
+            return result.toArray(new Patterns[0]);
+        }
     }
     
     
 
     // Global config
     public static final String KMER_LENGTH = "genomix.kmerlength";
+    public static final String PIPELINE_ORDER = "genomix.pipelineOrder";
+    public static final String INITIAL_INPUT_DIR = "genomix.initial.input.dir";
+    public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -239,6 +286,22 @@ public class GenomixJobConf extends JobConf {
         
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);
+        
+        if (get(PIPELINE_ORDER) == null) {
+            Patterns[] steps = {
+                    Patterns.BUILD, Patterns.MERGE, 
+                    Patterns.TIP_REMOVE, Patterns.MERGE,
+                    Patterns.BUBBLE, Patterns.MERGE,
+                    Patterns.LOW_COVERAGE, Patterns.MERGE,
+                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
+                    Patterns.SCAFFOLD, Patterns.MERGE
+            };
+            set(PIPELINE_ORDER, Patterns.stringFromArray(steps));
+        }
+        
+        // hyracks-specific
+        if (getInt(CPARTITION_PER_MACHINE, -1) == -1)
+            setInt(CPARTITION_PER_MACHINE, 2);
     }
 
     private void setFromOpts(Options opts) {
@@ -258,5 +321,12 @@ public class GenomixJobConf extends JobConf {
         set(IP_ADDRESS, opts.ipAddress);
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
+        
+        if (opts.pipelineOrder != null)
+            set(PIPELINE_ORDER, opts.pipelineOrder);
+        if (opts.inputDir != null)
+            set(INITIAL_INPUT_DIR, opts.inputDir);
+        if (opts.outputDir != null)
+            set(FINAL_OUTPUT_DIR, opts.outputDir);
     }
 }

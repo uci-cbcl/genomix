@@ -275,10 +275,5 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>genomix-driver</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 </project>

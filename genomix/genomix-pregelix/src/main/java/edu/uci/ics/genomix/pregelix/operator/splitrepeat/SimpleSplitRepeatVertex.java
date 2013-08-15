@@ -5,8 +5,7 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
-import org.genomix.driver.GenomixJobConf;
-
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicGraphCleanVertex;

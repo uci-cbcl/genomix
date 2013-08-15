@@ -18,8 +18,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
 
-import org.genomix.driver.GenomixJobConf;
-
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;

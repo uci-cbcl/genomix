@@ -2,8 +2,7 @@ package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import java.util.Iterator;
 
-import org.genomix.driver.GenomixJobConf;
-
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
