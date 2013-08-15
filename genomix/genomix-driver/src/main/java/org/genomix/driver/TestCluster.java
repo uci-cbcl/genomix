@@ -34,8 +34,9 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
-import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
+//import edu.uci.ics.hyracks.hdfs.utils.HyracksUtils;
+//import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
+//import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
 public class TestCluster {
@@ -49,12 +50,13 @@ public class TestCluster {
     private MiniDFSCluster dfsCluster;
 
     public void setUp(GenomixJobConf mainConf) throws Exception {
-        ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
-        ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
+//        ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
+//        ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
         FileUtils.forceMkdir(new File(CLUSTER_DIR));
         FileUtils.cleanDirectory(new File(CLUSTER_DIR));
         cleanupStores();
-        PregelixHyracksIntegrationUtil.init();
+        MyHyracksUtils.init();
+//        PregelixHyracksIntegrationUtil.init();
         LOGGER.info("Hyracks mini-cluster started");
         startHDFS(mainConf);
     }
@@ -90,7 +92,8 @@ public class TestCluster {
     }
 
     public void tearDown() throws Exception {
-        PregelixHyracksIntegrationUtil.deinit();
+//        PregelixHyracksIntegrationUtil.deinit();
+        MyHyracksUtils.deinit();
         LOGGER.info("Hyracks mini-cluster shut down");
         cleanupHDFS();
     }

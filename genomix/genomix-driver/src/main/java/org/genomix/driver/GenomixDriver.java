@@ -15,7 +15,14 @@
 
 package org.genomix.driver;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobConf;
 import org.kohsuke.args4j.CmdLineException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -31,20 +38,29 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksException;
  */
 public class GenomixDriver {
     
-    Path prevOutput;
-    Path curOutput;
+    String prevOutput;
+    String curOutput;
+    
+    private void copyLocalToHDFS(JobConf conf, String localFile, String destFile) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        Path dest = new Path(destFile);
+        dfs.mkdirs(dest);
+        dfs.copyFromLocalFile(new Path(localFile), dest);
+    }
     
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
-        curOutput = new Path(conf.getWorkingDirectory(), conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
-        int stepNum = 0;
+        String origInput = conf.getWorkingDirectory() + File.separator + conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
+        curOutput = "/00-initial-input";
         
         TestCluster testCluster = new TestCluster();
         boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
-        
+
+        int stepNum = 0;
         try {
             if (runLocal) {
                 testCluster.setUp(conf);
             }
+            copyLocalToHDFS(conf, origInput, curOutput);
             
             // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
             String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
@@ -52,9 +68,11 @@ public class GenomixDriver {
                 switch(step) {
                     case BUILD:
                         prevOutput = curOutput;
-                        curOutput = new Path(conf.getWorkingDirectory(), Patterns.BUILD + "-" + stepNum);
-                        conf.set("mapred.input.dir", prevOutput.toString());
-                        conf.set("mapred.output.dir", curOutput.toString());
+                        curOutput = Patterns.BUILD + "-" + stepNum;
+//                        conf.set("mapred.input.dir", prevOutput.toString());
+//                        conf.set("mapred.output.dir", curOutput.toString());
+                        FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+                        FileOutputFormat.setOutputPath(conf, new Path(curOutput));
                         Driver driver = new Driver(conf.get(GenomixJobConf.IP_ADDRESS), 
                                 Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
                                 Integer.parseInt(conf.get(GenomixJobConf.CPARTITION_PER_MACHINE)));
@@ -101,7 +119,7 @@ public class GenomixDriver {
     
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = {"-runLocal", "-kmerLength", "5", "-ip", "127.0.0.1", "-port", "55", "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/AddBridge/SimpleTest"};
+        String[] myArgs = {"-runLocal", "-kmerLength", "5", "-ip", "127.0.0.1", "-port", "55", "-inputDir", "data/AddBridge/SimpleTest/text.txt"};
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver(); 
         driver.runGenomix(conf);
