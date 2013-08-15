@@ -86,7 +86,7 @@ public class P2ForPathMergeVertex extends
     /**
      * head send message to path
      */
-    public void sendOutMsg() {
+    public void pathNodeSendOutMsg() {
         //send wantToMerge to next
         tmpKmer = getNextDestVertexIdAndSetFlag();
         if(tmpKmer != null){
@@ -136,23 +136,9 @@ public class P2ForPathMergeVertex extends
     }
 
     /**
-     * head send message to path
-     */
-    public void sendMsgToPathVertex(Iterator<PathMergeMessageWritable> msgIterator) {
-        //send out wantToMerge msg
-        if(selfFlag != State.IS_HEAD && selfFlag != State.IS_OLDHEAD){
-                sendOutMsg();
-        }
-    }
-
-    /**
      * path response message to head
      */
     public void responseMsgToHeadVertex(Iterator<PathMergeMessageWritable> msgIterator) {
-        if(!msgIterator.hasNext() && selfFlag == State.IS_HEAD){
-            outFlag |= MessageFlag.IS_FINAL;
-            sendOutMsg();
-        }
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             /** final Vertex Responses To FakeVertex **/
@@ -161,10 +147,10 @@ public class P2ForPathMergeVertex extends
             }else if(isResponseKillMsg()){
                 responseToDeadVertex();
             }else if(getMsgFlag() == MessageFlag.IS_FINAL){
-                processMerge(incomingMsg);
+                processMerge();
                 getVertexValue().setState(State.IS_FINAL);
             }else{
-                sendUpdateMsg(incomingMsg);
+                sendUpdateMsg();
                 outFlag = 0;
                 sendMergeMsg();
             }
@@ -174,69 +160,55 @@ public class P2ForPathMergeVertex extends
     /**
      * head vertex process merge
      */
-    public void processMergeInHeadVertex(Iterator<PathMergeMessageWritable> msgIterator){
-      //process merge when receiving msg
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            /** final Vertex Responses To FakeVertex **/
-            if(isReceiveKillMsg()){
-                broadcaseKillself();
-            } else if(isResponseKillMsg()){
-                responseToDeadVertex();
-            } else{
-                /** for final processing (2) **/
-                if(getMsgFlag() == MessageFlag.IS_FINAL){
-                    sendFinalMergeMsg();
-                    break;
-                }
-                if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD)
-                    processUpdate();
-                else if(!incomingMsg.isUpdateMsg())
-                    receivedMsgList.add(incomingMsg);
-            }
-        }
-        if(receivedMsgList.size() != 0){
-            byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
-             switch(numOfMsgsFromHead){
-                case MessageFromHead.BothMsgsFromHead:
-                case MessageFromHead.OneMsgFromOldHeadAndOneFromHead:
-                    for(int i = 0; i < 2; i++)
-                        processFinalMerge(receivedMsgList.get(i)); //processMerge()
-                    getVertexValue().setState(State.IS_FINAL);
-                    /** NON-FAKE and Final vertice send msg to FAKE vertex **/
-                    sendMsgToFakeVertex();
-                    voteToHalt();
-                    break;
-                case MessageFromHead.OneMsgFromHeadAndOneFromNonHead:
-                    for(int i = 0; i < 2; i++)
-                        processFinalMerge(receivedMsgList.get(i));
-                    setHeadState();
-                    this.activate();
-                    break;
-                case MessageFromHead.BothMsgsFromNonHead:
-                    for(int i = 0; i < 2; i++)
-                        processFinalMerge(receivedMsgList.get(i));
-                    break;
-                case MessageFromHead.NO_MSG:
-                    //halt
-                    voteToHalt(); //deleteVertex(getVertexId());
-                    break;
-            }
+    public void processMergeInHeadVertex(){
+        /** process merge when receiving msg **/
+        byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
+         switch(numOfMsgsFromHead){
+            case MessageFromHead.BothMsgsFromHead:
+            case MessageFromHead.OneMsgFromOldHeadAndOneFromHead:
+                for(int i = 0; i < 2; i++)
+                    processFinalMerge(receivedMsgList.get(i)); //processMerge()
+                getVertexValue().setState(State.IS_FINAL);
+                /** NON-FAKE and Final vertice send msg to FAKE vertex **/
+                sendMsgToFakeVertex();
+                voteToHalt();
+                break;
+            case MessageFromHead.OneMsgFromHeadAndOneFromNonHead:
+                for(int i = 0; i < 2; i++)
+                    processFinalMerge(receivedMsgList.get(i));
+                setHeadState();
+                this.activate();
+                break;
+            case MessageFromHead.BothMsgsFromNonHead:
+                for(int i = 0; i < 2; i++)
+                    processFinalMerge(receivedMsgList.get(i));
+                break;
+            case MessageFromHead.NO_MSG:
+                //halt
+                voteToHalt(); //deleteVertex(getVertexId());
+                break;
         }
     }
+    
+    public void aggregateMsgAndGroupInFakeNode(Iterator<PathMergeMessageWritable> msgIterator){
+        kmerMapper.clear();
+        /** Mapper **/
+        mapKeyByInternalKmer(msgIterator);
+        /** Reducer **/
+        reduceKeyByInternalKmer();
+    }
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1){
             addFakeVertex();
             startSendMsg();
-        }
-        else if (getSuperstep() == 2){
-            if(!msgIterator.hasNext() && isFakeVertex)
+        } else if (getSuperstep() == 2){
+            if(isFakeVertex)
                 voteToHalt();
             initState(msgIterator);
-        }
-        else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
+        } else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
                 /** for processing final merge (1) **/
                 if(msgIterator.hasNext()){
@@ -253,40 +225,58 @@ public class P2ForPathMergeVertex extends
                 }
                 /** processing general case **/
                 else{
-                    sendMsgToPathVertex(msgIterator);
+                    if(selfFlag != State.IS_HEAD && selfFlag != State.IS_OLDHEAD)
+                        sendSettledMsgToAllNeighborNodes();
                     if(selfFlag != State.IS_HEAD)
                         voteToHalt();
                 }
             }
-            /** Fake vertex agregates message and group them by actual kmer (2) **/
             else{
-                kmerMapper.clear();
-                /** Mapper **/
-                mapKeyByInternalKmer(msgIterator);
-                /** Reducer **/
-                reduceKeyByInternalKmer();
+                /** Fake vertex agregates message and group them by actual kmer (2) **/
+                aggregateMsgAndGroupInFakeNode(msgIterator);
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
-                responseMsgToHeadVertex(msgIterator);
+                /** head doesn't receive msg and send out final msg **/
+                if(!msgIterator.hasNext() && selfFlag == State.IS_HEAD){
+                    outFlag |= MessageFlag.IS_FINAL;
+                    sendSettledMsgToAllNeighborNodes();
+                } else
+                    responseMsgToHeadVertex(msgIterator);
                 if(selfFlag != State.IS_HEAD)
                     voteToHalt();
-                else
-                    this.activate();
             } 
-            /** Fake vertex agregates message and group them by actual kmer (1) **/
             else{
-                kmerMapper.clear();
-                /** Mapper **/
-                mapKeyByInternalKmer(msgIterator);
-                /** Reducer **/
-                reduceKeyByInternalKmer();
+                /** Fake vertex agregates message and group them by actual kmer (1) **/
+                aggregateMsgAndGroupInFakeNode(msgIterator);
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
             if(!isFakeVertex){
-                processMergeInHeadVertex(msgIterator);
+                while (msgIterator.hasNext()) {
+                    incomingMsg = msgIterator.next();
+                    /** final Vertex Responses To FakeVertex **/
+                    if(isReceiveKillMsg()){
+                        broadcaseKillself();
+                    } else if(isResponseKillMsg()){
+                        responseToDeadVertex();
+                    } else{
+                        /** for final processing, receive msg from head, which means final merge (2) **/
+                        if(getMsgFlag() == MessageFlag.IS_FINAL){
+                            sendFinalMergeMsg();
+                            break;
+                        }
+                        if(incomingMsg.isUpdateMsg()) //&& selfFlag == State.IS_OLDHEAD
+                            processUpdate();
+                        else if(!incomingMsg.isUpdateMsg())
+                            receivedMsgList.add(incomingMsg);
+                    }
+                }
+                if(receivedMsgList.size() != 0)
+                    processMergeInHeadVertex();
+                else
+                    voteToHalt();
             }
         } else
             voteToHalt();
