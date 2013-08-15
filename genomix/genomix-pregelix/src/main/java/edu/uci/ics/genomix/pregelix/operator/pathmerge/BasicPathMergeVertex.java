@@ -46,30 +46,23 @@ public abstract class BasicPathMergeVertex extends
      * merge and updateAdjList merge with one neighbor
      */
     public void processMerge(){
-        inFlag = incomingMsg.getFlag();
-        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        
-        if((inFlag & MessageFlag.IS_HEAD) > 0){
-            byte state = getVertexValue().getState();
-            state |= State.IS_HEAD;
-            getVertexValue().setState(state);
-        }
-        
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
-        
-        getVertexValue().processMerges(neighborToMeDir, incomingMsg.getSourceVertexId(), 
-                neighborToMergeDir, incomingMsg.getNeighborEdge(),
-                kmerSize, incomingMsg.getInternalKmer());
+        processMerge(incomingMsg);
     }
     
     /**
      * merge and updateAdjList  having parameter
      */
     public void processMerge(PathMergeMessageWritable msg){
-        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK);
+        inFlag = msg.getFlag();
+        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
 
+        if((inFlag & MessageFlag.IS_HEAD) > 0){
+            byte state = getVertexValue().getState();
+            state |= State.IS_HEAD;
+            getVertexValue().setState(state);
+        }
+        
         byte neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());
         
         getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
@@ -191,6 +184,10 @@ public abstract class BasicPathMergeVertex extends
         }
     }
     
+    public void sendUpdateMsg(){
+        sendUpdateMsg(incomingMsg);
+    }
+    
     /**
      * send update message to neighber for P2
      */
@@ -274,7 +271,7 @@ public abstract class BasicPathMergeVertex extends
         outgoingMsg.setUpdateMsg(false);
         if(selfFlag == State.IS_HEAD){
             byte newState = getVertexValue().getState(); 
-            newState &= ~State.IS_HEAD;
+            newState &= State.VERTEX_CLEAR;
             newState |= State.IS_OLDHEAD;
             getVertexValue().setState(newState);
             resetSelfFlag();
