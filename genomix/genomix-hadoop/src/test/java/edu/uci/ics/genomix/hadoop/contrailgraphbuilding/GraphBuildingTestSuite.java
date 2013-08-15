@@ -22,9 +22,9 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 public class GraphBuildingTestSuite extends TestSuite{
 
     private static int SIZE_KMER = 3;
-    public static final String PreFix = "data/webmap/BFS_TestSet"; 
+    public static final String PreFix = "data/webmap/Scaffolding_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-        + "4"};
+        + "PairedEnd"};
 //        + "2", PreFix + File.separator
 //        + "3", PreFix + File.separator
 //        + "4", PreFix + File.separator

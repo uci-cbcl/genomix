@@ -5,12 +5,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class ScaffoldingVertex extends 
     BFSTraverseVertex{
@@ -56,19 +59,21 @@ public class ScaffoldingVertex extends
     private KmerListAndFlagList kmerListAndflagList = new KmerListAndFlagList();
     public static Map<Long, KmerListAndFlagList> scaffoldingMap = new HashMap<Long, KmerListAndFlagList>();
     
-    private HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap = new HashMapWritable<VKmerBytesWritable, VKmerListWritable>();
-    
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
         if (maxIteration < 0)
             maxIteration = getContext().getConfiguration().getInt(ITERATIONS, 1000000);
         if(incomingMsg == null)
-            incomingMsg = new MessageWritable(kmerSize);
+            incomingMsg = new BFSTraverseMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new MessageWritable(kmerSize);
+            outgoingMsg = new BFSTraverseMessageWritable();
         else
-            outgoingMsg.reset(kmerSize);
+            outgoingMsg.reset();
+        if(kmerList == null)
+            kmerList = new VKmerListWritable();
+        else
+            kmerList.reset();
         if(fakeVertex == null){
             fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
@@ -76,8 +81,8 @@ public class ScaffoldingVertex extends
         }
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable(kmerSize);
-        if(kmerList == null)
-            kmerList = new VKmerListWritable();
+        if(tmpKmer == null)
+            tmpKmer = new VKmerBytesWritable();
     }
     
     public void addStartReadsToScaffoldingMap(){
@@ -125,12 +130,12 @@ public class ScaffoldingVertex extends
     }
     
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
             /** add a fake vertex **/
             addFakeVertex();
-            /** grouped by 5' readId **/
+            /** grouped by 5'/~5' readId **/
             addStartReadsToScaffoldingMap();
             addEndReadsToScaffoldingMap();
             
@@ -138,33 +143,62 @@ public class ScaffoldingVertex extends
         } else if(getSuperstep() == 2){
             /** process scaffoldingMap **/
             for(Long readId : scaffoldingMap.keySet()){
-                ////////////
-                PositionWritable nodeId = new PositionWritable();
-                nodeId.set((byte) 0, 1, 0);
-                PositionListWritable nodeIdList = new PositionListWritable();
-                nodeIdList.append(nodeId);
-                ////////////
                 kmerListAndflagList.set(scaffoldingMap.get(readId));
                 if(kmerListAndflagList.size() == 2){
-                    initiateSrcAndDestNode(kmerListAndflagList.kmerList, kmerListAndflagList.flagList, nodeIdList);
+                    initiateSrcAndDestNode(kmerListAndflagList.kmerList, commonReadId, kmerListAndflagList.flagList.get(0),
+                            kmerListAndflagList.flagList.get(1));
                     sendMsg(srcNode, outgoingMsg);
                 }
             }
+            
             deleteVertex(getVertexId());
         } else if(getSuperstep() == 3){
             if(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
-                
-                /** initiate the traverseMap in vertexValue **/
-                kmerList.reset();
-                kmerList.append(incomingMsg.getSeekedVertexId());
-                traverseMap.clear();
-                traverseMap.put(incomingMsg.getSeekedVertexId(), kmerList);
-                getVertexValue().setTraverseMap(traverseMap);
-                
-                /** begin to traverse **/
-                
+                /** begin to BFS **/
+                initialBroadcaseBFSTraverse();
             }
+            voteToHalt();
+        } else if(getSuperstep() > 3){
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                if(incomingMsg.isTraverseMsg()){
+                    /** check if find destination **/
+                    if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
+                        if(isValidDestination()){
+                            /** final step to process BFS -- pathList and dirList **/
+                            finalProcessBTS();
+                            /** send message to all the path nodes to add this common readId **/
+                            sendMsgToPathNodeToAddCommondReadId();
+                        }
+                        else{
+                            //continue to BFS
+                            broadcaseBFSTraverse();
+                        }
+                    } else {
+                        //continue to BFS
+                        broadcaseBFSTraverse();
+                    }
+                } else{
+                    /** append common readId to the corresponding edge **/
+                    appendCommonReadId();
+                }
+            }
+            voteToHalt();
         }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        PregelixJob job = new PregelixJob(ScaffoldingVertex.class.getSimpleName());
+        job.setVertexClass(ScaffoldingVertex.class);
+        /**
+         * BinaryInput and BinaryOutput
+         */
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        Client.run(args, job);
     }
 }

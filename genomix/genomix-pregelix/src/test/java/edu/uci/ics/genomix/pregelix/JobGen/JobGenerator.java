@@ -270,7 +270,7 @@ public class JobGenerator {
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(ScaffoldingVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);

@@ -20,7 +20,7 @@ public class BFSTraverseVertex extends
     
     protected VKmerBytesWritable srcNode = new VKmerBytesWritable("AAT");
     protected VKmerBytesWritable destNode = new VKmerBytesWritable("AGA");
-    private long commonReadId = 2; 
+    protected long commonReadId = 2; 
     
     private EdgeDirs edgeDirs =  new EdgeDirs();
     private ArrayListWritable<EdgeDirs> edgeDirsList = new ArrayListWritable<EdgeDirs>();
