@@ -438,7 +438,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     }
     
     /**
-     * broadcast kill self to all neighbers  Pre-condition: vertex is a path vertex ***
+     * broadcast kill self to all neighbers ***
      */
     public void broadcaseKillself(){
         outFlag = 0;
