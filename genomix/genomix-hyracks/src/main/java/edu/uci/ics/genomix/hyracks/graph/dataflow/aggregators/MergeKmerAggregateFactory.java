@@ -74,9 +74,6 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 for (byte d: DirectionFlag.values) {
                     localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
-                for (byte d: DirectionFlag.values) {
-                    localUniNode.getThreadList(d).unionUpdate(readNode.getThreadList(d));
-                }
                 localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
                 localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
@@ -96,9 +93,6 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (byte d: DirectionFlag.values) {
                     localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
-                }
-                for (byte d: DirectionFlag.values) {
-                    localUniNode.getThreadList(d).unionUpdate(readNode.getThreadList(d));
                 }
                 localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
                 localUniNode.getEndReads().unionUpdate(readNode.getEndReads());

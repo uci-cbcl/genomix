@@ -94,7 +94,6 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
                                     outputNode.setAsReference(
                                             tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-                                    System.out.println(outputNode.getEndReads().getLength());
                                     output.write(outputKmer.toString().getBytes());
                                     output.writeByte('\t');
                                     output.write(outputNode.toString().getBytes());

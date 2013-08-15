@@ -23,18 +23,18 @@ import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 
 @SuppressWarnings("deprecation")
-public class JobRun {
+public class JobRunStepByStepTestCase {
     private static final int KmerSize = 3;
-    private static final int ReadLength = 6;
+    private static final int ReadLength = 7;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/test.txt";
+    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/HighSplitRepeat.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
-
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/test.txt";
-    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";;
+    
+    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/Test.txt";
+    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
     
     private JobConf conf = new JobConf();
@@ -43,14 +43,15 @@ public class JobRun {
     
     private Driver driver;
     
-    @Test
     public void TestAll() throws Exception {
-//        TestReader();
-//        TestGroupby();
+        TestReader();
+        TestGroupby();
         TestGroupbyUnMerged();
     }
     
+    @Test
     public void TestReader() throws Exception {
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         driver.runJob(new GenomixJobConf(conf), Plan.CHECK_KMERREADER, true);

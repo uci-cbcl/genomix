@@ -79,7 +79,7 @@ public class Driver {
         job.addResource(hadoopMapRed);
         URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
         job.addResource(hadoopHdfs);
-
+        
         LOG.info("job started");
         long start = System.currentTimeMillis();
         long end = start;

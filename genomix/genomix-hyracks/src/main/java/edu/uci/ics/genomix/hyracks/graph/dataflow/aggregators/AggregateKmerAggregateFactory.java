@@ -79,10 +79,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 localUniNode.reset();
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (byte d: DirectionFlag.values) {
-                    localUniNode.getEdgeList(d).appendList(readNode.getEdgeList(d));
-                }
-                for (byte d: DirectionFlag.values) {
-                    localUniNode.getThreadList(d).appendList(readNode.getThreadList(d));
+                    localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
                 localUniNode.getStartReads().appendList(readNode.getStartReads());
                 localUniNode.getEndReads().appendList(readNode.getEndReads());
@@ -97,10 +94,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (byte d: DirectionFlag.values) {
-                    localUniNode.getEdgeList(d).appendList(readNode.getEdgeList(d));
-                }
-                for (byte d: DirectionFlag.values) {
-                    localUniNode.getThreadList(d).appendList(readNode.getThreadList(d));
+                    localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
                 localUniNode.getStartReads().appendList(readNode.getStartReads());
                 localUniNode.getEndReads().appendList(readNode.getEndReads());

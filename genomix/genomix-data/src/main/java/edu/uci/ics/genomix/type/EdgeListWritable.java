@@ -73,7 +73,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     }
     
     public boolean add(EdgeWritable element) {
-        return edges.add(element);
+        return edges.add(new EdgeWritable(element));
     }
     
     public EdgeWritable set(int i, EdgeWritable element) {

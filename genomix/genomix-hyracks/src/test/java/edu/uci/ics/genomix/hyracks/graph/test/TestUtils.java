@@ -29,35 +29,49 @@ public class TestUtils {
      * @param expectedFile
      * @param actualFile
      */
-    public static void compareWithSortedResult(File expectedFile, File actualFile) throws Exception {
+    @SuppressWarnings("finally")
+    public static boolean compareWithSortedResult(File expectedFile, File actualFile) throws Exception {
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         ArrayList<String> actualLines = new ArrayList<String>();
+        ArrayList<String> expectedLines = new ArrayList<String>();
+        
         String lineExpected, lineActual;
+        boolean flag = true;
         try {
             while ((lineActual = readerActual.readLine()) != null) {
                 actualLines.add(lineActual);
             }
             Collections.sort(actualLines);
-            int num = 1;
+            
+            while ((lineExpected = readerExpected.readLine()) != null) {
+                expectedLines.add(lineExpected);
+            }
+            Collections.sort(expectedLines);
+
+            int num = 0;
             for (String actualLine : actualLines) {
-                lineExpected = readerExpected.readLine();
+                lineExpected = expectedLines.get(num);
                 if (lineExpected == null) {
-                    throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
+                    flag = false;
                 }
+                System.out.println(lineExpected);
+                System.out.println(actualLine);
                 if (!equalStrings(lineExpected, actualLine)) {
-                    throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
-                            + actualLine);
+                    flag = false;
+                    System.out.println(lineExpected);
+                    System.out.println(actualLine);
                 }
                 ++num;
             }
-            lineExpected = readerExpected.readLine();
+            lineExpected = expectedLines.get(num);
             if (lineExpected != null) {
-                throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineExpected);
+                flag = false;
             }
         } finally {
             readerActual.close();
             readerExpected.close();
+            return flag;
         }
     }
 
@@ -94,11 +108,13 @@ public class TestUtils {
         }
     }
 
+    @SuppressWarnings({ "resource", "finally" })
     public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         String lineExpected, lineActual;
         int num = 1;
+
         try {
             while ((lineExpected = readerExpected.readLine()) != null) {
                 lineActual = readerActual.readLine();
@@ -106,7 +122,7 @@ public class TestUtils {
                 if (lineActual == null) {
                     throw new Exception("Actual result changed at line " + num + ":\n< " + lineExpected + "\n> ");
                 }
-                if (!equalStrings(lineExpected, lineActual)) {
+                if (lineExpected.equalsIgnoreCase(lineActual)) {
                     throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }

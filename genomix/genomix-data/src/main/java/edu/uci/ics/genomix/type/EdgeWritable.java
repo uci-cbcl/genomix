@@ -69,7 +69,12 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
         key.setAsCopy(otherKey);
         setReadIDs(otherPositions);
     }
-
+    
+    public void setAsCopy(KmerBytesWritable otherKey, PositionListWritable otherPositions) {
+        key.setAsCopy(otherKey);
+        setReadIDs(otherPositions);
+    }
+    
     /**
      * Set the internal readIDs when the given positionList has readid, position, and mateid set
      */

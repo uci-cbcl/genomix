@@ -4,8 +4,6 @@ import java.util.Map;
 
 import edu.uci.ics.genomix.hyracks.graph.io.KeyValueSequenceWriterFactory;
 import edu.uci.ics.genomix.hyracks.graph.io.KeyValueTextWriterFactory;
-import edu.uci.ics.genomix.hyracks.graph.io.NodeSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.graph.io.NodeTextWriterFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
@@ -18,6 +16,11 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 public class JobGenUnMergedGraph extends JobGenBrujinGraph{
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
 
     public JobGenUnMergedGraph(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
