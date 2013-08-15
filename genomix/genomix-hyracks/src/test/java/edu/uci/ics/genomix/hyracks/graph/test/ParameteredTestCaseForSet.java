@@ -32,7 +32,7 @@ import edu.uci.ics.genomix.hyracks.graph.test.TestSet.DirType;
 @SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
 public class ParameteredTestCaseForSet {
-    public static final DirType temp = DirType.TIP;
+    public static final DirType testSetType = DirType.TIP;
 
     public String dataPath;
     
@@ -43,7 +43,7 @@ public class ParameteredTestCaseForSet {
     @Parameters
     public static Collection<Object[]> getdataPath() {
         Collection<Object[]> data = new ArrayList<Object[]>();
-        TestSet ts = new TestSet(temp);
+        TestSet ts = new TestSet(testSetType);
         String [] dirSet = ts.getTestDir();
         for (String testDirPointer : dirSet) {
             data.add(new Object[] { testDirPointer });
@@ -89,7 +89,7 @@ public class ParameteredTestCaseForSet {
         dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
         dfs = FileSystem.get(conf);
         
-        TestSet ts = new TestSet(temp);
+        TestSet ts = new TestSet(testSetType);
         String [] dirSet = ts.getTestDir();
         for (String testDir : dirSet) {
             File src = new File(testDir);
