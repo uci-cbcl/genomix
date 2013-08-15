@@ -60,6 +60,7 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
                     }
                     tempKmer.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputKmerField));
+                    
                     outputNode.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
                     outputKey.setAsCopy(tempKmer);

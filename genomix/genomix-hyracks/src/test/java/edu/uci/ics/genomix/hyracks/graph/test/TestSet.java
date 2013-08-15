@@ -15,9 +15,10 @@
 package edu.uci.ics.genomix.hyracks.graph.test;
 
 import java.io.File;
+import java.io.IOException;
 
 public class TestSet {
-    
+
     public final String PREFIX = "src/test/resources/input/sequence/";
     public final String PATHMERGE = "pathmerge";
     public final String TIP = "tip";
@@ -27,6 +28,7 @@ public class TestSet {
 
     public final String[] SRSET = { "HighSplitRepeat", "MidSplitRepeat", "LowSplitRepeat" };
     public final String[] TIPSET = { "Tips1", "Tips2", "Tips3", "Tips4" };
+
     public static enum DirType {
         PATHMERGE,
         TIP,
@@ -34,9 +36,9 @@ public class TestSet {
         SPLITREPEAT,
         BRIDGE
     }
-    
+
     private DirType testSet;
-    
+
     @SuppressWarnings("static-access")
     public TestSet(DirType patternType) {
         switch (patternType) {
@@ -57,7 +59,7 @@ public class TestSet {
                 break;
         }
     }
-    
+
     public String[] getTestDir() {
         switch (testSet) {
             case PATHMERGE:
@@ -67,7 +69,7 @@ public class TestSet {
             case BUBBLE:
                 break;
             case SPLITREPEAT:
-                return prepend(SRSET, PREFIX + SPLITREPEAT+ File.separator);
+                return prepend(SRSET, PREFIX + SPLITREPEAT + File.separator);
             case BRIDGE:
                 break;
         }
@@ -81,5 +83,32 @@ public class TestSet {
         }
         return output;
     }
-    
+
+    public String[] getAllTestInputinDir() throws IOException {
+        switch (testSet) {
+            case PATHMERGE:
+                break;
+            case TIP:
+                return detectAllTestSet(PREFIX + TIP);
+            case BUBBLE:
+                break;
+            case SPLITREPEAT:
+                return detectAllTestSet(PREFIX + SPLITREPEAT);
+            case BRIDGE:
+                break;
+        }
+        return null;
+    }
+
+    private String[] detectAllTestSet(String inputPrefix) throws IOException {
+        File src = new File(inputPrefix);
+        String[] output = new String[src.listFiles().length - 1];
+        int i = 0;
+        for (File f : src.listFiles()) {
+            if (!f.getName().contains(".DS_Store"))
+                output[i++] = f.getPath().toString();
+        }
+        System.out.println(output.length);
+        return output;
+    }
 }

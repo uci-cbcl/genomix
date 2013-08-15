@@ -43,7 +43,7 @@ public class JobRunStepByStepTestCase {
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/HighSplitRepeat.txt";
+    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/LowSplitRepeat.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
     
@@ -57,13 +57,14 @@ public class JobRunStepByStepTestCase {
     
     private Driver driver;
     
+    @Test
     public void TestAll() throws Exception {
-        TestReader();
-        TestGroupby();
+//        TestReader();
+//        TestGroupby();
         TestGroupbyUnMerged();
     }
     
-    @Test
+    
     public void TestReader() throws Exception {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();

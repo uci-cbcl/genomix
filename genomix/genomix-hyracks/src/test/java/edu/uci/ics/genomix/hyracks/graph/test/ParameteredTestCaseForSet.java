@@ -46,21 +46,31 @@ import edu.uci.ics.genomix.hyracks.graph.test.TestSet.DirType;
 @SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
 public class ParameteredTestCaseForSet {
-    public static final DirType testSetType = DirType.TIP;
+    public static final DirType testSetType = DirType.SPLITREPEAT;
 
     public String dataPath;
+    public int KmerSize;
     
-    public ParameteredTestCaseForSet(String otherPath) {
+    public ParameteredTestCaseForSet(String otherPath, String otherKmerSize) {
         this.dataPath = otherPath;
+        this.KmerSize = Integer.parseInt(otherKmerSize);
     }
 
     @Parameters
-    public static Collection<Object[]> getdataPath() {
+    public static Collection<Object[]> getdataPath() throws Exception {
         Collection<Object[]> data = new ArrayList<Object[]>();
         TestSet ts = new TestSet(testSetType);
-        String [] dirSet = ts.getTestDir();
-        for (String testDirPointer : dirSet) {
-            data.add(new Object[] { testDirPointer });
+        String[] dirSet;
+        try {
+            dirSet = ts.getAllTestInputinDir();
+            for (String testDirPointer : dirSet) {
+                String[] paraForSTest = testDirPointer.split("_");
+                if(paraForSTest.length != 2)
+                    throw new Exception("the number of paramters is not enough");
+                data.add(new Object[] { testDirPointer, paraForSTest[1].substring(1)});
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return data;
     }
@@ -72,7 +82,6 @@ public class ParameteredTestCaseForSet {
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
     private static final String EXPECTED_PATH = "expected";
     
-    private static final int KmerSize = 3;
     private static MiniDFSCluster dfsCluster;
     private static FileSystem dfs;
     private static JobConf conf = new JobConf();
@@ -87,7 +96,7 @@ public class ParameteredTestCaseForSet {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHDFS();
-        conf.setInt(GenomixJobConf.KMER_LENGTH, KmerSize);
+        
         driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
                 edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
@@ -104,7 +113,7 @@ public class ParameteredTestCaseForSet {
         dfs = FileSystem.get(conf);
         
         TestSet ts = new TestSet(testSetType);
-        String [] dirSet = ts.getTestDir();
+        String [] dirSet = ts.getAllTestInputinDir();
         for (String testDir : dirSet) {
             File src = new File(testDir);
             Path dest = new Path(HDFS_INPUT_PATH + File.separator + src.getName());
@@ -138,6 +147,7 @@ public class ParameteredTestCaseForSet {
         waitawhile();
         cleanUpReEntry();
         File src = new File(dataPath);
+        conf.setInt(GenomixJobConf.KMER_LENGTH, this.KmerSize);
         FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH + File.separator + src.getName());
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH + File.separator + src.getName()));
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);

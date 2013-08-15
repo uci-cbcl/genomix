@@ -104,7 +104,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             uniqueElements.add(new PositionWritable(pos));
         }
         for (PositionWritable pos : otherList) {
-            uniqueElements.add(pos);
+            uniqueElements.add(new PositionWritable(pos));
         }
         valueCount = 0;
         setSize(newSize * PositionWritable.LENGTH + HEADER_SIZE);

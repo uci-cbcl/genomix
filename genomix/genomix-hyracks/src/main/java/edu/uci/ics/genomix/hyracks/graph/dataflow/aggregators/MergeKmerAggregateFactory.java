@@ -50,9 +50,9 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
         final int frameSize = ctx.getFrameSize();
         KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new IAggregatorDescriptor() {
-
+            
             private NodeWritable readNode = new NodeWritable();
-
+            
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, fieldId);
@@ -77,8 +77,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
                 localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
-                //make a fake feild to cheat caller
- //               tupleBuilder.addFieldEndOffset();
+                
             }
 
             @Override
