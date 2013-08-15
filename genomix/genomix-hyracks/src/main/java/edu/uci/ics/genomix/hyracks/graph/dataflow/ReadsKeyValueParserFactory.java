@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;

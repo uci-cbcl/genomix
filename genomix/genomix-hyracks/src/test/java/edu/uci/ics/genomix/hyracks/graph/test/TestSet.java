@@ -49,13 +49,13 @@ public class TestSet {
             case PATHMERGE:
                 break;
             case TIP:
-                break;
+                return prepend(TIPSET, PREFIX + TIP + File.separator);
             case BUBBLE:
                 break;
             case SPLITREPEAT:
                 return prepend(SRSET, PREFIX + SPLITREPEAT+ File.separator);
             case BRIDGE:
-                return prepend(TIPSET, PREFIX + TIP + File.separator);
+                break;
         }
         return null;
     }

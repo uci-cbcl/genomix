@@ -30,6 +30,7 @@ import org.junit.BeforeClass;
 /*
  * A base class providing most of the boilerplate for Hadoop-based tests
  */
+
 @SuppressWarnings("deprecation")
 public class HadoopMiniClusterTest {
     protected int KMER_LENGTH = 5;
@@ -150,7 +151,7 @@ public class HadoopMiniClusterTest {
         if (poslistField != null) {
 //            TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
         } else {
-//            TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
+//            TestUtils.c(new File(expectedPath), dumped);
         }
         return true;
     }
@@ -163,10 +164,6 @@ public class HadoopMiniClusterTest {
     }
 
     protected static void startHDFS() throws IOException {
-//        conf.addResource(new Path(HADOOP_CONF_ROOT + "core-site.xml"));
-        //        conf.addResource(new Path(HADOOP_CONF_ROOT + "mapred-site.xml"));
-//        conf.addResource(new Path(HADOOP_CONF_ROOT + "hdfs-site.xml"));
-
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
         System.setProperty("hadoop.log.dir", "logs");
@@ -216,27 +213,5 @@ public class HadoopMiniClusterTest {
         dfsCluster.shutdown();
         mrCluster.shutdown();
     }
-    
-//    public void buildGraph() throws IOException {
-//        JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 
-//        FileInputFormat.setInputPaths(buildConf, SEQUENCE);
-//        FileOutputFormat.setOutputPath(buildConf, new Path(INPUT_GRAPH));
-//        
-//        GraphBuildingDriver tldriver = new GraphBuildingDriver();
-//        tldriver.run(SEQUENCE, INPUT_GRAPH, 2, kmerByteSize, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
-//        
-//        boolean resultsAreText = true;
-//        copyResultsToLocal(INPUT_GRAPH, ACTUAL_ROOT + INPUT_GRAPH, resultsAreText, buildConf);
-//    }
-//    
-//    private void prepareGraph() throws IOException {
-//        if (regenerateGraph) {
-//            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
-//            buildGraph();
-//            copyLocalToDFS(ACTUAL_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
-//        } else {
-//            copyLocalToDFS(EXPECTED_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
-//        }
-//    }
 
 }

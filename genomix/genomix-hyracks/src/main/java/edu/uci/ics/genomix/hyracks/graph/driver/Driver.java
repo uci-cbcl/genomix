@@ -22,7 +22,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.lib.NLineInputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
@@ -72,7 +71,6 @@ public class Driver {
         runJob(job, Plan.BUILD_DEBRUJIN_GRAPH, false);
     }
 
-    @SuppressWarnings("deprecation")
     public void runJob(GenomixJobConf job, Plan planChoice, boolean profiling) throws HyracksException {
         /** add hadoop configurations */
         URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
@@ -81,9 +79,6 @@ public class Driver {
         job.addResource(hadoopMapRed);
         URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
         job.addResource(hadoopHdfs);
-
-//        job.setInputFormat(NLineInputFormat.class);
-//        job.setInt("mapred.line.input.format.linespermap", 4 * 10);
         
         LOG.info("job started");
         long start = System.currentTimeMillis();

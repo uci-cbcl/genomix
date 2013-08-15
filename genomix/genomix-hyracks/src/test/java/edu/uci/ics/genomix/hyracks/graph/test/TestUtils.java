@@ -48,14 +48,19 @@ public class TestUtils {
                 expectedLines.add(lineExpected);
             }
             Collections.sort(expectedLines);
+
             int num = 0;
             for (String actualLine : actualLines) {
                 lineExpected = expectedLines.get(num);
                 if (lineExpected == null) {
                     flag = false;
                 }
+                System.out.println(lineExpected);
+                System.out.println(actualLine);
                 if (!equalStrings(lineExpected, actualLine)) {
                     flag = false;
+                    System.out.println(lineExpected);
+                    System.out.println(actualLine);
                 }
                 ++num;
             }
@@ -117,7 +122,7 @@ public class TestUtils {
                 if (lineActual == null) {
                     throw new Exception("Actual result changed at line " + num + ":\n< " + lineExpected + "\n> ");
                 }
-                if (!equalStrings(lineExpected, lineActual)) {
+                if (lineExpected.equalsIgnoreCase(lineActual)) {
                     throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
                             + lineActual);
                 }

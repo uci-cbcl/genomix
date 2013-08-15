@@ -17,13 +17,11 @@ package edu.uci.ics.genomix.hyracks.graph.io;
 import java.io.DataOutput;
 import java.io.IOException;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.JobConf;
 
-import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 import edu.uci.ics.genomix.type.NodeWritable;

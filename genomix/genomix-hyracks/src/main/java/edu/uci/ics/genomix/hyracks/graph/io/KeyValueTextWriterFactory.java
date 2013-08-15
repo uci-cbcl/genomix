@@ -17,7 +17,6 @@ package edu.uci.ics.genomix.hyracks.graph.io;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;

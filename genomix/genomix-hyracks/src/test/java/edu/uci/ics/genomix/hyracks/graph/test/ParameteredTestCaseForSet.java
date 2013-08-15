@@ -29,13 +29,14 @@ import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.test.TestSet.DirType;
 
+@SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
-public class ParameteredTestForSet {
-    public static final DirType temp = DirType.SPLITREPEAT;
+public class ParameteredTestCaseForSet {
+    public static final DirType temp = DirType.TIP;
 
     public String dataPath;
     
-    public ParameteredTestForSet(String otherPath) {
+    public ParameteredTestCaseForSet(String otherPath) {
         this.dataPath = otherPath;
     }
 
@@ -55,7 +56,8 @@ public class ParameteredTestForSet {
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
-
+    private static final String EXPECTED_PATH = "expected";
+    
     private static final int KmerSize = 3;
     private static MiniDFSCluster dfsCluster;
     private static FileSystem dfs;
@@ -117,7 +119,6 @@ public class ParameteredTestForSet {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void TestGroupbyUnMerged() throws Exception {
         waitawhile();
@@ -131,8 +132,9 @@ public class ParameteredTestForSet {
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_UNMERGED_GRAPH, true);
         dumpResult();
         
-//        Assert.assertEquals(true,
-//                TestUtils.compareWithSortedResult(new File(DUMPED_RESULT), new File(EXPECTED_UNMERGED)));
+        Assert.assertEquals(true,
+                TestUtils.compareWithSortedResult(new File(ACTUAL_RESULT_DIR + File.separator + 
+                        File.separator + src.getName() + "/test.txt"), new File(EXPECTED_PATH + File.separator + src.getName() + ".txt")));
     }
 
     private void cleanUpReEntry() throws IOException {
