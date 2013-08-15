@@ -33,6 +33,8 @@ import org.kohsuke.args4j.Option;
 
 import com.sun.tools.javac.util.List;
 
+import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
+
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
 
@@ -48,6 +50,15 @@ public class GenomixJobConf extends JobConf {
         // Global config
         @Option(name = "-kmerLength", usage = "The kmer length for this graph.", required = true)
         private int kmerLength = -1;
+        
+        @Option(name = "-pipelineOrder", usage = "Change the order of the graph cleaning process", required = false)
+        String pipelineOrder;
+        
+        @Option(name = "-inputDir", usage = "Input directory for the first job that will be run", required = false)
+        String inputDir;
+        
+        @Option(name = "-outputDir", usage = "Output directory for the final job that will be run", required = false)
+        String outputDir;
 
         // Graph cleaning
         @Option(name = "-bridgeRemove_maxLength", usage = "Nodes with length <= bridgeRemoveLength that bridge separate paths are removed from the graph", required = false)
@@ -71,24 +82,18 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
         
-        // Hyracks/Pregelix Advanced Setup
+        // Hyracks/Pregelix Setup
         @Option(name = "-ip", usage = "IP address of the cluster controller", required = true)
         private String ipAddress = "";
         
-        @Option(name = "-port", usage = "port of the cluster controller", required = true)
+        @Option(name = "-port", usage = "Port of the cluster controller", required = true)
         private int port = -1;
         
-        @Option(name = "-profile", usage = "whether to do runtime profifling", required = false)
+        @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
         private boolean profile = false;
         
-        @Option(name = "-pipelineOrder", usage = "Change the order of the graph cleaning process", required = false)
-        String pipelineOrder;
-        
-        @Option(name = "-inputDir", usage = "Input directory for the first job that will be run", required = false)
-        String inputDir;
-        
-        @Option(name = "-outputDir", usage = "Output directory for the final job that will be run", required = false)
-        String outputDir;
+        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port", required=false)
+        private boolean runLocal = false;
         
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
@@ -145,10 +150,11 @@ public class GenomixJobConf extends JobConf {
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     
-    // Hyracks/Pregelix Advanced Setup
+    // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
     public static final String PORT = "genomix.port";
     public static final String PROFILE = "genomix.profile";
+    public static final String RUN_LOCAL = "genomix.runLocal";
 
     // TODO should these also be command line options?
     public static final String CPARTITION_PER_MACHINE = "genomix.driver.duplicate.num";
@@ -302,11 +308,24 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CPARTITION_PER_MACHINE, -1) == -1)
             setInt(CPARTITION_PER_MACHINE, 2);
+        
+        if (getBoolean(RUN_LOCAL, false)) {
+            // override any other settings for HOST and PORT
+            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
+            setInt(PORT, PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+        }
     }
 
     private void setFromOpts(Options opts) {
         // Global config
         setInt(KMER_LENGTH, opts.kmerLength);
+        if (opts.pipelineOrder != null)
+            set(PIPELINE_ORDER, opts.pipelineOrder);
+        if (opts.inputDir != null)
+            set(INITIAL_INPUT_DIR, opts.inputDir);
+        if (opts.outputDir != null)
+            set(FINAL_OUTPUT_DIR, opts.outputDir);
+        setBoolean(RUN_LOCAL, opts.runLocal);
                 
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
@@ -321,12 +340,5 @@ public class GenomixJobConf extends JobConf {
         set(IP_ADDRESS, opts.ipAddress);
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
-        
-        if (opts.pipelineOrder != null)
-            set(PIPELINE_ORDER, opts.pipelineOrder);
-        if (opts.inputDir != null)
-            set(INITIAL_INPUT_DIR, opts.inputDir);
-        if (opts.outputDir != null)
-            set(FINAL_OUTPUT_DIR, opts.outputDir);
     }
 }

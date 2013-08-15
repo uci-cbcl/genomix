@@ -34,55 +34,74 @@ public class GenomixDriver {
     Path prevOutput;
     Path curOutput;
     
-    public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException {
+    public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         curOutput = new Path(conf.getWorkingDirectory(), conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
         int stepNum = 0;
         
-        // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
-        String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
-        for (Patterns step: Patterns.arrayFromString(pipelineSteps)) {
-            switch(step) {
-                case BUILD:
-                    prevOutput = curOutput;
-                    curOutput = new Path(conf.getWorkingDirectory(), Patterns.BUILD + "-" + stepNum);
-                    conf.set("mapred.input.dir", prevOutput.toString());
-                    conf.set("mapred.output.dir", curOutput.toString());
-                    Driver driver = new Driver(conf.get(GenomixJobConf.IP_ADDRESS), 
-                            Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
-                            Integer.parseInt(conf.get(GenomixJobConf.CPARTITION_PER_MACHINE)));
-                    driver.runJob(conf, Plan.BUILD_DEBRUJIN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
-                case MERGE:
-                case MERGE_P4:
-                    
-                case MERGE_P1:
-                    
-                case MERGE_P2:
-                    
-                case TIP_REMOVE:
-                    
-                case BUBBLE:
-                    
-                case LOW_COVERAGE:
-                    
-                case BRIDGE:
-                    
-                case SPLIT_REPEAT:
-                    
-                case SCAFFOLD:
-                    
+        TestCluster testCluster = new TestCluster();
+        boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        
+        try {
+            if (runLocal) {
+                testCluster.setUp(conf);
+            }
+            
+            // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
+            String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
+            for (Patterns step: Patterns.arrayFromString(pipelineSteps)) {
+                switch(step) {
+                    case BUILD:
+                        prevOutput = curOutput;
+                        curOutput = new Path(conf.getWorkingDirectory(), Patterns.BUILD + "-" + stepNum);
+                        conf.set("mapred.input.dir", prevOutput.toString());
+                        conf.set("mapred.output.dir", curOutput.toString());
+                        Driver driver = new Driver(conf.get(GenomixJobConf.IP_ADDRESS), 
+                                Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
+                                Integer.parseInt(conf.get(GenomixJobConf.CPARTITION_PER_MACHINE)));
+                        driver.runJob(conf, Plan.BUILD_DEBRUJIN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
+                    case MERGE:
+                    case MERGE_P4:
+                        
+                    case MERGE_P1:
+                        
+                    case MERGE_P2:
+                        
+                    case TIP_REMOVE:
+                        
+                    case BUBBLE:
+                        
+                    case LOW_COVERAGE:
+                        
+                    case BRIDGE:
+                        
+                    case SPLIT_REPEAT:
+                        
+                    case SCAFFOLD:
+                        
+                }
+            }
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (runLocal) {
+                try {
+                    testCluster.tearDown();
+                } catch (Exception e) {
+                    System.out.println("Exception raised while tearing down the Test Cluster: " + e);
+                }
             }
         }
     }
 
-    public static void test(String[] args) throws CmdLineException, NumberFormatException, HyracksException {
+    public static void test(String[] args) throws Exception {
         GenomixJobConf conf = GenomixJobConf.fromArguments(args);
         GenomixDriver driver = new GenomixDriver(); 
         driver.runGenomix(conf);
     }
     
 
-    public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException {
-        String[] myArgs = {"-kmerLength", "5", "-ip", "127.0.0.1", "-port", "55", "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/AddBridge/SimpleTest"};
+    public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
+        String[] myArgs = {"-runLocal", "-kmerLength", "5", "-ip", "127.0.0.1", "-port", "55", "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/AddBridge/SimpleTest"};
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver(); 
         driver.runGenomix(conf);
