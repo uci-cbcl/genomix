@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.hadoop.graph.GenerateGraphViz;
@@ -57,7 +58,6 @@ public class GraphBuildingTestCase extends TestCase{
         driver.run(HDFS_INPUTPATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, true, HADOOP_CONF_PATH);
         dumpResult();
     }
-    
     
     
     private void dumpResult() throws Exception {

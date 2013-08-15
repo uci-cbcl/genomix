@@ -15,7 +15,6 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -26,21 +25,16 @@ import edu.uci.ics.genomix.hyracks.graph.job.GenomixJobConf;
 @SuppressWarnings("deprecation")
 public class JobRunStepByStepTestCase {
     private static final int KmerSize = 3;
-    private static final int ReadLength = 6;
+    private static final int ReadLength = 7;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/Test.txt";
+    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/HighSplitRepeat.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
-
-    private static final String EXPECTED_DIR = "src/test/resources/expected/";
-    private static final String EXPECTED_READER_RESULT = EXPECTED_DIR + "result_after_initial_read.txt";
-    private static final String EXPECTED_OUPUT_KMER = EXPECTED_DIR + "result_after_kmerAggregate.txt";
-    private static final String EXPECTED_UNMERGED = EXPECTED_DIR + "result_unmerged.txt";
     
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/Test.txt";
-    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";;
+    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
     
     private JobConf conf = new JobConf();
@@ -49,42 +43,38 @@ public class JobRunStepByStepTestCase {
     
     private Driver driver;
     
+    public void TestAll() throws Exception {
+        TestReader();
+        TestGroupby();
+        TestGroupbyUnMerged();
+    }
     
-  //  @Test
+    @Test
     public void TestReader() throws Exception {
-        setUp();
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         driver.runJob(new GenomixJobConf(conf), Plan.CHECK_KMERREADER, true);
         dumpResult();
-        tearDown();
-        Assert.assertEquals(true, TestUtils.compareWithSortedResult(new File(DUMPED_RESULT), new File(EXPECTED_READER_RESULT)));
     }
     
-    @Test
     public void TestGroupby() throws Exception {
-        setUp();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUJIN_GRAPH, true);
         dumpResult();
-        tearDown();
-        Assert.assertEquals(true, TestUtils.compareWithSortedResult(new File(DUMPED_RESULT), new File(EXPECTED_OUPUT_KMER)));
     }
     
-    @Test
     public void TestGroupbyUnMerged() throws Exception {
-        setUp();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_UNMERGED_GRAPH, true);
         dumpResult();
-        tearDown();
-        Assert.assertEquals(true, TestUtils.compareWithSortedResult(new File(DUMPED_RESULT), new File(EXPECTED_UNMERGED)));
     }
     
+    @Before
     public void setUp() throws Exception {
         cleanupStores();
         edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
@@ -149,6 +139,7 @@ public class JobRunStepByStepTestCase {
         } 
     }
     
+    @After
     public void tearDown() throws Exception {
         edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.deinit();
         cleanupHDFS();

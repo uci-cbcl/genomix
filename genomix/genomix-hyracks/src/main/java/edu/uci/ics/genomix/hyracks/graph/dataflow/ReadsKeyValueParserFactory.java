@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -40,6 +41,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
+import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
@@ -48,14 +50,13 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     public static final int OutputKmerField = 0;
     public static final int OutputNodeField = 1;
 
-    private final int readLength;
     private final int kmerSize;
-
+    protected ConfFactory confFac;
+    
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
             null });
 
-    public ReadsKeyValueParserFactory(int readlength, int k) {
-        this.readLength = readlength;
+    public ReadsKeyValueParserFactory(int k) {
         this.kmerSize = k;
     }
 
@@ -107,10 +108,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 Matcher geneMatcher = genePattern.matcher(geneLine[1]);
                 boolean isValid = geneMatcher.matches();
                 if (isValid) {
-                    if (geneLine[1].length() != readLength) {
-                        LOG.warn("Invalid readlength at: " + readID);
-                        return;
-                    }
                     SplitReads(readID, geneLine[1].getBytes(), writer);
                 }
             }

@@ -84,14 +84,12 @@ public class JobGenBrujinGraph extends JobGen {
     protected String[] ncNodeNames;
     protected String[] readSchedule;
 
-    protected int readLength;
     protected int kmerSize;
     protected int frameLimits;
     protected int frameSize;
     protected int tableSize;
     protected GroupbyType groupbyType;
     protected OutputFormat outputFormat;
-
 
     protected void logDebug(String status) {
         LOG.debug(status + " nc nodes:" + ncNodeNames.length);
@@ -140,8 +138,7 @@ public class JobGenBrujinGraph extends JobGen {
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
-                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(readLength,
-                            kmerSize));
+                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -161,15 +158,15 @@ public class JobGenBrujinGraph extends JobGen {
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(jobSpec, frameLimits, keyFields,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
                 ReadsKeyValueParserFactory.readKmerOutputRec);
-        
+
         connectOperators(jobSpec, readOperator, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
                 jobSpec));
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
         jobSpec.setFrameSize(frameSize);
 
-        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(kmerSize),
-                new MergeKmerAggregateFactory(kmerSize), new KmerHashPartitioncomputerFactory(),
+        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(
+                kmerSize), new MergeKmerAggregateFactory(kmerSize), new KmerHashPartitioncomputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         logDebug("LocalKmerGroupby Operator");
@@ -192,7 +189,7 @@ public class JobGenBrujinGraph extends JobGen {
                 new OneToOneConnectorDescriptor(jobSpec));
         return mapToFinalNode;
     }
-    
+
     public AbstractOperatorDescriptor generateNodeWriterOpertator(JobSpecification jobSpec,
             AbstractOperatorDescriptor mapEachReadToNode) throws HyracksException {
         ITupleWriterFactory nodeWriter = null;
@@ -237,7 +234,6 @@ public class JobGenBrujinGraph extends JobGen {
 
     protected void initJobConfiguration(Scheduler scheduler) throws HyracksDataException {
         Configuration conf = confFactory.getConf();
-        readLength = conf.getInt(GenomixJobConf.READ_LENGTH, GenomixJobConf.DEFAULT_READLEN);
         kmerSize = conf.getInt(GenomixJobConf.KMER_LENGTH, GenomixJobConf.DEFAULT_KMERLEN);
         if (kmerSize % 2 == 0) {
             kmerSize--;
@@ -251,7 +247,7 @@ public class JobGenBrujinGraph extends JobGen {
         groupbyType = GroupbyType.PRECLUSTER;
 
         String output = conf.get(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
-        
+
         if (output.equalsIgnoreCase("text")) {
             outputFormat = OutputFormat.TEXT;
         } else {
@@ -262,7 +258,7 @@ public class JobGenBrujinGraph extends JobGen {
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
             readSchedule = scheduler.getLocationConstraints(splits);
-            
+
         } catch (IOException ex) {
             throw new HyracksDataException(ex);
         }
