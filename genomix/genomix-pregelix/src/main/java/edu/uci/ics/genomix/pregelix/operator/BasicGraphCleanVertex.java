@@ -313,22 +313,22 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
      * start sending message
      */
     public void startSendMsg() {
-        if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())) {
+        if (VertexUtil.isHeadVertexWithManyOutgoing(getVertexValue())) {
             outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));
             sendMsgToAllNextNodes();
             voteToHalt();
         }
-        if (VertexUtil.isRearVertexWithOutdegree(getVertexValue())) {
+        if (VertexUtil.isRearVertexWithManyIncoming(getVertexValue())) {
             outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));
             sendMsgToAllPreviousNodes();
             voteToHalt();
         }
-        if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
+        if (VertexUtil.isHeadVertexWithOnlyOneOutgoing(getVertexValue())){
             outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
         }
-        if (VertexUtil.isRearWithoutOutdegree(getVertexValue())){
+        if (VertexUtil.isRearVertexWithOnlyOneIncoming(getVertexValue())){
             outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();

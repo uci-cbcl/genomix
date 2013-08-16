@@ -33,12 +33,20 @@ public class VertexUtil {
     public static boolean isHeadVertexWithIndegree(VertexValueWritable value) {
         return isHead(value) && !isHeadWithoutIndegree(value);
     }
-
+    
     /**
      * Head Vertex without indegree: indegree = 0, outdegree = 1
      */
     public static boolean isHeadWithoutIndegree(VertexValueWritable value){
         return value.inDegree() == 0 && value.outDegree() == 1;
+    }
+    
+    public static boolean isHeadVertexWithOnlyOneOutgoing(VertexValueWritable value){
+        return isHead(value) && value.outDegree() == 1;
+    }
+    
+    public static boolean isHeadVertexWithManyOutgoing(VertexValueWritable value){
+        return isHead(value) && value.outDegree() > 1;
     }
     
     /**
@@ -57,12 +65,20 @@ public class VertexUtil {
         return isRear(value) && !isRearWithoutOutdegree(value);
     }
 
-    
     /**
      * Rear Vertex without outdegree: indegree = 1, outdegree = 0
      */
     public static boolean isRearWithoutOutdegree(VertexValueWritable value){
         return value.inDegree() == 1 && value.outDegree() == 0;
+    }
+    
+
+    public static boolean isRearVertexWithOnlyOneIncoming(VertexValueWritable value){
+        return isRear(value) && value.inDegree() == 1;
+    }
+    
+    public static boolean isRearVertexWithManyIncoming(VertexValueWritable value){
+        return isRear(value) && value.inDegree() > 1;
     }
     
     /**
@@ -71,20 +87,15 @@ public class VertexUtil {
     public static boolean isCycle(VKmerBytesWritable kmer, VKmerBytesWritable mergeChain, int kmerSize) {
         String chain = mergeChain.toString().substring(1);
         return chain.contains(kmer.toString());
-
-        /*subKmer.set(vertexId);
-        for(int istart = 1; istart < mergeChain.getKmerLength() - kmerSize + 1; istart++){
-        	byte nextgene = mergeChain.getGeneCodeAtPosition(istart+kmerSize);
-        	subKmer.shiftKmerWithNextCode(nextgene);
-        	if(subKmer.equals(vertexId))
-            	return true;
-        }
-        return false;*/
     }
     
     /**
      * check if vertex is a tip
      */
+    public static boolean isTipVertex(VertexValueWritable value){
+        return isIncomingTipVertex(value) || isOutgoingTipVertex(value); 
+    }
+    
     public static boolean isIncomingTipVertex(VertexValueWritable value){
     	return value.inDegree() == 0 && value.outDegree() == 1;
     }
@@ -125,5 +136,4 @@ public class VertexUtil {
         else
             return null;
     }
-    
 }

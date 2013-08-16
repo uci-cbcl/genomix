@@ -23,12 +23,29 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class JobGenerator {
 
     public static String outputBase = "src/test/resources/jobs/";
+    
+    private static void generateUnrollTandemRepeatGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(jobName);
+        job.setVertexClass(UnrollTandemRepeat.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setInt(UnrollTandemRepeat.KMER_SIZE, 3);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genUnrollTandemRepeatGraph() throws IOException {
+        generateUnrollTandemRepeatGraphJob("UnrollTandemRepeatGraph", outputBase + "UnrollTandemRepeatGraph.xml");
+    }
     
     private static void generateMapReduceGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
@@ -285,6 +302,7 @@ public class JobGenerator {
     }
     
     public static void main(String[] args) throws IOException {
+        genUnrollTandemRepeatGraph();
         genMapReduceGraph();
         genP1ForMergeGraph();
         genP2ForMergeGraph();
