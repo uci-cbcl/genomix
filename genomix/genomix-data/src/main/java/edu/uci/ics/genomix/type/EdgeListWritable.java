@@ -245,6 +245,15 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     }
     
     
+    public boolean contains(VKmerBytesWritable toFind){
+        Iterator<VKmerBytesWritable> posIterator = this.getKeys();
+        while (posIterator.hasNext()) {
+            if (toFind.equals(posIterator.next()))
+                return true;
+        }
+        return false;
+    }
+    
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.

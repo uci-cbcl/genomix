@@ -37,12 +37,11 @@ public class VertexValueWritable
     
     public static class VertexStateFlag extends FakeFlag {
         public static final byte IS_NON = 0b00 << 5;
-        public static final byte IS_RANDOMTAIL = 0b00 << 5;
         public static final byte IS_HEAD = 0b01 << 5;
-        public static final byte IS_FINAL = 0b10 << 5;
-        public static final byte IS_RANDOMHEAD = 0b11 << 5;
+        public static final byte IS_FINAL = 0b10 << 5; 
         public static final byte IS_OLDHEAD = 0b11 << 5;
-
+        
+        public static final byte IS_HALT = 0b1111111;
         public static final byte VERTEX_MASK = 0b11 << 5;
         public static final byte VERTEX_CLEAR = (byte) 11001111;
     }
@@ -208,13 +207,18 @@ public class VertexValueWritable
     /**
      * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
      */
-    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
-            byte neighborToMergeDir, EdgeWritable nodeToAdd){
-        byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
-        this.getEdgeList(deleteDir).remove(nodeToDelete);
-        
-        byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
-        this.getEdgeList(mergeDir).add(nodeToAdd);
+//    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
+//            byte neighborToMergeDir, NodeWritable node){
+//        byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
+//        this.getEdgeList(deleteDir).remove(nodeToDelete);
+//        
+//        byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
+////        this.getEdgeList(mergeDir).add(nodeToAdd);
+//        
+//        this.getNode().mergeEdges(mergeDir, node);
+//    }
+    public void processUpdates(byte neighborToDeleteDir, NodeWritable node){
+        this.getNode().mergeEdges(neighborToDeleteDir, node);
     }
     
     /**

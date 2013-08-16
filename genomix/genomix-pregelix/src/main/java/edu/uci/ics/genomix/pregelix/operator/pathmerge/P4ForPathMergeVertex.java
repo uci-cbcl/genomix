@@ -12,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /*
@@ -200,9 +199,10 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 processUpdate();
-                this.activate();
-                if(VertexUtil.isHeadOrRearVertexWithDegree(getVertexValue()))
+                if(isHaltNode())
                     voteToHalt();
+                else
+                    this.activate();
             }
         } else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self
@@ -213,10 +213,11 @@ public class P4ForPathMergeVertex extends
                 incomingMsg = msgIterator.next();
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
                 processMerge();
-                this.activate();
                 //head meets head, stop
                 if(getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)
                     voteToHalt();
+                else
+                    this.activate();
             }
         }
     }

@@ -103,6 +103,10 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         getVertexValue().setState(state);
     }
     
+    public boolean isHaltNode(){
+        return getVertexValue().getState() == State.IS_HALT;
+    }
+    
     /**
      * check the message type
      */
@@ -358,35 +362,41 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     public void initState(Iterator<M> msgIterator) {
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            byte headMergeDir = (byte) (incomingMsg.getFlag() & MessageFlag.HEAD_SHOULD_MERGE_MASK);
-            switch(headMergeDir){
-                case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
-                    if(VertexUtil.isValidRear(getVertexValue())){
-                        /** not set up yet **/
-                        if(getHeadFlag() != MessageFlag.IS_HEAD){
-                            getVertexValue().setState(incomingMsg.getFlag());
-                        } else{ /** already set up **/
-                            /** if headMergeDir are not the same **/
-                            if(getHeadMergeDir() != headMergeDir){
-                                getVertexValue().setState(MessageFlag.IS_NON);
-                            }
-                        }
-                    }
-                    break;
-                case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
-                    if(VertexUtil.isValidHead(getVertexValue())){
-                        /** not set up yet **/
-                        if(getHeadFlag() != MessageFlag.IS_HEAD){
-                            getVertexValue().setState(incomingMsg.getFlag());
-                        } else{ /** already set up **/
-                            /** if headMergeDir are not the same **/
-                            if(getHeadMergeDir() != headMergeDir){
-                                getVertexValue().setState(MessageFlag.IS_NON);
-                            }
-                        }
-                    }
-                    break;
+            if(getHeadFlag() != MessageFlag.IS_HEAD){
+                getVertexValue().setState(incomingMsg.getFlag());
+            } else{ /** already set up **/
+                /** if headMergeDir are not the same **/
+                getVertexValue().setState(MessageFlag.IS_HALT);
+                voteToHalt();
             }
+        }
+//            byte headMergeDir = (byte) (incomingMsg.getFlag() & MessageFlag.HEAD_SHOULD_MERGE_MASK);
+//            switch(headMergeDir){
+//                case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
+//                    /** not set up yet **/
+//                    if(getHeadFlag() != MessageFlag.IS_HEAD){
+//                        getVertexValue().setState(incomingMsg.getFlag());
+//                    } else{ /** already set up **/
+//                        /** if headMergeDir are not the same **/
+//                        if(getHeadMergeDir() != headMergeDir){
+//                            getVertexValue().setState(MessageFlag.IS_HALT);
+//                            voteToHalt();
+//                        }
+//                    }
+//                    break;
+//                case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
+//                    /** not set up yet **/
+//                    if(getHeadFlag() != MessageFlag.IS_HEAD){
+//                        getVertexValue().setState(incomingMsg.getFlag());
+//                    } else{ /** already set up **/
+//                        /** if headMergeDir are not the same **/
+//                        if(getHeadMergeDir() != headMergeDir){
+//                            getVertexValue().setState(MessageFlag.IS_HALT);
+//                            voteToHalt();
+//                        }
+//                    }
+//                    break;
+//            }
 //            if (!VertexUtil.isPathVertex(getVertexValue())
 //                    && !VertexUtil.isHeadWithoutIndegree(getVertexValue())
 //                    && !VertexUtil.isRearWithoutOutdegree(getVertexValue())) {
@@ -399,7 +409,6 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
 //                else 
 //                    getVertexValue().setState(incomingMsg.getFlag());
 //            }
-        }
     }
     
     /**
@@ -412,11 +421,25 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             return false;
     }
     
+    public boolean ifFlipWithPredecessor(VKmerBytesWritable toFind){
+        if(getVertexValue().getRFList().contains(toFind))
+            return true;
+        else
+            return false;
+    }
+    
     /**
      * check if A need to be flipped with successor
      */
     public boolean ifFilpWithSuccessor(){
         if(!getVertexValue().getFRList().isEmpty())
+            return true;
+        else
+            return false;
+    }
+    
+    public boolean ifFilpWithSuccessor(VKmerBytesWritable toFind){
+        if(getVertexValue().getFRList().contains(toFind))
             return true;
         else
             return false;
@@ -433,6 +456,14 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             outFlag |= MessageFlag.DIR_RR;
     }
     
+    public void setPredecessorAdjMsg(VKmerBytesWritable toFind){
+        outFlag &= MessageFlag.DIR_CLEAR;
+        if(getVertexValue().getRFList().contains(toFind))
+            outFlag |= MessageFlag.DIR_RF;
+        else if(getVertexValue().getRRList().contains(toFind))
+            outFlag |= MessageFlag.DIR_RR;
+    }
+    
     /**
      * set adjMessage to successor(from predecessor)
      */
@@ -441,6 +472,14 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         if(!getVertexValue().getFFList().isEmpty())
             outFlag |= MessageFlag.DIR_FF;
         else if(!getVertexValue().getFRList().isEmpty())
+            outFlag |= MessageFlag.DIR_FR;
+    }
+    
+    public void setSuccessorAdjMsg(VKmerBytesWritable toFind){
+        outFlag &= MessageFlag.DIR_CLEAR;
+        if(getVertexValue().getFFList().contains(toFind))
+            outFlag |= MessageFlag.DIR_FF;
+        else if(getVertexValue().getFRList().contains(toFind))
             outFlag |= MessageFlag.DIR_FR;
     }
     

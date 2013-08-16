@@ -357,7 +357,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     /**
      * merge my edge list (both kmers and readIDs) with those of `other`.  Assumes that `other` is doing the flipping, if any.
      */
-    private void mergeEdges(byte dir, NodeWritable other) {
+    public void mergeEdges(byte dir, NodeWritable other) {
         switch (dir & DirectionFlag.DIR_MASK) {
             case DirectionFlag.DIR_FF:
                 if (outDegree() > 1)

@@ -36,10 +36,9 @@ public abstract class BasicPathMergeVertex extends
         byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
-        
-        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(), 
-                neighborToMergeDir, incomingMsg.getNeighborEdge());
+//        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(), 
+//                neighborToMergeDir, incomingMsg.getNeighborEdge());
+        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getNode());
     }
     
     /**
@@ -97,11 +96,11 @@ public abstract class BasicPathMergeVertex extends
     public void processFinalMerge(PathMergeMessageWritable msg){
         byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK); 
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        byte neighborToMergeDir = 0;
-        if(getMsgFlag() == MessageFlag.IS_FINAL)
-            neighborToMergeDir = neighborToMeDir;
-        else
-            neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());
+//        byte neighborToMergeDir = 0;
+//        if(getMsgFlag() == MessageFlag.IS_FINAL)
+//            neighborToMergeDir = neighborToMeDir;
+//        else
+//            neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());
         
         String selfString;
         String match;
@@ -148,27 +147,49 @@ public abstract class BasicPathMergeVertex extends
      * configure UPDATE msg
      */
     public void configureUpdateMsgForPredecessor(){
-        if(getPrevDestVertexId() != null){
-            setPredecessorAdjMsg();
-            if(ifFilpWithSuccessor())
-                outgoingMsg.setFlip(true);
+        outgoingMsg.setSourceVertexId(getVertexId());
+        for(byte d: OutgoingListFlag.values)
+            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+        
+        kmerIterator = getVertexValue().getRFList().getKeys();
+        while(kmerIterator.hasNext()){
+            destVertexId.setAsCopy(kmerIterator.next());
+            setPredecessorAdjMsg(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            for(byte d: OutgoingListFlag.values)
-                outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-            outgoingMsg.setSourceVertexId(getVertexId());
-            sendMsg(getPrevDestVertexId(), outgoingMsg);
+            outgoingMsg.setFlip(ifFilpWithSuccessor(destVertexId));
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        kmerIterator = getVertexValue().getRRList().getKeys();
+        while(kmerIterator.hasNext()){
+            destVertexId.setAsCopy(kmerIterator.next());
+            setPredecessorAdjMsg(destVertexId);
+            outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setFlip(ifFilpWithSuccessor(destVertexId));
+            sendMsg(destVertexId, outgoingMsg);
         }
     }
     
     public void configureUpdateMsgForSuccessor(){
-        if(getNextDestVertexId() != null){
-            setSuccessorAdjMsg();
+        outgoingMsg.setSourceVertexId(getVertexId());
+        for(byte d: IncomingListFlag.values)
+            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+        
+        kmerIterator = getVertexValue().getFFList().getKeys();
+        while(kmerIterator.hasNext()){
+            destVertexId.setAsCopy(kmerIterator.next());
+            setSuccessorAdjMsg(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setFlip(ifFlipWithPredecessor());  
-            for(byte d: IncomingListFlag.values)
-                outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-            sendMsg(getNextDestVertexId(), outgoingMsg);
+            outgoingMsg.setFlip(ifFlipWithPredecessor(destVertexId));  
+            sendMsg(destVertexId, outgoingMsg);
+        }
+        kmerIterator = getVertexValue().getFRList().getKeys();
+        while(kmerIterator.hasNext()){
+            destVertexId.setAsCopy(kmerIterator.next());
+            setSuccessorAdjMsg(destVertexId);
+            outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setFlip(ifFlipWithPredecessor(destVertexId));  
+            destVertexId.setAsCopy(kmerIterator.next());
+            sendMsg(destVertexId, outgoingMsg);
         }
     }
 	/**
