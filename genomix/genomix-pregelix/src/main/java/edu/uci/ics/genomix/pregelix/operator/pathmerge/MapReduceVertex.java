@@ -74,12 +74,12 @@ public class MapReduceVertex extends
                 kmer.setAsCopy(tmpKmer);
             else
                 kmer.setAsCopy(reverseKmer);
-            if(!kmerMapper.containsKey(tmpKmer)){
+            if(!kmerMapper.containsKey(kmer)){
                 //kmerList.reset();
                 kmerList.append(incomingMsg.getSourceVertexId());
                 kmerMapper.put(kmer, kmerList);
             } else{
-                kmerList.setCopy(kmerMapper.get(tmpKmer));
+                kmerList.setCopy(kmerMapper.get(kmer));
                 kmerList.append(incomingMsg.getSourceVertexId());
                 kmerMapper.put(kmer, kmerList);
             }

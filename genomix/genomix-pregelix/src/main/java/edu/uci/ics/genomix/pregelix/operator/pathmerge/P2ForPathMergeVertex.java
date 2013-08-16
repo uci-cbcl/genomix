@@ -138,23 +138,10 @@ public class P2ForPathMergeVertex extends
     /**
      * path response message to head
      */
-    public void responseMsgToHeadVertex(Iterator<PathMergeMessageWritable> msgIterator) {
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            /** final Vertex Responses To FakeVertex **/
-            if(isReceiveKillMsg()){
-                broadcaseKillself();
-            }else if(isResponseKillMsg()){
-                responseToDeadVertex();
-            }else if(getMsgFlag() == MessageFlag.IS_FINAL){
-                processMerge();
-                getVertexValue().setState(State.IS_FINAL);
-            }else{
-                sendUpdateMsg();
-                outFlag = 0;
-                sendMergeMsg();
-            }
-        }
+    public void responseMergeMsgToHeadVertex() {
+    //      sendUpdateMsg();
+          outFlag = 0;
+          sendMergeMsg();
     }
 
     /**
@@ -221,13 +208,12 @@ public class P2ForPathMergeVertex extends
                     } else if(isReceiveKillMsg()){
                         responseToDeadVertex();
                     }
-                    this.activate();
                 }
                 /** processing general case **/
                 else{
-                    if(selfFlag != State.IS_HEAD && selfFlag != State.IS_OLDHEAD)
+                    if(isPathNode())
                         sendSettledMsgToAllNeighborNodes();
-                    if(selfFlag != State.IS_HEAD)
+                    if(!isHeadNode())
                         voteToHalt();
                 }
             }
@@ -239,13 +225,28 @@ public class P2ForPathMergeVertex extends
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
                 /** head doesn't receive msg and send out final msg **/
-                if(!msgIterator.hasNext() && selfFlag == State.IS_HEAD){
+                if(!msgIterator.hasNext() && isHeadNode()){
                     outFlag |= MessageFlag.IS_FINAL;
                     sendSettledMsgToAllNeighborNodes();
-                } else
-                    responseMsgToHeadVertex(msgIterator);
-                if(selfFlag != State.IS_HEAD)
                     voteToHalt();
+                } else{
+                    while (msgIterator.hasNext()) {
+                        incomingMsg = msgIterator.next();
+                        /** final Vertex Responses To FakeVertex **/
+                        if(isReceiveKillMsg()){
+                            broadcaseKillself();
+                        }else if(isResponseKillMsg()){
+                            responseToDeadVertex();
+                            voteToHalt();
+                        }
+                        else{
+                            sendUpdateMsg();
+                            outFlag = 0;
+                            sendMergeMsg();
+                            voteToHalt();
+                        }
+                    }
+                }
             } 
             else{
                 /** Fake vertex agregates message and group them by actual kmer (1) **/
@@ -261,22 +262,19 @@ public class P2ForPathMergeVertex extends
                         broadcaseKillself();
                     } else if(isResponseKillMsg()){
                         responseToDeadVertex();
-                    } else{
-                        /** for final processing, receive msg from head, which means final merge (2) **/
-                        if(getMsgFlag() == MessageFlag.IS_FINAL){
-                            sendFinalMergeMsg();
-                            break;
-                        }
-                        if(incomingMsg.isUpdateMsg()) //&& selfFlag == State.IS_OLDHEAD
-                            processUpdate();
-                        else if(!incomingMsg.isUpdateMsg())
-                            receivedMsgList.add(incomingMsg);
+                        voteToHalt();
+                    } else if(getMsgFlag() == MessageFlag.IS_FINAL){/** for final processing, receive msg from head, which means final merge (2) ex. 8**/
+                        sendFinalMergeMsg();
+                        voteToHalt();
+                        break;
+                    } else if(incomingMsg.isUpdateMsg()&& selfFlag == State.IS_OLDHEAD){
+                        processUpdate();
+                    } else if(!incomingMsg.isUpdateMsg()){
+                       receivedMsgList.add(incomingMsg);
                     }
                 }
                 if(receivedMsgList.size() != 0)
                     processMergeInHeadVertex();
-                else
-                    voteToHalt();
             }
         } else
             voteToHalt();

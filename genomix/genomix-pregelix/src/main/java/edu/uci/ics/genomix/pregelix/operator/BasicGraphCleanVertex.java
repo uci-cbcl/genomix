@@ -85,6 +85,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         state &= State.VERTEX_CLEAR;
         state |= State.IS_FINAL;
         getVertexValue().setState(state);
+        this.activate();
     }
     
     /**
@@ -110,6 +111,14 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
         return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
+    }
+    
+    public boolean isHeadNode(){
+        return selfFlag == State.IS_HEAD;
+    }
+    
+    public boolean isPathNode(){
+        return selfFlag != State.IS_HEAD && selfFlag != State.IS_OLDHEAD;
     }
     
     /**
@@ -304,7 +313,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
      * start sending message
      */
     public void startSendMsg() {
-        if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())) {
+        if (VertexUtil.isHeadWithoutIndegree(getVertexValue())) {
             outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));
             sendMsgToAllNextNodes();
             voteToHalt();
@@ -314,7 +323,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             sendMsgToAllPreviousNodes();
             voteToHalt();
         }
-        if (VertexUtil.isHeadWithoutIndegree(getVertexValue())){
+        if (VertexUtil.isHeadVertexWithIndegree(getVertexValue())){
             outgoingMsg.setFlag((byte)(MessageFlag.IS_HEAD));
             sendMsg(getVertexId(), outgoingMsg); //send to itself
             voteToHalt();
@@ -448,7 +457,6 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         sendSettledMsgToAllNeighborNodes();
         
         deleteVertex(getVertexId());
-        this.activate();
     }
     
     /**

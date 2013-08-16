@@ -470,4 +470,5 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public boolean isStartReadOrEndRead(){
         return startReads.getCountOfPosition() > 0 || endReads.getCountOfPosition() > 0;
     }
+    
 }
