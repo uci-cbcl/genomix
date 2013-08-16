@@ -96,6 +96,14 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         return total;
     }
 	
+    public EdgeWritable getEdge(VKmerBytesWritable key){
+        for(EdgeWritable edge : edges){
+            if(edge.getKey().equals(key)){
+                return edge;
+            }
+        }
+        return null;
+    }
 	/**
      * Return this Edge's representation as a new byte array 
      */

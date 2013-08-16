@@ -9,6 +9,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -25,6 +26,7 @@ public class UnrollTandemRepeat extends
     private byte repeatDir = 0;
     
     private VertexValueWritable tmpValue = new VertexValueWritable();
+    private EdgeWritable tmpEdge = new EdgeWritable();
     private MessageWritable incomingMsg = new MessageWritable();
     private MessageWritable outgoingMsg = new MessageWritable();
     
@@ -54,6 +56,21 @@ public class UnrollTandemRepeat extends
         return false;
     }
     
+    public byte mirrorDirection(byte dir) {
+        switch (dir) {
+            case MessageFlag.DIR_FF:
+                return MessageFlag.DIR_RR;
+            case MessageFlag.DIR_FR:
+                return MessageFlag.DIR_FR;
+            case MessageFlag.DIR_RF:
+                return MessageFlag.DIR_RF;
+            case MessageFlag.DIR_RR:
+                return MessageFlag.DIR_FF;
+            default:
+                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
+        }
+    }
+    
     public byte flipDir(byte dir){
         switch(dir){
             case DirectionFlag.DIR_FF:
@@ -64,8 +81,9 @@ public class UnrollTandemRepeat extends
                 return DirectionFlag.DIR_FF;
             case DirectionFlag.DIR_RR:
                 return DirectionFlag.DIR_FR;
+            default:
+                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
         }
-        return 0;
     }
     
     /**
@@ -77,12 +95,10 @@ public class UnrollTandemRepeat extends
         boolean hasFlip = false;
         /** pick one edge and flip **/
         for(byte d : DirectionFlag.values){
-            for(EdgeWritable edge : getVertexValue().getEdgeList(d)){
-                byte flipDir = flipDir(repeatDir);
-                getVertexValue().getEdgeList(flipDir).add(edge);
-                getVertexValue().getEdgeList(d).remove(edge);
-                /** send flip message to node for updating edgeDir **/
-                outgoingMsg.setFlag(flipDir);
+            for(EdgeWritable edge : tmpValue.getEdgeList(d)){
+                byte flipDir = flipDir(d);
+                tmpValue.getEdgeList(flipDir).add(edge);
+                tmpValue.getEdgeList(d).remove(edge);
                 /** setup hasFlip to go out of the loop **/
                 hasFlip = true;
                 break;
@@ -104,6 +120,24 @@ public class UnrollTandemRepeat extends
     public void mergeTandemRepeat(){
         getVertexValue().getInternalKmer().mergeWithKmerInDir(repeatDir, kmerSize, getVertexId());
         getVertexValue().getEdgeList(repeatDir).remove(getVertexId());
+        boolean hasFlip = false;
+        /** pick one edge and flip **/
+        for(byte d : DirectionFlag.values){
+            for(EdgeWritable edge : getVertexValue().getEdgeList(d)){
+                byte flipDir = flipDir(d);
+                getVertexValue().getEdgeList(flipDir).add(edge);
+                getVertexValue().getEdgeList(d).remove(edge);
+                /** send flip message to node for updating edgeDir **/
+                outgoingMsg.setFlag(flipDir);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                sendMsg(edge.getKey(), outgoingMsg);
+                /** setup hasFlip to go out of the loop **/
+                hasFlip = true;
+                break;
+            }
+            if(hasFlip)
+                break;
+        }
     }
     
     @Override
@@ -112,6 +146,18 @@ public class UnrollTandemRepeat extends
         if(getSuperstep() == 1){
             if(isTandemRepeat() && repeatCanBeMerged()){
                 mergeTandemRepeat();
+            }
+            voteToHalt();
+        } else if(getSuperstep() == 2){
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                /** update edge **/
+                byte flipDir = flipDir(incomingMsg.getFlag());
+                byte prevNeighborToMe = mirrorDirection(flipDir);
+                byte curNeighborToMe = mirrorDirection(incomingMsg.getFlag());
+                tmpEdge.setAsCopy(getVertexValue().getEdgeList(prevNeighborToMe).getEdge(incomingMsg.getSourceVertexId()));
+                getVertexValue().getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
+                getVertexValue().getEdgeList(curNeighborToMe).add(tmpEdge);
             }
             voteToHalt();
         }
