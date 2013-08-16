@@ -1,19 +1,26 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
+import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class SplitRepeatVertex extends 
@@ -250,5 +257,24 @@ public class SplitRepeatVertex extends
             }
             voteToHalt();
         }
-    } 
+    }
+    
+    public static void main(String[] args) throws Exception {
+        Client.run(args, getConfiguredJob(null));
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(SplitRepeatVertex.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, SplitRepeatVertex.class.getSimpleName());
+        job.setVertexClass(SplitRepeatVertex.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.setDynamicVertexValueSize(true);
+        return job;
+    }
 }

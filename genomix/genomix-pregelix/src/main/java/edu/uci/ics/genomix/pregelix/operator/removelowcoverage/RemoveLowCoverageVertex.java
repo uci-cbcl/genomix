@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -11,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -68,16 +70,21 @@ public class RemoveLowCoverageVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(RemoveLowCoverageVertex.class.getSimpleName());
+        Client.run(args, getConfiguredJob(null));
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(RemoveLowCoverageVertex.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, RemoveLowCoverageVertex.class.getSimpleName());
         job.setVertexClass(RemoveLowCoverageVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
+        job.setDynamicVertexValueSize(true);
+        return job;
     }
 }

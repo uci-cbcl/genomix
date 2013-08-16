@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.tipremove;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -10,6 +11,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
@@ -98,16 +100,21 @@ public class TipRemoveVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(TipRemoveVertex.class.getSimpleName());
+        Client.run(args, getConfiguredJob(null));
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(TipRemoveVertex.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, TipRemoveVertex.class.getSimpleName());
         job.setVertexClass(TipRemoveVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
+        job.setDynamicVertexValueSize(true);
+        return job;
     }
 }

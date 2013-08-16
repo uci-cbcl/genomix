@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -175,16 +176,21 @@ public class NaiveBFSTraverseVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(NaiveBFSTraverseVertex.class.getSimpleName());
+        Client.run(args, getConfiguredJob(null));
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(NaiveBFSTraverseVertex.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, NaiveBFSTraverseVertex.class.getSimpleName());
         job.setVertexClass(NaiveBFSTraverseVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
+        job.setDynamicVertexValueSize(true);
+        return job;
     }
 }

@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,10 +15,12 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeMessageWritable.DirToMajor;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
@@ -198,18 +201,23 @@ public class BubbleMergeVertex extends
         }
         voteToHalt();
     }
-
+    
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(BubbleMergeVertex.class.getSimpleName());
+        Client.run(args, getConfiguredJob(null));
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(BubbleMergeVertex.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, BubbleMergeVertex.class.getSimpleName());
         job.setVertexClass(BubbleMergeVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
+        job.setDynamicVertexValueSize(true);
+        return job;
     }
 }

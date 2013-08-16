@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -11,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.EdgeDirs;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -243,16 +245,21 @@ public class BFSTraverseVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(BFSTraverseVertex.class.getSimpleName());
+        Client.run(args, getConfiguredJob(null));
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(BFSTraverseVertex.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, BFSTraverseVertex.class.getSimpleName());
         job.setVertexClass(BFSTraverseVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
+        job.setDynamicVertexValueSize(true);
+        return job;
     }
 }
