@@ -17,8 +17,6 @@ import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, M> {
-    public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
-    public static final String ITERATIONS = "BasicGraphCleanVertex.iteration";
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
