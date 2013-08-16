@@ -31,8 +31,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import com.sun.tools.javac.util.List;
-
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
