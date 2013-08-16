@@ -245,9 +245,9 @@ public class JobGenBrujinGraph extends JobGen {
         String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         groupbyType = GroupbyType.PRECLUSTER;
 
-        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
+        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
 
-        if (output.equalsIgnoreCase("text")) {
+        if (output.equalsIgnoreCase(GenomixJobConf.OUTPUT_FORMAT_TEXT)) {
             outputFormat = OutputFormat.TEXT;
         } else {
             outputFormat = OutputFormat.BINARY;
