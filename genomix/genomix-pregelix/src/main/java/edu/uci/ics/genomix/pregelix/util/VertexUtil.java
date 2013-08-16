@@ -136,4 +136,20 @@ public class VertexUtil {
         else
             return null;
     }
+    
+    /**
+     * check if vertex is a valid head
+     * valid head = 1. path node || 2. only one outgoing + no path node
+     */
+    public static boolean isValidHead(VertexValueWritable value){
+        return isPathVertex(value) || (value.outDegree() == 1 && !isPathVertex(value));
+    }
+    
+    /**
+     * check if vertex is a valid Rear
+     * valid head = 1. path node || 2. only one incoming + no path node
+     */
+    public static boolean isValidRear(VertexValueWritable value){
+        return isPathVertex(value) || (value.inDegree() == 1 && !isPathVertex(value));
+    }
 }

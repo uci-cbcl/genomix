@@ -1,6 +1,6 @@
 package edu.uci.ics.genomix.pregelix.type;
 
-public class MessageFromHead {
+public class MessageTypeFromHead {
     public static final byte BothMsgsFromHead = 0b0000 << 1;
     public static final byte BothMsgsFromNonHead = 0b0001 << 1;
     public static final byte BothMsgsFromOldHead = 0b0010 << 1;

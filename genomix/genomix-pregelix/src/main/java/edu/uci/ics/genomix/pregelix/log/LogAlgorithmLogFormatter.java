@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.log;
 import java.util.logging.*;
 
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.type.Message;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class LogAlgorithmLogFormatter extends Formatter {
@@ -13,7 +12,6 @@ public class LogAlgorithmLogFormatter extends Formatter {
     private long step;
     private KmerBytesWritable sourceVertexId = new KmerBytesWritable();
     private KmerBytesWritable destVertexId = new KmerBytesWritable();
-    private MessageWritable msg = new MessageWritable();
     private KmerBytesWritable mergeChain = new KmerBytesWritable();
     //private boolean testDelete = false;
     /**
@@ -32,7 +30,6 @@ public class LogAlgorithmLogFormatter extends Formatter {
         this.step = step;
         this.sourceVertexId.setAsCopy(sourceVertexId);
         this.destVertexId.setAsCopy(destVertexId);
-        this.msg = msg;
         this.operation = 0;
     }
 
@@ -54,7 +51,6 @@ public class LogAlgorithmLogFormatter extends Formatter {
     public void reset() {
         this.sourceVertexId = new KmerBytesWritable();
         this.destVertexId = new KmerBytesWritable();
-        this.msg = new MessageWritable();
         this.mergeChain = new KmerBytesWritable();
     }
 
@@ -71,7 +67,6 @@ public class LogAlgorithmLogFormatter extends Formatter {
                 builder.append("Send message to " + "\r\n");
                 builder.append("Destination Code: " + dest + "\r\n");
             }
-            builder.append("Message is: " + Message.MESSAGE_CONTENT.getContentFromCode(msg.getFlag()) + "\r\n");
 
         }
         if (operation == 2) {

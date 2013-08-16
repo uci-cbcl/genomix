@@ -92,7 +92,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this();
         setAsReference(data, offset);
     }
-
+    
+    public NodeWritable getNode(){
+        return this;
+    }
+    
     public void setAsCopy(NodeWritable node) {
         setAsCopy(node.edges, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
     }
@@ -470,5 +474,5 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public boolean isStartReadOrEndRead(){
         return startReads.getCountOfPosition() > 0 || endReads.getCountOfPosition() > 0;
     }
-    
+
 }

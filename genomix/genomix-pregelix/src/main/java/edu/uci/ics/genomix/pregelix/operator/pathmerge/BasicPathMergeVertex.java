@@ -49,6 +49,24 @@ public abstract class BasicPathMergeVertex extends
         processMerge(incomingMsg);
     }
     
+    public byte flipHeadMergeDir(byte d, boolean isFlip){
+        if(isFlip){
+            switch(d){
+                case State.HEAD_SHOULD_MERGEWITHPREV:
+                    return State.HEAD_SHOULD_MERGEWITHNEXT;
+                case State.HEAD_SHOULD_MERGEWITHNEXT:
+                    return State.HEAD_SHOULD_MERGEWITHPREV;
+                    default:
+                        return 0;
+            }
+        } else
+            return d;
+    }
+    
+    public boolean isDifferentDirWithMergeKmer(byte neighborToMeDir){
+        return neighborToMeDir == MessageFlag.DIR_FR || neighborToMeDir == MessageFlag.DIR_RF;
+    }
+    
     /**
      * merge and updateAdjList  having parameter
      */
@@ -59,7 +77,10 @@ public abstract class BasicPathMergeVertex extends
 
         if((inFlag & MessageFlag.IS_HEAD) > 0){
             byte state = getVertexValue().getState();
+            state &= State.HEAD_SHOULD_MERGE_CLEAR;
             state |= State.IS_HEAD;
+            byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_SHOULD_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
+            state |= headMergeDir;
             getVertexValue().setState(state);
         }
         
@@ -67,7 +88,7 @@ public abstract class BasicPathMergeVertex extends
         
         getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
                 neighborToMergeDir, msg.getNeighborEdge(),
-                kmerSize, msg.getInternalKmer());
+                kmerSize, msg.getNode());
     }
     
     /**
@@ -117,9 +138,10 @@ public abstract class BasicPathMergeVertex extends
                 break;
         }
        
-        getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
-                neighborToMergeDir, msg.getNeighborEdge(),
-                kmerSize, tmpKmer);
+        //TODO: fix mergeWithNode
+//        getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
+//                neighborToMergeDir, msg.getNeighborEdge(),
+//                kmerSize, tmpKmer);
     }
     
     /**
@@ -353,9 +375,9 @@ public abstract class BasicPathMergeVertex extends
         outgoingMsg.setFlip(ifFilpWithSuccessor());
         for(byte d: OutgoingListFlag.values)
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+        outgoingMsg.setNode(getVertexValue().getNode());
+//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(getPrevDestVertexId(), outgoingMsg);
-//        deleteVertex(getVertexId());
     }
     
     public void configureMergeMsgForSuccessor(){
@@ -365,9 +387,9 @@ public abstract class BasicPathMergeVertex extends
         outgoingMsg.setFlip(ifFlipWithPredecessor());
         for(byte d: IncomingListFlag.values)
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+        outgoingMsg.setNode(getVertexValue().getNode());
+//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(getNextDestVertexId(), outgoingMsg);
-//        deleteVertex(getVertexId());
     }
     
     /**
@@ -377,13 +399,11 @@ public abstract class BasicPathMergeVertex extends
         setPredecessorAdjMsg();
         outgoingMsg.setFlag(outFlag);        
         outgoingMsg.setFlip(ifFilpWithSuccessor());
-//        outFlag &= MessageFlag.DIR_CLEAR;
-//        outFlag |= meToNeighborDir;
-//        outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         for(byte d: OutgoingListFlag.values)
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+        outgoingMsg.setNode(getVertexValue().getNode());
+//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
     }
     
@@ -391,21 +411,21 @@ public abstract class BasicPathMergeVertex extends
         setSuccessorAdjMsg();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setFlip(ifFlipWithPredecessor());
-//        outFlag &= MessageFlag.DIR_CLEAR;
-//        outFlag |= meToNeighborDir;
-//        outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         for(byte d: IncomingListFlag.values)
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+        outgoingMsg.setNode(getVertexValue().getNode());
+//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
         sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
     }
     /**
      * send merge message to neighber for P4
      */
     public void broadcastMergeMsg(){
-        if(headFlag > 0)
+        if(headFlag > 0){
             outFlag |= MessageFlag.IS_HEAD;
+            outFlag |= headMergeDir;
+        }
         switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK) {
             case State.SHOULD_MERGEWITHNEXT:
                 /** configure merge msg for successor **/

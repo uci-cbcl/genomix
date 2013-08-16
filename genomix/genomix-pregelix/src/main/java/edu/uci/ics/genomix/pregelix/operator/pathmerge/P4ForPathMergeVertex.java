@@ -63,7 +63,6 @@ public class P4ForPathMergeVertex extends
     private boolean curHead;
     private boolean nextHead;
     private boolean prevHead;
-    private byte selfFlag;
     
     /**
      * initiate kmerSize, maxIteration
@@ -93,13 +92,12 @@ public class P4ForPathMergeVertex extends
         outFlag = (byte)0;
         inFlag = (byte)0;
         // Node may be marked as head b/c it's a real head or a real tail
-        headFlag = (byte) (State.IS_HEAD & getVertexValue().getState());
+        headFlag = getHeadFlag();
+        headMergeDir = getHeadMergeDir();
     }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
         // "deterministically random", based on node id
-        //randGenerator.setSeed(randSeed);
-        //randSeed = randGenerator.nextInt();
         randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 100000 * getSuperstep());//randSeed + nodeID.hashCode()
         for(int i = 0; i < 500; i++)
             randGenerator.nextFloat();
@@ -148,8 +146,6 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
-            //tailFlag = (byte) (MessageFlag.IS_TAIL & getVertexValue().getState());
-            //outFlag = (byte) (headFlag | tailFlag);
             outFlag |= headFlag;
             
             outFlag |= MessageFlag.NO_MERGE;
@@ -162,8 +158,8 @@ public class P4ForPathMergeVertex extends
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue());//&& headFlag == 0;
-            hasPrev = setPrevInfo(getVertexValue());//&& headFlag == 0;
+            hasNext = setNextInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT));
+            hasPrev = setPrevInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHPREV));
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
