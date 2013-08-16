@@ -46,7 +46,6 @@ import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
-import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SimpleSplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;

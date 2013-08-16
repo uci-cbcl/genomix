@@ -260,7 +260,7 @@ public class JobGenerator {
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().setInt(SplitRepeatVertex.KMER_SIZE, 3);
+        job.getConfiguration().setInt(GenomixJobConf.KMER_LENGTH, 3);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
