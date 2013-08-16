@@ -249,5 +249,6 @@ public class SplitRepeatVertex extends
             }
             voteToHalt();
         }
-    } 
+    }
+
 }

@@ -10,7 +10,7 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
                 {
 //                "SimplePath",
 //                "ThreeDuplicate",
-                "BridgePath_AfterUnroll"
+                "head_6"
 //                "CyclePath",
 //                "SelfPath"
 //                "TreePath"

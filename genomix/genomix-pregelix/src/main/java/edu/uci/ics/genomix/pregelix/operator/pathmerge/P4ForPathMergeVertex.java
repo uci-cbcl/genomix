@@ -110,7 +110,7 @@ public class P4ForPathMergeVertex extends
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
-        if (!value.getFFList().isEmpty()) {
+        if (value.getFFList().getCountOfPosition() > 0) {
             nextKmer.setAsCopy(value.getFFList().get(0).getKey());
             nextHead = isNodeRandomHead(nextKmer);
             return true;
