@@ -39,7 +39,16 @@ import edu.uci.ics.genomix.hyracks.graph.job.JobGenBrujinGraph;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
+import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SimpleSplitRepeatVertex;
+import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 
@@ -53,6 +62,7 @@ public class GenomixDriver {
     
     private String prevOutput;
     private String curOutput;
+    private int stepNum;
     
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
@@ -70,15 +80,28 @@ public class GenomixDriver {
                     FileSystem.getLocal(new Configuration()), new Path(localDest), false, conf);
     }
     
+    private void buildGraph(GenomixJobConf conf) throws NumberFormatException, HyracksException {
+        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
+                Integer.parseInt(conf.get(GenomixJobConf.PORT)),
+                Integer.parseInt(conf.get(GenomixJobConf.CPARTITION_PER_MACHINE)));
+        hyracksDriver.runJob(conf, Plan.BUILD_DEBRUJIN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
+    }
+    
+    private void setOutput(GenomixJobConf conf, String string) {
+        prevOutput = curOutput;
+        curOutput = File.separator + String.format("%02d-", stepNum) + Patterns.MERGE_P1;
+        FileInputFormat.setInputPaths(conf, new Path(prevOutput));
+        FileOutputFormat.setOutputPath(conf, new Path(curOutput));
+    }
+    
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         String origInput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
         curOutput = "/00-initial-input";
-        
 //        TestCluster testCluster = new TestCluster();
         TestCluster2 testCluster = new TestCluster2();
-        boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
 
-        int stepNum = 0;
+        boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        stepNum = 0;
         try {
             if (runLocal) {
                 testCluster.setUp(conf);
@@ -86,7 +109,6 @@ public class GenomixDriver {
             copyLocalToHDFS(conf, origInput, curOutput);
             
             List<PregelixJob> jobs = new ArrayList<PregelixJob>();
-            PregelixJob curJob;
             
             // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
             String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
@@ -94,48 +116,45 @@ public class GenomixDriver {
                 stepNum++;
                 switch(step) {
                     case BUILD:
-                        prevOutput = curOutput;
-                        curOutput = File.separator + String.format("%02d-", stepNum) + Patterns.BUILD;
-//                        conf.set("mapred.input.dir", prevOutput.toString());
-//                        conf.set("mapred.output.dir", curOutput.toString());
-                        FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                        FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
-                                Integer.parseInt(conf.get(GenomixJobConf.PORT)),
-                                Integer.parseInt(conf.get(GenomixJobConf.CPARTITION_PER_MACHINE)));
-                        hyracksDriver.runJob(conf, Plan.BUILD_DEBRUJIN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.BUILD);
+                        buildGraph(conf);
                         break;
                     case MERGE:
                     case MERGE_P1:
-                        prevOutput = curOutput;
-                        curOutput = File.separator + String.format("%02d-", stepNum) + Patterns.MERGE_P1;
-                        FileInputFormat.setInputPaths(conf, new Path(prevOutput));
-                        FileOutputFormat.setOutputPath(conf, new Path(curOutput));
-                        curJob = new PregelixJob(conf, P1ForPathMergeVertex.class.getName());
-                        curJob.setVertexClass(P1ForPathMergeVertex.class);
-                        curJob.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-                        curJob.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-                        curJob.setDynamicVertexValueSize(true);
-                        curJob.setOutputKeyClass(VKmerBytesWritable.class);
-                        curJob.setOutputValueClass(VertexValueWritable.class);
-//                        curJob.getConfiguration().writeXml(new FileOutputStream(new File(CONF_XML)));
-                        jobs.add(curJob);
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.MERGE_P1);
+                        jobs.add(P1ForPathMergeVertex.getConfiguredJob(conf));
                         break;
                     case MERGE_P2:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.MERGE_P2);
+                        jobs.add(P2ForPathMergeVertex.getConfiguredJob(conf));
                         break;
                     case MERGE_P4:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.MERGE_P4);
+                        jobs.add(P4ForPathMergeVertex.getConfiguredJob(conf));
                         break;
                     case TIP_REMOVE:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.TIP_REMOVE);
+                        jobs.add(TipRemoveVertex.getConfiguredJob(conf));
                         break;
                     case BUBBLE:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.BUBBLE);
+                        jobs.add(BubbleMergeVertex.getConfiguredJob(conf));
                         break;
                     case LOW_COVERAGE:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.LOW_COVERAGE);
+                        jobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf));
                         break;
                     case BRIDGE:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.BRIDGE);
+                        jobs.add(BridgeRemoveVertex.getConfiguredJob(conf));
                         break;
                     case SPLIT_REPEAT:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.SPLIT_REPEAT);
+                        jobs.add(SplitRepeatVertex.getConfiguredJob(conf));
                         break;
                     case SCAFFOLD:
+                        setOutput(conf, File.separator + String.format("%02d-", stepNum) + Patterns.SCAFFOLD);
+                        jobs.add(ScaffoldingVertex.getConfiguredJob(conf));
                         break;
                 }
             }
