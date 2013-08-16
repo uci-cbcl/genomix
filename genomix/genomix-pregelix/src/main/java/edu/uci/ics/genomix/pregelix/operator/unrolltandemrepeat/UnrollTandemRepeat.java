@@ -1,14 +1,18 @@
 package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeWritable;
@@ -164,16 +168,21 @@ public class UnrollTandemRepeat extends
     }
     
     public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(UnrollTandemRepeat.class.getSimpleName());
+        Client.run(args, getConfiguredJob(null));
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(UnrollTandemRepeat.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, UnrollTandemRepeat.class.getSimpleName());
         job.setVertexClass(UnrollTandemRepeat.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
+        job.setDynamicVertexValueSize(true);
+        return job;
     }
 }

@@ -108,6 +108,7 @@ public class GenomixJobConf extends JobConf {
         MERGE_P1,
         MERGE_P2,
         MERGE_P4,
+        UNROLL_TANDEM,
         BRIDGE,
         BUBBLE,
         LOW_COVERAGE,

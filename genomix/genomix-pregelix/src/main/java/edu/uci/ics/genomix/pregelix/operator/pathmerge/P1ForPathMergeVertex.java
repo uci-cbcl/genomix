@@ -152,9 +152,9 @@ public class P1ForPathMergeVertex extends
     public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
         PregelixJob job;
         if (conf == null)
-            job = new PregelixJob(conf, P1ForPathMergeVertex.class.getSimpleName());
-        else
             job = new PregelixJob(P1ForPathMergeVertex.class.getSimpleName());
+        else
+            job = new PregelixJob(conf, P1ForPathMergeVertex.class.getSimpleName());
         job.setVertexClass(P1ForPathMergeVertex.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);

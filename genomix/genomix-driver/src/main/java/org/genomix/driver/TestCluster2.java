@@ -84,12 +84,12 @@ public class TestCluster2 {
         lfs.delete(new Path("build"), true);
         System.setProperty("hadoop.log.dir", "logs");
         dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
-        FileSystem dfs = FileSystem.get(conf);
-        Path src = new Path(DATA_INPUT_PATH);
-        Path dest = new Path(HDFS_INPUT_PATH);
-        dfs.mkdirs(dest);
-        // dfs.mkdirs(result);
-        dfs.copyFromLocalFile(src, dest);
+//        FileSystem dfs = FileSystem.get(conf);
+//        Path src = new Path(DATA_INPUT_PATH);
+//        Path dest = new Path(HDFS_INPUT_PATH);
+//        dfs.mkdirs(dest);
+//        // dfs.mkdirs(result);
+//        dfs.copyFromLocalFile(src, dest);
 
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_PATH)));
         conf.writeXml(confOutput);
