@@ -49,7 +49,7 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-kmerLength", usage = "The kmer length for this graph.", required = true)
         private int kmerLength = -1;
         
-        @Option(name = "-pipelineOrder", usage = "Change the order of the graph cleaning process", required = false)
+        @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         String pipelineOrder;
         
         @Option(name = "-inputDir", usage = "Input directory for the first job that will be run", required = false)
@@ -102,6 +102,8 @@ public class GenomixJobConf extends JobConf {
      */
     public static enum Patterns {
         BUILD,
+        BUILD_HYRACKS,
+        BUILD_MR,
         MERGE,
         MERGE_P1,
         MERGE_P2,
@@ -335,7 +337,7 @@ public class GenomixJobConf extends JobConf {
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
         
-        // Hyracks/Pregelix Advanced Setup
+        // Hyracks/Pregelix Setup
         set(IP_ADDRESS, opts.ipAddress);
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
