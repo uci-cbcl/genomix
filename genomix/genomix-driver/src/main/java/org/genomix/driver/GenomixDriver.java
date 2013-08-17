@@ -294,9 +294,10 @@ public class GenomixDriver {
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = { "-runLocal", "-kmerLength", "5", 
                             "-ip", "127.0.0.1", "-port", "55", 
-                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/walk_random_seq1.txt",
-//                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild-output.binmerge",
-                            "-pipelineOrder", "BUILD"
+//                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/walk_random_seq1.txt",
+//                            "-pipelineOrder", "BUILD,MERGE",
+                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+                            "-pipelineOrder", "MERGE"
                             };
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();

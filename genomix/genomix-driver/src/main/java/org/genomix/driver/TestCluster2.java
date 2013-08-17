@@ -26,8 +26,6 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
 public class TestCluster2 {
-    private static final int KmerSize = 3;
-    private static final int ReadLength = 7;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
@@ -42,8 +40,6 @@ public class TestCluster2 {
     private MiniDFSCluster dfsCluster;
     
 //    private GenomixJobConf conf = new GenomixJobConf(KmerSize);
-    private int numberOfNC = 2;
-    private int numPartitionPerMachine = 2;
     
     private Driver driver;
     
@@ -63,7 +59,6 @@ public class TestCluster2 {
         FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
-        conf.setInt(GenomixJobConf.KMER_LENGTH, KmerSize);
 //        driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
 //                edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
@@ -83,7 +78,7 @@ public class TestCluster2 {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
         System.setProperty("hadoop.log.dir", "logs");
-        dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
+        dfsCluster = new MiniDFSCluster(conf, Integer.parseInt(conf.get(GenomixJobConf.CPARTITION_PER_MACHINE)), true, null);
 //        FileSystem dfs = FileSystem.get(conf);
 //        Path src = new Path(DATA_INPUT_PATH);
 //        Path dest = new Path(HDFS_INPUT_PATH);
