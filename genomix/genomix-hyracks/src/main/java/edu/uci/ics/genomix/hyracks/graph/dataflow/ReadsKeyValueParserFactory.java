@@ -90,7 +90,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             byte mateId = (byte) 0;
 
             @Override
-            public void parse(LongWritable key, Text value, IFrameWriter writer) throws HyracksDataException {
+            public void parse(LongWritable key, Text value, IFrameWriter writer,  String fileString) throws HyracksDataException {
                 String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
                 if (geneLine.length != 2) {
                     return;
@@ -233,6 +233,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             public void close(IFrameWriter writer) throws HyracksDataException {
                 FrameUtils.flushFrame(outputBuffer, writer);
             }
+
         };
     }
 }

@@ -40,7 +40,7 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
     }
 
     @Override
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) throws HyracksDataException {
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
         KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new ITupleWriter() {
             private NodeWritable outputNode = new NodeWritable();
@@ -80,4 +80,5 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
 
         };
     }
+
 }

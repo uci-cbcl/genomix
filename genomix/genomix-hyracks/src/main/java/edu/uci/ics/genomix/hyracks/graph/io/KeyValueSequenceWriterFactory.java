@@ -96,7 +96,8 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
     }
 
     @Override
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) throws HyracksDataException {
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
+            throws HyracksDataException {
         KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new TupleWriter(confFactory);
     }

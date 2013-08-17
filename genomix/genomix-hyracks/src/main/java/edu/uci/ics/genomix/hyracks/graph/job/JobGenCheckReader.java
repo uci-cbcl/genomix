@@ -70,7 +70,7 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx) throws HyracksDataException {
+                    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
                         KmerBytesWritable.setGlobalKmerLength(kmerSize);
                         return new ITupleWriter() {
 

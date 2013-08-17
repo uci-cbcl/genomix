@@ -161,10 +161,12 @@ public class GenomixDriver {
     }
 
     private void buildGraph(GenomixJobConf conf) throws NumberFormatException, HyracksException {
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
+        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
                 Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
                         .get(GenomixJobConf.CPARTITION_PER_MACHINE)));
-        hyracksDriver.runJob(conf, Plan.BUILD_DEBRUJIN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
+        hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
     }
 
     private void setOutput(GenomixJobConf conf, String string) {
