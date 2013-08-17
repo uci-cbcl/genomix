@@ -364,6 +364,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             incomingMsg = msgIterator.next();
             if(getHeadFlag() != MessageFlag.IS_HEAD){
                 getVertexValue().setState(incomingMsg.getFlag());
+                this.activate();
             } else{ /** already set up **/
                 /** if headMergeDir are not the same **/
                 getVertexValue().setState(MessageFlag.IS_HALT);

@@ -353,7 +353,33 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         mergeCoverage(other);
         internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
-
+    
+    
+    /**
+     * update my edge list
+     */
+    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
+        edges[deleteDir].remove(toDelete);
+        switch (updateDir) {
+            case DirectionFlag.DIR_FF:
+                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+                break;
+            case DirectionFlag.DIR_FR:
+                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+                break;
+            case DirectionFlag.DIR_RF:
+                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+                break;
+            case DirectionFlag.DIR_RR:
+                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+                break;
+        }
+    }
+    
     /**
      * merge my edge list (both kmers and readIDs) with those of `other`.  Assumes that `other` is doing the flipping, if any.
      */
@@ -441,11 +467,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             case DirectionFlag.DIR_RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
-                for (PositionWritable p : startReads) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                for (PositionWritable p : other.startReads) {
+                    startReads.append(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
                 for (PositionWritable p : other.endReads) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                    endReads.append(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
                 break;
         }

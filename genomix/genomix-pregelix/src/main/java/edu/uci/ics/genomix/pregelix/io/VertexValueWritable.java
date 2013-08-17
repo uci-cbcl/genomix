@@ -217,8 +217,14 @@ public class VertexValueWritable
 //        
 //        this.getNode().mergeEdges(mergeDir, node);
 //    }
-    public void processUpdates(byte neighborToDeleteDir, NodeWritable node){
-        this.getNode().mergeEdges(neighborToDeleteDir, node);
+    public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
+        this.getNode().updateEdges(deleteDir, toDelete, updateDir, other);
+    }
+    
+    public void processMerges(byte mergeDir, NodeWritable node, int kmerSize){
+        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        mergeDir = (byte)(mergeDir & MessageFlag.DIR_MASK);
+        super.getNode().mergeWithNode(mergeDir, node);
     }
     
     /**

@@ -214,8 +214,10 @@ public class P4ForPathMergeVertex extends
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
                 processMerge();
                 //head meets head, stop
-                if(getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)
+                if(getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD){
+                    getVertexValue().setState(MessageFlag.IS_HALT);
                     voteToHalt();
+                }
                 else
                     this.activate();
             }

@@ -36,9 +36,11 @@ public abstract class BasicPathMergeVertex extends
         byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         
+        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
 //        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(), 
 //                neighborToMergeDir, incomingMsg.getNeighborEdge());
-        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getNode());
+        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(),
+                neighborToMergeDir, incomingMsg.getNode());
     }
     
     /**
@@ -83,11 +85,12 @@ public abstract class BasicPathMergeVertex extends
             getVertexValue().setState(state);
         }
         
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());
+//        byte neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());
         
-        getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
-                neighborToMergeDir, msg.getNeighborEdge(),
-                kmerSize, msg.getNode());
+        getVertexValue().processMerges(neighborToMeDir, msg.getNode(), kmerSize);
+//        getVertexValue().processMerges(neighborToMeDir, msg.getSourceVertexId(), 
+//                neighborToMergeDir, msg.getNeighborEdge(),
+//                kmerSize, msg.getNode());
     }
     
     /**
