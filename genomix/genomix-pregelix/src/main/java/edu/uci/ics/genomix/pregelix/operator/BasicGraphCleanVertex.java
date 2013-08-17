@@ -14,6 +14,7 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, M> {
@@ -27,6 +28,8 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     protected VKmerBytesWritable destVertexId = null;
     protected Iterator<VKmerBytesWritable> kmerIterator;
     protected VKmerListWritable kmerList = null;
+    protected VKmerBytesWritable curKmer = null; //for detect tandemRepeat
+    protected byte repeatDir; //for detect tandemRepeat
     protected VKmerBytesWritable tmpKmer = null;
     protected byte headFlag;
     protected byte outFlag;
@@ -268,7 +271,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     /**
      * head send message to all previous nodes
      */
-    public void sendSettledMsgToAllPreviousNodes() {
+    public void sendSettledMsgToAllPrevNodes() {
         kmerIterator = getVertexValue().getRFList().getKeys(); // RFList
         while(kmerIterator.hasNext()){
             outFlag &= MessageFlag.DIR_CLEAR;
@@ -314,7 +317,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     }
     
     public void sendSettledMsgToAllNeighborNodes() {
-        sendSettledMsgToAllPreviousNodes();
+        sendSettledMsgToAllPrevNodes();
         sendSettledMsgToAllNextNodes();
     }
     
@@ -322,40 +325,54 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
      * start sending message
      */
     public void startSendMsg() {
-        if (VertexUtil.isHeadVertexWithManyOutgoing(getVertexValue())) {
-            outFlag = 0;
-            outFlag |= MessageFlag.IS_HEAD;
-            outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
-            outgoingMsg.setFlag(outFlag);
-            sendMsgToAllNextNodes();
-            voteToHalt();
-        }
-        if (VertexUtil.isRearVertexWithManyIncoming(getVertexValue())) {
+//        if(isTandemRepeat())
+        
+        if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue())){
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
-            outgoingMsg.setFlag(outFlag);
-            sendMsgToAllPreviousNodes();
-            voteToHalt();
+            getVertexValue().setState(outFlag);
+            activate();
         }
-        if (VertexUtil.isHeadVertexWithOnlyOneOutgoing(getVertexValue())){
+        if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue())){
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
-            outgoingMsg.setFlag(outFlag);
-            sendMsg(getVertexId(), outgoingMsg); //send to itself
-            voteToHalt();
+            getVertexValue().setState(outFlag);
+            activate();
         }
-        if (VertexUtil.isRearVertexWithOnlyOneIncoming(getVertexValue())){
+        if (VertexUtil.isVertexWithManyIncoming(getVertexValue())) {
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
-            outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
-            outgoingMsg.setFlag(outFlag);
-            sendMsg(getVertexId(), outgoingMsg); //send to itself
+            sendSettledMsgToAllPrevNodes();
+        }
+        if (VertexUtil.isVertexWithManyOutgoing(getVertexValue())) {
+            outFlag = 0;
+            outFlag |= MessageFlag.IS_HEAD;
+            sendSettledMsgToAllNextNodes();
+        }
+        if(!VertexUtil.isActiveVertex(getVertexValue())){
+            getVertexValue().setState(MessageFlag.IS_HALT);
             voteToHalt();
         }
     }
 
+    public void setHeadMergeDir(){
+        byte state = MessageFlag.IS_HEAD;
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        switch(neighborToMeDir){
+            case MessageFlag.DIR_FF:
+            case MessageFlag.DIR_FR:
+                state |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                break;
+            case MessageFlag.DIR_RF:
+            case MessageFlag.DIR_RR:
+                state |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                break;
+        }
+        getVertexValue().setState(state);
+    }
     /**
      * initiate head, rear and path node
      */
@@ -363,8 +380,8 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if(getHeadFlag() != MessageFlag.IS_HEAD){
-                getVertexValue().setState(incomingMsg.getFlag());
-                this.activate();
+                setHeadMergeDir();
+                activate();
             } else{ /** already set up **/
                 /** if headMergeDir are not the same **/
                 getVertexValue().setState(MessageFlag.IS_HALT);
@@ -591,8 +608,36 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         }
     }
     
-    @Override
-    public void compute(Iterator<M> msgIterator) {
-        
+    /**
+     * check if it is a tandem repeat
+     */
+    public boolean isTandemRepeat(){
+        for(byte d : DirectionFlag.values){
+            Iterator<VKmerBytesWritable> it = getVertexValue().getEdgeList(d).getKeys();
+            while(it.hasNext()){
+                curKmer.setAsCopy(it.next());
+                if(curKmer.equals(getVertexId())){
+                    repeatDir = d;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
+    
+    public byte flipDir(byte dir){
+        switch(dir){
+            case DirectionFlag.DIR_FF:
+                return DirectionFlag.DIR_RF;
+            case DirectionFlag.DIR_FR:
+                return DirectionFlag.DIR_RR;
+            case DirectionFlag.DIR_RF:
+                return DirectionFlag.DIR_FF;
+            case DirectionFlag.DIR_RR:
+                return DirectionFlag.DIR_FR;
+            default:
+                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
+        }
+    }
+    
 }

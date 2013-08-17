@@ -75,7 +75,7 @@ public class BFSTraverseVertex extends
         outgoingMsg.setPathList(kmerList);
         outgoingMsg.setReadId(incomingMsg.getReadId()); //only one readId
         if(incomingMsg.isSrcFlip())
-            sendSettledMsgToAllPreviousNodes();
+            sendSettledMsgToAllPrevNodes();
         else
             sendSettledMsgToAllNextNodes();
     }
@@ -97,7 +97,7 @@ public class BFSTraverseVertex extends
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                sendSettledMsgToAllPreviousNodes();
+                sendSettledMsgToAllPrevNodes();
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:

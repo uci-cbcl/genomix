@@ -79,7 +79,7 @@ public class BridgeRemoveVertex extends
                 sendSettledMsgToAllNextNodes();
             }
             else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
-                sendSettledMsgToAllPreviousNodes();
+                sendSettledMsgToAllPrevNodes();
             }
         }
         else if (getSuperstep() == 2){
