@@ -19,7 +19,7 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
 //                "BridgePath_AfterUnroll"
 //                "head_6"
 //                "head_7"
-//                "CyclePath",
+                "CyclePath",
 //                "SelfPath"
 //                "TreePath"
                 "HyracksGraphBuild",

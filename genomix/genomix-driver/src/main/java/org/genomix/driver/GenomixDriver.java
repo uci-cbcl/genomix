@@ -74,10 +74,10 @@ public class GenomixDriver {
     private String curOutput;
     private int stepNum;
     private List<PregelixJob> jobs;
-    private boolean followingBuild = false;  // need to adapt the graph immediately after building
+    private boolean followingBuild = true;  // need to adapt the graph immediately after building
 
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
-    private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
+    private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
 
     private void copyLocalToHDFS(JobConf conf, String localFile, String destFile) throws IOException {
         FileSystem dfs = FileSystem.get(conf);
@@ -263,7 +263,8 @@ public class GenomixDriver {
                 }
             }
             for (int i = 0; i < jobs.size(); i++) {
-                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
+//                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
+//                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
                 pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
                         Integer.parseInt(conf.get(GenomixJobConf.PORT)));
             }
@@ -292,11 +293,12 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-runLocal", "-kmerLength", "5", 
+        String[] myArgs = { "-runLocal", "-kmerLength", "3", 
                             "-ip", "127.0.0.1", "-port", "55", 
 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/walk_random_seq1.txt",
 //                            "-pipelineOrder", "BUILD,MERGE",
-                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+//                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+                            "-inputDir", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
                             "-pipelineOrder", "MERGE"
                             };
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
