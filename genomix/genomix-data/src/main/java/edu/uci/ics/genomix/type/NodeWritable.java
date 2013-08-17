@@ -453,7 +453,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 for (PositionWritable p : startReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
-                for (PositionWritable p : other.endReads) {
+                for (PositionWritable p : endReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
                 //stream theirs in, not offset (they are first now) but flipped
@@ -467,11 +467,17 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             case DirectionFlag.DIR_RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
+                for (PositionWritable p : startReads) {
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                }
+                for (PositionWritable p : endReads) {
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                }
                 for (PositionWritable p : other.startReads) {
-                    startReads.append(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                    startReads.append(p);
                 }
                 for (PositionWritable p : other.endReads) {
-                    endReads.append(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                    endReads.append(p);
                 }
                 break;
         }
