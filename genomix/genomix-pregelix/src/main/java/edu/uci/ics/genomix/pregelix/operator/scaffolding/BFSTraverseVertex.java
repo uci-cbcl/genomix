@@ -9,10 +9,9 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.EdgeDirs;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.type.EdgeDirs;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -167,7 +166,7 @@ public class BFSTraverseVertex extends
         }
     }
     
-    public void finalProcessBTS(){
+    public void finalProcessBFS(){
         kmerList.setCopy(incomingMsg.getPathList());
         kmerList.append(getVertexId());
         incomingMsg.setPathList(kmerList);
@@ -222,7 +221,7 @@ public class BFSTraverseVertex extends
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                         if(isValidDestination()){
                             /** final step to process BFS -- pathList and dirList **/
-                            finalProcessBTS();
+                            finalProcessBFS();
                             /** send message to all the path nodes to add this common readId **/
                             sendMsgToPathNodeToAddCommondReadId();
                         }

@@ -144,6 +144,18 @@ public class UnrollTandemRepeat extends
         }
     }
     
+    /**
+     * update edges
+     */
+    public void updateEdges(){
+        byte flipDir = flipDir(incomingMsg.getFlag());
+        byte prevNeighborToMe = mirrorDirection(flipDir);
+        byte curNeighborToMe = mirrorDirection(incomingMsg.getFlag());
+        tmpEdge.setAsCopy(getVertexValue().getEdgeList(prevNeighborToMe).getEdge(incomingMsg.getSourceVertexId()));
+        getVertexValue().getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
+        getVertexValue().getEdgeList(curNeighborToMe).add(tmpEdge);
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
@@ -156,12 +168,7 @@ public class UnrollTandemRepeat extends
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
                 /** update edge **/
-                byte flipDir = flipDir(incomingMsg.getFlag());
-                byte prevNeighborToMe = mirrorDirection(flipDir);
-                byte curNeighborToMe = mirrorDirection(incomingMsg.getFlag());
-                tmpEdge.setAsCopy(getVertexValue().getEdgeList(prevNeighborToMe).getEdge(incomingMsg.getSourceVertexId()));
-                getVertexValue().getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
-                getVertexValue().getEdgeList(curNeighborToMe).add(tmpEdge);
+                updateEdges();
             }
             voteToHalt();
         }

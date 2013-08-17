@@ -64,7 +64,7 @@ public class GraphBuildingTestCase extends TestCase{
 //        Path src = new Path(RESULT_PATH);
 //        Path dest = new Path(RESULT_PATH);
 //        dfs.copyToLocalFile(src, dest);
-        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, RESULT_PATH + "/test.txt", false, conf, true, dfs);
-        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(RESULT_PATH + "/test.txt.bindir", RESULT_PATH + "/graphviz");
+        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, RESULT_PATH + "/", false, conf, true, dfs);
+        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(RESULT_PATH + "/bin", RESULT_PATH + "/graphviz");
     }
 }

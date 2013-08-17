@@ -92,7 +92,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         this();
         setAsReference(data, offset);
     }
-
+    
+    public NodeWritable getNode(){
+        return this;
+    }
+    
     public void setAsCopy(NodeWritable node) {
         setAsCopy(node.edges, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
     }
@@ -349,11 +353,37 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         mergeCoverage(other);
         internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
-
+    
+    
+    /**
+     * update my edge list
+     */
+    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
+        edges[deleteDir].remove(toDelete);
+        switch (updateDir) {
+            case DirectionFlag.DIR_FF:
+                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+                break;
+            case DirectionFlag.DIR_FR:
+                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+                break;
+            case DirectionFlag.DIR_RF:
+                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+                break;
+            case DirectionFlag.DIR_RR:
+                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+                break;
+        }
+    }
+    
     /**
      * merge my edge list (both kmers and readIDs) with those of `other`.  Assumes that `other` is doing the flipping, if any.
      */
-    private void mergeEdges(byte dir, NodeWritable other) {
+    public void mergeEdges(byte dir, NodeWritable other) {
         switch (dir & DirectionFlag.DIR_MASK) {
             case DirectionFlag.DIR_FF:
                 if (outDegree() > 1)
@@ -423,7 +453,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 for (PositionWritable p : startReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
-                for (PositionWritable p : other.endReads) {
+                for (PositionWritable p : endReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
                 //stream theirs in, not offset (they are first now) but flipped
@@ -440,8 +470,14 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 for (PositionWritable p : startReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
-                for (PositionWritable p : other.endReads) {
+                for (PositionWritable p : endReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                }
+                for (PositionWritable p : other.startReads) {
+                    startReads.append(p);
+                }
+                for (PositionWritable p : other.endReads) {
+                    endReads.append(p);
                 }
                 break;
         }
@@ -470,5 +506,5 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public boolean isStartReadOrEndRead(){
         return startReads.getCountOfPosition() > 0 || endReads.getCountOfPosition() > 0;
     }
-    
+
 }

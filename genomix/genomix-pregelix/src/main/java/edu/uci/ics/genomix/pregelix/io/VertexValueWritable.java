@@ -5,6 +5,7 @@ import java.io.*;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -14,7 +15,12 @@ public class VertexValueWritable
 
     private static final long serialVersionUID = 1L;
 
-    public static class State extends VertexStateFlag{            
+    public static class State extends VertexStateFlag{   
+        public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b0 << 2; //use for initiating head
+        public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b1 << 2;
+        public static final byte HEAD_SHOULD_MERGE_MASK = 0b1 << 2;
+        public static final byte HEAD_SHOULD_MERGE_CLEAR = (byte) 11001011;
+        
         public static final byte NO_MERGE = 0b00 << 3;
         public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
         public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
@@ -31,12 +37,11 @@ public class VertexValueWritable
     
     public static class VertexStateFlag extends FakeFlag {
         public static final byte IS_NON = 0b00 << 5;
-        public static final byte IS_RANDOMTAIL = 0b00 << 5;
         public static final byte IS_HEAD = 0b01 << 5;
-        public static final byte IS_FINAL = 0b10 << 5;
-        public static final byte IS_RANDOMHEAD = 0b11 << 5;
+        public static final byte IS_FINAL = 0b10 << 5; 
         public static final byte IS_OLDHEAD = 0b11 << 5;
-
+        
+        public static final byte IS_HALT = 0b1111111;
         public static final byte VERTEX_MASK = 0b11 << 5;
         public static final byte VERTEX_CLEAR = (byte) 11001111;
     }
@@ -60,12 +65,12 @@ public class VertexValueWritable
         traverseMap  = new HashMapWritable<VKmerBytesWritable, VKmerListWritable>();
     }
     
-    public NodeWritable getNode(){
-        NodeWritable node = new NodeWritable();
-        node.setAsCopy(this.getEdges(), this.getStartReads(), this.getEndReads(), 
-                this.getInternalKmer(), this.getAverageCoverage());
-        return node;
-    }
+//    public NodeWritable getNode(){
+//        NodeWritable node = new NodeWritable();
+//        node.setAsCopy(this.getEdges(), this.getStartReads(), this.getEndReads(), 
+//                this.getInternalKmer(), this.getAverageCoverage());
+//        return super();
+//    }
     
     public void setNode(NodeWritable node){
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
@@ -202,13 +207,24 @@ public class VertexValueWritable
     /**
      * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
      */
-    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
-            byte neighborToMergeDir, EdgeWritable nodeToAdd){
-        byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
-        this.getEdgeList(deleteDir).remove(nodeToDelete);
-        
-        byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
-        this.getEdgeList(mergeDir).add(nodeToAdd);
+//    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
+//            byte neighborToMergeDir, NodeWritable node){
+//        byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
+//        this.getEdgeList(deleteDir).remove(nodeToDelete);
+//        
+//        byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
+////        this.getEdgeList(mergeDir).add(nodeToAdd);
+//        
+//        this.getNode().mergeEdges(mergeDir, node);
+//    }
+    public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
+        this.getNode().updateEdges(deleteDir, toDelete, updateDir, other);
+    }
+    
+    public void processMerges(byte mergeDir, NodeWritable node, int kmerSize){
+        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        mergeDir = (byte)(mergeDir & MessageFlag.DIR_MASK);
+        super.getNode().mergeWithNode(mergeDir, node);
     }
     
     /**
@@ -216,15 +232,17 @@ public class VertexValueWritable
      */
     public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
             byte neighborToMergeDir, EdgeWritable nodeToAdd, 
-            int kmerSize, VKmerBytesWritable kmer){
+            int kmerSize, NodeWritable node){
+        KmerBytesWritable.setGlobalKmerLength(kmerSize);
         byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
-        this.getEdgeList(deleteDir).remove(nodeToDelete);
-        this.getInternalKmer().mergeWithKmerInDir(deleteDir, kmerSize, kmer);
-        
-        if(nodeToAdd != null){
-            byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
-            this.getEdgeList(mergeDir).add(nodeToAdd);
-        }
+//        this.getEdgeList(deleteDir).remove(nodeToDelete);
+        super.getNode().mergeWithNode(deleteDir, node);
+//        this.getInternalKmer().mergeWithKmerInDir(deleteDir, kmerSize, kmer);
+
+//        if(nodeToAdd != null){
+//            byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
+//            this.getEdgeList(mergeDir).add(nodeToAdd);
+//        }
     }
     
     public boolean hasPathTo(VKmerBytesWritable nodeToSeek){

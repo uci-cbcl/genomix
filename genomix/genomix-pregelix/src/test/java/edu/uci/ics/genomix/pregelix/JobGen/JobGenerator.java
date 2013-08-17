@@ -119,7 +119,7 @@ public class JobGenerator {
     private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(jobName);
         job.setVertexClass(P4ForPathMergeVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);

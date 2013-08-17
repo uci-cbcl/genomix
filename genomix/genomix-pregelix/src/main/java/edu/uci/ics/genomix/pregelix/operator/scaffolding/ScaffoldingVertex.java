@@ -169,7 +169,7 @@ public class ScaffoldingVertex extends
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                         if(isValidDestination()){
                             /** final step to process BFS -- pathList and dirList **/
-                            finalProcessBTS();
+                            finalProcessBFS();
                             /** send message to all the path nodes to add this common readId **/
                             sendMsgToPathNodeToAddCommondReadId();
                         }
