@@ -191,7 +191,6 @@ public abstract class BasicPathMergeVertex extends
             setSuccessorAdjMsg(destVertexId);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setFlip(ifFlipWithPredecessor(destVertexId));  
-            destVertexId.setAsCopy(kmerIterator.next());
             sendMsg(destVertexId, outgoingMsg);
         }
     }

@@ -85,7 +85,7 @@ public class HadoopMiniClusterTest {
             // file is binary
             // save the entire binary output dir
             FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
-                    new Path(localDestFile + ".bindir"), false, conf);
+                    new Path(localDestFile + "bin"), false, conf); //bindir
             
             // chomp through output files
             FileStatus[] files = ArrayUtils.addAll(dfs.globStatus(new Path(hdfsSrcDir + "*")), dfs.globStatus(new Path(hdfsSrcDir + "*/*")));
