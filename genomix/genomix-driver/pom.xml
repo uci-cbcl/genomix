@@ -35,16 +35,8 @@
 						<configuration>
 							<programs>
 								<program>
-									<mainClass>edu.uci.ics.genomix.hyracks.driver.Driver</mainClass>
+									<mainClass>edu.uci.ics.genomix.driver.GenomixDriver</mainClass>
 									<name>genomix</name>
-								</program>
-								<program>
-									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
-									<name>genomixcc</name>
-								</program>
-								<program>
-									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
-									<name>genomixnc</name>
 								</program>
 							</programs>
 							<repositoryLayout>flat</repositoryLayout>
@@ -189,12 +181,15 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.1</version>
-			<scope>test</scope>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>genomix-data</artifactId>
 			<version>0.2.10-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
@@ -221,16 +216,22 @@
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>genomix-hadoop</artifactId>
 			<version>0.2.10-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>genomix-hyracks</artifactId>
 			<version>0.2.10-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.pregelix</groupId>
 			<artifactId>genomix-pregelix</artifactId>
 			<version>0.2.10-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
@@ -251,6 +252,8 @@
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-data-std</artifactId>
 			<version>0.2.10-SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>

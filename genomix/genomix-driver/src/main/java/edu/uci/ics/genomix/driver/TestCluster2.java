@@ -1,4 +1,4 @@
-package org.genomix.driver;
+package edu.uci.ics.genomix.driver;
 
 import java.io.DataOutputStream;
 import java.io.File;

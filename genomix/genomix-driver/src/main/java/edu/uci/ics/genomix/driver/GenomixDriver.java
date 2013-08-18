@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.genomix.driver;
+package edu.uci.ics.genomix.driver;
 
 import java.io.BufferedWriter;
 import java.io.File;
