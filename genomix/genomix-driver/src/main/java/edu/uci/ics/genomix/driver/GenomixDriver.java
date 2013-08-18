@@ -293,7 +293,7 @@ public class GenomixDriver {
                             "-inputDir", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
                             "-pipelineOrder", "MERGE"
                             };
-        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
+        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
