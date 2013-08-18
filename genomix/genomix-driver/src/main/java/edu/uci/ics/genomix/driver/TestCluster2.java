@@ -13,14 +13,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobConf;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
@@ -43,7 +38,6 @@ public class TestCluster2 {
     
     private Driver driver;
     
-    @Before
     public void setUp(GenomixJobConf conf) throws Exception {
         cleanupStores();
 //        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
@@ -111,7 +105,6 @@ public class TestCluster2 {
         } 
     }
     
-    @After
     public void tearDown() throws Exception {
 //        edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.deinit();
 //        MyHyracksUtils.deinit();
