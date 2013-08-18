@@ -65,7 +65,7 @@
 						<configuration>
 							<programs>
 								<program>
-									<mainClass>edu.uci.ics.genomix.pregelix.example.Client</mainClass>
+									<mainClass>edu.uci.ics.genomix.pregelix.client.Client</mainClass>
 									<name>pregelix</name>
 								</program>
 							</programs>
