@@ -218,6 +218,17 @@ public class GenomixJobConf extends JobConf {
         CmdLineParser parser = new CmdLineParser(opts);
         parser.parseArgument(args);
         GenomixJobConf conf = new GenomixJobConf(opts.kmerLength);
+        FileInputFormat.setInputPaths(conf, opts.inputDir);
+        {
+          @SuppressWarnings("deprecation")
+          Path path = new Path(conf.getWorkingDirectory(), opts.inputDir);
+          conf.set("mapred.input.dir", path.toString());
+
+          @SuppressWarnings("deprecation")
+          Path outputDir = new Path(conf.getWorkingDirectory(), opts.outputDir);
+          conf.set("mapred.output.dir", outputDir.toString());
+        }
+        FileOutputFormat.setOutputPath(conf, new Path(opts.outputDir));
         conf.extraArguments = opts.arguments.toArray(new String[opts.arguments.size()]);
         conf.setFromOpts(opts);
         conf.fillMissingDefaults();
