@@ -35,7 +35,7 @@
 						<configuration>
 							<programs>
 								<program>
-									<mainClass>edu.uci.ics.genomix.hyracks.driver.Driver</mainClass>
+									<mainClass>edu.uci.ics.genomix.hyracks.graph.driver.Driver</mainClass>
 									<name>genomix</name>
 								</program>
 								<program>

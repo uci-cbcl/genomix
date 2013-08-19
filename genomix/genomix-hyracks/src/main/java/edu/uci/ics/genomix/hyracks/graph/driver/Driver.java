@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2013 by The Regents of the University of California
+// * Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -22,7 +22,11 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
@@ -76,7 +80,7 @@ public class Driver {
         job.addResource(hadoopMapRed);
         URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
         job.addResource(hadoopHdfs);
-        
+
         LOG.info("job started");
         long start = System.currentTimeMillis();
         long end = start;
@@ -121,34 +125,42 @@ public class Driver {
 
     private void execute(JobSpecification job) throws Exception {
         job.setUseConnectorPolicyForScheduling(false);
-        JobId jobId = hcc.startJob(job, profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
+        JobId jobId = hcc
+                .startJob(job, profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
         hcc.waitForCompletion(jobId);
     }
 
+    
     public static void main(String[] args) throws Exception {
+//        String[] myArgs = { "-inputDir", "/home/nanz1/TestData", "-outputDir", "/home/hadoop/pairoutput",
+//                "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099" };
         GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
-        String[] otherArgs = jobConf.getExtraArguments();
+/*        String[] otherArgs = jobConf.getExtraArguments();
         if (otherArgs.length < 2) {
             System.err.println("Need <input> <output> as additional arguments!");
             System.exit(-1);
-        }
+        }*/
+        
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
         int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));
         int numOfDuplicate = jobConf.getInt(GenomixJobConf.CPARTITION_PER_MACHINE, 2);
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
-        // FileInputFormat.setInputPaths(job, otherArgs[2]);
-        {
-            @SuppressWarnings("deprecation")
-            Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[0]);
-            jobConf.set("mapred.input.dir", path.toString());
+        jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
+        jobConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
+        
+//         FileInputFormat.setInputPaths(jobConf, jobConf.i);
+//        {
+//            @SuppressWarnings("deprecation")
+//            Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[0]);
+//            jobConf.set("mapred.input.dir", path.toString());
 
-            @SuppressWarnings("deprecation")
-            Path outputDir = new Path(jobConf.getWorkingDirectory(), otherArgs[1]);
-            jobConf.set("mapred.output.dir", outputDir.toString());
-        }
+//            @SuppressWarnings("deprecation")
+//            Path outputDir = new Path(jobConf.getWorkingDirectory(), otherArgs[1]);
+//            jobConf.set("mapred.output.dir", outputDir.toString());
+//        }
         // FileInputFormat.addInputPath(jobConf, new Path(otherArgs[2]));
-        // FileOutputFormat.setOutputPath(job, new Path(otherArgs[3]));
+//         FileOutputFormat.setOutputPath(jobConf, new Path(otherArgs[3]));
         Driver driver = new Driver(ipAddress, port, numOfDuplicate);
-        driver.runJob(jobConf, Plan.BUILD_DEBRUJIN_GRAPH, bProfiling);
+        driver.runJob(jobConf, Plan.BUILD_UNMERGED_GRAPH, bProfiling);
     }
 }
