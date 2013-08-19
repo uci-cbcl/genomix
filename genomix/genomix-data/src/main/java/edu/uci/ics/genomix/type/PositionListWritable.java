@@ -275,6 +275,12 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     public void remove(PositionWritable toRemove) {
         remove(toRemove, false);
     }
+    
+    public void removeReadId(long readId){
+        PositionWritable toRemove = new PositionWritable();
+        toRemove.set((byte)0, readId, 0);
+        remove(toRemove);
+    }
 
     @Override
     public void write(DataOutput out) throws IOException {
@@ -362,5 +368,9 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
                 return false;
         }
         return true;
+    }
+    
+    public boolean isEmpty(){
+        return this.getCountOfPosition() == 0;
     }
 }

@@ -22,10 +22,12 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 public class GraphBuildingTestSuite extends TestSuite{
 
     private static int SIZE_KMER = 3;
-    public static final String PreFix = "data/webmap/PathMerge_TestSet"; 
+    public static final String PreFix = "data/webmap/SplitRepeat_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
 //        + "LeftAdj", PreFix + File.separator
-        + "RingPath"};
+        + "2to1"};
+//        + "SimpleSplitManyTimes", PreFix + File.separator
+//        + "ComplexSplitManyTimes"};
 //        + "TandemRepeatWithMergeEdge", PreFix + File.separator
 //        + "TandemRepeatWithUnmergeEdge"};
 //        + "FR", PreFix + File.separator
