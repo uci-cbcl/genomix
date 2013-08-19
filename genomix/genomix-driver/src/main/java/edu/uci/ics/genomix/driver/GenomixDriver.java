@@ -169,7 +169,7 @@ public class GenomixDriver {
 
     private void setOutput(GenomixJobConf conf, Patterns step) {
         prevOutput = curOutput;
-        curOutput = File.separator + String.format("%02d-", stepNum) + step;
+        curOutput = "genomix-driver-test" + File.separator + String.format("%02d-", stepNum) + step;
         FileInputFormat.setInputPaths(conf, new Path(prevOutput));
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
     }
@@ -184,7 +184,7 @@ public class GenomixDriver {
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         String origInput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
-        curOutput = "/00-initial-input";
+        curOutput = "genomix-driver-test-00-initial-input";
         //        TestCluster testCluster = new TestCluster();
         TestCluster2 testCluster = new TestCluster2();
 
