@@ -414,7 +414,8 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
             int kmerlength1 = Marshal.getInt(b1, s1);
             int kmerlength2 = Marshal.getInt(b2, s2);
             if (kmerlength1 == kmerlength2) {
-                return compareBytes(b1, s1 + HEADER_SIZE, l1 - HEADER_SIZE, b2, s2 + HEADER_SIZE, l2 - HEADER_SIZE);
+                return compareBytes(b1, s1 + HEADER_SIZE, KmerUtil.getByteNumFromK(kmerlength1), 
+                        b2, s2 + HEADER_SIZE, KmerUtil.getByteNumFromK(kmerlength2));
             }
             return kmerlength1 - kmerlength2;
         }
