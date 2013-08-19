@@ -8,7 +8,6 @@ import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class VertexValueWritable 
     extends NodeWritable{
@@ -55,22 +54,12 @@ public class VertexValueWritable
     
     private byte state;
     private boolean isFakeVertex;
-    
-    private HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap;
 
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
-        traverseMap  = new HashMapWritable<VKmerBytesWritable, VKmerListWritable>();
     }
-    
-//    public NodeWritable getNode(){
-//        NodeWritable node = new NodeWritable();
-//        node.setAsCopy(this.getEdges(), this.getStartReads(), this.getEndReads(), 
-//                this.getInternalKmer(), this.getAverageCoverage());
-//        return super();
-//    }
     
     public void setNode(NodeWritable node){
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
@@ -148,20 +137,11 @@ public class VertexValueWritable
     public void setState(byte state) {
         this.state = state;
     }
-    
-    public HashMapWritable<VKmerBytesWritable, VKmerListWritable> getTraverseMap() {
-        return traverseMap;
-    }
-
-    public void setTraverseMap(HashMapWritable<VKmerBytesWritable, VKmerListWritable> traverseMap) {
-        this.traverseMap = traverseMap;
-    }
 
     public void reset() {
         super.reset();
         this.state = 0;
         this.isFakeVertex = false;
-        this.traverseMap.clear();
     }
     
     @Override
@@ -170,7 +150,6 @@ public class VertexValueWritable
         super.readFields(in);
         this.state = in.readByte();
         this.isFakeVertex = in.readBoolean();
-        this.traverseMap.readFields(in);
     }
 
     @Override
@@ -178,7 +157,6 @@ public class VertexValueWritable
         super.write(out);
         out.writeByte(this.state);
         out.writeBoolean(this.isFakeVertex);
-        this.traverseMap.write(out);
     }
     
     public int getDegree(){
@@ -207,46 +185,17 @@ public class VertexValueWritable
     /**
      * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
      */
-//    public void processUpdates(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
-//            byte neighborToMergeDir, NodeWritable node){
-//        byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
-//        this.getEdgeList(deleteDir).remove(nodeToDelete);
-//        
-//        byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
-////        this.getEdgeList(mergeDir).add(nodeToAdd);
-//        
-//        this.getNode().mergeEdges(mergeDir, node);
-//    }
     public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
         this.getNode().updateEdges(deleteDir, toDelete, updateDir, other);
-    }
-    
-    public void processMerges(byte mergeDir, NodeWritable node, int kmerSize){
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
-        mergeDir = (byte)(mergeDir & MessageFlag.DIR_MASK);
-        super.getNode().mergeWithNode(mergeDir, node);
     }
     
     /**
      * Process any changes to value.  This is for merging.  nodeToAdd should be only edge
      */
-    public void processMerges(byte neighborToDeleteDir, VKmerBytesWritable nodeToDelete,
-            byte neighborToMergeDir, EdgeWritable nodeToAdd, 
-            int kmerSize, NodeWritable node){
+    public void processMerges(byte mergeDir, NodeWritable node, int kmerSize){
         KmerBytesWritable.setGlobalKmerLength(kmerSize);
-        byte deleteDir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
-//        this.getEdgeList(deleteDir).remove(nodeToDelete);
-        super.getNode().mergeWithNode(deleteDir, node);
-//        this.getInternalKmer().mergeWithKmerInDir(deleteDir, kmerSize, kmer);
-
-//        if(nodeToAdd != null){
-//            byte mergeDir = (byte)(neighborToMergeDir & MessageFlag.DIR_MASK);
-//            this.getEdgeList(mergeDir).add(nodeToAdd);
-//        }
-    }
-    
-    public boolean hasPathTo(VKmerBytesWritable nodeToSeek){
-        return traverseMap.containsKey(nodeToSeek);
+        mergeDir = (byte)(mergeDir & MessageFlag.DIR_MASK);
+        super.getNode().mergeWithNode(mergeDir, node);
     }
     
 }

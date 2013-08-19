@@ -93,7 +93,7 @@ public class P1ForPathMergeVertex extends
         if (getSuperstep() == 3) {
             if(getVertexValue().getState() == State.IS_HEAD)
                 outFlag |= MessageFlag.IS_HEAD;
-            sendSettledMsgToAllNextNodes();
+            sendSettledMsgToAllNextNodes(getVertexValue());
         } else {
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();

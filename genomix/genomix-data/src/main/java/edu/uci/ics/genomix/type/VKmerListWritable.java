@@ -96,7 +96,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
             Marshal.putInt(valueCount, storage, offset);
         }
     }
-
+    
     /**
      * Save the union of my list and otherList. Uses a temporary HashSet for
      * uniquefication
@@ -230,6 +230,15 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         return it;
     }
 
+    public boolean contains(VKmerListWritable kmer){
+        Iterator<VKmerBytesWritable> posIterator = this.iterator();
+        while (posIterator.hasNext()) {
+            if (kmer.equals(posIterator.next())) 
+                return true;
+        }
+        return false;
+    }
+    
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.

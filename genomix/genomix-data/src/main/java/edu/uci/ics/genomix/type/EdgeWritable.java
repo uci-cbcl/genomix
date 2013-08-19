@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -81,6 +82,13 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     public void setReadIDs(PositionListWritable otherPositions) {
         readIDs.reset();
         for (PositionWritable p : otherPositions) {
+            appendReadID(p);
+        }
+    }
+    
+    public void setReadIDs(Set<Long> readIdSet) {
+        readIDs.reset();
+        for (long p : readIdSet) {
             appendReadID(p);
         }
     }

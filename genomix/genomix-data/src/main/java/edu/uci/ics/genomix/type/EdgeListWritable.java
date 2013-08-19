@@ -298,6 +298,16 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     public void remove(EdgeWritable toRemove) {
         remove(toRemove, false);
     }
+    
+    public void removeSubEdge(EdgeWritable toRemove){
+        Iterator<Long> it = toRemove.readIDIter();
+        while(it.hasNext()){
+            long readId = it.next();
+            this.getReadIDs(toRemove.getKey()).removeReadId(readId);
+        }
+        if(this.getReadIDs(toRemove.getKey()).isEmpty())
+            this.remove(toRemove);
+    }
 
     /**
      * Adds all edges in edgeList to me.  If I have the same edge as `other`, that entry will be the union of both sets of readIDs.

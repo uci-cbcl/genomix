@@ -152,4 +152,24 @@ public class VertexUtil {
     public static boolean isValidRear(VertexValueWritable value){
         return isPathVertex(value) || (value.inDegree() == 1 && !isPathVertex(value));
     }
+    
+    public static boolean isVertexWithOnlyOneIncoming(VertexValueWritable value){
+        return value.inDegree() == 1 && !isPathVertex(value);
+    }
+    
+    public static boolean isVertexWithOnlyOneOutgoing(VertexValueWritable value){
+        return value.outDegree() == 1 && !isPathVertex(value);
+    }
+    
+    public static boolean isVertexWithManyIncoming(VertexValueWritable value){
+        return value.inDegree() > 1;
+    }
+    
+    public static boolean isVertexWithManyOutgoing(VertexValueWritable value){
+        return value.outDegree() > 1;
+    }
+    
+    public static boolean isActiveVertex(VertexValueWritable value){
+        return value.inDegree() == 1 || value.outDegree() == 1;
+    }
 }
