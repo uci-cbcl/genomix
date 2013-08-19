@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 /*
  * vertexId: BytesWritable
@@ -215,25 +216,21 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
-                /** record startKmer in merge path **/
-                if(getSuperstep() == 6){
-                    getVertexValue().setStartKmer(getVertexId());
-                }
-                /** check if merge path is a cycle **/
-                if(getVertexValue().getStartKmer() == incomingMsg.getSourceVertexId()){
+                /** process merge **/
+                processMerge();
+                /** if it's a tandem repeat, which means detecting cycle **/
+                if(isTandemRepeat()){
+                    for(byte d : DirectionFlag.values)
+                        getVertexValue().getEdgeList(d).reset();
                     getVertexValue().setState(MessageFlag.IS_HALT);
                     voteToHalt();
-                } else{
-                    /** process merge **/
-                    processMerge();
-                    //head meets head, stop
-                    if(getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD){
-                        getVertexValue().setState(MessageFlag.IS_HALT);
-                        voteToHalt();
-                    }
-                    else
-                        this.activate();
+                }/** head meets head, stop **/ 
+                else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)){
+                    getVertexValue().setState(MessageFlag.IS_HALT);
+                    voteToHalt();
                 }
+                else
+                    this.activate();
             }
         }
     }

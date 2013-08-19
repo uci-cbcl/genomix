@@ -54,13 +54,11 @@ public class VertexValueWritable
     
     private byte state;
     private boolean isFakeVertex;
-    private VKmerBytesWritable startKmer; //use for detect cycle in path merge
 
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
-        startKmer = new VKmerBytesWritable();
     }
     
     public void setNode(NodeWritable node){
@@ -140,19 +138,10 @@ public class VertexValueWritable
         this.state = state;
     }
 
-    public VKmerBytesWritable getStartKmer() {
-        return startKmer;
-    }
-
-    public void setStartKmer(VKmerBytesWritable startKmer) {
-        this.startKmer.setAsCopy(startKmer);
-    }
-
     public void reset() {
         super.reset();
         this.state = 0;
         this.isFakeVertex = false;
-        this.startKmer.reset(0);
     }
     
     @Override
@@ -161,7 +150,6 @@ public class VertexValueWritable
         super.readFields(in);
         this.state = in.readByte();
         this.isFakeVertex = in.readBoolean();
-        this.startKmer.readFields(in);
     }
 
     @Override
@@ -169,7 +157,6 @@ public class VertexValueWritable
         super.write(out);
         out.writeByte(this.state);
         out.writeBoolean(this.isFakeVertex);
-        this.startKmer.write(out);
     }
     
     public int getDegree(){
