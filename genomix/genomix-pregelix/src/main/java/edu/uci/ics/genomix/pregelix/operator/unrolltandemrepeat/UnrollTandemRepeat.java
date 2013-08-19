@@ -19,7 +19,6 @@ public class UnrollTandemRepeat extends
     public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static int kmerSize = -1;
     
-    private VertexValueWritable tmpValue = new VertexValueWritable();
     private EdgeWritable tmpEdge = new EdgeWritable();
     
     /**
@@ -36,7 +35,7 @@ public class UnrollTandemRepeat extends
      */
     public boolean repeatCanBeMerged(){
         tmpValue.setAsCopy(getVertexValue());
-        tmpValue.getEdgeList(repeatDir).remove(curKmer);
+        tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
         boolean hasFlip = false;
         /** pick one edge and flip **/
         for(byte d : DirectionFlag.values){

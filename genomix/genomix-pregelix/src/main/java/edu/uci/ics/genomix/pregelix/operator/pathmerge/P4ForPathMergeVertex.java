@@ -93,6 +93,9 @@ public class P4ForPathMergeVertex extends
         // Node may be marked as head b/c it's a real head or a real tail
         headFlag = getHeadFlag();
         headMergeDir = getHeadMergeDir();
+        if(repeatKmer == null)
+            repeatKmer = new VKmerBytesWritable();
+        tmpValue.reset();
     }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
@@ -212,14 +215,25 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
-                processMerge();
-                //head meets head, stop
-                if(getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD){
+                /** record startKmer in merge path **/
+                if(getSuperstep() == 6){
+                    getVertexValue().setStartKmer(getVertexId());
+                }
+                /** check if merge path is a cycle **/
+                if(getVertexValue().getStartKmer() == incomingMsg.getSourceVertexId()){
                     getVertexValue().setState(MessageFlag.IS_HALT);
                     voteToHalt();
+                } else{
+                    /** process merge **/
+                    processMerge();
+                    //head meets head, stop
+                    if(getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD){
+                        getVertexValue().setState(MessageFlag.IS_HALT);
+                        voteToHalt();
+                    }
+                    else
+                        this.activate();
                 }
-                else
-                    this.activate();
             }
         }
     }

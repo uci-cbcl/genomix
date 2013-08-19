@@ -24,7 +24,10 @@ public class GraphBuildingTestSuite extends TestSuite{
     private static int SIZE_KMER = 3;
     public static final String PreFix = "data/webmap/PathMerge_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-        + "BridgePath2"};
+//        + "LeftAdj", PreFix + File.separator
+        + "RingPath"};
+//        + "TandemRepeatWithMergeEdge", PreFix + File.separator
+//        + "TandemRepeatWithUnmergeEdge"};
 //        + "FR", PreFix + File.separator
 //        + "RF", PreFix + File.separator
 //        + "head_FR", PreFix + File.separator

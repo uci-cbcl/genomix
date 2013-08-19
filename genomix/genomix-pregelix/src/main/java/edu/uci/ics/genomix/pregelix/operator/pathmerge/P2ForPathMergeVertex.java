@@ -212,7 +212,7 @@ public class P2ForPathMergeVertex extends
                 /** processing general case **/
                 else{
                     if(isPathNode())
-                        sendSettledMsgToAllNeighborNodes();
+                        sendSettledMsgToAllNeighborNodes(getVertexValue());
                     if(!isHeadNode())
                         voteToHalt();
                 }
@@ -227,7 +227,7 @@ public class P2ForPathMergeVertex extends
                 /** head doesn't receive msg and send out final msg **/
                 if(!msgIterator.hasNext() && isHeadNode()){
                     outFlag |= MessageFlag.IS_FINAL;
-                    sendSettledMsgToAllNeighborNodes();
+                    sendSettledMsgToAllNeighborNodes(getVertexValue());
                     voteToHalt();
                 } else{
                     while (msgIterator.hasNext()) {
