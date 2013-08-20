@@ -58,7 +58,9 @@ public class SplitRepeatVertex extends
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
     private EdgeListWritable incomingEdgeList = null; 
-    private EdgeListWritable outgoingEdgeList = null; 
+    private EdgeListWritable outgoingEdgeList = null;
+    private EdgeWritable tmpIncomingEdge = null;
+    private EdgeWritable tmpOutgoingEdge = null;
     private byte incomingEdgeDir = 0;
     private byte outgoingEdgeDir = 0;
     
@@ -89,6 +91,10 @@ public class SplitRepeatVertex extends
             outgoingEdgeList = new EdgeListWritable();
         if(createdVertexId == null)
             createdVertexId = new VKmerBytesWritable();
+        if(tmpIncomingEdge == null)
+            tmpIncomingEdge = new EdgeWritable();
+        if(tmpOutgoingEdge == null)
+            tmpOutgoingEdge = new EdgeWritable();
     }
     
     /**
@@ -229,17 +235,19 @@ public class SplitRepeatVertex extends
                                 randomGenerateVertexId(3);
                                 
                                 /** change incomingEdge/outgoingEdge's edgeList to commondReadIdSet **/
-                                incomingEdge.setReadIDs(neighborEdgeIntersection);
-                                outgoingEdge.setReadIDs(neighborEdgeIntersection);
+                                tmpIncomingEdge.setAsCopy(incomingEdge);
+                                tmpOutgoingEdge.setAsCopy(outgoingEdge);
+                                tmpIncomingEdge.setReadIDs(neighborEdgeIntersection);
+                                tmpOutgoingEdge.setReadIDs(neighborEdgeIntersection);
                                 
                                 /** create new/created vertex **/
-                                createNewVertex(i, incomingEdge, outgoingEdge);
+                                createNewVertex(i, tmpIncomingEdge, tmpOutgoingEdge);
                                 
                                 /** send msg to neighbors to update their edges to new vertex **/
-                                sendMsgToUpdateEdge(incomingEdge, outgoingEdge);
+                                sendMsgToUpdateEdge(tmpIncomingEdge, tmpOutgoingEdge);
                                 
                                 /** store deleted edge **/
-                                storeDeletedEdge(i, incomingEdge, outgoingEdge, neighborEdgeIntersection);
+                                storeDeletedEdge(i, tmpIncomingEdge, tmpOutgoingEdge, neighborEdgeIntersection);
                             }
                         }
                     }                

@@ -25,7 +25,9 @@ public class GraphBuildingTestSuite extends TestSuite{
     public static final String PreFix = "data/webmap/SplitRepeat_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
 //        + "LeftAdj", PreFix + File.separator
-        + "2to1"};
+        + "AdjSplitRepeat_1to1", PreFix + File.separator
+        + "AdjSplitRepeat_2to2", PreFix + File.separator
+        + "AdjSplitRepeat_3to3"};
 //        + "SimpleSplitManyTimes", PreFix + File.separator
 //        + "ComplexSplitManyTimes"};
 //        + "TandemRepeatWithMergeEdge", PreFix + File.separator

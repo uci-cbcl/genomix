@@ -306,7 +306,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             this.getReadIDs(toRemove.getKey()).removeReadId(readId);
         }
         if(this.getReadIDs(toRemove.getKey()).isEmpty())
-            this.remove(toRemove);
+            this.remove(toRemove.getKey());
     }
 
     /**
