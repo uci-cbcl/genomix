@@ -369,37 +369,27 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
      * differences in length will lead to relative offsets, where the incoming readids will be found in the
      * new sequence at the same relative position (e.g., 10% of the total length from 5' start).
      */
-    private void addStartAndEndReadIDs(byte dir, final NodeWritable other) {
-        int K = KmerBytesWritable.lettersInKmer;
+    private void addStartAndEndReadIDs(boolean flip, final NodeWritable other) {
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
         float lengthFactor = (float) thisLength / (float) otherLength;
-        int newOtherOffset, newThisOffset;
-        switch (dir & DirectionFlag.DIR_MASK) {
-            case DirectionFlag.DIR_FF:
-            case DirectionFlag.DIR_RR:
-                newOtherOffset = 0;
-                // stream theirs in, adjusting to the new total length
-                for (PositionWritable p : other.startReads) {
-                    startReads.append(p.getMateId(), p.getReadId(),
-                            (int) (newOtherOffset + p.getPosId() * lengthFactor));
-                }
-                for (PositionWritable p : other.endReads) {
-                    endReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset + p.getPosId() * lengthFactor));
-                }
-                break;
-            case DirectionFlag.DIR_FR:
-            case DirectionFlag.DIR_RF:
-                newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
-                // stream theirs in, offset and flipped
-                for (PositionWritable p : other.startReads) {
-                    endReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
-                }
-                for (PositionWritable p : other.endReads) {
-                    startReads.append(p.getMateId(), p.getReadId(),
-                            (int) (newOtherOffset - p.getPosId() * lengthFactor));
-                }
-                break;
+        if (flip) {
+            // stream theirs in, adjusting to the new total length
+            for (PositionWritable p : other.startReads) {
+                startReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
+            }
+            for (PositionWritable p : other.endReads) {
+                endReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
+            }
+        } else {
+            int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
+            // stream theirs in, offset and flipped
+            for (PositionWritable p : other.startReads) {
+                endReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
+            }
+            for (PositionWritable p : other.endReads) {
+                startReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
+            }
         }
     }
 
@@ -468,21 +458,16 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
     }
 
-    private void addEdges(byte dir, NodeWritable other) {
-        switch (dir & DirectionFlag.DIR_MASK) {
-            case DirectionFlag.DIR_FF:
-            case DirectionFlag.DIR_RR:
-                for (byte d : DirectionFlag.values) {
-                    edges[d].unionUpdate(other.edges[d]);
-                }
-                break;
-            case DirectionFlag.DIR_FR:
-            case DirectionFlag.DIR_RF:
-                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
-                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
-                break;
+    private void addEdges(boolean flip, NodeWritable other) {
+        if (flip) {
+            for (byte d : DirectionFlag.values) {
+                edges[d].unionUpdate(other.edges[d]);
+            }
+        } else {
+            edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+            edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+            edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+            edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
         }
     }
 
