@@ -24,7 +24,9 @@ public class GraphBuildingTestSuite extends TestSuite{
     private static int SIZE_KMER = 3;
     public static final String PreFix = "data/webmap/BubbleMerge_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-        + "AdjFR"
+          + "SimpleRectangle", PreFix + File.separator
+          + "MediumRectangle", PreFix + File.separator
+          + "ComplexRectangle"
     };
 //        + "SimpleBubble", PreFix + File.separator
 //        + "LtoL", PreFix + File.separator

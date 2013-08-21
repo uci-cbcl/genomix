@@ -8,7 +8,6 @@ import java.util.Set;
 import edu.uci.ics.genomix.pregelix.io.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -18,11 +17,11 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 public class SplitRepeatVertex extends 
     BasicGraphCleanVertex<SplitRepeatMessageWritable>{
     
-    public class DeletedEdge{
+    public class EdgeAndDir{
         private byte dir;
         private EdgeWritable edge;
         
-        public DeletedEdge(){
+        public EdgeAndDir(){
             dir = 0;
             edge = new EdgeWritable();
         }
@@ -45,27 +44,16 @@ public class SplitRepeatVertex extends
 
     }
     
-    private byte[][] connectedTable = new byte[][]{
-            {MessageFlag.DIR_RF, MessageFlag.DIR_FF},
-            {MessageFlag.DIR_RF, MessageFlag.DIR_FR},
-            {MessageFlag.DIR_RR, MessageFlag.DIR_FF},
-            {MessageFlag.DIR_RR, MessageFlag.DIR_FR}
-    };
-    
     public static Set<String> existKmerString = new HashSet<String>();
     protected VKmerBytesWritable createdVertexId = null;  
     private Set<Long> incomingReadIdSet = new HashSet<Long>();
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
-    private EdgeListWritable incomingEdgeList = null; 
-    private EdgeListWritable outgoingEdgeList = null;
     private EdgeWritable tmpIncomingEdge = null;
     private EdgeWritable tmpOutgoingEdge = null;
-    private byte incomingEdgeDir = 0;
-    private byte outgoingEdgeDir = 0;
-    
+
     private EdgeWritable deletedEdge = new EdgeWritable();
-    private Set<DeletedEdge> deletedEdges = new HashSet<DeletedEdge>();//A set storing deleted edges
+    private Set<EdgeAndDir> deletedEdges = new HashSet<EdgeAndDir>();//A set storing deleted edges
     
     /**
      * initiate kmerSize, maxIteration
@@ -121,14 +109,6 @@ public class SplitRepeatVertex extends
         createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
     }
    
-    public void setEdgeListAndEdgeDir(int i){
-        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
-        incomingEdgeDir = connectedTable[i][0];
-        
-        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
-        outgoingEdgeDir = connectedTable[i][1];
-    }
-    
     public void setNeighborEdgeIntersection(EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
         incomingReadIdSet.clear();
         long[] incomingReadIds = incomingEdge.getReadIDs().toReadIDArray();
@@ -189,8 +169,8 @@ public class SplitRepeatVertex extends
     
     public void storeDeletedEdge(int i, EdgeWritable incomingEdge, EdgeWritable outgoingEdge,
             Set<Long> commonReadIdSet){
-        DeletedEdge deletedIncomingEdge = new DeletedEdge();
-        DeletedEdge deletedOutgoingEdge = new DeletedEdge();
+        EdgeAndDir deletedIncomingEdge = new EdgeAndDir();
+        EdgeAndDir deletedOutgoingEdge = new EdgeAndDir();
         
         deletedIncomingEdge.setDir(connectedTable[i][0]);
         deletedIncomingEdge.setEdge(incomingEdge);
@@ -202,7 +182,7 @@ public class SplitRepeatVertex extends
         deletedEdges.add(deletedOutgoingEdge);
     }
     
-    public void deleteEdgeFromOldVertex(DeletedEdge deleteEdge){
+    public void deleteEdgeFromOldVertex(EdgeAndDir deleteEdge){
         getVertexValue().getEdgeList(deleteEdge.dir).removeSubEdge(deleteEdge.getEdge());
     }
     
@@ -253,7 +233,7 @@ public class SplitRepeatVertex extends
                     }                
                 }
                 /** delete extra edges from old vertex **/
-                for(DeletedEdge deletedEdge : deletedEdges){
+                for(EdgeAndDir deletedEdge : deletedEdges){
                     deleteEdgeFromOldVertex(deletedEdge);
                 }
                 

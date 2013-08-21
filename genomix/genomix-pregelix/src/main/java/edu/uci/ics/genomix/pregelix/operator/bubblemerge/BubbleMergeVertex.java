@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -39,8 +41,8 @@ public class BubbleMergeVertex extends
     private Set<BubbleMergeMessageWritable> unchangedSet = new HashSet<BubbleMergeMessageWritable>();
     private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
 
-    private VKmerBytesWritable incomingEdge = new VKmerBytesWritable();
-    private VKmerBytesWritable outgoingEdge = new VKmerBytesWritable();
+    private VKmerBytesWritable incomingKmer = new VKmerBytesWritable();
+    private VKmerBytesWritable outgoingKmer = new VKmerBytesWritable();
     private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
     private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
     
@@ -62,43 +64,40 @@ public class BubbleMergeVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
+        if(incomingEdgeList == null)
+            incomingEdgeList = new EdgeListWritable();
+        if(outgoingEdgeList == null)
+            outgoingEdgeList = new EdgeListWritable();
         outFlag = 0;
     }
     
     public void sendBubbleAndMajorVertexMsgToMinorVertex(){
-        /** get majorVertex and minorVertex and meToMajorDir and meToMinorDir **/
-        byte incomingEdgeToMeDir = 0;
-        if(!getVertexValue().getEdgeList(MessageFlag.DIR_RR).isEmpty()){
-            incomingEdge.setAsCopy(getVertexValue().getEdgeList(MessageFlag.DIR_RR).get(0).getKey());
-            incomingEdgeToMeDir = MessageFlag.DIR_RR;
-        } else{
-            incomingEdge.setAsCopy(getVertexValue().getEdgeList(MessageFlag.DIR_RF).get(0).getKey());
-            incomingEdgeToMeDir = MessageFlag.DIR_RF;
+        for(int i = 0; i < 4; i++){
+            /** set edgeList and edgeDir based on connectedTable **/
+            setEdgeListAndEdgeDir(i);
+            
+            for(EdgeWritable incomingEdge : incomingEdgeList){
+                for(EdgeWritable outgoingEdge : outgoingEdgeList){
+                    /** get majorVertex and minorVertex and meToMajorDir and meToMinorDir **/
+                    incomingKmer.setAsCopy(incomingEdge.getKey());
+                    outgoingKmer.setAsCopy(outgoingEdge.getKey());
+                    majorVertexId.setAsCopy(incomingKmer.compareTo(outgoingKmer) >= 0 ? incomingKmer : outgoingKmer);
+                    minorVertexId.setAsCopy(incomingKmer.compareTo(outgoingKmer) < 0 ? incomingKmer : outgoingKmer);
+                    byte majorToMeDir = (incomingKmer.compareTo(outgoingKmer) >= 0 ? incomingEdgeDir : outgoingEdgeDir);
+                    byte meToMajorDir = mirrorDirection(majorToMeDir);
+                    byte minorToMeDir = (incomingKmer.compareTo(outgoingKmer) < 0 ? incomingEdgeDir : outgoingEdgeDir);
+                    byte meToMinorDir = mirrorDirection(minorToMeDir);
+                    
+                    /** setup outgoingMsg **/
+                    outgoingMsg.setMajorVertexId(majorVertexId);
+                    outgoingMsg.setSourceVertexId(getVertexId());
+                    outgoingMsg.setNode(getVertexValue().getNode());
+                    outgoingMsg.setMeToMajorDir(meToMajorDir);
+                    outgoingMsg.setMeToMinorDir(meToMinorDir);
+                    sendMsg(minorVertexId, outgoingMsg);
+                }
+            }
         }
-        
-        byte outgoingEdgeToMeDir = 0;
-        if(!getVertexValue().getEdgeList(MessageFlag.DIR_FF).isEmpty()){
-            outgoingEdge.setAsCopy(getVertexValue().getEdgeList(MessageFlag.DIR_FF).get(0).getKey());
-            outgoingEdgeToMeDir = MessageFlag.DIR_FF;
-        } else{
-            outgoingEdge.setAsCopy(getVertexValue().getEdgeList(MessageFlag.DIR_FR).get(0).getKey());
-            outgoingEdgeToMeDir = MessageFlag.DIR_FR;
-        }
-        
-        majorVertexId.setAsCopy(incomingEdge.compareTo(outgoingEdge) >= 0 ? incomingEdge : outgoingEdge);
-        minorVertexId.setAsCopy(incomingEdge.compareTo(outgoingEdge) < 0 ? incomingEdge : outgoingEdge);
-        byte majorToMeDir = (incomingEdge.compareTo(outgoingEdge) >= 0 ? incomingEdgeToMeDir : outgoingEdgeToMeDir);
-        byte meToMajorDir = mirrorDirection(majorToMeDir);
-        byte minorToMeDir = (incomingEdge.compareTo(outgoingEdge) < 0 ? incomingEdgeToMeDir : outgoingEdgeToMeDir);
-        byte meToMinorDir = mirrorDirection(minorToMeDir);
-        
-        /** setup outgoingMsg **/
-        outgoingMsg.setMajorVertexId(majorVertexId);
-        outgoingMsg.setSourceVertexId(getVertexId());
-        outgoingMsg.setNode(getVertexValue().getNode());
-        outgoingMsg.setMeToMajorDir(meToMajorDir);
-        outgoingMsg.setMeToMinorDir(meToMinorDir);
-        sendMsg(minorVertexId, outgoingMsg);
     }
     
     @SuppressWarnings({ "unchecked" })

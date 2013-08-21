@@ -12,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
@@ -22,6 +23,13 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     public static final String ITERATIONS = "BasicGraphCleanVertex.iteration";
     public static int kmerSize = -1;
     public static int maxIteration = -1;
+    
+    public byte[][] connectedTable = new byte[][]{
+            {MessageFlag.DIR_RF, MessageFlag.DIR_FF},
+            {MessageFlag.DIR_RF, MessageFlag.DIR_FR},
+            {MessageFlag.DIR_RR, MessageFlag.DIR_FF},
+            {MessageFlag.DIR_RR, MessageFlag.DIR_FR}
+    };
     
     protected M incomingMsg = null; 
     protected M outgoingMsg = null; 
@@ -40,6 +48,11 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     public static boolean fakeVertexExist = false;
     protected static VKmerBytesWritable fakeVertex = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable();
+    
+    protected EdgeListWritable incomingEdgeList = null; //SplitRepeat
+    protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat
+    protected byte incomingEdgeDir = 0; //SplitRepeat
+    protected byte outgoingEdgeDir = 0; //SplitRepeat
     
     /**
      * initiate kmerSize, maxIteration
@@ -632,6 +645,18 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             default:
                 throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
         }
+    }
+    
+    /**
+     * use for SplitRepeatVertex
+     * @param i
+     */
+    public void setEdgeListAndEdgeDir(int i){
+        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
+        incomingEdgeDir = connectedTable[i][0];
+        
+        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
+        outgoingEdgeDir = connectedTable[i][1];
     }
     
 }
