@@ -50,13 +50,23 @@ public class GenomixJobConf extends JobConf {
         private int kmerLength = -1;
         
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
-        String pipelineOrder;
+        private String pipelineOrder;
         
-        @Option(name = "-inputDir", usage = "Input directory for the first job that will be run", required = false)
-        String inputDir;
+        @Option(name = "-localInput", usage = "Local directory containing input for the first pipeline step", required = false)
+        private String localInput;
         
-        @Option(name = "-outputDir", usage = "Output directory for the final job that will be run", required = false)
-        String outputDir;
+        @Option(name = "-hdfsInput", usage = "HDFS directory containing input for the first pipeline step", required = false)
+        private String hdfsInput;
+        
+        @Option(name = "-localOutput", usage = "Local directory where the final step's output will be saved", required = false)
+        private String localOutput;
+        
+        @Option(name = "-hdfsOutput", usage = "HDFS directory where the final step's output will be saved", required = false)
+        private String hdfsOutput;
+        
+        @Option(name = "-hdfsWorkPath", usage = "HDFS directory where pipeline temp ouptut will be saved", required = false)
+        private String hdfsWorkPath;
+        
 
         // Graph cleaning
         @Option(name = "-bridgeRemove_maxLength", usage = "Nodes with length <= bridgeRemoveLength that bridge separate paths are removed from the graph", required = false)
@@ -141,6 +151,8 @@ public class GenomixJobConf extends JobConf {
     public static final String PIPELINE_ORDER = "genomix.pipelineOrder";
     public static final String INITIAL_INPUT_DIR = "genomix.initial.input.dir";
     public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
+    public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
+    public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -190,6 +202,7 @@ public class GenomixJobConf extends JobConf {
 
     public static final String OUTPUT_FORMAT_BINARY = "genomix.outputformat.binary";
     public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
+    public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     
     private String[] extraArguments = {};
     
@@ -218,17 +231,6 @@ public class GenomixJobConf extends JobConf {
         CmdLineParser parser = new CmdLineParser(opts);
         parser.parseArgument(args);
         GenomixJobConf conf = new GenomixJobConf(opts.kmerLength);
-        FileInputFormat.setInputPaths(conf, opts.inputDir);
-        {
-          @SuppressWarnings("deprecation")
-          Path path = new Path(conf.getWorkingDirectory(), opts.inputDir);
-          conf.set("mapred.input.dir", path.toString());
-
-          @SuppressWarnings("deprecation")
-          Path outputDir = new Path(conf.getWorkingDirectory(), opts.outputDir);
-          conf.set("mapred.output.dir", outputDir.toString());
-        }
-        FileOutputFormat.setOutputPath(conf, new Path(opts.outputDir));
         conf.extraArguments = opts.arguments.toArray(new String[opts.arguments.size()]);
         conf.setFromOpts(opts);
         conf.fillMissingDefaults();
@@ -316,6 +318,9 @@ public class GenomixJobConf extends JobConf {
             };
             set(PIPELINE_ORDER, Patterns.stringFromArray(steps));
         }
+        // hdfs setup
+        if (get(HDFS_WORK_PATH) == null)
+            set(HDFS_WORK_PATH, "genomix_out");  // should be in the user's home directory? 
         
         // hyracks-specific
         if (getInt(CPARTITION_PER_MACHINE, -1) == -1)
@@ -333,10 +338,22 @@ public class GenomixJobConf extends JobConf {
         setInt(KMER_LENGTH, opts.kmerLength);
         if (opts.pipelineOrder != null)
             set(PIPELINE_ORDER, opts.pipelineOrder);
-        if (opts.inputDir != null)
-            set(INITIAL_INPUT_DIR, opts.inputDir);
-        if (opts.outputDir != null)
-            set(FINAL_OUTPUT_DIR, opts.outputDir);
+        
+        if (opts.localInput != null && opts.hdfsInput != null)
+            throw new IllegalArgumentException("Please set either -localInput or -hdfsInput, but NOT BOTH!");
+        if (opts.localInput == null && opts.hdfsInput == null)
+            throw new IllegalArgumentException("Please specify an input via -localInput or -hdfsInput!");
+        if (opts.hdfsInput != null)
+            set(INITIAL_INPUT_DIR, opts.hdfsInput);
+        if (opts.localInput != null)
+            set(LOCAL_INPUT_DIR, opts.localInput);
+        if (opts.hdfsOutput != null)
+            set(FINAL_OUTPUT_DIR, opts.hdfsOutput);
+        if (opts.localOutput != null)
+            set(LOCAL_OUTPUT_DIR, opts.localOutput);
+        if (opts.hdfsWorkPath != null)
+            set(HDFS_WORK_PATH, opts.hdfsWorkPath);
+
         setBoolean(RUN_LOCAL, opts.runLocal);
                 
         // Graph cleaning

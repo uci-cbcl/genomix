@@ -59,33 +59,29 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * The main entry point for the Genomix assembler, a hyracks/pregelix/hadoop-based deBruijn assembler.
  */
 public class GenomixDriver {
-
-    private static final String CONF_XML = "conf.xml";
-
     private String prevOutput;
     private String curOutput;
     private int stepNum;
     private List<PregelixJob> jobs;
-    private boolean followingBuild = true;  // need to adapt the graph immediately after building
+    private boolean followingBuild = false; // need to adapt the graph immediately after building
 
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
 
-    private void copyLocalToHDFS(JobConf conf, String localFile, String destFile) throws IOException {
+    private void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
         FileSystem dfs = FileSystem.get(conf);
-        Path dest = new Path(destFile);
+        Path dest = new Path(destDir);
         dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(new Path(localFile), dest);
+        dfs.copyFromLocalFile(new Path(localDir), dest);
     }
 
     private void copyHDFSToLocal(GenomixJobConf conf, String hdfsSrc, String localDest) throws Exception {
         FileUtils.deleteDirectory(new File(localDest));
-        copyResultsToLocal(hdfsSrc, localDest, false,
-                conf, true, FileSystem.get(conf));
-//        FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrc), FileSystem.getLocal(new Configuration()), new Path(
-//                localDest), false, conf);
+        copyResultsToLocal(hdfsSrc, localDest, false, conf, true, FileSystem.get(conf));
+        //        FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrc), FileSystem.getLocal(new Configuration()), new Path(
+        //                localDest), false, conf);
     }
-    
+
     private static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
             Configuration conf, boolean ignoreZeroOutputs, FileSystem dfs) throws IOException {
         if (resultsAreText) {
@@ -97,9 +93,10 @@ public class GenomixDriver {
             // save the entire binary output dir
             FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
                     new Path(localDestFile + ".bindir"), false, conf);
-            
+
             // chomp through output files
-            FileStatus[] files = ArrayUtils.addAll(dfs.globStatus(new Path(hdfsSrcDir + "*")), dfs.globStatus(new Path(hdfsSrcDir + "*/*")));
+            FileStatus[] files = ArrayUtils.addAll(dfs.globStatus(new Path(hdfsSrcDir + "*")),
+                    dfs.globStatus(new Path(hdfsSrcDir + "*/*")));
             FileStatus validFile = null;
             for (FileStatus f : files) {
                 if (f.getLen() != 0) {
@@ -113,8 +110,7 @@ public class GenomixDriver {
                     FileSystem lfs = FileSystem.getLocal(new Configuration());
                     lfs.mkdirs(new Path(localDestFile).getParent());
                     return;
-                }
-                else {
+                } else {
                     throw new IOException("No non-zero outputs in source directory " + hdfsSrcDir);
                 }
             }
@@ -169,11 +165,11 @@ public class GenomixDriver {
 
     private void setOutput(GenomixJobConf conf, Patterns step) {
         prevOutput = curOutput;
-        curOutput = "genomix-driver-test" + File.separator + String.format("%02d-", stepNum) + step;
+        curOutput = conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + String.format("%02d-", stepNum) + step;
         FileInputFormat.setInputPaths(conf, new Path(prevOutput));
         FileOutputFormat.setOutputPath(conf, new Path(curOutput));
     }
-    
+
     private void addJob(PregelixJob job) {
         if (followingBuild)
             job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
@@ -182,118 +178,106 @@ public class GenomixDriver {
     }
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
-        String origInput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
-        curOutput = "genomix-driver-test-00-initial-input";
-        //        TestCluster testCluster = new TestCluster();
         TestCluster2 testCluster = new TestCluster2();
-
-        boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        jobs = new ArrayList<PregelixJob>();
         stepNum = 0;
-        try {
-            if (runLocal) {
-                testCluster.setUp(conf);
-            }
-            copyLocalToHDFS(conf, origInput, curOutput);
+        boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        if (runLocal)
+            testCluster.setUp(conf);
+        
+        String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
+        if (localInput != null) {
+            conf.set(GenomixJobConf.INITIAL_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + "00-initial-input-from-genomix-driver");
+            copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
+        }
+        curOutput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
+        
 
-            jobs = new ArrayList<PregelixJob>();
-
-            // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
-            String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
-            for (Patterns step : Patterns.arrayFromString(pipelineSteps)) {
-                stepNum++;
-                switch (step) {
-                    case BUILD:
-                    case BUILD_HYRACKS:
-                        setOutput(conf, Patterns.BUILD);
-                        buildGraph(conf);
-                        break;
-                    case BUILD_MR:
-                        //TODO add the hadoop build code
-                        throw new IllegalArgumentException("BUILD_MR hasn't been added to the driver yet!");
-                    case MERGE_P1:
-                        setOutput(conf, Patterns.MERGE_P1);
-                        addJob(P1ForPathMergeVertex.getConfiguredJob(conf));
-                        break;
-                    case MERGE_P2:
-                        setOutput(conf, Patterns.MERGE_P2);
-                        addJob(P2ForPathMergeVertex.getConfiguredJob(conf));
-                        break;
-                    case MERGE:
-                    case MERGE_P4:
-                        setOutput(conf, Patterns.MERGE_P4);
-                        addJob(P4ForPathMergeVertex.getConfiguredJob(conf));
-                        break;
-                    case UNROLL_TANDEM:
-                        setOutput(conf, Patterns.UNROLL_TANDEM);
-                        addJob(UnrollTandemRepeat.getConfiguredJob(conf));
-                        break;
-                    case TIP_REMOVE:
-                        setOutput(conf, Patterns.TIP_REMOVE);
-                        addJob(TipRemoveVertex.getConfiguredJob(conf));
-                        break;
-                    case BUBBLE:
-                        setOutput(conf, Patterns.BUBBLE);
-                        addJob(BubbleMergeVertex.getConfiguredJob(conf));
-                        break;
-                    case LOW_COVERAGE:
-                        setOutput(conf, Patterns.LOW_COVERAGE);
-                        addJob(RemoveLowCoverageVertex.getConfiguredJob(conf));
-                        break;
-                    case BRIDGE:
-                        setOutput(conf, Patterns.BRIDGE);
-                        addJob(BridgeRemoveVertex.getConfiguredJob(conf));
-                        break;
-                    case SPLIT_REPEAT:
-                        setOutput(conf, Patterns.SPLIT_REPEAT);
-                        addJob(SplitRepeatVertex.getConfiguredJob(conf));
-                        break;
-                    case SCAFFOLD:
-                        setOutput(conf, Patterns.SCAFFOLD);
-                        addJob(ScaffoldingVertex.getConfiguredJob(conf));
-                        break;
-                }
-            }
-            for (int i = 0; i < jobs.size(); i++) {
-//                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
-//                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
-                pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
-                        Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-            }
-
-            //            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS), Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-
-            // copy the final job's output to the local output
-            copyHDFSToLocal(conf, curOutput, "myoutput");
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            if (runLocal) {
-                try {
-                    testCluster.tearDown();
-                } catch (Exception e) {
-                    System.out.println("Exception raised while tearing down the Test Cluster: " + e);
-                }
+        // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
+        String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
+        for (Patterns step : Patterns.arrayFromString(pipelineSteps)) {
+            stepNum++;
+            switch (step) {
+                case BUILD:
+                case BUILD_HYRACKS:
+                    setOutput(conf, Patterns.BUILD);
+                    buildGraph(conf);
+                    break;
+                case BUILD_MR:
+                    //TODO add the hadoop build code
+                    throw new IllegalArgumentException("BUILD_MR hasn't been added to the driver yet!");
+                case MERGE_P1:
+                    setOutput(conf, Patterns.MERGE_P1);
+                    addJob(P1ForPathMergeVertex.getConfiguredJob(conf));
+                    break;
+                case MERGE_P2:
+                    setOutput(conf, Patterns.MERGE_P2);
+                    addJob(P2ForPathMergeVertex.getConfiguredJob(conf));
+                    break;
+                case MERGE:
+                case MERGE_P4:
+                    setOutput(conf, Patterns.MERGE_P4);
+                    addJob(P4ForPathMergeVertex.getConfiguredJob(conf));
+                    break;
+                case UNROLL_TANDEM:
+                    setOutput(conf, Patterns.UNROLL_TANDEM);
+                    addJob(UnrollTandemRepeat.getConfiguredJob(conf));
+                    break;
+                case TIP_REMOVE:
+                    setOutput(conf, Patterns.TIP_REMOVE);
+                    addJob(TipRemoveVertex.getConfiguredJob(conf));
+                    break;
+                case BUBBLE:
+                    setOutput(conf, Patterns.BUBBLE);
+                    addJob(BubbleMergeVertex.getConfiguredJob(conf));
+                    break;
+                case LOW_COVERAGE:
+                    setOutput(conf, Patterns.LOW_COVERAGE);
+                    addJob(RemoveLowCoverageVertex.getConfiguredJob(conf));
+                    break;
+                case BRIDGE:
+                    setOutput(conf, Patterns.BRIDGE);
+                    addJob(BridgeRemoveVertex.getConfiguredJob(conf));
+                    break;
+                case SPLIT_REPEAT:
+                    setOutput(conf, Patterns.SPLIT_REPEAT);
+                    addJob(SplitRepeatVertex.getConfiguredJob(conf));
+                    break;
+                case SCAFFOLD:
+                    setOutput(conf, Patterns.SCAFFOLD);
+                    addJob(ScaffoldingVertex.getConfiguredJob(conf));
+                    break;
             }
         }
-    }
+        for (int i = 0; i < jobs.size(); i++) {
+            //                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
+            //                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
+            pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
+                    Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+        }
 
-    public static void test(String[] args) throws Exception {
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
-        GenomixDriver driver = new GenomixDriver();
-        driver.runGenomix(conf);
+        //            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS), Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+        
+        if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
+            copyHDFSToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+        if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
+            FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
+
+        if (runLocal)
+            testCluster.tearDown();
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-runLocal", "-kmerLength", "3", 
-                            "-ip", "127.0.0.1", "-port", "55", 
-//                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/walk_random_seq1.txt",
-//                            "-pipelineOrder", "BUILD,MERGE",
-//                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-                            "-inputDir", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
-                            "-pipelineOrder", "MERGE"
-                            };
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+        String[] myArgs = { "-runLocal", "-kmerLength", "3", "-ip", "127.0.0.1",
+                "-port",
+                "55",
+                //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/walk_random_seq1.txt",
+                //                            "-pipelineOrder", "BUILD,MERGE",
+                //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", "-pipelineOrder",
+                "MERGE" };
+        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
