@@ -91,10 +91,10 @@ public class GenomixJobConf extends JobConf {
         private int tipRemove_maxLength = -1;
         
         // Hyracks/Pregelix Setup
-        @Option(name = "-ip", usage = "IP address of the cluster controller", required = true)
-        private String ipAddress = "";
+        @Option(name = "-ip", usage = "IP address of the cluster controller", required = false)
+        private String ipAddress;
         
-        @Option(name = "-port", usage = "Port of the cluster controller", required = true)
+        @Option(name = "-port", usage = "Port of the cluster controller", required = false)
         private int port = -1;
         
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -210,7 +210,6 @@ public class GenomixJobConf extends JobConf {
         super(new Configuration());
         setInt(KMER_LENGTH, kmerLength);
         fillMissingDefaults();
-        validateConf(this);
     }
     
     public GenomixJobConf(Configuration other) {
@@ -277,7 +276,7 @@ public class GenomixJobConf extends JobConf {
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
 
         // Hyracks/Pregelix Advanced Setup
-        if (conf.get(IP_ADDRESS) == "")
+        if (conf.get(IP_ADDRESS) == null)
             throw new IllegalArgumentException("ipAddress was not specified!");        
     }
     
@@ -354,7 +353,15 @@ public class GenomixJobConf extends JobConf {
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
 
+        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
+            throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
         setBoolean(RUN_LOCAL, opts.runLocal);
+        // Hyracks/Pregelix Setup
+        if (opts.ipAddress != null)
+            set(IP_ADDRESS, opts.ipAddress);
+        setInt(PORT, opts.port);
+        setBoolean(PROFILE, opts.profile);
+        
                 
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
@@ -365,9 +372,5 @@ public class GenomixJobConf extends JobConf {
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
         
-        // Hyracks/Pregelix Setup
-        set(IP_ADDRESS, opts.ipAddress);
-        setInt(PORT, opts.port);
-        setBoolean(PROFILE, opts.profile);
     }
 }
