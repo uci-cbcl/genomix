@@ -20,6 +20,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     private NodeWritable node; //except kmer, other field should be updated when MergeBubble
     private byte meToMajorDir;
     private byte meToMinorDir;
+    private boolean isFlip;
     
     public BubbleMergeMessageWritable(){
         super();
@@ -27,6 +28,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         node = new NodeWritable();
         meToMajorDir = 0;
         meToMinorDir = 0;
+        isFlip = false;
     }
     
     public void set(BubbleMergeMessageWritable msg){
@@ -36,6 +38,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         this.setNode(msg.node);
         this.setMeToMajorDir(msg.meToMajorDir);
         this.setMeToMinorDir(msg.meToMinorDir);
+        this.setFlip(msg.isFlip());
     }
     
     public void reset(){
@@ -44,6 +47,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         node.reset();
         meToMajorDir = 0;
         meToMinorDir = 0;
+        isFlip = false;
     }
     
     public byte getRelativeDirToMajor(){
@@ -64,6 +68,14 @@ public class BubbleMergeMessageWritable extends MessageWritable{
 
     public void setMajorVertexId(VKmerBytesWritable majorVertexId) {
         this.majorVertexId.setAsCopy(majorVertexId);
+    }
+    
+    public VKmerBytesWritable getTopCoverageVertexId() {
+        return majorVertexId;
+    }
+
+    public void setTopCoverageVertexId(VKmerBytesWritable topCoverageVertexId) {
+        this.majorVertexId.setAsCopy(topCoverageVertexId);
     }
     
     public NodeWritable getNode() {
@@ -89,6 +101,14 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     public void setMeToMinorDir(byte meToMinorDir) {
         this.meToMinorDir = meToMinorDir;
     }
+    
+    public boolean isFlip() {
+        return isFlip;
+    }
+
+    public void setFlip(boolean isFlip) {
+        this.isFlip = isFlip;
+    }
 
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -98,6 +118,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         node.readFields(in);
         meToMajorDir = in.readByte();
         meToMinorDir = in.readByte();
+        isFlip = in.readBoolean();
     }
     
     @Override
@@ -107,6 +128,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         node.write(out);
         out.writeByte(meToMajorDir);
         out.write(meToMinorDir);
+        out.writeBoolean(isFlip);
     }
     
     public static class SortByCoverage implements Comparator<BubbleMergeMessageWritable> {
@@ -116,8 +138,12 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         }
     }
     
+    public boolean isFlip(BubbleMergeMessageWritable other){
+        return this.getRelativeDirToMajor() == other.getRelativeDirToMajor();
+    }
+    
     public float computeDissimilar(BubbleMergeMessageWritable other){
-        if(this.getRelativeDirToMajor() == other.getRelativeDirToMajor())
+        if(isFlip(other))
             return this.getNode().getInternalKmer().fracDissimilar(other.getNode().getInternalKmer());
         else{
             String reverse = other.getNode().getInternalKmer().toString();

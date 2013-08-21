@@ -358,10 +358,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
      * merge all metadata from `other` into this, as if `other` were the same node as this.
      * We don't touch the internal kmer but we do add edges, coverage, and start/end readids.
      */
-    public void addFromNode(byte dir, final NodeWritable other) {
-        addEdges(dir, other);
+    public void addFromNode(boolean flip, final NodeWritable other) {
+        addEdges(flip, other);
         addCoverage(other);
-        addStartAndEndReadIDs(dir, other);
+        addStartAndEndReadIDs(flip, other);
     }
 
     /**

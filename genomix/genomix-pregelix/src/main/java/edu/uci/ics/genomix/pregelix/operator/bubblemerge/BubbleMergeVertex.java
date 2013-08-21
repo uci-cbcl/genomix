@@ -142,6 +142,10 @@ public class BubbleMergeVertex extends
         return isSameEdgeType(topBubbleToMajorDir, curBubbleToMajorDir) && isSameEdgeType(topBubbleToMinorDir, curBubbleToMinorDir);
     }
     
+    public boolean isFlipRelativeToMajor(BubbleMergeMessageWritable msg1, BubbleMergeMessageWritable msg2){
+        return msg1.getRelativeDirToMajor() == msg2.getRelativeDirToMajor();
+    }
+    
     public void processSimilarSetToUnchangeSetAndDeletedSet(){
         unchangedSet.clear();
         deletedSet.clear();
@@ -157,11 +161,15 @@ public class BubbleMergeVertex extends
                 //check if the vertex is valid minor and if it comes from valid major
                 if(!isValidMajorAndMinor())
                     continue;
-                //compute the similarity  
+                //compute the similarity
                 float fracDissimilar = topCoverageMessage.computeDissimilar(curMessage);
                 if(fracDissimilar < dissimilarThreshold){ //if similar with top node, delete this node and put it in deletedSet 
                     //add coverage to top node
-                    topCoverageMessage.getNode().addFromNode(curMessage.getNode());
+                    topCoverageMessage.getNode().addFromNode(isFlipRelativeToMajor(topCoverageMessage, curMessage), 
+                            curMessage.getNode());
+                    boolean flip = curMessage.isFlip(topCoverageMessage);
+                    curMessage.setFlip(flip);
+                    curMessage.setTopCoverageVertexId(topCoverageMessage.getSourceVertexId());
                     deletedSet.add(curMessage);
                     it.remove();
                 }
@@ -183,8 +191,43 @@ public class BubbleMergeVertex extends
         for(BubbleMergeMessageWritable msg : deletedSet){
             outFlag = MessageFlag.KILL;
             outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setTopCoverageVertexId(msg.getTopCoverageVertexId());
+            outgoingMsg.setFlip(msg.isFlip());
             sendMsg(msg.getSourceVertexId(), outgoingMsg);
         }
+    }
+    
+    /**
+     * broadcast kill self to all neighbors and send message to update neighbor's edges ***
+     */
+    public void broadcaseKillselfAndNoticeToUpdateEdges(){
+        outFlag = 0;
+        outFlag |= MessageFlag.KILL;
+        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
+        
+        outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
+        outgoingMsg.setFlip(incomingMsg.isFlip());
+        sendSettledMsgToAllNeighborNodes(getVertexValue());
+        
+        deleteVertex(getVertexId());
+    }
+    
+    /**
+     * do some remove operations on adjMap after receiving the info about dead Vertex
+     */
+    public void responseToDeadVertexAndUpdateEdges(){
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        
+        EdgeWritable edge = new EdgeWritable();
+        edge.setAsCopy(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()));
+        edge.setKey(incomingMsg.getTopCoverageVertexId());
+        EdgeListWritable edgeList = new EdgeListWritable();
+        edgeList.add(edge);
+        byte updateDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
+        getVertexValue().getEdgeList(updateDir).unionUpdate(edgeList);
+        
+        getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
     }
     
     @Override
@@ -200,6 +243,8 @@ public class BubbleMergeVertex extends
             aggregateBubbleNodesByMajorNode(msgIterator);
             
             for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
+                receivedMsgList.clear();
+                receivedMsgList.addAll(receivedMsgMap.get(prevId));
                 if(receivedMsgList.size() > 1){ // filter bubble
                     /** for each majorVertex, sort the node by decreasing order of coverage **/
                     receivedMsgList = receivedMsgMap.get(prevId);
@@ -219,7 +264,7 @@ public class BubbleMergeVertex extends
                 if(incomingMsg.getFlag() == MessageFlag.KILL){
                     broadcaseKillself();
                 } else if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
-                    /** update average coverage **/
+                    /** update Node including average coverage **/
                     getVertexValue().setNode(incomingMsg.getNode());
                 }
             }
