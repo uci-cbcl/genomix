@@ -15,5 +15,9 @@
       <directory>target/appassembler/lib</directory>
       <outputDirectory>lib</outputDirectory>
     </fileSet>
+    <fileSet>
+      <directory>src/main/resources/conf</directory>
+      <outputDirectory>conf</outputDirectory>
+    </fileSet>
   </fileSets>
 </assembly>
