@@ -72,7 +72,13 @@ public class GenomixDriver {
         FileSystem dfs = FileSystem.get(conf);
         Path dest = new Path(destDir);
         dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(new Path(localDir), dest);
+        
+        File srcBase = new File(localDir);
+        if (srcBase.isDirectory())
+            for (File f : srcBase.listFiles())
+                dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);                
+        else
+            dfs.copyFromLocalFile(new Path(localDir), dest);
     }
 
     private void copyHDFSToLocal(GenomixJobConf conf, String hdfsSrc, String localDest) throws Exception {
@@ -269,15 +275,13 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-runLocal", "-kmerLength", "3", "-ip", "127.0.0.1",
-                "-port",
-                "55",
-                //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/walk_random_seq1.txt",
+        String[] myArgs = { "-runLocal", "-kmerLength", "3", 
+                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/",
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", "-pipelineOrder",
-                "MERGE" };
-        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
+//                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
+                "-pipelineOrder", "BUILD" };
+        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
