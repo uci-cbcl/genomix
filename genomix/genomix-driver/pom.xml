@@ -41,6 +41,7 @@
 							</programs>
 							<repositoryLayout>flat</repositoryLayout>
 							<repositoryName>lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
 						</configuration>
 						<phase>package</phase>
 						<goals>
