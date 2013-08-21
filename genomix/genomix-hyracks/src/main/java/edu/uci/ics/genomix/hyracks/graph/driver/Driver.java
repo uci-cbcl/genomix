@@ -15,8 +15,13 @@
 
 package edu.uci.ics.genomix.hyracks.graph.driver;
 
+import java.io.File;
 import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -36,6 +41,7 @@ import edu.uci.ics.genomix.hyracks.graph.job.JobGenUnMergedGraph;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
+import edu.uci.ics.hyracks.api.deployment.DeploymentId;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
@@ -69,7 +75,7 @@ public class Driver {
     }
 
     public void runJob(GenomixJobConf job) throws HyracksException {
-        runJob(job, Plan.BUILD_DEBRUJIN_GRAPH, false);
+        runJob(job, Plan.BUILD_UNMERGED_GRAPH, false);
     }
 
     public void runJob(GenomixJobConf job, Plan planChoice, boolean profiling) throws HyracksException {
@@ -92,7 +98,6 @@ public class Driver {
             LOG.info("ncmap:" + ncMap.size() + " " + ncMap.keySet().toString());
             switch (planChoice) {
                 case BUILD_DEBRUJIN_GRAPH:
-                default:
                     jobGen = new JobGenBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
                 case CHECK_KMERREADER:
@@ -100,6 +105,9 @@ public class Driver {
                     break;
                 case BUILD_UNMERGED_GRAPH:
                     jobGen = new JobGenUnMergedGraph(job, scheduler, ncMap, numPartitionPerMachine);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unrecognized planChoice: " + planChoice);
             }
 
             start = System.currentTimeMillis();
@@ -123,14 +131,25 @@ public class Driver {
         }
     }
 
-    private void execute(JobSpecification job) throws Exception {
-        job.setUseConnectorPolicyForScheduling(false);
-        JobId jobId = hcc
-                .startJob(job, profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
-        hcc.waitForCompletion(jobId);
+    private DeploymentId prepareJobs() throws Exception {
+        URLClassLoader classLoader = (URLClassLoader) this.getClass().getClassLoader();
+        List<String> jars = new ArrayList<String>();
+        URL[] urls = classLoader.getURLs();
+        for (URL url : urls)
+            if (url.toString().endsWith(".jar"))
+                jars.add(new File(url.getPath()).toString());
+        DeploymentId deploymentId = hcc.deployBinary(jars);
+        return deploymentId;
     }
 
-    
+    private void execute(JobSpecification job) throws Exception {
+        job.setUseConnectorPolicyForScheduling(false);
+        DeploymentId deployId = prepareJobs();
+        JobId jobId = hcc
+                .startJob(deployId, job, profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
+        hcc.waitForCompletion(jobId);
+    }
+        
     public static void main(String[] args) throws Exception {
 //        String[] myArgs = { "-inputDir", "/home/nanz1/TestData", "-outputDir", "/home/hadoop/pairoutput",
 //                "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099" };
@@ -143,7 +162,8 @@ public class Driver {
         
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
         int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));
-        int numOfDuplicate = jobConf.getInt(GenomixJobConf.CPARTITION_PER_MACHINE, 2);
+        int numOfDuplicate = jobConf.getInt(GenomixJobConf.CPARTITION_PER_MACHINE, 4);
+        numOfDuplicate = 4;
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
         jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         jobConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);

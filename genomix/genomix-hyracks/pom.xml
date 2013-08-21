@@ -33,6 +33,7 @@
 				<executions>
 					<execution>
 						<configuration>
+						<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
 							<programs>
 								<program>
 									<mainClass>edu.uci.ics.genomix.hyracks.graph.driver.Driver</mainClass>

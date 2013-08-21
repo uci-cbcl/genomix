@@ -93,14 +93,13 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             public void parse(LongWritable key, Text value, IFrameWriter writer,  String fileString) throws HyracksDataException {
                 String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
                 if (geneLine.length != 2) {
-                    return;
+                    throw new IllegalArgumentException("malformed line found in parser. Two values aren't separated by tabs: " + value.toString());
                 }
                 int readID = 0;
                 try {
                     readID = Integer.parseInt(geneLine[0]);
                 } catch (NumberFormatException e) {
-                    LOG.warn("Invalid data ");
-                    return;
+                    throw new IllegalArgumentException("Malformed line found in parser: ", e);
                 }
 
                 Pattern genePattern = Pattern.compile("[AGCT]+");
@@ -114,7 +113,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private void SplitReads(int readID, byte[] array, IFrameWriter writer) {
                 /*first kmer*/
                 if (kmerSize >= array.length) {
-                    return;
+                    throw new IllegalArgumentException("kmersize (k="+kmerSize+") is larger than the read length (" + array.length + ")");
                 }
                 curNode.reset();
                 nextNode.reset();

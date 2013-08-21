@@ -12,22 +12,10 @@
  ! See the License for the specific language governing permissions and
  ! limitations under the License.
  !-->
-<assembly>
-  <id>binary-assembly</id>
-  <formats>
-    <format>zip</format>
-    <format>dir</format>
-  </formats>
-  <includeBaseDirectory>false</includeBaseDirectory>
-  <fileSets>
-    <fileSet>
-      <directory>target/appassembler/bin</directory>
-      <outputDirectory>bin</outputDirectory>
-      <fileMode>0755</fileMode>
-    </fileSet>
-    <fileSet>
-      <directory>target/appassembler/lib</directory>
-      <outputDirectory>lib</outputDirectory>
-    </fileSet>
-  </fileSets>
-</assembly>
+<cluster-topology>
+    <network-switch name="Global">
+        <network-switch name="local">
+            <terminal name="127.0.0.1"/>
+        </network-switch>
+    </network-switch>
+</cluster-topology>
