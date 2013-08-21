@@ -162,7 +162,7 @@ public class BubbleMergeVertex extends
                 float fracDissimilar = topCoverageMessage.computeDissimilar(curMessage);
                 if(fracDissimilar < dissimilarThreshold){ //if similar with top node, delete this node and put it in deletedSet 
                     //add coverage to top node
-                    topCoverageMessage.getNode().addWithNode(curMessage.getNode());
+                    topCoverageMessage.getNode().addFromNode(curMessage.getNode());
                     deletedSet.add(curMessage);
                     it.remove();
                 }
