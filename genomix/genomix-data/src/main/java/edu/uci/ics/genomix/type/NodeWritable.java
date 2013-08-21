@@ -354,6 +354,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
     
+    public void addWithNode(final NodeWritable other){
+        addEdges(other);
+        addCoverage(other);
+    }
+    
     
     /**
      * update my edge list
@@ -417,6 +422,12 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 edges[DirectionFlag.DIR_RF].setAsCopy(other.edges[DirectionFlag.DIR_RF]);
                 edges[DirectionFlag.DIR_RR].setAsCopy(other.edges[DirectionFlag.DIR_RR]);
                 break;
+        }
+    }
+    
+    public void addEdges(NodeWritable other){
+        for(byte dir : DirectionFlag.values){
+            edges[dir].unionUpdate(other.edges[dir]);
         }
     }
 

@@ -76,6 +76,12 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         return edges.add(new EdgeWritable(element));
     }
     
+    public boolean add(VKmerBytesWritable kmer) {
+        EdgeWritable edge = new EdgeWritable();
+        edge.setKey(kmer);
+        return edges.add(edge);
+    }
+    
     public EdgeWritable set(int i, EdgeWritable element) {
         return edges.set(i, element);
     }

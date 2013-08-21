@@ -5,8 +5,8 @@ import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -16,6 +16,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
 /*
  * vertexId: BytesWritable
@@ -53,10 +54,14 @@ public class BubbleAddVertex extends
     public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
     public static int kmerSize = -1;
    
-    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable("ATA"); //forward
-    private VKmerBytesWritable middleVertexId = new VKmerBytesWritable("CTA"); //reverse
-    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable("AGA"); //forward
-    private VKmerBytesWritable insertedBubble = new VKmerBytesWritable("GTA"); //reverse
+    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable("ACA"); //forward
+    private VKmerBytesWritable middleVertexId = new VKmerBytesWritable("ATG"); //reverse
+    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable("TCA"); //forward
+    private VKmerBytesWritable insertedBubble = new VKmerBytesWritable("ATT"); //reverse
+    private byte majorToNewBubbleDir = MessageFlag.DIR_RR;
+    private byte minorToNewBubbleDir = MessageFlag.DIR_FR;
+    
+    private EdgeListWritable[] edges = new EdgeListWritable[4];
     
     /**
      * initiate kmerSize, length
@@ -99,21 +104,32 @@ public class BubbleAddVertex extends
         getVertexValue().getEdgeList(dir).add(newEdge);
     }
     
+    public void setupEdgeForInsertedBubble(){
+        for (byte d : DirectionFlag.values) {
+            edges[d] = new EdgeListWritable();
+        }
+        edges[majorToNewBubbleDir].add(majorVertexId);
+        edges[minorToNewBubbleDir].add(minorVertexId);
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
         if(getSuperstep() == 1){
             if(getVertexId().equals(majorVertexId)){
                 /** add edge pointing to insertedBubble **/
-                addEdgeToInsertedBubble(DirectionFlag.DIR_FR, insertedBubble);
+                addEdgeToInsertedBubble(majorToNewBubbleDir, insertedBubble);
             } 
             else if(getVertexId().equals(minorVertexId)){
                 /** add edge pointing to insertedBubble **/
-                addEdgeToInsertedBubble(DirectionFlag.DIR_RF, insertedBubble);
+                addEdgeToInsertedBubble(minorToNewBubbleDir, insertedBubble);
             } 
             else if(getVertexId().equals(middleVertexId)){
+                /** setup edges of insertedBubble**/
+                setupEdgeForInsertedBubble();
+                
                 /** insert new bubble **/
-                insertBubble(getVertexValue().getEdges(), insertedBubble, getVertexValue().getInternalKmer());
+                insertBubble(edges, insertedBubble, getVertexValue().getInternalKmer());
             }
         }
         voteToHalt();
