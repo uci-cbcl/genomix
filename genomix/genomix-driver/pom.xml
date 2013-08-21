@@ -33,10 +33,21 @@
 				<executions>
 					<execution>
 						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
 							<programs>
 								<program>
 									<mainClass>edu.uci.ics.genomix.driver.GenomixDriver</mainClass>
 									<name>genomix</name>
+								</program>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+									<name>genomixcc</name>
+								</program>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+									<name>genomixnc</name>
 								</program>
 							</programs>
 							<repositoryLayout>flat</repositoryLayout>
