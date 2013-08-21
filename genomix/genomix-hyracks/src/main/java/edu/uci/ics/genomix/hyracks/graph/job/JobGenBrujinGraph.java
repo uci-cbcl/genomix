@@ -117,7 +117,7 @@ public class JobGenBrujinGraph extends JobGen {
 
         switch (groupbyType) {
             case PRECLUSTER:
-            default:
+            default: // TODO throw exception here
                 obj[0] = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, aggregator,
                         combineRed);
@@ -235,7 +235,7 @@ public class JobGenBrujinGraph extends JobGen {
     protected void initJobConfiguration(Scheduler scheduler) throws HyracksDataException {
         Configuration conf = confFactory.getConf();
         kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
-        if (kmerSize % 2 == 0) {
+        if (kmerSize % 2 == 0) {  // TODO remove this check completely 
             throw new IllegalArgumentException("kmerLength cannot be even!");
         }
         frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, GenomixJobConf.DEFAULT_FRAME_LIMIT);
@@ -249,7 +249,7 @@ public class JobGenBrujinGraph extends JobGen {
 
         if (output.equalsIgnoreCase(GenomixJobConf.OUTPUT_FORMAT_TEXT)) {
             outputFormat = OutputFormat.TEXT;
-        } else {
+        } else {  // TODO make this an else if and throw an error on bad input
             outputFormat = OutputFormat.BINARY;
         }
         try {
