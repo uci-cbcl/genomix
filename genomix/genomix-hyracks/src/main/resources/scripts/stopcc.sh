@@ -1,3 +1,5 @@
+#!/bin/bash
+
 hostname
 . conf/cluster.properties
 
@@ -14,7 +16,7 @@ if [ "$PID" == "" ]; then
 fi
 
 echo $PID
-kill -9 $PID
+kill -9 $PID || echo "Couldn't find process with PID $PID"
 
 #Clean up CC temp dir
 rm -rf $CCTMP_DIR/*

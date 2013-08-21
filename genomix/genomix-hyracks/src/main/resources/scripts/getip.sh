@@ -1,3 +1,7 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
 #get the OS
 OS_NAME=`uname -a|awk '{print $1}'`
 LINUX_OS='Linux'

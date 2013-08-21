@@ -1,4 +1,8 @@
 #!/bin/bash
+set -e
+set -o pipefail
+
+
 hostname
 
 #Import cluster properties

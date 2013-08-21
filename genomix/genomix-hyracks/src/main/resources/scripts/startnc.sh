@@ -1,3 +1,7 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
 hostname
 
 MY_NAME=`hostname`

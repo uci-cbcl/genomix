@@ -1,3 +1,7 @@
+#!/bin/bash
+set -e
+set -o pipefail
+
 hostname
 
 #Get the IP address of the cc
