@@ -348,4 +348,21 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             edges.add(new EdgeWritable(key, unionEdges.get(key)));
         }
     }
+
+    /**
+     * Adds the given edge in to my list. If I have the same key as `other`, that entry will be the union of both sets of readIDs.
+     */
+    public void unionAdd(EdgeWritable otherEdge) {
+        VKmerBytesWritable otherKey = otherEdge.getKey();
+        for (EdgeWritable e : this) {
+            if (e.getKey().equals(otherKey)) {
+                for (PositionWritable p : otherEdge.getReadIDs()) {
+                    e.appendReadID(p);
+                }
+                return;
+            }
+        }
+        // didn't find the edge; add a copy of it now
+        edges.add(new EdgeWritable(otherEdge));
+    }
 }
