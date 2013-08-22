@@ -94,14 +94,13 @@ public class JobGenerator {
     }
 //    
 //    private static void generateP3ForMergeGraphJob(String jobName, String outputPath) throws IOException {
-//        PregelixJob job = new PregelixJob(jobName);
+//        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
 //        job.setVertexClass(P3ForPathMergeVertex.class);
 //        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
 //        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
 //        job.setDynamicVertexValueSize(true);
 //        job.setOutputKeyClass(PositionWritable.class);
 //        job.setOutputValueClass(VertexValueWritable.class);
-//        job.getConfiguration().setInt(P3ForPathMergeVertex.KMER_SIZE, 3);
 //        job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, 0.3f);
 //        job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, 2);
 //        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
