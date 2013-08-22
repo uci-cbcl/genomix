@@ -45,6 +45,23 @@ public class RandomString {
 
         return new String(buf);
     }
+    
+    public String nextString(int startIdx, int endIdx) {
+        String tmp = "";
+        for (int idx = startIdx; idx < endIdx;) {
+            buf[idx] = symbols[random.nextInt(4)];
+            if (idx >= k - 1) {
+                tmp = new String(buf, idx - k + 1, k);
+                if (!existKmer.contains(tmp)) {
+                    existKmer.add(tmp);
+                    idx++;
+                }
+            } else
+                idx++;
+        }
+
+        return new String(buf);
+    }
 
     public void setLength(int length) {
         buf = new char[length];
@@ -53,6 +70,12 @@ public class RandomString {
     public void addString(String s) {
         char[] tmp = s.toCharArray();
         for (int i = 0; i < tmp.length; i++)
+            buf[i] = tmp[i];
+    }
+    
+    public void addString(String s, int startIdx) {
+        char[] tmp = s.toCharArray();
+        for (int i = startIdx; i < tmp.length; i++)
             buf[i] = tmp[i];
     }
 

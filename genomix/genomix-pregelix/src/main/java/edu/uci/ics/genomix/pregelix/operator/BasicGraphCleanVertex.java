@@ -68,6 +68,8 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     }
     
     public byte getHeadFlag(){
+        if(getVertexValue().getState() == MessageFlag.IS_HALT)
+            return 0;
         return (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
@@ -427,8 +429,13 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if(getHeadFlag() != MessageFlag.IS_HEAD && !isTandemRepeat()){
-                setHeadMergeDir();
-                activate();
+                if(isValidPath()){
+                    setHeadMergeDir();
+                    activate();
+                } else{
+                    getVertexValue().setState(MessageFlag.IS_HALT);
+                    voteToHalt();
+                }
             } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
                 activate();
             } else{ /** already set up **/
@@ -437,6 +444,25 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
                 voteToHalt();
             }
         }
+    }
+    
+    /**
+     * check if it is valid path
+     */
+    public boolean isValidPath(){
+        if(isHaltNode())
+            return false;
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        switch(neighborToMeDir){
+            case MessageFlag.DIR_FF:
+            case MessageFlag.DIR_FR:
+                return getVertexValue().inDegree() == 1;
+            case MessageFlag.DIR_RF:
+            case MessageFlag.DIR_RR:
+                return getVertexValue().outDegree() == 1;
+        }
+        return true;
     }
     
     /**

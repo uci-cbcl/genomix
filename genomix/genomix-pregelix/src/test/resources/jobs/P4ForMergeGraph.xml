@@ -84,7 +84,7 @@
 <property><name>fs.har.impl</name><value>org.apache.hadoop.fs.HarFileSystem</value></property>
 <property><name>io.mapfile.bloom.error.rate</name><value>0.005</value></property>
 <property><name>mapred.job.tracker</name><value>local</value></property>
-<property><name>BasicGraphCleanVertex.kmerSize</name><value>3</value></property>
+<property><name>BasicGraphCleanVertex.kmerSize</name><value>5</value></property>
 <property><name>io.skip.checksum.errors</name><value>false</value></property>
 <property><name>mapred.reduce.max.attempts</name><value>4</value></property>
 <property><name>fs.s3.maxRetries</name><value>4</value></property>
