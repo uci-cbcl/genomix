@@ -102,7 +102,7 @@ public class GenomixDriver {
                     key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                     value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
                     if (bw == null)
-                        bw = new BufferedWriter(new FileWriter(localDestDir + File.separator + "text"));
+                        bw = new BufferedWriter(new FileWriter(localDestDir + File.separator + "data"));
                     while (reader.next(key, value)) {
                         if (key == null || value == null)
                             break;
@@ -238,13 +238,15 @@ public class GenomixDriver {
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = { "-runLocal", "-kmerLength", "3",
-                //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/",
-                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/pathmerge",
-                "-localOutput", "output",
+                "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
+//                "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
+//                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
+//                "-localInput", "output-build/bin",
+                "-localOutput", "output-both",
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD" };
+                "-pipelineOrder", "BUILD,MERGE" };
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);

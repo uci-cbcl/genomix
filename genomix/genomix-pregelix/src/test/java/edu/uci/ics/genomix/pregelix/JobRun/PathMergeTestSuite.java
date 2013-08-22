@@ -18,11 +18,14 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
 //                "RingPath", "CyclePath",
 //                "SimpleTreePath", "ComplexTreePath", "HyracksGraphBuild"
 //                };
-        String PreFix = "BubbleMerge_Input"; 
+//        String PreFix = "BubbleMerge_Input"; 
+//        String testSet[] = { PreFix + File.separator
+//            + "SimpleRectangle", PreFix + File.separator
+//            + "MediumRectangle", PreFix + File.separator
+//            + "ComplexRectangle"};
+        String PreFix = "SmallRandom"; 
         String testSet[] = { PreFix + File.separator
-            + "SimpleRectangle", PreFix + File.separator
-            + "MediumRectangle", PreFix + File.separator
-            + "ComplexRectangle"};
+            + "synthetic1"};
 //        , PreFix + File.separator
 //            + "LtoL", PreFix + File.separator
 //            + "LtoR", PreFix + File.separator
