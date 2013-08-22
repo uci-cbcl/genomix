@@ -186,12 +186,11 @@ public class GenomixDriver {
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
-        GenomixMiniCluster testCluster = new GenomixMiniCluster();
         jobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         if (runLocal)
-            testCluster.setUp(conf);
+            GenomixMiniCluster.init(conf);
         
         String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
         if (localInput != null) {
@@ -272,7 +271,7 @@ public class GenomixDriver {
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
 
         if (runLocal)
-            testCluster.tearDown();
+            GenomixMiniCluster.deinit();
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
@@ -282,7 +281,7 @@ public class GenomixDriver {
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
                 "-pipelineOrder", "BUILD" };
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
