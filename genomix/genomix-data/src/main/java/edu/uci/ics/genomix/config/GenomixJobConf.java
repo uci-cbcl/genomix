@@ -100,6 +100,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
         private boolean profile = false;
         
+        @Option(name = "-coresPerMachine", usage="the number of cores available in each machine", required=false)
+        private int coresPerMachine;
+        
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port", required=false)
         private boolean runLocal = false;
         
@@ -170,7 +173,7 @@ public class GenomixJobConf extends JobConf {
     public static final String RUN_LOCAL = "genomix.runLocal";
 
     // TODO should these also be command line options?
-    public static final String CPARTITION_PER_MACHINE = "genomix.driver.duplicate.num";
+    public static final String CORES_PER_MACHINE = "genomix.driver.duplicate.num";
     public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
     public static final String TABLE_SIZE = "genomix.tablesize";
@@ -322,8 +325,8 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, "genomix_out");  // should be in the user's home directory? 
         
         // hyracks-specific
-        if (getInt(CPARTITION_PER_MACHINE, -1) == -1)
-            setInt(CPARTITION_PER_MACHINE, 2);
+        if (getInt(CORES_PER_MACHINE, -1) == -1)
+            setInt(CORES_PER_MACHINE, 4);
         
         if (getBoolean(RUN_LOCAL, false)) {
             // override any other settings for HOST and PORT
@@ -356,13 +359,14 @@ public class GenomixJobConf extends JobConf {
         if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
             throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
         setBoolean(RUN_LOCAL, opts.runLocal);
+        
         // Hyracks/Pregelix Setup
         if (opts.ipAddress != null)
             set(IP_ADDRESS, opts.ipAddress);
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
-        
-                
+        setInt(CORES_PER_MACHINE, opts.coresPerMachine);
+       
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
@@ -371,6 +375,5 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
-        
     }
 }

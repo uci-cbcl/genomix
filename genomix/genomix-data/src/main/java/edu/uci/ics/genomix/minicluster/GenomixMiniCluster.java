@@ -37,7 +37,7 @@ public class GenomixMiniCluster {
         makeLocalClusterConfig();
         ClusterConfig.setClusterPropertiesPath(clusterProperties.toAbsolutePath().toString());
         ClusterConfig.setStorePath(clusterStores.toAbsolutePath().toString());
-//        dfsCluster = new MiniDFSCluster(conf, Integer.parseInt(conf.get(GenomixJobConf.CPARTITION_PER_MACHINE)), true, null);
+//        dfsCluster = new MiniDFSCluster(conf, Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)), true, null);
         
         // cluster controller
         CCConfig ccConfig = new CCConfig();

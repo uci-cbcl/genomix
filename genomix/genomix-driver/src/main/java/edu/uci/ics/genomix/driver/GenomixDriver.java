@@ -127,7 +127,7 @@ public class GenomixDriver {
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
                 Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
-                        .get(GenomixJobConf.CPARTITION_PER_MACHINE)));
+                        .get(GenomixJobConf.CORES_PER_MACHINE)));
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
     }
