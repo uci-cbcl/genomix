@@ -40,6 +40,7 @@ import org.kohsuke.args4j.CmdLineException;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.minicluster.GenomixMiniCluster;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
@@ -185,7 +186,7 @@ public class GenomixDriver {
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
-        TestCluster2 testCluster = new TestCluster2();
+        GenomixMiniCluster testCluster = new GenomixMiniCluster();
         jobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
