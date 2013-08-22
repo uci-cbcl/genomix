@@ -6,10 +6,11 @@ public class BubbleMergeTestSuite extends BasicGraphCleanTestSuite{
 
     public static Test suite() throws Exception {
         String pattern ="BubbleMerge";
-        String testSet[] = {"OverlapBubble"}; 
-//            {"SimpleBubble", "LtoL", "LtoR", "RtoL", "RtoR",
-//                "InvalidBubble", "BubbleWithTip",
-//                "SimpleRectangle", "MediumRectangle", "ComplexRectangle"};
+        String testSet[] = {"SimpleBubble", "LtoL", "LtoR", "RtoL", "RtoR", "FRandRF",
+                "InvalidBubble", "BubbleWithTip", 
+                "SideBubble", "OverlapBubble",
+                "SimpleRectangle", "MediumRectangle", "ComplexRectangle",
+                "ThreeSquares", "Grid"};
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
         return makeTestSuite(testSuite);
