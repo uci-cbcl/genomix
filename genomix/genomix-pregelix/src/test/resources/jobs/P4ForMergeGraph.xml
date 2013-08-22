@@ -75,11 +75,11 @@
 <property><name>pregelix.incStateLength</name><value>true</value></property>
 <property><name>mapred.job.tracker.handler.count</name><value>10</value></property>
 <property><name>mapred.tasktracker.expiry.interval</name><value>600000</value></property>
-<property><name>genomix.PathMergeRandom.randSeed</name><value>1.37715712E12</value></property>
+<property><name>genomix.PathMergeRandom.randSeed</name><value>1.37721034E12</value></property>
 <property><name>mapred.jobtracker.maxtasks.per.job</name><value>-1</value></property>
 <property><name>mapred.jobtracker.job.history.block.size</name><value>3145728</value></property>
 <property><name>keep.failed.task.files</name><value>false</value></property>
-<property><name>genomix.driver.duplicate.num</name><value>2</value></property>
+<property><name>genomix.driver.duplicate.num</name><value>4</value></property>
 <property><name>ipc.client.tcpnodelay</name><value>false</value></property>
 <property><name>mapred.task.profile.reduces</name><value>0-2</value></property>
 <property><name>genomix.bridgeRemove.maxLength</name><value>4</value></property>

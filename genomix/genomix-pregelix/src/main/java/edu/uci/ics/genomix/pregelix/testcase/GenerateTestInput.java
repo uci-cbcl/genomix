@@ -56,6 +56,22 @@ public class GenerateTestInput {
         return s2;
     }
     
+    /**
+     * Grid
+     */
+    public static String gridPath(int kmerSize){
+        int length = kmerSize + kmerSize + kmerSize + 1;
+        RandomString rs = new RandomString(kmerSize, length); // 3 + 3 + 3
+        String row1 = rs.nextString(0, length).substring(0, length - 1);
+        rs.nextString(kmerSize, kmerSize + 1);
+        String row2 = rs.nextString(2*kmerSize, 2*kmerSize + 1).substring(1, length);
+        String column1 = row1.substring(0, kmerSize) + row2.substring(0, 2*kmerSize - 1);
+        String column2 = row1.substring(1, 1 + 2*kmerSize - 1) + row2.substring(2*kmerSize - 1, 3*kmerSize - 1);
+        String column3 = row1.substring(1 + kmerSize, length - 1) + row2.substring(length -1);
+        return row1 + "\r\n" + row2 + "\r\n" + column1 + "\r\n" + column2 + "\r\n" + column3;
+
+    }
+    
     public static void generateSimplePath(String destDir, int kmerSize, int readLength, int numLines){
         OutputStreamWriter writer;
         try {
@@ -100,23 +116,36 @@ public class GenerateTestInput {
         }
     }
     
+    public static void generateGridPath(String destDir, int kmerSize){
+        OutputStreamWriter writer;
+        try {
+            writer = new OutputStreamWriter(new FileOutputStream(destDir));
+            writer.write(gridPath(kmerSize));
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     public static void main(String[] args) {
-        int kmerSize = 3; 
-        /** SimplePath **/
-        int readLength = 9;
-        int numLines = 3;
-        generateSimplePath("graph/SimplePath", kmerSize, readLength, numLines);
-        /** BridgePath **/
-        int headLength = 2;
-        int bridgeLength = 4; 
-        generateBridgePath("graph/BridgePath", kmerSize, headLength, bridgeLength, readLength);
-        /** TreePath **/
-        int x = 5;
-        int y = 5;
-        int z = 5;
-        generateTreePath("graph/TreePath", kmerSize, x, y, z);
-        /** CyclePath **/
-        int cycleLength = 8;
-        generateCyclePath("graph/CyclePath", kmerSize, cycleLength);
+        int kmerSize = 5; 
+//        /** SimplePath **/
+//        int readLength = 9;
+//        int numLines = 3;
+//        generateSimplePath("graph/SimplePath", kmerSize, readLength, numLines);
+//        /** BridgePath **/
+//        int headLength = 2;
+//        int bridgeLength = 4; 
+//        generateBridgePath("graph/BridgePath", kmerSize, headLength, bridgeLength, readLength);
+//        /** TreePath **/
+//        int x = 5;
+//        int y = 5;
+//        int z = 5;
+//        generateTreePath("graph/TreePath", kmerSize, x, y, z);
+//        /** CyclePath **/
+//        int cycleLength = 8;
+//        generateCyclePath("graph/CyclePath", kmerSize, cycleLength);
+        /** GridPath **/
+        generateGridPath("graph/GridPath", kmerSize);
     }
 }

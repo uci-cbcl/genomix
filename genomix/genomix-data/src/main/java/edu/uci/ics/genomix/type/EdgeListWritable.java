@@ -357,7 +357,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         for (EdgeWritable e : this) {
             if (e.getKey().equals(otherKey)) {
                 for (PositionWritable p : otherEdge.getReadIDs()) {
-                    e.appendReadID(p);
+                    e.unionAddReadId(p);
                 }
                 return;
             }
