@@ -424,9 +424,13 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
      * initiate head, rear and path node
      */
     public void initState(Iterator<M> msgIterator) {
+        if(getVertexId().toString().equals("CTA"))
+            System.out.print("");
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            if(getHeadFlag() != MessageFlag.IS_HEAD && !isTandemRepeat()){
+            if(isHaltNode())
+                voteToHalt();
+            else if(getHeadFlag() != MessageFlag.IS_HEAD && !isTandemRepeat()){
                 if(isValidPath()){
                     setHeadMergeDir();
                     activate();
@@ -448,8 +452,6 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
      * check if it is valid path
      */
     public boolean isValidPath(){
-        if(isHaltNode())
-            return false;
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         switch(neighborToMeDir){
