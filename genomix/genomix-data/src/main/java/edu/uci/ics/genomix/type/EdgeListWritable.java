@@ -76,6 +76,12 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         return edges.add(new EdgeWritable(element));
     }
     
+    public boolean add(VKmerBytesWritable kmer) {
+        EdgeWritable edge = new EdgeWritable();
+        edge.setKey(kmer);
+        return edges.add(edge);
+    }
+    
     public EdgeWritable set(int i, EdgeWritable element) {
         return edges.set(i, element);
     }
@@ -306,7 +312,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             this.getReadIDs(toRemove.getKey()).removeReadId(readId);
         }
         if(this.getReadIDs(toRemove.getKey()).isEmpty())
-            this.remove(toRemove);
+            this.remove(toRemove.getKey());
     }
 
     /**
@@ -341,5 +347,22 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         for (VKmerBytesWritable key : unionEdges.keySet()) {
             edges.add(new EdgeWritable(key, unionEdges.get(key)));
         }
+    }
+
+    /**
+     * Adds the given edge in to my list. If I have the same key as `other`, that entry will be the union of both sets of readIDs.
+     */
+    public void unionAdd(EdgeWritable otherEdge) {
+        VKmerBytesWritable otherKey = otherEdge.getKey();
+        for (EdgeWritable e : this) {
+            if (e.getKey().equals(otherKey)) {
+                for (PositionWritable p : otherEdge.getReadIDs()) {
+                    e.appendReadID(p);
+                }
+                return;
+            }
+        }
+        // didn't find the edge; add a copy of it now
+        edges.add(new EdgeWritable(otherEdge));
     }
 }

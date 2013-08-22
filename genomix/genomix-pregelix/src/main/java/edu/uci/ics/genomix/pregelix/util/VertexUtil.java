@@ -153,6 +153,11 @@ public class VertexUtil {
         return isPathVertex(value) || (value.inDegree() == 1 && !isPathVertex(value));
     }
     
+    /** 
+     * check condition for starting to send msg 
+     * @param value
+     * @return
+     */
     public static boolean isVertexWithOnlyOneIncoming(VertexValueWritable value){
         return value.inDegree() == 1 && !isPathVertex(value);
     }
@@ -172,4 +177,16 @@ public class VertexUtil {
     public static boolean isActiveVertex(VertexValueWritable value){
         return value.inDegree() == 1 || value.outDegree() == 1;
     }
+    
+    /**
+     * check if the vertex is bubble
+     */
+    public static boolean isBubbleVertex(VertexValueWritable value){
+        return value.inDegree() > 0 && value.outDegree() > 0;
+    }
+    
+    /**
+     * check if the vertex is major or minor
+     */
+
 }

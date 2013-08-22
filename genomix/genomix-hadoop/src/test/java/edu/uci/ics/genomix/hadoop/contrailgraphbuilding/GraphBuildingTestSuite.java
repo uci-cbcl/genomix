@@ -22,10 +22,23 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 public class GraphBuildingTestSuite extends TestSuite{
 
     private static int SIZE_KMER = 3;
-    public static final String PreFix = "data/webmap/SplitRepeat_TestSet"; 
+    public static final String PreFix = "data/webmap/BubbleMerge_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-//        + "LeftAdj", PreFix + File.separator
-        + "2to1"};
+          + "SimpleRectangle", PreFix + File.separator
+          + "MediumRectangle", PreFix + File.separator
+          + "ComplexRectangle"
+    };
+//        + "SimpleBubble", PreFix + File.separator
+//        + "LtoL", PreFix + File.separator
+//        + "LtoR", PreFix + File.separator
+//        + "RtoL", PreFix + File.separator
+//        + "RtoR"}; //, PreFix + File.separator
+//        + "InvalidBubble", PreFix + File.separator
+//        + "BubbleWithTip", PreFix + File.separator
+//        + "SideBubble", PreFix + File.separator
+//        + "OverlapBubble", PreFix + File.separator
+//        + "Rectangle", PreFix + File.separator
+//        + "Grid"};
 //        + "SimpleSplitManyTimes", PreFix + File.separator
 //        + "ComplexSplitManyTimes"};
 //        + "TandemRepeatWithMergeEdge", PreFix + File.separator

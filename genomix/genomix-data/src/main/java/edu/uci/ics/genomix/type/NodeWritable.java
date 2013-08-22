@@ -353,8 +353,46 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         mergeCoverage(other);
         internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
-    
-    
+
+    /**
+     * merge all metadata from `other` into this, as if `other` were the same node as this.
+     * We don't touch the internal kmer but we do add edges, coverage, and start/end readids.
+     */
+    public void addFromNode(boolean flip, final NodeWritable other) {
+        addEdges(flip, other);
+        addCoverage(other);
+        addStartAndEndReadIDs(flip, other);
+    }
+
+    /**
+     * Add `other`'s readids to my own accounting for any differences in orientation and overall length.
+     * differences in length will lead to relative offsets, where the incoming readids will be found in the
+     * new sequence at the same relative position (e.g., 10% of the total length from 5' start).
+     */
+    private void addStartAndEndReadIDs(boolean flip, final NodeWritable other) {
+        int otherLength = other.internalKmer.lettersInKmer;
+        int thisLength = internalKmer.lettersInKmer;
+        float lengthFactor = (float) thisLength / (float) otherLength;
+        if (flip) {
+            // stream theirs in, adjusting to the new total length
+            for (PositionWritable p : other.startReads) {
+                startReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
+            }
+            for (PositionWritable p : other.endReads) {
+                endReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
+            }
+        } else {
+            int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
+            // stream theirs in, offset and flipped
+            for (PositionWritable p : other.startReads) {
+                endReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
+            }
+            for (PositionWritable p : other.endReads) {
+                startReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
+            }
+        }
+    }
+
     /**
      * update my edge list
      */
@@ -417,6 +455,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 edges[DirectionFlag.DIR_RF].setAsCopy(other.edges[DirectionFlag.DIR_RF]);
                 edges[DirectionFlag.DIR_RR].setAsCopy(other.edges[DirectionFlag.DIR_RR]);
                 break;
+        }
+    }
+
+    private void addEdges(boolean flip, NodeWritable other) {
+        if (flip) {
+            for (byte d : DirectionFlag.values) {
+                edges[d].unionUpdate(other.edges[d]);
+            }
+        } else {
+            edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+            edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+            edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+            edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
         }
     }
 
