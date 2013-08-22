@@ -139,18 +139,16 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     }
     
     public boolean isFlip(BubbleMergeMessageWritable other){
-        return this.getRelativeDirToMajor() == other.getRelativeDirToMajor();
+        return this.getRelativeDirToMajor() != other.getRelativeDirToMajor();
     }
     
     public float computeDissimilar(BubbleMergeMessageWritable other){
-        if(isFlip(other))
-            return this.getNode().getInternalKmer().fracDissimilar(other.getNode().getInternalKmer());
-        else{
+        if(isFlip(other)){
             String reverse = other.getNode().getInternalKmer().toString();
             VKmerBytesWritable reverseKmer = new VKmerBytesWritable();
             reverseKmer.setByReadReverse(reverse.length(), reverse.getBytes(), 0);
             return this.getNode().getInternalKmer().fracDissimilar(reverseKmer);
-        }
-        
+        } else
+            return this.getNode().getInternalKmer().fracDissimilar(other.getNode().getInternalKmer());
     }
 }

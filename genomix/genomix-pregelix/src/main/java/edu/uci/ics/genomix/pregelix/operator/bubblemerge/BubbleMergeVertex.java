@@ -262,7 +262,7 @@ public class BubbleMergeVertex extends
             if(msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 if(incomingMsg.getFlag() == MessageFlag.KILL){
-                    broadcaseKillself();
+                    broadcaseKillselfAndNoticeToUpdateEdges();
                 } else if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
                     /** update Node including average coverage **/
                     getVertexValue().setNode(incomingMsg.getNode());
@@ -272,7 +272,7 @@ public class BubbleMergeVertex extends
             if(msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 if(isResponseKillMsg()){
-                    responseToDeadVertex();
+                    responseToDeadVertexAndUpdateEdges();
                 }
             }
         }
