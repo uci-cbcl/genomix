@@ -19,19 +19,16 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.util.GenericOptionsParser;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
@@ -48,6 +45,7 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
+@SuppressWarnings("deprecation")
 public class Driver {
     public static enum Plan {
         BUILD_DEBRUJIN_GRAPH,
@@ -154,32 +152,29 @@ public class Driver {
 //        String[] myArgs = { "-inputDir", "/home/nanz1/TestData", "-outputDir", "/home/hadoop/pairoutput",
 //                "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099" };
         GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
-/*        String[] otherArgs = jobConf.getExtraArguments();
-        if (otherArgs.length < 2) {
-            System.err.println("Need <input> <output> as additional arguments!");
-            System.exit(-1);
-        }*/
         
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
         int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));
-        int numOfDuplicate = jobConf.getInt(GenomixJobConf.CPARTITION_PER_MACHINE, 4);
-        numOfDuplicate = 4;
+        int numOfDuplicate = jobConf.getInt(GenomixJobConf.CORES_PER_MACHINE, 4);
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
         jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         jobConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         
-//         FileInputFormat.setInputPaths(jobConf, jobConf.i);
-//        {
-//            @SuppressWarnings("deprecation")
-//            Path path = new Path(jobConf.getWorkingDirectory(), otherArgs[0]);
-//            jobConf.set("mapred.input.dir", path.toString());
+        System.out.println(GenomixJobConf.INITIAL_INPUT_DIR);
+        System.out.println(GenomixJobConf.FINAL_OUTPUT_DIR);
+        FileInputFormat.setInputPaths(jobConf, new Path(jobConf.get(GenomixJobConf.INITIAL_INPUT_DIR)));
+        {
+          Path path = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.INITIAL_INPUT_DIR));
+          jobConf.set("mapred.input.dir", path.toString());
 
-//            @SuppressWarnings("deprecation")
-//            Path outputDir = new Path(jobConf.getWorkingDirectory(), otherArgs[1]);
-//            jobConf.set("mapred.output.dir", outputDir.toString());
-//        }
-        // FileInputFormat.addInputPath(jobConf, new Path(otherArgs[2]));
-//         FileOutputFormat.setOutputPath(jobConf, new Path(otherArgs[3]));
+          Path outputDir = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR));
+          jobConf.set("mapred.output.dir", outputDir.toString());
+        }
+        
+        FileOutputFormat.setOutputPath(jobConf, new Path(jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR)));
+        FileSystem dfs = FileSystem.get(jobConf);
+        dfs.delete(new Path(jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR)), true);
+        
         Driver driver = new Driver(ipAddress, port, numOfDuplicate);
         driver.runJob(jobConf, Plan.BUILD_UNMERGED_GRAPH, bProfiling);
     }

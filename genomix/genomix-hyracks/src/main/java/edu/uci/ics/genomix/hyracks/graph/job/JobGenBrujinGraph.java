@@ -63,9 +63,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 @SuppressWarnings("deprecation")
 public class JobGenBrujinGraph extends JobGen {
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 1L;
 
     public enum GroupbyType {
@@ -117,7 +115,6 @@ public class JobGenBrujinGraph extends JobGen {
 
         switch (groupbyType) {
             case PRECLUSTER:
-            default: // TODO throw exception here
                 obj[0] = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, aggregator,
                         combineRed);
@@ -128,6 +125,8 @@ public class JobGenBrujinGraph extends JobGen {
                         finalRec);
                 jobSpec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
                 break;
+            default:
+                throw new IllegalArgumentException("Unrecognized groupbyType: " + groupbyType);
         }
         return obj;
     }
@@ -235,9 +234,6 @@ public class JobGenBrujinGraph extends JobGen {
     protected void initJobConfiguration(Scheduler scheduler) throws HyracksDataException {
         Configuration conf = confFactory.getConf();
         kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
-        if (kmerSize % 2 == 0) {  // TODO remove this check completely 
-            throw new IllegalArgumentException("kmerLength cannot be even!");
-        }
         frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, GenomixJobConf.DEFAULT_FRAME_LIMIT);
         tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
         frameSize = conf.getInt(GenomixJobConf.FRAME_SIZE, GenomixJobConf.DEFAULT_FRAME_SIZE);
@@ -249,9 +245,12 @@ public class JobGenBrujinGraph extends JobGen {
 
         if (output.equalsIgnoreCase(GenomixJobConf.OUTPUT_FORMAT_TEXT)) {
             outputFormat = OutputFormat.TEXT;
-        } else {  // TODO make this an else if and throw an error on bad input
+        } else if(output.equalsIgnoreCase(GenomixJobConf.OUTPUT_FORMAT_BINARY)){
             outputFormat = OutputFormat.BINARY;
+        } else {
+            throw new IllegalArgumentException("Unrecognized outputFormat: " + output);
         }
+        
         try {
             hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()

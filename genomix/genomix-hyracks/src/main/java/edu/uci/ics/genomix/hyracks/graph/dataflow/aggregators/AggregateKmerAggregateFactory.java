@@ -85,7 +85,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 localUniNode.getEndReads().appendList(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
                 // make an empty field
-//                tupleBuilder.addFieldEndOffset();// mark question?
+//                tupleBuilder.addFieldEndOffset();
             }
 
             @Override
@@ -119,8 +119,6 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
             }
-
         };
     }
-
 }

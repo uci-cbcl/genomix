@@ -32,9 +32,6 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 public class JobGenUnMergedGraph extends JobGenBrujinGraph{
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     public JobGenUnMergedGraph(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,

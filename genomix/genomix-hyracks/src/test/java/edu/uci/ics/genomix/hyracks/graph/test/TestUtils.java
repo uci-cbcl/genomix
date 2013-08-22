@@ -55,8 +55,7 @@ public class TestUtils {
                 if (lineExpected == null) {
                     flag = false;
                 }
-                System.out.println(lineExpected);
-                System.out.println(actualLine);
+
                 if (!equalStrings(lineExpected, actualLine)) {
                     flag = false;
                     System.out.println(lineExpected);
@@ -108,7 +107,6 @@ public class TestUtils {
         }
     }
 
-    @SuppressWarnings({ "resource", "finally" })
     public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
