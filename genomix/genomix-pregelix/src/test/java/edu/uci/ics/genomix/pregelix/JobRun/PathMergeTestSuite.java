@@ -20,9 +20,8 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
 //                };
         String PreFix = "BubbleMerge_Input"; 
         String testSet[] = { PreFix + File.separator
-            + "SimpleRectangle", PreFix + File.separator
-            + "MediumRectangle", PreFix + File.separator
-            + "ComplexRectangle"};
+//            + "SideBubble", PreFix + File.separator
+            + "Grid1"};
 //        , PreFix + File.separator
 //            + "LtoL", PreFix + File.separator
 //            + "LtoR", PreFix + File.separator

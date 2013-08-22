@@ -147,6 +147,9 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         return getVertexValue().getState() == State.IS_HALT;
     }
     
+    public boolean isDeadNode(){
+        return getVertexValue().getState() == State.IS_DEAD;
+    }
     /**
      * check the message type
      */
@@ -613,6 +616,10 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             addVertex(fakeVertex, vertex);
             fakeVertexExist = true;
         }
+    }
+    
+    public boolean isFakeVertex(){
+        return ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0;
     }
     
     /**

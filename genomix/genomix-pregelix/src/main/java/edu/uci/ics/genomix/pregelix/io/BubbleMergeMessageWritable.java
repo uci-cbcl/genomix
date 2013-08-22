@@ -17,36 +17,48 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     }
     
     private VKmerBytesWritable majorVertexId; //use for MergeBubble
+    private VKmerBytesWritable minorVertexId;
     private NodeWritable node; //except kmer, other field should be updated when MergeBubble
     private byte meToMajorDir;
     private byte meToMinorDir;
+    private VKmerBytesWritable topCoverageVertexId;
     private boolean isFlip;
     
     public BubbleMergeMessageWritable(){
         super();
         majorVertexId = new VKmerBytesWritable();
+        minorVertexId = new VKmerBytesWritable();
         node = new NodeWritable();
         meToMajorDir = 0;
         meToMinorDir = 0;
+        topCoverageVertexId = new VKmerBytesWritable();
         isFlip = false;
+    }
+    
+    public BubbleMergeMessageWritable(BubbleMergeMessageWritable msg){
+        set(msg);
     }
     
     public void set(BubbleMergeMessageWritable msg){
         this.setSourceVertexId(msg.getSourceVertexId());
         this.setFlag(msg.getFlag());
         this.setMajorVertexId(msg.getMajorVertexId());
+        this.setMinorVertexId(msg.getMinorVertexId());
         this.setNode(msg.node);
         this.setMeToMajorDir(msg.meToMajorDir);
         this.setMeToMinorDir(msg.meToMinorDir);
+        this.setTopCoverageVertexId(msg.topCoverageVertexId);
         this.setFlip(msg.isFlip());
     }
     
     public void reset(){
         super.reset();
         majorVertexId.reset(0);
+        minorVertexId.reset(0);
         node.reset();
         meToMajorDir = 0;
         meToMinorDir = 0;
+        topCoverageVertexId.reset(0);
         isFlip = false;
     }
     
@@ -67,15 +79,30 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     }
 
     public void setMajorVertexId(VKmerBytesWritable majorVertexId) {
+        if(this.majorVertexId == null)
+            this.majorVertexId = new VKmerBytesWritable();
         this.majorVertexId.setAsCopy(majorVertexId);
     }
     
+    
+    public VKmerBytesWritable getMinorVertexId() {
+        return minorVertexId;
+    }
+
+    public void setMinorVertexId(VKmerBytesWritable minorVertexId) {
+        if(this.minorVertexId == null)
+            this.minorVertexId = new VKmerBytesWritable();
+        this.minorVertexId.setAsCopy(minorVertexId);
+    }
+
     public VKmerBytesWritable getTopCoverageVertexId() {
-        return majorVertexId;
+        return topCoverageVertexId;
     }
 
     public void setTopCoverageVertexId(VKmerBytesWritable topCoverageVertexId) {
-        this.majorVertexId.setAsCopy(topCoverageVertexId);
+        if(this.topCoverageVertexId == null)
+            this.topCoverageVertexId = new VKmerBytesWritable();
+        this.topCoverageVertexId.setAsCopy(topCoverageVertexId);
     }
     
     public NodeWritable getNode() {
@@ -83,6 +110,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     }
 
     public void setNode(NodeWritable node) {
+        if(this.node == null)
+            this.node = new NodeWritable();
         this.node.setAsCopy(node);
     }
     
@@ -109,15 +138,17 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     public void setFlip(boolean isFlip) {
         this.isFlip = isFlip;
     }
-
+    
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
         majorVertexId.readFields(in);
+        minorVertexId.readFields(in);
         node.readFields(in);
         meToMajorDir = in.readByte();
         meToMinorDir = in.readByte();
+        topCoverageVertexId.readFields(in);
         isFlip = in.readBoolean();
     }
     
@@ -125,9 +156,11 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     public void write(DataOutput out) throws IOException {
         super.write(out);
         majorVertexId.write(out);
+        minorVertexId.write(out);
         node.write(out);
         out.writeByte(meToMajorDir);
         out.write(meToMinorDir);
+        topCoverageVertexId.write(out);
         out.writeBoolean(isFlip);
     }
     

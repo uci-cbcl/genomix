@@ -37,10 +37,12 @@ public class VertexValueWritable
     public static class VertexStateFlag extends FakeFlag {
         public static final byte IS_NON = 0b00 << 5;
         public static final byte IS_HEAD = 0b01 << 5;
-        public static final byte IS_FINAL = 0b10 << 5; 
+        public static final byte IS_FINAL = 0b10 << 5;
+        
         public static final byte IS_OLDHEAD = 0b11 << 5;
         
         public static final byte IS_HALT = 0b1111111;
+        public static final byte IS_DEAD = 0b0111111;
         public static final byte VERTEX_MASK = 0b11 << 5;
         public static final byte VERTEX_CLEAR = (byte) 11001111;
     }

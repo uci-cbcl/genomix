@@ -117,6 +117,15 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
         readIDs.append((byte)0, posn.getReadId(), 0);
     }
     
+    public void unionAddReadId(PositionWritable posn){
+        Iterator<Long> it = readIDIter();
+        while(it.hasNext()){
+            if(it.next() == posn.getReadId())
+                return;
+        }
+        readIDs.append((byte)0, posn.getReadId(), 0);
+    }
+    
     public void appendReadID(long readID) {
         readIDs.append((byte)0, readID, 0);
     }
