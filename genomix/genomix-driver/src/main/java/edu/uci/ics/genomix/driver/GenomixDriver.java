@@ -23,11 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
@@ -67,97 +65,61 @@ public class GenomixDriver {
     private boolean followingBuild = false; // need to adapt the graph immediately after building
 
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
-    private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
+    private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(
+            this.getClass());
 
     private void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
         FileSystem dfs = FileSystem.get(conf);
         Path dest = new Path(destDir);
+        dfs.delete(dest, true);
         dfs.mkdirs(dest);
-        
+
         File srcBase = new File(localDir);
         if (srcBase.isDirectory())
             for (File f : srcBase.listFiles())
-                dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);                
+                dfs.copyFromLocalFile(new Path(f.toString()), dest);
         else
             dfs.copyFromLocalFile(new Path(localDir), dest);
     }
 
-    private void copyHDFSToLocal(GenomixJobConf conf, String hdfsSrc, String localDest) throws Exception {
-        FileUtils.deleteDirectory(new File(localDest));
-        copyResultsToLocal(hdfsSrc, localDest, false, conf, true, FileSystem.get(conf));
-        //        FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrc), FileSystem.getLocal(new Configuration()), new Path(
-        //                localDest), false, conf);
-    }
+    private static void copyBinToLocal(GenomixJobConf conf, String hdfsSrcDir, String localDestDir) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        FileUtils.deleteQuietly(new File(localDestDir));
 
-    private static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
-            Configuration conf, boolean ignoreZeroOutputs, FileSystem dfs) throws IOException {
-        if (resultsAreText) {
-            // for text files, just concatenate them together
-            FileUtil.copyMerge(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
-                    new Path(localDestFile), false, conf, null);
-        } else {
-            // file is binary
-            // save the entire binary output dir
-            FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
-                    new Path(localDestFile + ".bindir"), false, conf);
+        // save original binary to output/bin
+        dfs.copyToLocalFile(new Path(hdfsSrcDir), new Path(localDestDir + File.separator + "bin"));
 
-            // chomp through output files
-            FileStatus[] files = ArrayUtils.addAll(dfs.globStatus(new Path(hdfsSrcDir + "*")),
-                    dfs.globStatus(new Path(hdfsSrcDir + "*/*")));
-            FileStatus validFile = null;
-            for (FileStatus f : files) {
-                if (f.getLen() != 0) {
-                    validFile = f;
-                    break;
-                }
-            }
-            if (validFile == null) {
-                if (ignoreZeroOutputs) {
-                    // just make a dummy output dir
-                    FileSystem lfs = FileSystem.getLocal(new Configuration());
-                    lfs.mkdirs(new Path(localDestFile).getParent());
-                    return;
-                } else {
-                    throw new IOException("No non-zero outputs in source directory " + hdfsSrcDir);
-                }
-            }
-
-            // also load the Nodes and write them out as text locally. 
-            FileSystem lfs = FileSystem.getLocal(new Configuration());
-            lfs.mkdirs(new Path(localDestFile).getParent());
-            File filePathTo = new File(localDestFile);
-            if (filePathTo.exists() && filePathTo.isDirectory()) {
-                filePathTo = new File(localDestFile + "/data");
-            }
-            BufferedWriter bw = new BufferedWriter(new FileWriter(filePathTo));
-            SequenceFile.Reader reader = new SequenceFile.Reader(dfs, validFile.getPath(), conf);
-            SequenceFile.Writer writer = new SequenceFile.Writer(lfs, new JobConf(), new Path(localDestFile
-                    + ".binmerge"), reader.getKeyClass(), reader.getValueClass());
-
-            Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-            Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-
-            for (FileStatus f : files) {
-                if (f.getLen() == 0) {
-                    continue;
-                }
-                reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
-                while (reader.next(key, value)) {
-                    if (key == null || value == null) {
-                        break;
+        // convert hdfs sequence files to text as output/text
+        BufferedWriter bw = null;
+        SequenceFile.Reader reader = null;
+        Writable key = null;
+        Writable value = null;
+        FileStatus[] files = dfs.globStatus(new Path(hdfsSrcDir + File.separator + "*"));
+        for (FileStatus f : files) {
+            if (f.getLen() != 0) {
+                try {
+                    reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
+                    key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+                    value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+                    if (bw == null)
+                        bw = new BufferedWriter(new FileWriter(localDestDir + File.separator + "text"));
+                    while (reader.next(key, value)) {
+                        if (key == null || value == null)
+                            break;
+                        bw.write(key.toString() + "\t" + value.toString());
+                        bw.newLine();
                     }
-                    bw.write(key.toString() + "\t" + value.toString());
-                    System.out.println(key.toString() + "\t" + value.toString());
-                    bw.newLine();
-                    writer.append(key, value);
-
+                } catch (Exception e) {
+                    System.out.println("Encountered an error copying " + f + " to local:\n" + e);
+                } finally {
+                    if (reader != null)
+                        reader.close();
                 }
-                reader.close();
+                
             }
-            writer.close();
-            bw.close();
         }
-
+        if (bw != null)
+            bw.close();
     }
 
     private void buildGraph(GenomixJobConf conf) throws NumberFormatException, HyracksException {
@@ -191,14 +153,14 @@ public class GenomixDriver {
         boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         if (runLocal)
             GenomixMiniCluster.init(conf);
-        
+
         String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
         if (localInput != null) {
-            conf.set(GenomixJobConf.INITIAL_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator + "00-initial-input-from-genomix-driver");
+            conf.set(GenomixJobConf.INITIAL_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+                    + "00-initial-input-from-genomix-driver");
             copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
         }
         curOutput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
-        
 
         // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
         String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
@@ -264,9 +226,9 @@ public class GenomixDriver {
         }
 
         //            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS), Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-        
+
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
-            copyHDFSToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+            copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
 
@@ -275,11 +237,13 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-runLocal", "-kmerLength", "3", 
-                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/",
+        String[] myArgs = { "-runLocal", "-kmerLength", "3",
+                //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/synthetic/",
+                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/pathmerge",
+                "-localOutput", "output",
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-//                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
+                //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
                 "-pipelineOrder", "BUILD" };
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
