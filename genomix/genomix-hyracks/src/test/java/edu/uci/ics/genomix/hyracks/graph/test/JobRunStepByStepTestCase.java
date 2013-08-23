@@ -36,16 +36,20 @@ import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 
 @SuppressWarnings("deprecation")
+/**
+ * this StepByStepTestCase only applied on OutputTextFormt
+ *
+ */
 public class JobRunStepByStepTestCase {
     private static final int KmerSize = 3;
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/LowSplitRepeat.txt";
+    private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/walk_random_seq1.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
     
-    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/Test.txt";
+    private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/walk_random_seq1.txt";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
     
@@ -80,7 +84,7 @@ public class JobRunStepByStepTestCase {
     }
     
     public void TestGroupbyUnMerged() throws Exception {
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, true);
@@ -90,12 +94,13 @@ public class JobRunStepByStepTestCase {
     @Before
     public void setUp() throws Exception {
         cleanupStores();
+        conf.setBoolean(GenomixJobConf.RUN_LOCAL, true);
         edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHDFS();
 
-        FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH);
+        FileInputFormat.setInputPaths(conf, new Path(HDFS_INPUT_PATH));
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
         conf.setInt(GenomixJobConf.KMER_LENGTH, KmerSize);

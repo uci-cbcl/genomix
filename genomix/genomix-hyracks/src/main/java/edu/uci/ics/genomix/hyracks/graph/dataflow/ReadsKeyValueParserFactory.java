@@ -199,7 +199,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     tempEdge.setAsCopy(nextReverseKmer, readIdList);
                     curNode.getEdgeList(DirectionFlag.DIR_RR).add(tempEdge);
                     tempEdge.setAsCopy(curReverseKmer, readIdList);
-                    nextNode.getEdgeList(DirectionFlag.DIR_RR).add(tempEdge);
+                    nextNode.getEdgeList(DirectionFlag.DIR_FF).add(tempEdge);
                 }
             }
 

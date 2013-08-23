@@ -25,7 +25,8 @@ public class TestSet {
     public final String BUBBLE = "bubble";
     public final String SPLITREPEAT = "splitrepeat";
     public final String BRIDGE = "bridge";
-
+    public final String RANDOM = "random";
+    
     public final String[] SRSET = { "HighSplitRepeat", "MidSplitRepeat", "LowSplitRepeat" };
     public final String[] TIPSET = { "Tips1", "Tips2", "Tips3", "Tips4" };
 
@@ -34,7 +35,8 @@ public class TestSet {
         TIP,
         BUBBLE,
         SPLITREPEAT,
-        BRIDGE
+        BRIDGE,
+        RANDOM
     }
 
     private DirType testSet;
@@ -87,7 +89,7 @@ public class TestSet {
     public String[] getAllTestInputinDir() throws IOException {
         switch (testSet) {
             case PATHMERGE:
-                break;
+                return detectAllTestSet(PREFIX + PATHMERGE);
             case TIP:
                 return detectAllTestSet(PREFIX + TIP);
             case BUBBLE:
@@ -96,6 +98,8 @@ public class TestSet {
                 return detectAllTestSet(PREFIX + SPLITREPEAT);
             case BRIDGE:
                 break;
+            case RANDOM:
+                return detectAllTestSet(PREFIX + RANDOM);
         }
         return null;
     }
