@@ -13,7 +13,7 @@ import string
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--walk', '-w', action='store_true')
+    parser.add_argument('--walk', '-w', action='store_true', help="walk the genome in regular intervals rather than placing the reads randomly")
     parser.add_argument('--coverage', '-c', type=float, required=True)
     parser.add_argument('--genome-length', '-g', type=int,
                         required=True)

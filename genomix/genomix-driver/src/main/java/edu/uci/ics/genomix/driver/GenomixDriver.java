@@ -16,7 +16,10 @@
 package edu.uci.ics.genomix.driver;
 
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,6 +61,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  * The main entry point for the Genomix assembler, a hyracks/pregelix/hadoop-based deBruijn assembler.
  */
 public class GenomixDriver {
+    private static final String HADOOP_CONF = "hadoop.conf.xml";
     private String prevOutput;
     private String curOutput;
     private int stepNum;
@@ -122,13 +126,26 @@ public class GenomixDriver {
             bw.close();
     }
 
-    private void buildGraph(GenomixJobConf conf) throws NumberFormatException, HyracksException {
+    private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, HyracksException {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
+//        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
+//                Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
+//                        .get(GenomixJobConf.CORES_PER_MACHINE)));
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
-                Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
-                        .get(GenomixJobConf.CORES_PER_MACHINE)));
+                Integer.parseInt(conf.get(GenomixJobConf.PORT)), 1);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
+        followingBuild = true;
+    }
+    
+    private void buildGraphWithHadoop(GenomixJobConf conf) throws IOException {
+        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
+        conf.writeXml(confOutput);
+        confOutput.close();
+        edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver(); 
+        hadoopDriver.run(prevOutput, curOutput, Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)), 
+                Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), true, HADOOP_CONF);
+        FileUtils.deleteQuietly(new File(HADOOP_CONF));
         followingBuild = true;
     }
 
@@ -169,12 +186,13 @@ public class GenomixDriver {
             switch (step) {
                 case BUILD:
                 case BUILD_HYRACKS:
-                    setOutput(conf, Patterns.BUILD);
-                    buildGraph(conf);
+                    setOutput(conf, Patterns.BUILD_HYRACKS);
+                    buildGraphWithHyracks(conf);
                     break;
-                case BUILD_MR:
-                    //TODO add the hadoop build code
-                    throw new IllegalArgumentException("BUILD_MR hasn't been added to the driver yet!");
+                case BUILD_HADOOP:
+                    setOutput(conf, Patterns.BUILD_HADOOP);
+                    buildGraphWithHadoop(conf);
+                    break;
                 case MERGE_P1:
                     setOutput(conf, Patterns.MERGE_P1);
                     addJob(P1ForPathMergeVertex.getConfiguredJob(conf));
@@ -238,15 +256,15 @@ public class GenomixDriver {
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = { "-runLocal", "-kmerLength", "3",
-                "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
-//                "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
+//                "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
+                "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
 //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
 //                "-localInput", "output-build/bin",
-                "-localOutput", "output-both",
+                "-localOutput", "output-simple",
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD,MERGE" };
+                "-pipelineOrder", "BUILD_HADOOP,MERGE,TIP_REMOVE" };
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);

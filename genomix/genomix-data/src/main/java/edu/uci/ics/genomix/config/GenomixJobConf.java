@@ -116,7 +116,7 @@ public class GenomixJobConf extends JobConf {
     public static enum Patterns {
         BUILD,
         BUILD_HYRACKS,
-        BUILD_MR,
+        BUILD_HADOOP,
         MERGE,
         MERGE_P1,
         MERGE_P2,
