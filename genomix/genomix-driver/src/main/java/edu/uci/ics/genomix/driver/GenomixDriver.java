@@ -116,7 +116,7 @@ public class GenomixDriver {
         Writable value = null;
         FileStatus[] files = dfs.globStatus(new Path(hdfsSrcDir + File.separator + "*"));
         for (FileStatus f : files) {
-            if (f.getLen() != 0) {
+            if (f.getLen() != 0 && !f.isDir()) {
                 try {
                     reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
                     key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
@@ -149,7 +149,7 @@ public class GenomixDriver {
         SequenceFile.Reader reader = null;
         VKmerBytesWritable key = null;
         NodeWritable value = null;
-        TreeMap<Float, Long> coverageCounts = new TreeMap<Float, Long>();        
+        TreeMap<Integer, Long> coverageCounts = new TreeMap<Integer, Long>();        
         FileStatus[] files = dfs.globStatus(new Path(inputStats + File.separator + "*"));
         for (FileStatus f : files) {
             if (f.getLen() != 0) {
@@ -160,7 +160,7 @@ public class GenomixDriver {
                     while (reader.next(key, value)) {
                         if (key == null || value == null)
                             break;
-                        Float cov = value.getAverageCoverage();
+                        Integer cov = java.lang.Math.round(value.getAverageCoverage());
                         Long count = coverageCounts.get(cov);
                         if (count == null)
                             coverageCounts.put(cov, new Long(1));
@@ -177,7 +177,7 @@ public class GenomixDriver {
         }
         
         XYSeries series = new XYSeries("Kmer Coverage");
-        for (Entry<Float, Long> pair : coverageCounts.entrySet()) {
+        for (Entry<Integer, Long> pair : coverageCounts.entrySet()) {
             series.add(pair.getKey().floatValue(), pair.getValue().longValue());
         }
         XYDataset xyDataset = new XYSeriesCollection(series);
@@ -373,8 +373,8 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-                String[] myArgs = { "-runLocal", "-kmerLength", "55",
-                        "-coresPerMachine", "1",
+                String[] myArgs = { "-runLocal", "-kmerLength", "5",
+                        "-coresPerMachine", "2",
 //                        "-saveIntermediateResults", "true",
 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
 //                        "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
@@ -386,7 +386,7 @@ public class GenomixDriver {
                         //                            "-pipelineOrder", "BUILD,MERGE",
                         //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                         //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                        "-pipelineOrder", "BUILD_HYRACKS,STATS,MERGE,DUMP_FASTA" };
+                        "-pipelineOrder", "BUILD_HADOOP,STATS,MERGE,DUMP_FASTA" };
                 
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
