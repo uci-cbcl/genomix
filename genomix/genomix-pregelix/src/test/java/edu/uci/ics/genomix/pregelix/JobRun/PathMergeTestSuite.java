@@ -17,7 +17,8 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
 //                "RingPath", "CyclePath",
 //                "SimpleTreePath", "ComplexTreePath",
 //                "Triangle", "Rectangle", 
-                "synthetic",
+//                "synthetic",
+                "SmallGenome"
                 };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
