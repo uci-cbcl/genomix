@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
@@ -137,7 +138,7 @@ public class JobGenBrujinGraph extends JobGen {
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
-                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize));
+                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize, hadoopJobConfFactory));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -252,7 +253,10 @@ public class JobGenBrujinGraph extends JobGen {
         }
         
         try {
+            
+            JobConf jobconf = new JobConf(conf);
             hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
+            
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
             readSchedule = scheduler.getLocationConstraints(splits);
@@ -268,5 +272,4 @@ public class JobGenBrujinGraph extends JobGen {
         LOG.info("Frame limit" + frameLimits);
         LOG.info("Frame kmerByteSize" + frameSize);
     }
-
 }

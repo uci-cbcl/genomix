@@ -46,7 +46,7 @@ import edu.uci.ics.genomix.hyracks.graph.test.TestSet.DirType;
 @SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
 public class ParameteredTestCaseForSet {
-    public static final DirType testSetType = DirType.PATHMERGE;
+    public static final DirType testSetType = DirType.RANDOM;
 
     public String dataPath;
     public int KmerSize;

@@ -37,10 +37,12 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+
 /**
  * This test only applied on SequenceInputFormat，
  *
  */
+
 @SuppressWarnings("deprecation")
 public class ResultsCheckingTest {
 

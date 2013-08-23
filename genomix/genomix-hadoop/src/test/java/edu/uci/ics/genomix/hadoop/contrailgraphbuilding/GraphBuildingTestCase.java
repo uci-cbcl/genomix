@@ -15,7 +15,6 @@ import org.junit.Test;
 import edu.uci.ics.genomix.hadoop.graph.GenerateGraphViz;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 
-
 @SuppressWarnings({ "deprecation", "unused" })
 public class GraphBuildingTestCase extends TestCase{
 
@@ -58,7 +57,6 @@ public class GraphBuildingTestCase extends TestCase{
         driver.run(HDFS_INPUTPATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, true, HADOOP_CONF_PATH);
         dumpResult();
     }
-    
     
     private void dumpResult() throws Exception {
 //        Path src = new Path(RESULT_PATH);

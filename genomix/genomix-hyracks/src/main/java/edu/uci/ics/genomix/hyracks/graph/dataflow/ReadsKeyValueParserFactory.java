@@ -15,6 +15,7 @@
 
 package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -50,13 +53,14 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     public static final int OutputNodeField = 1;
 
     private final int kmerSize;
-    protected ConfFactory confFac;
+    public ConfFactory confFac;
     
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
             null });
 
-    public ReadsKeyValueParserFactory(int k) {
+    public ReadsKeyValueParserFactory(int k, ConfFactory conFac) {
         this.kmerSize = k;
+        this.confFac = conFac;
     }
 
     public enum KmerDir {
@@ -88,29 +92,75 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private KmerDir nextKmerDir = KmerDir.FORWARD;
 
             byte mateId = (byte) 0;
-
+            boolean fastqFormat = false;
+            int lineCount = 0;
+            
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer,  String fileString) throws HyracksDataException {
-                String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
-                if (geneLine.length != 2) {
-                    throw new IllegalArgumentException("malformed line found in parser. Two values aren't separated by tabs: " + value.toString());
+                
+                String[] tokens = fileString.split("\\.(?=[^\\.]+$)");  // split on the last "." to get the basename and the extension
+                if (tokens.length > 2) 
+                    throw new IllegalStateException("Parse error trying to parse filename... split extension tokens are: " + tokens.toString());
+                String basename = tokens[0];
+                String extension = tokens.length == 2 ? tokens[1] : ""; 
+                
+                if (basename.endsWith("_2")) {
+                    mateId = (byte) 1;
+                } else {
+                    mateId = (byte) 0;
                 }
-                int readID = 0;
-                try {
-                    readID = Integer.parseInt(geneLine[0]);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Malformed line found in parser: ", e);
+                
+                if (extension.contains("fastq") || extension.contains("fq")) {
+                    //TODO
+//                    if (! (job.getInputFormat() instanceof NLineInputFormat)) {
+//                        throw new IllegalStateException("Fastq files require the NLineInputFormat (was " + job.getInputFormat() + " ).");
+//                    }
+//                    if (job.getInt("mapred.line.input.format.linespermap", -1) % 4 != 0) {
+//                        throw new IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was " + job.get("mapred.line.input.format.linespermap") + ").");
+//                    }
+                    fastqFormat = true;
                 }
-
+                
+//                String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
+//                if (geneLine.length != 2) {
+//                    throw new IllegalArgumentException("malformed line found in parser. Two values aren't separated by tabs: " + value.toString());
+//                }
+//                int readID = 0;
+//                try {
+//                    readID = Integer.parseInt(geneLine[0]);
+//                } catch (NumberFormatException e) {
+//                    throw new IllegalArgumentException("Malformed line found in parser: ", e);
+//                }
+                
+                lineCount++;
+                long readID = 0;
+                String geneLine;
+                
+                if (fastqFormat) {
+                    if ((lineCount - 1) % 4 == 1) {
+                        readID = key.get();  // this is actually the offset into the file... will it be the same across all files?? //
+                        geneLine = value.toString().trim();
+                    } else {
+                        return;  //skip all other lines
+                    }
+                } else {
+                    String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
+                    if (rawLine.length != 2) {
+                        throw new HyracksDataException("invalid data");
+                    }
+                    readID = Long.parseLong(rawLine[0]);
+                    geneLine = rawLine[1];
+                }
+                
                 Pattern genePattern = Pattern.compile("[AGCT]+");
-                Matcher geneMatcher = genePattern.matcher(geneLine[1]);
+                Matcher geneMatcher = genePattern.matcher(geneLine);
                 boolean isValid = geneMatcher.matches();
                 if (isValid) {
-                    SplitReads(readID, geneLine[1].getBytes(), writer);
+                    SplitReads(readID, geneLine.getBytes(), writer);
                 }
             }
 
-            private void SplitReads(int readID, byte[] array, IFrameWriter writer) {
+            private void SplitReads(long readID, byte[] array, IFrameWriter writer) {
                 /*first kmer*/
                 if (kmerSize >= array.length) {
                     throw new IllegalArgumentException("kmersize (k="+kmerSize+") is larger than the read length (" + array.length + ")");

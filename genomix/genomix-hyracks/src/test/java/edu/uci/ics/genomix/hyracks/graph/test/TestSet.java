@@ -59,6 +59,8 @@ public class TestSet {
             case BRIDGE:
                 testSet = patternType.BRIDGE;
                 break;
+            case RANDOM:
+                testSet = patternType.RANDOM;
         }
     }
 
