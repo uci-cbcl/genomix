@@ -130,7 +130,9 @@ public class GenomixJobConf extends JobConf {
         LOW_COVERAGE,
         TIP_REMOVE,
         SCAFFOLD,
-        SPLIT_REPEAT;
+        SPLIT_REPEAT,
+        STATS,
+        DUMP_FASTA;
         
         /**
          * Get a comma-separated pipeline from the given array of Patterns

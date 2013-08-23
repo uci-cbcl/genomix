@@ -23,7 +23,12 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -37,9 +42,17 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.kohsuke.args4j.CmdLineException;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
+import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.minicluster.GenomixMiniCluster;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
@@ -54,6 +67,9 @@ import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -119,7 +135,93 @@ public class GenomixDriver {
                     if (reader != null)
                         reader.close();
                 }
-                
+
+            }
+        }
+        if (bw != null)
+            bw.close();
+    }
+
+    private static void drawStatistics(GenomixJobConf conf, String inputStats, String outputChart) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        
+        // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
+        SequenceFile.Reader reader = null;
+        VKmerBytesWritable key = null;
+        NodeWritable value = null;
+        TreeMap<Float, Long> coverageCounts = new TreeMap<Float, Long>();        
+        FileStatus[] files = dfs.globStatus(new Path(inputStats + File.separator + "*"));
+        for (FileStatus f : files) {
+            if (f.getLen() != 0) {
+                try {
+                    reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
+                    key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+                    value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+                    while (reader.next(key, value)) {
+                        if (key == null || value == null)
+                            break;
+                        Float cov = value.getAverageCoverage();
+                        Long count = coverageCounts.get(cov);
+                        if (count == null)
+                            coverageCounts.put(cov, new Long(1));
+                        else 
+                            coverageCounts.put(cov, count + 1);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Encountered an error getting stats for " + f + ":\n" + e);
+                } finally {
+                    if (reader != null)
+                        reader.close();
+                }
+            }
+        }
+        
+        XYSeries series = new XYSeries("Kmer Coverage");
+        for (Entry<Float, Long> pair : coverageCounts.entrySet()) {
+            series.add(pair.getKey().floatValue(), pair.getValue().longValue());
+        }
+        XYDataset xyDataset = new XYSeriesCollection(series);
+        JFreeChart chart = ChartFactory.createXYLineChart("Coverage per kmer in " + new File(inputStats).getName(),
+                "Coverage", "Count", xyDataset, PlotOrientation.VERTICAL, true, true, false);
+
+        // Write the data to the output stream:
+        FileOutputStream chartOut = new FileOutputStream(new File(outputChart));
+        ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
+        chartOut.flush();
+        chartOut.close();
+    }
+    
+    
+    private static void dumpGraph(GenomixJobConf conf, String inputGraph, String outputFasta, boolean followingBuild) throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        
+        // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
+        SequenceFile.Reader reader = null;
+        VKmerBytesWritable key = null;
+        NodeWritable value = null;
+        BufferedWriter bw = null;
+        FileStatus[] files = dfs.globStatus(new Path(inputGraph + File.separator + "*"));
+        for (FileStatus f : files) {
+            if (f.getLen() != 0) {
+                try {
+                    reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
+                    key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+                    value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+                    if (bw == null)
+                        bw = new BufferedWriter(new FileWriter(outputFasta));
+                    while (reader.next(key, value)) {
+                        if (key == null || value == null)
+                            break;
+                        bw.write(">node_" + key.toString() + "\n");
+                        bw.write(followingBuild ? key.toString() : value.getInternalKmer().toString());
+                        bw.newLine();
+                    }
+                } catch (Exception e) {
+                    System.out.println("Encountered an error getting stats for " + f + ":\n" + e);
+                } finally {
+                    if (reader != null)
+                        reader.close();
+                }
             }
         }
         if (bw != null)
@@ -169,6 +271,7 @@ public class GenomixDriver {
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         jobs = new ArrayList<PregelixJob>();
         stepNum = 0;
+        boolean dump = false; 
         boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         if (runLocal)
             GenomixMiniCluster.init(conf);
@@ -236,22 +339,32 @@ public class GenomixDriver {
                     setOutput(conf, Patterns.SCAFFOLD);
                     addJob(ScaffoldingVertex.getConfiguredJob(conf));
                     break;
+                case STATS:
+                    drawStatistics(conf, curOutput, "coverage.png");
+                    break;
+                case DUMP_FASTA:
+                    dump = true;
+                    break;
             }
         }
-        
+
         // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
         // this would let them resume at arbitrary points of the pipeline
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
             for (int i = 0; i < jobs.size(); i++) {
-              pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
-                      Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+                pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
+                        Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+                System.out.println("Finished job " + jobs.get(i).getJobName());
             }
         } else {
-            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS), Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS),
+                    Integer.parseInt(conf.get(GenomixJobConf.PORT)));
         }
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+        if (dump)
+            dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
 
@@ -260,23 +373,26 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-runLocal", "-kmerLength", "3",
-                "-saveIntermediateResults", "true",
-//                "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
-                "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
-//                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
-//                "-localInput", "output-build/bin",
-                "-localOutput", "output-skip",
-                //                            "-pipelineOrder", "BUILD,MERGE",
-                //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-                //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD_HADOOP,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE" };
-        
-//        Patterns.BUILD, Patterns.MERGE, 
-//        Patterns.TIP_REMOVE, Patterns.MERGE,
-//        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
-        GenomixDriver driver = new GenomixDriver();
-        driver.runGenomix(conf);
+                String[] myArgs = { "-runLocal", "-kmerLength", "55",
+                        "-coresPerMachine", "1",
+//                        "-saveIntermediateResults", "true",
+//                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
+//                        "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
+                        "-localInput", "/home/wbiesing/code/biggerInput",
+//                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
+        //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
+        //                "-localInput", "output-build/bin",
+//                        "-localOutput", "output-skip",
+                        //                            "-pipelineOrder", "BUILD,MERGE",
+                        //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+                        //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
+                        "-pipelineOrder", "BUILD_HYRACKS,STATS,MERGE,DUMP_FASTA" };
+                
+        //        Patterns.BUILD, Patterns.MERGE, 
+        //        Patterns.TIP_REMOVE, Patterns.MERGE,
+        //        Patterns.BUBBLE, Patterns.MERGE,
+                GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
+                GenomixDriver driver = new GenomixDriver();
+                driver.runGenomix(conf);
     }
 }
