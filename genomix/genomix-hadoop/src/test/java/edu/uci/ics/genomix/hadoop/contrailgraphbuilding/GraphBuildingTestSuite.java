@@ -22,9 +22,9 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 public class GraphBuildingTestSuite extends TestSuite{
 
     private static int SIZE_KMER = 3;
-    public static final String PreFix = "data/webmap/PathMerge_TestSet"; 
+    public static final String PreFix = "data/webmap/RandomWalk_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
-        + "synthetic"
+        + "SmallGenome"
     };
 //          + "SimpleRectangle", PreFix + File.separator
 //          + "MediumRectangle", PreFix + File.separator
