@@ -264,7 +264,7 @@ public class GenomixDriver {
                 "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
 //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
 //                "-localInput", "output-build/bin",
-                "-localOutput", "output-simple",
+                "-localOutput", "output-skip",
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 

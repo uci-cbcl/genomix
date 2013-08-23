@@ -67,8 +67,8 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-hdfsWorkPath", usage = "HDFS directory where pipeline temp output will be saved", required = false)
         private String hdfsWorkPath;
         
-        @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: false)", required = false)
-        private boolean saveIntermediateResults = false;
+        @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: true)", required = false)
+        private boolean saveIntermediateResults = true;
         
 
         // Graph cleaning
