@@ -129,23 +129,25 @@ public class GenomixDriver {
     private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, HyracksException {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-//        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
-//                Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
-//                        .get(GenomixJobConf.CORES_PER_MACHINE)));
+        //        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
+        //                Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
+        //                        .get(GenomixJobConf.CORES_PER_MACHINE)));
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
                 Integer.parseInt(conf.get(GenomixJobConf.PORT)), 1);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
+        System.out.println("Finished job Hyracks-Build-Graph");
         followingBuild = true;
     }
-    
+
     private void buildGraphWithHadoop(GenomixJobConf conf) throws IOException {
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
         conf.writeXml(confOutput);
         confOutput.close();
-        edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver(); 
-        hadoopDriver.run(prevOutput, curOutput, Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)), 
+        edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
+        hadoopDriver.run(prevOutput, curOutput, Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)),
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), true, HADOOP_CONF);
         FileUtils.deleteQuietly(new File(HADOOP_CONF));
+        System.out.println("Finished job Hadoop-Build-Graph");
         followingBuild = true;
     }
 

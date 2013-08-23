@@ -104,7 +104,7 @@ public class GenomixJobConf extends JobConf {
         private boolean profile = false;
         
         @Option(name = "-coresPerMachine", usage="the number of cores available in each machine", required=false)
-        private int coresPerMachine;
+        private int coresPerMachine = -1;
         
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port", required=false)
         private boolean runLocal = false;
