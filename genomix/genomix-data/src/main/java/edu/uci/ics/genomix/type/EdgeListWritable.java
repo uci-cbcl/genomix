@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -203,9 +204,11 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('[');
         String delim = "";
-        for (EdgeWritable e : edges) {
-            sbuilder.append(delim).append(e);
-            delim = ", ";
+        Object[] objs = edges.toArray();
+        Arrays.sort(objs);
+        for (Object e : objs) {
+            sbuilder.append(delim).append(e.toString());
+            delim = ",";
         }
         sbuilder.append(']');
         return sbuilder.toString();

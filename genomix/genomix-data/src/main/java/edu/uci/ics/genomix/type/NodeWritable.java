@@ -324,7 +324,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         for (byte d : DirectionFlag.values) {
             sbuilder.append(edges[d].toString()).append('\t');
         }
-        sbuilder.append("{5':" + startReads.toString() + ", ~5':" + endReads.toString() + "}");
+        sbuilder.append("{5':" + startReads.toString() + ", ~5':" + endReads.toString() + "}").append('\t');
         sbuilder.append(internalKmer.toString()).append('\t');
         sbuilder.append(averageCoverage).append('x').append('}');
         return sbuilder.toString();

@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -301,15 +302,16 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('[');
-        for (PositionWritable pos : this) {
-            sbuilder.append(pos.toString());
-            sbuilder.append(',');
+        long[] ids = toUUIDArray();
+        Arrays.sort(ids);
+        PositionWritable posn = new PositionWritable();
+        String delim = "";
+        for (long p : ids) {
+            posn.set(p);
+            sbuilder.append(delim).append(posn.toString());
+            delim = ",";
         }
-        if (valueCount > 0) {
-            sbuilder.setCharAt(sbuilder.length() - 1, ']');
-        } else {
-            sbuilder.append(']');
-        }
+        sbuilder.append(']');
         return sbuilder.toString();
     }
     
