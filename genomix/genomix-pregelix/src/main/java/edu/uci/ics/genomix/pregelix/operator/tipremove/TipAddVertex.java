@@ -55,7 +55,7 @@ public class TipAddVertex extends
    
     private VKmerBytesWritable splitNode = new VKmerBytesWritable("CTA");
     private VKmerBytesWritable insertedTip = new VKmerBytesWritable("AGC");
-    private byte tipToSplitDir = MessageFlag.DIR_RF;
+    private byte tipToSplitDir = MessageFlag.DIR_FR;
     /**
      * initiate kmerSize, length
      */

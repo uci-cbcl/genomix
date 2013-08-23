@@ -18,9 +18,6 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class UnrollTandemRepeat extends
     BasicGraphCleanVertex<MessageWritable>{
-    public static final String KMER_SIZE = "BasicGraphCleanVertex.kmerSize";
-    public static int kmerSize = -1;
-    
     private EdgeWritable tmpEdge = new EdgeWritable();
     
     /**
@@ -28,8 +25,15 @@ public class UnrollTandemRepeat extends
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = getContext().getConfiguration().getInt(KMER_SIZE, 5);
-        outgoingMsg.reset();
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        if(incomingMsg == null)
+            incomingMsg = new MessageWritable();
+        if(outgoingMsg == null)
+            outgoingMsg = new MessageWritable();
+        else
+            outgoingMsg.reset();
+        if(repeatKmer == null)
+            repeatKmer = new VKmerBytesWritable();
     }
     
     /**
