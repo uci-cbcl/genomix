@@ -64,8 +64,11 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-hdfsOutput", usage = "HDFS directory where the final step's output will be saved", required = false)
         private String hdfsOutput;
         
-        @Option(name = "-hdfsWorkPath", usage = "HDFS directory where pipeline temp ouptut will be saved", required = false)
+        @Option(name = "-hdfsWorkPath", usage = "HDFS directory where pipeline temp output will be saved", required = false)
         private String hdfsWorkPath;
+        
+        @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: false)", required = false)
+        private boolean saveIntermediateResults = false;
         
 
         // Graph cleaning
@@ -156,6 +159,7 @@ public class GenomixJobConf extends JobConf {
     public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
     public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
+    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results"; 
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -206,6 +210,14 @@ public class GenomixJobConf extends JobConf {
     public static final String OUTPUT_FORMAT_BINARY = "genomix.outputformat.binary";
     public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
+    private static final Patterns[] DEFAULT_PIPELINE_ORDER = {
+                    Patterns.BUILD, Patterns.MERGE, 
+                    Patterns.TIP_REMOVE, Patterns.MERGE,
+                    Patterns.BUBBLE, Patterns.MERGE,
+                    Patterns.LOW_COVERAGE, Patterns.MERGE,
+                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
+                    Patterns.SCAFFOLD, Patterns.MERGE
+            };
     
     private String[] extraArguments = {};
     
@@ -310,15 +322,7 @@ public class GenomixJobConf extends JobConf {
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);
         
         if (get(PIPELINE_ORDER) == null) {
-            Patterns[] steps = {
-                    Patterns.BUILD, Patterns.MERGE, 
-                    Patterns.TIP_REMOVE, Patterns.MERGE,
-                    Patterns.BUBBLE, Patterns.MERGE,
-                    Patterns.LOW_COVERAGE, Patterns.MERGE,
-                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
-                    Patterns.SCAFFOLD, Patterns.MERGE
-            };
-            set(PIPELINE_ORDER, Patterns.stringFromArray(steps));
+            set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
@@ -355,6 +359,8 @@ public class GenomixJobConf extends JobConf {
             set(LOCAL_OUTPUT_DIR, opts.localOutput);
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
+        setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
+            
 
         if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
             throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");

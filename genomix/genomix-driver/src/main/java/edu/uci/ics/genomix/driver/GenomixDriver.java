@@ -236,14 +236,17 @@ public class GenomixDriver {
                     break;
             }
         }
-        for (int i = 0; i < jobs.size(); i++) {
-            //                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
-            //                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(jobs.get(i).getConfiguration().getClass(PregelixJob.VERTEX_CLASS, null));
-            pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
-                    Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+        
+        // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
+        // this would let them resume at arbitrary points of the pipeline
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
+            for (int i = 0; i < jobs.size(); i++) {
+              pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
+                      Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+            }
+        } else {
+            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS), Integer.parseInt(conf.get(GenomixJobConf.PORT)));
         }
-
-        //            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS), Integer.parseInt(conf.get(GenomixJobConf.PORT)));
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
@@ -256,6 +259,7 @@ public class GenomixDriver {
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = { "-runLocal", "-kmerLength", "3",
+                "-saveIntermediateResults", "true",
 //                "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
                 "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
 //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
@@ -264,7 +268,11 @@ public class GenomixDriver {
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD_HADOOP,MERGE,TIP_REMOVE" };
+                "-pipelineOrder", "BUILD_HADOOP,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE" };
+        
+//        Patterns.BUILD, Patterns.MERGE, 
+//        Patterns.TIP_REMOVE, Patterns.MERGE,
+//        Patterns.BUBBLE, Patterns.MERGE,
         GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
