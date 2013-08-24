@@ -57,6 +57,7 @@ public class GenomixDriver {
         //InputFormat and OutputFormat for Reducer
         conf.setInputFormat(NLineInputFormat.class);
         conf.setInt("mapred.line.input.format.linespermap", 4 * 100000);
+        conf.setInt("io.sort.mb", 150);
         if (seqOutput == true)
             conf.setOutputFormat(SequenceFileOutputFormat.class);
         else

@@ -132,17 +132,18 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 //                    throw new IllegalArgumentException("Malformed line found in parser: ", e);
 //                }
                 
-                lineCount++;
+//                lineCount++;
                 long readID = 0;
                 String geneLine;
                 
                 if (fastqFormat) {
-                    if ((lineCount - 1) % 4 == 1) {
+//                    if ((lineCount - 1) % 4 == 1) {
+                    
                         readID = key.get();  // this is actually the offset into the file... will it be the same across all files?? //
                         geneLine = value.toString().trim();
-                    } else {
-                        return;  //skip all other lines
-                    }
+//                    } else {
+//                        return;  //skip all other lines
+//                    }
                 } else {
                     String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
                     if (rawLine.length != 2) {
