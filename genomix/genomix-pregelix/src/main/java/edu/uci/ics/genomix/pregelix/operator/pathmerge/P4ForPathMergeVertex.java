@@ -71,6 +71,7 @@ public class P4ForPathMergeVertex extends
     private boolean nextHead;
     private boolean prevHead;
     
+    HashMapWritable<ByteWritable, VLongWritable> counters = new HashMapWritable<ByteWritable, VLongWritable>();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -153,7 +154,6 @@ public class P4ForPathMergeVertex extends
      */
     public void updateStatisticsCounter(byte counterName){
         ByteWritable counterNameWritable = new ByteWritable(counterName);
-        HashMapWritable<ByteWritable, VLongWritable> counters = getVertexValue().getCounters();
         if(counters.containsKey(counterNameWritable))
             counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);
         else
@@ -163,101 +163,122 @@ public class P4ForPathMergeVertex extends
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
-        if (getSuperstep() == 1)
-            startSendMsg();
-        else if (getSuperstep() == 2)
-            initState(msgIterator);
-        else if (getSuperstep() % 4 == 3){
-            outFlag |= headFlag;
-            
-            outFlag |= MessageFlag.NO_MERGE;
-            setStateAsNoMerge();
-            
-            // only PATH vertices are present. Find the ID's for my neighbors
-            curKmer.setAsCopy(getVertexId());
-            
-            curHead = isNodeRandomHead(curKmer);
-            
-            // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
-            // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT));
-            hasPrev = setPrevInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHPREV));
-            if (hasNext || hasPrev) {
-                if (curHead) {
-                    if (hasNext && !nextHead) {
-                        // compress this head to the forward tail
-                		sendUpdateMsgToPredecessor(); 
-                    } else if (hasPrev && !prevHead) {
-                        // compress this head to the reverse tail
-                        sendUpdateMsgToSuccessor();
-                    } 
-                }
-                else {
-                    // I'm a tail
-                    if (hasNext && hasPrev) {
-                         if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
-                            // tails on both sides, and I'm the "local minimum"
-                            // compress me towards the tail in forward dir
-                            sendUpdateMsgToPredecessor();
-                        }
-                    } else if (!hasPrev) {
-                        // no previous node
-                        if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
-                            // merge towards tail in forward dir
-                            sendUpdateMsgToPredecessor();
-                        }
-                    } else if (!hasNext) {
-                        // no next node
-                        if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
-                            // merge towards tail in reverse dir
-                            sendUpdateMsgToSuccessor();
-                        }
-                    }
-                }
-            }
-            this.activate();
-        }
-        else if (getSuperstep() % 4 == 0){
-            //update neighber
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                processUpdate();
-                if(isHaltNode())
-                    voteToHalt();
-                else
-                    this.activate();
-            }
-        } else if (getSuperstep() % 4 == 1){
-            //send message to the merge object and kill self
-            broadcastMergeMsg();
-        } else if (getSuperstep() % 4 == 2){
-            //merge tmpKmer
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
-                /** process merge **/
-                processMerge();
-                // set statistics counter: MergedNodes
+        counters.clear();
+        if(getSuperstep() == 1){
+            if(getVertexId().toString().contains("AT") || getVertexId().toString().contains("GA")){
                 updateStatisticsCounter(StatisticsCounter.MergedNodes);
-                /** if it's a tandem repeat, which means detecting cycle **/
-                if(isTandemRepeat()){
-                    for(byte d : DirectionFlag.values)
-                        getVertexValue().getEdgeList(d).reset();
-                    getVertexValue().setState(MessageFlag.IS_HALT);
-                    // set statistics counter: TandemRepeats
-                    updateStatisticsCounter(StatisticsCounter.TandemRepeats);
-                    voteToHalt();
-                }/** head meets head, stop **/ 
-                else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)){
-                    getVertexValue().setState(MessageFlag.IS_HALT);
-                    // set statistics counter: MergedPaths
-                    updateStatisticsCounter(StatisticsCounter.MergedPaths);
-                    voteToHalt();
-                }
-                else
-                    this.activate();
+//                updateStatisticsCounter(StatisticsCounter.MergedPaths);
+                getVertexValue().setCounters(counters);
+                activate();
             }
-        }
+        } else if(getSuperstep() == 2){
+            if(getVertexId().toString().contains("AA")){
+                updateStatisticsCounter(StatisticsCounter.MergedNodes);
+                getVertexValue().setCounters(counters);
+            }
+            voteToHalt();
+        } 
+//        else{
+
+//            updateStatisticsCounter(StatisticsCounter.MergedPaths);
+//            getVertexValue().setCounters(counters);
+//            voteToHalt();
+//        }
+//        if (getSuperstep() == 1)
+//            startSendMsg();
+//        else if (getSuperstep() == 2)
+//            initState(msgIterator);
+//        else if (getSuperstep() % 4 == 3){
+//            outFlag |= headFlag;
+//            
+//            outFlag |= MessageFlag.NO_MERGE;
+//            setStateAsNoMerge();
+//            
+//            // only PATH vertices are present. Find the ID's for my neighbors
+//            curKmer.setAsCopy(getVertexId());
+//            
+//            curHead = isNodeRandomHead(curKmer);
+//            
+//            // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
+//            // We prevent merging towards non-path nodes
+//            hasNext = setNextInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT));
+//            hasPrev = setPrevInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHPREV));
+//            if (hasNext || hasPrev) {
+//                if (curHead) {
+//                    if (hasNext && !nextHead) {
+//                        // compress this head to the forward tail
+//                		sendUpdateMsgToPredecessor(); 
+//                    } else if (hasPrev && !prevHead) {
+//                        // compress this head to the reverse tail
+//                        sendUpdateMsgToSuccessor();
+//                    } 
+//                }
+//                else {
+//                    // I'm a tail
+//                    if (hasNext && hasPrev) {
+//                         if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
+//                            // tails on both sides, and I'm the "local minimum"
+//                            // compress me towards the tail in forward dir
+//                            sendUpdateMsgToPredecessor();
+//                        }
+//                    } else if (!hasPrev) {
+//                        // no previous node
+//                        if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
+//                            // merge towards tail in forward dir
+//                            sendUpdateMsgToPredecessor();
+//                        }
+//                    } else if (!hasNext) {
+//                        // no next node
+//                        if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
+//                            // merge towards tail in reverse dir
+//                            sendUpdateMsgToSuccessor();
+//                        }
+//                    }
+//                }
+//            }
+//            this.activate();
+//        }
+//        else if (getSuperstep() % 4 == 0){
+//            //update neighber
+//            while (msgIterator.hasNext()) {
+//                incomingMsg = msgIterator.next();
+//                processUpdate();
+//                if(isHaltNode())
+//                    voteToHalt();
+//                else
+//                    this.activate();
+//            }
+//        } else if (getSuperstep() % 4 == 1){
+//            //send message to the merge object and kill self
+//            broadcastMergeMsg();
+//        } else if (getSuperstep() % 4 == 2){
+//            //merge tmpKmer
+//            while (msgIterator.hasNext()) {
+//                incomingMsg = msgIterator.next();
+//                selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
+//                /** process merge **/
+//                processMerge();
+//                // set statistics counter: MergedNodes
+//                updateStatisticsCounter(StatisticsCounter.MergedNodes);
+//                /** if it's a tandem repeat, which means detecting cycle **/
+//                if(isTandemRepeat()){
+//                    for(byte d : DirectionFlag.values)
+//                        getVertexValue().getEdgeList(d).reset();
+//                    getVertexValue().setState(MessageFlag.IS_HALT);
+//                    // set statistics counter: TandemRepeats
+//                    updateStatisticsCounter(StatisticsCounter.TandemRepeats);
+//                    voteToHalt();
+//                }/** head meets head, stop **/ 
+//                else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)){
+//                    getVertexValue().setState(MessageFlag.IS_HALT);
+//                    // set statistics counter: MergedPaths
+//                    updateStatisticsCounter(StatisticsCounter.MergedPaths);
+//                    voteToHalt();
+//                }
+//                else
+//                    this.activate();
+//            }
+//        }
     }
 
     public static void main(String[] args) throws Exception {

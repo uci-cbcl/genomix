@@ -147,7 +147,8 @@ public class VertexValueWritable
     }
 
     public void setCounters(HashMapWritable<ByteWritable, VLongWritable> counters) {
-        this.counters = counters;
+        this.counters.clear();
+        this.counters.putAll(counters);
     }
 
     public void reset() {
