@@ -260,16 +260,6 @@ public class P4ForPathMergeVertex extends
         }
     }
 
-    private static HashMapWritable readStatisticsCounterResult(Configuration conf) {
-        try {
-            HashMapWritable counters = (HashMapWritable) IterationUtils
-                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
-            return counters;
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-    
     public static void main(String[] args) throws Exception {
         Client.run(args, getConfiguredJob(null));
     }

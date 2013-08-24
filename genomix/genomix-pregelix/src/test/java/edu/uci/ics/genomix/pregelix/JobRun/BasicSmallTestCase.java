@@ -15,20 +15,28 @@
 
 package edu.uci.ics.genomix.pregelix.JobRun;
 
+import java.io.IOException;
+
 import junit.framework.TestCase;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.graph.GenerateGraphViz;
+import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 public class BasicSmallTestCase extends TestCase {
     private final PregelixJob job;
@@ -62,6 +70,16 @@ public class BasicSmallTestCase extends TestCase {
         }
     }
 
+    private static HashMapWritable readStatisticsCounterResult(Configuration conf) {
+        try {
+            VertexValueWritable value = (VertexValueWritable) IterationUtils
+                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
+            return value.getCounters();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+    
     @Test
     public void test() throws Exception {
         setUp();
@@ -69,6 +87,8 @@ public class BasicSmallTestCase extends TestCase {
         for (Plan plan : plans) {
             driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
                     PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
+            HashMapWritable counters = readStatisticsCounterResult(job.getConfiguration());
+            System.out.println(counters.toString());
         }
         compareResults();
         tearDown();
