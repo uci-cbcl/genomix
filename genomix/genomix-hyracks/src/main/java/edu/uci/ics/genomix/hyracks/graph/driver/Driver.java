@@ -86,8 +86,8 @@ public class Driver {
         URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
         job.addResource(hadoopHdfs);
         
-        job.setInt("mapred.line.input.format.linespermap", 2000000); // must be a multiple of 4
-        job.setInputFormat(NLineInputFormat.class);
+//        job.setInt("mapred.line.input.format.linespermap", 2000000); // must be a multiple of 4
+//        job.setInputFormat(NLineInputFormat.class);
 
         LOG.info("job started");
         long start = System.currentTimeMillis();

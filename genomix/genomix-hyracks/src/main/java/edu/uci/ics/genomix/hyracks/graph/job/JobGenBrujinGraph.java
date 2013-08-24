@@ -103,6 +103,9 @@ public class JobGenBrujinGraph extends JobGen {
         for (int i = 0; i < numPartitionPerMachine; i++) {
             System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length, nodes.length);
         }
+        System.out.println("Node names:");
+        for (String e : ncNodeNames)
+            System.out.println(e);
         initJobConfiguration(scheduler);
     }
 
