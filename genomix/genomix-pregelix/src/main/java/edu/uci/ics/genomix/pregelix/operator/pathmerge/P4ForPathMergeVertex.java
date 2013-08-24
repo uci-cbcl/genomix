@@ -4,15 +4,23 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.hadoop.conf.Configuration;
+
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
@@ -140,6 +148,18 @@ public class P4ForPathMergeVertex extends
         return false;
     }
     
+    /**
+     * set statistics counter
+     */
+    public void updateStatisticsCounter(byte counterName){
+        ByteWritable counterNameWritable = new ByteWritable(counterName);
+        HashMapWritable<ByteWritable, VLongWritable> counters = getVertexValue().getCounters();
+        if(counters.containsKey(counterNameWritable))
+            counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);
+        else
+            counters.put(counterNameWritable, new VLongWritable(1));
+    }
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -217,15 +237,21 @@ public class P4ForPathMergeVertex extends
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
                 /** process merge **/
                 processMerge();
+                // set statistics counter: MergedNodes
+                updateStatisticsCounter(StatisticsCounter.MergedNodes);
                 /** if it's a tandem repeat, which means detecting cycle **/
                 if(isTandemRepeat()){
                     for(byte d : DirectionFlag.values)
                         getVertexValue().getEdgeList(d).reset();
                     getVertexValue().setState(MessageFlag.IS_HALT);
+                    // set statistics counter: TandemRepeats
+                    updateStatisticsCounter(StatisticsCounter.TandemRepeats);
                     voteToHalt();
                 }/** head meets head, stop **/ 
                 else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)){
                     getVertexValue().setState(MessageFlag.IS_HALT);
+                    // set statistics counter: MergedPaths
+                    updateStatisticsCounter(StatisticsCounter.MergedPaths);
                     voteToHalt();
                 }
                 else
@@ -234,6 +260,16 @@ public class P4ForPathMergeVertex extends
         }
     }
 
+    private static HashMapWritable readStatisticsCounterResult(Configuration conf) {
+        try {
+            HashMapWritable counters = (HashMapWritable) IterationUtils
+                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
+            return counters;
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+    
     public static void main(String[] args) throws Exception {
         Client.run(args, getConfiguredJob(null));
     }
