@@ -1,6 +1,10 @@
 #!/bin/bash
 
 hostname
+
+GENOMIX_HOME="$( dirname "$( dirname "$( readlink -e "${BASH_SOURCE[0]}" )" )" )"  # parent dir of absolute script path
+cd "$GENOMIX_HOME"
+
 . conf/cluster.properties
 
 #Kill process
