@@ -1,13 +1,19 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
+import edu.uci.ics.genomix.pregelix.io.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -692,4 +698,13 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         outgoingEdgeDir = connectedTable[i][1];
     }
     
+    public static HashMapWritable<ByteWritable, VLongWritable> readStatisticsCounterResult(Configuration conf) {
+        try {
+            VertexValueWritable value = (VertexValueWritable) IterationUtils
+                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
+            return value.getCounters();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }

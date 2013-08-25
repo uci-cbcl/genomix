@@ -15,6 +15,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 public class StatisticsAggregator extends
     GlobalAggregator<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable, VertexValueWritable, VertexValueWritable>{
 
+    public static HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
     private VertexValueWritable value = new VertexValueWritable();
     
     @Override
@@ -53,6 +54,7 @@ public class StatisticsAggregator extends
 
     @Override
     public VertexValueWritable finishFinal() {
+        updateAggregateState(preGlobalCounters);
         return value;
     }
 

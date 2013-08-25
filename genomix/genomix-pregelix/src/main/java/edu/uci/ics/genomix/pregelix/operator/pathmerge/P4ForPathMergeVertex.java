@@ -19,6 +19,8 @@ import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -105,6 +107,8 @@ public class P4ForPathMergeVertex extends
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
+        if(getSuperstep() > 1)
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
     }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
@@ -164,18 +168,21 @@ public class P4ForPathMergeVertex extends
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         counters.clear();
+        getVertexValue().getCounters().clear();
         if(getSuperstep() == 1){
-            if(getVertexId().toString().contains("AT") || getVertexId().toString().contains("GA")){
+//            if(getVertexId().toString().contains("AT") || getVertexId().toString().contains("GA")){
                 updateStatisticsCounter(StatisticsCounter.MergedNodes);
 //                updateStatisticsCounter(StatisticsCounter.MergedPaths);
                 getVertexValue().setCounters(counters);
                 activate();
-            }
+//            }
         } else if(getSuperstep() == 2){
             if(getVertexId().toString().contains("AA")){
                 updateStatisticsCounter(StatisticsCounter.MergedNodes);
-                getVertexValue().setCounters(counters);
+            } else{
+                updateStatisticsCounter(StatisticsCounter.MergedPaths);
             }
+            getVertexValue().setCounters(counters);
             voteToHalt();
         } 
 //        else{
