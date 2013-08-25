@@ -1,10 +1,13 @@
 package edu.uci.ics.genomix.pregelix.type;
 
 public class StatisticsCounter {
-    public static final byte Num_MergedNodes = 0b00 << 0;
-    public static final byte Num_MergedPaths = 0b01 << 0;
-    public static final byte Num_TandemRepeats = 0b10 << 0;
-    public static final byte Num_RemovedTips = 0b11 << 0;
+    public static final byte Num_MergedNodes = 0b000 << 0;
+    public static final byte Num_MergedPaths = 0b001 << 0;
+    public static final byte Num_TandemRepeats = 0b010 << 0;
+    public static final byte Num_RemovedTips = 0b011 << 0;
+    public static final byte Num_RemovedLowCoverageNodes = 0b100 << 0;
+    public static final byte Num_RemovedBubbles = 0b101 << 0;
+    public static final byte Num_RemovedBridges = 0b110 << 0;
     
     public final static class COUNTER_CONTENT{
         public static String getContent(byte code){
@@ -21,6 +24,15 @@ public class StatisticsCounter {
                     break;
                 case Num_RemovedTips:
                     r = "num of removed tips";
+                    break;
+                case Num_RemovedLowCoverageNodes:
+                    r = "num of removed low coverage nodes";
+                    break;
+                case Num_RemovedBubbles:
+                    r = "num of removed bubbles";
+                    break;
+                case Num_RemovedBridges:
+                    r = "num of removed bridges";
                     break;
             }
             return r;

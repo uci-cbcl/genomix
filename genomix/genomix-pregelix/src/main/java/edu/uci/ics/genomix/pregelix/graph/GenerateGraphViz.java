@@ -117,9 +117,9 @@ public class GenerateGraphViz {
         System.out.println(gv.getDotSource());
 
         String type = "ps";
-        File folder = new File(destDir);
-        folder.mkdirs();
-        File out = new File(destDir + "/result." + type); // Linux
+//        File folder = new File(destDir);
+//        folder.mkdirs();
+        File out = new File(destDir + "." + type); // Linux
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
     

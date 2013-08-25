@@ -49,7 +49,7 @@ public class RemoveLowCoverageVertex extends
         initVertex(); 
         if(getSuperstep() == 1){
             if(getVertexValue().getAvgCoverage() <= minAverageCoverage){
-                broadcaseKillself();
+                broadcaseReallyKillself();
                 deadNodeSet.add(getVertexId());
             }
             else

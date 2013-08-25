@@ -151,7 +151,6 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                     continue;
                 } else {
                     for (String testPathStr : TestDir) {
-//                        File testDir = new File(testPathStr);
                         String resultFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
                                 + File.separator + getTestCaseName(testPathStr) 
                                 + File.separator + "bin";
@@ -161,20 +160,19 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                         String graphvizFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
                                 + File.separator + getTestCaseName(testPathStr) 
                                 + File.separator + "graphviz";
+                        String statisticsFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
+                                + File.separator + getTestCaseName(testPathStr) 
+                                + File.separator + "statistics" ;
                         testSuite.addTest(new BasicSmallTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile
                                 .getAbsolutePath().toString(), dfs,
-                                HDFS_INPUTPATH + File.separator + getTestCaseName(testPathStr) , resultFileName, textFileName, graphvizFileName));
+                                HDFS_INPUTPATH + File.separator + getTestCaseName(testPathStr) , resultFileName, 
+                                textFileName, graphvizFileName, statisticsFileName));
                     }
                 }
             }
         }
         return testSuite;
     }
-    
-//    public static Test suite() throws Exception {
-//        BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
-//        return makeTestSuite(testSuite);
-//    }
     
     /**
      * Runs the tests and collects their result in a TestResult.

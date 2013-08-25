@@ -18,7 +18,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class GenerateTextFile {
 
-    public static void generateFromPathmergeResult(int kmerSize, String strSrcDir, String outPutDir) throws IOException {
+    public static void convertGraphCleanOutputToText(String strSrcDir, String outPutDir) throws IOException {
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.getLocal(conf);
 

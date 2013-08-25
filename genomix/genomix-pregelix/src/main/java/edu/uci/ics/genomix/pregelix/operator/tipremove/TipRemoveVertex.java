@@ -67,7 +67,9 @@ public class TipRemoveVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
-        if(getSuperstep() > 1)
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
             StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();

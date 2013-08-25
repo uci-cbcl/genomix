@@ -15,8 +15,13 @@
 
 package edu.uci.ics.genomix.pregelix.JobRun;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import junit.framework.TestCase;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -40,12 +45,13 @@ public class BasicSmallTestCase extends TestCase {
     private final String resultFileDir;
     private final String textFileDir;
     private final String graphvizFileDir;
+    private final String statisticsFileDir;
     private final String jobFile;
     private final Driver driver = new Driver(this.getClass());
     private final FileSystem dfs;
 
     public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs,
-            String hdfsInput, String resultFile, String textFile, String graphvizFile) throws Exception {
+            String hdfsInput, String resultFile, String textFile, String graphvizFile, String statisticsFile) throws Exception {
         super("test");
         this.jobFile = jobFile;
         this.job = new PregelixJob("test");
@@ -57,6 +63,7 @@ public class BasicSmallTestCase extends TestCase {
         this.resultFileDir = resultFile;
         this.textFileDir = textFile;
         this.graphvizFileDir = graphvizFile;
+        this.statisticsFileDir = statisticsFile;
 
         this.dfs = dfs;
     }
@@ -67,16 +74,6 @@ public class BasicSmallTestCase extends TestCase {
         }
     }
 
-    public void outputCounters(HashMapWritable<ByteWritable, VLongWritable> counters){
-        String output = "";
-        for(ByteWritable counterName : counters.keySet()){
-            output += StatisticsCounter.COUNTER_CONTENT.getContent(counterName.get());
-            output += ": ";
-            output += counters.get(counterName).toString() + "\n";
-        }
-        System.out.println(output);
-    }
-    
     @Test
     public void test() throws Exception {
         setUp();
@@ -84,10 +81,6 @@ public class BasicSmallTestCase extends TestCase {
         for (Plan plan : plans) {
             driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
                     PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
-//            HashMapWritable<ByteWritable, VLongWritable> counters = BasicGraphCleanVertex.readStatisticsCounterResult(job.getConfiguration());
-//            //output counters
-//            outputCounters(counters);
-//            System.out.println("");
         }
         compareResults();
         tearDown();
@@ -95,11 +88,41 @@ public class BasicSmallTestCase extends TestCase {
     }
 
     private void compareResults() throws Exception {
+        //copy bin to local
         dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(resultFileDir));
-        GenerateTextFile.generateFromPathmergeResult(3, resultFileDir, textFileDir);
+        //covert bin to text
+        GenerateTextFile.convertGraphCleanOutputToText(resultFileDir, textFileDir);
+        //covert bin to graphviz
         GenerateGraphViz.convertGraphCleanOutputToGraphViz(resultFileDir, graphvizFileDir);
+        //generate statistic counters
+        generateStatisticsResult(statisticsFileDir);
     }
+    
+    public void generateStatisticsResult(String outPutDir) throws IOException{
+        //convert Counters to string
+        HashMapWritable<ByteWritable, VLongWritable> counters = BasicGraphCleanVertex.readStatisticsCounterResult(job.getConfiguration());
+        String output = convertCountersToString(counters);
+        
+        //output Counters
+        Configuration conf = new Configuration();
+        FileSystem fileSys = FileSystem.getLocal(conf);
 
+        fileSys.create(new Path(outPutDir));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(outPutDir));
+        bw.write(output);
+        bw.close();
+    }
+    
+    public String convertCountersToString(HashMapWritable<ByteWritable, VLongWritable> counters){
+        String output = "";
+        for(ByteWritable counterName : counters.keySet()){
+            output += StatisticsCounter.COUNTER_CONTENT.getContent(counterName.get());
+            output += ": ";
+            output += counters.get(counterName).toString() + "\n";
+        }
+        return output;
+    }
+    
     public String toString() {
         return jobFile;
     }

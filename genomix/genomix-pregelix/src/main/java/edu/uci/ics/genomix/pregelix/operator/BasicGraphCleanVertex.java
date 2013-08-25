@@ -607,6 +607,17 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     }
     
     /**
+     * broadcast kill self to all neighbers ***
+     */
+    public void broadcaseReallyKillself(){
+        outFlag = 0;
+        outFlag |= MessageFlag.KILL;
+        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
+        
+        sendSettledMsgToAllNeighborNodes(getVertexValue());
+    }
+    
+    /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
     public void responseToDeadVertex(){
