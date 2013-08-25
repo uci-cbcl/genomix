@@ -148,6 +148,7 @@ public class JobGenerator {
     private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(TipAddVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -164,6 +165,7 @@ public class JobGenerator {
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(TipRemoveVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);

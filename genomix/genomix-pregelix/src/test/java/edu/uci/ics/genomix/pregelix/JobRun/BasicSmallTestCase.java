@@ -29,6 +29,7 @@ import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
@@ -66,6 +67,16 @@ public class BasicSmallTestCase extends TestCase {
         }
     }
 
+    public void outputCounters(HashMapWritable<ByteWritable, VLongWritable> counters){
+        String output = "";
+        for(ByteWritable counterName : counters.keySet()){
+            output += StatisticsCounter.COUNTER_CONTENT.getContent(counterName.get());
+            output += ": ";
+            output += counters.get(counterName).toString() + "\n";
+        }
+        System.out.println(output);
+    }
+    
     @Test
     public void test() throws Exception {
         setUp();
@@ -73,8 +84,10 @@ public class BasicSmallTestCase extends TestCase {
         for (Plan plan : plans) {
             driver.runJob(job, plan, PregelixHyracksIntegrationUtil.CC_HOST,
                     PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT, false);
-            HashMapWritable<ByteWritable, VLongWritable> counters = BasicGraphCleanVertex.readStatisticsCounterResult(job.getConfiguration());
-            System.out.println(counters.toString());
+//            HashMapWritable<ByteWritable, VLongWritable> counters = BasicGraphCleanVertex.readStatisticsCounterResult(job.getConfiguration());
+//            //output counters
+//            outputCounters(counters);
+//            System.out.println("");
         }
         compareResults();
         tearDown();

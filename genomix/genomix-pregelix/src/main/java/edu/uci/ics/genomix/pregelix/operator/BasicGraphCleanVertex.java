@@ -58,6 +58,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     protected byte incomingEdgeDir = 0; //SplitRepeat
     protected byte outgoingEdgeDir = 0; //SplitRepeat
     
+    protected HashMapWritable<ByteWritable, VLongWritable> counters = new HashMapWritable<ByteWritable, VLongWritable>();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -698,6 +699,23 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         outgoingEdgeDir = connectedTable[i][1];
     }
     
+    
+    /**
+     * set statistics counter
+     */
+    public void updateStatisticsCounter(byte counterName){
+        ByteWritable counterNameWritable = new ByteWritable(counterName);
+        if(counters.containsKey(counterNameWritable))
+            counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);
+        else
+            counters.put(counterNameWritable, new VLongWritable(1));
+    }
+    
+    /**
+     * read statistics counters
+     * @param conf
+     * @return
+     */
     public static HashMapWritable<ByteWritable, VLongWritable> readStatisticsCounterResult(Configuration conf) {
         try {
             VertexValueWritable value = (VertexValueWritable) IterationUtils
