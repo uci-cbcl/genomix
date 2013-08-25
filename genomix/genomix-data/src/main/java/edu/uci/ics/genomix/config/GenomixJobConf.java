@@ -215,11 +215,11 @@ public class GenomixJobConf extends JobConf {
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = {
                     Patterns.BUILD, Patterns.MERGE, 
-                    Patterns.TIP_REMOVE, Patterns.MERGE,
-                    Patterns.BUBBLE, Patterns.MERGE,
                     Patterns.LOW_COVERAGE, Patterns.MERGE,
-                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
-                    Patterns.SCAFFOLD, Patterns.MERGE
+                    Patterns.TIP_REMOVE, Patterns.MERGE,
+//                    Patterns.BUBBLE, Patterns.MERGE,
+//                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
+//                    Patterns.SCAFFOLD, Patterns.MERGE
             };
     
     private String[] extraArguments = {};

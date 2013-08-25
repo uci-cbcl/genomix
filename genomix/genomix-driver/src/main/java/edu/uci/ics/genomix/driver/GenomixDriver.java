@@ -257,7 +257,7 @@ public class GenomixDriver {
                 Integer.parseInt(conf.get(GenomixJobConf.PORT)), 1);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
-        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks"));
+        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
     }
 
     private void buildGraphWithHadoop(GenomixJobConf conf) throws IOException {
