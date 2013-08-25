@@ -36,6 +36,7 @@ public class JobGenerator {
     private static void generateUnrollTandemRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(UnrollTandemRepeat.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
@@ -250,6 +251,7 @@ public class JobGenerator {
     private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(SplitRepeatVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
@@ -281,6 +283,7 @@ public class JobGenerator {
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(ScaffoldingVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);

@@ -13,6 +13,8 @@ import edu.uci.ics.genomix.pregelix.io.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -89,6 +91,12 @@ public class SplitRepeatVertex extends
             tmpIncomingEdge = new EdgeWritable();
         if(tmpOutgoingEdge == null)
             tmpOutgoingEdge = new EdgeWritable();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
     
     /**
@@ -228,6 +236,9 @@ public class SplitRepeatVertex extends
                                 
                                 /** create new/created vertex **/
                                 createNewVertex(i, tmpIncomingEdge, tmpOutgoingEdge);
+                                //set statistics counter: Num_SplitRepeats
+                                updateStatisticsCounter(StatisticsCounter.Num_SplitRepeats);
+                                getVertexValue().setCounters(counters);
                                 
                                 /** send msg to neighbors to update their edges to new vertex **/
                                 sendMsgToUpdateEdge(tmpIncomingEdge, tmpOutgoingEdge);

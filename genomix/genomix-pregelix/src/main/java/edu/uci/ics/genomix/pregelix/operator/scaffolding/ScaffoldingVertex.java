@@ -11,6 +11,9 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -45,7 +48,8 @@ public class ScaffoldingVertex extends
         }
 
         public void setFlagList(ArrayList<Boolean> flagList) {
-            this.flagList = flagList;
+            this.flagList.clear();
+            this.flagList.addAll(flagList);
         }
 
         public VKmerListWritable getKmerList() {
@@ -53,7 +57,8 @@ public class ScaffoldingVertex extends
         }
 
         public void setKmerList(VKmerListWritable kmerList) {
-            this.kmerList = kmerList;
+            this.kmerList.reset();
+            this.kmerList.appendList(kmerList);
         }
         
     }
@@ -85,6 +90,12 @@ public class ScaffoldingVertex extends
             destVertexId = new VKmerBytesWritable(kmerSize);
         if(tmpKmer == null)
             tmpKmer = new VKmerBytesWritable();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
     
     public void addStartReadsToScaffoldingMap(){
@@ -172,6 +183,9 @@ public class ScaffoldingVertex extends
                             finalProcessBFS();
                             /** send message to all the path nodes to add this common readId **/
                             sendMsgToPathNodeToAddCommondReadId();
+                            //set statistics counter: Num_RemovedLowCoverageNodes
+                            updateStatisticsCounter(StatisticsCounter.Num_Scaffodings);
+                            getVertexValue().setCounters(counters);
                         }
                         else{
                             //continue to BFS
