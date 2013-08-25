@@ -18,6 +18,7 @@ package edu.uci.ics.genomix.config;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
@@ -223,6 +224,8 @@ public class GenomixJobConf extends JobConf {
     
     private String[] extraArguments = {};
     
+    private static Map<String, Long> tickTimes = new HashMap<String, Long>(); 
+    
     public GenomixJobConf(int kmerLength) {
         super(new Configuration());
         setInt(KMER_LENGTH, kmerLength);
@@ -383,5 +386,28 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
+    }
+    
+    /**
+     * Reset the given counter, returning the its elapsed time (or 0 if unset) 
+     */
+    public static long tick(String counter) {
+        Long time = tickTimes.get(counter);
+        tickTimes.put(counter, System.currentTimeMillis());
+        if (time == null)
+            return 0;
+        else
+            return System.currentTimeMillis() - time;
+    }
+    
+    /**
+     * Return the given counter without a reset (or 0 if unset) 
+     */
+    public static long tock(String counter) {
+        Long time = tickTimes.get(counter);
+        if (time == null)
+            return 0;
+        else
+            return System.currentTimeMillis() - time;
     }
 }

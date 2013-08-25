@@ -31,6 +31,8 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -72,11 +74,13 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.core.driver.Driver;
 
 /**
  * The main entry point for the Genomix assembler, a hyracks/pregelix/hadoop-based deBruijn assembler.
  */
 public class GenomixDriver {
+    private static final Log LOG = LogFactory.getLog(GenomixDriver.class);
     private static final String HADOOP_CONF = "hadoop.conf.xml";
     private String prevOutput;
     private String curOutput;
@@ -89,6 +93,8 @@ public class GenomixDriver {
             this.getClass());
 
     private void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
+        LOG.info("Copying local directory " + localDir + " to HDFS: " + destDir);
+        GenomixJobConf.tick("copyLocalToHDFS");
         FileSystem dfs = FileSystem.get(conf);
         Path dest = new Path(destDir);
         dfs.delete(dest, true);
@@ -100,9 +106,13 @@ public class GenomixDriver {
                 dfs.copyFromLocalFile(new Path(f.toString()), dest);
         else
             dfs.copyFromLocalFile(new Path(localDir), dest);
+        
+        LOG.info("Copy took " + GenomixJobConf.tock("copyLocalToHDFS") + "ms");
     }
 
     private static void copyBinToLocal(GenomixJobConf conf, String hdfsSrcDir, String localDestDir) throws IOException {
+        LOG.info("Copying HDFS directory " + hdfsSrcDir + " to local: " + localDestDir);
+        GenomixJobConf.tick("copyBinToLocal");
         FileSystem dfs = FileSystem.get(conf);
         FileUtils.deleteQuietly(new File(localDestDir));
 
@@ -140,9 +150,12 @@ public class GenomixDriver {
         }
         if (bw != null)
             bw.close();
+        LOG.info("Copy took " + GenomixJobConf.tock("copyBinToLocal") + "ms");
     }
 
     private static void drawStatistics(GenomixJobConf conf, String inputStats, String outputChart) throws IOException {
+        LOG.info("Getting coverage statistics...");
+        GenomixJobConf.tick("drawStatistics");
         FileSystem dfs = FileSystem.get(conf);
         
         // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
@@ -189,10 +202,13 @@ public class GenomixDriver {
         ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
         chartOut.flush();
         chartOut.close();
+        LOG.info("Coverage took " + GenomixJobConf.tock("drawStatistics") + "ms");
     }
     
     
     private static void dumpGraph(GenomixJobConf conf, String inputGraph, String outputFasta, boolean followingBuild) throws IOException {
+        LOG.info("Dumping graph to fasta...");
+        GenomixJobConf.tick("dumpGraph");
         FileSystem dfs = FileSystem.get(conf);
         
         // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
@@ -226,9 +242,12 @@ public class GenomixDriver {
         }
         if (bw != null)
             bw.close();
+        LOG.info("Dump graph to fasta took " + GenomixJobConf.tock("dumpGraph") + "ms");
     }
 
     private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, HyracksException {
+        LOG.info("Building Graph using Hyracks...");
+        GenomixJobConf.tick("buildGraphWithHyracks");
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         //        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
@@ -237,11 +256,13 @@ public class GenomixDriver {
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
                 Integer.parseInt(conf.get(GenomixJobConf.PORT)), 1);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
-        System.out.println("Finished job Hyracks-Build-Graph");
         followingBuild = true;
+        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks"));
     }
 
     private void buildGraphWithHadoop(GenomixJobConf conf) throws IOException {
+        LOG.info("Building Graph using Hadoop...");
+        GenomixJobConf.tick("buildGraphWithHadoop");
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
         conf.writeXml(confOutput);
         confOutput.close();
@@ -251,6 +272,7 @@ public class GenomixDriver {
         FileUtils.deleteQuietly(new File(HADOOP_CONF));
         System.out.println("Finished job Hadoop-Build-Graph");
         followingBuild = true;
+        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop"));
     }
 
     private void setOutput(GenomixJobConf conf, Patterns step) {
@@ -352,13 +374,20 @@ public class GenomixDriver {
         // this would let them resume at arbitrary points of the pipeline
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
             for (int i = 0; i < jobs.size(); i++) {
+                LOG.info("Starting job " + jobs.get(i).getJobName());
+                GenomixJobConf.tick("pregelix-job");
+                
                 pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
                         Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-                System.out.println("Finished job " + jobs.get(i).getJobName());
+                
+                LOG.info("Finished job " + jobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
             }
         } else {
+            LOG.info("Starting pregelix job series...");
+            GenomixJobConf.tick("pregelix-runJobs");
             pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS),
                     Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+            LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
         }
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
