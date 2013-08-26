@@ -12,6 +12,8 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
@@ -69,12 +71,47 @@ public class BridgeRemoveVertex extends
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
         receivedMsgList.clear();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
 
+    /**
+     * aggregate received messages
+     */
+    public void aggregateReceivedMsgs(Iterator<MessageWritable> msgIterator){
+        int i = 0;
+        while (msgIterator.hasNext()) {
+            if(i == 3)
+                break;
+            receivedMsgList.add(msgIterator.next());
+            i++;
+        }
+    }
+    
+    /**
+     * remove bridge pattern
+     */
+    public void removeBridge(){
+        if(receivedMsgList.size() == 2){
+            if(getVertexValue().getKmerLength() <= length 
+                    && getVertexValue().getDegree() == 2){
+                broadcaseKillself();
+                //set statistics counter: Num_RemovedBridges
+                updateStatisticsCounter(StatisticsCounter.Num_RemovedBridges);
+                getVertexValue().setCounters(counters);
+            }
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
+            //filter bridge vertex
             if(VertexUtil.isUpBridgeVertex(getVertexValue())){
                 sendSettledMsgToAllNextNodes(getVertexValue());
             }
@@ -83,19 +120,10 @@ public class BridgeRemoveVertex extends
             }
         }
         else if (getSuperstep() == 2){
-            int i = 0;
-            while (msgIterator.hasNext()) {
-                if(i == 3)
-                    break;
-                receivedMsgList.add(msgIterator.next());
-                i++;
-            }
-            if(receivedMsgList.size() == 2){
-                if(getVertexValue().getKmerLength() <= length 
-                        && getVertexValue().getDegree() == 2){
-                    broadcaseKillself();
-                }
-            }
+            //collect received messages
+            aggregateReceivedMsgs(msgIterator);
+            //detect bridge pattern and remove it
+            removeBridge();
         }
         else if(getSuperstep() == 3){
             while(msgIterator.hasNext()){

@@ -35,12 +35,12 @@ public class GenomixDriver {
         @Option(name = "-kmer-size", usage = "the size of kmer", required = true)
         public int sizeKmer;
         
-//        @Option(name = "-read-length", usage = "the length of read", required = true)
-//        public int readLength;
+        @Option(name = "-num-lines-per-map", usage = "the number of lines per map", required = true)
+        public int linesPerMap;
     }
     
     public void run(String inputPath, String outputPath, int numReducers, int sizeKmer,
-            boolean seqOutput, String defaultConfPath) throws IOException{
+            int linesPerMap, boolean seqOutput, String defaultConfPath) throws IOException{
         JobConf conf = new JobConf(GenomixDriver.class);
         conf.setInt("sizeKmer", sizeKmer);
         if (defaultConfPath != null) {
@@ -56,7 +56,7 @@ public class GenomixDriver {
         
         //InputFormat and OutputFormat for Reducer
         conf.setInputFormat(NLineInputFormat.class);
-        conf.setInt("mapred.line.input.format.linespermap", 4 * 100000);
+        conf.setInt("mapred.line.input.format.linespermap", linesPerMap);
         conf.setInt("io.sort.mb", 150);
         if (seqOutput == true)
             conf.setOutputFormat(SequenceFileOutputFormat.class);
@@ -81,6 +81,7 @@ public class GenomixDriver {
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
         GenomixDriver driver = new GenomixDriver();
-        driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, true, null);
+        driver.run(options.inputPath, options.outputPath, options.numReducers, 
+                options.sizeKmer, options.linesPerMap, true, null);
     }
 }

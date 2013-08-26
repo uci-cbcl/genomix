@@ -12,6 +12,8 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -20,7 +22,7 @@ public class RemoveLowCoverageVertex extends
     public static int kmerSize = -1;
     private static float minAverageCoverage = -1;
     
-    private Set<VKmerBytesWritable> deadNodeSet = new HashSet<VKmerBytesWritable>();
+    private static Set<VKmerBytesWritable> deadNodeSet = new HashSet<VKmerBytesWritable>();
     /**
      * initiate kmerSize, length
      */
@@ -42,6 +44,12 @@ public class RemoveLowCoverageVertex extends
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
     
     @Override
@@ -49,22 +57,26 @@ public class RemoveLowCoverageVertex extends
         initVertex(); 
         if(getSuperstep() == 1){
             if(getVertexValue().getAvgCoverage() <= minAverageCoverage){
-                broadcaseKillself();
-                deadNodeSet.add(getVertexId());
+                broadcaseReallyKillself();
+                deadNodeSet.add(new VKmerBytesWritable(getVertexId()));
             }
             else
                 voteToHalt();
         } else if(getSuperstep() == 2){
-            if(deadNodeSet.contains(getVertexId()))
+            if(deadNodeSet.contains(getVertexId())){
                 deleteVertex(getVertexId());
+                //set statistics counter: Num_RemovedLowCoverageNodes
+                updateStatisticsCounter(StatisticsCounter.Num_RemovedLowCoverageNodes);
+                getVertexValue().setCounters(counters);
+            }
             else{
                 while(msgIterator.hasNext()){
                     incomingMsg = msgIterator.next();
                     if(isResponseKillMsg())
                         responseToDeadVertex();
                 }
-                voteToHalt();
             }
+            voteToHalt();
         } 
     }
     

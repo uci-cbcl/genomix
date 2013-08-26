@@ -1,13 +1,19 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
+import edu.uci.ics.genomix.pregelix.io.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -52,6 +58,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     protected byte incomingEdgeDir = 0; //SplitRepeat
     protected byte outgoingEdgeDir = 0; //SplitRepeat
     
+    protected HashMapWritable<ByteWritable, VLongWritable> counters = new HashMapWritable<ByteWritable, VLongWritable>();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -600,6 +607,17 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     }
     
     /**
+     * broadcast kill self to all neighbers ***
+     */
+    public void broadcaseReallyKillself(){
+        outFlag = 0;
+        outFlag |= MessageFlag.KILL;
+        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
+        
+        sendSettledMsgToAllNeighborNodes(getVertexValue());
+    }
+    
+    /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
     public void responseToDeadVertex(){
@@ -692,4 +710,30 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         outgoingEdgeDir = connectedTable[i][1];
     }
     
+    
+    /**
+     * set statistics counter
+     */
+    public void updateStatisticsCounter(byte counterName){
+        ByteWritable counterNameWritable = new ByteWritable(counterName);
+        if(counters.containsKey(counterNameWritable))
+            counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);
+        else
+            counters.put(counterNameWritable, new VLongWritable(1));
+    }
+    
+    /**
+     * read statistics counters
+     * @param conf
+     * @return
+     */
+    public static HashMapWritable<ByteWritable, VLongWritable> readStatisticsCounterResult(Configuration conf) {
+        try {
+            VertexValueWritable value = (VertexValueWritable) IterationUtils
+                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
+            return value.getCounters();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }

@@ -10,7 +10,10 @@ public class BubbleMergeTestSuite extends BasicGraphCleanTestSuite{
                 "InvalidBubble", "BubbleWithTip", 
                 "SideBubble", "OverlapBubble",
                 "SimpleRectangle", "MediumRectangle", "ComplexRectangle",
-                "ThreeSquares", "Grid"};
+                "ThreeSquares", "Grid",
+                "TwoSimilarInTwo", "TwoSimilarInThree", 
+                "TwoSimilarInFour", "ThreeSimilarInFour",
+                "FourSimilarInFour"};
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
         return makeTestSuite(testSuite);

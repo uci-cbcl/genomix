@@ -11,6 +11,8 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
@@ -65,6 +67,12 @@ public class TipRemoveVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
 
     @Override
@@ -75,18 +83,27 @@ public class TipRemoveVertex extends
             	if(getVertexValue().getKmerLength() <= length){
             	    sendSettledMsgToNextNode();
             		deleteVertex(getVertexId());
+                    //set statistics counter: Num_RemovedTips
+                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
+                    getVertexValue().setCounters(counters);
             	}
             }
             else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
                 if(getVertexValue().getKmerLength() <= length){
-
                     sendSettledMsgToPrevNode();
                     deleteVertex(getVertexId());
+                    //set statistics counter: Num_RemovedTips
+                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
+                    getVertexValue().setCounters(counters);
                 }
             }
             else if(VertexUtil.isSingleVertex(getVertexValue())){
-                if(getVertexValue().getKmerLength() <= length)
+                if(getVertexValue().getKmerLength() <= length){
                     deleteVertex(getVertexId());
+                    //set statistics counter: Num_RemovedTips
+                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
+                    getVertexValue().setCounters(counters);
+                }
             }
         }
         else if(getSuperstep() == 2){

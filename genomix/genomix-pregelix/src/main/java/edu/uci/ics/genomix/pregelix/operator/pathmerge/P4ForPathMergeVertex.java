@@ -12,7 +12,10 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
@@ -96,6 +99,12 @@ public class P4ForPathMergeVertex extends
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
@@ -217,19 +226,29 @@ public class P4ForPathMergeVertex extends
                 selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
                 /** process merge **/
                 processMerge();
+                // set statistics counter: Num_MergedNodes
+                updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
                 /** if it's a tandem repeat, which means detecting cycle **/
                 if(isTandemRepeat()){
                     for(byte d : DirectionFlag.values)
                         getVertexValue().getEdgeList(d).reset();
                     getVertexValue().setState(MessageFlag.IS_HALT);
+                    // set statistics counter: Num_TandemRepeats
+                    updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats);
+                    getVertexValue().setCounters(counters);
                     voteToHalt();
                 }/** head meets head, stop **/ 
                 else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)){
                     getVertexValue().setState(MessageFlag.IS_HALT);
+                    // set statistics counter: Num_MergedPaths
+                    updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
+                    getVertexValue().setCounters(counters);
                     voteToHalt();
                 }
-                else
+                else{
+                    getVertexValue().setCounters(counters);
                     this.activate();
+                }
             }
         }
     }

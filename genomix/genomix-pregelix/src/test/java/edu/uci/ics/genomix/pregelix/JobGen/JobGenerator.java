@@ -10,6 +10,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
@@ -35,6 +36,7 @@ public class JobGenerator {
     private static void generateUnrollTandemRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(UnrollTandemRepeat.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
@@ -114,6 +116,7 @@ public class JobGenerator {
     private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(P4ForPathMergeVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -130,6 +133,7 @@ public class JobGenerator {
     private static void generateRemoveLowCoverageGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(RemoveLowCoverageVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -146,6 +150,7 @@ public class JobGenerator {
     private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(TipAddVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -162,6 +167,7 @@ public class JobGenerator {
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(TipRemoveVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -178,6 +184,7 @@ public class JobGenerator {
     private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BridgeAddVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -194,6 +201,7 @@ public class JobGenerator {
     private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BridgeRemoveVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -210,6 +218,7 @@ public class JobGenerator {
     private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BubbleAddVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -226,6 +235,7 @@ public class JobGenerator {
     private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BubbleMergeVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -242,6 +252,7 @@ public class JobGenerator {
     private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(SplitRepeatVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
@@ -273,6 +284,7 @@ public class JobGenerator {
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(ScaffoldingVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);

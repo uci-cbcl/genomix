@@ -56,11 +56,13 @@ public class VertexValueWritable
     
     private byte state;
     private boolean isFakeVertex;
-
+    private HashMapWritable<ByteWritable, VLongWritable> counters;
+    
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
+        counters = new HashMapWritable<ByteWritable, VLongWritable>();
     }
     
     public void setNode(NodeWritable node){
@@ -139,11 +141,21 @@ public class VertexValueWritable
     public void setState(byte state) {
         this.state = state;
     }
+    
+    public HashMapWritable<ByteWritable, VLongWritable> getCounters() {
+        return counters;
+    }
+
+    public void setCounters(HashMapWritable<ByteWritable, VLongWritable> counters) {
+        this.counters.clear();
+        this.counters.putAll(counters);
+    }
 
     public void reset() {
         super.reset();
         this.state = 0;
         this.isFakeVertex = false;
+        this.counters.clear();
     }
     
     @Override
@@ -152,6 +164,7 @@ public class VertexValueWritable
         super.readFields(in);
         this.state = in.readByte();
         this.isFakeVertex = in.readBoolean();
+        this.counters.readFields(in);
     }
 
     @Override
@@ -159,6 +172,7 @@ public class VertexValueWritable
         super.write(out);
         out.writeByte(this.state);
         out.writeBoolean(this.isFakeVertex);
+        this.counters.write(out);
     }
     
     public int getDegree(){

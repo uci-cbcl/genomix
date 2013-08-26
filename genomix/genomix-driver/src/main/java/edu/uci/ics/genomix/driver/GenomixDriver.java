@@ -268,7 +268,7 @@ public class GenomixDriver {
         confOutput.close();
         edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
         hadoopDriver.run(prevOutput, curOutput, Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)),
-                Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), true, HADOOP_CONF);
+                Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, HADOOP_CONF);
         FileUtils.deleteQuietly(new File(HADOOP_CONF));
         System.out.println("Finished job Hadoop-Build-Graph");
         followingBuild = true;

@@ -50,6 +50,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-kmerLength", usage = "The kmer length for this graph.", required = true)
         private int kmerLength = -1;
         
+        @Option(name = "-num-lines-per-map", usage = "The kmer length for this graph.", required = true)
+        private int linesPerMap = -1;
+        
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         private String pipelineOrder;
         
@@ -157,6 +160,7 @@ public class GenomixJobConf extends JobConf {
 
     // Global config
     public static final String KMER_LENGTH = "genomix.kmerlength";
+    public static final String LINES_PERMAP = "genomix.linespermap";
     public static final String PIPELINE_ORDER = "genomix.pipelineOrder";
     public static final String INITIAL_INPUT_DIR = "genomix.initial.input.dir";
     public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
@@ -309,7 +313,7 @@ public class GenomixJobConf extends JobConf {
             setInt(BRIDGE_REMOVE_MAX_LENGTH, kmerLength + 1);
         
         if (getFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, -1) == -1)
-            setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .05f);
+            setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .5f);
         
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
@@ -321,7 +325,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
         
         if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
-            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 1.0f);
+            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
         
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);

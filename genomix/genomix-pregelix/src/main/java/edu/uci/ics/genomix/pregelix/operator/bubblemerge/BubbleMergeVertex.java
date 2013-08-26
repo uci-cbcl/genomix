@@ -20,7 +20,9 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /**
@@ -77,6 +79,12 @@ public class BubbleMergeVertex extends
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
     
     public void sendBubbleAndMajorVertexMsgToMinorVertex(){
@@ -151,7 +159,7 @@ public class BubbleMergeVertex extends
     }
     
     public boolean isFlipRelativeToMajor(BubbleMergeMessageWritable msg1, BubbleMergeMessageWritable msg2){
-        return msg1.getRelativeDirToMajor() == msg2.getRelativeDirToMajor();
+        return msg1.getRelativeDirToMajor() != msg2.getRelativeDirToMajor();
     }
     
     public void processSimilarSetToUnchangeSetAndDeletedSet(){
@@ -174,7 +182,7 @@ public class BubbleMergeVertex extends
                 if(fracDissimilar < dissimilarThreshold){ //if similar with top node, delete this node and put it in deletedSet 
                     //add coverage to top node
                     topCoverageMessage.getNode().addFromNode(isFlipRelativeToMajor(topCoverageMessage, curMessage), 
-                            curMessage.getNode());
+                            curMessage.getNode()); 
                     boolean flip = curMessage.isFlip(topCoverageMessage);
                     curMessage.setFlip(flip);
                     curMessage.setTopCoverageVertexId(topCoverageMessage.getSourceVertexId());
@@ -184,7 +192,7 @@ public class BubbleMergeVertex extends
                     it.remove();
                 }
             }
-            unchangedSet.add(topCoverageMessage);
+            unchangedSet.add(new BubbleMergeMessageWritable(topCoverageMessage));
         }
     }
     
@@ -332,6 +340,9 @@ public class BubbleMergeVertex extends
                 incomingMsg = msgIterator.next();
                 if(incomingMsg.getFlag() == MessageFlag.KILL){
                     broadcaseKillselfAndNoticeToUpdateEdges();
+                    //set statistics counter: Num_RemovedTips
+                    updateStatisticsCounter(StatisticsCounter.Num_RemovedBubbles);
+                    getVertexValue().setCounters(counters);
                 }
             }
         } else if(getSuperstep() == 6){
