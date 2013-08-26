@@ -27,14 +27,17 @@ public class GraphBuildingTestCase extends TestCase{
 
     private static final int COUNT_REDUCER = 1;
     private final int SIZE_KMER;
+    private final int LINES_PERMAP;
         
     public GraphBuildingTestCase(String resultFileDir, String hadoopConfPath,
-            String hdfsInputPath, int kmerSize, FileSystem dfs, JobConf conf){
+            String hdfsInputPath, int kmerSize, int linesPerMap,
+            FileSystem dfs, JobConf conf){
         super("test");
         this.RESULT_PATH = resultFileDir;
         this.HADOOP_CONF_PATH = hadoopConfPath;
         this.HDFS_INPUTPATH = hdfsInputPath;
         this.SIZE_KMER = kmerSize;
+        this.LINES_PERMAP = linesPerMap;
         this.dfs = dfs;
         this.conf = conf;
     }
@@ -55,7 +58,7 @@ public class GraphBuildingTestCase extends TestCase{
     
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
-        driver.run(HDFS_INPUTPATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, true, HADOOP_CONF_PATH);
+        driver.run(HDFS_INPUTPATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, LINES_PERMAP, true, HADOOP_CONF_PATH);
         dumpResult();
     }
     

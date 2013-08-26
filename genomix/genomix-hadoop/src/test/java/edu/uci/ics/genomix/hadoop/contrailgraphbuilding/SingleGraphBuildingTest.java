@@ -28,6 +28,7 @@ public class SingleGraphBuildingTest {
     
     private static final int COUNT_REDUCER = 1;
     private static final int SIZE_KMER = 3;
+    private static int LINES_PERMAP = 4 * 100000;
     
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
@@ -44,7 +45,7 @@ public class SingleGraphBuildingTest {
     
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
-        driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, true, HADOOP_CONF_PATH);
+        driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, LINES_PERMAP, true, HADOOP_CONF_PATH);
         dumpResult();
     }
     

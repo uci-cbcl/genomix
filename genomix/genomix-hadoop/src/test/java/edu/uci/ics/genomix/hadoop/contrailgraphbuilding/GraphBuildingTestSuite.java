@@ -22,6 +22,7 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 public class GraphBuildingTestSuite extends TestSuite{
 
     private static int SIZE_KMER = 3;
+    private static int LINES_PERMAP = 4 * 100000;
     public static final String PreFix = "data/webmap/BubbleMerge_TestSet"; 
     public static final String[] TestDir = { PreFix + File.separator
         + "ThreeKmer"
@@ -135,7 +136,8 @@ public class GraphBuildingTestSuite extends TestSuite{
             String resultFileName = ACTUAL_RESULT_DIR + File.separator + 
                     "bin" + File.separator + testDir.getName();
             testSuite.addTest(new GraphBuildingTestCase(resultFileName, HADOOP_CONF_PATH, 
-                    HDFS_INPUTPATH + File.separator + testDir.getName(), SIZE_KMER, dfs, conf));
+                    HDFS_INPUTPATH + File.separator + testDir.getName(), SIZE_KMER, 
+                    LINES_PERMAP, dfs, conf));
         }
         return testSuite;
     }

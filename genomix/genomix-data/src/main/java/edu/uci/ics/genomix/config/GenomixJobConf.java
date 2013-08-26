@@ -49,6 +49,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-kmerLength", usage = "The kmer length for this graph.", required = true)
         private int kmerLength = -1;
         
+        @Option(name = "-num-lines-per-map", usage = "The kmer length for this graph.", required = true)
+        private int linesPerMap = -1;
+        
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         private String pipelineOrder;
         
@@ -156,6 +159,7 @@ public class GenomixJobConf extends JobConf {
 
     // Global config
     public static final String KMER_LENGTH = "genomix.kmerlength";
+    public static final String LINES_PERMAP = "genomix.linespermap";
     public static final String PIPELINE_ORDER = "genomix.pipelineOrder";
     public static final String INITIAL_INPUT_DIR = "genomix.initial.input.dir";
     public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
