@@ -459,7 +459,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     private void addEdges(boolean flip, NodeWritable other) {
-        if (flip) {
+        if (!flip) {
             for (byte d : DirectionFlag.values) {
                 edges[d].unionUpdate(other.edges[d]);
             }

@@ -159,7 +159,7 @@ public class BubbleMergeVertex extends
     }
     
     public boolean isFlipRelativeToMajor(BubbleMergeMessageWritable msg1, BubbleMergeMessageWritable msg2){
-        return msg1.getRelativeDirToMajor() == msg2.getRelativeDirToMajor();
+        return msg1.getRelativeDirToMajor() != msg2.getRelativeDirToMajor();
     }
     
     public void processSimilarSetToUnchangeSetAndDeletedSet(){
@@ -182,7 +182,7 @@ public class BubbleMergeVertex extends
                 if(fracDissimilar < dissimilarThreshold){ //if similar with top node, delete this node and put it in deletedSet 
                     //add coverage to top node
                     topCoverageMessage.getNode().addFromNode(isFlipRelativeToMajor(topCoverageMessage, curMessage), 
-                            curMessage.getNode());
+                            curMessage.getNode()); 
                     boolean flip = curMessage.isFlip(topCoverageMessage);
                     curMessage.setFlip(flip);
                     curMessage.setTopCoverageVertexId(topCoverageMessage.getSourceVertexId());
@@ -192,7 +192,7 @@ public class BubbleMergeVertex extends
                     it.remove();
                 }
             }
-            unchangedSet.add(topCoverageMessage);
+            unchangedSet.add(new BubbleMergeMessageWritable(topCoverageMessage));
         }
     }
     

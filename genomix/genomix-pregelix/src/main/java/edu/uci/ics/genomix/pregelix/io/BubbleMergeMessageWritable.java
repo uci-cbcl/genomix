@@ -167,7 +167,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     public static class SortByCoverage implements Comparator<BubbleMergeMessageWritable> {
         @Override
         public int compare(BubbleMergeMessageWritable left, BubbleMergeMessageWritable right) {
-            return Float.compare(left.node.getAverageCoverage(), right.node.getAverageCoverage());
+            return -Float.compare(left.node.getAverageCoverage(), right.node.getAverageCoverage());
         }
     }
     

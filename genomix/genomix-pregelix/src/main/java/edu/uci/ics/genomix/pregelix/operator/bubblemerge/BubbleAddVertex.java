@@ -57,8 +57,10 @@ public class BubbleAddVertex extends
     private VKmerBytesWritable majorVertexId = new VKmerBytesWritable("ACA"); //forward
     private VKmerBytesWritable middleVertexId = new VKmerBytesWritable("ATG"); //reverse
     private VKmerBytesWritable minorVertexId = new VKmerBytesWritable("TCA"); //forward
-    private VKmerBytesWritable insertedBubble = new VKmerBytesWritable("ATT"); //reverse
-    private byte majorToNewBubbleDir = MessageFlag.DIR_RR;
+    private VKmerBytesWritable insertedBubble = new VKmerBytesWritable("ATA"); //reverse
+    private VKmerBytesWritable internalKmerInNewBubble = new VKmerBytesWritable("ATG");
+    private float coverageOfInsertedBubble = 1;
+    private byte majorToNewBubbleDir = MessageFlag.DIR_FR;
     private byte minorToNewBubbleDir = MessageFlag.DIR_FR;
     
     private EdgeListWritable[] edges = new EdgeListWritable[4];
@@ -69,6 +71,24 @@ public class BubbleAddVertex extends
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+    }
+   
+    /**
+     * Returns the edge dir for B->A when the A->B edge is type @dir
+     */
+    public byte mirrorDirection(byte dir) {
+        switch (dir) {
+            case MessageFlag.DIR_FF:
+                return MessageFlag.DIR_RR;
+            case MessageFlag.DIR_FR:
+                return MessageFlag.DIR_FR;
+            case MessageFlag.DIR_RF:
+                return MessageFlag.DIR_RF;
+            case MessageFlag.DIR_RR:
+                return MessageFlag.DIR_FF;
+            default:
+                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
+        }
     }
     
     /**
@@ -91,17 +111,20 @@ public class BubbleAddVertex extends
          */
         vertexValue.setEdges(edges);
         vertexValue.setInternalKmer(internalKmer);
+        vertexValue.setAverageCoverage(coverageOfInsertedBubble);
+        vertexValue.setInternalKmer(internalKmerInNewBubble);
 
         vertex.setVertexValue(vertexValue);
         
         addVertex(insertedBubble, vertex);
     }
     
-    public void addEdgeToInsertedBubble(byte dir, VKmerBytesWritable insertedBubble){
+    public void addEdgeToInsertedBubble(byte meToNewBubbleDir, VKmerBytesWritable insertedBubble){
         EdgeWritable newEdge = new EdgeWritable();
         newEdge.setKey(insertedBubble);
         newEdge.appendReadID(0);
-        getVertexValue().getEdgeList(dir).add(newEdge);
+        byte newBubbleToMeDir = mirrorDirection(meToNewBubbleDir);
+        getVertexValue().getEdgeList(newBubbleToMeDir).add(newEdge);
     }
     
     public void setupEdgeForInsertedBubble(){
