@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -67,12 +68,9 @@ public class GenomixDriver {
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(
             this.getClass());
-    private NCTypes curNC = null;
-
-    
 
     private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, IOException {
-        startNCs(NCTypes.HYRACKS);
+        DriverUtils.startNCs(NCTypes.HYRACKS);
         LOG.info("Building Graph using Hyracks...");
         GenomixJobConf.tick("buildGraphWithHyracks");
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
@@ -85,72 +83,6 @@ public class GenomixDriver {
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
-    }
-
-    private void startNCs(NCTypes type) throws IOException {
-        LOG.info("Starting NC's");
-        shutdownNCs();
-        curNC = type;
-        String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "startAllNCs.sh " + type;
-        System.out.println(startNCCmd);
-        Process p = Runtime.getRuntime().exec(startNCCmd);
-        try { 
-            p.waitFor();  // wait for ssh 
-            Thread.sleep(3000);  // wait for NC -> CC registration
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to start the" + type + " NC's! Script returned exit code: " + p.exitValue());
-    }
-
-    private void shutdownNCs() throws IOException {
-        LOG.info("Shutting down NC's");
-        if (curNC == null) // nothing started yet
-            return;
-        switch(curNC) {
-            case HYRACKS:
-            case PREGELIX:
-                String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopAllNCs.sh " + curNC;
-                System.out.println(stopNCCmd);
-                Process p = Runtime.getRuntime().exec(stopNCCmd);
-                try {
-                    p.waitFor();  // wait for ssh 
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                curNC = null;
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid type specified for curNC: " + curNC);
-        }
-    }
-
-    private void startCC() throws IOException {
-        LOG.info("Starting CC");
-        String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "startcc.sh";
-        Process p = Runtime.getRuntime().exec(startCCCmd);
-        try { 
-            p.waitFor();  // wait for cmd execution
-            Thread.sleep(3000);  // wait for CC registration
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to start the genomix CC! Script returned exit code: " + p.exitValue());
-    }
-
-    private void shutdownCC() throws IOException {
-        LOG.info("Shutting down CC");
-        String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
-        Process p = Runtime.getRuntime().exec(stopCCCmd);
-        try { 
-            p.waitFor();  // wait for cmd execution
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to stop the genomix CC! Script returned exit code: " + p.exitValue());
     }
 
     private void buildGraphWithHadoop(GenomixJobConf conf) throws IOException {
@@ -187,14 +119,14 @@ public class GenomixDriver {
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         jobs = new ArrayList<PregelixJob>();
         stepNum = 0;
-        boolean dump = false; 
+        boolean dump = false;
         boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         try {
             if (runLocal)
                 GenomixMiniCluster.init(conf);
             else
-                startCC();
-    
+                DriverUtils.startCC();
+
             String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
             if (localInput != null) {
                 conf.set(GenomixJobConf.INITIAL_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
@@ -202,7 +134,7 @@ public class GenomixDriver {
                 DriverUtils.copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
             }
             curOutput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
-    
+
             // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
             String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
             for (Patterns step : Patterns.arrayFromString(pipelineSteps)) {
@@ -266,19 +198,19 @@ public class GenomixDriver {
                         break;
                 }
             }
-    
+
             if (jobs.size() > 0)
-                startNCs(NCTypes.PREGELIX);
+                DriverUtils.startNCs(NCTypes.PREGELIX);
             // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
             // this would let them resume at arbitrary points of the pipeline
             if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
                 for (int i = 0; i < jobs.size(); i++) {
                     LOG.info("Starting job " + jobs.get(i).getJobName());
                     GenomixJobConf.tick("pregelix-job");
-                    
+
                     pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
                             Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-                    
+
                     LOG.info("Finished job " + jobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
                 }
             } else {
@@ -288,7 +220,7 @@ public class GenomixDriver {
                         Integer.parseInt(conf.get(GenomixJobConf.PORT)));
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
             }
-    
+
             if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
                 DriverUtils.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
             if (dump)
@@ -303,8 +235,8 @@ public class GenomixDriver {
                 if (runLocal)
                     GenomixMiniCluster.deinit();
                 else {
-                    shutdownNCs();
-                    shutdownCC();
+                    DriverUtils.shutdownNCs();
+                    DriverUtils.shutdownCC();
                 }
             } catch (Exception e) {
                 System.out.println("Exception raise while shutting down cluster:");
@@ -314,26 +246,27 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-                String[] myArgs = { "-runLocal", "-kmerLength", "5",
-                        "-coresPerMachine", "2",
-//                        "-saveIntermediateResults", "true",
-//                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
-//                        "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
-                        "-localInput", "/home/wbiesing/code/biggerInput",
-//                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
-        //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
-        //                "-localInput", "output-build/bin",
-//                        "-localOutput", "output-skip",
-                        //                            "-pipelineOrder", "BUILD,MERGE",
-                        //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-                        //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                        "-pipelineOrder", "BUILD_HADOOP,STATS,MERGE,DUMP_FASTA" };
-                
+        String[] myArgs = { "-ip", "localhost", "-port", "3099", 
+                "-kmerLength", "5", "-coresPerMachine", "2",
+                //                        "-saveIntermediateResults", "true",
+                //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
+                "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
+                //                        "-localInput", "/home/wbiesing/code/biggerInput",
+                //                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
+                //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
+                //                "-localInput", "output-build/bin",
+                //                        "-localOutput", "output-skip",
+                //                            "-pipelineOrder", "BUILD,MERGE",
+                //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+                //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
+                "-pipelineOrder", "BUILD_HYRACKS,MERGE,DUMP_FASTA" };
+        System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
+
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-                GenomixJobConf conf = GenomixJobConf.fromArguments(args);
-                GenomixDriver driver = new GenomixDriver();
-                driver.runGenomix(conf);
+        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
+        GenomixDriver driver = new GenomixDriver();
+        driver.runGenomix(conf);
     }
 }

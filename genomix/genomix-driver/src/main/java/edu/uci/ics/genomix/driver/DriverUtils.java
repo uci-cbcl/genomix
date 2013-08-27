@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -38,6 +39,68 @@ public class DriverUtils {
     }
 
     private static final Log LOG = LogFactory.getLog(DriverUtils.class);
+    
+    static void startNCs(NCTypes type) throws IOException {
+        LOG.info("Starting NC's");
+        shutdownNCs();
+        String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
+                + "startAllNCs.sh " + type;
+        Process p = Runtime.getRuntime().exec(startNCCmd);
+        try {
+            p.waitFor(); // wait for ssh 
+            Thread.sleep(3000); // wait for NC -> CC registration
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to start the" + type + " NC's! Script returned exit code: "
+                    + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                    + IOUtils.toString(p.getInputStream()));
+    }
+
+    static void shutdownNCs() throws IOException {
+        LOG.info("Shutting down any previous NC's");
+        String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
+                + "stopAllNCs.sh";
+        Process p = Runtime.getRuntime().exec(stopNCCmd);
+        try {
+            p.waitFor(); // wait for ssh 
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void startCC() throws IOException {
+        LOG.info("Starting CC");
+        String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
+                + "startcc.sh";
+        Process p = Runtime.getRuntime().exec(startCCCmd);
+        try {
+            p.waitFor(); // wait for cmd execution
+            Thread.sleep(3000); // wait for CC registration
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to start the genomix CC! Script returned exit code: " + p.exitValue()
+                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                    + IOUtils.toString(p.getInputStream()));
+    }
+
+    static void shutdownCC() throws IOException {
+        LOG.info("Shutting down CC");
+        String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
+        Process p = Runtime.getRuntime().exec(stopCCCmd);
+        try {
+            p.waitFor(); // wait for cmd execution
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to stop the genomix CC! Script returned exit code: " + p.exitValue()
+                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                    + IOUtils.toString(p.getInputStream()));
+    }
     
     public static void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
         LOG.info("Copying local directory " + localDir + " to HDFS: " + destDir);
