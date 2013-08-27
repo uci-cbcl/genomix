@@ -103,6 +103,8 @@ public class GenomixDriver {
     }
 
     private void shutdownNCs() throws IOException {
+        if (curNC == null) // nothing started yet
+            return;
         switch(curNC) {
             case HYRACKS:
             case PREGELIX:
@@ -115,8 +117,8 @@ public class GenomixDriver {
                 }
                 curNC = null;
                 break;
-            default: // nothing started yet
-                break;
+            default:
+                throw new IllegalArgumentException("Invalid type specified for curNC: " + curNC);
         }
     }
 

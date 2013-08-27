@@ -50,9 +50,9 @@ export JAVA_OPTS=$NCJAVA_OPTS
 #Enter the temp dir
 cd $NCTMP_DIR
 
-if [ "$1" == "hyracks" ]; then
+if [ "$1" == "HYRACKS" ]; then
   NCTYPE="hyracksnc"
-elif [ "$1" == "pregelix" ]; then
+elif [ "$1" == "PREGELIX" ]; then
   NCTYPE="pregelixnc"
 else
   echo "unknown NC type $1" 1>&2
