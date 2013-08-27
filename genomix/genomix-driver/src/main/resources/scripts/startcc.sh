@@ -4,13 +4,11 @@ set -o pipefail
 
 hostname
 
-GENOMIX_HOME="$( dirname "$( dirname "$( readlink -e "${BASH_SOURCE[0]}" )" )" )"  # parent dir of absolute script path
+GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
 cd "$GENOMIX_HOME"
-
 
 #Import cluster properties
 . conf/cluster.properties
-
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
 CCHOST=`bin/getip.sh`
@@ -29,9 +27,9 @@ export JAVA_OPTS=$CCJAVA_OPTS
 
 cd $CCTMP_DIR
 #Launch hyracks cc script
-if [ -f "conf/topology.xml"  ]; then
+if [ -f "${GENOMIX_HOME}/conf/topology.xml"  ]; then
 #Launch hyracks cc script with topology
-"${GENOMIX_HOME}"/bin/genomixcc -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST -client-net-port $CC_CLIENTPORT -cluster-net-port $CC_CLUSTERPORT -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -job-history-size 0 -cluster-topology "conf/topology.xml" &> "$CCLOGS_DIR"/cc.log &
+"${GENOMIX_HOME}"/bin/genomixcc -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST -client-net-port $CC_CLIENTPORT -cluster-net-port $CC_CLUSTERPORT -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -job-history-size 0 -cluster-topology "${GENOMIX_HOME}/conf/topology.xml" &> "$CCLOGS_DIR"/cc.log &
 else
 #Launch hyracks cc script without toplogy
 "${GENOMIX_HOME}"/bin/genomixcc -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST -client-net-port $CC_CLIENTPORT -cluster-net-port $CC_CLUSTERPORT -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -job-history-size 0 &> "$CCLOGS_DIR"/cc.log &

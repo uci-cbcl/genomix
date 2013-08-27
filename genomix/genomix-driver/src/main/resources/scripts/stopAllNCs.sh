@@ -2,7 +2,7 @@
 set -e
 set -o pipefail
 
-GENOMIX_HOME="$( dirname "$( dirname "$( readlink -e "${BASH_SOURCE[0]}" )" )" )"  # parent dir of absolute script path
+GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
 cd "$GENOMIX_HOME"
 
 for i in `cat conf/slaves`

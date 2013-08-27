@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-set -o pipefail
 
 #get the OS
 OS_NAME=`uname -a|awk '{print $1}'`
@@ -10,7 +8,7 @@ if [ $OS_NAME = $LINUX_OS ];
 then
     #Get IP Address
     #Prefer Infiniband connection
-    IPADDR=`/sbin/ifconfig ib0 | grep "inet " | awk '{print $2}' | cut -f 2 -d ':'`
+    IPADDR=`/sbin/ifconfig ib0 2> /dev/null | grep "inet " | awk '{print $2}' | cut -f 2 -d ':'`
     if [ "$IPADDR" = "" ]
     then
         IPADDR=`/sbin/ifconfig eth0 | grep "inet " | awk '{print $2}' | cut -f 2 -d ':'`
