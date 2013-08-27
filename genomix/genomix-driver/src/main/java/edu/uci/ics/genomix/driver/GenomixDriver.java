@@ -80,6 +80,11 @@ import edu.uci.ics.pregelix.core.driver.Driver;
  * The main entry point for the Genomix assembler, a hyracks/pregelix/hadoop-based deBruijn assembler.
  */
 public class GenomixDriver {
+    private enum NCTypes {
+        HYRACKS,
+        PREGELIX
+    }
+
     private static final Log LOG = LogFactory.getLog(GenomixDriver.class);
     private static final String HADOOP_CONF = "hadoop.conf.xml";
     private String prevOutput;
@@ -91,6 +96,7 @@ public class GenomixDriver {
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(
             this.getClass());
+    private NCTypes curNC = null;
 
     private void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
         LOG.info("Copying local directory " + localDir + " to HDFS: " + destDir);
@@ -245,7 +251,8 @@ public class GenomixDriver {
         LOG.info("Dump graph to fasta took " + GenomixJobConf.tock("dumpGraph") + "ms");
     }
 
-    private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, HyracksException {
+    private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, IOException {
+        startNCs(NCTypes.HYRACKS);
         LOG.info("Building Graph using Hyracks...");
         GenomixJobConf.tick("buildGraphWithHyracks");
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
@@ -258,6 +265,64 @@ public class GenomixDriver {
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
+    }
+
+    private void startNCs(NCTypes type) throws IOException {
+        shutdownNCs();
+        curNC = type;
+        String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "startAllNCs.sh " + type;
+        Process p = Runtime.getRuntime().exec(startNCCmd);
+        try { 
+            p.waitFor();  // wait for ssh 
+            Thread.sleep(3000);  // wait for NC -> CC registration
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to start the" + type + " NC's! Script returned exit code: " + p.exitValue());
+    }
+
+    private void shutdownNCs() throws IOException {
+        switch(curNC) {
+            case HYRACKS:
+            case PREGELIX:
+                String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopAllNCs.sh " + curNC;
+                Process p = Runtime.getRuntime().exec(stopNCCmd);
+                try {
+                    p.waitFor();  // wait for ssh 
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                curNC = null;
+                break;
+            default: // nothing started yet
+                break;
+        }
+    }
+
+    private void startCC() throws IOException {
+        String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "startcc.sh";
+        Process p = Runtime.getRuntime().exec(startCCCmd);
+        try { 
+            p.waitFor();  // wait for cmd execution
+            Thread.sleep(3000);  // wait for CC registration
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to start the genomix CC! Script returned exit code: " + p.exitValue());
+    }
+
+    private void shutdownCC() throws IOException {
+        String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
+        Process p = Runtime.getRuntime().exec(stopCCCmd);
+        try { 
+            p.waitFor();  // wait for cmd execution
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to stop the genomix CC! Script returned exit code: " + p.exitValue());
     }
 
     private void buildGraphWithHadoop(GenomixJobConf conf) throws IOException {
@@ -297,6 +362,8 @@ public class GenomixDriver {
         boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         if (runLocal)
             GenomixMiniCluster.init(conf);
+        else
+            startCC();
 
         String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
         if (localInput != null) {
@@ -370,6 +437,8 @@ public class GenomixDriver {
             }
         }
 
+        if (jobs.size() > 0)
+            startNCs(NCTypes.PREGELIX);
         // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
         // this would let them resume at arbitrary points of the pipeline
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
@@ -399,6 +468,10 @@ public class GenomixDriver {
 
         if (runLocal)
             GenomixMiniCluster.deinit();
+        else {
+            shutdownNCs();
+            shutdownCC();
+        }
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {

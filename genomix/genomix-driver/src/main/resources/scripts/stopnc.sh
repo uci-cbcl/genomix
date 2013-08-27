@@ -7,11 +7,22 @@ cd "$GENOMIX_HOME"
 
 . conf/cluster.properties
 
+
+if [ "$1" == "hyracks" ]; then
+  NCTYPE="hyracksnc"
+elif [ "$1" == "pregelix" ]; then
+  NCTYPE="pregelixnc"
+else
+  echo "unknown NC type $1" 1>&2
+  exit 1
+fi
+
+
 #Kill process
-PID=`jps -lvm | grep 'Dapp.name=genomixnc' | awk '{print $1}'`
+PID=`jps -lvm | grep "Dapp.name=$NCTYPE" | awk '{print $1}'`
 
 if [ "$PID" == "" ]; then
-  PID=`ps -ef|grep ${USER}|grep java|grep 'Dapp.name=genomixnc'|awk '{print $2}'`
+  PID=`ps -ef|grep ${USER}|grep java|grep "Dapp.name=$NCTYPE"|awk '{print $2}'`
 fi
 
 if [ "$PID" == "" ]; then
@@ -24,7 +35,7 @@ fi
 
 if [ "$PID" == "" ]; then
   USERID=`id | sed 's/^uid=//;s/(.*$//'`
-  PID=`ps -ef|grep ${USERID}|grep java|grep 'Dapp.name=genomixnc'|awk '{print $2}'`
+  PID=`ps -ef|grep ${USERID}|grep java|grep "Dapp.name=$NCTYPE"|awk '{print $2}'`
 fi
 
 echo $PID

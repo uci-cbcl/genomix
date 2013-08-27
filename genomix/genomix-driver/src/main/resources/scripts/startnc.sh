@@ -8,6 +8,7 @@ GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's par
 cd "$GENOMIX_HOME"
 
 
+
 MY_NAME=`hostname`
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
@@ -49,5 +50,16 @@ export JAVA_OPTS=$NCJAVA_OPTS
 #Enter the temp dir
 cd $NCTMP_DIR
 
+if [ "$1" == "hyracks" ]; then
+  NCTYPE="hyracksnc"
+elif [ "$1" == "pregelix" ]; then
+  NCTYPE="pregelixnc"
+else
+  echo "unknown NC type $1" 1>&2
+  exit 1
+fi
+
+echo startnc `pwd` "$GENOMIX_HOME"
 #Launch hyracks nc
-"${GENOMIX_HOME}"/bin/genomixnc -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> "$NCLOGS_DIR"/$NODEID.log &
+"${GENOMIX_HOME}"/bin/$NCTYPE -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> "$NCLOGS_DIR"/$NODEID.log &
+

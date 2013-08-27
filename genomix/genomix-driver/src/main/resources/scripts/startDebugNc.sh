@@ -49,5 +49,15 @@ export JAVA_OPTS=$NCJAVA_OPTS2
 #Enter the temp dir
 cd $NCTMP_DIR2
 
+
+if [ "$1" == "hyracks" ]; then
+  NCTYPE="hyracksnc"
+elif [ "$1" == "pregelix" ]; then
+  NCTYPE="pregelixnc"
+else
+  echo "unknown NC type $1" 1>&2
+  exit 1
+fi
+
 #Launch hyracks nc
-"${GENOMIX_HOME}"/bin/genomixnc -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> "$NCLOGS_DIR"/$NODEID.log &
+"${GENOMIX_HOME}"/bin/$NCTYPE -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> "$NCLOGS_DIR"/$NODEID.log &
