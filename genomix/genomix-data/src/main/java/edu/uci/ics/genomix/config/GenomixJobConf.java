@@ -50,7 +50,7 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-kmerLength", usage = "The kmer length for this graph.", required = true)
         private int kmerLength = -1;
         
-        @Option(name = "-num-lines-per-map", usage = "The kmer length for this graph.", required = true)
+        @Option(name = "-num-lines-per-map", usage = "The kmer length for this graph.", required = false)
         private int linesPerMap = -1;
         
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
