@@ -2,11 +2,14 @@
 set -e
 set -o pipefail
 
-hostname
-
 GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
 cd "$GENOMIX_HOME"
 
+if [ -e "$GENOMIX_HOME"/conf/cc.pid ] ; then
+  echo "existing CC pid found... Not starting a new CC!"
+  exit 1
+fi
+  
 #Import cluster properties
 . conf/cluster.properties
 #Get the IP address of the cc
@@ -34,3 +37,7 @@ else
 #Launch hyracks cc script without toplogy
 "${GENOMIX_HOME}"/bin/genomixcc -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST -client-net-port $CC_CLIENTPORT -cluster-net-port $CC_CLUSTERPORT -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -job-history-size 0 &> "$CCLOGS_DIR"/cc.log &
 fi
+
+PID=$!
+echo "master: "`hostname`$'\t'$PID
+echo $PID > "$GENOMIX_HOME"/conf/cc.pid

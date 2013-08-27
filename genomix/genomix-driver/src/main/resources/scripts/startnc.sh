@@ -2,8 +2,6 @@
 set -e
 set -o pipefail
 
-hostname
-
 GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
 cd "$GENOMIX_HOME"
 
@@ -59,7 +57,8 @@ else
   exit 1
 fi
 
-echo startnc `pwd` "$GENOMIX_HOME"
 #Launch hyracks nc
 "${GENOMIX_HOME}"/bin/$NCTYPE -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> "$NCLOGS_DIR"/$NODEID.log &
+
+echo $!  # write PID of bg'ed script
 
