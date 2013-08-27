@@ -12,6 +12,8 @@ import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageTypeFromHead;
 import edu.uci.ics.genomix.type.VKmerListWritable;
@@ -83,6 +85,16 @@ public class P2ForPathMergeVertex extends
             destVertexId = new VKmerBytesWritable();
         if(tmpKmer == null)
             tmpKmer = new VKmerBytesWritable();
+        headMergeDir = getHeadMergeDir();
+        if(repeatKmer == null)
+            repeatKmer = new VKmerBytesWritable();
+        tmpValue.reset();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+        else
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
 
     /**
