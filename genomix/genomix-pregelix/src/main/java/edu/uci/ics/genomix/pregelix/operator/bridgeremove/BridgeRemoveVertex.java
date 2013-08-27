@@ -120,7 +120,7 @@ public class BridgeRemoveVertex extends
             }
         }
         else if (getSuperstep() == 2){
-            //collect received messages
+            //aggregate received messages
             aggregateReceivedMsgs(msgIterator);
             //detect bridge pattern and remove it
             removeBridge();

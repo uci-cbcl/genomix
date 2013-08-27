@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -19,10 +20,10 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RemoveLowCoverageVertex extends
     BasicGraphCleanVertex<MessageWritable> {
-    public static int kmerSize = -1;
     private static float minAverageCoverage = -1;
     
-    private static Set<VKmerBytesWritable> deadNodeSet = new HashSet<VKmerBytesWritable>();
+    private static Set<VKmerBytesWritable> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());
+    
     /**
      * initiate kmerSize, length
      */
