@@ -16,7 +16,7 @@ public class StatisticsAggregator extends
     GlobalAggregator<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable, VertexValueWritable, VertexValueWritable>{
 
     public static HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
-    private VertexValueWritable value = new VertexValueWritable();
+    protected VertexValueWritable value = new VertexValueWritable();
     
     @Override
     public void init() {
