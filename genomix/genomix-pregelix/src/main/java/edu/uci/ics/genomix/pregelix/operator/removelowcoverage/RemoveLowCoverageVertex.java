@@ -18,6 +18,11 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
+/**
+ * Graph clean pattern: Remove Lowcoverage
+ * @author anbangx
+ *
+ */
 public class RemoveLowCoverageVertex extends
     BasicGraphCleanVertex<MessageWritable> {
     private static float minAverageCoverage = -1;

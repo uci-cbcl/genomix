@@ -23,6 +23,11 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
+/**
+ * Graph clean pattern: Split Repeat
+ * @author anbangx
+ *
+ */
 public class SplitRepeatVertex extends 
     BasicGraphCleanVertex<SplitRepeatMessageWritable>{
     
