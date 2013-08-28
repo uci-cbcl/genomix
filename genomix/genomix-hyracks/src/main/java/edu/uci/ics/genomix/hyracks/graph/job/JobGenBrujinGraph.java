@@ -103,9 +103,7 @@ public class JobGenBrujinGraph extends JobGen {
         for (int i = 0; i < numPartitionPerMachine; i++) {
             System.arraycopy(nodes, 0, ncNodeNames, i * nodes.length, nodes.length);
         }
-        System.out.println("Node names:");
-        for (String e : ncNodeNames)
-            System.out.println(e);
+
         initJobConfiguration(scheduler);
     }
 
@@ -241,7 +239,8 @@ public class JobGenBrujinGraph extends JobGen {
         frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, GenomixJobConf.DEFAULT_FRAME_LIMIT);
         tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
         frameSize = conf.getInt(GenomixJobConf.FRAME_SIZE, GenomixJobConf.DEFAULT_FRAME_SIZE);
-
+        System.out.println(GenomixJobConf.DEFAULT_FRAME_SIZE);
+        System.out.println(frameSize);
         String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         groupbyType = GroupbyType.PRECLUSTER;
 

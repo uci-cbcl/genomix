@@ -118,6 +118,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
+        @Option(name = "-frameSize", usage = "frame size of hyracks", required = false)
+        private int frameSize = -1;
+        
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
     }
@@ -204,7 +207,7 @@ public class GenomixJobConf extends JobConf {
     public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
     public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
 
-    public static final int DEFAULT_FRAME_SIZE = 128 * 1024;
+    public static final int DEFAULT_FRAME_SIZE = 256 * 1024;
     public static final int DEFAULT_FRAME_LIMIT = 4096;
     public static final int DEFAULT_TABLE_SIZE = 10485767;
     public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
@@ -353,6 +356,8 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CORES_PER_MACHINE, -1) == -1)
             setInt(CORES_PER_MACHINE, 4);
+        if (getInt(FRAME_SIZE, -1) == -1)
+            setInt(FRAME_SIZE, DEFAULT_FRAME_SIZE);
         
 //        if (getBoolean(RUN_LOCAL, false)) {
 //            // override any other settings for HOST and PORT
@@ -396,7 +401,8 @@ public class GenomixJobConf extends JobConf {
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
         setInt(CORES_PER_MACHINE, opts.coresPerMachine);
-       
+        setInt(FRAME_SIZE, opts.frameSize);
+        
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
