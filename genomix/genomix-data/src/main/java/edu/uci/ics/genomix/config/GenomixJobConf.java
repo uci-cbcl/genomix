@@ -110,7 +110,7 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-coresPerMachine", usage="the number of cores available in each machine", required=false)
         private int coresPerMachine = -1;
         
-        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port", required=false)
+        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
         @Argument
@@ -299,9 +299,9 @@ public class GenomixJobConf extends JobConf {
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
 
-        // Hyracks/Pregelix Advanced Setup
-        if (conf.get(IP_ADDRESS) == null)
-            throw new IllegalArgumentException("ipAddress was not specified!");        
+//        // Hyracks/Pregelix Advanced Setup
+//        if (conf.get(IP_ADDRESS) == null)
+//            throw new IllegalArgumentException("ipAddress was not specified!");
     }
     
     private void fillMissingDefaults() {
@@ -341,11 +341,11 @@ public class GenomixJobConf extends JobConf {
         if (getInt(CORES_PER_MACHINE, -1) == -1)
             setInt(CORES_PER_MACHINE, 4);
         
-        if (getBoolean(RUN_LOCAL, false)) {
-            // override any other settings for HOST and PORT
-            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
-            setInt(PORT, PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
-        }
+//        if (getBoolean(RUN_LOCAL, false)) {
+//            // override any other settings for HOST and PORT
+//            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
+//            setInt(PORT, PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+//        }
     }
 
     private void setFromOpts(Options opts) {
@@ -371,8 +371,10 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
             
 
-        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
-            throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
+//        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
+//            throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
+        if (opts.runLocal)
+            throw new IllegalArgumentException("runLocal is currently unsupported!");
         setBoolean(RUN_LOCAL, opts.runLocal);
         
         // Hyracks/Pregelix Setup
