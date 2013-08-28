@@ -32,6 +32,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
@@ -96,6 +98,9 @@ public class GenomixJobConf extends JobConf {
         
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
+        
+        @Option(name= "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
+        private int maxReadIDsPerEdge = -1;
         
         // Hyracks/Pregelix Setup
         @Option(name = "-ip", usage = "IP address of the cluster controller", required = false)
@@ -176,6 +181,7 @@ public class GenomixJobConf extends JobConf {
     public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.PathMergeRandom.probBeingRandomHead";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
+    public static final String MAX_READIDS_PER_EDGE = "genomix.max.readids.per.edge";
     
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
@@ -225,6 +231,7 @@ public class GenomixJobConf extends JobConf {
 //                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
 //                    Patterns.SCAFFOLD, Patterns.MERGE
             };
+    
     
     private String[] extraArguments = {};
     
@@ -298,6 +305,9 @@ public class GenomixJobConf extends JobConf {
         
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
+        
+        if (Integer.parseInt(conf.get(MAX_READIDS_PER_EDGE)) < 0)
+            throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
 
 //        // Hyracks/Pregelix Advanced Setup
 //        if (conf.get(IP_ADDRESS) == null)
@@ -329,6 +339,9 @@ public class GenomixJobConf extends JobConf {
         
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);
+        
+        if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
+            setInt(MAX_READIDS_PER_EDGE, 250);
         
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
@@ -415,5 +428,10 @@ public class GenomixJobConf extends JobConf {
             return 0;
         else
             return System.currentTimeMillis() - time;
+    }
+
+    public static void setGlobalStaticConstants(Configuration conf) {
+        KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
+        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
     }
 }

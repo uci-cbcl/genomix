@@ -116,8 +116,8 @@ public class GenomixDriver {
     }
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
-        KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         DriverUtils.updateCCProperties(conf);
+        GenomixJobConf.setGlobalStaticConstants(conf);
         jobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         boolean dump = false;

@@ -331,7 +331,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         for (EdgeWritable e : edges) {
             VKmerBytesWritable key = e.getKey();
             if (unionEdges.containsKey(key)) {
-                unionEdges.get(key).unionUpdate(e.getReadIDs());
+                unionEdges.get(key).unionUpdateCappedCount(e.getReadIDs());
             }
             else {
                 unionEdges.put(key, new PositionListWritable(e.getReadIDs())); // make a new copy of their list
@@ -340,7 +340,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         for (EdgeWritable e : other.edges) {
             VKmerBytesWritable key = e.getKey();
             if (unionEdges.containsKey(key)) {
-                unionEdges.get(key).unionUpdate(e.getReadIDs());
+                unionEdges.get(key).unionUpdateCappedCount(e.getReadIDs());
             }
             else {
                 unionEdges.put(key, new PositionListWritable(e.getReadIDs())); // make a new copy of their list
