@@ -27,11 +27,9 @@ public class RemoveLowCoverageVertex extends
     /**
      * initiate kmerSize, length
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if(minAverageCoverage == -1)
-            minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)

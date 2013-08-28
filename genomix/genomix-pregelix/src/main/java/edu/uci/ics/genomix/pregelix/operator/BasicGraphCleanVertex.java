@@ -12,6 +12,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 import edu.uci.ics.genomix.pregelix.io.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -63,6 +64,11 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
+        if (kmerSize == -1)
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        if (maxIteration < 0)
+            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
     
     /**

@@ -62,6 +62,7 @@ public class TipAddVertex extends
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })

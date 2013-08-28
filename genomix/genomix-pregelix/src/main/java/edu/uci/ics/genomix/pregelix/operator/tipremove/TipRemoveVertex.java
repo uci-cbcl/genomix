@@ -28,11 +28,9 @@ public class TipRemoveVertex extends
     /**
      * initiate kmerSize, length
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if(length == -1)
-            length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.TIP_REMOVE_MAX_LENGTH));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)

@@ -53,11 +53,9 @@ public class P2ForPathMergeVertex extends
     /**
      * initiate kmerSize, maxIteration
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        super.initVertex();
         headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         if(incomingMsg == null)

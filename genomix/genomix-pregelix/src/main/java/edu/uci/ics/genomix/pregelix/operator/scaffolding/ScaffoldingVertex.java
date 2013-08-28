@@ -38,30 +38,9 @@ public class ScaffoldingVertex extends
     private KmerListAndFlagListWritable kmerListAndflagList = new KmerListAndFlagListWritable();
     private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-        if(incomingMsg == null)
-            incomingMsg = new BFSTraverseMessageWritable();
-        if(outgoingMsg == null)
-            outgoingMsg = new BFSTraverseMessageWritable();
-        else
-            outgoingMsg.reset();
-        if(kmerList == null)
-            kmerList = new VKmerListWritable();
-        else
-            kmerList.reset();
-        if(fakeVertex == null){
-            fakeVertex = new VKmerBytesWritable();
-            String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
-        }
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable(kmerSize);
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
+        super.initVertex();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
         else

@@ -42,10 +42,10 @@ public class BridgeAddVertex extends
     public void initVertex() {
         if (kmerSize == -1) {
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-            KmerBytesWritable.setGlobalKmerLength(kmerSize);
         }
         if (length == -1)
             length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
+        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
