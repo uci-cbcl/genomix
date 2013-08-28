@@ -70,16 +70,15 @@ public class GenomixDriver {
 
     private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, IOException {
         DriverUtils.shutdownNCs();
+        DriverUtils.shutdownCC();
+        DriverUtils.startCC();
         DriverUtils.startNCs(NCTypes.HYRACKS);
         LOG.info("Building Graph using Hyracks...");
         GenomixJobConf.tick("buildGraphWithHyracks");
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        //        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
-        //                Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
-        //                        .get(GenomixJobConf.CORES_PER_MACHINE)));
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
-                Integer.parseInt(conf.get(GenomixJobConf.PORT)), 1);
+                Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)));
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
@@ -124,8 +123,6 @@ public class GenomixDriver {
         try {
             if (runLocal)
                 GenomixMiniCluster.init(conf);
-            else
-                DriverUtils.startCC();
 
             String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
             if (localInput != null) {
@@ -201,6 +198,8 @@ public class GenomixDriver {
 
             if (jobs.size() > 0) {
                 DriverUtils.shutdownNCs();
+                DriverUtils.shutdownCC();
+                DriverUtils.startCC();
                 DriverUtils.startNCs(NCTypes.PREGELIX);
                 pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
             }
@@ -249,7 +248,7 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-ip", "localhost", "-port", "3099", 
+        String[] myArgs = { "-ip", "169.234.116.43", "-port", "3099", 
                 "-kmerLength", "5", "-coresPerMachine", "2",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
@@ -262,14 +261,15 @@ public class GenomixDriver {
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD_HYRACKS,MERGE,DUMP_FASTA" };
-//        System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
+                "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
+        System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
 
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
+    
 }

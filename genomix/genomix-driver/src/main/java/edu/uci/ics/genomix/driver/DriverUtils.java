@@ -47,7 +47,7 @@ public class DriverUtils {
         Process p = Runtime.getRuntime().exec(startNCCmd);
         try {
             p.waitFor(); // wait for ssh 
-            Thread.sleep(8000); // wait for NC -> CC registration
+            Thread.sleep(3000); // wait for NC -> CC registration
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -64,7 +64,7 @@ public class DriverUtils {
         Process p = Runtime.getRuntime().exec(stopNCCmd);
         try {
             p.waitFor(); // wait for ssh 
-            Thread.sleep(8000);
+//            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -77,7 +77,7 @@ public class DriverUtils {
         Process p = Runtime.getRuntime().exec(startCCCmd);
         try {
             p.waitFor(); // wait for cmd execution
-            Thread.sleep(8000); // wait for CC registration
+            Thread.sleep(5000); // wait for CC registration
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -93,14 +93,14 @@ public class DriverUtils {
         Process p = Runtime.getRuntime().exec(stopCCCmd);
         try {
             p.waitFor(); // wait for cmd execution
-            Thread.sleep(8000);
+//            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to stop the genomix CC! Script returned exit code: " + p.exitValue()
-                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-                    + IOUtils.toString(p.getInputStream()));
+//        if (p.exitValue() != 0)
+//            throw new RuntimeException("Failed to stop the genomix CC! Script returned exit code: " + p.exitValue()
+//                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+//                    + IOUtils.toString(p.getInputStream()));
     }
     
     public static void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
