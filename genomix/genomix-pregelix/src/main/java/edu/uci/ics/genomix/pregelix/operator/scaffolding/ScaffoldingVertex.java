@@ -26,6 +26,11 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
+/**
+ * Graph clean pattern: Scaffolding
+ * @author anbangx
+ *
+ */
 public class ScaffoldingVertex extends 
     BFSTraverseVertex{
 
