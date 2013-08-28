@@ -50,7 +50,6 @@ public class DriverUtils {
     static String getIP(String hostName) throws IOException, InterruptedException {
         String getIPCmd = "ssh -n " + hostName + " \"" + System.getProperty("app.home", ".") + File.separator + "bin"
                 + File.separator + "getip.sh\"";
-        System.out.println(getIPCmd);
         Process p = Runtime.getRuntime().exec(getIPCmd);
         p.waitFor(); // wait for ssh 
         String stdout = IOUtils.toString(p.getInputStream()).trim();
@@ -64,13 +63,15 @@ public class DriverUtils {
      * set the CC's IP address and port from the cluster.properties and `getip.sh` script 
      */
     static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException, InterruptedException {
+        Properties CCProperties = new Properties();
+        CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf" + File.separator + "cluster.properties"));
         if (conf.get(GenomixJobConf.IP_ADDRESS) == null)
             conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
         if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
-            Properties CCProperties = new Properties();
-            CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf" + File.separator + "cluster.properties"));
             conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
         }
+        if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
+            conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE", GenomixJobConf.DEFAULT_FRAME_SIZE));
     }
 
     static void startNCs(NCTypes type) throws IOException {
