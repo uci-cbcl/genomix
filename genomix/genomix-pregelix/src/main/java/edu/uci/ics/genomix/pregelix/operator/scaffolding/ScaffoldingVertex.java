@@ -71,19 +71,19 @@ public class ScaffoldingVertex extends
         getVertexValue().getScaffoldingMap().clear();
     }
     
-    public void addStartReadsToScaffoldingMap(VKmerBytesWritable id, VertexValueWritable value){
+    public void addStartReadsToScaffoldingMap(){
         boolean isflip = false;
-        for(PositionWritable pos : value.getStartReads()){
+        for(PositionWritable pos : getVertexValue().getStartReads()){
             long readId = pos.getReadId();
             if(scaffoldingMap.containsKey(readId)){
                 kmerList.setCopy(scaffoldingMap.get(readId).getKmerList());
-                kmerList.append(id);
+                kmerList.append(getVertexId());
                 flagList.clear();
                 flagList.addAll(scaffoldingMap.get(readId).getFlagList());
                 flagList.add(new BooleanWritable(isflip));
             } else{
                 kmerList.reset();
-                kmerList.append(id);
+                kmerList.append(getVertexId());
                 flagList.clear();
                 flagList.add(new BooleanWritable(isflip));
             }
@@ -93,19 +93,19 @@ public class ScaffoldingVertex extends
         }
     }
     
-    public void addEndReadsToScaffoldingMap(VKmerBytesWritable id, VertexValueWritable value){
+    public void addEndReadsToScaffoldingMap(){
         boolean isflip = true;
-        for(PositionWritable pos : value.getEndReads()){
+        for(PositionWritable pos : getVertexValue().getEndReads()){
             long readId = pos.getReadId();
             if(scaffoldingMap.containsKey(readId)){
                 kmerList.setCopy(scaffoldingMap.get(readId).getKmerList());
-                kmerList.append(id);
+                kmerList.append(getVertexId());
                 flagList.clear();
                 flagList.addAll(scaffoldingMap.get(readId).getFlagList());
                 flagList.add(new BooleanWritable(isflip));
             } else{
                 kmerList.reset();
-                kmerList.append(id);
+                kmerList.append(getVertexId());
                 flagList.clear();
                 flagList.add(new BooleanWritable(isflip));
             }
@@ -119,16 +119,16 @@ public class ScaffoldingVertex extends
     public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
-            /** add a fake vertex **/
+            // add a fake vertex 
             addFakeVertex();
-            /** grouped by 5'/~5' readId in aggregator **/
-            addStartReadsToScaffoldingMap(getVertexId(), getVertexValue());
-            addEndReadsToScaffoldingMap(getVertexId(), getVertexValue());
+            // grouped by 5'/~5' readId in aggregator
+            addStartReadsToScaffoldingMap();
+            addEndReadsToScaffoldingMap();
             getVertexValue().setScaffoldingMap(scaffoldingMap);
             
             voteToHalt();
         } else if(getSuperstep() == 2){
-            /** process scaffoldingMap **/
+            // process scaffoldingMap 
             for(VLongWritable readId : ScaffoldingAggregator.preScaffoldingMap.keySet()){
                 kmerListAndflagList.set(ScaffoldingAggregator.preScaffoldingMap.get(readId));
                 if(kmerListAndflagList.size() == 2){
@@ -142,7 +142,7 @@ public class ScaffoldingVertex extends
         } else if(getSuperstep() == 3){
             if(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
-                /** begin to BFS **/
+                // begin to BFS
                 initialBroadcaseBFSTraverse();
             }
             voteToHalt();
@@ -150,12 +150,12 @@ public class ScaffoldingVertex extends
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
                 if(incomingMsg.isTraverseMsg()){
-                    /** check if find destination **/
+                    // check if find destination 
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                         if(isValidDestination()){
-                            /** final step to process BFS -- pathList and dirList **/
+                            // final step to process BFS -- pathList and dirList
                             finalProcessBFS();
-                            /** send message to all the path nodes to add this common readId **/
+                            // send message to all the path nodes to add this common readId
                             sendMsgToPathNodeToAddCommondReadId();
                             //set statistics counter: Num_RemovedLowCoverageNodes
                             updateStatisticsCounter(StatisticsCounter.Num_Scaffodings);
@@ -170,7 +170,7 @@ public class ScaffoldingVertex extends
                         broadcaseBFSTraverse();
                     }
                 } else{
-                    /** append common readId to the corresponding edge **/
+                    // append common readId to the corresponding edge
                     appendCommonReadId();
                 }
             }
