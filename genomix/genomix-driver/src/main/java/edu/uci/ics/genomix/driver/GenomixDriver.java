@@ -66,10 +66,10 @@ public class GenomixDriver {
     private boolean followingBuild = false; // need to adapt the graph immediately after building
 
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
-    private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(
-            this.getClass());
+    private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
 
     private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, IOException {
+        DriverUtils.shutdownNCs();
         DriverUtils.startNCs(NCTypes.HYRACKS);
         LOG.info("Building Graph using Hyracks...");
         GenomixJobConf.tick("buildGraphWithHyracks");
@@ -199,8 +199,11 @@ public class GenomixDriver {
                 }
             }
 
-            if (jobs.size() > 0)
+            if (jobs.size() > 0) {
+                DriverUtils.shutdownNCs();
                 DriverUtils.startNCs(NCTypes.PREGELIX);
+                pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
+            }
             // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
             // this would let them resume at arbitrary points of the pipeline
             if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
@@ -260,12 +263,12 @@ public class GenomixDriver {
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
                 "-pipelineOrder", "BUILD_HYRACKS,MERGE,DUMP_FASTA" };
-        System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
+//        System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
 
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
+        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
