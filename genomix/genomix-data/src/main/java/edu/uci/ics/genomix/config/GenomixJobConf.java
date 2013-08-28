@@ -118,9 +118,6 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
-        @Option(name = "-frameSize", usage = "frame size of hyracks", required = false)
-        private int frameSize = -1;
-        
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
     }
@@ -401,7 +398,6 @@ public class GenomixJobConf extends JobConf {
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
         setInt(CORES_PER_MACHINE, opts.coresPerMachine);
-        setInt(FRAME_SIZE, opts.frameSize);
         
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
