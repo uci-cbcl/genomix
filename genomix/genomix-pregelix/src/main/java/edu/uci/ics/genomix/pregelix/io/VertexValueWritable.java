@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
 
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex.KmerListAndFlagListWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;

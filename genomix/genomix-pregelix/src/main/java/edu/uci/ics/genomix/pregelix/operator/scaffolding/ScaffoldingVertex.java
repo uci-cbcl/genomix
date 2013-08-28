@@ -1,13 +1,10 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
@@ -15,12 +12,14 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.KmerListAndFlagListWritable;
 import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -30,64 +29,9 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 public class ScaffoldingVertex extends 
     BFSTraverseVertex{
 
-    public static class KmerListAndFlagListWritable implements Writable{
-        private ArrayListWritable<BooleanWritable> flagList;
-        private VKmerListWritable kmerList;
-        
-        public KmerListAndFlagListWritable(){
-            flagList = new ArrayListWritable<BooleanWritable>();
-            kmerList = new VKmerListWritable();
-        }
-        
-        public void set(KmerListAndFlagListWritable kmerAndflag){
-            flagList.clear();
-            kmerList.reset();
-            flagList.addAll(kmerAndflag.getFlagList());
-            kmerList.appendList(kmerAndflag.getKmerList());
-        }
-        
-        public void add(KmerListAndFlagListWritable otherKmerAndFlag){
-            this.flagList.addAll(otherKmerAndFlag.getFlagList());
-            this.kmerList.appendList(otherKmerAndFlag.getKmerList());
-        }
-        
-        public int size(){
-            return flagList.size();
-        }
-        
-        public ArrayListWritable<BooleanWritable> getFlagList() {
-            return flagList;
-        }
-
-        public void setFlagList(ArrayListWritable<BooleanWritable> flagList) {
-            this.flagList.clear();
-            this.flagList.addAll(flagList);
-        }
-
-        public VKmerListWritable getKmerList() {
-            return kmerList;
-        }
-
-        public void setKmerList(VKmerListWritable kmerList) {
-            this.kmerList.reset();
-            this.kmerList.appendList(kmerList);
-        }
-
-        @Override
-        public void write(DataOutput out) throws IOException {
-            flagList.write(out);
-            kmerList.write(out);
-        }
-
-        @Override
-        public void readFields(DataInput in) throws IOException {
-            flagList.readFields(in);
-            kmerList.readFields(in);
-        }
-        
-    }
-    
+    private ArrayListWritable<BooleanWritable> flagList = new ArrayListWritable<BooleanWritable>();
     private KmerListAndFlagListWritable kmerListAndflagList = new KmerListAndFlagListWritable();
+    private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     
     public void initVertex() {
         if (kmerSize == -1)
@@ -122,8 +66,53 @@ public class ScaffoldingVertex extends
         else if(getSuperstep() == 2)
             ScaffoldingAggregator.preScaffoldingMap = readScaffoldingMapResult(getContext().getConfiguration());
         counters.clear();
+        scaffoldingMap.clear();
         getVertexValue().getCounters().clear();
         getVertexValue().getScaffoldingMap().clear();
+    }
+    
+    public void addStartReadsToScaffoldingMap(VKmerBytesWritable id, VertexValueWritable value){
+        boolean isflip = false;
+        for(PositionWritable pos : value.getStartReads()){
+            long readId = pos.getReadId();
+            if(scaffoldingMap.containsKey(readId)){
+                kmerList.setCopy(scaffoldingMap.get(readId).getKmerList());
+                kmerList.append(id);
+                flagList.clear();
+                flagList.addAll(scaffoldingMap.get(readId).getFlagList());
+                flagList.add(new BooleanWritable(isflip));
+            } else{
+                kmerList.reset();
+                kmerList.append(id);
+                flagList.clear();
+                flagList.add(new BooleanWritable(isflip));
+            }
+            kmerListAndflagList.setKmerList(kmerList);
+            kmerListAndflagList.setFlagList(flagList);
+            scaffoldingMap.put(new VLongWritable(readId), kmerListAndflagList);
+        }
+    }
+    
+    public void addEndReadsToScaffoldingMap(VKmerBytesWritable id, VertexValueWritable value){
+        boolean isflip = true;
+        for(PositionWritable pos : value.getEndReads()){
+            long readId = pos.getReadId();
+            if(scaffoldingMap.containsKey(readId)){
+                kmerList.setCopy(scaffoldingMap.get(readId).getKmerList());
+                kmerList.append(id);
+                flagList.clear();
+                flagList.addAll(scaffoldingMap.get(readId).getFlagList());
+                flagList.add(new BooleanWritable(isflip));
+            } else{
+                kmerList.reset();
+                kmerList.append(id);
+                flagList.clear();
+                flagList.add(new BooleanWritable(isflip));
+            }
+            kmerListAndflagList.setKmerList(kmerList);
+            kmerListAndflagList.setFlagList(flagList);
+            scaffoldingMap.put(new VLongWritable(readId), kmerListAndflagList);
+        }
     }
     
     @Override
@@ -133,6 +122,9 @@ public class ScaffoldingVertex extends
             /** add a fake vertex **/
             addFakeVertex();
             /** grouped by 5'/~5' readId in aggregator **/
+            addStartReadsToScaffoldingMap(getVertexId(), getVertexValue());
+            addEndReadsToScaffoldingMap(getVertexId(), getVertexValue());
+            getVertexValue().setScaffoldingMap(scaffoldingMap);
             
             voteToHalt();
         } else if(getSuperstep() == 2){
@@ -140,8 +132,8 @@ public class ScaffoldingVertex extends
             for(VLongWritable readId : ScaffoldingAggregator.preScaffoldingMap.keySet()){
                 kmerListAndflagList.set(ScaffoldingAggregator.preScaffoldingMap.get(readId));
                 if(kmerListAndflagList.size() == 2){
-                    initiateSrcAndDestNode(kmerListAndflagList.kmerList, commonReadId, kmerListAndflagList.flagList.get(0).get(),
-                            kmerListAndflagList.flagList.get(1).get());
+                    initiateSrcAndDestNode(kmerListAndflagList.getKmerList(), commonReadId, kmerListAndflagList.getFlagList().get(0).get(),
+                            kmerListAndflagList.getFlagList().get(1).get());
                     sendMsg(srcNode, outgoingMsg);
                 }
             }
