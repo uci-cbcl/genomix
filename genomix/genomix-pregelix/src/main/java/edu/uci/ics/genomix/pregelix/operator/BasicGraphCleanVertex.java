@@ -28,6 +28,9 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
+    public static boolean fakeVertexExist = false;
+    protected static VKmerBytesWritable fakeVertex = null;
+    
     public byte[][] connectedTable = new byte[][]{
             {MessageFlag.DIR_RF, MessageFlag.DIR_FF},
             {MessageFlag.DIR_RF, MessageFlag.DIR_FR},
@@ -38,6 +41,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     protected M incomingMsg = null; 
     protected M outgoingMsg = null; 
     protected VKmerBytesWritable destVertexId = null;
+    protected VertexValueWritable tmpValue = new VertexValueWritable();
     protected Iterator<VKmerBytesWritable> kmerIterator;
     protected VKmerListWritable kmerList = null;
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
@@ -48,10 +52,6 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     protected byte inFlag;
     protected byte selfFlag;
     protected byte headMergeDir;
-    
-    public static boolean fakeVertexExist = false;
-    protected static VKmerBytesWritable fakeVertex = null;
-    protected VertexValueWritable tmpValue = new VertexValueWritable();
     
     protected EdgeListWritable incomingEdgeList = null; //SplitRepeat
     protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat

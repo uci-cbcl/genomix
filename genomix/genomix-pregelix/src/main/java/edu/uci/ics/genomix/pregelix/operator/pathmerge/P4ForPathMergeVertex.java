@@ -53,7 +53,7 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex {
 
-    private static long randSeed = 1;
+    private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
     private Random randGenerator;
     

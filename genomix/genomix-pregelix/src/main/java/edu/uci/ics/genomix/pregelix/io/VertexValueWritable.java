@@ -57,12 +57,14 @@ public class VertexValueWritable
     private byte state;
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
+    private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap; //use for scaffolding, think optimaztion way
     
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
         counters = new HashMapWritable<ByteWritable, VLongWritable>();
+        scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     }
     
     public void setNode(NodeWritable node){
@@ -150,12 +152,22 @@ public class VertexValueWritable
         this.counters.clear();
         this.counters.putAll(counters);
     }
+    
+    public HashMapWritable<VLongWritable, KmerListAndFlagListWritable> getScaffoldingMap() {
+        return scaffoldingMap;
+    }
 
+    public void setScaffoldingMap(HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap) {
+        this.scaffoldingMap.clear();
+        this.scaffoldingMap.putAll(scaffoldingMap);
+    }
+    
     public void reset() {
         super.reset();
         this.state = 0;
         this.isFakeVertex = false;
         this.counters.clear();
+        scaffoldingMap.clear();
     }
     
     @Override
@@ -165,6 +177,7 @@ public class VertexValueWritable
         this.state = in.readByte();
         this.isFakeVertex = in.readBoolean();
         this.counters.readFields(in);
+        scaffoldingMap.readFields(in);
     }
 
     @Override
@@ -173,6 +186,7 @@ public class VertexValueWritable
         out.writeByte(this.state);
         out.writeBoolean(this.isFakeVertex);
         this.counters.write(out);
+        scaffoldingMap.write(out);
     }
     
     public int getDegree(){

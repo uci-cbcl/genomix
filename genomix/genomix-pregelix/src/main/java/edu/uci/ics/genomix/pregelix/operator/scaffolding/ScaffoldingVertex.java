@@ -1,15 +1,19 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.BooleanWritable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.io.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.KmerListAndFlagListWritable;
+import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
@@ -19,52 +23,20 @@ import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
+/**
+ * Graph clean pattern: Scaffolding
+ * @author anbangx
+ *
+ */
 public class ScaffoldingVertex extends 
     BFSTraverseVertex{
 
-    public class KmerListAndFlagList{
-        private ArrayList<Boolean> flagList;
-        private VKmerListWritable kmerList;
-        
-        public KmerListAndFlagList(){
-            flagList = new ArrayList<Boolean>();
-            kmerList = new VKmerListWritable();
-        }
-        
-        public void set(KmerListAndFlagList kmerAndflag){
-            flagList.clear();
-            kmerList.reset();
-            flagList.addAll(kmerAndflag.getFlagList());
-            kmerList.appendList(kmerAndflag.getKmerList());
-        }
-        
-        public int size(){
-            return flagList.size();
-        }
-        
-        public ArrayList<Boolean> getFlagList() {
-            return flagList;
-        }
-
-        public void setFlagList(ArrayList<Boolean> flagList) {
-            this.flagList.clear();
-            this.flagList.addAll(flagList);
-        }
-
-        public VKmerListWritable getKmerList() {
-            return kmerList;
-        }
-
-        public void setKmerList(VKmerListWritable kmerList) {
-            this.kmerList.reset();
-            this.kmerList.appendList(kmerList);
-        }
-        
-    }
-    private ArrayList<Boolean> flagList = new ArrayList<Boolean>();
-    private KmerListAndFlagList kmerListAndflagList = new KmerListAndFlagList();
-    public static Map<Long, KmerListAndFlagList> scaffoldingMap = new HashMap<Long, KmerListAndFlagList>();
+    private ArrayListWritable<BooleanWritable> flagList = new ArrayListWritable<BooleanWritable>();
+    private KmerListAndFlagListWritable kmerListAndflagList = new KmerListAndFlagListWritable();
+    private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     
     public void initVertex() {
         if (kmerSize == -1)
@@ -94,8 +66,14 @@ public class ScaffoldingVertex extends
             StatisticsAggregator.preGlobalCounters.clear();
         else
             StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        if(getSuperstep() == 1)
+            ScaffoldingAggregator.preScaffoldingMap.clear();
+        else if(getSuperstep() == 2)
+            ScaffoldingAggregator.preScaffoldingMap = readScaffoldingMapResult(getContext().getConfiguration());
         counters.clear();
+        scaffoldingMap.clear();
         getVertexValue().getCounters().clear();
+        getVertexValue().getScaffoldingMap().clear();
     }
     
     public void addStartReadsToScaffoldingMap(){
@@ -107,16 +85,16 @@ public class ScaffoldingVertex extends
                 kmerList.append(getVertexId());
                 flagList.clear();
                 flagList.addAll(scaffoldingMap.get(readId).getFlagList());
-                flagList.add(isflip);
+                flagList.add(new BooleanWritable(isflip));
             } else{
                 kmerList.reset();
                 kmerList.append(getVertexId());
                 flagList.clear();
-                flagList.add(isflip);
+                flagList.add(new BooleanWritable(isflip));
             }
             kmerListAndflagList.setKmerList(kmerList);
             kmerListAndflagList.setFlagList(flagList);
-            scaffoldingMap.put(readId, kmerListAndflagList);
+            scaffoldingMap.put(new VLongWritable(readId), kmerListAndflagList);
         }
     }
     
@@ -129,16 +107,16 @@ public class ScaffoldingVertex extends
                 kmerList.append(getVertexId());
                 flagList.clear();
                 flagList.addAll(scaffoldingMap.get(readId).getFlagList());
-                flagList.add(isflip);
+                flagList.add(new BooleanWritable(isflip));
             } else{
                 kmerList.reset();
                 kmerList.append(getVertexId());
                 flagList.clear();
-                flagList.add(isflip);
+                flagList.add(new BooleanWritable(isflip));
             }
             kmerListAndflagList.setKmerList(kmerList);
             kmerListAndflagList.setFlagList(flagList);
-            scaffoldingMap.put(readId, kmerListAndflagList);
+            scaffoldingMap.put(new VLongWritable(readId), kmerListAndflagList);
         }
     }
     
@@ -146,20 +124,21 @@ public class ScaffoldingVertex extends
     public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
-            /** add a fake vertex **/
+            // add a fake vertex 
             addFakeVertex();
-            /** grouped by 5'/~5' readId **/
+            // grouped by 5'/~5' readId in aggregator
             addStartReadsToScaffoldingMap();
             addEndReadsToScaffoldingMap();
+            getVertexValue().setScaffoldingMap(scaffoldingMap);
             
             voteToHalt();
         } else if(getSuperstep() == 2){
-            /** process scaffoldingMap **/
-            for(Long readId : scaffoldingMap.keySet()){
-                kmerListAndflagList.set(scaffoldingMap.get(readId));
+            // process scaffoldingMap 
+            for(VLongWritable readId : ScaffoldingAggregator.preScaffoldingMap.keySet()){
+                kmerListAndflagList.set(ScaffoldingAggregator.preScaffoldingMap.get(readId));
                 if(kmerListAndflagList.size() == 2){
-                    initiateSrcAndDestNode(kmerListAndflagList.kmerList, commonReadId, kmerListAndflagList.flagList.get(0),
-                            kmerListAndflagList.flagList.get(1));
+                    initiateSrcAndDestNode(kmerListAndflagList.getKmerList(), commonReadId, kmerListAndflagList.getFlagList().get(0).get(),
+                            kmerListAndflagList.getFlagList().get(1).get());
                     sendMsg(srcNode, outgoingMsg);
                 }
             }
@@ -168,7 +147,7 @@ public class ScaffoldingVertex extends
         } else if(getSuperstep() == 3){
             if(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
-                /** begin to BFS **/
+                // begin to BFS
                 initialBroadcaseBFSTraverse();
             }
             voteToHalt();
@@ -176,12 +155,12 @@ public class ScaffoldingVertex extends
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
                 if(incomingMsg.isTraverseMsg()){
-                    /** check if find destination **/
+                    // check if find destination 
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                         if(isValidDestination()){
-                            /** final step to process BFS -- pathList and dirList **/
+                            // final step to process BFS -- pathList and dirList
                             finalProcessBFS();
-                            /** send message to all the path nodes to add this common readId **/
+                            // send message to all the path nodes to add this common readId
                             sendMsgToPathNodeToAddCommondReadId();
                             //set statistics counter: Num_RemovedLowCoverageNodes
                             updateStatisticsCounter(StatisticsCounter.Num_Scaffodings);
@@ -196,11 +175,21 @@ public class ScaffoldingVertex extends
                         broadcaseBFSTraverse();
                     }
                 } else{
-                    /** append common readId to the corresponding edge **/
+                    // append common readId to the corresponding edge
                     appendCommonReadId();
                 }
             }
             voteToHalt();
+        }
+    }
+    
+    public static HashMapWritable<VLongWritable, KmerListAndFlagListWritable> readScaffoldingMapResult(Configuration conf) {
+        try {
+            VertexValueWritable value = (VertexValueWritable) IterationUtils
+                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
+            return value.getScaffoldingMap();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
     }
     

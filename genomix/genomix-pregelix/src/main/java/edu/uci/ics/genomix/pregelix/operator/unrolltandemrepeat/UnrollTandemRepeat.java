@@ -18,6 +18,11 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
+/**
+ * Graph clean pattern: Unroll TandemRepeat
+ * @author anbangx
+ *
+ */
 public class UnrollTandemRepeat extends
     BasicGraphCleanVertex<MessageWritable>{
     private EdgeWritable tmpEdge = new EdgeWritable();

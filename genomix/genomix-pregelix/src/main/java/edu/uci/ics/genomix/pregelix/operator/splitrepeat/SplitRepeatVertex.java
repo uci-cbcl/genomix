@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
@@ -52,8 +53,8 @@ public class SplitRepeatVertex extends
 
     }
     
-    public static Set<String> existKmerString = new HashSet<String>();
-    protected VKmerBytesWritable createdVertexId = null;  
+    private static Set<String> existKmerString = Collections.synchronizedSet(new HashSet<String>());
+    private VKmerBytesWritable createdVertexId = null;  
     private Set<Long> incomingReadIdSet = new HashSet<Long>();
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
@@ -106,15 +107,17 @@ public class SplitRepeatVertex extends
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
-        while(true){
-            for (int i = 0; i < n; i++) {
-                char c = chars[random.nextInt(chars.length)];
-                sb.append(c);
+        synchronized(existKmerString){
+            while(true){
+                for (int i = 0; i < n; i++) {
+                    char c = chars[random.nextInt(chars.length)];
+                    sb.append(c);
+                }
+                if(!existKmerString.contains(sb.toString()))
+                    break;
             }
-            if(!existKmerString.contains(sb.toString()))
-                break;
+            existKmerString.add(sb.toString());
         }
-        existKmerString.add(sb.toString());
         return sb.toString();
     }
     

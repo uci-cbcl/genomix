@@ -26,7 +26,9 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /**
- * Naive Algorithm for path merge graph
+ * Graph clean pattern: Bubble Merge
+ * @author anbangx
+ *
  */
 public class BubbleMergeVertex extends
     BasicGraphCleanVertex<BubbleMergeMessageWritable> {
@@ -43,14 +45,15 @@ public class BubbleMergeVertex extends
     private BubbleMergeMessageWritable curMessage = new BubbleMergeMessageWritable();
     private Set<BubbleMergeMessageWritable> unchangedSet = new HashSet<BubbleMergeMessageWritable>();
     private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
-    private static Set<BubbleMergeMessageWritable> allDeletedSet = new HashSet<BubbleMergeMessageWritable>();
+    private EdgeWritable tmpEdge = new EdgeWritable();
+    
+    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
     
     private VKmerBytesWritable incomingKmer = new VKmerBytesWritable();
     private VKmerBytesWritable outgoingKmer = new VKmerBytesWritable();
     private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
     private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
     
-    private EdgeWritable tmpEdge = new EdgeWritable();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -216,12 +219,14 @@ public class BubbleMergeVertex extends
     }
     
     public void processAllDeletedSet(){
-        for(BubbleMergeMessageWritable msg : allDeletedSet){
-            outgoingMsg.set(msg);
-            outFlag = MessageFlag.KILL;
-            outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
-            sendMsg(msg.getSourceVertexId(), outgoingMsg);
+        synchronized(allDeletedSet){
+            for(BubbleMergeMessageWritable msg : allDeletedSet){
+                outgoingMsg.set(msg);
+                outFlag = MessageFlag.KILL;
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
+                sendMsg(msg.getSourceVertexId(), outgoingMsg);
+            }
         }
     }
     
