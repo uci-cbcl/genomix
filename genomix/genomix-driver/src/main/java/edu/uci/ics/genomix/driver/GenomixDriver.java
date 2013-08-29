@@ -119,6 +119,7 @@ public class GenomixDriver {
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         DriverUtils.updateCCProperties(conf);
         GenomixJobConf.setGlobalStaticConstants(conf);
+        followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
         jobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         boolean dump = false;

@@ -76,6 +76,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: true)", required = false)
         private boolean saveIntermediateResults = true;
         
+        @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
+        private boolean followsGraphBuild = false;
+        
 
         // Graph cleaning
         @Option(name = "-bridgeRemove_maxLength", usage = "Nodes with length <= bridgeRemoveLength that bridge separate paths are removed from the graph", required = false)
@@ -171,7 +174,8 @@ public class GenomixJobConf extends JobConf {
     public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
     public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
-    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results"; 
+    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
+    public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -384,6 +388,7 @@ public class GenomixJobConf extends JobConf {
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
+        setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
             
 
 //        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
