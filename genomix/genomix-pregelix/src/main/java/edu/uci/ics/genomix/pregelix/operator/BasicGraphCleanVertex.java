@@ -71,11 +71,11 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
-        if (kmerSize == -1)
+        if (getSuperstep() == 1) {
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        }
     }
     
     /**
