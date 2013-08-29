@@ -44,8 +44,8 @@ public class ScaffoldingVertex extends
         super.initVertex();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-        else
-            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+//        else
+//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         if(getSuperstep() == 1)
             ScaffoldingAggregator.preScaffoldingMap.clear();
         else if(getSuperstep() == 2)

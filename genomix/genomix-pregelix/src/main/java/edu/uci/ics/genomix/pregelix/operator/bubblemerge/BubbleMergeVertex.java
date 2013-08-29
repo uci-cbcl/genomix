@@ -82,8 +82,8 @@ public class BubbleMergeVertex extends
         }
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-        else
-            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+//        else
+//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
