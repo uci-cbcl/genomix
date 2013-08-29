@@ -138,19 +138,4 @@ public class MapReduceVertex extends
             voteToHalt();
         }
     }
-    
-    public static void main(String[] args) throws Exception {
-        PregelixJob job = new PregelixJob(MapReduceVertex.class.getSimpleName());
-        job.setVertexClass(MapReduceVertex.class);
-        /**
-         * BinaryInput and BinaryOutput
-         */
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        Client.run(args, job);
-    }
-
 }

@@ -39,6 +39,7 @@ import edu.uci.ics.genomix.driver.DriverUtils.NCTypes;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.minicluster.GenomixMiniCluster;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
@@ -150,44 +151,44 @@ public class GenomixDriver {
                         break;
                     case MERGE_P1:
                         setOutput(conf, Patterns.MERGE_P1);
-                        addJob(P1ForPathMergeVertex.getConfiguredJob(conf));
+                        addJob(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
                         break;
                     case MERGE_P2:
                         setOutput(conf, Patterns.MERGE_P2);
-                        addJob(P2ForPathMergeVertex.getConfiguredJob(conf));
+                        addJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
                         break;
                     case MERGE:
                     case MERGE_P4:
                         setOutput(conf, Patterns.MERGE_P4);
-                        addJob(P4ForPathMergeVertex.getConfiguredJob(conf));
+                        addJob(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
                         break;
                     case UNROLL_TANDEM:
                         setOutput(conf, Patterns.UNROLL_TANDEM);
-                        addJob(UnrollTandemRepeat.getConfiguredJob(conf));
+                        addJob(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
                         break;
                     case TIP_REMOVE:
                         setOutput(conf, Patterns.TIP_REMOVE);
-                        addJob(TipRemoveVertex.getConfiguredJob(conf));
+                        addJob(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
                         break;
                     case BUBBLE:
                         setOutput(conf, Patterns.BUBBLE);
-                        addJob(BubbleMergeVertex.getConfiguredJob(conf));
+                        addJob(BubbleMergeVertex.getConfiguredJob(conf, BubbleMergeVertex.class));
                         break;
                     case LOW_COVERAGE:
                         setOutput(conf, Patterns.LOW_COVERAGE);
-                        addJob(RemoveLowCoverageVertex.getConfiguredJob(conf));
+                        addJob(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
                         break;
                     case BRIDGE:
                         setOutput(conf, Patterns.BRIDGE);
-                        addJob(BridgeRemoveVertex.getConfiguredJob(conf));
+                        addJob(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
                         break;
                     case SPLIT_REPEAT:
                         setOutput(conf, Patterns.SPLIT_REPEAT);
-                        addJob(SplitRepeatVertex.getConfiguredJob(conf));
+                        addJob(SplitRepeatVertex.getConfiguredJob(conf, SplitRepeatVertex.class));
                         break;
                     case SCAFFOLD:
                         setOutput(conf, Patterns.SCAFFOLD);
-                        addJob(ScaffoldingVertex.getConfiguredJob(conf));
+                        addJob(ScaffoldingVertex.getConfiguredJob(conf, ScaffoldingVertex.class));
                         break;
                     case STATS:
                         DriverUtils.drawStatistics(conf, curOutput, "coverage.png");
@@ -264,7 +265,7 @@ public class GenomixDriver {
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
                 "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
-//        System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
+//        System.setProperty("app.home", "/home/anbangx/workspace/fullstack_genomix/hyracks/genomix/genomix-driver/target/appassembler");
 
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,

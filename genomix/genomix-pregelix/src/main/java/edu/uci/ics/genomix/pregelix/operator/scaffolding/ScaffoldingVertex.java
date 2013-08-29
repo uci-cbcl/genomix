@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.KmerListAndFlagListWritable;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
@@ -173,21 +174,12 @@ public class ScaffoldingVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
+        Client.run(args, getConfiguredJob(null, ScaffoldingVertex.class));
     }
     
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(ScaffoldingVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, ScaffoldingVertex.class.getSimpleName());
-        job.setVertexClass(ScaffoldingVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends MessageWritable>> vertexClass) throws IOException {
+        PregelixJob job = BasicGraphCleanVertex.getConfiguredJob(conf, vertexClass);
+        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
         return job;
     }
 }

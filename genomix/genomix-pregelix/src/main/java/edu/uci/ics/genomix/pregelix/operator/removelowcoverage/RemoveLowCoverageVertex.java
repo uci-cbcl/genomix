@@ -85,21 +85,6 @@ public class RemoveLowCoverageVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(RemoveLowCoverageVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, RemoveLowCoverageVertex.class.getSimpleName());
-        job.setVertexClass(RemoveLowCoverageVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
+        Client.run(args, getConfiguredJob(null, RemoveLowCoverageVertex.class));
     }
 }

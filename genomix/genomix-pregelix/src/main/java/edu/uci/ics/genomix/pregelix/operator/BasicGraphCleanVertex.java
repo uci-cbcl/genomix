@@ -8,8 +8,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
+import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -17,6 +21,9 @@ import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeListWritable;
@@ -741,5 +748,23 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends MessageWritable>> vertexClass) throws IOException {
+        // the following class weirdness is because java won't let me get the runtime class in a static context :(
+        System.out.println(vertexClass.getSimpleName());
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(vertexClass.getSimpleName());
+        else
+            job = new PregelixJob(conf, vertexClass.getSimpleName());
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
+        job.setVertexClass(vertexClass);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.setDynamicVertexValueSize(true);
+        return job;
     }
 }
