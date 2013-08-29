@@ -208,8 +208,8 @@ public class GenomixJobConf extends JobConf {
     public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
     public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
 
-    public static final int DEFAULT_FRAME_SIZE = 256 * 1024;
-    public static final int DEFAULT_FRAME_LIMIT = 4096;
+    public static final int DEFAULT_FRAME_SIZE = 65536;
+    public static final int DEFAULT_FRAME_LIMIT = 65536;
     public static final int DEFAULT_TABLE_SIZE = 10485767;
     public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
     public static final long DEFAULT_GROUPBY_HYBRID_INPUTKEYS = 38500000L;

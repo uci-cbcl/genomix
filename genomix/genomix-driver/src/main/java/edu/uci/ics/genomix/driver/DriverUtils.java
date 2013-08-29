@@ -31,6 +31,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.minicluster.GenomixMiniCluster;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -43,7 +44,7 @@ public class DriverUtils {
     }
 
     private static final Log LOG = LogFactory.getLog(DriverUtils.class);
-    
+
     /*
      * Get the IP address of the master node using the bin/getip.sh script
      */
@@ -58,20 +59,22 @@ public class DriverUtils {
                     + p.exitValue() + "\nstdout: " + stdout + "\nstderr: " + IOUtils.toString(p.getErrorStream()));
         return stdout;
     }
-    
+
     /**
-     * set the CC's IP address and port from the cluster.properties and `getip.sh` script 
+     * set the CC's IP address and port from the cluster.properties and `getip.sh` script
      */
     static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException, InterruptedException {
         Properties CCProperties = new Properties();
-        CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf" + File.separator + "cluster.properties"));
+        CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
+                + File.separator + "cluster.properties"));
         if (conf.get(GenomixJobConf.IP_ADDRESS) == null)
             conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
         if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
             conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
         }
         if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
-            conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE", String.valueOf(GenomixJobConf.DEFAULT_FRAME_SIZE)));
+            conf.set(GenomixJobConf.FRAME_SIZE,
+                    CCProperties.getProperty("FRAME_SIZE", String.valueOf(GenomixJobConf.DEFAULT_FRAME_SIZE)));
     }
 
     static void startNCs(NCTypes type) throws IOException {
@@ -81,7 +84,7 @@ public class DriverUtils {
         Process p = Runtime.getRuntime().exec(startNCCmd);
         try {
             p.waitFor(); // wait for ssh 
-            Thread.sleep(3000); // wait for NC -> CC registration
+            Thread.sleep(5000); // wait for NC -> CC registration
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -111,7 +114,7 @@ public class DriverUtils {
         Process p = Runtime.getRuntime().exec(startCCCmd);
         try {
             p.waitFor(); // wait for cmd execution
-            Thread.sleep(5000); // wait for CC registration
+            Thread.sleep(6000); // wait for CC registration
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -135,6 +138,26 @@ public class DriverUtils {
         //            throw new RuntimeException("Failed to stop the genomix CC! Script returned exit code: " + p.exitValue()
         //                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
         //                    + IOUtils.toString(p.getErrorStream()));
+    }
+
+    static void addClusterShutdownHook(final boolean runLocal) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                LOG.info("Shutting down the cluster");
+                try {
+                    if (runLocal)
+                        GenomixMiniCluster.deinit();
+                    else {
+                        DriverUtils.shutdownNCs();
+                        DriverUtils.shutdownCC();
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error while shutting the cluster down:");
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public static void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
