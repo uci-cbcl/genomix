@@ -79,6 +79,8 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
         private boolean followsGraphBuild = false;
         
+        @Option(name = "-clusterWaitTime", usage = "the amount of time (in ms) to wait between starting/stopping CC/NC", required = false)
+        private int clusterWaitTime = -1;
 
         // Graph cleaning
         @Option(name = "-bridgeRemove_maxLength", usage = "Nodes with length <= bridgeRemoveLength that bridge separate paths are removed from the graph", required = false)
@@ -176,6 +178,7 @@ public class GenomixJobConf extends JobConf {
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
     public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
+    public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -235,6 +238,7 @@ public class GenomixJobConf extends JobConf {
                     Patterns.SPLIT_REPEAT, Patterns.MERGE,
                     Patterns.SCAFFOLD, Patterns.MERGE
             };
+    
     
     
     private String[] extraArguments = {};
@@ -360,6 +364,9 @@ public class GenomixJobConf extends JobConf {
         if (getInt(FRAME_SIZE, -1) == -1)
             setInt(FRAME_SIZE, DEFAULT_FRAME_SIZE);
         
+        if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
+            setInt(CLUSTER_WAIT_TIME, 6000);
+        
 //        if (getBoolean(RUN_LOCAL, false)) {
 //            // override any other settings for HOST and PORT
 //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
@@ -389,6 +396,7 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
         setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
+        setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
             
 
 //        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))

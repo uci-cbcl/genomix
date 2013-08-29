@@ -71,10 +71,11 @@ public class GenomixDriver {
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
 
     private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, IOException {
-        DriverUtils.shutdownNCs();
-        DriverUtils.shutdownCC();
-        DriverUtils.startCC();
-        DriverUtils.startNCs(NCTypes.HYRACKS);
+        int clusterWaitTime = Integer.parseInt(conf.get(GenomixJobConf.CLUSTER_WAIT_TIME));
+        DriverUtils.shutdownNCs(clusterWaitTime);
+        DriverUtils.shutdownCC(clusterWaitTime);
+        DriverUtils.startCC(clusterWaitTime);
+        DriverUtils.startNCs(NCTypes.HYRACKS, clusterWaitTime);
         LOG.info("Building Graph using Hyracks...");
         GenomixJobConf.tick("buildGraphWithHyracks");
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
@@ -203,10 +204,11 @@ public class GenomixDriver {
         }
 
         if (jobs.size() > 0) {
-            DriverUtils.shutdownNCs();
-            DriverUtils.shutdownCC();
-            DriverUtils.startCC();
-            DriverUtils.startNCs(NCTypes.PREGELIX);
+            int clusterWaitTime = Integer.parseInt(conf.get(GenomixJobConf.CLUSTER_WAIT_TIME));
+            DriverUtils.shutdownNCs(clusterWaitTime);
+            DriverUtils.shutdownCC(clusterWaitTime);
+            DriverUtils.startCC(clusterWaitTime);
+            DriverUtils.startNCs(NCTypes.PREGELIX, clusterWaitTime);
             pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
         }
         // if the user wants to, we can save the intermediate results to HDFS (running each job individually)

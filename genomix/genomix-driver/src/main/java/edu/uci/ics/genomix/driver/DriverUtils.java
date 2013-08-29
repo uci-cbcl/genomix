@@ -77,14 +77,14 @@ public class DriverUtils {
                     CCProperties.getProperty("FRAME_SIZE", String.valueOf(GenomixJobConf.DEFAULT_FRAME_SIZE)));
     }
 
-    static void startNCs(NCTypes type) throws IOException {
+    static void startNCs(NCTypes type, int sleepms) throws IOException {
         LOG.info("Starting NC's");
         String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "startAllNCs.sh " + type;
         Process p = Runtime.getRuntime().exec(startNCCmd);
         try {
             p.waitFor(); // wait for ssh 
-            Thread.sleep(5000); // wait for NC -> CC registration
+            Thread.sleep(sleepms); // wait for NC -> CC registration
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -94,27 +94,27 @@ public class DriverUtils {
                     + IOUtils.toString(p.getErrorStream()));
     }
 
-    static void shutdownNCs() throws IOException {
+    static void shutdownNCs(int sleepms) throws IOException {
         LOG.info("Shutting down any previous NC's");
         String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "stopAllNCs.sh";
         Process p = Runtime.getRuntime().exec(stopNCCmd);
         try {
             p.waitFor(); // wait for ssh 
-            //            Thread.sleep(3000);
+            Thread.sleep(sleepms);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    static void startCC() throws IOException {
+    static void startCC(int sleepms) throws IOException {
         LOG.info("Starting CC");
         String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "startcc.sh";
         Process p = Runtime.getRuntime().exec(startCCCmd);
         try {
             p.waitFor(); // wait for cmd execution
-            Thread.sleep(6000); // wait for CC registration
+            Thread.sleep(sleepms); // wait for CC registration
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -124,13 +124,13 @@ public class DriverUtils {
                     + IOUtils.toString(p.getErrorStream()));
     }
 
-    static void shutdownCC() throws IOException {
+    static void shutdownCC(int sleepms) throws IOException {
         LOG.info("Shutting down CC");
         String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
         Process p = Runtime.getRuntime().exec(stopCCCmd);
         try {
             p.waitFor(); // wait for cmd execution
-            //            Thread.sleep(2000);
+            Thread.sleep(sleepms);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -149,8 +149,8 @@ public class DriverUtils {
                     if (runLocal)
                         GenomixMiniCluster.deinit();
                     else {
-                        DriverUtils.shutdownNCs();
-                        DriverUtils.shutdownCC();
+                        DriverUtils.shutdownNCs(0);
+                        DriverUtils.shutdownCC(0);
                     }
                 } catch (Exception e) {
                     System.err.println("Error while shutting the cluster down:");
