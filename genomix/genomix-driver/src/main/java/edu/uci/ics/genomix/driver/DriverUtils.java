@@ -71,7 +71,7 @@ public class DriverUtils {
             conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
         }
         if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
-            conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE"));
+            conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE", String.valueOf(GenomixJobConf.DEFAULT_FRAME_SIZE)));
     }
 
     static void startNCs(NCTypes type) throws IOException {
