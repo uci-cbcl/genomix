@@ -211,17 +211,17 @@ public class GenomixJobConf extends JobConf {
     public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
     public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
 
-    public static final int DEFAULT_FRAME_SIZE = 256 * 1024;
-    public static final int DEFAULT_FRAME_LIMIT = 10485767;
-    public static final int DEFAULT_TABLE_SIZE = 10485767;
-    public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
-    public static final long DEFAULT_GROUPBY_HYBRID_INPUTKEYS = 38500000L;
-    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE = 9;
-    public static final int DEFAULT_GROUPBY_HYBRID_HASHLEVEL = 1;
-    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS = 13;
+    public static final int DEFAULT_FRAME_SIZE = 65535;
+    public static final int DEFAULT_FRAME_LIMIT = 4096;
+//    public static final int DEFAULT_TABLE_SIZE = 10485767;
+//    public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
+//    public static final long DEFAULT_GROUPBY_HYBRID_INPUTKEYS = 38500000L;
+//    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE = 9;
+//    public static final int DEFAULT_GROUPBY_HYBRID_HASHLEVEL = 1;
+//    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS = 13;
 
-    public static final String GROUPBY_TYPE_HYBRID = "hybrid";
-    public static final String GROUPBY_TYPE_EXTERNAL = "external";
+//    public static final String GROUPBY_TYPE_HYBRID = "hybrid";
+//    public static final String GROUPBY_TYPE_EXTERNAL = "external";
     public static final String GROUPBY_TYPE_PRECLUSTER = "precluster";
     
     public static final String JOB_PLAN_GRAPHBUILD = "graphbuild";
