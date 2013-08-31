@@ -398,11 +398,6 @@ public class GenomixJobConf extends JobConf {
         setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
         setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
             
-
-//        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
-//            throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
-        if (opts.runLocal)
-            throw new IllegalArgumentException("runLocal is currently unsupported!");
         setBoolean(RUN_LOCAL, opts.runLocal);
         
         // Hyracks/Pregelix Setup

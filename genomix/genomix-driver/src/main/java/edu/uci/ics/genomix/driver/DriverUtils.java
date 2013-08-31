@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2013 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.genomix.driver;
 
 import java.io.BufferedWriter;
@@ -11,7 +26,6 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,7 +33,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.jfree.chart.ChartFactory;
@@ -31,19 +44,13 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.minicluster.GenomixMiniCluster;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class DriverUtils {
 
-    enum NCTypes {
-        HYRACKS,
-        PREGELIX
-    }
-
-    private static final Log LOG = LogFactory.getLog(DriverUtils.class);
+    public static final Log LOG = LogFactory.getLog(DriverUtils.class);
 
     /*
      * Get the IP address of the master node using the bin/getip.sh script
@@ -76,151 +83,7 @@ public class DriverUtils {
             conf.set(GenomixJobConf.FRAME_SIZE,
                     CCProperties.getProperty("FRAME_SIZE", String.valueOf(GenomixJobConf.DEFAULT_FRAME_SIZE)));
     }
-
-    static void startNCs(NCTypes type, int sleepms) throws IOException {
-        LOG.info("Starting NC's");
-        String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
-                + "startAllNCs.sh " + type;
-        Process p = Runtime.getRuntime().exec(startNCCmd);
-        try {
-            p.waitFor(); // wait for ssh 
-            Thread.sleep(sleepms); // wait for NC -> CC registration
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to start the" + type + " NC's! Script returned exit code: "
-                    + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-                    + IOUtils.toString(p.getErrorStream()));
-    }
-
-    static void shutdownNCs(int sleepms) throws IOException {
-        LOG.info("Shutting down any previous NC's");
-        String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
-                + "stopAllNCs.sh";
-        Process p = Runtime.getRuntime().exec(stopNCCmd);
-        try {
-            p.waitFor(); // wait for ssh 
-            Thread.sleep(sleepms);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static void startCC(int sleepms) throws IOException {
-        LOG.info("Starting CC");
-        String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
-                + "startcc.sh";
-        Process p = Runtime.getRuntime().exec(startCCCmd);
-        try {
-            p.waitFor(); // wait for cmd execution
-            Thread.sleep(sleepms); // wait for CC registration
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to start the genomix CC! Script returned exit code: " + p.exitValue()
-                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-                    + IOUtils.toString(p.getErrorStream()));
-    }
-
-    static void shutdownCC(int sleepms) throws IOException {
-        LOG.info("Shutting down CC");
-        String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
-        Process p = Runtime.getRuntime().exec(stopCCCmd);
-        try {
-            p.waitFor(); // wait for cmd execution
-            Thread.sleep(sleepms);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        //        if (p.exitValue() != 0)
-        //            throw new RuntimeException("Failed to stop the genomix CC! Script returned exit code: " + p.exitValue()
-        //                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-        //                    + IOUtils.toString(p.getErrorStream()));
-    }
-
-    static void addClusterShutdownHook(final boolean runLocal) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                LOG.info("Shutting down the cluster");
-                try {
-                    if (runLocal)
-                        GenomixMiniCluster.deinit();
-                    else {
-                        DriverUtils.shutdownNCs(0);
-                        DriverUtils.shutdownCC(0);
-                    }
-                } catch (Exception e) {
-                    System.err.println("Error while shutting the cluster down:");
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public static void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
-        LOG.info("Copying local directory " + localDir + " to HDFS: " + destDir);
-        GenomixJobConf.tick("copyLocalToHDFS");
-        FileSystem dfs = FileSystem.get(conf);
-        Path dest = new Path(destDir);
-        dfs.delete(dest, true);
-        dfs.mkdirs(dest);
-
-        File srcBase = new File(localDir);
-        if (srcBase.isDirectory())
-            for (File f : srcBase.listFiles())
-                dfs.copyFromLocalFile(new Path(f.toString()), dest);
-        else
-            dfs.copyFromLocalFile(new Path(localDir), dest);
-
-        LOG.info("Copy took " + GenomixJobConf.tock("copyLocalToHDFS") + "ms");
-    }
-
-    public static void copyBinToLocal(JobConf conf, String hdfsSrcDir, String localDestDir) throws IOException {
-        LOG.info("Copying HDFS directory " + hdfsSrcDir + " to local: " + localDestDir);
-        GenomixJobConf.tick("copyBinToLocal");
-        FileSystem dfs = FileSystem.get(conf);
-        FileUtils.deleteQuietly(new File(localDestDir));
-
-        // save original binary to output/bin
-        dfs.copyToLocalFile(new Path(hdfsSrcDir), new Path(localDestDir + File.separator + "bin"));
-
-        // convert hdfs sequence files to text as output/text
-        BufferedWriter bw = null;
-        SequenceFile.Reader reader = null;
-        Writable key = null;
-        Writable value = null;
-        FileStatus[] files = dfs.globStatus(new Path(hdfsSrcDir + File.separator + "*"));
-        for (FileStatus f : files) {
-            if (f.getLen() != 0 && !f.isDir()) {
-                try {
-                    reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
-                    key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-                    value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-                    if (bw == null)
-                        bw = new BufferedWriter(new FileWriter(localDestDir + File.separator + "data"));
-                    while (reader.next(key, value)) {
-                        if (key == null || value == null)
-                            break;
-                        bw.write(key.toString() + "\t" + value.toString());
-                        bw.newLine();
-                    }
-                } catch (Exception e) {
-                    System.out.println("Encountered an error copying " + f + " to local:\n" + e);
-                } finally {
-                    if (reader != null)
-                        reader.close();
-                }
-
-            }
-        }
-        if (bw != null)
-            bw.close();
-        LOG.info("Copy took " + GenomixJobConf.tock("copyBinToLocal") + "ms");
-    }
-
+    
     static void drawStatistics(JobConf conf, String inputStats, String outputChart) throws IOException {
         LOG.info("Getting coverage statistics...");
         GenomixJobConf.tick("drawStatistics");
