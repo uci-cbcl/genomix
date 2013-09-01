@@ -81,6 +81,9 @@ public class GenomixJobConf extends JobConf {
         
         @Option(name = "-clusterWaitTime", usage = "the amount of time (in ms) to wait between starting/stopping CC/NC", required = false)
         private int clusterWaitTime = -1;
+        
+        @Option(name = "-drawStatistics", usage = "Plot coverage statistics after graphbuilding stages", required = false)
+        private boolean drawStatistics = false;
 
         // Graph cleaning
         @Option(name = "-bridgeRemove_maxLength", usage = "Nodes with length <= bridgeRemoveLength that bridge separate paths are removed from the graph", required = false)
@@ -145,7 +148,6 @@ public class GenomixJobConf extends JobConf {
         TIP_REMOVE,
         SCAFFOLD,
         SPLIT_REPEAT,
-        STATS,
         DUMP_FASTA;
         
         /**
@@ -179,6 +181,7 @@ public class GenomixJobConf extends JobConf {
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
     public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
     public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
+    public static final String DRAW_STATISTICS = "genomix.draw.statistics";
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -238,6 +241,7 @@ public class GenomixJobConf extends JobConf {
                     Patterns.SPLIT_REPEAT, Patterns.MERGE,
                     Patterns.SCAFFOLD, Patterns.MERGE
             };
+    
     
     
     
@@ -367,6 +371,11 @@ public class GenomixJobConf extends JobConf {
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
         
+        if (getBoolean(DRAW_STATISTICS, false))
+            setBoolean(DRAW_STATISTICS, true);
+        else
+            setBoolean(DRAW_STATISTICS, false);
+        
 //        if (getBoolean(RUN_LOCAL, false)) {
 //            // override any other settings for HOST and PORT
 //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
@@ -397,6 +406,7 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
         setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
         setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
+        setBoolean(DRAW_STATISTICS, opts.drawStatistics);
             
         setBoolean(RUN_LOCAL, opts.runLocal);
         

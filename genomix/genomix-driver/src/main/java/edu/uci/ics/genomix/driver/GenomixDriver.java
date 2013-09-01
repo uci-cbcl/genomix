@@ -86,6 +86,8 @@ public class GenomixDriver {
         followingBuild = true;
         manager.stopCluster(ClusterType.HYRACKS);
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.DRAW_STATISTICS)))
+            DriverUtils.drawStatistics(conf, curOutput, new Path(curOutput).getName() + ".coverage.png");
     }
 
     private void buildGraphWithHadoop(GenomixJobConf conf) throws Exception {
@@ -103,6 +105,8 @@ public class GenomixDriver {
         followingBuild = true;
         manager.stopCluster(ClusterType.HADOOP);
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop"));
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.DRAW_STATISTICS)))
+            DriverUtils.drawStatistics(conf, curOutput, new Path(curOutput).getName() + ".coverage.png");
     }
 
     @SuppressWarnings("deprecation")
@@ -193,11 +197,8 @@ public class GenomixDriver {
                     setOutput(conf, Patterns.SCAFFOLD);
                     addJob(ScaffoldingVertex.getConfiguredJob(conf, ScaffoldingVertex.class));
                     break;
-                case STATS:
-                    DriverUtils.drawStatistics(conf, curOutput, "coverage.png");
-                    break;
                 case DUMP_FASTA:
-                    dump = true;
+                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
                     break;
             }
         }
@@ -230,8 +231,6 @@ public class GenomixDriver {
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
-        if (dump)
-            DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
 
