@@ -64,7 +64,7 @@ public class GenomixDriver {
     private String prevOutput;
     private String curOutput;
     private int stepNum;
-    private List<PregelixJob> jobs;
+    private List<PregelixJob> pregelixJobs;
     private boolean followingBuild = false; // need to adapt the graph immediately after building
     private boolean runLocal;
 
@@ -120,7 +120,7 @@ public class GenomixDriver {
     private void addJob(PregelixJob job) {
         if (followingBuild)
             job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        jobs.add(job);
+        pregelixJobs.add(job);
         followingBuild = false;
     }
 
@@ -128,9 +128,8 @@ public class GenomixDriver {
         DriverUtils.updateCCProperties(conf);
         GenomixJobConf.setGlobalStaticConstants(conf);
         followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
-        jobs = new ArrayList<PregelixJob>();
+        pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
-        boolean dump = false;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         manager = new GenomixClusterManager(runLocal, conf);
 
@@ -203,31 +202,30 @@ public class GenomixDriver {
             }
         }
 
-        if (jobs.size() > 0) {
+        if (pregelixJobs.size() > 0) {
             manager.startCluster(ClusterType.PREGELIX);
             pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
-        }
-        // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
-        // this would let them resume at arbitrary points of the pipeline
-        if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
-            for (int i = 0; i < jobs.size(); i++) {
-                LOG.info("Starting job " + jobs.get(i).getJobName());
-                GenomixJobConf.tick("pregelix-job");
-
-                pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
+            // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
+            // this would let them resume at arbitrary points of the pipeline
+            if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
+                for (int i = 0; i < pregelixJobs.size(); i++) {
+                    LOG.info("Starting job " + pregelixJobs.get(i).getJobName());
+                    GenomixJobConf.tick("pregelix-job");
+                    
+                    pregelixDriver.runJob(pregelixJobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
+                            Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+                    
+                    LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
+                }
+            } else {
+                LOG.info("Starting pregelix job series...");
+                GenomixJobConf.tick("pregelix-runJobs");
+                pregelixDriver.runJobs(pregelixJobs, conf.get(GenomixJobConf.IP_ADDRESS),
                         Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-
-                LOG.info("Finished job " + jobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
+                LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
             }
-        } else {
-            LOG.info("Starting pregelix job series...");
-            GenomixJobConf.tick("pregelix-runJobs");
-            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS),
-                    Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-            LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
+            manager.stopCluster(ClusterType.PREGELIX);
         }
-        
-        manager.stopCluster(ClusterType.PREGELIX);
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
@@ -237,7 +235,9 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = {"-runLocal", "true", "-kmerLength", "5", "-coresPerMachine", "2",
+        String[] myArgs = {
+//                "-runLocal", "true",
+                "-kmerLength", "5", "-coresPerMachine", "2",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
                 "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",

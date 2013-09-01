@@ -19,6 +19,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -72,7 +73,7 @@ public class GenomixClusterManager {
     private final GenomixJobConf conf;
     private boolean jarsCopiedToHadoop = false;
 
-    private Map<ClusterType, Thread> shutdownHooks;
+    private HashMap<ClusterType, Thread> shutdownHooks = new HashMap<ClusterType, Thread>(); 
 
     public GenomixClusterManager(boolean runLocal, GenomixJobConf conf) {
         this.runLocal = runLocal;
