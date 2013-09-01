@@ -25,7 +25,7 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
  *
  */
 public class P4ForPathMergeVertex extends
-    BasicPathMergeVertex {
+    BasicPathMergeVertex<VertexValueWritable> {
 
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;

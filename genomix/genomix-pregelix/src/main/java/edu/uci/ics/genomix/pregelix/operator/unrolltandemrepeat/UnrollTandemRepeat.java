@@ -24,7 +24,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  *
  */
 public class UnrollTandemRepeat extends
-    BasicGraphCleanVertex<MessageWritable>{
+    BasicGraphCleanVertex<VertexValueWritable, MessageWritable>{
     private EdgeWritable tmpEdge = new EdgeWritable();
     
     /**

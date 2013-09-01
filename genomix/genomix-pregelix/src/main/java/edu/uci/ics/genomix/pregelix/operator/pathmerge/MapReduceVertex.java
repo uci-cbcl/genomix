@@ -16,8 +16,8 @@ import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
-public class MapReduceVertex extends
-	BasicPathMergeVertex{
+public class MapReduceVertex<V extends VertexValueWritable> extends
+	BasicPathMergeVertex<V>{
     
     protected VKmerBytesWritable reverseKmer;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();

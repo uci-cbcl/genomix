@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -11,8 +12,8 @@ import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 
-public abstract class BasicPathMergeVertex extends
-	BasicGraphCleanVertex<PathMergeMessageWritable>{
+public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extends
+	BasicGraphCleanVertex<V, PathMergeMessageWritable>{
 	
     public void setStateAsMergeWithPrev(){
         byte state = getVertexValue().getState();
@@ -390,7 +391,7 @@ public abstract class BasicPathMergeVertex extends
     }
     
     /**
-     * configure MERGE msg
+     * configure MERGE msg  TODO: delete edgelist, merge configureMergeMsgForPredecessor and configureMergeMsgForPredecessorByIn...
      */
     public void configureMergeMsgForPredecessor(){
         setPredecessorToMeDir();

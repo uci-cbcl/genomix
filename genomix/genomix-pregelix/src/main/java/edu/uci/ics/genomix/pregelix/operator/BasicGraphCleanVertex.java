@@ -31,8 +31,8 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
-public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
-        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, M> {
+public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
+        Vertex<VKmerBytesWritable, V, NullWritable, M> {
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
@@ -49,7 +49,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     protected M incomingMsg = null; 
     protected M outgoingMsg = null; 
     protected VKmerBytesWritable destVertexId = null;
-    protected VertexValueWritable tmpValue = new VertexValueWritable();
+    protected VertexValueWritable tmpValue = new VertexValueWritable(); 
     protected Iterator<VKmerBytesWritable> kmerIterator;
     protected VKmerListWritable kmerList = null;
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
@@ -750,7 +750,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         }
     }
     
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends MessageWritable>> vertexClass) throws IOException {
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
         // the following class weirdness is because java won't let me get the runtime class in a static context :(
         System.out.println(vertexClass.getSimpleName());
         PregelixJob job;
