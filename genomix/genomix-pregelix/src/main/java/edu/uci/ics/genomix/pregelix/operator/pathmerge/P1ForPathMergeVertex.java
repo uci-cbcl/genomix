@@ -48,7 +48,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * Naive Algorithm for path merge graph
  */
 public class P1ForPathMergeVertex extends
-    BasicPathMergeVertex {
+    BasicPathMergeVertex<VertexValueWritable> {
     
     private ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
     /**

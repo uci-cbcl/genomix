@@ -19,7 +19,7 @@ import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class BFSTraverseVertex extends
-    BasicGraphCleanVertex<BFSTraverseMessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessageWritable> {
     
     protected VKmerBytesWritable srcNode = new VKmerBytesWritable("AAT");
     protected VKmerBytesWritable destNode = new VKmerBytesWritable("AGA");

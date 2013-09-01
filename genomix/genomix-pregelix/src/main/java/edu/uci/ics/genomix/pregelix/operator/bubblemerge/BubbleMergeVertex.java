@@ -31,7 +31,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  *
  */
 public class BubbleMergeVertex extends
-    BasicGraphCleanVertex<BubbleMergeMessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessageWritable> {
     private float dissimilarThreshold = -1;
     
     public static class EdgeType{

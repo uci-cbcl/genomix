@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
@@ -41,7 +42,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
  */
 public class P2ForPathMergeVertex extends
-    MapReduceVertex {
+    MapReduceVertex<VertexValueWritable> {
 
     private ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
     

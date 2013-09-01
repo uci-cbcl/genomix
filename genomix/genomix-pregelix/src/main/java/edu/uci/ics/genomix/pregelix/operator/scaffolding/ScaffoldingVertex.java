@@ -177,7 +177,7 @@ public class ScaffoldingVertex extends
         Client.run(args, getConfiguredJob(null, ScaffoldingVertex.class));
     }
     
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends MessageWritable>> vertexClass) throws IOException {
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
         PregelixJob job = BasicGraphCleanVertex.getConfiguredJob(conf, vertexClass);
         job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
         return job;

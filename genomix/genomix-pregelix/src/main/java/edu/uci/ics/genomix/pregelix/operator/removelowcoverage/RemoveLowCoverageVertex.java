@@ -24,7 +24,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
  *
  */
 public class RemoveLowCoverageVertex extends
-    BasicGraphCleanVertex<MessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable,MessageWritable> {
     private static float minAverageCoverage = -1;
     
     private static Set<VKmerBytesWritable> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());

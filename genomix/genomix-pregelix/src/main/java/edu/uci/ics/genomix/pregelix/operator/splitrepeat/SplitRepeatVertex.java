@@ -29,7 +29,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  *
  */
 public class SplitRepeatVertex extends 
-    BasicGraphCleanVertex<SplitRepeatMessageWritable>{
+    BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessageWritable>{
     
     public class EdgeAndDir{
         private byte dir;

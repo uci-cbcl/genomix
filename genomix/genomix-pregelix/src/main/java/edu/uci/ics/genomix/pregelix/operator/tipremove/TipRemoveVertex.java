@@ -22,7 +22,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  *
  */
 public class TipRemoveVertex extends
-        BasicGraphCleanVertex<MessageWritable> {
+        BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
     private int length = -1;
     
     /**
