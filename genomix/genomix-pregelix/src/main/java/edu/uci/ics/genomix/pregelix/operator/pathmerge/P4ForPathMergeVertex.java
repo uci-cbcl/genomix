@@ -20,7 +20,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 /**
- * Graph clean pattern: P4(Logistics-algorithm) for path merge 
+ * Graph clean pattern: P4(Smart-algorithm) for path merge 
  * @author anbangx
  *
  */
