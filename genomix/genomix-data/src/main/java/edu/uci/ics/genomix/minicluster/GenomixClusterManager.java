@@ -239,7 +239,7 @@ public class GenomixClusterManager {
         Thread hook = new Thread() {
             @Override
             public void run() {
-                LOG.info("Interrupt received... Shutting down the cluster!");
+                LOG.info("Shutting down the cluster...");
                 try {
                     stopCluster(clusterType);
                 } catch (Exception e) {
@@ -255,7 +255,11 @@ public class GenomixClusterManager {
     private void removeClusterShutdownHook(final ClusterType clusterType) {
         if (!shutdownHooks.containsKey(clusterType))
             throw new IllegalArgumentException("There is no shutdown hook for " + clusterType + "!");
-        Runtime.getRuntime().removeShutdownHook(shutdownHooks.get(clusterType));
+        try {
+            Runtime.getRuntime().removeShutdownHook(shutdownHooks.get(clusterType));
+        } catch (IllegalStateException e) {
+            // ignore: we must already be shutting down
+        }
     }
 
     public static void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
