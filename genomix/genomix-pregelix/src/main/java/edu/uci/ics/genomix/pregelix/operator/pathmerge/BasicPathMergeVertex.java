@@ -157,7 +157,7 @@ public abstract class BasicPathMergeVertex extends
         kmerIterator = getVertexValue().getRFList().getKeys();
         while(kmerIterator.hasNext()){
             destVertexId.setAsCopy(kmerIterator.next());
-            setPredecessorAdjMsg(destVertexId);
+            setPredecessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setFlip(ifFilpWithSuccessor(destVertexId));
             sendMsg(destVertexId, outgoingMsg);
@@ -165,7 +165,7 @@ public abstract class BasicPathMergeVertex extends
         kmerIterator = getVertexValue().getRRList().getKeys();
         while(kmerIterator.hasNext()){
             destVertexId.setAsCopy(kmerIterator.next());
-            setPredecessorAdjMsg(destVertexId);
+            setPredecessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setFlip(ifFilpWithSuccessor(destVertexId));
             sendMsg(destVertexId, outgoingMsg);
@@ -180,7 +180,7 @@ public abstract class BasicPathMergeVertex extends
         kmerIterator = getVertexValue().getFFList().getKeys();
         while(kmerIterator.hasNext()){
             destVertexId.setAsCopy(kmerIterator.next());
-            setSuccessorAdjMsg(destVertexId);
+            setSuccessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setFlip(ifFlipWithPredecessor(destVertexId));  
             sendMsg(destVertexId, outgoingMsg);
@@ -188,7 +188,7 @@ public abstract class BasicPathMergeVertex extends
         kmerIterator = getVertexValue().getFRList().getKeys();
         while(kmerIterator.hasNext()){
             destVertexId.setAsCopy(kmerIterator.next());
-            setSuccessorAdjMsg(destVertexId);
+            setSuccessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setFlip(ifFlipWithPredecessor(destVertexId));  
             sendMsg(destVertexId, outgoingMsg);
@@ -260,7 +260,7 @@ public abstract class BasicPathMergeVertex extends
     }
     
     public void sendMergeMsgToSuccessor(){
-        setSuccessorAdjMsg();
+        setSuccessorToMeDir();
         if(ifFlipWithPredecessor())
             outgoingMsg.setFlip(true);
         else
@@ -395,7 +395,7 @@ public abstract class BasicPathMergeVertex extends
      * configure MERGE msg
      */
     public void configureMergeMsgForPredecessor(){
-        setPredecessorAdjMsg();
+        setPredecessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFilpWithSuccessor());
@@ -407,7 +407,7 @@ public abstract class BasicPathMergeVertex extends
     }
     
     public void configureMergeMsgForSuccessor(){
-        setSuccessorAdjMsg();
+        setSuccessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFlipWithPredecessor());
@@ -422,7 +422,7 @@ public abstract class BasicPathMergeVertex extends
      * configure MERGE msg
      */
     public void configureMergeMsgForPredecessorByIncomingMsg(){
-        setPredecessorAdjMsg();
+        setPredecessorToMeDir();
         outgoingMsg.setFlag(outFlag);        
         outgoingMsg.setFlip(ifFilpWithSuccessor());
         outgoingMsg.setSourceVertexId(getVertexId());
@@ -434,7 +434,7 @@ public abstract class BasicPathMergeVertex extends
     }
     
     public void configureMergeMsgForSuccessorByIncomingMsg(){
-        setSuccessorAdjMsg();
+        setSuccessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setFlip(ifFlipWithPredecessor());
         outgoingMsg.setSourceVertexId(getVertexId());

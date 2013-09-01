@@ -522,7 +522,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     /**
      * set adjMessage to predecessor(from successor)
      */
-    public void setPredecessorAdjMsg(){
+    public void setPredecessorToMeDir(){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(!getVertexValue().getRFList().isEmpty())
             outFlag |= MessageFlag.DIR_RF;
@@ -530,7 +530,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             outFlag |= MessageFlag.DIR_RR;
     }
     
-    public void setPredecessorAdjMsg(VKmerBytesWritable toFind){
+    public void setPredecessorToMeDir(VKmerBytesWritable toFind){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(getVertexValue().getRFList().contains(toFind))
             outFlag |= MessageFlag.DIR_RF;
@@ -541,7 +541,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     /**
      * set adjMessage to successor(from predecessor)
      */
-    public void setSuccessorAdjMsg(){
+    public void setSuccessorToMeDir(){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(!getVertexValue().getFFList().isEmpty())
             outFlag |= MessageFlag.DIR_FF;
@@ -549,7 +549,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             outFlag |= MessageFlag.DIR_FR;
     }
     
-    public void setSuccessorAdjMsg(VKmerBytesWritable toFind){
+    public void setSuccessorToMeDir(VKmerBytesWritable toFind){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(getVertexValue().getFFList().contains(toFind))
             outFlag |= MessageFlag.DIR_FF;
