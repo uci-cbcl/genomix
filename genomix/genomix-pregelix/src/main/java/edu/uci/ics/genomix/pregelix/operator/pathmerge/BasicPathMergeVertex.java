@@ -319,10 +319,10 @@ public abstract class BasicPathMergeVertex extends
         outgoingMsg.reset();
         outgoingMsg.setUpdateMsg(false);
         if(selfFlag == State.IS_HEAD){
-            byte newState = getVertexValue().getState(); 
-            newState &= State.VERTEX_CLEAR;
-            newState |= State.IS_OLDHEAD;
-            getVertexValue().setState(newState);
+            byte state = getVertexValue().getState(); 
+            state &= State.VERTEX_CLEAR;
+            state |= State.IS_OLDHEAD;
+            getVertexValue().setState(state);
             this.activate();
             resetSelfFlag();
             outFlag |= MessageFlag.IS_HEAD;  
