@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.driver;
+package edu.uci.ics.genomix.minicluster;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,7 +55,7 @@ public class DriverUtils {
     /*
      * Get the IP address of the master node using the bin/getip.sh script
      */
-    static String getIP(String hostName) throws IOException, InterruptedException {
+    public static String getIP(String hostName) throws IOException, InterruptedException {
         String getIPCmd = "ssh -n " + hostName + " \"" + System.getProperty("app.home", ".") + File.separator + "bin"
                 + File.separator + "getip.sh\"";
         Process p = Runtime.getRuntime().exec(getIPCmd);
@@ -70,7 +70,7 @@ public class DriverUtils {
     /**
      * set the CC's IP address and port from the cluster.properties and `getip.sh` script
      */
-    static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException, InterruptedException {
+    public static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException, InterruptedException {
         Properties CCProperties = new Properties();
         CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
                 + File.separator + "cluster.properties"));
@@ -84,7 +84,7 @@ public class DriverUtils {
                     CCProperties.getProperty("FRAME_SIZE", String.valueOf(GenomixJobConf.DEFAULT_FRAME_SIZE)));
     }
     
-    static void drawStatistics(JobConf conf, String inputStats, String outputChart) throws IOException {
+    public static void drawStatistics(JobConf conf, String inputStats, String outputChart) throws IOException {
         LOG.info("Getting coverage statistics...");
         GenomixJobConf.tick("drawStatistics");
         FileSystem dfs = FileSystem.get(conf);
@@ -136,7 +136,7 @@ public class DriverUtils {
         LOG.info("Coverage took " + GenomixJobConf.tock("drawStatistics") + "ms");
     }
 
-    static void dumpGraph(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
+    public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
             throws IOException {
         LOG.info("Dumping graph to fasta...");
         GenomixJobConf.tick("dumpGraph");

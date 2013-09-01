@@ -59,7 +59,7 @@ public class GenomixClusterManager {
     }
     
     private static final Log LOG = LogFactory.getLog(GenomixClusterManager.class);
-
+    public static final String LOCAL_HOSTNAME = "localhost";
     public static final String LOCAL_IP = "127.0.0.1";
     public static final int LOCAL_CLIENT_PORT = 3099;
     public static final int LOCAL_CC_PORT = 1099;
@@ -132,8 +132,8 @@ public class GenomixClusterManager {
     private void startLocalCC() throws Exception {
         LOG.info("Starting local CC...");
         CCConfig ccConfig = new CCConfig();
-        ccConfig.clientNetIpAddress = LOCAL_IP;
-        ccConfig.clusterNetIpAddress = LOCAL_IP;
+        ccConfig.clientNetIpAddress = LOCAL_HOSTNAME;
+        ccConfig.clusterNetIpAddress = LOCAL_HOSTNAME;
         ccConfig.clusterNetPort = LOCAL_CC_PORT;
         ccConfig.clientNetPort = LOCAL_CLIENT_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
@@ -148,28 +148,13 @@ public class GenomixClusterManager {
 //        ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home") + "/conf/cluster.properties");
 //        ClusterConfig.setStorePath(...);
         NCConfig ncConfig = new NCConfig();
-        ncConfig.ccHost = "localhost";
-        ncConfig.clusterNetIPAddress = "localhost";
-        ncConfig.ccPort = LOCAL_CLIENT_PORT;
+        ncConfig.ccHost = LOCAL_HOSTNAME;
+        ncConfig.clusterNetIPAddress = LOCAL_HOSTNAME;
+        ncConfig.ccPort = LOCAL_CC_PORT;
         ncConfig.dataIPAddress = LOCAL_IP;
         ncConfig.datasetIPAddress = LOCAL_IP;
         ncConfig.nodeId = "nc1";
         ncConfig.ioDevices = "tmp" + File.separator + "t3";
-        //        ncConfig1.ioDevices = clusterWorkDir.toString() + File.separator + "tmp" + File.separator + "t3";
-        
-        
-//        -        NCConfig ncConfig1 = new NCConfig();
-//        -        ncConfig1.ccHost = "localhost";
-//        -        ncConfig1.clusterNetIPAddress = "localhost";
-//        -        ncConfig1.ccPort = TEST_HYRACKS_CC_PORT;
-//        -        ncConfig1.dataIPAddress = "127.0.0.1";
-//        -        ncConfig1.datasetIPAddress = "127.0.0.1";
-//        -        ncConfig1.nodeId = NC1_ID;
-//        -        ncConfig1.ioDevices = clusterWorkDir.toString() + File.separator + "tmp" + File.separator + "t3";
-//        -        ncConfig1.appNCMainClass = NCApplicationEntryPoint.class.getName();
-//        -        nc1 = new NodeControllerService(ncConfig1);
-//        -        nc1.start();
-        
         
         if (clusterType == ClusterType.PREGELIX)
             ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
@@ -254,7 +239,7 @@ public class GenomixClusterManager {
         Thread hook = new Thread() {
             @Override
             public void run() {
-                LOG.info("Shutting down the cluster");
+                LOG.info("Interrupt received... Shutting down the cluster!");
                 try {
                     stopCluster(clusterType);
                 } catch (Exception e) {

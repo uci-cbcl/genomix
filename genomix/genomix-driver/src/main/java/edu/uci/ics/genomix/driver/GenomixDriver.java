@@ -36,6 +36,7 @@ import org.kohsuke.args4j.CmdLineException;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
@@ -236,7 +237,7 @@ public class GenomixDriver {
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = {
-//                "-runLocal", "true",
+                "-runLocal", "true",
                 "-kmerLength", "5", "-coresPerMachine", "2",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
