@@ -237,7 +237,7 @@ public class GenomixDriver {
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = {
-                "-runLocal", "true",
+//                "-runLocal", "true",
                 "-kmerLength", "5", "-coresPerMachine", "2",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
@@ -251,8 +251,9 @@ public class GenomixDriver {
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
                 "-pipelineOrder", "BUILD_HYRACKS" };
+        // allow Eclipse to run the maven-generated scripts
                 if (System.getProperty("app.home") == null)
-                    System.setProperty("app.home", new File("src/main/resources").getAbsolutePath());
+                    System.setProperty("app.home", new File("target/appassembler").getAbsolutePath());
 
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
