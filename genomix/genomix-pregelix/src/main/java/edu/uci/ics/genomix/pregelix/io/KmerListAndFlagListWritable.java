@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.Writable;
 
+import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public class KmerListAndFlagListWritable implements Writable{

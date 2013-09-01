@@ -2,6 +2,10 @@ package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
 
+import edu.uci.ics.genomix.pregelix.io.common.AdjacencyListWritable;
+import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
