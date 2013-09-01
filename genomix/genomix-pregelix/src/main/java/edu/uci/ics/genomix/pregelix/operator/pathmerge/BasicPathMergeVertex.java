@@ -232,6 +232,9 @@ public abstract class BasicPathMergeVertex extends
         }
     }
     
+    /**
+     * override sendUpdateMsg and use incomingMsg as parameter automatically
+     */
     public void sendUpdateMsg(){
         sendUpdateMsg(incomingMsg);
     }
