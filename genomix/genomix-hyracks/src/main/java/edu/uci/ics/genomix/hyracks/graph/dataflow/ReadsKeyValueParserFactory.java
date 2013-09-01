@@ -93,7 +93,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             byte mateId = (byte) 0;
             boolean fastqFormat = false;
-            int lineCount = 0;
+//            int lineCount = 0;
             
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer,  String fileString) throws HyracksDataException {
@@ -135,10 +135,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 //                lineCount++;
                 long readID = 0;
                 String geneLine;
-                
                 if (fastqFormat) {
 //                    if ((lineCount - 1) % 4 == 1) {
-                    
                         readID = key.get();  // this is actually the offset into the file... will it be the same across all files?? //
                         geneLine = value.toString().trim();
 //                    } else {

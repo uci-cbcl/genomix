@@ -17,36 +17,10 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-/*
- * vertexId: BytesWritable
- * vertexValue: ByteWritable
- * edgeValue: NullWritable
- * message: MessageWritable
- * 
- * DNA:
- * A: 00
- * C: 01
- * G: 10
- * T: 11
- * 
- * succeed node
- *  A 00000001 1
- *  G 00000010 2
- *  C 00000100 4
- *  T 00001000 8
- * precursor node
- *  A 00010000 16
- *  G 00100000 32
- *  C 01000000 64
- *  T 10000000 128
- *  
- * For example, ONE LINE in input file: 00,01,10    0001,0010,
- * That means that vertexId is ACG, its succeed node is A and its precursor node is C.
- * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
- * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
- */
 /**
- * Naive Algorithm for path merge graph
+ * Graph clean pattern: Remove Bridge
+ * @author anbangx
+ *
  */
 public class BridgeRemoveVertex extends
     BasicGraphCleanVertex<MessageWritable> {
@@ -57,9 +31,9 @@ public class BridgeRemoveVertex extends
     /**
      * initiate kmerSize, maxIteration
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        super.initVertex();
         if(length == -1)
             length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
         if(incomingMsg == null)
@@ -120,7 +94,7 @@ public class BridgeRemoveVertex extends
             }
         }
         else if (getSuperstep() == 2){
-            //collect received messages
+            //aggregate received messages
             aggregateReceivedMsgs(msgIterator);
             //detect bridge pattern and remove it
             removeBridge();
@@ -135,21 +109,7 @@ public class BridgeRemoveVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
+        Client.run(args, getConfiguredJob(null, BridgeRemoveVertex.class));
     }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(BridgeRemoveVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, BridgeRemoveVertex.class.getSimpleName());
-        job.setVertexClass(BridgeRemoveVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
-    }
+
 }

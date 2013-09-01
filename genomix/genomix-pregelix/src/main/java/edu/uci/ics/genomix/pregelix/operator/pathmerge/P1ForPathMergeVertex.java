@@ -55,10 +55,7 @@ public class P1ForPathMergeVertex extends
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
@@ -146,21 +143,6 @@ public class P1ForPathMergeVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(P1ForPathMergeVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, P1ForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(P1ForPathMergeVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        return job;
+        Client.run(args, getConfiguredJob(null, P1ForPathMergeVertex.class));
     }
 }

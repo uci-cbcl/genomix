@@ -46,8 +46,8 @@ import edu.uci.ics.hyracks.hdfs2.scheduler.Scheduler;
 public class ClusterConfig {
 
     private static String[] NCs;
-    private static String storePropertiesPath = "conf/stores.properties";
-    private static String clusterPropertiesPath = "conf/cluster.properties";
+    private static String storePropertiesPath = System.getProperty("app.home", ".") + File.separator  + "conf/stores.properties";
+    private static String clusterPropertiesPath = System.getProperty("app.home", ".") + File.separator  + "conf/cluster.properties";
     private static Properties clusterProperties = new Properties();
     private static Map<String, List<String>> ipToNcMapping;
     private static String[] stores;

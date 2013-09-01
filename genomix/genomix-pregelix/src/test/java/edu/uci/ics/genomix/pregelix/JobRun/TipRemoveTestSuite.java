@@ -6,7 +6,7 @@ public class TipRemoveTestSuite extends BasicGraphCleanTestSuite{
 
     public static Test suite() throws Exception {
         String pattern ="TipRemove";
-        String testSet[] = {"SmallGenome"};//{"SmallGenome", "FR_Tip", "RF_Tip"};
+        String testSet[] = {"SmallGenome", "FR_Tip", "RF_Tip"};
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
         return makeTestSuite(testSuite);

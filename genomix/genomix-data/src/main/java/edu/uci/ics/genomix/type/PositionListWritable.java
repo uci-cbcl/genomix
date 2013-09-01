@@ -113,6 +113,27 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             append(pos);
         }
     }
+    
+    /**
+     * version of unionUpdate that imposes a maximum number on the number of positions added
+     */
+    public void unionUpdateCappedCount(PositionListWritable otherList) {
+        HashSet<PositionWritable> uniqueElements = new HashSet<PositionWritable>(valueCount + otherList.valueCount);
+        for (PositionWritable pos : this) {
+            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
+                uniqueElements.add(new PositionWritable(pos));
+        }
+        for (PositionWritable pos : otherList) {
+            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
+                uniqueElements.add(new PositionWritable(pos));
+        }
+        valueCount = 0;
+        setSize(uniqueElements.size() * PositionWritable.LENGTH + HEADER_SIZE);
+        for (PositionWritable pos : uniqueElements) {
+            append(pos);
+        }
+    }
+    
 
     public static int getCountByDataLength(int length) {
         if (length % PositionWritable.LENGTH != 0) {

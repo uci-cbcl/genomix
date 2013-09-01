@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
@@ -22,6 +23,11 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
+/**
+ * Graph clean pattern: Split Repeat
+ * @author anbangx
+ *
+ */
 public class SplitRepeatVertex extends 
     BasicGraphCleanVertex<SplitRepeatMessageWritable>{
     
@@ -52,8 +58,8 @@ public class SplitRepeatVertex extends
 
     }
     
-    public static Set<String> existKmerString = new HashSet<String>();
-    protected VKmerBytesWritable createdVertexId = null;  
+    private static Set<String> existKmerString = Collections.synchronizedSet(new HashSet<String>());
+    private VKmerBytesWritable createdVertexId = null;  
     private Set<Long> incomingReadIdSet = new HashSet<Long>();
     private Set<Long> outgoingReadIdSet = new HashSet<Long>();
     private Set<Long> neighborEdgeIntersection = new HashSet<Long>();
@@ -66,11 +72,9 @@ public class SplitRepeatVertex extends
     /**
      * initiate kmerSize, maxIteration
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new SplitRepeatMessageWritable();
         if(outgoingMsg == null)
@@ -106,15 +110,17 @@ public class SplitRepeatVertex extends
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
-        while(true){
-            for (int i = 0; i < n; i++) {
-                char c = chars[random.nextInt(chars.length)];
-                sb.append(c);
+        synchronized(existKmerString){
+            while(true){
+                for (int i = 0; i < n; i++) {
+                    char c = chars[random.nextInt(chars.length)];
+                    sb.append(c);
+                }
+                if(!existKmerString.contains(sb.toString()))
+                    break;
             }
-            if(!existKmerString.contains(sb.toString()))
-                break;
+            existKmerString.add(sb.toString());
         }
-        existKmerString.add(sb.toString());
         return sb.toString();
     }
     
@@ -271,21 +277,7 @@ public class SplitRepeatVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
+        Client.run(args, getConfiguredJob(null, SplitRepeatVertex.class));
     }
     
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(SplitRepeatVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, SplitRepeatVertex.class.getSimpleName());
-        job.setVertexClass(SplitRepeatVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
-    }
 }

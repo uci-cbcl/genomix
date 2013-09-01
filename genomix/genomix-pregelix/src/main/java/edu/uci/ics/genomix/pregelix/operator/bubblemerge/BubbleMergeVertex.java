@@ -26,7 +26,9 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /**
- * Naive Algorithm for path merge graph
+ * Graph clean pattern: Bubble Merge
+ * @author anbangx
+ *
  */
 public class BubbleMergeVertex extends
     BasicGraphCleanVertex<BubbleMergeMessageWritable> {
@@ -43,22 +45,21 @@ public class BubbleMergeVertex extends
     private BubbleMergeMessageWritable curMessage = new BubbleMergeMessageWritable();
     private Set<BubbleMergeMessageWritable> unchangedSet = new HashSet<BubbleMergeMessageWritable>();
     private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
-    private static Set<BubbleMergeMessageWritable> allDeletedSet = new HashSet<BubbleMergeMessageWritable>();
+    private EdgeWritable tmpEdge = new EdgeWritable();
+    
+    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
     
     private VKmerBytesWritable incomingKmer = new VKmerBytesWritable();
     private VKmerBytesWritable outgoingKmer = new VKmerBytesWritable();
     private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
     private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
     
-    private EdgeWritable tmpEdge = new EdgeWritable();
     /**
      * initiate kmerSize, maxIteration
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        super.initVertex();
         if(dissimilarThreshold == -1)
             dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if(incomingMsg == null)
@@ -216,12 +217,14 @@ public class BubbleMergeVertex extends
     }
     
     public void processAllDeletedSet(){
-        for(BubbleMergeMessageWritable msg : allDeletedSet){
-            outgoingMsg.set(msg);
-            outFlag = MessageFlag.KILL;
-            outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
-            sendMsg(msg.getSourceVertexId(), outgoingMsg);
+        synchronized(allDeletedSet){
+            for(BubbleMergeMessageWritable msg : allDeletedSet){
+                outgoingMsg.set(msg);
+                outFlag = MessageFlag.KILL;
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
+                sendMsg(msg.getSourceVertexId(), outgoingMsg);
+            }
         }
     }
     
@@ -358,21 +361,6 @@ public class BubbleMergeVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(BubbleMergeVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, BubbleMergeVertex.class.getSimpleName());
-        job.setVertexClass(BubbleMergeVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
+        Client.run(args, getConfiguredJob(null, BubbleMergeVertex.class));
     }
 }

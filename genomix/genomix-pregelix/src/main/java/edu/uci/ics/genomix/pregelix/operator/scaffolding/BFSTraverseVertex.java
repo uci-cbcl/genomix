@@ -9,6 +9,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.EdgeDirs;
@@ -30,11 +31,9 @@ public class BFSTraverseVertex extends
     /**
      * initiate kmerSize, maxIteration
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new BFSTraverseMessageWritable();
         if(outgoingMsg == null)
@@ -244,21 +243,7 @@ public class BFSTraverseVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
+        Client.run(args, getConfiguredJob(null, BFSTraverseVertex.class));
     }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(BFSTraverseVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, BFSTraverseVertex.class.getSimpleName());
-        job.setVertexClass(BFSTraverseVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
-    }
+
 }

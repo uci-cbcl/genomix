@@ -32,6 +32,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
@@ -50,7 +52,7 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-kmerLength", usage = "The kmer length for this graph.", required = true)
         private int kmerLength = -1;
         
-        @Option(name = "-num-lines-per-map", usage = "The kmer length for this graph.", required = true)
+        @Option(name = "-num-lines-per-map", usage = "The kmer length for this graph.", required = false)
         private int linesPerMap = -1;
         
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
@@ -73,6 +75,9 @@ public class GenomixJobConf extends JobConf {
         
         @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: true)", required = false)
         private boolean saveIntermediateResults = true;
+        
+        @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
+        private boolean followsGraphBuild = false;
         
 
         // Graph cleaning
@@ -97,6 +102,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-tipRemove_maxLength", usage = "Tips (dead ends in the graph) whose length is less than this threshold are removed from the graph", required = false)
         private int tipRemove_maxLength = -1;
         
+        @Option(name= "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
+        private int maxReadIDsPerEdge = -1;
+        
         // Hyracks/Pregelix Setup
         @Option(name = "-ip", usage = "IP address of the cluster controller", required = false)
         private String ipAddress;
@@ -110,7 +118,7 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-coresPerMachine", usage="the number of cores available in each machine", required=false)
         private int coresPerMachine = -1;
         
-        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port", required=false)
+        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
         @Argument
@@ -166,7 +174,8 @@ public class GenomixJobConf extends JobConf {
     public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
     public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
-    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results"; 
+    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
+    public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -176,6 +185,7 @@ public class GenomixJobConf extends JobConf {
     public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.PathMergeRandom.probBeingRandomHead";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
+    public static final String MAX_READIDS_PER_EDGE = "genomix.max.readids.per.edge";
     
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
@@ -198,8 +208,8 @@ public class GenomixJobConf extends JobConf {
     public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
     public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
 
-    public static final int DEFAULT_FRAME_SIZE = 128 * 1024;
-    public static final int DEFAULT_FRAME_LIMIT = 4096;
+    public static final int DEFAULT_FRAME_SIZE = 65536;
+    public static final int DEFAULT_FRAME_LIMIT = 65536;
     public static final int DEFAULT_TABLE_SIZE = 10485767;
     public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
     public static final long DEFAULT_GROUPBY_HYBRID_INPUTKEYS = 38500000L;
@@ -225,6 +235,7 @@ public class GenomixJobConf extends JobConf {
 //                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
 //                    Patterns.SCAFFOLD, Patterns.MERGE
             };
+    
     
     private String[] extraArguments = {};
     
@@ -298,10 +309,13 @@ public class GenomixJobConf extends JobConf {
         
         if (Integer.parseInt(conf.get(TIP_REMOVE_MAX_LENGTH)) < kmerLength)
             throw new IllegalArgumentException("tipRemove_maxLength must be at least as long as kmerLength!");
+        
+        if (Integer.parseInt(conf.get(MAX_READIDS_PER_EDGE)) < 0)
+            throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
 
-        // Hyracks/Pregelix Advanced Setup
-        if (conf.get(IP_ADDRESS) == null)
-            throw new IllegalArgumentException("ipAddress was not specified!");        
+//        // Hyracks/Pregelix Advanced Setup
+//        if (conf.get(IP_ADDRESS) == null)
+//            throw new IllegalArgumentException("ipAddress was not specified!");
     }
     
     private void fillMissingDefaults() {
@@ -330,6 +344,9 @@ public class GenomixJobConf extends JobConf {
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);
         
+        if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
+            setInt(MAX_READIDS_PER_EDGE, 250);
+        
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
@@ -340,12 +357,14 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CORES_PER_MACHINE, -1) == -1)
             setInt(CORES_PER_MACHINE, 4);
+        if (getInt(FRAME_SIZE, -1) == -1)
+            setInt(FRAME_SIZE, DEFAULT_FRAME_SIZE);
         
-        if (getBoolean(RUN_LOCAL, false)) {
-            // override any other settings for HOST and PORT
-            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
-            setInt(PORT, PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
-        }
+//        if (getBoolean(RUN_LOCAL, false)) {
+//            // override any other settings for HOST and PORT
+//            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
+//            setInt(PORT, PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+//        }
     }
 
     private void setFromOpts(Options opts) {
@@ -369,10 +388,13 @@ public class GenomixJobConf extends JobConf {
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
+        setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
             
 
-        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
-            throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
+//        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
+//            throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
+        if (opts.runLocal)
+            throw new IllegalArgumentException("runLocal is currently unsupported!");
         setBoolean(RUN_LOCAL, opts.runLocal);
         
         // Hyracks/Pregelix Setup
@@ -381,7 +403,7 @@ public class GenomixJobConf extends JobConf {
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
         setInt(CORES_PER_MACHINE, opts.coresPerMachine);
-       
+        
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
@@ -413,5 +435,10 @@ public class GenomixJobConf extends JobConf {
             return 0;
         else
             return System.currentTimeMillis() - time;
+    }
+
+    public static void setGlobalStaticConstants(Configuration conf) {
+        KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
+        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
     }
 }

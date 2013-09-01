@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -17,20 +18,23 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
+/**
+ * Graph clean pattern: Remove Lowcoverage
+ * @author anbangx
+ *
+ */
 public class RemoveLowCoverageVertex extends
     BasicGraphCleanVertex<MessageWritable> {
-    public static int kmerSize = -1;
     private static float minAverageCoverage = -1;
     
-    private static Set<VKmerBytesWritable> deadNodeSet = new HashSet<VKmerBytesWritable>();
+    private static Set<VKmerBytesWritable> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());
+    
     /**
      * initiate kmerSize, length
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if(minAverageCoverage == -1)
-            minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
@@ -81,21 +85,6 @@ public class RemoveLowCoverageVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(RemoveLowCoverageVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, RemoveLowCoverageVertex.class.getSimpleName());
-        job.setVertexClass(RemoveLowCoverageVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
+        Client.run(args, getConfiguredJob(null, RemoveLowCoverageVertex.class));
     }
 }

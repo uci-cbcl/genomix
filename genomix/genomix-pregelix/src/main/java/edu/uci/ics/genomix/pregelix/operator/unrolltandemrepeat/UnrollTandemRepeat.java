@@ -18,6 +18,11 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
+/**
+ * Graph clean pattern: Unroll TandemRepeat
+ * @author anbangx
+ *
+ */
 public class UnrollTandemRepeat extends
     BasicGraphCleanVertex<MessageWritable>{
     private EdgeWritable tmpEdge = new EdgeWritable();
@@ -25,9 +30,9 @@ public class UnrollTandemRepeat extends
     /**
      * initiate kmerSize, length
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
@@ -132,21 +137,6 @@ public class UnrollTandemRepeat extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(UnrollTandemRepeat.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, UnrollTandemRepeat.class.getSimpleName());
-        job.setVertexClass(UnrollTandemRepeat.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
+        Client.run(args, getConfiguredJob(null, UnrollTandemRepeat.class));
     }
 }

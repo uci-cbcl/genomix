@@ -16,36 +16,10 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-/*
- * vertexId: BytesWritable
- * vertexValue: ByteWritable
- * edgeValue: NullWritable
- * message: MessageWritable
- * 
- * DNA:
- * A: 00
- * C: 01
- * G: 10
- * T: 11
- * 
- * succeed node
- *  A 00000001 1
- *  G 00000010 2
- *  C 00000100 4
- *  T 00001000 8
- * precursor node
- *  A 00010000 16
- *  G 00100000 32
- *  C 01000000 64
- *  T 10000000 128
- *  
- * For example, ONE LINE in input file: 00,01,10    0001,0010,
- * That means that vertexId is ACG, its succeed node is A and its precursor node is C.
- * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
- * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
- */
 /**
- *  Remove tip or single node when l > constant
+ * Remove tip or single node when l > constant
+ * @author anbangx
+ *
  */
 public class TipRemoveVertex extends
         BasicGraphCleanVertex<MessageWritable> {
@@ -54,11 +28,9 @@ public class TipRemoveVertex extends
     /**
      * initiate kmerSize, length
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if(length == -1)
-            length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.TIP_REMOVE_MAX_LENGTH));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
@@ -116,21 +88,6 @@ public class TipRemoveVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(TipRemoveVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, TipRemoveVertex.class.getSimpleName());
-        job.setVertexClass(TipRemoveVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
+        Client.run(args, getConfiguredJob(null, TipRemoveVertex.class));
     }
 }

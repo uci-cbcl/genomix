@@ -47,7 +47,15 @@
 								</program>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
-									<name>genomixnc</name>
+									<name>hyracksnc</name>
+								</program>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
+									<name>pregelixnc</name>
+									<commandLineArguments>
+									  <commandLineArgument>-app-nc-main-class</commandLineArgument>
+									  <commandLineArgument>edu.uci.ics.pregelix.runtime.bootstrap.NCApplicationEntryPoint</commandLineArgument>
+  									</commandLineArguments>
 								</program>
 							</programs>
 							<repositoryLayout>flat</repositoryLayout>

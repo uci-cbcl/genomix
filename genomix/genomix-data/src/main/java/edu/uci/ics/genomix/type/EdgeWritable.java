@@ -32,6 +32,8 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
 
     private static final long serialVersionUID = 1L;
     
+    public static int MAX_READ_IDS_PER_EDGE = 250;
+    
     private VKmerBytesWritable key;
     private PositionListWritable readIDs;
 
@@ -114,10 +116,14 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
      * clear the given PositionWritable of its position & mate info, then append it
      */
     public void appendReadID(PositionWritable posn) {
+        if (readIDs.getCountOfPosition() >= MAX_READ_IDS_PER_EDGE)
+            return;  // past maximum threshold-- just ignore this readid
         readIDs.append((byte)0, posn.getReadId(), 0);
     }
     
     public void unionAddReadId(PositionWritable posn){
+        if (readIDs.getCountOfPosition() >= MAX_READ_IDS_PER_EDGE)
+            return;  // past maximum threshold-- just ignore this readid
         Iterator<Long> it = readIDIter();
         while(it.hasNext()){
             if(it.next() == posn.getReadId())
@@ -127,6 +133,8 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     }
     
     public void appendReadID(long readID) {
+        if (readIDs.getCountOfPosition() >= MAX_READ_IDS_PER_EDGE)
+            return;  // past maximum threshold-- just ignore this readid
         readIDs.append((byte)0, readID, 0);
     }
     

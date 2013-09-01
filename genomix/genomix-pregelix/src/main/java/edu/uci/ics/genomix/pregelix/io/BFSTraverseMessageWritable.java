@@ -96,7 +96,7 @@ public class BFSTraverseMessageWritable extends MessageWritable{
     public void setTraverseMsg(boolean isTraverseMsg) {
         this.isTraverseMsg = isTraverseMsg;
     }
-
+    
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();

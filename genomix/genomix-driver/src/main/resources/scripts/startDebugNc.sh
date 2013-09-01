@@ -4,10 +4,13 @@ set -o pipefail
 
 hostname
 
+GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$GENOMIX_HOME"
+
+
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
-CURRENT_PATH=`pwd`
-CCHOST=`ssh ${CCHOST_NAME} "cd ${CURRENT_PATH}; bin/getip.sh"`
+CCHOST=`ssh ${CCHOST_NAME} "cd ${GENOMIX_HOME}; bin/getip.sh"`
 
 #Import cluster properties
 . conf/cluster.properties
@@ -43,10 +46,18 @@ NODEID=`hostname | cut -d '.' -f 1`
 #Set JAVA_OPTS
 export JAVA_OPTS=$NCJAVA_OPTS2
 
-GENOMIX_HOME=`pwd`
-
 #Enter the temp dir
 cd $NCTMP_DIR2
 
+
+if [ "$1" == "HYRACKS" ]; then
+  NCTYPE="hyracksnc"
+elif [ "$1" == "PREGELIX" ]; then
+  NCTYPE="pregelixnc"
+else
+  echo "unknown NC type $1" 1>&2
+  exit 1
+fi
+
 #Launch hyracks nc
-${GENOMIX_HOME}/bin/genomixnc -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> $NCLOGS_DIR/$NODEID.log &
+"${GENOMIX_HOME}"/bin/$NCTYPE -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> "$NCLOGS_DIR"/$NODEID.log &

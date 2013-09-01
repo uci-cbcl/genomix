@@ -19,41 +19,15 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
-/*
- * vertexId: BytesWritable
- * vertexValue: ByteWritable
- * edgeValue: NullWritable
- * message: MessageWritable
- * 
- * DNA:
- * A: 00
- * C: 01
- * G: 10
- * T: 11
- * 
- * succeed node
- *  A 00000001 1
- *  G 00000010 2
- *  C 00000100 4
- *  T 00001000 8
- * precursor node
- *  A 00010000 16
- *  G 00100000 32
- *  C 01000000 64
- *  T 10000000 128
- *  
- * For example, ONE LINE in input file: 00,01,10    0001,0010,
- * That means that vertexId is ACG, its succeed node is A and its precursor node is C.
- * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
- * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
- */
 /**
- * Naive Algorithm for path merge graph
+ * Graph clean pattern: P4(Logistics-algorithm) for path merge 
+ * @author anbangx
+ *
  */
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex {
 
-    private static long randSeed = 1;
+    private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
     private Random randGenerator;
     
@@ -69,11 +43,9 @@ public class P4ForPathMergeVertex extends
     /**
      * initiate kmerSize, maxIteration
      */
+    @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        super.initVertex();
         if(incomingMsg == null)
             incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
@@ -254,21 +226,6 @@ public class P4ForPathMergeVertex extends
     }
 
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null));
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf) throws IOException {
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(P4ForPathMergeVertex.class.getSimpleName());
-        else
-            job = new PregelixJob(conf, P4ForPathMergeVertex.class.getSimpleName());
-        job.setVertexClass(P4ForPathMergeVertex.class);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
+        Client.run(args, getConfiguredJob(null, P4ForPathMergeVertex.class));
     }
 }
