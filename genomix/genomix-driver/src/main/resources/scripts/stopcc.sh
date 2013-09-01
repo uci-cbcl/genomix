@@ -17,7 +17,8 @@ else
   echo "Stopped CC on master: "`hostname`$'\t'$PID
 fi
 
-#Clean up CC temp dir
-rm -rf $CCTMP_DIR/*
+#Clean up CC temp dir but keep the default logs directory
+shopt -s extglob
+rm -rf $CCTMP_DIR/!(logs)
 
 
