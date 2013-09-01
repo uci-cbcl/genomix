@@ -203,28 +203,9 @@ public class GenomixJobConf extends JobConf {
     public static final String CORES_PER_MACHINE = "genomix.driver.duplicate.num";
     public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
-    public static final String TABLE_SIZE = "genomix.tablesize";
     public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
     public static final String OUTPUT_FORMAT = "genomix.graph.output";
 
-    /** Configurations used by hybrid groupby function in graph build phrase */
-    public static final String GROUPBY_HYBRID_INPUTSIZE = "genomix.graph.groupby.hybrid.inputsize";
-    public static final String GROUPBY_HYBRID_INPUTKEYS = "genomix.graph.groupby.hybrid.inputkeys";
-    public static final String GROUPBY_HYBRID_RECORDSIZE_SINGLE = "genomix.graph.groupby.hybrid.recordsize.single";
-    public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
-    public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
-
-    public static final int DEFAULT_FRAME_SIZE = 65535;
-    public static final int DEFAULT_FRAME_LIMIT = 4096;
-//    public static final int DEFAULT_TABLE_SIZE = 10485767;
-//    public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
-//    public static final long DEFAULT_GROUPBY_HYBRID_INPUTKEYS = 38500000L;
-//    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE = 9;
-//    public static final int DEFAULT_GROUPBY_HYBRID_HASHLEVEL = 1;
-//    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS = 13;
-
-//    public static final String GROUPBY_TYPE_HYBRID = "hybrid";
-//    public static final String GROUPBY_TYPE_EXTERNAL = "external";
     public static final String GROUPBY_TYPE_PRECLUSTER = "precluster";
     
     public static final String JOB_PLAN_GRAPHBUILD = "graphbuild";
@@ -365,8 +346,6 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CORES_PER_MACHINE, -1) == -1)
             setInt(CORES_PER_MACHINE, 4);
-        if (getInt(FRAME_SIZE, -1) == -1)
-            setInt(FRAME_SIZE, DEFAULT_FRAME_SIZE);
         
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);

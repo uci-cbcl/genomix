@@ -80,8 +80,9 @@ public class DriverUtils {
             conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
         }
         if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
-            conf.set(GenomixJobConf.FRAME_SIZE,
-                    CCProperties.getProperty("FRAME_SIZE", String.valueOf(GenomixJobConf.DEFAULT_FRAME_SIZE)));
+            conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE"));
+        if (conf.get(GenomixJobConf.FRAME_LIMIT) == null)
+            conf.set(GenomixJobConf.FRAME_LIMIT, CCProperties.getProperty("FRAME_LIMIT"));
     }
     
     public static void drawStatistics(JobConf conf, String inputStats, String outputChart) throws IOException {

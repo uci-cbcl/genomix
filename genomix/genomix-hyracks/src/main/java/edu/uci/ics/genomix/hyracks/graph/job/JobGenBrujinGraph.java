@@ -80,6 +80,8 @@ public class JobGenBrujinGraph extends JobGen {
 
     protected ConfFactory hadoopJobConfFactory;
     protected static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
+    private static final int DEFAULT_FRAME_LIMIT = 4096;
+    private static final int DEFAULT_FRAME_SIZE = 65535;
     protected String[] ncNodeNames;
     protected String[] readSchedule;
 
@@ -236,10 +238,10 @@ public class JobGenBrujinGraph extends JobGen {
     protected void initJobConfiguration(Scheduler scheduler) throws HyracksDataException {
         Configuration conf = confFactory.getConf();
         kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
-        frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, GenomixJobConf.DEFAULT_FRAME_LIMIT);
+        frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, DEFAULT_FRAME_LIMIT);
 //        tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
-        frameSize = conf.getInt(GenomixJobConf.FRAME_SIZE, GenomixJobConf.DEFAULT_FRAME_SIZE);
-        System.out.println(GenomixJobConf.DEFAULT_FRAME_SIZE);
+        frameSize = conf.getInt(GenomixJobConf.FRAME_SIZE, DEFAULT_FRAME_SIZE);
+        System.out.println(DEFAULT_FRAME_SIZE);
         System.out.println(frameSize);
         String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         groupbyType = GroupbyType.PRECLUSTER;
