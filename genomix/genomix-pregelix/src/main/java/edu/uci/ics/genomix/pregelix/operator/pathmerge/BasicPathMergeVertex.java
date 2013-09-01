@@ -418,6 +418,33 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         sendMsg(mergeDest, outgoingMsg);
     }
     
+    /**
+     * configure MERGE msg For P2
+     */
+    public void configureP2MergeMsgForPredecessor(VKmerBytesWritable mergeDest){
+        setPredecessorToMeDir();
+        outgoingMsg.setFlag(outFlag);
+        outgoingMsg.setSourceVertexId(getVertexId());
+        outgoingMsg.setFlip(ifFilpWithSuccessor());
+        for(byte d: OutgoingListFlag.values)
+            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+        outgoingMsg.setNode(getVertexValue().getNode());
+//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+        sendMsg(mergeDest, outgoingMsg);
+    }
+    
+    public void configureP2MergeMsgForSuccessor(VKmerBytesWritable mergeDest){
+        setSuccessorToMeDir();
+        outgoingMsg.setFlag(outFlag);
+        outgoingMsg.setSourceVertexId(getVertexId());
+        outgoingMsg.setFlip(ifFlipWithPredecessor());
+        for(byte d: IncomingListFlag.values)
+            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+        outgoingMsg.setNode(getVertexValue().getNode());
+//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+        sendMsg(mergeDest, outgoingMsg);
+    }
+    
 //    /**
 //     * configure MERGE msg
 //     */

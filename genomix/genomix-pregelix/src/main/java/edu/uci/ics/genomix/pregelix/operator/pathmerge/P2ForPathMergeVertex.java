@@ -34,9 +34,9 @@ public class P2ForPathMergeVertex extends
         headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         if(incomingMsg == null)
-            incomingMsg = new PathMergeMessageWritable();
+            incomingMsg = new P2PathMergeMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new PathMergeMessageWritable();
+            outgoingMsg = new P2PathMergeMessageWritable();
         else
             outgoingMsg.reset();
         receivedMsgList.clear();
