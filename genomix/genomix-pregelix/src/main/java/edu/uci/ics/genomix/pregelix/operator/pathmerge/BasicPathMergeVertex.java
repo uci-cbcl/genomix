@@ -11,9 +11,10 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extends
-	BasicGraphCleanVertex<V, PathMergeMessageWritable>{
+public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
+	BasicGraphCleanVertex<V, M>{
 	
     public void setStateAsMergeWithPrev(){
         byte state = getVertexValue().getState();
@@ -303,11 +304,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extend
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                configureMergeMsgForSuccessorByIncomingMsg(); //sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); 
+                configureMergeMsgForSuccessor(incomingMsg.getSourceVertexId());
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
-                configureMergeMsgForPredecessorByIncomingMsg(); //sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg); 
+                configureMergeMsgForPredecessor(incomingMsg.getSourceVertexId()); 
                 break; 
         }
     }
@@ -375,7 +376,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extend
         outFlag = 0;
         if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outFlag |= MessageFlag.STOP;
-        configureMergeMsgForPredecessor();
+        configureMergeMsgForPredecessor(getPrevDestVertexId());
         deleteVertex(getVertexId());
     }
     
@@ -386,14 +387,14 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extend
         outFlag = 0;
         if (getVertexValue().getState() == State.IS_HEAD)//is_tail
             outFlag |= MessageFlag.STOP;
-        configureMergeMsgForSuccessor();
+        configureMergeMsgForSuccessor(getNextDestVertexId());
         deleteVertex(getVertexId());
     }
     
     /**
      * configure MERGE msg  TODO: delete edgelist, merge configureMergeMsgForPredecessor and configureMergeMsgForPredecessorByIn...
      */
-    public void configureMergeMsgForPredecessor(){
+    public void configureMergeMsgForPredecessor(VKmerBytesWritable mergeDest){
         setPredecessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
@@ -402,10 +403,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extend
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setNode(getVertexValue().getNode());
 //        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-        sendMsg(getPrevDestVertexId(), outgoingMsg);
+        sendMsg(mergeDest, outgoingMsg);
     }
     
-    public void configureMergeMsgForSuccessor(){
+    public void configureMergeMsgForSuccessor(VKmerBytesWritable mergeDest){
         setSuccessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
@@ -414,35 +415,35 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extend
             outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setNode(getVertexValue().getNode());
 //        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-        sendMsg(getNextDestVertexId(), outgoingMsg);
+        sendMsg(mergeDest, outgoingMsg);
     }
     
-    /**
-     * configure MERGE msg
-     */
-    public void configureMergeMsgForPredecessorByIncomingMsg(){
-        setPredecessorToMeDir();
-        outgoingMsg.setFlag(outFlag);        
-        outgoingMsg.setFlip(ifFilpWithSuccessor());
-        outgoingMsg.setSourceVertexId(getVertexId());
-        for(byte d: OutgoingListFlag.values)
-            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setNode(getVertexValue().getNode());
-//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
-    }
-    
-    public void configureMergeMsgForSuccessorByIncomingMsg(){
-        setSuccessorToMeDir();
-        outgoingMsg.setFlag(outFlag);
-        outgoingMsg.setFlip(ifFlipWithPredecessor());
-        outgoingMsg.setSourceVertexId(getVertexId());
-        for(byte d: IncomingListFlag.values)
-            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setNode(getVertexValue().getNode());
-//        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
-    }
+//    /**
+//     * configure MERGE msg
+//     */
+//    public void configureMergeMsgForPredecessorByIncomingMsg(){
+//        setPredecessorToMeDir();
+//        outgoingMsg.setFlag(outFlag);        
+//        outgoingMsg.setFlip(ifFilpWithSuccessor());
+//        outgoingMsg.setSourceVertexId(getVertexId());
+//        for(byte d: OutgoingListFlag.values)
+//            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+//        outgoingMsg.setNode(getVertexValue().getNode());
+////        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+//        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+//    }
+//    
+//    public void configureMergeMsgForSuccessorByIncomingMsg(){
+//        setSuccessorToMeDir();
+//        outgoingMsg.setFlag(outFlag);
+//        outgoingMsg.setFlip(ifFlipWithPredecessor());
+//        outgoingMsg.setSourceVertexId(getVertexId());
+//        for(byte d: IncomingListFlag.values)
+//            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+//        outgoingMsg.setNode(getVertexValue().getNode());
+////        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+//        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+//    }
     /**
      * send merge message to neighber for P4
      */
@@ -454,12 +455,12 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable> extend
         switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK) {
             case State.SHOULD_MERGEWITHNEXT:
                 /** configure merge msg for successor **/
-                configureMergeMsgForSuccessor();
+                configureMergeMsgForSuccessor(getNextDestVertexId());
                 deleteVertex(getVertexId());
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
-                configureMergeMsgForPredecessor();
+                configureMergeMsgForPredecessor(getPrevDestVertexId());
                 deleteVertex(getVertexId());
                 break; 
         }

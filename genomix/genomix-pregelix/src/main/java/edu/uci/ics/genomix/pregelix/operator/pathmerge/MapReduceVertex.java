@@ -4,20 +4,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
 
-public class MapReduceVertex<V extends VertexValueWritable> extends
-	BasicPathMergeVertex<V>{
+public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
+	BasicPathMergeVertex<V, PathMergeMessageWritable>{
     
     protected VKmerBytesWritable reverseKmer;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();

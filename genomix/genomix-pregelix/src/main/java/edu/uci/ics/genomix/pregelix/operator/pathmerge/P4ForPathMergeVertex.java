@@ -1,14 +1,10 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
-import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
@@ -25,7 +21,7 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
  *
  */
 public class P4ForPathMergeVertex extends
-    BasicPathMergeVertex<VertexValueWritable> {
+    BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
 
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
