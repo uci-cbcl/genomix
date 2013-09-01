@@ -9,7 +9,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.type.MessageTypeFromHead;
+import edu.uci.ics.genomix.pregelix.type.MessageType;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 /*
@@ -130,15 +130,15 @@ public class P2ForPathMergeVertex extends
             }
         }
         if(countHead == 2)
-            return MessageTypeFromHead.BothMsgsFromHead;
+            return MessageType.BothMsgsFromHead;
         else if(countHead == 1 && countOldHead == 1)
-            return MessageTypeFromHead.OneMsgFromOldHeadAndOneFromHead;
+            return MessageType.OneMsgFromOldHeadAndOneFromHead;
         else if(countHead == 1 && countOldHead == 0)
-            return MessageTypeFromHead.OneMsgFromHeadAndOneFromNonHead;
+            return MessageType.OneMsgFromHeadAndOneFromNonHead;
         else if(countHead == 0 && countOldHead == 0)
-            return MessageTypeFromHead.BothMsgsFromNonHead;
+            return MessageType.BothMsgsFromNonHead;
         else
-            return MessageTypeFromHead.NO_MSG;
+            return MessageType.NO_MSG;
     }
 
     /**
@@ -157,8 +157,8 @@ public class P2ForPathMergeVertex extends
         /** process merge when receiving msg **/
         byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
          switch(numOfMsgsFromHead){
-            case MessageTypeFromHead.BothMsgsFromHead:
-            case MessageTypeFromHead.OneMsgFromOldHeadAndOneFromHead:
+            case MessageType.BothMsgsFromHead:
+            case MessageType.OneMsgFromOldHeadAndOneFromHead:
                 for(int i = 0; i < 2; i++)
                     processFinalMerge(receivedMsgList.get(i)); //processMerge()
                 getVertexValue().setState(State.IS_FINAL);
@@ -166,17 +166,17 @@ public class P2ForPathMergeVertex extends
                 sendMsgToFakeVertex();
                 voteToHalt();
                 break;
-            case MessageTypeFromHead.OneMsgFromHeadAndOneFromNonHead:
+            case MessageType.OneMsgFromHeadAndOneFromNonHead:
                 for(int i = 0; i < 2; i++)
                     processFinalMerge(receivedMsgList.get(i));
                 setHeadState();
                 this.activate();
                 break;
-            case MessageTypeFromHead.BothMsgsFromNonHead:
+            case MessageType.BothMsgsFromNonHead:
                 for(int i = 0; i < 2; i++)
                     processFinalMerge(receivedMsgList.get(i));
                 break;
-            case MessageTypeFromHead.NO_MSG:
+            case MessageType.NO_MSG:
                 //halt
                 voteToHalt(); //deleteVertex(getVertexId());
                 break;
