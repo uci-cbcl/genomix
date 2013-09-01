@@ -133,6 +133,7 @@ public class GenomixDriver {
         stepNum = 0;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         manager = new GenomixClusterManager(runLocal, conf);
+        manager.stopCluster(ClusterType.HYRACKS); // shut down any existing NCs and CCs
 
         String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
         if (localInput != null) {

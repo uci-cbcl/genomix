@@ -219,7 +219,7 @@ public class GenomixClusterManager {
     }
 
     private static void shutdownCC() throws IOException, InterruptedException {
-        LOG.info("Shutting down CC");
+        LOG.info("Shutting down any previous CC");
         String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
         Process p = Runtime.getRuntime().exec(stopCCCmd);
         p.waitFor(); // wait for cmd execution
@@ -254,7 +254,8 @@ public class GenomixClusterManager {
     
     private void removeClusterShutdownHook(final ClusterType clusterType) {
         if (!shutdownHooks.containsKey(clusterType))
-            throw new IllegalArgumentException("There is no shutdown hook for " + clusterType + "!");
+//            throw new IllegalArgumentException("There is no shutdown hook for " + clusterType + "!");
+            return;  // ignore-- we are cleaning up after a previous run
         try {
             Runtime.getRuntime().removeShutdownHook(shutdownHooks.get(clusterType));
         } catch (IllegalStateException e) {
