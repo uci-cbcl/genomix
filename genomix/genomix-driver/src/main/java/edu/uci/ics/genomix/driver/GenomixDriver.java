@@ -252,7 +252,7 @@ public class GenomixDriver {
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
                 "-pipelineOrder", "BUILD_HYRACKS" };
                 if (System.getProperty("app.home") == null)
-                    System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
+                    System.setProperty("app.home", new File("src/main/resources").getAbsolutePath());
 
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
