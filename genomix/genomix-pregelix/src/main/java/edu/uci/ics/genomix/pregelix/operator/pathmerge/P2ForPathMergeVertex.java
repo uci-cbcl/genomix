@@ -1,16 +1,10 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
@@ -279,7 +273,7 @@ public class P2ForPathMergeVertex extends
                         sendFinalMergeMsg();
                         voteToHalt();
                         break;
-                    } else if(incomingMsg.isUpdateMsg()&& selfFlag == State.IS_OLDHEAD){
+                    } else if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD){ // only old head update edges
                         processUpdate();
                     } else if(!incomingMsg.isUpdateMsg()){
                        receivedMsgList.add(incomingMsg);

@@ -37,8 +37,6 @@ public abstract class BasicPathMergeVertex extends
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         
         byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
-//        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(), 
-//                neighborToMergeDir, incomingMsg.getNeighborEdge());
         getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(),
                 neighborToMergeDir, incomingMsg.getNode());
     }
