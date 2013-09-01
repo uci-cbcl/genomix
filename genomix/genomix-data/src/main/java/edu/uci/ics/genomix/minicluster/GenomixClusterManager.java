@@ -85,6 +85,7 @@ public class GenomixClusterManager {
      * 
      */
     public void startCluster(ClusterType clusterType) throws Exception {
+        addClusterShutdownHook(clusterType);
         switch (clusterType) {
             case HYRACKS:
             case PREGELIX:
@@ -104,11 +105,9 @@ public class GenomixClusterManager {
                     deployJarsToHadoop();
                 break;
         }
-        addClusterShutdownHook(clusterType);
     }
 
     public void stopCluster(ClusterType clusterType) throws Exception {
-        if (runLocal) {
             switch (clusterType) {
                 case HYRACKS:
                 case PREGELIX:
@@ -121,11 +120,12 @@ public class GenomixClusterManager {
                     }
                     break;
                 case HADOOP:
-                    localMRCluster.shutdown();
-                    localDFSCluster.shutdown();
+                    if (runLocal) {
+                        localMRCluster.shutdown();
+                        localDFSCluster.shutdown();
+                    }
                     break;
             }
-        }
         removeClusterShutdownHook(clusterType);
     }
 
