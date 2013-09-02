@@ -353,6 +353,13 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         mergeCoverage(other);
         internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
+    
+    public void mergeWithNodeWithoutKmer(final NodeWritable other) {
+        byte dir = DirectionFlag.DIR_FF;
+        mergeEdges(dir, other);
+        mergeStartAndEndReadIDs(dir, other);
+        mergeCoverage(other);
+    }
 
     /**
      * merge all metadata from `other` into this, as if `other` were the same node as this.

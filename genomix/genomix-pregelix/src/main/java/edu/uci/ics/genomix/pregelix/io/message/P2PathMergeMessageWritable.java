@@ -17,7 +17,16 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         super();
         messageType = 0;
     }
-
+    
+    public P2PathMergeMessageWritable(P2PathMergeMessageWritable msg){
+        setSourceVertexId(msg.getSourceVertexId());
+        setFlag(msg.getFlag());
+        setNode(msg.getNode());
+        setFlip(msg.isFlip());
+        setUpdateMsg(msg.isUpdateMsg());
+        messageType = msg.getMessageType();
+    }
+    
     public void reset(){
         super.reset();
         messageType = 0;

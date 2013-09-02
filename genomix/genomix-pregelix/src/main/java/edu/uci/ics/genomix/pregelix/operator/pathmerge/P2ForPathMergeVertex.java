@@ -15,8 +15,6 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageType;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
-import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 /**
@@ -76,10 +74,6 @@ public class P2ForPathMergeVertex extends
             StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
-        if(getSuperstep() == 1){
-            getVertexValue().setPrependMergeNode(getVertexValue().getNode());
-            getVertexValue().setAppendMergeNode(getVertexValue().getNode());
-        }
     }
 
     /**
@@ -115,6 +109,15 @@ public class P2ForPathMergeVertex extends
         mapKeyByInternalKmer(msgIterator);
         /** Reducer **/
         reduceKeyByInternalKmer();
+    }
+    
+    /**
+     * initiate prepend and append MergeNode
+     */
+    public void initPrependAndAppendMergeNode(){
+        getVertexValue().setPrependMergeNode(getVertexValue().getNode());
+        getVertexValue().setAppendMergeNode(getVertexValue().getNode());
+        activate();
     }
     
     /**
@@ -201,6 +204,16 @@ public class P2ForPathMergeVertex extends
     
     public void sendP2MergeMsgByIncomingMsgDir(){
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        switch(meToNeighborDir){
+            case MessageFlag.DIR_FF:
+            case MessageFlag.DIR_FR:
+                outgoingMsg.setMessageType(P2MessageType.FROM_SUCCESSOR);
+                break;
+            case MessageFlag.DIR_RF:
+            case MessageFlag.DIR_RR:
+                outgoingMsg.setMessageType(P2MessageType.FROM_PREDECESSOR);
+                break;
+        }
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
@@ -223,7 +236,6 @@ public class P2ForPathMergeVertex extends
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFilpWithSuccessor());
         outgoingMsg.setNode(getVertexValue().getAppendMergeNode());
-        outgoingMsg.setMessageType(P2MessageType.FROM_SUCCESSOR);
         sendMsg(mergeDest, outgoingMsg);
     }
     
@@ -233,7 +245,6 @@ public class P2ForPathMergeVertex extends
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFlipWithPredecessor());
         outgoingMsg.setNode(getVertexValue().getPrependMergeNode());
-        outgoingMsg.setMessageType(P2MessageType.FROM_PREDECESSOR);
         sendMsg(mergeDest, outgoingMsg);
     }
     
@@ -241,7 +252,7 @@ public class P2ForPathMergeVertex extends
      * final merge and updateAdjList  having parameter for p2
      */
     public void processP2Merge(P2PathMergeMessageWritable msg){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK); 
+        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK); 
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         
         getVertexValue().getMergeNode(msg.getMessageType()).mergeWithNode(neighborToMeDir, msg.getNode());
@@ -262,9 +273,10 @@ public class P2ForPathMergeVertex extends
                 outFlag |= neighborToMeDir;
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
-                for(byte d: IncomingListFlag.values)
-                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+//                for(byte d: IncomingListFlag.values)
+//                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+//                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+                outgoingMsg.setNode(getVertexValue().getNode());
                 outgoingMsg.setMessageType(P2MessageType.FROM_PREDECESSOR);
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
                 break;
@@ -274,9 +286,10 @@ public class P2ForPathMergeVertex extends
                 outFlag |= neighborToMeDir;       
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
-                for(byte d: OutgoingListFlag.values)
-                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+//                for(byte d: OutgoingListFlag.values)
+//                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+//                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+                outgoingMsg.setNode(getVertexValue().getNode());
                 outgoingMsg.setMessageType(P2MessageType.FROM_SUCCESSOR);
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
                 break; 
@@ -322,6 +335,8 @@ public class P2ForPathMergeVertex extends
         initVertex();
         if (getSuperstep() == 1){
             addFakeVertex();
+            // initiate prependMergeNode and appendMergeNode
+            initPrependAndAppendMergeNode();
             startSendMsg();
         } else if (getSuperstep() == 2){
             if(isFakeVertex)
@@ -358,7 +373,7 @@ public class P2ForPathMergeVertex extends
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
-                // head doesn't receive msg and send out final msg
+                // head doesn't receive msg and send out final msg, ex. 2
                 if(!msgIterator.hasNext() && isHeadNode()){
                     outFlag |= MessageFlag.IS_FINAL;
                     sendSettledMsgToAllNeighborNodes(getVertexValue());
@@ -397,14 +412,14 @@ public class P2ForPathMergeVertex extends
                     } else if(isResponseKillMsg()){
                         responseToDeadVertex();
                         voteToHalt();
-                    } else if(getMsgFlag() == MessageFlag.IS_FINAL){// for final processing, receive msg from head, which means final merge (2) ex. 8
+                    } else if(getMsgFlag() == MessageFlag.IS_FINAL){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
                         sendFinalMergeMsg();
                         voteToHalt();
                         break;
                     } else if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD){ // only old head update edges
                         processUpdate();
                     } else if(!incomingMsg.isUpdateMsg()){
-                       receivedMsgList.add(incomingMsg);
+                       receivedMsgList.add(new P2PathMergeMessageWritable(incomingMsg));
                     }
                 }
                 if(receivedMsgList.size() != 0)

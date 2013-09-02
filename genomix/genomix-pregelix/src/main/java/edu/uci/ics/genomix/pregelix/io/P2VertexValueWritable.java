@@ -54,9 +54,13 @@ public class P2VertexValueWritable extends VertexValueWritable{
      * process finalNode 
      */
     public void processFinalNode(){
+        int internalKmerLength = getNode().getInternalKmer().getKmerLetterLength();
+        setNode(prependMergeNode);
+        getNode().mergeWithNodeWithoutKmer(appendMergeNode);
+        
         String prepend = prependMergeNode.getInternalKmer().toString();
         String append = appendMergeNode.getInternalKmer().toString();
-        String merge = prepend + append.substring(getNode().getInternalKmer().getKmerLetterLength());
+        String merge = prepend + append.substring(internalKmerLength);
         getNode().getInternalKmer().setByRead(merge.length(), merge.getBytes(), 0);
     }
     
