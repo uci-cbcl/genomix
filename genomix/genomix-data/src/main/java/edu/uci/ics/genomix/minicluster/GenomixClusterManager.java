@@ -201,8 +201,17 @@ public class GenomixClusterManager {
                         LOG.info("Deploying " + item);
                         Path localJar = new Path(item);
                         Path jarDestDir = new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH) + "/jar-dependencies");
+                        // dist cache requires absolute paths. we have to use the working directory if HDFS_WORK_PATH is relative
+                        if (!jarDestDir.isAbsolute()) {
+                            // working dir is the correct base, but we must use the path version (not a URI). Get URI and strip out leading identifiers
+                            LOG.info("work dir is: " + dfs.getWorkingDirectory().toString());
+                            String hostNameRE = "([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*";
+                            String[] workDir = dfs.getWorkingDirectory().toString().split("(hdfs://" + hostNameRE + ":\\d+|file:)");
+                            LOG.info("work dirs are now: " + workDir[0].toString());
+                            jarDestDir = new Path(workDir[1] + File.separator + jarDestDir);
+                        }
                         dfs.mkdirs(jarDestDir);
-                        Path destJar = new Path(new File(jarDestDir + File.separator + localJar.getName()).getAbsolutePath());
+                        Path destJar = new Path(jarDestDir + File.separator + localJar.getName());
                         dfs.copyFromLocalFile(localJar, destJar);
                         LOG.info("Jar in distributed cache: " + destJar);
                         DistributedCache.addFileToClassPath(destJar, conf);
