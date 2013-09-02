@@ -7,7 +7,6 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
@@ -26,6 +25,7 @@ public class P2ForPathMergeVertex extends
     private ArrayList<P2PathMergeMessageWritable> receivedMsgList = new ArrayList<P2PathMergeMessageWritable>();
     
     private boolean isFakeVertex = false;
+    
     /**
      * initiate kmerSize, maxIteration
      */
@@ -67,6 +67,10 @@ public class P2ForPathMergeVertex extends
             StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
+        if(getSuperstep() == 1){
+            getVertexValue().setPrependMergeNode(getVertexValue().getNode());
+            getVertexValue().setAppendMergeNode(getVertexValue().getNode());
+        }
     }
 
     /**

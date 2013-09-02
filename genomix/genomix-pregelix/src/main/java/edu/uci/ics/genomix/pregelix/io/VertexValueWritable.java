@@ -71,6 +71,10 @@ public class VertexValueWritable
         scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     }
     
+    public VertexValueWritable get(){
+        return this;
+    }
+    
     public void setNode(NodeWritable node){
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
                 node.getInternalKmer(), node.getAverageCoverage());
