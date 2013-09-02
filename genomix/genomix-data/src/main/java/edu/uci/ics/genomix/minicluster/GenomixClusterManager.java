@@ -205,12 +205,12 @@ public class GenomixClusterManager {
                         if (!jarDestDir.isAbsolute()) {
                             // working dir is the correct base, but we must use the path version (not a URI). Get URI and strip out leading identifiers
                             String hostNameRE = "([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*";
-                            String[] workDir = dfs.getWorkingDirectory().toString().split("(hdfs://" + hostNameRE + ":\\d+|file:)", 1);
-                            if (workDir.length <= 1) {
+                            String[] workDirs = dfs.getWorkingDirectory().toString().split("(hdfs://" + hostNameRE + ":\\d+|file:)", 2);
+                            if (workDirs.length <= 1) {
                                 LOG.info("Weird.... didn't find a URI header matching hdfs://host:port or file:  Just using the original instead.");
                                 jarDestDir = new Path(dfs.getWorkingDirectory() + File.separator + jarDestDir);
                             } else {
-                                jarDestDir = new Path(workDir[1] + File.separator + jarDestDir);
+                                jarDestDir = new Path(workDirs[1] + File.separator + jarDestDir);
                             }
                         }
                         dfs.mkdirs(jarDestDir);

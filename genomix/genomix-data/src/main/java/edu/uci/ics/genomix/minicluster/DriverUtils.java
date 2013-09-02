@@ -83,6 +83,8 @@ public class DriverUtils {
             conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE"));
         if (conf.get(GenomixJobConf.FRAME_LIMIT) == null)
             conf.set(GenomixJobConf.FRAME_LIMIT, CCProperties.getProperty("FRAME_LIMIT"));
+        if (conf.get(GenomixJobConf.HYRACKS_IO_DIRS) == null)
+            conf.set(GenomixJobConf.HYRACKS_IO_DIRS, CCProperties.getProperty("IO_DIRS"));
     }
     
     public static void drawStatistics(JobConf conf, String inputStats, String outputChart) throws IOException {

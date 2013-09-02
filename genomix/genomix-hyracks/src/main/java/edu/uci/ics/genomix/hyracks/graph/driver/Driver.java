@@ -159,7 +159,8 @@ public class Driver {
 
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
         int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));
-        int numOfDuplicate = jobConf.getInt(GenomixJobConf.CORES_PER_MACHINE, 4);
+        String IODirs = jobConf.get(GenomixJobConf.HYRACKS_IO_DIRS, null);
+        int numOfDuplicate = IODirs != null ? IODirs.split(",").length : 4;
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
         jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         jobConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);

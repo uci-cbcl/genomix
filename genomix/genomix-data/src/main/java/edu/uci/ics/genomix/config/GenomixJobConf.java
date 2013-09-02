@@ -120,9 +120,6 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
         private boolean profile = false;
         
-        @Option(name = "-coresPerMachine", usage="the number of cores available in each machine", required=false)
-        private int coresPerMachine = -1;
-        
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
@@ -200,7 +197,6 @@ public class GenomixJobConf extends JobConf {
     public static final String RUN_LOCAL = "genomix.runLocal";
 
     // TODO should these also be command line options?
-    public static final String CORES_PER_MACHINE = "genomix.driver.duplicate.num";
     public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
     public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
@@ -214,6 +210,7 @@ public class GenomixJobConf extends JobConf {
     public static final String OUTPUT_FORMAT_BINARY = "genomix.outputformat.binary";
     public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
+    public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = {
                     Patterns.BUILD, Patterns.MERGE, 
                     Patterns.LOW_COVERAGE, Patterns.MERGE,
@@ -344,9 +341,6 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, "genomix_out");  // should be in the user's home directory? 
         
         // hyracks-specific
-        if (getInt(CORES_PER_MACHINE, -1) == -1)
-            setInt(CORES_PER_MACHINE, 4);
-        
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
         
@@ -394,7 +388,6 @@ public class GenomixJobConf extends JobConf {
             set(IP_ADDRESS, opts.ipAddress);
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
-        setInt(CORES_PER_MACHINE, opts.coresPerMachine);
         
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);

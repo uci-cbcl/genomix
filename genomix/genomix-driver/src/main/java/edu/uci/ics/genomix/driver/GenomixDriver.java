@@ -68,6 +68,7 @@ public class GenomixDriver {
     private List<PregelixJob> pregelixJobs;
     private boolean followingBuild = false; // need to adapt the graph immediately after building
     private boolean runLocal;
+    private int numCoresPerMachine;
 
     private GenomixClusterManager manager;
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
@@ -82,7 +83,7 @@ public class GenomixDriver {
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(
                 runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS),
                 runLocal ? GenomixClusterManager.LOCAL_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
-                        Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)));
+                        numCoresPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
         manager.stopCluster(ClusterType.HYRACKS);
@@ -99,7 +100,7 @@ public class GenomixDriver {
         conf.writeXml(confOutput);
         confOutput.close();
         edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
-        hadoopDriver.run(prevOutput, curOutput, Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)),
+        hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine,
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, HADOOP_CONF);
         FileUtils.deleteQuietly(new File(HADOOP_CONF));
         System.out.println("Finished job Hadoop-Build-Graph");
@@ -127,6 +128,7 @@ public class GenomixDriver {
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         DriverUtils.updateCCProperties(conf);
+        numCoresPerMachine = conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
         GenomixJobConf.setGlobalStaticConstants(conf);
         followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
         pregelixJobs = new ArrayList<PregelixJob>();
