@@ -57,7 +57,7 @@ public class GenomixClusterManager {
         PREGELIX,
         HADOOP
     }
-    
+
     private static final Log LOG = LogFactory.getLog(GenomixClusterManager.class);
     public static final String LOCAL_HOSTNAME = "localhost";
     public static final String LOCAL_IP = "127.0.0.1";
@@ -73,7 +73,7 @@ public class GenomixClusterManager {
     private final GenomixJobConf conf;
     private boolean jarsCopiedToHadoop = false;
 
-    private HashMap<ClusterType, Thread> shutdownHooks = new HashMap<ClusterType, Thread>(); 
+    private HashMap<ClusterType, Thread> shutdownHooks = new HashMap<ClusterType, Thread>();
 
     public GenomixClusterManager(boolean runLocal, GenomixJobConf conf) {
         this.runLocal = runLocal;
@@ -82,7 +82,6 @@ public class GenomixClusterManager {
 
     /**
      * Start a cluster of the given type. If runLocal is specified, we will create an in-memory version of the cluster.
-     * 
      */
     public void startCluster(ClusterType clusterType) throws Exception {
         addClusterShutdownHook(clusterType);
@@ -108,28 +107,42 @@ public class GenomixClusterManager {
     }
 
     public void stopCluster(ClusterType clusterType) throws Exception {
-            switch (clusterType) {
-                case HYRACKS:
-                case PREGELIX:
-                    if (runLocal) {
+        switch (clusterType) {
+            case HYRACKS:
+            case PREGELIX:
+                if (runLocal) {
+                    if (localCC != null) {
                         localCC.stop();
+                        localCC = null;
+                    }
+                    if (localNC != null) {
                         localNC.stop();
-                    } else {
-                        shutdownCC();
-                        shutdownNCs();
+                        localNC = null;
+
                     }
-                    break;
-                case HADOOP:
-                    if (runLocal) {
+                } else {
+                    shutdownCC();
+                    shutdownNCs();
+                }
+                break;
+            case HADOOP:
+                if (runLocal) {
+                    if (localMRCluster != null) {
                         localMRCluster.shutdown();
-                        localDFSCluster.shutdown();
+                        localMRCluster = null;
                     }
-                    break;
-            }
+                    if (localDFSCluster != null) {
+                        localDFSCluster.shutdown();
+                        localDFSCluster = null;
+                    }
+                }
+                break;
+        }
         removeClusterShutdownHook(clusterType);
     }
 
     private void startLocalCC() throws Exception {
+        //        if (localCC == null) {
         LOG.info("Starting local CC...");
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = LOCAL_HOSTNAME;
@@ -141,21 +154,22 @@ public class GenomixClusterManager {
         ccConfig.profileDumpPeriod = -1;
         localCC = new ClusterControllerService(ccConfig);
         localCC.start();
+        //        }
     }
 
     private void startLocalNC(ClusterType clusterType) throws Exception {
         LOG.info("Starting local NC...");
-//        ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home") + "/conf/cluster.properties");
-//        ClusterConfig.setStorePath(...);
+        //        ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home") + "/conf/cluster.properties");
+        //        ClusterConfig.setStorePath(...);
         NCConfig ncConfig = new NCConfig();
         ncConfig.ccHost = LOCAL_HOSTNAME;
         ncConfig.clusterNetIPAddress = LOCAL_HOSTNAME;
         ncConfig.ccPort = LOCAL_CC_PORT;
         ncConfig.dataIPAddress = LOCAL_IP;
         ncConfig.datasetIPAddress = LOCAL_IP;
-        ncConfig.nodeId = "nc1";
+        ncConfig.nodeId = "nc-" + clusterType;
         ncConfig.ioDevices = "tmp" + File.separator + "t3";
-        
+
         if (clusterType == ClusterType.PREGELIX)
             ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
         localNC = new NodeControllerService(ncConfig);
@@ -167,24 +181,30 @@ public class GenomixClusterManager {
         localDFSCluster = new MiniDFSCluster(conf, 1, true, null);
         localMRCluster = new MiniMRCluster(1, localDFSCluster.getFileSystem().getUri().toString(), 1);
     }
-    
+
     /**
      * Walk the current CLASSPATH to get all jar's in use and copy them up to all HDFS nodes
-     * @throws IOException 
+     * 
+     * @throws IOException
      */
     private void deployJarsToHadoop() throws IOException {
         if (!jarsCopiedToHadoop) {
             LOG.info("Deploying jars in my classpath to HDFS Distributed Cache...");
             FileSystem dfs = FileSystem.get(conf);
-            String[] classPath = {System.getenv().get("CLASSPATH"), System.getProperty("java.class.path")};
+            String[] classPath = { System.getenv().get("CLASSPATH"), System.getProperty("java.class.path") };
             for (String cp : classPath) {
+                if (cp == null)
+                    continue;
                 for (String item : cp.split(":")) {
+                    LOG.info("Checking " + item);
                     if (item.endsWith(".jar")) {
+                        LOG.info("Deploying " + item);
                         Path localJar = new Path(item);
-                        Path jarDestDir = new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH) + "/tmp-jars/");
+                        Path jarDestDir = new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH) + "/jar-dependencies");
                         dfs.mkdirs(jarDestDir);
-                        Path destJar = new Path(jarDestDir + localJar.getName());
+                        Path destJar = new Path(new File(jarDestDir + File.separator + localJar.getName()).getAbsolutePath());
                         dfs.copyFromLocalFile(localJar, destJar);
+                        LOG.info("Jar in distributed cache: " + destJar);
                         DistributedCache.addFileToClassPath(destJar, conf);
                     }
                 }
@@ -235,7 +255,8 @@ public class GenomixClusterManager {
 
     private void addClusterShutdownHook(final ClusterType clusterType) {
         if (shutdownHooks.containsKey(clusterType))
-            throw new IllegalArgumentException("Already specified a hook for shutting down a " + clusterType + " cluster! (Try removing the existing hook first?)");
+            throw new IllegalArgumentException("Already specified a hook for shutting down a " + clusterType
+                    + " cluster! (Try removing the existing hook first?)");
         Thread hook = new Thread() {
             @Override
             public void run() {
@@ -251,11 +272,11 @@ public class GenomixClusterManager {
         shutdownHooks.put(clusterType, hook);
         Runtime.getRuntime().addShutdownHook(hook);
     }
-    
+
     private void removeClusterShutdownHook(final ClusterType clusterType) {
         if (!shutdownHooks.containsKey(clusterType))
-//            throw new IllegalArgumentException("There is no shutdown hook for " + clusterType + "!");
-            return;  // ignore-- we are cleaning up after a previous run
+            //            throw new IllegalArgumentException("There is no shutdown hook for " + clusterType + "!");
+            return; // ignore-- we are cleaning up after a previous run
         try {
             Runtime.getRuntime().removeShutdownHook(shutdownHooks.get(clusterType));
         } catch (IllegalStateException e) {

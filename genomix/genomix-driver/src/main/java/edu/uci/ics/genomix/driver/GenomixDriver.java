@@ -251,7 +251,7 @@ public class GenomixDriver {
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD_HYRACKS" };
+                "-pipelineOrder", "BUILD_HYRACKS,STATS,MERGE" };
         // allow Eclipse to run the maven-generated scripts
                 if (System.getProperty("app.home") == null)
                     System.setProperty("app.home", new File("target/appassembler").getAbsolutePath());
@@ -259,7 +259,7 @@ public class GenomixDriver {
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
+        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
