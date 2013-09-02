@@ -70,10 +70,11 @@ public class VertexValueWritable
         counters = new HashMapWritable<ByteWritable, VLongWritable>();
         scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     }
-    
-    public VertexValueWritable get(){
-        return this;
-    }
+
+//    TODO: figure out why can't use
+//    public VertexValueWritable get(){
+//        return this;
+//    }
     
     public void setNode(NodeWritable node){
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),

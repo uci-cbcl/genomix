@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
@@ -14,6 +15,10 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageType;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
+import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
+import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 /**
  * Graph clean pattern: P2(Logistics-algorithm) for path merge 
  * @author anbangx
@@ -31,7 +36,11 @@ public class P2ForPathMergeVertex extends
      */
     @Override
     public void initVertex() {
-        super.initVertex();
+        if (kmerSize == -1)
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        if (maxIteration < 0)
+            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         if(incomingMsg == null)
@@ -73,6 +82,30 @@ public class P2ForPathMergeVertex extends
         }
     }
 
+    /**
+     * add fake vertex
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void addFakeVertex(){
+        if(!fakeVertexExist){
+            //add a fake vertex
+            Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+            vertex.getMsgList().clear();
+            vertex.getEdges().clear();
+            
+            P2VertexValueWritable vertexValue = new P2VertexValueWritable();//kmerSize + 1
+            vertexValue.setState(State.IS_FAKE);
+            vertexValue.setFakeVertex(true);
+            
+            vertex.setVertexId(fakeVertex);
+            vertex.setVertexValue(vertexValue);
+            
+            addVertex(fakeVertex, vertex);
+            fakeVertexExist = true;
+        }
+    }
+    
     /**
      * map reduce in FakeNode
      */
@@ -215,6 +248,42 @@ public class P2ForPathMergeVertex extends
     }
     
     /**
+     * send final merge message to neighber for P2
+     */
+    public void sendFinalMergeMsg(){
+        outFlag |= MessageFlag.IS_FINAL;
+        
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        switch(neighborToMeDir){
+            case MessageFlag.DIR_FF:
+            case MessageFlag.DIR_FR:
+                outFlag &= MessageFlag.DIR_CLEAR;
+                outFlag |= neighborToMeDir;
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                for(byte d: IncomingListFlag.values)
+                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+                outgoingMsg.setMessageType(P2MessageType.FROM_PREDECESSOR);
+                sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+                break;
+            case MessageFlag.DIR_RF:
+            case MessageFlag.DIR_RR:
+                outFlag &= MessageFlag.DIR_CLEAR;
+                outFlag |= neighborToMeDir;       
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                for(byte d: OutgoingListFlag.values)
+                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
+                outgoingMsg.setMessageType(P2MessageType.FROM_SUCCESSOR);
+                sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
+                break; 
+        }
+    }
+    
+    /**
      * head vertex process merge
      */
     public void processMergeInHeadVertex(){
@@ -257,19 +326,21 @@ public class P2ForPathMergeVertex extends
         } else if (getSuperstep() == 2){
             if(isFakeVertex)
                 voteToHalt();
-            initState(msgIterator);
+            else{
+                initState(msgIterator);
+            }
         } else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
                 // for processing final merge (1)
                 if(msgIterator.hasNext()){
                     incomingMsg = msgIterator.next();
                     if(getMsgFlag() == MessageFlag.IS_FINAL){
-                        setFinalState();
                         processP2Merge(incomingMsg);
-                        getVertexValue().setState(State.IS_FINAL);
+                        getVertexValue().setState(State.IS_FINAL); // setFinalState();
                         getVertexValue().processFinalNode();
                         // NON-FAKE and Final vertice send msg to FAKE vertex 
                         sendMsgToFakeVertex();
+                        voteToHalt();
                     } else if(isReceiveKillMsg()){
                         responseToDeadVertex();
                     }

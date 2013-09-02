@@ -4,6 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.type.NodeWritable;
 
@@ -18,6 +21,17 @@ public class P2VertexValueWritable extends VertexValueWritable{
         super();
         prependMergeNode = new NodeWritable();
         appendMergeNode = new NodeWritable();
+    }
+    
+    public VertexValueWritable get(){
+        VertexValueWritable tmpValue = new VertexValueWritable(); 
+        tmpValue.setAsCopy(getNode());
+        tmpValue.setState(getState());
+        tmpValue.setFakeVertex(isFakeVertex());
+        tmpValue.setCounters(getCounters());
+        tmpValue.setScaffoldingMap(getScaffoldingMap());
+        
+        return tmpValue;
     }
     
     public void reset(){
@@ -42,8 +56,7 @@ public class P2VertexValueWritable extends VertexValueWritable{
     public void processFinalNode(){
         String prepend = prependMergeNode.getInternalKmer().toString();
         String append = appendMergeNode.getInternalKmer().toString();
-        append.substring(getNode().getInternalKmer().getKmerLetterLength());
-        String merge = prepend + append;
+        String merge = prepend + append.substring(getNode().getInternalKmer().getKmerLetterLength());
         getNode().getInternalKmer().setByRead(merge.length(), merge.getBytes(), 0);
     }
     

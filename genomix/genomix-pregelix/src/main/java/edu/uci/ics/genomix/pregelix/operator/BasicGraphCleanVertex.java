@@ -441,8 +441,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * initiate head, rear and path node
      */
     public void initState(Iterator<M> msgIterator) {
-        if(getVertexId().toString().equals("CTA"))
-            System.out.print("");
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if(isHaltNode())
@@ -660,6 +658,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
             vertex.getMsgList().clear();
             vertex.getEdges().clear();
+            
             VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
             vertexValue.setState(State.IS_FAKE);
             vertexValue.setFakeVertex(true);

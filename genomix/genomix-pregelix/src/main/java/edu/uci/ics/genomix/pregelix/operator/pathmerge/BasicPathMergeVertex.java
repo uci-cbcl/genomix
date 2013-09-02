@@ -314,40 +314,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     /**
-     * send final merge message to neighber for P2
-     */
-    public void sendFinalMergeMsg(){
-        outFlag |= MessageFlag.IS_FINAL;
-//        sendMergeMsgByIncomingMsgDir();
-        
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
-                outFlag &= MessageFlag.DIR_CLEAR;
-                outFlag |= neighborToMeDir;
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setSourceVertexId(getVertexId());
-                for(byte d: IncomingListFlag.values)
-                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-                sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
-                break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
-                outFlag &= MessageFlag.DIR_CLEAR;
-                outFlag |= neighborToMeDir;       
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setSourceVertexId(getVertexId());
-                for(byte d: OutgoingListFlag.values)
-                    outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-                outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-                sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
-                break; 
-        }
-    }
-    /**
      * send merge message to neighber for P1
      */
     public void responseMergeMsgToPrevNode(){
