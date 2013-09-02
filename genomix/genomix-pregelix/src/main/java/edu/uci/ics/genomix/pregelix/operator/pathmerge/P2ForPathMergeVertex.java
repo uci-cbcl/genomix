@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -8,13 +7,12 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageType;
-import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 /**
@@ -71,6 +69,17 @@ public class P2ForPathMergeVertex extends
         getVertexValue().getCounters().clear();
     }
 
+    /**
+     * map reduce in FakeNode
+     */
+    public void aggregateMsgAndGroupInFakeNode(Iterator<P2PathMergeMessageWritable> msgIterator){
+        kmerMapper.clear();
+        /** Mapper **/
+        mapKeyByInternalKmer(msgIterator);
+        /** Reducer **/
+        reduceKeyByInternalKmer();
+    }
+    
     /**
      * head send message to path
      */
@@ -133,57 +142,6 @@ public class P2ForPathMergeVertex extends
     }
 
     /**
-     * head vertex process merge
-     */
-    public void processMergeInHeadVertex(){
-        /** process merge when receiving msg **/
-        byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
-         switch(numOfMsgsFromHead){
-            case MessageType.BothMsgsFromHead:
-            case MessageType.OneMsgFromOldHeadAndOneFromHead:
-                for(int i = 0; i < 2; i++)
-                    processFinalMerge(receivedMsgList.get(i)); //processMerge()
-                getVertexValue().setState(State.IS_FINAL);
-                /** NON-FAKE and Final vertice send msg to FAKE vertex **/
-                sendMsgToFakeVertex();
-                voteToHalt();
-                break;
-            case MessageType.OneMsgFromHeadAndOneFromNonHead:
-                for(int i = 0; i < 2; i++)
-                    processFinalMerge(receivedMsgList.get(i));
-                setHeadState();
-                this.activate();
-                break;
-            case MessageType.BothMsgsFromNonHead:
-                for(int i = 0; i < 2; i++)
-                    processFinalMerge(receivedMsgList.get(i));
-                break;
-            case MessageType.NO_MSG:
-                //halt
-                voteToHalt(); //deleteVertex(getVertexId());
-                break;
-        }
-    }
-    
-    /**
-     * final merge and updateAdjList  having parameter for p2
-     */
-    public void processP2Merge(P2PathMergeMessageWritable msg){
-        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK); 
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        
-        getVertexValue().getMergeNode(msg.getMessageType()).mergeWithNode(neighborToMeDir, msg.getNode());
-    }
-    
-    public void aggregateMsgAndGroupInFakeNode(Iterator<P2PathMergeMessageWritable> msgIterator){
-        kmerMapper.clear();
-        /** Mapper **/
-        mapKeyByInternalKmer(msgIterator);
-        /** Reducer **/
-        reduceKeyByInternalKmer();
-    }
-    
-    /**
      * send merge message to neighber for P2
      */
     public void sendMergeMsg(){
@@ -242,6 +200,50 @@ public class P2ForPathMergeVertex extends
         sendMsg(mergeDest, outgoingMsg);
     }
     
+    /**
+     * final merge and updateAdjList  having parameter for p2
+     */
+    public void processP2Merge(P2PathMergeMessageWritable msg){
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK); 
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        
+        getVertexValue().getMergeNode(msg.getMessageType()).mergeWithNode(neighborToMeDir, msg.getNode());
+    }
+    
+    /**
+     * head vertex process merge
+     */
+    public void processMergeInHeadVertex(){
+        // process merge when receiving msg 
+        byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
+         switch(numOfMsgsFromHead){
+            case MessageType.BothMsgsFromHead:
+            case MessageType.OneMsgFromOldHeadAndOneFromHead:
+                for(int i = 0; i < 2; i++)
+                    processP2Merge(receivedMsgList.get(i));
+                getVertexValue().setState(State.IS_FINAL);
+                getVertexValue().processFinalNode();
+                // NON-FAKE and Final vertice send msg to FAKE vertex 
+                sendMsgToFakeVertex();
+                voteToHalt();
+                break;
+            case MessageType.OneMsgFromHeadAndOneFromNonHead:
+                for(int i = 0; i < 2; i++)
+                    processP2Merge(receivedMsgList.get(i));
+                setHeadState();
+                this.activate();
+                break;
+            case MessageType.BothMsgsFromNonHead:
+                for(int i = 0; i < 2; i++)
+                    processP2Merge(receivedMsgList.get(i));
+                break;
+            case MessageType.NO_MSG:
+                //halt
+                voteToHalt(); //deleteVertex(getVertexId());
+                break;
+        }
+    }
+    
     @Override
     public void compute(Iterator<P2PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -254,20 +256,20 @@ public class P2ForPathMergeVertex extends
             initState(msgIterator);
         } else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
-                /** for processing final merge (1) **/
+                // for processing final merge (1)
                 if(msgIterator.hasNext()){
                     incomingMsg = msgIterator.next();
                     if(getMsgFlag() == MessageFlag.IS_FINAL){
                         setFinalState();
-                        processFinalMerge(incomingMsg);
-                        /** NON-FAKE and Final vertice send msg to FAKE vertex **/
+                        processP2Merge(incomingMsg);
+                        getVertexValue().setState(State.IS_FINAL);
+                        getVertexValue().processFinalNode();
+                        // NON-FAKE and Final vertice send msg to FAKE vertex 
                         sendMsgToFakeVertex();
                     } else if(isReceiveKillMsg()){
                         responseToDeadVertex();
                     }
-                }
-                /** processing general case **/
-                else{
+                } else{ // processing general case 
                     if(isPathNode())
                         sendSettledMsgToAllNeighborNodes(getVertexValue());
                     if(!isHeadNode())
@@ -275,13 +277,13 @@ public class P2ForPathMergeVertex extends
                 }
             }
             else{
-                /** Fake vertex agregates message and group them by actual kmer (2) **/
+                // Fake vertex agregates message and group them by actual kmer (2)
                 aggregateMsgAndGroupInFakeNode(msgIterator);
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
-                /** head doesn't receive msg and send out final msg **/
+                // head doesn't receive msg and send out final msg
                 if(!msgIterator.hasNext() && isHeadNode()){
                     outFlag |= MessageFlag.IS_FINAL;
                     sendSettledMsgToAllNeighborNodes(getVertexValue());
@@ -289,7 +291,7 @@ public class P2ForPathMergeVertex extends
                 } else{
                     while (msgIterator.hasNext()) {
                         incomingMsg = msgIterator.next();
-                        /** final Vertex Responses To FakeVertex **/
+                        // final Vertex Responses To FakeVertex
                         if(isReceiveKillMsg()){
                             broadcaseKillself();
                         }else if(isResponseKillMsg()){
@@ -306,7 +308,7 @@ public class P2ForPathMergeVertex extends
                 }
             } 
             else{
-                /** Fake vertex agregates message and group them by actual kmer (1) **/
+                // Fake vertex agregates message and group them by actual kmer (1) 
                 aggregateMsgAndGroupInFakeNode(msgIterator);
                 voteToHalt();
             }
@@ -314,13 +316,13 @@ public class P2ForPathMergeVertex extends
             if(!isFakeVertex){
                 while (msgIterator.hasNext()) {
                     incomingMsg = msgIterator.next();
-                    /** final Vertex Responses To FakeVertex **/
+                    // final Vertex Responses To FakeVertex 
                     if(isReceiveKillMsg()){
                         broadcaseKillself();
                     } else if(isResponseKillMsg()){
                         responseToDeadVertex();
                         voteToHalt();
-                    } else if(getMsgFlag() == MessageFlag.IS_FINAL){/** for final processing, receive msg from head, which means final merge (2) ex. 8**/
+                    } else if(getMsgFlag() == MessageFlag.IS_FINAL){// for final processing, receive msg from head, which means final merge (2) ex. 8
                         sendFinalMergeMsg();
                         voteToHalt();
                         break;
