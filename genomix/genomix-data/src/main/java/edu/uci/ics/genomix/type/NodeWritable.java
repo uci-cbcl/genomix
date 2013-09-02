@@ -354,6 +354,12 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
     
+    public void mergeWithNodeWithoutKmer(byte dir, final NodeWritable other) {
+        mergeEdges(dir, other);
+        mergeStartAndEndReadIDs(dir, other);
+        mergeCoverage(other);
+    }
+    
     public void mergeWithNodeWithoutKmer(final NodeWritable other) {
         byte dir = DirectionFlag.DIR_FF;
         mergeEdges(dir, other);
