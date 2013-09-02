@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.type.NodeWritable;
 
 public class P2VertexValueWritable extends VertexValueWritable{
@@ -12,33 +13,51 @@ public class P2VertexValueWritable extends VertexValueWritable{
     
     private NodeWritable prependMergeNode;
     private NodeWritable appendMergeNode;
-    private byte prependMergeDir;
-    private byte appendMergeDir;
     
     public P2VertexValueWritable(){
         super();
         prependMergeNode = new NodeWritable();
         appendMergeNode = new NodeWritable();
-        prependMergeDir = 0;
-        appendMergeDir = 0;
     }
     
     public void reset(){
         super.reset();
         prependMergeNode.reset();
         appendMergeNode.reset();
-        prependMergeDir = 0;
-        appendMergeDir = 0;
     }
     
+    public NodeWritable getMergeNode(byte mergeMsgType){
+        switch(mergeMsgType){
+            case P2MessageType.FROM_PREDECESSOR:
+                return getPrependMergeNode();
+            case P2MessageType.FROM_SUCCESSOR:
+                return getAppendMergeNode();
+        }
+        return null;
+    }
+    
+    public NodeWritable getPrependMergeNode() {
+        return prependMergeNode;
+    }
+
+    public void setPrependMergeNode(NodeWritable prependMergeNode) {
+        this.prependMergeNode.setAsCopy(prependMergeNode);
+    }
+
+    public NodeWritable getAppendMergeNode() {
+        return appendMergeNode;
+    }
+
+    public void setAppendMergeNode(NodeWritable appendMergeNode) {
+        this.appendMergeNode.setAsCopy(appendMergeNode);
+    }
+
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
         prependMergeNode.readFields(in);
         appendMergeNode.readFields(in);
-        prependMergeDir = in.readByte();
-        appendMergeDir = in.readByte();
     }
     
     @Override
@@ -46,7 +65,5 @@ public class P2VertexValueWritable extends VertexValueWritable{
         super.write(out);
         prependMergeNode.write(out);
         appendMergeNode.write(out);
-        out.writeByte(prependMergeDir);
-        out.writeByte(appendMergeDir);
     }
 }

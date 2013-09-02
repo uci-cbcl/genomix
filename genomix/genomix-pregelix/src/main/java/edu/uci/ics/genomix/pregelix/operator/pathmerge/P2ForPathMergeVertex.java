@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -7,11 +8,13 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageType;
+import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 /**
@@ -22,7 +25,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class P2ForPathMergeVertex extends
     MapReduceVertex<P2VertexValueWritable, P2PathMergeMessageWritable> {
 
-    private ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
+    private ArrayList<P2PathMergeMessageWritable> receivedMsgList = new ArrayList<P2PathMergeMessageWritable>();
     
     private boolean isFakeVertex = false;
     /**
@@ -162,7 +165,17 @@ public class P2ForPathMergeVertex extends
         }
     }
     
-    public void aggregateMsgAndGroupInFakeNode(Iterator<PathMergeMessageWritable> msgIterator){
+    /**
+     * final merge and updateAdjList  having parameter for p2
+     */
+    public void processP2Merge(P2PathMergeMessageWritable msg){
+        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK); 
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        
+        getVertexValue().getMergeNode(msg.getMessageType()).mergeWithNode(neighborToMeDir, msg.getNode());
+    }
+    
+    public void aggregateMsgAndGroupInFakeNode(Iterator<P2PathMergeMessageWritable> msgIterator){
         kmerMapper.clear();
         /** Mapper **/
         mapKeyByInternalKmer(msgIterator);
@@ -170,8 +183,67 @@ public class P2ForPathMergeVertex extends
         reduceKeyByInternalKmer();
     }
     
+    /**
+     * send merge message to neighber for P2
+     */
+    public void sendMergeMsg(){
+        outgoingMsg.reset();
+        outgoingMsg.setUpdateMsg(false);
+        if(selfFlag == State.IS_HEAD){
+            byte state = getVertexValue().getState(); 
+            state &= State.VERTEX_CLEAR;
+            state |= State.IS_OLDHEAD;
+            getVertexValue().setState(state);
+            this.activate();
+            resetSelfFlag();
+            outFlag |= MessageFlag.IS_HEAD;  
+        } else if(selfFlag == State.IS_OLDHEAD){
+            outFlag |= MessageFlag.IS_OLDHEAD;
+            voteToHalt();
+        }
+        sendP2MergeMsgByIncomingMsgDir();
+    }
+    
+    public void sendP2MergeMsgByIncomingMsgDir(){
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        switch(neighborToMeDir){
+            case MessageFlag.DIR_FF:
+            case MessageFlag.DIR_FR:
+                configureP2MergeMsgForSuccessor(incomingMsg.getSourceVertexId());
+                break;
+            case MessageFlag.DIR_RF:
+            case MessageFlag.DIR_RR:
+                configureP2MergeMsgForPredecessor(incomingMsg.getSourceVertexId()); 
+                break; 
+        }
+    }
+    
+    /**
+     * configure MERGE msg For P2
+     */
+    public void configureP2MergeMsgForPredecessor(VKmerBytesWritable mergeDest){
+        setPredecessorToMeDir();
+        outgoingMsg.setFlag(outFlag);
+        outgoingMsg.setSourceVertexId(getVertexId());
+        outgoingMsg.setFlip(ifFilpWithSuccessor());
+        outgoingMsg.setNode(getVertexValue().getAppendMergeNode());
+        outgoingMsg.setMessageType(P2MessageType.FROM_SUCCESSOR);
+        sendMsg(mergeDest, outgoingMsg);
+    }
+    
+    public void configureP2MergeMsgForSuccessor(VKmerBytesWritable mergeDest){
+        setSuccessorToMeDir();
+        outgoingMsg.setFlag(outFlag);
+        outgoingMsg.setSourceVertexId(getVertexId());
+        outgoingMsg.setFlip(ifFlipWithPredecessor());
+        outgoingMsg.setNode(getVertexValue().getPrependMergeNode());
+        outgoingMsg.setMessageType(P2MessageType.FROM_PREDECESSOR);
+        sendMsg(mergeDest, outgoingMsg);
+    }
+    
     @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
+    public void compute(Iterator<P2PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1){
             addFakeVertex();

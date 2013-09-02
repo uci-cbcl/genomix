@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
-	BasicPathMergeVertex<V, PathMergeMessageWritable>{
+	BasicPathMergeVertex<V, M>{
     
     protected VKmerBytesWritable reverseKmer;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
@@ -24,9 +24,9 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     public void initVertex() {
         super.initVertex();
         if(incomingMsg == null)
-            incomingMsg = new PathMergeMessageWritable();
+            incomingMsg = (M) new PathMergeMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new PathMergeMessageWritable();
+            outgoingMsg = (M) new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
         if(reverseKmer == null)
@@ -55,7 +55,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         }
     }
     
-    public void mapKeyByInternalKmer(Iterator<PathMergeMessageWritable> msgIterator){
+    public void mapKeyByInternalKmer(Iterator<M> msgIterator){
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
@@ -92,7 +92,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         }
     }
     
-    public void finalVertexResponseToFakeVertex(Iterator<PathMergeMessageWritable> msgIterator){
+    public void finalVertexResponseToFakeVertex(Iterator<M> msgIterator){
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             inFlag = incomingMsg.getFlag();
@@ -103,7 +103,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     }
     
     @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
+    public void compute(Iterator<M> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
             addFakeVertex();
