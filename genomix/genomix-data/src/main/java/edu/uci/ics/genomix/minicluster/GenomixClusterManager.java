@@ -204,11 +204,14 @@ public class GenomixClusterManager {
                         // dist cache requires absolute paths. we have to use the working directory if HDFS_WORK_PATH is relative
                         if (!jarDestDir.isAbsolute()) {
                             // working dir is the correct base, but we must use the path version (not a URI). Get URI and strip out leading identifiers
-                            LOG.info("work dir is: " + dfs.getWorkingDirectory().toString());
                             String hostNameRE = "([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*";
-                            String[] workDir = dfs.getWorkingDirectory().toString().split("(hdfs://" + hostNameRE + ":\\d+|file:)");
-                            LOG.info("work dirs are now: " + workDir[0].toString());
-                            jarDestDir = new Path(workDir[1] + File.separator + jarDestDir);
+                            String[] workDir = dfs.getWorkingDirectory().toString().split("(hdfs://" + hostNameRE + ":\\d+|file:)", 1);
+                            if (workDir.length <= 1) {
+                                LOG.info("Weird.... didn't find a URI header matching hdfs://host:port or file:  Just using the original instead.");
+                                jarDestDir = new Path(dfs.getWorkingDirectory() + File.separator + jarDestDir);
+                            } else {
+                                jarDestDir = new Path(workDir[1] + File.separator + jarDestDir);
+                            }
                         }
                         dfs.mkdirs(jarDestDir);
                         Path destJar = new Path(jarDestDir + File.separator + localJar.getName());
