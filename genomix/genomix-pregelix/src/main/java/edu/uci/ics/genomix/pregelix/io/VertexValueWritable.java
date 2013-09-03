@@ -221,11 +221,13 @@ public class VertexValueWritable
         this.getEdgeList(dir).remove(nodeToDelete);
     }
     
+    
     /**
      * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
      */
     public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
-        this.getNode().updateEdges(deleteDir, toDelete, updateDir, other);
+        byte replaceDir = mirrorDirection(deleteDir);
+        this.getNode().updateEdges(deleteDir, toDelete, updateDir, replaceDir, other);
     }
     
     /**
@@ -237,4 +239,21 @@ public class VertexValueWritable
         super.getNode().mergeWithNode(mergeDir, node);
     }
     
+    /**
+     * Returns the edge dir for B->A when the A->B edge is type @dir
+     */
+    public byte mirrorDirection(byte dir) {
+        switch (dir) {
+            case MessageFlag.DIR_FF:
+                return MessageFlag.DIR_RR;
+            case MessageFlag.DIR_FR:
+                return MessageFlag.DIR_FR;
+            case MessageFlag.DIR_RF:
+                return MessageFlag.DIR_RF;
+            case MessageFlag.DIR_RR:
+                return MessageFlag.DIR_FF;
+            default:
+                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
+        }
+    }
 }

@@ -409,26 +409,27 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     /**
      * update my edge list
      */
-    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
+    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, byte replaceDir, NodeWritable other){
         edges[deleteDir].remove(toDelete);
-        switch (updateDir) {
-            case DirectionFlag.DIR_FF:
-                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
-                break;
-            case DirectionFlag.DIR_FR:
-                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
-                break;
-            case DirectionFlag.DIR_RF:
-                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
-                break;
-            case DirectionFlag.DIR_RR:
-                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
-                break;
-        }
+        edges[updateDir].unionUpdate(other.edges[replaceDir]);
+//        switch (updateDir) {
+//            case DirectionFlag.DIR_FF:
+//                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+//                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+//                break;
+//            case DirectionFlag.DIR_FR:
+//                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+//                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+//                break;
+//            case DirectionFlag.DIR_RF:
+//                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+//                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+//                break;
+//            case DirectionFlag.DIR_RR:
+//                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+//                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+//                break;
+//        }
     }
     
     /**
