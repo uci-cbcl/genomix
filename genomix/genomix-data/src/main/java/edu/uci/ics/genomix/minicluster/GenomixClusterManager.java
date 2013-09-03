@@ -61,11 +61,15 @@ public class GenomixClusterManager {
     private static final Log LOG = LogFactory.getLog(GenomixClusterManager.class);
     public static final String LOCAL_HOSTNAME = "localhost";
     public static final String LOCAL_IP = "127.0.0.1";
-    public static final int LOCAL_CLIENT_PORT = 3099;
-    public static final int LOCAL_CC_PORT = 1099;
+    public static final int LOCAL_HYRACKS_CLIENT_PORT = 3099;
+    public static final int LOCAL_HYRACKS_CC_PORT = 1099;
+    public static final int LOCAL_PREGELIX_CLIENT_PORT = 3097;
+    public static final int LOCAL_PREGELIX_CC_PORT = 1097;
 
-    private ClusterControllerService localCC;
-    private NodeControllerService localNC;
+    private ClusterControllerService localHyracksCC;
+    private NodeControllerService localHyracksNC;
+    private ClusterControllerService localPregelixCC;
+    private NodeControllerService localPregelixNC;
     private MiniDFSCluster localDFSCluster;
     private MiniMRCluster localMRCluster;
 
@@ -89,7 +93,7 @@ public class GenomixClusterManager {
             case HYRACKS:
             case PREGELIX:
                 if (runLocal) {
-                    startLocalCC();
+                    startLocalCC(clusterType);
                     startLocalNC(clusterType);
                 } else {
                     int sleepms = Integer.parseInt(conf.get(GenomixJobConf.CLUSTER_WAIT_TIME));
@@ -109,15 +113,29 @@ public class GenomixClusterManager {
     public void stopCluster(ClusterType clusterType) throws Exception {
         switch (clusterType) {
             case HYRACKS:
+                if (runLocal) {
+                    if (localHyracksCC != null) {
+//                        localHyracksCC.stop();
+                        localHyracksCC = null;
+                    }
+                    if (localHyracksNC != null) {
+//                        localHyracksNC.stop();
+                        localHyracksNC = null;
+                    }
+                } else {
+                    shutdownCC();
+                    shutdownNCs();
+                }
+                break;
             case PREGELIX:
                 if (runLocal) {
-                    if (localCC != null) {
-                        localCC.stop();
-                        localCC = null;
+                    if (localPregelixCC != null) {
+//                        localPregelixCC.stop();
+                        localPregelixCC = null;
                     }
-                    if (localNC != null) {
-                        localNC.stop();
-                        localNC = null;
+                    if (localPregelixNC != null) {
+//                        localPregelixNC.stop();
+                        localPregelixNC = null;
 
                     }
                 } else {
@@ -141,20 +159,28 @@ public class GenomixClusterManager {
         removeClusterShutdownHook(clusterType);
     }
 
-    private void startLocalCC() throws Exception {
-        //        if (localCC == null) {
+    private void startLocalCC(ClusterType clusterType) throws Exception {
         LOG.info("Starting local CC...");
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = LOCAL_HOSTNAME;
         ccConfig.clusterNetIpAddress = LOCAL_HOSTNAME;
-        ccConfig.clusterNetPort = LOCAL_CC_PORT;
-        ccConfig.clientNetPort = LOCAL_CLIENT_PORT;
         ccConfig.defaultMaxJobAttempts = 0;
         ccConfig.jobHistorySize = 1;
         ccConfig.profileDumpPeriod = -1;
-        localCC = new ClusterControllerService(ccConfig);
-        localCC.start();
-        //        }
+
+        if (clusterType == ClusterType.HYRACKS) {
+            ccConfig.clusterNetPort = LOCAL_HYRACKS_CC_PORT;
+            ccConfig.clientNetPort = LOCAL_HYRACKS_CLIENT_PORT;
+            localHyracksCC = new ClusterControllerService(ccConfig);
+            localHyracksCC.start();
+        } else if (clusterType == ClusterType.PREGELIX) {
+            ccConfig.clusterNetPort = LOCAL_PREGELIX_CC_PORT;
+            ccConfig.clientNetPort = LOCAL_PREGELIX_CLIENT_PORT;
+            localPregelixCC = new ClusterControllerService(ccConfig);
+            localPregelixCC.start();
+        } else {
+            throw new IllegalArgumentException("Invalid CC type: " + clusterType);
+        }
     }
 
     private void startLocalNC(ClusterType clusterType) throws Exception {
@@ -164,16 +190,23 @@ public class GenomixClusterManager {
         NCConfig ncConfig = new NCConfig();
         ncConfig.ccHost = LOCAL_HOSTNAME;
         ncConfig.clusterNetIPAddress = LOCAL_HOSTNAME;
-        ncConfig.ccPort = LOCAL_CC_PORT;
         ncConfig.dataIPAddress = LOCAL_IP;
         ncConfig.datasetIPAddress = LOCAL_IP;
         ncConfig.nodeId = "nc-" + clusterType;
         ncConfig.ioDevices = "tmp" + File.separator + "t3";
 
-        if (clusterType == ClusterType.PREGELIX)
+        if (clusterType == ClusterType.HYRACKS) {
+            ncConfig.ccPort = LOCAL_HYRACKS_CC_PORT;
+            localHyracksNC = new NodeControllerService(ncConfig);
+            localHyracksNC.start();
+        } else if (clusterType == ClusterType.PREGELIX) {
+            ncConfig.ccPort = LOCAL_PREGELIX_CC_PORT;
             ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
-        localNC = new NodeControllerService(ncConfig);
-        localNC.start();
+            localPregelixNC = new NodeControllerService(ncConfig);
+            localPregelixNC.start();
+        } else {
+            throw new IllegalArgumentException("Invalid NC type: " + clusterType);
+        }
     }
 
     private void startLocalMRCluster() throws IOException {
@@ -196,16 +229,17 @@ public class GenomixClusterManager {
                 if (cp == null)
                     continue;
                 for (String item : cp.split(":")) {
-                    LOG.info("Checking " + item);
+                    //                    LOG.info("Checking " + item);
                     if (item.endsWith(".jar")) {
-                        LOG.info("Deploying " + item);
+                        //                        LOG.info("Deploying " + item);
                         Path localJar = new Path(item);
                         Path jarDestDir = new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH) + "/jar-dependencies");
                         // dist cache requires absolute paths. we have to use the working directory if HDFS_WORK_PATH is relative
                         if (!jarDestDir.isAbsolute()) {
                             // working dir is the correct base, but we must use the path version (not a URI). Get URI and strip out leading identifiers
                             String hostNameRE = "([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*";
-                            String[] workDirs = dfs.getWorkingDirectory().toString().split("(hdfs://" + hostNameRE + ":\\d+|file:)", 2);
+                            String[] workDirs = dfs.getWorkingDirectory().toString()
+                                    .split("(hdfs://" + hostNameRE + ":\\d+|file:)", 2);
                             if (workDirs.length <= 1) {
                                 LOG.info("Weird.... didn't find a URI header matching hdfs://host:port or file:  Just using the original instead.");
                                 jarDestDir = new Path(dfs.getWorkingDirectory() + File.separator + jarDestDir);
@@ -216,7 +250,7 @@ public class GenomixClusterManager {
                         dfs.mkdirs(jarDestDir);
                         Path destJar = new Path(jarDestDir + File.separator + localJar.getName());
                         dfs.copyFromLocalFile(localJar, destJar);
-                        LOG.info("Jar in distributed cache: " + destJar);
+                        //                        LOG.info("Jar in distributed cache: " + destJar);
                         DistributedCache.addFileToClassPath(destJar, conf);
                     }
                 }

@@ -83,7 +83,7 @@ public class GenomixDriver {
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(
                 runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS),
-                runLocal ? GenomixClusterManager.LOCAL_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
+                runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
                         numCoresPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
@@ -246,8 +246,8 @@ public class GenomixDriver {
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = {
-//                "-runLocal", "true",
-                "-kmerLength", "5", "-coresPerMachine", "2",
+                "-runLocal", "true",
+                "-kmerLength", "5",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
                 "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
@@ -259,7 +259,7 @@ public class GenomixDriver {
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD_HYRACKS,STATS,MERGE" };
+                "-pipelineOrder", "MERGE" };
         // allow Eclipse to run the maven-generated scripts
                 if (System.getProperty("app.home") == null)
                     System.setProperty("app.home", new File("target/appassembler").getAbsolutePath());
@@ -267,7 +267,8 @@ public class GenomixDriver {
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+//        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+          GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
