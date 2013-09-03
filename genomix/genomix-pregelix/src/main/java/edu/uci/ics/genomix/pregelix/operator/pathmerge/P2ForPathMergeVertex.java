@@ -195,7 +195,8 @@ public class P2ForPathMergeVertex extends
             getVertexValue().setState(state);
             this.activate();
             resetSelfFlag();
-            outFlag |= MessageFlag.IS_HEAD;  
+            outFlag |= MessageFlag.IS_HEAD;
+            outFlag |= getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK;
         } else if(selfFlag == State.IS_OLDHEAD){
             outFlag |= MessageFlag.IS_OLDHEAD;
             voteToHalt();
@@ -331,8 +332,16 @@ public class P2ForPathMergeVertex extends
                 voteToHalt();
                 break;
             case MessageType.OneMsgFromHeadAndOneFromNonHead:
-                for(int i = 0; i < 2; i++)
+                for(int i = 0; i < 2; i++){
+                    //set head should merge dir in state
+                    if((receivedMsgList.get(i).getFlag() & MessageFlag.DIR_MASK) == MessageFlag.IS_HEAD){
+                        byte state =  getVertexValue().getState();
+                        state &= MessageFlag.HEAD_SHOULD_MERGE_CLEAR;
+                        state |= receivedMsgList.get(i).getFlag() & MessageFlag.HEAD_SHOULD_MERGE_MASK;
+                        getVertexValue().setState(state);
+                    }
                     processP2Merge(receivedMsgList.get(i));
+                }
                 setHeadState();
                 this.activate();
                 break;
@@ -428,7 +437,6 @@ public class P2ForPathMergeVertex extends
                 // head doesn't receive msg and send out final msg, ex. 2, 5
                 if(!msgIterator.hasNext() && isHeadNode()){
                     outFlag |= MessageFlag.IS_FINAL;
-//                    sendSettledMsgToAllNeighborNodes(getVertexValue());
                     headSendUpdateMsg();
                     outFlag = 0;
                     outFlag |= MessageFlag.IS_FINAL;
