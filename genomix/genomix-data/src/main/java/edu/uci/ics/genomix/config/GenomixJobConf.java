@@ -211,6 +211,8 @@ public class GenomixJobConf extends JobConf {
     public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
+    public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
+    
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = {
                     Patterns.BUILD, Patterns.MERGE, 
                     Patterns.LOW_COVERAGE, Patterns.MERGE,

@@ -69,6 +69,7 @@ public class GenomixDriver {
     private boolean followingBuild = false; // need to adapt the graph immediately after building
     private boolean runLocal;
     private int numCoresPerMachine;
+    private int numMachines;
 
     private GenomixClusterManager manager;
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
@@ -100,7 +101,7 @@ public class GenomixDriver {
         conf.writeXml(confOutput);
         confOutput.close();
         edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
-        hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine,
+        hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine * numMachines,
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, HADOOP_CONF);
         FileUtils.deleteQuietly(new File(HADOOP_CONF));
         System.out.println("Finished job Hadoop-Build-Graph");
@@ -129,6 +130,7 @@ public class GenomixDriver {
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         DriverUtils.updateCCProperties(conf);
         numCoresPerMachine = conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
+        numMachines = conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r").length;  // split on newlines
         GenomixJobConf.setGlobalStaticConstants(conf);
         followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
         pregelixJobs = new ArrayList<PregelixJob>();

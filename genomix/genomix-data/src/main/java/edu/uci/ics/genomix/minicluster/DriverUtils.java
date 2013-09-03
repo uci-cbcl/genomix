@@ -26,6 +26,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,6 +86,11 @@ public class DriverUtils {
             conf.set(GenomixJobConf.FRAME_LIMIT, CCProperties.getProperty("FRAME_LIMIT"));
         if (conf.get(GenomixJobConf.HYRACKS_IO_DIRS) == null)
             conf.set(GenomixJobConf.HYRACKS_IO_DIRS, CCProperties.getProperty("IO_DIRS"));
+        if (conf.get(GenomixJobConf.HYRACKS_SLAVES) == null) {
+            String slaves = FileUtils.readFileToString(new File(System.getProperty("app.home", ".") + File.separator + "conf"
+                    + File.separator + "slaves"));
+            conf.set(GenomixJobConf.HYRACKS_SLAVES, slaves);
+        }
     }
     
     public static void drawStatistics(JobConf conf, String inputStats, String outputChart) throws IOException {
