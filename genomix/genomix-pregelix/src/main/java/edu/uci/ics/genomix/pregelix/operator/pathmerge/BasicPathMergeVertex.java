@@ -210,7 +210,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * send update message to neighber
      */
     public void broadcastUpdateMsg(){
-        if((getVertexValue().getState() & State.VERTEX_MASK) == State.IS_HEAD)
+        if((getVertexValue().getState() & State.VERTEX_MASK) == State.IS_HEAD && (outFlag & State.VERTEX_MASK) != State.IS_FINAL)
             outFlag |= MessageFlag.IS_HEAD;
         switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK){
             case State.SHOULD_MERGEWITHPREV:
@@ -431,5 +431,16 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 deleteVertex(getVertexId());
                 break; 
         }
+    }
+    
+    public byte revertHeadMergeDir(byte headMergeDir){
+        switch(headMergeDir){
+            case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
+                return MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+            case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
+                return MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+        }
+        return 0;
+        
     }
 }

@@ -334,10 +334,21 @@ public class P2ForPathMergeVertex extends
             case MessageType.OneMsgFromHeadAndOneFromNonHead:
                 for(int i = 0; i < 2; i++){
                     //set head should merge dir in state
-                    if((receivedMsgList.get(i).getFlag() & MessageFlag.DIR_MASK) == MessageFlag.IS_HEAD){
+                    if((receivedMsgList.get(i).getFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_HEAD){
                         byte state =  getVertexValue().getState();
                         state &= MessageFlag.HEAD_SHOULD_MERGE_CLEAR;
-                        state |= receivedMsgList.get(i).getFlag() & MessageFlag.HEAD_SHOULD_MERGE_MASK;
+                        byte dir = (byte)(receivedMsgList.get(i).getFlag() & MessageFlag.HEAD_SHOULD_MERGE_MASK);
+                        switch(receivedMsgList.get(i).getFlag() & MessageFlag.DIR_MASK){
+                            case MessageFlag.DIR_FF:
+                            case MessageFlag.DIR_RR:
+                                state |= dir;
+                                break;
+                            case MessageFlag.DIR_FR:
+                            case MessageFlag.DIR_RF:
+                                state |= revertHeadMergeDir(dir);
+                                break;    
+                        }
+                        
                         getVertexValue().setState(state);
                     }
                     processP2Merge(receivedMsgList.get(i));
@@ -409,7 +420,7 @@ public class P2ForPathMergeVertex extends
                         processFinalUpdate();
                         getVertexValue().setState(MessageFlag.IS_HALT);
                         voteToHalt();
-                    } else if(isFinalMergeMsg()){ // ex. 5
+                    } else if(isFinalMergeMsg()){ // ex. 4, 5
                         processP2Merge(incomingMsg);
                         getVertexValue().setState(State.IS_FINAL); // setFinalState();
                         getVertexValue().processFinalNode();
@@ -436,9 +447,9 @@ public class P2ForPathMergeVertex extends
             if(!isFakeVertex){
                 // head doesn't receive msg and send out final msg, ex. 2, 5
                 if(!msgIterator.hasNext() && isHeadNode()){
-                    outFlag |= MessageFlag.IS_FINAL;
-                    headSendUpdateMsg();
-                    outFlag = 0;
+//                    outFlag |= MessageFlag.IS_FINAL;
+//                    headSendUpdateMsg();
+//                    outFlag = 0;
                     outFlag |= MessageFlag.IS_FINAL;
                     headSendMergeMsg();
                     voteToHalt();
@@ -475,7 +486,13 @@ public class P2ForPathMergeVertex extends
                     } else if(isResponseKillMsg()){
                         responseToDeadVertex();
                         voteToHalt();
-                    } else if(isFinalUpdateMsg() || (incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD)){ // only old head update edges
+                    } 
+//                    else if(isFinalUpdateMsg()){ 
+//                        processFinalUpdate();
+//                        getVertexValue().setState(MessageFlag.IS_HALT);
+//                        voteToHalt();
+//                    } 
+                    else if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD){// only old head update edges
                         processUpdate();
                         voteToHalt();
                     } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
