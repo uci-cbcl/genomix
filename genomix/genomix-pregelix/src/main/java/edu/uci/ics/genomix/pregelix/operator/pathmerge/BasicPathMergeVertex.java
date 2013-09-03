@@ -159,7 +159,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             destVertexId.setAsCopy(kmerIterator.next());
             setPredecessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setFlip(ifFilpWithSuccessor(destVertexId));
+            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = getVertexValue().getRRList().getKeys();
@@ -167,7 +167,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             destVertexId.setAsCopy(kmerIterator.next());
             setPredecessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setFlip(ifFilpWithSuccessor(destVertexId));
+            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -182,7 +182,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             destVertexId.setAsCopy(kmerIterator.next());
             setSuccessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setFlip(ifFlipWithPredecessor(destVertexId));  
+            outgoingMsg.setFlip(ifFlipWithPredecessor(incomingMsg.getSourceVertexId()));  
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = getVertexValue().getFRList().getKeys();
@@ -190,7 +190,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             destVertexId.setAsCopy(kmerIterator.next());
             setSuccessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setFlip(ifFlipWithPredecessor(destVertexId));  
+            outgoingMsg.setFlip(ifFlipWithPredecessor(incomingMsg.getSourceVertexId()));  //destVertexId
             sendMsg(destVertexId, outgoingMsg);
         }
     }

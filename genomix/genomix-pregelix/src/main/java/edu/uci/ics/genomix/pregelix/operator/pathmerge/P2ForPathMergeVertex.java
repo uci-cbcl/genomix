@@ -352,9 +352,8 @@ public class P2ForPathMergeVertex extends
         } else if (getSuperstep() == 2){
             if(isFakeVertex)
                 voteToHalt();
-            else{
+            else
                 initState(msgIterator);
-            }
         } else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
                 // for processing final merge (1)
@@ -367,9 +366,12 @@ public class P2ForPathMergeVertex extends
                         // NON-FAKE and Final vertice send msg to FAKE vertex 
                         sendMsgToFakeVertex();
                         voteToHalt();
-                    } else if(isReceiveKillMsg()){
+                    } else if(isResponseKillMsg()){
                         responseToDeadVertex();
-                    }
+                    } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isHaltNode())){ // only old head update edges
+                        processUpdate();
+                        voteToHalt();
+                    } 
                 } else{ // processing general case 
                     if(isPathNode())
                         sendSettledMsgToAllNeighborNodes(getVertexValue());
@@ -424,11 +426,14 @@ public class P2ForPathMergeVertex extends
                         responseToDeadVertex();
                         voteToHalt();
                     } else if(isFinalMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
+                        sendUpdateMsg();
+                        outFlag = 0;
                         sendFinalMergeMsg();
                         voteToHalt();
                         break;
-                    } else if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD){ // only old head update edges
+                    } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isHaltNode())){ // only old head update edges
                         processUpdate();
+                        voteToHalt();
                     } else if(!incomingMsg.isUpdateMsg()){
                        receivedMsgList.add(new P2PathMergeMessageWritable(incomingMsg));
                     }

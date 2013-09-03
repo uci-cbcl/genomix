@@ -39,7 +39,7 @@ public class P2PathMergeOutputFormat extends
         public void writeVertex(Vertex<VKmerBytesWritable, P2VertexValueWritable, NullWritable, ?> vertex)
                 throws IOException, InterruptedException {
             byte selfFlag = (byte)(vertex.getVertexValue().getState() & State.VERTEX_MASK);
-            if(selfFlag == State.IS_FINAL)
+            if(vertex.getVertexValue().getState() == State.IS_HALT || selfFlag == State.IS_FINAL)
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().get());
             P2ForPathMergeVertex.fakeVertexExist = false;
         }
