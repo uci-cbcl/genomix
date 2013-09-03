@@ -107,7 +107,7 @@ public class GenomixDriver {
         System.out.println("Finished job Hadoop-Build-Graph");
         followingBuild = true;
         manager.stopCluster(ClusterType.HADOOP);
-        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop"));
+        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop") + "ms");
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.DRAW_STATISTICS)))
             DriverUtils.drawStatistics(conf, curOutput, new Path(curOutput).getName() + ".coverage.png");
     }
@@ -128,6 +128,9 @@ public class GenomixDriver {
     }
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
+        LOG.info("Starting Genomix Assembler Pipeline...");
+        GenomixJobConf.tick("runGenomix");
+        
         DriverUtils.updateCCProperties(conf);
         numCoresPerMachine = conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
         numMachines = conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r").length;  // split on newlines
@@ -237,7 +240,8 @@ public class GenomixDriver {
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
-
+        
+        LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
