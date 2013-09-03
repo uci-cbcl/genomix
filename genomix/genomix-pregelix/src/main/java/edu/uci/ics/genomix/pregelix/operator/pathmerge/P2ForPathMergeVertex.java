@@ -203,6 +203,19 @@ public class P2ForPathMergeVertex extends
         sendP2MergeMsgByIncomingMsgDir();
     }
     
+    public void headSendMergeMsg(){
+        outgoingMsg.reset();
+        outgoingMsg.setUpdateMsg(false);
+        switch(getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK){
+            case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
+                sendSettledMsgToAllPrevNodes(getVertexValue());
+                break;
+            case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
+                sendSettledMsgToAllNextNodes(getVertexValue());
+                break;
+        }
+    }
+    
     public void sendP2MergeMsgByIncomingMsgDir(){
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         switch(meToNeighborDir){
@@ -265,7 +278,7 @@ public class P2ForPathMergeVertex extends
      */
     public void sendFinalMergeMsg(){
         outFlag |= MessageFlag.IS_FINAL;
-        
+        outgoingMsg.setUpdateMsg(false);
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         switch(meToNeighborDir){
             case MessageFlag.DIR_FF:
@@ -337,8 +350,32 @@ public class P2ForPathMergeVertex extends
     /**
      * check if it is final msg
      */
-    public boolean isFinalMsg(){
-        return (byte)(getMsgFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_FINAL;
+    public boolean isFinalMergeMsg(){
+        return (byte)(getMsgFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_FINAL && !incomingMsg.isUpdateMsg();
+    }
+    
+    public boolean isFinalUpdateMsg(){
+        return (byte)(getMsgFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_FINAL && incomingMsg.isUpdateMsg();
+    }
+    
+    /**
+     * check if it is a valid update node
+     */
+    public boolean isValidUpateNode(){
+        byte meToNeighborDir = (byte)(incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        boolean flag = false;
+        switch(neighborToMeDir){
+            case MessageFlag.DIR_FF:
+            case MessageFlag.DIR_FR:
+                flag = (getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                break;
+            case MessageFlag.DIR_RF:
+            case MessageFlag.DIR_RR:
+                flag = (getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                break;
+        }
+        return isHeadNode() && flag;
     }
     
     @Override
@@ -359,7 +396,11 @@ public class P2ForPathMergeVertex extends
                 // for processing final merge (1)
                 if(msgIterator.hasNext()){
                     incomingMsg = msgIterator.next();
-                    if(isFinalMsg()){ // ex. 5
+                    if(isFinalUpdateMsg()){ // only old head update edges
+                        processFinalUpdate();
+                        getVertexValue().setState(MessageFlag.IS_HALT);
+                        voteToHalt();
+                    } else if(isFinalMergeMsg()){ // ex. 5
                         processP2Merge(incomingMsg);
                         getVertexValue().setState(State.IS_FINAL); // setFinalState();
                         getVertexValue().processFinalNode();
@@ -368,10 +409,8 @@ public class P2ForPathMergeVertex extends
                         voteToHalt();
                     } else if(isResponseKillMsg()){
                         responseToDeadVertex();
-                    } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isHaltNode())){ // only old head update edges
-                        processUpdate();
                         voteToHalt();
-                    } 
+                    }
                 } else{ // processing general case 
                     if(isPathNode())
                         sendSettledMsgToAllNeighborNodes(getVertexValue());
@@ -389,7 +428,11 @@ public class P2ForPathMergeVertex extends
                 // head doesn't receive msg and send out final msg, ex. 2, 5
                 if(!msgIterator.hasNext() && isHeadNode()){
                     outFlag |= MessageFlag.IS_FINAL;
-                    sendSettledMsgToAllNeighborNodes(getVertexValue());
+//                    sendSettledMsgToAllNeighborNodes(getVertexValue());
+                    headSendUpdateMsg();
+                    outFlag = 0;
+                    outFlag |= MessageFlag.IS_FINAL;
+                    headSendMergeMsg();
                     voteToHalt();
                 } else{
                     while (msgIterator.hasNext()) {
@@ -400,8 +443,7 @@ public class P2ForPathMergeVertex extends
                         }else if(isResponseKillMsg()){
                             responseToDeadVertex();
                             voteToHalt();
-                        }
-                        else{
+                        } else{
                             sendUpdateMsg();
                             outFlag = 0;
                             sendMergeMsg();
@@ -425,15 +467,15 @@ public class P2ForPathMergeVertex extends
                     } else if(isResponseKillMsg()){
                         responseToDeadVertex();
                         voteToHalt();
-                    } else if(isFinalMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
+                    } else if(isFinalUpdateMsg() || (incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD)){ // only old head update edges
+                        processUpdate();
+                        voteToHalt();
+                    } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
                         sendUpdateMsg();
                         outFlag = 0;
                         sendFinalMergeMsg();
                         voteToHalt();
                         break;
-                    } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isHaltNode())){ // only old head update edges
-                        processUpdate();
-                        voteToHalt();
                     } else if(!incomingMsg.isUpdateMsg()){
                        receivedMsgList.add(new P2PathMergeMessageWritable(incomingMsg));
                     }

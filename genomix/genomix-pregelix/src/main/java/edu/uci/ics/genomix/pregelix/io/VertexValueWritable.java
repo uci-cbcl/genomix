@@ -227,7 +227,12 @@ public class VertexValueWritable
      */
     public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
         byte replaceDir = mirrorDirection(deleteDir);
-        this.getNode().updateEdges(deleteDir, toDelete, updateDir, replaceDir, other);
+        this.getNode().updateEdges(deleteDir, toDelete, updateDir, replaceDir, other, true);
+    }
+    
+    public void processFinalUpdates(byte deleteDir, byte updateDir, NodeWritable other){
+        byte replaceDir = mirrorDirection(deleteDir);
+        this.getNode().updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
     }
     
     /**

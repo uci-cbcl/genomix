@@ -409,9 +409,21 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     /**
      * update my edge list
      */
-    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, byte replaceDir, NodeWritable other){
-        edges[deleteDir].remove(toDelete);
-        edges[updateDir].unionUpdate(other.edges[replaceDir]);
+    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, byte replaceDir, NodeWritable other, boolean applyDelete){
+        if(applyDelete)
+            edges[deleteDir].remove(toDelete);
+        switch (replaceDir) {
+            case DirectionFlag.DIR_FF:
+            case DirectionFlag.DIR_FR:
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+                break;
+            case DirectionFlag.DIR_RF:
+            case DirectionFlag.DIR_RR:
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+                break;
+        }
 //        switch (updateDir) {
 //            case DirectionFlag.DIR_FF:
 //                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);

@@ -44,6 +44,18 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     /**
+     * final updateAdjList
+     */
+    public void processFinalUpdate(){
+        inFlag = incomingMsg.getFlag();
+        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        
+        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
+        getVertexValue().processFinalUpdates(neighborToMeDir, neighborToMergeDir, incomingMsg.getNode());
+    }
+    
+    /**
      * merge and updateAdjList merge with one neighbor
      */
     public void processMerge(){
@@ -198,7 +210,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * send update message to neighber
      */
     public void broadcastUpdateMsg(){
-        if((getVertexValue().getState() & State.IS_HEAD) > 0)
+        if((getVertexValue().getState() & State.VERTEX_MASK) == State.IS_HEAD)
             outFlag |= MessageFlag.IS_HEAD;
         switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK){
             case State.SHOULD_MERGEWITHPREV:
@@ -255,6 +267,19 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR: 
                 sendUpdateMsgToSuccessor();
+                break;
+        }
+    }
+    
+    public void headSendUpdateMsg(){
+        outgoingMsg.reset();
+        outgoingMsg.setUpdateMsg(true);
+        switch(getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK){
+            case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
+                sendUpdateMsgToSuccessor();
+                break;
+            case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
+                sendUpdateMsgToPredecessor();
                 break;
         }
     }
