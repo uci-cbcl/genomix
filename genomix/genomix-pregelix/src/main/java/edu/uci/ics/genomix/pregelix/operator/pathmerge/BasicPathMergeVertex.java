@@ -251,6 +251,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         sendUpdateMsg(incomingMsg);
     }
     
+    public void sendFinalUpdateMsg(){
+        outFlag |= MessageFlag.IS_FINAL;
+        sendUpdateMsg(incomingMsg);
+    }
+    
     /**
      * send update message to neighber for P2
      */

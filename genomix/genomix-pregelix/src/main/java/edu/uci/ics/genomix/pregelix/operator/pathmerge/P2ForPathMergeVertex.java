@@ -388,14 +388,14 @@ public class P2ForPathMergeVertex extends
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                flag = (getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                flag = ((getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHPREV);
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
-                flag = (getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                flag = ((getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT);
                 break;
         }
-        return isHeadNode() && flag;
+        return isHaltNode() || (isHeadNode() && flag);
     }
     
     @Override
@@ -447,9 +447,6 @@ public class P2ForPathMergeVertex extends
             if(!isFakeVertex){
                 // head doesn't receive msg and send out final msg, ex. 2, 5
                 if(!msgIterator.hasNext() && isHeadNode()){
-//                    outFlag |= MessageFlag.IS_FINAL;
-//                    headSendUpdateMsg();
-//                    outFlag = 0;
                     outFlag |= MessageFlag.IS_FINAL;
                     headSendMergeMsg();
                     voteToHalt();
@@ -486,17 +483,11 @@ public class P2ForPathMergeVertex extends
                     } else if(isResponseKillMsg()){
                         responseToDeadVertex();
                         voteToHalt();
-                    } 
-//                    else if(isFinalUpdateMsg()){ 
-//                        processFinalUpdate();
-//                        getVertexValue().setState(MessageFlag.IS_HALT);
-//                        voteToHalt();
-//                    } 
-                    else if(incomingMsg.isUpdateMsg() && selfFlag == State.IS_OLDHEAD){// only old head update edges
+                    } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isValidUpateNode())){// only old head update edges
                         processUpdate();
                         voteToHalt();
                     } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
-                        sendUpdateMsg();
+                        sendFinalUpdateMsg();
                         outFlag = 0;
                         sendFinalMergeMsg();
                         voteToHalt();
