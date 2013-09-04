@@ -26,6 +26,7 @@ public class TestSet {
     public final String SPLITREPEAT = "splitrepeat";
     public final String BRIDGE = "bridge";
     public final String RANDOM = "random";
+    public final String SINGLEREAD = "singleread";
     
     public final String[] SRSET = { "HighSplitRepeat", "MidSplitRepeat", "LowSplitRepeat" };
     public final String[] TIPSET = { "Tips1", "Tips2", "Tips3", "Tips4" };
@@ -36,7 +37,8 @@ public class TestSet {
         BUBBLE,
         SPLITREPEAT,
         BRIDGE,
-        RANDOM
+        RANDOM,
+        SINGLEREAD
     }
 
     private DirType testSet;
@@ -61,6 +63,8 @@ public class TestSet {
                 break;
             case RANDOM:
                 testSet = patternType.RANDOM;
+            case SINGLEREAD:
+                testSet = patternType.SINGLEREAD;
         }
     }
 
@@ -102,6 +106,8 @@ public class TestSet {
                 break;
             case RANDOM:
                 return detectAllTestSet(PREFIX + RANDOM);
+            case SINGLEREAD:
+                return detectAllTestSet(PREFIX + SINGLEREAD);
         }
         return null;
     }
@@ -111,10 +117,10 @@ public class TestSet {
         String[] output = new String[src.listFiles().length - 1];
         int i = 0;
         for (File f : src.listFiles()) {
-            if (!f.getName().contains(".DS_Store"))
+            if (!f.getName().contains(".DS_Store")){
                 output[i++] = f.getPath().toString();
+            }
         }
-        System.out.println(output.length);
         return output;
     }
 }
