@@ -81,10 +81,9 @@ public class GenomixDriver {
         GenomixJobConf.tick("buildGraphWithHyracks");
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(
-                runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS),
-                runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
-                        numCoresPerMachine);
+        String hyracksIP = runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS);
+        int hyracksPort = runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT));
+        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(hyracksIP, hyracksPort, numCoresPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
         manager.stopCluster(ClusterType.HYRACKS);
@@ -130,7 +129,7 @@ public class GenomixDriver {
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
         LOG.info("Starting Genomix Assembler Pipeline...");
         GenomixJobConf.tick("runGenomix");
-        
+
         DriverUtils.updateCCProperties(conf);
         numCoresPerMachine = conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
         numMachines = conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r").length;  // split on newlines
@@ -214,17 +213,16 @@ public class GenomixDriver {
         if (pregelixJobs.size() > 0) {
             manager.startCluster(ClusterType.PREGELIX);
             pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
+            String pregelixIP = runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS);
+            int pregelixPort = runLocal ? GenomixClusterManager.LOCAL_PREGELIX_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT));
             // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
             // this would let them resume at arbitrary points of the pipeline
             if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
                 for (int i = 0; i < pregelixJobs.size(); i++) {
                     LOG.info("Starting job " + pregelixJobs.get(i).getJobName());
                     GenomixJobConf.tick("pregelix-job");
-                    
-                    pregelixDriver.runJob(pregelixJobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
-                            Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-                    
                     LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
+                    pregelixDriver.runJob(pregelixJobs.get(i), pregelixIP, pregelixPort);
                 }
             } else {
                 LOG.info("Starting pregelix job series...");

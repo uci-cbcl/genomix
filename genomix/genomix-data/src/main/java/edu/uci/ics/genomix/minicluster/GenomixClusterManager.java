@@ -115,11 +115,11 @@ public class GenomixClusterManager {
             case HYRACKS:
                 if (runLocal) {
                     if (localHyracksCC != null) {
-//                        localHyracksCC.stop();
+                        localHyracksCC.stop();
                         localHyracksCC = null;
                     }
                     if (localHyracksNC != null) {
-//                        localHyracksNC.stop();
+                        localHyracksNC.stop();
                         localHyracksNC = null;
                     }
                 } else {
@@ -130,11 +130,11 @@ public class GenomixClusterManager {
             case PREGELIX:
                 if (runLocal) {
                     if (localPregelixCC != null) {
-//                        localPregelixCC.stop();
+                        localPregelixCC.stop();
                         localPregelixCC = null;
                     }
                     if (localPregelixNC != null) {
-//                        localPregelixNC.stop();
+                        localPregelixNC.stop();
                         localPregelixNC = null;
 
                     }
@@ -193,7 +193,7 @@ public class GenomixClusterManager {
         ncConfig.dataIPAddress = LOCAL_IP;
         ncConfig.datasetIPAddress = LOCAL_IP;
         ncConfig.nodeId = "nc-" + clusterType;
-        ncConfig.ioDevices = "tmp" + File.separator + "t3";
+        ncConfig.ioDevices = "tmp" + File.separator + "t3" + File.separator + clusterType;
 
         if (clusterType == ClusterType.HYRACKS) {
             ncConfig.ccPort = LOCAL_HYRACKS_CC_PORT;
