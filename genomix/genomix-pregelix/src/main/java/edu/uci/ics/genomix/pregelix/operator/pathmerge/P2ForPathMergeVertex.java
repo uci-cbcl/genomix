@@ -5,8 +5,10 @@ import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.io.KmerAndDirWritable;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
@@ -188,6 +190,7 @@ public class P2ForPathMergeVertex extends
     public void sendMergeMsg(){
         outgoingMsg.reset();
         outgoingMsg.setUpdateMsg(false);
+        outgoingMsg.setApexMap(getVertexValue().getApexMap());
         if(selfFlag == State.IS_HEAD){
             byte state = getVertexValue().getState(); 
             state &= State.VERTEX_CLEAR;
@@ -272,6 +275,7 @@ public class P2ForPathMergeVertex extends
         
         getVertexValue().getMergeNode(msg.getMessageType()).mergeWithNode(neighborToMeDir, msg.getNode());
         getVertexValue().getNode().mergeWithNodeWithoutKmer(neighborToMeDir, msg.getNode());
+        getVertexValue().setApexMap(msg.getApexMap());
     }
     
     /**
@@ -280,6 +284,7 @@ public class P2ForPathMergeVertex extends
     public void sendFinalMergeMsg(){
         outFlag |= MessageFlag.IS_FINAL;
         outgoingMsg.setUpdateMsg(false);
+        outgoingMsg.setApexMap(getVertexValue().getApexMap());
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
         switch(meToNeighborDir){
             case MessageFlag.DIR_FF:
@@ -331,7 +336,7 @@ public class P2ForPathMergeVertex extends
                 sendMsgToFakeVertex();
                 voteToHalt();
                 break;
-            case MessageType.OneMsgFromHeadAndOneFromNonHead:
+            case MessageType.OneMsgFromHeadAndOneFromNonHead: //ex. 6
                 for(int i = 0; i < 2; i++){
                     //set head should merge dir in state
                     if((receivedMsgList.get(i).getFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_HEAD){
@@ -398,6 +403,39 @@ public class P2ForPathMergeVertex extends
         return isHaltNode() || (isHeadNode() && flag);
     }
     
+    /**
+     * initiate head, rear and path node for P2
+     */
+    public void initStateForP2(Iterator<P2PathMergeMessageWritable> msgIterator) {
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if(isHaltNode())
+                voteToHalt();
+            else if(getHeadFlag() != MessageFlag.IS_HEAD && !isTandemRepeat()){
+                if(isValidPath()){
+                    setHeadMergeDir();
+                    //set deleteKmer and deleteDir
+                    KmerAndDirWritable kmerAndDir = new KmerAndDirWritable();
+                    kmerAndDir.setDeleteDir((byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK));
+                    kmerAndDir.setDeleteKmer(getVertexId());
+                    HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>();
+                    apexMap.put(new VKmerBytesWritable(incomingMsg.getSourceVertexId()), kmerAndDir);
+                    getVertexValue().setApexMap(apexMap);
+                    activate();
+                } else{
+                    getVertexValue().setState(MessageFlag.IS_HALT);
+                    voteToHalt();
+                }
+            } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
+                activate();
+            } else{ /** already set up **/
+                /** if headMergeDir are not the same **/
+                getVertexValue().setState(MessageFlag.IS_HALT);
+                voteToHalt();
+            }
+        }
+    }
+    
     @Override
     public void compute(Iterator<P2PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -420,14 +458,14 @@ public class P2ForPathMergeVertex extends
                     if(!isHeadNode())
                         voteToHalt();
                 } else{
-                 // for processing final merge (1)
+                    // for processing final merge (1)
                     while(msgIterator.hasNext()){
                         incomingMsg = msgIterator.next();
-//                        if(isFinalUpdateMsg()){ // only old head update edges
-//                            processFinalUpdate();
-//                            getVertexValue().setState(MessageFlag.IS_HALT);
-//                            voteToHalt();
-//                        } else 
+                        if(isFinalUpdateMsg()){ // only old head update edges
+                            processFinalUpdate();
+                            getVertexValue().setState(MessageFlag.IS_HALT);
+                            voteToHalt();
+                        } else 
                         if(isFinalMergeMsg()){ // ex. 4, 5
                             processP2Merge(incomingMsg);
                             getVertexValue().setState(State.IS_FINAL); // setFinalState();
@@ -492,8 +530,6 @@ public class P2ForPathMergeVertex extends
                             processUpdate();
                         voteToHalt();
                     } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
-//                        sendFinalUpdateMsg();
-//                        outFlag = 0;
                         sendFinalMergeMsg();
                         voteToHalt();
                         break;

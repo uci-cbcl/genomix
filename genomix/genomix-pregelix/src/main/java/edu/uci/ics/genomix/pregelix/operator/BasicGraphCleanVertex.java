@@ -805,29 +805,4 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         }
     }
     
-    /**
-     * initiate head, rear and path node for P2
-     */
-    public void initStateForP2(Iterator<M> msgIterator) {
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            if(isHaltNode())
-                voteToHalt();
-            else if(getHeadFlag() != MessageFlag.IS_HEAD && !isTandemRepeat()){
-                if(isValidPath()){
-                    setHeadMergeDir();
-                    activate();
-                } else{
-                    getVertexValue().setState(MessageFlag.IS_HALT);
-                    voteToHalt();
-                }
-            } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
-                activate();
-            } else{ /** already set up **/
-                /** if headMergeDir are not the same **/
-                getVertexValue().setState(MessageFlag.IS_HALT);
-                voteToHalt();
-            }
-        }
-    }
 }
