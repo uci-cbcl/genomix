@@ -25,8 +25,12 @@ public class FrameSizePressureTest {
         test.cleanDiskFile();
         test.generateString();
         test.writeToDisk();
-        String[] fsPressureArgs = { "-kmerLength", String.valueOf(options.kmerLength), "-coresPerMachine",
-                String.valueOf(options.coresPerMachine), "-saveIntermediateResults", "true", "-localInput",
+        System.out.println(System.getProperty("java.class.path"));
+        System.out.println(System.getenv("HADOOP_HOME"));
+        System.out.println(System.getenv("JAVA_HOME"));
+        String[] fsPressureArgs = { "-kmerLength", String.valueOf(options.kmerLength), 
+//                "-coresPerMachine", String.valueOf(options.coresPerMachine), 
+                "-saveIntermediateResults", "true", "-localInput",
                 test.getTestDir(), "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
         GenomixDriver.main(fsPressureArgs);
     }
