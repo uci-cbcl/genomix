@@ -437,6 +437,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         }
         getVertexValue().setState(state);
     }
+    
     /**
      * initiate head, rear and path node
      */
@@ -762,5 +763,71 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         job.setOutputValueClass(VertexValueWritable.class);
         job.setDynamicVertexValueSize(true);
         return job;
+    }
+    
+    /**
+     * start sending message for P2
+     */
+    public void startSendMsgForP2() {
+        if(isTandemRepeat()){
+            tmpValue.setAsCopy(getVertexValue());
+            tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+            outFlag = 0;
+            outFlag |= MessageFlag.IS_HEAD;
+            sendSettledMsgToAllNeighborNodes(tmpValue);
+        } else{
+            if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue()) && getVertexValue().outDegree() == 0){
+                outFlag = 0;
+                outFlag |= MessageFlag.IS_HEAD;
+                outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                getVertexValue().setState(outFlag);
+                activate();
+            }
+            if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue()) && getVertexValue().inDegree() == 0){
+                outFlag = 0;
+                outFlag |= MessageFlag.IS_HEAD;
+                outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                getVertexValue().setState(outFlag);
+                activate();
+            }
+            if(getVertexValue().inDegree() > 1 || getVertexValue().outDegree() > 1){
+                outFlag = 0;
+                outFlag |= MessageFlag.IS_HEAD;
+                sendSettledMsgToAllNeighborNodes(getVertexValue());
+                getVertexValue().setState(MessageFlag.IS_HALT);
+                voteToHalt();
+            }
+        }
+        if(!VertexUtil.isActiveVertex(getVertexValue())
+                || isTandemRepeat()){
+            getVertexValue().setState(MessageFlag.IS_HALT);
+            voteToHalt();
+        }
+    }
+    
+    /**
+     * initiate head, rear and path node for P2
+     */
+    public void initStateForP2(Iterator<M> msgIterator) {
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if(isHaltNode())
+                voteToHalt();
+            else if(getHeadFlag() != MessageFlag.IS_HEAD && !isTandemRepeat()){
+                if(isValidPath()){
+                    setHeadMergeDir();
+                    activate();
+                } else{
+                    getVertexValue().setState(MessageFlag.IS_HALT);
+                    voteToHalt();
+                }
+            } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
+                activate();
+            } else{ /** already set up **/
+                /** if headMergeDir are not the same **/
+                getVertexValue().setState(MessageFlag.IS_HALT);
+                voteToHalt();
+            }
+        }
     }
 }

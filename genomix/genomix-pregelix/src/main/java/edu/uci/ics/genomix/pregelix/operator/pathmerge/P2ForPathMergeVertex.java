@@ -405,37 +405,40 @@ public class P2ForPathMergeVertex extends
             addFakeVertex();
             // initiate prependMergeNode and appendMergeNode
             initPrependAndAppendMergeNode();
-            startSendMsg();
+            startSendMsgForP2();
         } else if (getSuperstep() == 2){
             if(isFakeVertex)
                 voteToHalt();
             else
-                initState(msgIterator);
+                initStateForP2(msgIterator);
         } else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex){
-                // for processing final merge (1)
-                if(msgIterator.hasNext()){
-                    incomingMsg = msgIterator.next();
-                    if(isFinalUpdateMsg()){ // only old head update edges
-                        processFinalUpdate();
-                        getVertexValue().setState(MessageFlag.IS_HALT);
-                        voteToHalt();
-                    } else if(isFinalMergeMsg()){ // ex. 4, 5
-                        processP2Merge(incomingMsg);
-                        getVertexValue().setState(State.IS_FINAL); // setFinalState();
-                        getVertexValue().processFinalNode();
-                        // NON-FAKE and Final vertice send msg to FAKE vertex 
-                        sendMsgToFakeVertex();
-                        voteToHalt();
-                    } else if(isResponseKillMsg()){
-                        responseToDeadVertex();
-                        voteToHalt();
-                    }
-                } else{ // processing general case 
+                if(!msgIterator.hasNext()){
+                    // processing general case 
                     if(isPathNode())
                         sendSettledMsgToAllNeighborNodes(getVertexValue());
                     if(!isHeadNode())
                         voteToHalt();
+                } else{
+                 // for processing final merge (1)
+                    while(msgIterator.hasNext()){
+                        incomingMsg = msgIterator.next();
+                        if(isFinalUpdateMsg()){ // only old head update edges
+                            processFinalUpdate();
+                            getVertexValue().setState(MessageFlag.IS_HALT);
+                            voteToHalt();
+                        } else if(isFinalMergeMsg()){ // ex. 4, 5
+                            processP2Merge(incomingMsg);
+                            getVertexValue().setState(State.IS_FINAL); // setFinalState();
+                            getVertexValue().processFinalNode();
+                            // NON-FAKE and Final vertice send msg to FAKE vertex 
+                            sendMsgToFakeVertex();
+                            voteToHalt();
+                        } else if(isResponseKillMsg()){
+                            responseToDeadVertex();
+                            voteToHalt();
+                        }
+                    }  
                 }
             }
             else{
