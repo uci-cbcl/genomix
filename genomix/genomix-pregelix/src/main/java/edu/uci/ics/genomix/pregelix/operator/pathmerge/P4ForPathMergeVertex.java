@@ -143,10 +143,10 @@ public class P4ForPathMergeVertex extends
                 if (curHead) {
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
-                		sendUpdateMsgToPredecessor(); 
+                		sendUpdateMsgToPredecessor(true); 
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
-                        sendUpdateMsgToSuccessor();
+                        sendUpdateMsgToSuccessor(true);
                     } 
                 }
                 else {
@@ -155,19 +155,19 @@ public class P4ForPathMergeVertex extends
                          if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
-                            sendUpdateMsgToPredecessor();
+                            sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasPrev) {
                         // no previous node
                         if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                             // merge towards tail in forward dir
-                            sendUpdateMsgToPredecessor();
+                            sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasNext) {
                         // no next node
                         if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                             // merge towards tail in reverse dir
-                            sendUpdateMsgToSuccessor();
+                            sendUpdateMsgToSuccessor(true);
                         }
                     }
                 }
