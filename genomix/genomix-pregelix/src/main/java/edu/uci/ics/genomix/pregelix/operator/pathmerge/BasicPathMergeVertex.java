@@ -8,6 +8,7 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
@@ -53,6 +54,20 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         
         byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
         getVertexValue().processFinalUpdates(neighborToMeDir, neighborToMergeDir, incomingMsg.getNode());
+    }
+    
+    /**
+     * final updateAdjList
+     */
+    public void processFinalUpdate2(){
+        inFlag = incomingMsg.getFlag();
+        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        
+        EdgeWritable edge = new EdgeWritable();
+        edge.setKey(incomingMsg.getSourceVertexId());
+        edge.setReadIDs(incomingMsg.getNode().getEdgeList(meToNeighborDir).getReadIDs(getVertexId()));
+        getVertexValue().getEdgeList(neighborToMeDir).add(edge);
     }
     
     /**

@@ -88,7 +88,7 @@ public class P2VertexValueWritable extends VertexValueWritable{
     }
 
     public void setApexMap(HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap) {
-        this.apexMap = apexMap;
+        this.apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>(apexMap);
     }
 
     @Override

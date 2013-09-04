@@ -47,6 +47,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     }
     
     public void sendMsgToFakeVertex(){
+        outgoingMsg.reset();
         if(!getVertexValue().isFakeVertex()){
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());

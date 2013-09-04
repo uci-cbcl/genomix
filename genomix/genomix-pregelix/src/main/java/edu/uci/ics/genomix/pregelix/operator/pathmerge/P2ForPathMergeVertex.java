@@ -275,7 +275,7 @@ public class P2ForPathMergeVertex extends
         
         getVertexValue().getMergeNode(msg.getMessageType()).mergeWithNode(neighborToMeDir, msg.getNode());
         getVertexValue().getNode().mergeWithNodeWithoutKmer(neighborToMeDir, msg.getNode());
-        getVertexValue().setApexMap(msg.getApexMap());
+        getVertexValue().getApexMap().putAll(msg.getApexMap());
     }
     
     /**
@@ -320,6 +320,16 @@ public class P2ForPathMergeVertex extends
     }
     
     /**
+     * send updateMsg to apex
+     */
+    public void sendUpdateMsgToApex(){
+        outgoingMsg.setUpdateApexEdges(true);
+        outgoingMsg.setApexMap(getVertexValue().getApexMap());
+        outgoingMsg.setNode(getVertexValue().getNode());
+        sendSettledMsgToAllNeighborNodes(getVertexValue());
+    }
+    
+    /**
      * head vertex process merge
      */
     public void processMergeInHeadVertex(){
@@ -332,6 +342,8 @@ public class P2ForPathMergeVertex extends
                     processP2Merge(receivedMsgList.get(i));
                 getVertexValue().setState(State.IS_FINAL);
                 getVertexValue().processFinalNode();
+                //send updateMsg to apex
+                sendUpdateMsgToApex();
                 // NON-FAKE and Final vertice send msg to FAKE vertex 
                 sendMsgToFakeVertex();
                 voteToHalt();
@@ -436,6 +448,18 @@ public class P2ForPathMergeVertex extends
         }
     }
     
+    /**
+     * update apex's edges
+     */
+    public void updateApexEdges(){
+        KmerAndDirWritable deleteEdge = incomingMsg.getApexMap().get(getVertexId());
+        if(deleteEdge != null && getVertexValue().getEdgeList(deleteEdge.getDeleteDir()).contains(deleteEdge.getDeleteKmer())) //avoid to delete twice
+            getVertexValue().getEdgeList(deleteEdge.getDeleteDir()).remove(deleteEdge.getDeleteKmer());
+        processFinalUpdate2();
+        getVertexValue().setState(MessageFlag.IS_HALT);
+        voteToHalt();
+    }
+    
     @Override
     public void compute(Iterator<P2PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -461,21 +485,28 @@ public class P2ForPathMergeVertex extends
                     // for processing final merge (1)
                     while(msgIterator.hasNext()){
                         incomingMsg = msgIterator.next();
-                        if(isFinalUpdateMsg()){ // only old head update edges
-                            processFinalUpdate();
-                            getVertexValue().setState(MessageFlag.IS_HALT);
-                            voteToHalt();
-                        } else 
-                        if(isFinalMergeMsg()){ // ex. 4, 5
-                            processP2Merge(incomingMsg);
-                            getVertexValue().setState(State.IS_FINAL); // setFinalState();
-                            getVertexValue().processFinalNode();
-                            // NON-FAKE and Final vertice send msg to FAKE vertex 
-                            sendMsgToFakeVertex();
-                            voteToHalt();
-                        } else if(isResponseKillMsg()){
-                            responseToDeadVertex();
-                            voteToHalt();
+                        if(incomingMsg.isUpdateApexEdges()){
+                            //update edges in apex
+                            updateApexEdges();
+                        } else{
+//                            if(isFinalUpdateMsg()){ // only old head update edges
+//                                processFinalUpdate();
+//                                getVertexValue().setState(MessageFlag.IS_HALT);
+//                                voteToHalt();
+//                            } else 
+                            if(isFinalMergeMsg()){ // ex. 4, 5
+                                processP2Merge(incomingMsg);
+                                getVertexValue().setState(State.IS_FINAL); // setFinalState();
+                                getVertexValue().processFinalNode();
+                                //send updateMsg to apex
+                                sendUpdateMsgToApex();
+                                // NON-FAKE and Final vertice send msg to FAKE vertex 
+                                sendMsgToFakeVertex();
+                                voteToHalt();
+                            } else if(isResponseKillMsg()){
+                                responseToDeadVertex();
+                                voteToHalt();
+                            }
                         }
                     }  
                 }
@@ -495,17 +526,22 @@ public class P2ForPathMergeVertex extends
                 } else{
                     while (msgIterator.hasNext()) {
                         incomingMsg = msgIterator.next();
-                        // final Vertex Responses To FakeVertex
-                        if(isReceiveKillMsg()){
-                            broadcaseKillself();
-                        }else if(isResponseKillMsg()){
-                            responseToDeadVertex();
-                            voteToHalt();
+                        if(incomingMsg.isUpdateApexEdges()){
+                            //update edges in apex
+                            updateApexEdges();
                         } else{
-                            sendUpdateMsg();
-                            outFlag = 0;
-                            sendMergeMsg();
-                            voteToHalt();
+                            // final Vertex Responses To FakeVertex
+                            if(isReceiveKillMsg()){
+                                broadcaseKillself();
+                            }else if(isResponseKillMsg()){
+                                responseToDeadVertex();
+                                voteToHalt();
+                            } else{
+                                sendUpdateMsg();
+                                outFlag = 0;
+                                sendMergeMsg();
+                                voteToHalt();
+                            }
                         }
                     }
                 }

@@ -58,7 +58,7 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
     }
 
     public void setApexMap(HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap) {
-        this.apexMap = apexMap;
+        this.apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>(apexMap);
     }
     
     public boolean isUpdateApexEdges() {
