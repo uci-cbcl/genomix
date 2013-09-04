@@ -79,6 +79,11 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
         private boolean followsGraphBuild = false;
         
+        @Option(name = "-clusterWaitTime", usage = "the amount of time (in ms) to wait between starting/stopping CC/NC", required = false)
+        private int clusterWaitTime = -1;
+        
+        @Option(name = "-drawStatistics", usage = "Plot coverage statistics after graphbuilding stages", required = false)
+        private boolean drawStatistics = false;
 
         // Graph cleaning
         @Option(name = "-bridgeRemove_maxLength", usage = "Nodes with length <= bridgeRemoveLength that bridge separate paths are removed from the graph", required = false)
@@ -115,9 +120,6 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
         private boolean profile = false;
         
-        @Option(name = "-coresPerMachine", usage="the number of cores available in each machine", required=false)
-        private int coresPerMachine = -1;
-        
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
@@ -143,7 +145,6 @@ public class GenomixJobConf extends JobConf {
         TIP_REMOVE,
         SCAFFOLD,
         SPLIT_REPEAT,
-        STATS,
         DUMP_FASTA;
         
         /**
@@ -176,6 +177,8 @@ public class GenomixJobConf extends JobConf {
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
     public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
+    public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
+    public static final String DRAW_STATISTICS = "genomix.draw.statistics";
     
     // Graph cleaning
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -194,31 +197,11 @@ public class GenomixJobConf extends JobConf {
     public static final String RUN_LOCAL = "genomix.runLocal";
 
     // TODO should these also be command line options?
-    public static final String CORES_PER_MACHINE = "genomix.driver.duplicate.num";
     public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
-    public static final String TABLE_SIZE = "genomix.tablesize";
     public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
     public static final String OUTPUT_FORMAT = "genomix.graph.output";
 
-    /** Configurations used by hybrid groupby function in graph build phrase */
-    public static final String GROUPBY_HYBRID_INPUTSIZE = "genomix.graph.groupby.hybrid.inputsize";
-    public static final String GROUPBY_HYBRID_INPUTKEYS = "genomix.graph.groupby.hybrid.inputkeys";
-    public static final String GROUPBY_HYBRID_RECORDSIZE_SINGLE = "genomix.graph.groupby.hybrid.recordsize.single";
-    public static final String GROUPBY_HYBRID_RECORDSIZE_CROSS = "genomix.graph.groupby.hybrid.recordsize.cross";
-    public static final String GROUPBY_HYBRID_HASHLEVEL = "genomix.graph.groupby.hybrid.hashlevel";
-
-    public static final int DEFAULT_FRAME_SIZE = 65536;
-    public static final int DEFAULT_FRAME_LIMIT = 65536;
-    public static final int DEFAULT_TABLE_SIZE = 10485767;
-    public static final long DEFAULT_GROUPBY_HYBRID_INPUTSIZE = 154000000L;
-    public static final long DEFAULT_GROUPBY_HYBRID_INPUTKEYS = 38500000L;
-    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_SINGLE = 9;
-    public static final int DEFAULT_GROUPBY_HYBRID_HASHLEVEL = 1;
-    public static final int DEFAULT_GROUPBY_HYBRID_RECORDSIZE_CROSS = 13;
-
-    public static final String GROUPBY_TYPE_HYBRID = "hybrid";
-    public static final String GROUPBY_TYPE_EXTERNAL = "external";
     public static final String GROUPBY_TYPE_PRECLUSTER = "precluster";
     
     public static final String JOB_PLAN_GRAPHBUILD = "graphbuild";
@@ -227,14 +210,19 @@ public class GenomixJobConf extends JobConf {
     public static final String OUTPUT_FORMAT_BINARY = "genomix.outputformat.binary";
     public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
+    public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
+    public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
+    
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = {
                     Patterns.BUILD, Patterns.MERGE, 
                     Patterns.LOW_COVERAGE, Patterns.MERGE,
                     Patterns.TIP_REMOVE, Patterns.MERGE,
-//                    Patterns.BUBBLE, Patterns.MERGE,
-//                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
-//                    Patterns.SCAFFOLD, Patterns.MERGE
+                    Patterns.BUBBLE, Patterns.MERGE,
+                    Patterns.SPLIT_REPEAT, Patterns.MERGE,
+                    Patterns.SCAFFOLD, Patterns.MERGE
             };
+    
+    
     
     
     private String[] extraArguments = {};
@@ -355,10 +343,13 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, "genomix_out");  // should be in the user's home directory? 
         
         // hyracks-specific
-        if (getInt(CORES_PER_MACHINE, -1) == -1)
-            setInt(CORES_PER_MACHINE, 4);
-        if (getInt(FRAME_SIZE, -1) == -1)
-            setInt(FRAME_SIZE, DEFAULT_FRAME_SIZE);
+        if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
+            setInt(CLUSTER_WAIT_TIME, 6000);
+        
+        if (getBoolean(DRAW_STATISTICS, false))
+            setBoolean(DRAW_STATISTICS, true);
+        else
+            setBoolean(DRAW_STATISTICS, false);
         
 //        if (getBoolean(RUN_LOCAL, false)) {
 //            // override any other settings for HOST and PORT
@@ -389,12 +380,9 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
         setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
+        setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
+        setBoolean(DRAW_STATISTICS, opts.drawStatistics);
             
-
-//        if (opts.runLocal && (opts.ipAddress != null || opts.port != -1))
-//            throw new IllegalArgumentException("Option -runLocal cannot be set at the same time as -port or -ip! (-runLocal starts a cluster; -ip and -port specify an existing cluster)");
-        if (opts.runLocal)
-            throw new IllegalArgumentException("runLocal is currently unsupported!");
         setBoolean(RUN_LOCAL, opts.runLocal);
         
         // Hyracks/Pregelix Setup
@@ -402,7 +390,6 @@ public class GenomixJobConf extends JobConf {
             set(IP_ADDRESS, opts.ipAddress);
         setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
-        setInt(CORES_PER_MACHINE, opts.coresPerMachine);
         
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);

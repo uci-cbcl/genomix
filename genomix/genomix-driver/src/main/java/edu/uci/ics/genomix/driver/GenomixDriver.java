@@ -35,9 +35,10 @@ import org.kohsuke.args4j.CmdLineException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
-import edu.uci.ics.genomix.driver.DriverUtils.NCTypes;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
-import edu.uci.ics.genomix.minicluster.GenomixMiniCluster;
+import edu.uci.ics.genomix.minicluster.DriverUtils;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
@@ -64,43 +65,51 @@ public class GenomixDriver {
     private String prevOutput;
     private String curOutput;
     private int stepNum;
-    private List<PregelixJob> jobs;
+    private List<PregelixJob> pregelixJobs;
     private boolean followingBuild = false; // need to adapt the graph immediately after building
+    private boolean runLocal;
+    private int numCoresPerMachine;
+    private int numMachines;
 
+    private GenomixClusterManager manager;
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
 
-    private void buildGraphWithHyracks(GenomixJobConf conf) throws NumberFormatException, IOException {
-        DriverUtils.shutdownNCs();
-        DriverUtils.shutdownCC();
-        DriverUtils.startCC();
-        DriverUtils.startNCs(NCTypes.HYRACKS);
+    private void buildGraphWithHyracks(GenomixJobConf conf) throws Exception {
         LOG.info("Building Graph using Hyracks...");
+        manager.startCluster(ClusterType.HYRACKS);
         GenomixJobConf.tick("buildGraphWithHyracks");
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(conf.get(GenomixJobConf.IP_ADDRESS),
-                Integer.parseInt(conf.get(GenomixJobConf.PORT)), Integer.parseInt(conf
-                        .get(GenomixJobConf.CORES_PER_MACHINE)));
+        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(
+                runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS),
+                runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT)), 
+                        numCoresPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
+        manager.stopCluster(ClusterType.HYRACKS);
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.DRAW_STATISTICS)))
+            DriverUtils.drawStatistics(conf, curOutput, new Path(curOutput).getName() + ".coverage.png");
     }
 
-    private void buildGraphWithHadoop(GenomixJobConf conf) throws IOException {
+    private void buildGraphWithHadoop(GenomixJobConf conf) throws Exception {
         LOG.info("Building Graph using Hadoop...");
+        manager.startCluster(ClusterType.HADOOP);
         GenomixJobConf.tick("buildGraphWithHadoop");
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
         conf.writeXml(confOutput);
         confOutput.close();
-        // TODO copy the jars up to DFS
         edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
-        hadoopDriver.run(prevOutput, curOutput, Integer.parseInt(conf.get(GenomixJobConf.CORES_PER_MACHINE)),
+        hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine * numMachines,
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, HADOOP_CONF);
         FileUtils.deleteQuietly(new File(HADOOP_CONF));
         System.out.println("Finished job Hadoop-Build-Graph");
         followingBuild = true;
-        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop"));
+        manager.stopCluster(ClusterType.HADOOP);
+        LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop") + "ms");
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.DRAW_STATISTICS)))
+            DriverUtils.drawStatistics(conf, curOutput, new Path(curOutput).getName() + ".coverage.png");
     }
 
     @SuppressWarnings("deprecation")
@@ -114,27 +123,30 @@ public class GenomixDriver {
     private void addJob(PregelixJob job) {
         if (followingBuild)
             job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        jobs.add(job);
+        pregelixJobs.add(job);
         followingBuild = false;
     }
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
+        LOG.info("Starting Genomix Assembler Pipeline...");
+        GenomixJobConf.tick("runGenomix");
+        
         DriverUtils.updateCCProperties(conf);
+        numCoresPerMachine = conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
+        numMachines = conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r").length;  // split on newlines
         GenomixJobConf.setGlobalStaticConstants(conf);
         followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
-        jobs = new ArrayList<PregelixJob>();
+        pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
-        boolean dump = false;
-        final boolean runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
-        if (runLocal)
-            GenomixMiniCluster.init(conf);
-        DriverUtils.addClusterShutdownHook(runLocal); // *always* shut down any CCs or NCs we start
+        runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        manager = new GenomixClusterManager(runLocal, conf);
+        manager.stopCluster(ClusterType.HYRACKS); // shut down any existing NCs and CCs
 
         String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
         if (localInput != null) {
             conf.set(GenomixJobConf.INITIAL_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
                     + "00-initial-input-from-genomix-driver");
-            DriverUtils.copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
+            GenomixClusterManager.copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
         }
         curOutput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
 
@@ -193,53 +205,49 @@ public class GenomixDriver {
                     setOutput(conf, Patterns.SCAFFOLD);
                     addJob(ScaffoldingVertex.getConfiguredJob(conf, ScaffoldingVertex.class));
                     break;
-                case STATS:
-                    DriverUtils.drawStatistics(conf, curOutput, "coverage.png");
-                    break;
                 case DUMP_FASTA:
-                    dump = true;
+                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
                     break;
             }
         }
 
-        if (jobs.size() > 0) {
-            DriverUtils.shutdownNCs();
-            DriverUtils.shutdownCC();
-            DriverUtils.startCC();
-            DriverUtils.startNCs(NCTypes.PREGELIX);
+        if (pregelixJobs.size() > 0) {
+            manager.startCluster(ClusterType.PREGELIX);
             pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
-        }
-        // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
-        // this would let them resume at arbitrary points of the pipeline
-        if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
-            for (int i = 0; i < jobs.size(); i++) {
-                LOG.info("Starting job " + jobs.get(i).getJobName());
-                GenomixJobConf.tick("pregelix-job");
-
-                pregelixDriver.runJob(jobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
+            // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
+            // this would let them resume at arbitrary points of the pipeline
+            if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
+                for (int i = 0; i < pregelixJobs.size(); i++) {
+                    LOG.info("Starting job " + pregelixJobs.get(i).getJobName());
+                    GenomixJobConf.tick("pregelix-job");
+                    
+                    pregelixDriver.runJob(pregelixJobs.get(i), conf.get(GenomixJobConf.IP_ADDRESS),
+                            Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+                    
+                    LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
+                }
+            } else {
+                LOG.info("Starting pregelix job series...");
+                GenomixJobConf.tick("pregelix-runJobs");
+                pregelixDriver.runJobs(pregelixJobs, conf.get(GenomixJobConf.IP_ADDRESS),
                         Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-
-                LOG.info("Finished job " + jobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
+                LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
             }
-        } else {
-            LOG.info("Starting pregelix job series...");
-            GenomixJobConf.tick("pregelix-runJobs");
-            pregelixDriver.runJobs(jobs, conf.get(GenomixJobConf.IP_ADDRESS),
-                    Integer.parseInt(conf.get(GenomixJobConf.PORT)));
-            LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
+            manager.stopCluster(ClusterType.PREGELIX);
         }
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
-            DriverUtils.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
-        if (dump)
-            DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
+            GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
-
+        
+        LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-kmerLength", "5", "-coresPerMachine", "2",
+        String[] myArgs = {
+                "-runLocal", "true",
+                "-kmerLength", "5",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
                 "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
@@ -251,14 +259,16 @@ public class GenomixDriver {
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
+                "-pipelineOrder", "MERGE" };
+        // allow Eclipse to run the maven-generated scripts
                 if (System.getProperty("app.home") == null)
-                    System.setProperty("app.home", "/home/wbiesing/code/hyracks/genomix/genomix-driver/target/appassembler");
+                    System.setProperty("app.home", new File("target/appassembler").getAbsolutePath());
 
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+//        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+          GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }

@@ -57,8 +57,12 @@ else
   exit 1
 fi
 
-#Launch hyracks nc
-"${GENOMIX_HOME}"/bin/$NCTYPE -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices "${IO_DIRS}" &> "$NCLOGS_DIR"/$NODEID.log &
+CMD="\"${GENOMIX_HOME}/bin/$NCTYPE\" -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices \"${IO_DIRS}\""
+
+printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "$CMD" >> "$NCLOGS_DIR"/$NODEID.log
+
+#Launch nc
+eval "$CMD &>> \"$NCLOGS_DIR\"/$NODEID.log &"
 
 echo $!  # write PID of bg'ed script
 

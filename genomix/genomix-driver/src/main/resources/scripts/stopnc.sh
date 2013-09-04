@@ -17,5 +17,6 @@ do
 	rm -rf $io_dir/*
 done
 
-#Clean up NC temp dir
-rm -rf $NCTMP_DIR/*
+#Clean up NC temp dir but keep the default logs directory
+shopt -s extglob
+rm -rf $NCTMP_DIR/!(logs)

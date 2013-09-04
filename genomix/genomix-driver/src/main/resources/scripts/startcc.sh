@@ -14,7 +14,7 @@ fi
 . conf/cluster.properties
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
-CCHOST=`bin/getip.sh`
+CCHOST=`ssh -n ${CCHOST_NAME} "${GENOMIX_HOME}/bin/getip.sh"`
 
 #Remove the temp dir
 #rm -rf $CCTMP_DIR
@@ -29,15 +29,30 @@ export JAVA_HOME=$JAVA_HOME
 export JAVA_OPTS=$CCJAVA_OPTS
 
 cd $CCTMP_DIR
-#Launch hyracks cc script
+#Prepare cc script
+CMD="\"${GENOMIX_HOME}/bin/genomixcc\" -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST"
+
+if [ -n "$CC_CLIENTPORT" ]; then
+  CMD="$CMD -client-net-port $CC_CLIENTPORT"
+fi
+if [ -n "$CC_CLUSTERPORT" ]; then
+  CMD="$CMD -cluster-net-port $CC_CLUSTERPORT"
+fi
+if [ -n "$CC_HTTPPORT" ]; then
+  CMD="$CMD -http-port $CC_HTTPPORT"
+fi
+if [ -n "$JOB_HISTORY_SIZE" ]; then
+  CMD="$CMD -job-history-size $JOB_HISTORY_SIZE"
+fi
 if [ -f "${GENOMIX_HOME}/conf/topology.xml"  ]; then
-#Launch hyracks cc script with topology
-"${GENOMIX_HOME}"/bin/genomixcc -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST -client-net-port $CC_CLIENTPORT -cluster-net-port $CC_CLUSTERPORT -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -job-history-size 0 -cluster-topology "${GENOMIX_HOME}/conf/topology.xml" &> "$CCLOGS_DIR"/cc.log &
-else
-#Launch hyracks cc script without toplogy
-"${GENOMIX_HOME}"/bin/genomixcc -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST -client-net-port $CC_CLIENTPORT -cluster-net-port $CC_CLUSTERPORT -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -job-history-size 0 &> "$CCLOGS_DIR"/cc.log &
+CMD="$CMD -cluster-topology \"${GENOMIX_HOME}/conf/topology.xml\""
 fi
 
+#Launch cc script
+printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "$CMD" >> "$CCLOGS_DIR"/cc.log
+eval "$CMD &>> \"$CCLOGS_DIR\"/cc.log &"
+
+# save the PID of the process we just launched
 PID=$!
 echo "master: "`hostname`$'\t'$PID
-echo $PID > "$GENOMIX_HOME"/conf/cc.pid
+echo $PID > "$GENOMIX_HOME/conf/cc.pid"
