@@ -322,7 +322,7 @@ public class P2ForPathMergeVertex extends
         byte numOfMsgsFromHead = checkNumOfMsgsFromHead();
          switch(numOfMsgsFromHead){
             case MessageType.BothMsgsFromHead:
-            case MessageType.OneMsgFromOldHeadAndOneFromHead:
+            case MessageType.OneMsgFromOldHeadAndOneFromHead: //ex. 6
                 for(int i = 0; i < 2; i++)
                     processP2Merge(receivedMsgList.get(i));
                 getVertexValue().setState(State.IS_FINAL);
@@ -487,7 +487,8 @@ public class P2ForPathMergeVertex extends
                         responseToDeadVertex();
                         voteToHalt();
                     } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isValidUpateNode())){// only old head update edges
-                        processUpdate();
+                        if(!isHaltNode())
+                            processUpdate();
                         voteToHalt();
                     } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
                         sendFinalUpdateMsg();
