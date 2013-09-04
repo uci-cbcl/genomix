@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hyracks.util;
+package edu.uci.ics.genomix.hyracks.graph.util;
 
 import java.io.DataOutput;
 import java.io.IOException;
