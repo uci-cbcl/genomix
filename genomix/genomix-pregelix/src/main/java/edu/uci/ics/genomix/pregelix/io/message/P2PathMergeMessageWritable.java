@@ -18,11 +18,13 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
     private byte messageType; // otherwise, isFromSuccessor.
     
     private HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
+    private boolean isUpdateApexEdges;
     
     public P2PathMergeMessageWritable(){
         super();
         messageType = 0;
         apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>();
+        isUpdateApexEdges = false;
     }
     
     public P2PathMergeMessageWritable(P2PathMergeMessageWritable msg){
@@ -33,12 +35,14 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         setUpdateMsg(msg.isUpdateMsg());
         messageType = msg.getMessageType();
         setApexMap(msg.getApexMap());
+        isUpdateApexEdges = msg.isUpdateApexEdges;
     }
     
     public void reset(){
         super.reset();
         messageType = 0;
 //        apexMap.clear();
+        isUpdateApexEdges = false;
     }
 
     public byte getMessageType() {
@@ -57,12 +61,21 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         this.apexMap = apexMap;
     }
     
+    public boolean isUpdateApexEdges() {
+        return isUpdateApexEdges;
+    }
+
+    public void setUpdateApexEdges(boolean isUpdateApexEdges) {
+        this.isUpdateApexEdges = isUpdateApexEdges;
+    }
+
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
         messageType = in.readByte();
         apexMap.readFields(in);
+        isUpdateApexEdges = in.readBoolean();
     }
     
 
@@ -71,5 +84,6 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         super.write(out);
         out.writeByte(messageType);
         apexMap.write(out);
+        out.writeBoolean(isUpdateApexEdges);
     }
 }
