@@ -186,7 +186,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             destVertexId.setAsCopy(kmerIterator.next());
             setPredecessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
+            outgoingMsg.setFlip(ifFilpWithSuccessor());//incomingMsg.getSourceVertexId()
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = getVertexValue().getRRList().getKeys();
@@ -194,7 +194,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             destVertexId.setAsCopy(kmerIterator.next());
             setPredecessorToMeDir(destVertexId);
             outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
+            outgoingMsg.setFlip(ifFilpWithSuccessor());//incomingMsg.getSourceVertexId()
             sendMsg(destVertexId, outgoingMsg);
         }
     }
