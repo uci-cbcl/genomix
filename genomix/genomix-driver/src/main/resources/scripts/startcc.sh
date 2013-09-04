@@ -50,7 +50,7 @@ fi
 
 #Launch cc script
 printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "$CMD" >> "$CCLOGS_DIR"/cc.log
-eval "$CMD &>> \"$CCLOGS_DIR\"/cc.log &"
+eval "$CMD >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
 
 # save the PID of the process we just launched
 PID=$!

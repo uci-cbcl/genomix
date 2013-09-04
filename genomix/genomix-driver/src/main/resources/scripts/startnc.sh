@@ -62,7 +62,7 @@ CMD="\"${GENOMIX_HOME}/bin/$NCTYPE\" -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -
 printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "$CMD" >> "$NCLOGS_DIR"/$NODEID.log
 
 #Launch nc
-eval "$CMD &>> \"$NCLOGS_DIR\"/$NODEID.log &"
+eval "$CMD >> \"$NCLOGS_DIR/$NODEID.log\" 2>&1  &"
 
 echo $!  # write PID of bg'ed script
 

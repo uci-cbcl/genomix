@@ -268,7 +268,7 @@ public class GenomixDriver {
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
 //        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
-          GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
+          GenomixJobConf conf = GenomixJobConf.fromArguments(args);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }
