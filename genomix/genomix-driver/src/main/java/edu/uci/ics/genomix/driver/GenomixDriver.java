@@ -132,7 +132,7 @@ public class GenomixDriver {
 
         DriverUtils.updateCCProperties(conf);
         numCoresPerMachine = conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
-        numMachines = conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r").length;  // split on newlines
+        numMachines = conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r").length; // split on newlines
         GenomixJobConf.setGlobalStaticConstants(conf);
         followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
         pregelixJobs = new ArrayList<PregelixJob>();
@@ -218,17 +218,20 @@ public class GenomixDriver {
             // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
             // this would let them resume at arbitrary points of the pipeline
             if (Boolean.parseBoolean(conf.get(GenomixJobConf.SAVE_INTERMEDIATE_RESULTS))) {
+                LOG.info("Starting pregelix job series (saving intermediate results)...");
+                GenomixJobConf.tick("pregelix-runJob-one-by-one");
                 for (int i = 0; i < pregelixJobs.size(); i++) {
                     LOG.info("Starting job " + pregelixJobs.get(i).getJobName());
                     GenomixJobConf.tick("pregelix-job");
-                    LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in " + GenomixJobConf.tock("pregelix-job"));
                     pregelixDriver.runJob(pregelixJobs.get(i), pregelixIP, pregelixPort);
+                    LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
+                            + GenomixJobConf.tock("pregelix-job"));
                 }
+                LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJob-one-by-one"));
             } else {
-                LOG.info("Starting pregelix job series...");
+                LOG.info("Starting pregelix job series (not saving intermediate results...");
                 GenomixJobConf.tick("pregelix-runJobs");
-                pregelixDriver.runJobs(pregelixJobs, conf.get(GenomixJobConf.IP_ADDRESS),
-                        Integer.parseInt(conf.get(GenomixJobConf.PORT)));
+                pregelixDriver.runJobs(pregelixJobs, pregelixIP, pregelixPort);
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
             }
             manager.stopCluster(ClusterType.PREGELIX);
