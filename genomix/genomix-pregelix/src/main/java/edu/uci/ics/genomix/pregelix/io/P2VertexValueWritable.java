@@ -4,8 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class P2VertexValueWritable extends VertexValueWritable{
     
@@ -14,10 +16,13 @@ public class P2VertexValueWritable extends VertexValueWritable{
     private NodeWritable prependMergeNode;
     private NodeWritable appendMergeNode;
     
+    private HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
+    
     public P2VertexValueWritable(){
         super();
         prependMergeNode = new NodeWritable();
         appendMergeNode = new NodeWritable();
+        apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>();
     }
     
     public VertexValueWritable get(){
@@ -35,6 +40,7 @@ public class P2VertexValueWritable extends VertexValueWritable{
         super.reset();
         prependMergeNode.reset();
         appendMergeNode.reset();
+//        apexMap.clear();
     }
     
     public NodeWritable getMergeNode(byte mergeMsgType){
@@ -76,6 +82,14 @@ public class P2VertexValueWritable extends VertexValueWritable{
     public void setAppendMergeNode(NodeWritable appendMergeNode) {
         this.appendMergeNode.setAsCopy(appendMergeNode);
     }
+    
+    public HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> getApexMap() {
+        return apexMap;
+    }
+
+    public void setApexMap(HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap) {
+        this.apexMap = apexMap;
+    }
 
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -83,6 +97,7 @@ public class P2VertexValueWritable extends VertexValueWritable{
         super.readFields(in);
         prependMergeNode.readFields(in);
         appendMergeNode.readFields(in);
+        apexMap.readFields(in);
     }
     
     @Override
@@ -90,5 +105,6 @@ public class P2VertexValueWritable extends VertexValueWritable{
         super.write(out);
         prependMergeNode.write(out);
         appendMergeNode.write(out);
+        apexMap.write(out);
     }
 }

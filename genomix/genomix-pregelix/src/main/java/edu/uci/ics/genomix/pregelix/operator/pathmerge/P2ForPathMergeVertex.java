@@ -423,11 +423,12 @@ public class P2ForPathMergeVertex extends
                  // for processing final merge (1)
                     while(msgIterator.hasNext()){
                         incomingMsg = msgIterator.next();
-                        if(isFinalUpdateMsg()){ // only old head update edges
-                            processFinalUpdate();
-                            getVertexValue().setState(MessageFlag.IS_HALT);
-                            voteToHalt();
-                        } else if(isFinalMergeMsg()){ // ex. 4, 5
+//                        if(isFinalUpdateMsg()){ // only old head update edges
+//                            processFinalUpdate();
+//                            getVertexValue().setState(MessageFlag.IS_HALT);
+//                            voteToHalt();
+//                        } else 
+                        if(isFinalMergeMsg()){ // ex. 4, 5
                             processP2Merge(incomingMsg);
                             getVertexValue().setState(State.IS_FINAL); // setFinalState();
                             getVertexValue().processFinalNode();
@@ -491,8 +492,8 @@ public class P2ForPathMergeVertex extends
                             processUpdate();
                         voteToHalt();
                     } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
-                        sendFinalUpdateMsg();
-                        outFlag = 0;
+//                        sendFinalUpdateMsg();
+//                        outFlag = 0;
                         sendFinalMergeMsg();
                         voteToHalt();
                         break;

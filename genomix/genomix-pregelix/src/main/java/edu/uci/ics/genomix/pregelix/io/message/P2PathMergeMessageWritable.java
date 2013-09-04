@@ -4,6 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.pregelix.io.KmerAndDirWritable;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+
 public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
     
     public class P2MessageType{
@@ -13,9 +17,12 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
     
     private byte messageType; // otherwise, isFromSuccessor.
     
+    private HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
+    
     public P2PathMergeMessageWritable(){
         super();
         messageType = 0;
+        apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>();
     }
     
     public P2PathMergeMessageWritable(P2PathMergeMessageWritable msg){
@@ -25,11 +32,13 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         setFlip(msg.isFlip());
         setUpdateMsg(msg.isUpdateMsg());
         messageType = msg.getMessageType();
+        setApexMap(msg.getApexMap());
     }
     
     public void reset(){
         super.reset();
         messageType = 0;
+//        apexMap.clear();
     }
 
     public byte getMessageType() {
@@ -40,16 +49,27 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         this.messageType = messageType;
     }
 
+    public HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> getApexMap() {
+        return apexMap;
+    }
+
+    public void setApexMap(HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap) {
+        this.apexMap = apexMap;
+    }
+    
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
         messageType = in.readByte();
+        apexMap.readFields(in);
     }
     
+
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
         out.writeByte(messageType);
+        apexMap.write(out);
     }
 }
