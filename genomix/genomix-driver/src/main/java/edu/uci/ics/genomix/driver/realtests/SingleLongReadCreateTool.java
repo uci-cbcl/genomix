@@ -6,17 +6,20 @@ import java.util.HashSet;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class SingleLongReadCreateTool {
     /**
-     * it is better to set the kmerSize a big value, 
+     * it is better to set the kmerSize a big value in case of duplicates, 
      * the target path which contain this string will be generated automatically
      * target path: relative path: longreadfortest
      */
     private static final char[] symbols = new char[4];
-
+    private static final Log LOG = LogFactory.getLog(Driver.class);
     static {
         symbols[0] = 'A';
         symbols[1] = 'C';
@@ -53,6 +56,7 @@ public class SingleLongReadCreateTool {
     public void generateString() {
         String tmp = "";
         int count = 4;
+        LOG.info("Begin to generate string !");
         for (int idx = 0; idx < buf.length;) {
             buf[idx] = symbols[random.nextInt(4)];
             if (idx >= k - 1) {
@@ -69,6 +73,7 @@ public class SingleLongReadCreateTool {
                         } else if (count == 0) {
                             idx++;
                             count = 4;
+                            LOG.info("there must be a duplicate in read! " + idx);
                         } else
                             count--;
                         break;
@@ -87,6 +92,7 @@ public class SingleLongReadCreateTool {
             } else
                 idx++;
         }
+        LOG.info("End to generate string !");
     }
     
     public void writeToDisk() throws IOException {
@@ -98,5 +104,9 @@ public class SingleLongReadCreateTool {
         File targetFile = new File(targetPath);
         if(targetFile.exists())
             targetFile.delete();
+    }
+    
+    public String getTestDir() {
+        return targetPath;
     }
 }
