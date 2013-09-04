@@ -29,7 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.lib.NLineInputFormat;
+//import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
@@ -80,10 +80,16 @@ public class Driver {
     public void runJob(GenomixJobConf job, Plan planChoice, boolean profiling) throws HyracksException {
         /** add hadoop configurations */
         URL hadoopCore = job.getClass().getClassLoader().getResource("core-site.xml");
+        if (hadoopCore != null)
+            LOG.info("hadoopCore URL:  " + hadoopCore.toString());
         job.addResource(hadoopCore);
         URL hadoopMapRed = job.getClass().getClassLoader().getResource("mapred-site.xml");
+        if (hadoopMapRed != null)
+            LOG.info("hadoopMapRed URL:  " + hadoopMapRed.toString());
         job.addResource(hadoopMapRed);
         URL hadoopHdfs = job.getClass().getClassLoader().getResource("hdfs-site.xml");
+        if (hadoopHdfs != null)
+            LOG.info("hadoopHdfs URL:  " + hadoopHdfs.toString());
         job.addResource(hadoopHdfs);
 
         //        job.setInt("mapred.line.input.format.linespermap", 2000000); // must be a multiple of 4
@@ -138,8 +144,10 @@ public class Driver {
         List<String> jars = new ArrayList<String>();
         URL[] urls = classLoader.getURLs();
         for (URL url : urls)
-            if (url.toString().endsWith(".jar"))
+            if (url.toString().endsWith(".jar")) {
+                LOG.info(url.toString());
                 jars.add(new File(url.getPath()).toString());
+            }
         DeploymentId deploymentId = hcc.deployBinary(jars);
         return deploymentId;
     }
@@ -153,8 +161,8 @@ public class Driver {
     }
 
     public static void main(String[] args) throws Exception {
-//        String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",
-//                "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-frameSize", "252"};
+        //        String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",
+        //                "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-frameSize", "252"};
         GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
 
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
