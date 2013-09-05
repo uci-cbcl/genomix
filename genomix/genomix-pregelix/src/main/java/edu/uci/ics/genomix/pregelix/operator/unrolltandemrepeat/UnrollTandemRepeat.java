@@ -1,12 +1,8 @@
 package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 
-import java.io.IOException;
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
@@ -16,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**
  * Graph clean pattern: Unroll TandemRepeat

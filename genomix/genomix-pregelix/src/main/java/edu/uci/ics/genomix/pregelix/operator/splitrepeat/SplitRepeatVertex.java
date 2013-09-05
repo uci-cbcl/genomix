@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -8,9 +7,6 @@ import java.util.Random;
 import java.util.Set;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
@@ -20,7 +16,6 @@ import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 /**
