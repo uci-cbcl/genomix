@@ -42,12 +42,12 @@ import edu.uci.ics.genomix.hadoop.graph.test.HadoopMiniClusterTest;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.graph.test.TestSet.DirType;
+import edu.uci.ics.genomix.hyracks.graph.util.GenerateGraphViz;
 
 @SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
 public class ParameteredTestCaseForSet {
-    public static final DirType testSetType = DirType.RANDOM;
-
+    public static final DirType testSetType = DirType.SINGLEREAD;
     public String dataPath;
     public int KmerSize;
     
@@ -169,10 +169,12 @@ public class ParameteredTestCaseForSet {
         }
     }
 
-    public void dumpResult() throws IOException {
+    public void dumpResult() throws Exception {
         File src = new File(dataPath);
         HadoopMiniClusterTest.copyResultsToLocal(HDFS_OUTPUT_PATH + File.separator + src.getName(), ACTUAL_RESULT_DIR + File.separator + 
-                 File.separator + src.getName() + "/test.txt", false, conf, true, dfs);
+                 File.separator + src.getName() + File.separator + src.getName(), false, conf, true, dfs);
+        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(ACTUAL_RESULT_DIR + File.separator + 
+                File.separator + src.getName() + File.separator + src.getName() + ".bindir", ACTUAL_RESULT_DIR + File.separator + src.getName() + "/graphviz");
     }
 
     @AfterClass

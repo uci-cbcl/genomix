@@ -265,6 +265,8 @@ public class GenomixClusterManager {
         Process p = Runtime.getRuntime().exec(startNCCmd);
         p.waitFor(); // wait for ssh 
         Thread.sleep(sleepms); // wait for NC -> CC registration
+        System.out.println("\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                    + IOUtils.toString(p.getErrorStream()));
         if (p.exitValue() != 0)
             throw new RuntimeException("Failed to start the" + type + " NC's! Script returned exit code: "
                     + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
