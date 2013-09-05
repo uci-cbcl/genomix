@@ -57,12 +57,14 @@ public class P2ForPathMergeVertex extends
             kmerList = new VKmerListWritable();
         else
             kmerList.reset();
-        if(fakeVertex == null){
-            fakeVertex = new VKmerBytesWritable();
-            String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
+        synchronized(lock){
+            if(fakeVertex == null){
+                fakeVertex = new VKmerBytesWritable();
+                String fake = generateString(kmerSize + 1);//generaterRandomString(kmerSize + 1);
+                fakeVertex.setByRead(kmerSize + 1, fake.getBytes(), 0); 
+            }
+            isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
         }
-        isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
         if(tmpKmer == null)
@@ -78,7 +80,18 @@ public class P2ForPathMergeVertex extends
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-
+    
+    /**
+     * 
+     */
+    public String generateString(int length){
+        StringBuffer outputBuffer = new StringBuffer(length);
+        for (int i = 0; i < length; i++){
+           outputBuffer.append("A");
+        }
+        return outputBuffer.toString();
+    }
+    
     /**
      * add fake vertex
      */

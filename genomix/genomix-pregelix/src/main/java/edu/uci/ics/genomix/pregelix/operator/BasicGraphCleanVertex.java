@@ -33,6 +33,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
+    public static Object lock = new Object();
     public static boolean fakeVertexExist = false;
     protected static VKmerBytesWritable fakeVertex = null;
     
