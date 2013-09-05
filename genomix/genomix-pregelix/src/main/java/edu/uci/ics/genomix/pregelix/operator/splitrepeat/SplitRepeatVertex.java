@@ -10,9 +10,9 @@ import java.util.Set;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
@@ -29,7 +29,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  *
  */
 public class SplitRepeatVertex extends 
-    BasicGraphCleanVertex<SplitRepeatMessageWritable>{
+    BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessageWritable>{
     
     public class EdgeAndDir{
         private byte dir;

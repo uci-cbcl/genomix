@@ -8,8 +8,8 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
@@ -22,7 +22,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  *
  */
 public class TipRemoveVertex extends
-        BasicGraphCleanVertex<MessageWritable> {
+        BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
     private int length = -1;
     
     /**

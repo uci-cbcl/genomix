@@ -2,11 +2,11 @@ package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.KmerListAndFlagListWritable;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;

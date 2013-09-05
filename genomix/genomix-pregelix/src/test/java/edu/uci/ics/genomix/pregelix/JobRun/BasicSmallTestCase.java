@@ -29,9 +29,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.pregelix.graph.GenerateGraphViz;
-import edu.uci.ics.genomix.pregelix.io.ByteWritable;
-import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.io.VLongWritable;
+import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;

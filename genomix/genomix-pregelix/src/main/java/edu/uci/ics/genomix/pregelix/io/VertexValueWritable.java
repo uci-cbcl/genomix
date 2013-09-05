@@ -2,6 +2,10 @@ package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
 
+import edu.uci.ics.genomix.pregelix.io.common.AdjacencyListWritable;
+import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
@@ -41,9 +45,9 @@ public class VertexValueWritable
         
         public static final byte IS_OLDHEAD = 0b11 << 5;
         
-        public static final byte IS_HALT = 0b1111111;
-        public static final byte IS_DEAD = 0b0111111;
-        public static final byte VERTEX_MASK = 0b11 << 5;
+        public static final byte IS_HALT = 0b1111110;
+        public static final byte IS_DEAD = 0b0111110;
+        public static final byte VERTEX_MASK = 0b11 << 5; 
         public static final byte VERTEX_CLEAR = (byte) 11001111;
     }
     
@@ -66,6 +70,11 @@ public class VertexValueWritable
         counters = new HashMapWritable<ByteWritable, VLongWritable>();
         scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     }
+
+//    TODO: figure out why can't use
+//    public VertexValueWritable get(){
+//        return this;
+//    }
     
     public void setNode(NodeWritable node){
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
@@ -212,11 +221,18 @@ public class VertexValueWritable
         this.getEdgeList(dir).remove(nodeToDelete);
     }
     
+    
     /**
      * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
      */
     public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
-        this.getNode().updateEdges(deleteDir, toDelete, updateDir, other);
+        byte replaceDir = mirrorDirection(deleteDir);
+        this.getNode().updateEdges(deleteDir, toDelete, updateDir, replaceDir, other, true);
+    }
+    
+    public void processFinalUpdates(byte deleteDir, byte updateDir, NodeWritable other){
+        byte replaceDir = mirrorDirection(deleteDir);
+        this.getNode().updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
     }
     
     /**
@@ -228,4 +244,21 @@ public class VertexValueWritable
         super.getNode().mergeWithNode(mergeDir, node);
     }
     
+    /**
+     * Returns the edge dir for B->A when the A->B edge is type @dir
+     */
+    public byte mirrorDirection(byte dir) {
+        switch (dir) {
+            case MessageFlag.DIR_FF:
+                return MessageFlag.DIR_RR;
+            case MessageFlag.DIR_FR:
+                return MessageFlag.DIR_FR;
+            case MessageFlag.DIR_RF:
+                return MessageFlag.DIR_RF;
+            case MessageFlag.DIR_RR:
+                return MessageFlag.DIR_FF;
+            default:
+                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
+        }
+    }
 }

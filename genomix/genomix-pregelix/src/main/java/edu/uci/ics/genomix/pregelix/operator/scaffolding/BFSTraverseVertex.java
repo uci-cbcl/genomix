@@ -7,10 +7,10 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.ArrayListWritable;
-import edu.uci.ics.genomix.pregelix.io.BFSTraverseMessageWritable;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
+import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.EdgeDirs;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -19,7 +19,7 @@ import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class BFSTraverseVertex extends
-    BasicGraphCleanVertex<BFSTraverseMessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessageWritable> {
     
     protected VKmerBytesWritable srcNode = new VKmerBytesWritable("AAT");
     protected VKmerBytesWritable destNode = new VKmerBytesWritable("AGA");

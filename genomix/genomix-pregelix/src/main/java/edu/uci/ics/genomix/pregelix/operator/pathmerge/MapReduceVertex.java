@@ -4,20 +4,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
 
-public class MapReduceVertex extends
-	BasicPathMergeVertex{
+public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
+	BasicPathMergeVertex<V, M>{
     
     protected VKmerBytesWritable reverseKmer;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
@@ -29,9 +24,9 @@ public class MapReduceVertex extends
     public void initVertex() {
         super.initVertex();
         if(incomingMsg == null)
-            incomingMsg = new PathMergeMessageWritable();
+            incomingMsg = (M) new PathMergeMessageWritable();
         if(outgoingMsg == null)
-            outgoingMsg = new PathMergeMessageWritable();
+            outgoingMsg = (M) new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
         if(reverseKmer == null)
@@ -52,6 +47,7 @@ public class MapReduceVertex extends
     }
     
     public void sendMsgToFakeVertex(){
+        outgoingMsg.reset();
         if(!getVertexValue().isFakeVertex()){
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
@@ -60,7 +56,7 @@ public class MapReduceVertex extends
         }
     }
     
-    public void mapKeyByInternalKmer(Iterator<PathMergeMessageWritable> msgIterator){
+    public void mapKeyByInternalKmer(Iterator<M> msgIterator){
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
@@ -97,7 +93,7 @@ public class MapReduceVertex extends
         }
     }
     
-    public void finalVertexResponseToFakeVertex(Iterator<PathMergeMessageWritable> msgIterator){
+    public void finalVertexResponseToFakeVertex(Iterator<M> msgIterator){
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             inFlag = incomingMsg.getFlag();
@@ -108,7 +104,7 @@ public class MapReduceVertex extends
     }
     
     @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
+    public void compute(Iterator<M> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
             addFakeVertex();

@@ -11,19 +11,16 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.ByteWritable;
-import edu.uci.ics.genomix.pregelix.io.HashMapWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeListWritable;
@@ -31,11 +28,12 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
-public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
-        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, M> {
+public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
+        Vertex<VKmerBytesWritable, V, NullWritable, M> {
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
+    public static Object lock = new Object();
     public static boolean fakeVertexExist = false;
     protected static VKmerBytesWritable fakeVertex = null;
     
@@ -49,7 +47,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     protected M incomingMsg = null; 
     protected M outgoingMsg = null; 
     protected VKmerBytesWritable destVertexId = null;
-    protected VertexValueWritable tmpValue = new VertexValueWritable();
+    protected VertexValueWritable tmpValue = new VertexValueWritable(); 
     protected Iterator<VKmerBytesWritable> kmerIterator;
     protected VKmerListWritable kmerList = null;
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
@@ -447,12 +445,11 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         }
         getVertexValue().setState(state);
     }
+    
     /**
      * initiate head, rear and path node
      */
     public void initState(Iterator<M> msgIterator) {
-        if(getVertexId().toString().equals("CTA"))
-            System.out.print("");
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if(isHaltNode())
@@ -529,7 +526,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     /**
      * set adjMessage to predecessor(from successor)
      */
-    public void setPredecessorAdjMsg(){
+    public void setPredecessorToMeDir(){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(!getVertexValue().getRFList().isEmpty())
             outFlag |= MessageFlag.DIR_RF;
@@ -537,7 +534,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             outFlag |= MessageFlag.DIR_RR;
     }
     
-    public void setPredecessorAdjMsg(VKmerBytesWritable toFind){
+    public void setPredecessorToMeDir(VKmerBytesWritable toFind){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(getVertexValue().getRFList().contains(toFind))
             outFlag |= MessageFlag.DIR_RF;
@@ -548,7 +545,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
     /**
      * set adjMessage to successor(from predecessor)
      */
-    public void setSuccessorAdjMsg(){
+    public void setSuccessorToMeDir(){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(!getVertexValue().getFFList().isEmpty())
             outFlag |= MessageFlag.DIR_FF;
@@ -556,7 +553,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             outFlag |= MessageFlag.DIR_FR;
     }
     
-    public void setSuccessorAdjMsg(VKmerBytesWritable toFind){
+    public void setSuccessorToMeDir(VKmerBytesWritable toFind){
         outFlag &= MessageFlag.DIR_CLEAR;
         if(getVertexValue().getFFList().contains(toFind))
             outFlag |= MessageFlag.DIR_FF;
@@ -670,6 +667,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
             Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
             vertex.getMsgList().clear();
             vertex.getEdges().clear();
+            
             VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
             vertexValue.setState(State.IS_FAKE);
             vertexValue.setFakeVertex(true);
@@ -757,7 +755,7 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         }
     }
     
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends MessageWritable>> vertexClass) throws IOException {
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
         // the following class weirdness is because java won't let me get the runtime class in a static context :(
         System.out.println(vertexClass.getSimpleName());
         PregelixJob job;
@@ -774,4 +772,45 @@ public abstract class BasicGraphCleanVertex<M extends MessageWritable> extends
         job.setDynamicVertexValueSize(true);
         return job;
     }
+    
+    /**
+     * start sending message for P2
+     */
+    public void startSendMsgForP2() {
+        if(isTandemRepeat()){
+            tmpValue.setAsCopy(getVertexValue());
+            tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+            outFlag = 0;
+            outFlag |= MessageFlag.IS_HEAD;
+            sendSettledMsgToAllNeighborNodes(tmpValue);
+        } else{
+            if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue()) && getVertexValue().outDegree() == 0){
+                outFlag = 0;
+                outFlag |= MessageFlag.IS_HEAD;
+                outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                getVertexValue().setState(outFlag);
+                activate();
+            }
+            if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue()) && getVertexValue().inDegree() == 0){
+                outFlag = 0;
+                outFlag |= MessageFlag.IS_HEAD;
+                outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                getVertexValue().setState(outFlag);
+                activate();
+            }
+            if(getVertexValue().inDegree() > 1 || getVertexValue().outDegree() > 1){
+                outFlag = 0;
+                outFlag |= MessageFlag.IS_HEAD;
+                sendSettledMsgToAllNeighborNodes(getVertexValue());
+                getVertexValue().setState(MessageFlag.IS_HALT);
+                voteToHalt();
+            }
+        }
+        if(!VertexUtil.isActiveVertex(getVertexValue())
+                || isTandemRepeat()){
+            getVertexValue().setState(MessageFlag.IS_HALT);
+            voteToHalt();
+        }
+    }
+    
 }

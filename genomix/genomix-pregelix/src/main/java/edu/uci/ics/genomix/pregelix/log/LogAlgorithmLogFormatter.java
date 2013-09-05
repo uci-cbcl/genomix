@@ -2,7 +2,7 @@ package edu.uci.ics.genomix.pregelix.log;
 
 import java.util.logging.*;
 
-import edu.uci.ics.genomix.pregelix.io.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
 public class LogAlgorithmLogFormatter extends Formatter {

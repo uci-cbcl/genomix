@@ -17,8 +17,8 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -31,7 +31,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  *
  */
 public class BubbleMergeVertex extends
-    BasicGraphCleanVertex<BubbleMergeMessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessageWritable> {
     private float dissimilarThreshold = -1;
     
     public static class EdgeType{

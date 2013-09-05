@@ -353,6 +353,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         mergeCoverage(other);
         internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
+    
+    public void mergeWithNodeWithoutKmer(byte dir, final NodeWritable other) {
+        mergeEdges(dir, other);
+        mergeStartAndEndReadIDs(dir, other);
+        mergeCoverage(other);
+    }
+    
+    public void mergeWithNodeWithoutKmer(final NodeWritable other) {
+        byte dir = DirectionFlag.DIR_FF;
+        mergeEdges(dir, other);
+        mergeStartAndEndReadIDs(dir, other);
+        mergeCoverage(other);
+    }
 
     /**
      * merge all metadata from `other` into this, as if `other` were the same node as this.
@@ -396,24 +409,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     /**
      * update my edge list
      */
-    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
-        edges[deleteDir].remove(toDelete);
-        switch (updateDir) {
+    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, byte replaceDir, NodeWritable other, boolean applyDelete){
+        if(applyDelete)
+            edges[deleteDir].remove(toDelete);
+        switch (replaceDir) {
             case DirectionFlag.DIR_FF:
-                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
-                break;
             case DirectionFlag.DIR_FR:
-                edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-                edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
                 break;
             case DirectionFlag.DIR_RF:
-                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
-                break;
             case DirectionFlag.DIR_RR:
-                edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-                edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
+                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
                 break;
         }
     }

@@ -1,17 +1,13 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
-import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -20,12 +16,12 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 /**
- * Graph clean pattern: P4(Logistics-algorithm) for path merge 
+ * Graph clean pattern: P4(Smart-algorithm) for path merge 
  * @author anbangx
  *
  */
 public class P4ForPathMergeVertex extends
-    BasicPathMergeVertex {
+    BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
 
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
@@ -147,10 +143,10 @@ public class P4ForPathMergeVertex extends
                 if (curHead) {
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
-                		sendUpdateMsgToPredecessor(); 
+                		sendUpdateMsgToPredecessor(true); 
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
-                        sendUpdateMsgToSuccessor();
+                        sendUpdateMsgToSuccessor(true);
                     } 
                 }
                 else {
@@ -159,19 +155,19 @@ public class P4ForPathMergeVertex extends
                          if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
-                            sendUpdateMsgToPredecessor();
+                            sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasPrev) {
                         // no previous node
                         if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                             // merge towards tail in forward dir
-                            sendUpdateMsgToPredecessor();
+                            sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasNext) {
                         // no next node
                         if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                             // merge towards tail in reverse dir
-                            sendUpdateMsgToSuccessor();
+                            sendUpdateMsgToSuccessor(true);
                         }
                     }
                 }
