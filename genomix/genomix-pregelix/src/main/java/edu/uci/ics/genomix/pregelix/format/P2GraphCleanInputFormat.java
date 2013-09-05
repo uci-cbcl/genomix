@@ -35,7 +35,7 @@ class P2BinaryDataCleanLoadGraphReader extends
     BinaryDataCleanVertexReader<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> {
     private Vertex vertex;
     private VKmerBytesWritable vertexId = new VKmerBytesWritable();
-    private VertexValueWritable vertexValue = new VertexValueWritable();
+    private P2VertexValueWritable vertexValue = new P2VertexValueWritable();
 
     public P2BinaryDataCleanLoadGraphReader(RecordReader<VKmerBytesWritable, VertexValueWritable> recordReader) {
         super(recordReader);
