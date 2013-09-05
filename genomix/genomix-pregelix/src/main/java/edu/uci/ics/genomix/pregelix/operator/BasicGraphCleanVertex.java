@@ -757,7 +757,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
         // the following class weirdness is because java won't let me get the runtime class in a static context :(
-        System.out.println(vertexClass.getSimpleName());
         PregelixJob job;
         if (conf == null)
             job = new PregelixJob(vertexClass.getSimpleName());

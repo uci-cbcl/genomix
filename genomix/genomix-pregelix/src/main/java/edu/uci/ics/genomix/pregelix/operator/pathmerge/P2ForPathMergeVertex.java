@@ -1,23 +1,29 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.P2GraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.KmerAndDirWritable;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageType;
-import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 /**
  * Graph clean pattern: P2(Logistics-algorithm) for path merge 
@@ -585,6 +591,14 @@ public class P2ForPathMergeVertex extends
             }
         } else
             voteToHalt();
+    }
+    
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
+        // the following class weirdness is because java won't let me get the runtime class in a static context :(
+        PregelixJob job = MapReduceVertex.getConfiguredJob(conf, vertexClass); // NOTE: should be super.* but super isn't available in a static context
+        job.setVertexInputFormatClass(P2GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class);
+        return job;
     }
 
     public static void main(String[] args) throws Exception {

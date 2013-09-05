@@ -120,8 +120,13 @@ public class GenomixDriver {
     }
 
     private void addJob(PregelixJob job) {
-        if (followingBuild)
-            job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        if (followingBuild) {
+            if (P2ForPathMergeVertex.class.equals(BspUtils.getVertexClass(job.getConfiguration()))) {
+                job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
+            } else {
+                job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+            }
+        }
         pregelixJobs.add(job);
         followingBuild = false;
     }
@@ -223,7 +228,9 @@ public class GenomixDriver {
                 for (int i = 0; i < pregelixJobs.size(); i++) {
                     LOG.info("Starting job " + pregelixJobs.get(i).getJobName());
                     GenomixJobConf.tick("pregelix-job");
+                    
                     pregelixDriver.runJob(pregelixJobs.get(i), pregelixIP, pregelixPort);
+
                     LOG.info("Finished job " + pregelixJobs.get(i).getJobName() + " in "
                             + GenomixJobConf.tock("pregelix-job"));
                 }
@@ -231,7 +238,9 @@ public class GenomixDriver {
             } else {
                 LOG.info("Starting pregelix job series (not saving intermediate results...");
                 GenomixJobConf.tick("pregelix-runJobs");
+                
                 pregelixDriver.runJobs(pregelixJobs, pregelixIP, pregelixPort);
+                
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
             }
             manager.stopCluster(ClusterType.PREGELIX);
@@ -241,7 +250,7 @@ public class GenomixDriver {
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
-        
+
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }
 
