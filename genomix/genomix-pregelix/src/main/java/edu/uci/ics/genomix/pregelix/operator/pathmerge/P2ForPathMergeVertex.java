@@ -29,8 +29,6 @@ public class P2ForPathMergeVertex extends
 
     private ArrayList<P2PathMergeMessageWritable> receivedMsgList = new ArrayList<P2PathMergeMessageWritable>();
     
-    private boolean isFakeVertex = false;
-    
     /**
      * initiate kmerSize, maxIteration
      */
@@ -63,7 +61,6 @@ public class P2ForPathMergeVertex extends
                 String fake = generateString(kmerSize + 1);//generaterRandomString(kmerSize + 1);
                 fakeVertex.setByRead(kmerSize + 1, fake.getBytes(), 0); 
             }
-            isFakeVertex = ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0 ? true : false;
         }
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
@@ -98,21 +95,23 @@ public class P2ForPathMergeVertex extends
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void addFakeVertex(){
-        if(!fakeVertexExist){
-            //add a fake vertex
-            Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-            vertex.getMsgList().clear();
-            vertex.getEdges().clear();
-            
-            P2VertexValueWritable vertexValue = new P2VertexValueWritable();//kmerSize + 1
-            vertexValue.setState(State.IS_FAKE);
-            vertexValue.setFakeVertex(true);
-            
-            vertex.setVertexId(fakeVertex);
-            vertex.setVertexValue(vertexValue);
-            
-            addVertex(fakeVertex, vertex);
-            fakeVertexExist = true;
+        synchronized(lock){
+            if(!fakeVertexExist){
+                //add a fake vertex
+                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+                vertex.getMsgList().clear();
+                vertex.getEdges().clear();
+                
+                P2VertexValueWritable vertexValue = new P2VertexValueWritable();//kmerSize + 1
+                vertexValue.setState(State.IS_FAKE);
+                vertexValue.setFakeVertex(true);
+                
+                vertex.setVertexId(fakeVertex);
+                vertex.setVertexValue(vertexValue);
+                
+                addVertex(fakeVertex, vertex);
+                fakeVertexExist = true;
+            }
         }
     }
     
@@ -453,8 +452,8 @@ public class P2ForPathMergeVertex extends
                 }
             } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
                 activate();
-            } else{ /** already set up **/
-                /** if headMergeDir are not the same **/
+            } else{ // already set up
+                // if headMergeDir are not the same
                 getVertexValue().setState(MessageFlag.IS_HALT);
                 voteToHalt();
             }
@@ -482,12 +481,12 @@ public class P2ForPathMergeVertex extends
             initPrependAndAppendMergeNode();
             startSendMsgForP2();
         } else if (getSuperstep() == 2){
-            if(isFakeVertex)
+            if(isFakeVertex())
                 voteToHalt();
             else
                 initStateForP2(msgIterator);
         } else if (getSuperstep() % 3 == 0 && getSuperstep() <= maxIteration) {
-            if(!isFakeVertex){
+            if(!isFakeVertex()){
                 if(!msgIterator.hasNext()){
                     // processing general case 
                     if(isPathNode())
@@ -502,11 +501,6 @@ public class P2ForPathMergeVertex extends
                             //update edges in apex
                             updateApexEdges();
                         } else{
-//                            if(isFinalUpdateMsg()){ // only old head update edges
-//                                processFinalUpdate();
-//                                getVertexValue().setState(MessageFlag.IS_HALT);
-//                                voteToHalt();
-//                            } else 
                             if(isFinalMergeMsg()){ // ex. 4, 5
                                 processP2Merge(incomingMsg);
                                 getVertexValue().setState(State.IS_FINAL); // setFinalState();
@@ -530,7 +524,7 @@ public class P2ForPathMergeVertex extends
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 1 && getSuperstep() <= maxIteration) {
-            if(!isFakeVertex){
+            if(!isFakeVertex()){
                 // head doesn't receive msg and send out final msg, ex. 2, 5
                 if(!msgIterator.hasNext() && isHeadNode()){
                     outFlag |= MessageFlag.IS_FINAL;
@@ -565,7 +559,7 @@ public class P2ForPathMergeVertex extends
                 voteToHalt();
             }
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
-            if(!isFakeVertex){
+            if(!isFakeVertex()){
                 while (msgIterator.hasNext()) {
                     incomingMsg = msgIterator.next();
                     // final Vertex Responses To FakeVertex 

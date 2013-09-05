@@ -55,7 +55,7 @@ public class VertexValueWritable
         public static final byte IS_NONFAKE = 0 << 0;
         public static final byte IS_FAKE = 1 << 0;
         
-        public static final byte FAKEFLAG_MASK = (byte) 00000001;
+        public static final byte FAKEFLAG_MASK = (byte) 1 << 0;
     }
     
     private byte state;

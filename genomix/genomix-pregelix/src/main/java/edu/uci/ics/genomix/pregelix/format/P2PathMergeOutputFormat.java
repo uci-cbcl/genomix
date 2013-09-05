@@ -10,7 +10,7 @@ import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
@@ -41,7 +41,10 @@ public class P2PathMergeOutputFormat extends
             byte selfFlag = (byte)(vertex.getVertexValue().getState() & State.VERTEX_MASK);
             if(!vertex.getVertexValue().isFakeVertex() && (vertex.getVertexValue().getState() == State.IS_HALT || selfFlag == State.IS_FINAL))
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().get());
-            P2ForPathMergeVertex.fakeVertexExist = false;
+            synchronized(BasicGraphCleanVertex.lock){
+                BasicGraphCleanVertex.fakeVertexExist = false;
+                BasicGraphCleanVertex.fakeVertex = null;
+            }
         }
     }
 }

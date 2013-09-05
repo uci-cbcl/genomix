@@ -35,7 +35,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     public static Object lock = new Object();
     public static boolean fakeVertexExist = false;
-    protected static VKmerBytesWritable fakeVertex = null;
+    public static VKmerBytesWritable fakeVertex = null;
     
     public byte[][] connectedTable = new byte[][]{
             {MessageFlag.DIR_RF, MessageFlag.DIR_FF},
