@@ -16,6 +16,7 @@ package edu.uci.ics.genomix.hyracks.graph.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class TestSet {
 
@@ -27,6 +28,7 @@ public class TestSet {
     public final String BRIDGE = "bridge";
     public final String RANDOM = "random";
     public final String SINGLEREAD = "singleread";
+    public final String MULTIPLE_TANDEM_REPEAT = "multi_tandem_repeat";
     
     public final String[] SRSET = { "HighSplitRepeat", "MidSplitRepeat", "LowSplitRepeat" };
     public final String[] TIPSET = { "Tips1", "Tips2", "Tips3", "Tips4" };
@@ -38,7 +40,7 @@ public class TestSet {
         SPLITREPEAT,
         BRIDGE,
         RANDOM,
-        SINGLEREAD
+        SINGLEREAD, MULTIPLE_TANDEM_REPEAT
     }
 
     private DirType testSet;
@@ -63,8 +65,12 @@ public class TestSet {
                 break;
             case RANDOM:
                 testSet = patternType.RANDOM;
+                break;
             case SINGLEREAD:
                 testSet = patternType.SINGLEREAD;
+                break;
+            case MULTIPLE_TANDEM_REPEAT:
+                testSet = patternType.MULTIPLE_TANDEM_REPEAT;
         }
     }
 
@@ -108,19 +114,20 @@ public class TestSet {
                 return detectAllTestSet(PREFIX + RANDOM);
             case SINGLEREAD:
                 return detectAllTestSet(PREFIX + SINGLEREAD);
+            case MULTIPLE_TANDEM_REPEAT:
+                return detectAllTestSet(PREFIX + MULTIPLE_TANDEM_REPEAT);
         }
         return null;
     }
 
     private String[] detectAllTestSet(String inputPrefix) throws IOException {
         File src = new File(inputPrefix);
-        String[] output = new String[src.listFiles().length - 1];
-        int i = 0;
+        ArrayList<String> outArray = new ArrayList<String>(src.listFiles().length);
         for (File f : src.listFiles()) {
             if (!f.getName().contains(".DS_Store")){
-                output[i++] = f.getPath().toString();
+                outArray.add(f.getPath().toString());
             }
         }
-        return output;
+        return outArray.toArray(new String[outArray.size()]);
     }
 }
