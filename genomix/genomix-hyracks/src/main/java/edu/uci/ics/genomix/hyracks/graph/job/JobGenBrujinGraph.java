@@ -201,9 +201,10 @@ public class JobGenBrujinGraph extends JobGen {
                 nodeWriter = new NodeTextWriterFactory(kmerSize);
                 break;
             case BINARY:
-            default:
                 nodeWriter = new NodeSequenceWriterFactory(hadoopJobConfFactory.getConf());
                 break;
+            default:
+                throw new IllegalArgumentException("Invalid outputFormat: " + outputFormat);
         }
         logDebug("WriteOperator");
         // Output Node
@@ -246,7 +247,7 @@ public class JobGenBrujinGraph extends JobGen {
         String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         groupbyType = GroupbyType.PRECLUSTER;
 
-        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
+        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT);
 
         if (output.equalsIgnoreCase(GenomixJobConf.OUTPUT_FORMAT_TEXT)) {
             outputFormat = OutputFormat.TEXT;
