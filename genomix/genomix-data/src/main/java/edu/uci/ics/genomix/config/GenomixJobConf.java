@@ -123,6 +123,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
+        @Option(name = "-hyracksBuildOutputText", usage = "text output for hyracks build (debug option)", required=false)
+        private boolean hyracksBuildOutputText = false;
+        
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
     }
@@ -212,6 +215,7 @@ public class GenomixJobConf extends JobConf {
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
     public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
+    public static final String HYRACKS_BUILD_OUTPUT_TEXT = "genomix.hyracks.build.outout.text";
     
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = {
                     Patterns.BUILD, Patterns.MERGE, 
@@ -384,6 +388,7 @@ public class GenomixJobConf extends JobConf {
         setBoolean(DRAW_STATISTICS, opts.drawStatistics);
             
         setBoolean(RUN_LOCAL, opts.runLocal);
+        setBoolean(HYRACKS_BUILD_OUTPUT_TEXT, opts.hyracksBuildOutputText);
         
         // Hyracks/Pregelix Setup
         if (opts.ipAddress != null)

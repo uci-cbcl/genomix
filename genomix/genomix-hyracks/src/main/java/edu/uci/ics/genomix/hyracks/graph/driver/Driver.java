@@ -170,7 +170,10 @@ public class Driver {
         String IODirs = jobConf.get(GenomixJobConf.HYRACKS_IO_DIRS, null);
         int numOfDuplicate = IODirs != null ? IODirs.split(",").length : 4;
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
-        jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
+        if (Boolean.getBoolean(jobConf.get(GenomixJobConf.HYRACKS_BUILD_OUTPUT_TEXT)))
+            jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
+        else
+            jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         jobConf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
 
         System.out.println(GenomixJobConf.INITIAL_INPUT_DIR);
