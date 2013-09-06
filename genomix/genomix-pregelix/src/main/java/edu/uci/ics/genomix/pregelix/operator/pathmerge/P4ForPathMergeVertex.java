@@ -126,7 +126,7 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() % 4 == 3){
             outFlag |= headFlag;
             
-            outFlag |= MessageFlag.NO_MERGE;
+            outFlag |= State.NO_MERGE;
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors

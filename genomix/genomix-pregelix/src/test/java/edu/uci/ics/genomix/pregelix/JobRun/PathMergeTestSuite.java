@@ -19,7 +19,7 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
                 "SimpleTreePath", "ComplexTreePath",
                 "Triangle", "Rectangle", 
                 "synthetic",
-                "SmallGenome"
+//                "SmallGenome_5"
         };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
