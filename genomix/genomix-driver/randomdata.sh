@@ -4,7 +4,11 @@
 #set -e
 set -x
 
-[ $# -lt 5 ] && (echo "please provide 5 parameters: infile.readids numlines numfiles outdir and cmd"; exit 1)
+if [ $# -ne 5 ]; then
+    echo "please provide 5 parameters: infile.readids numlines numfiles outdir and cmd" 
+    echo "for example:   $0 /ffs/test/cbcl/wbiesing/testdata/5k_assemblathon_readids/5k_assemblathon.readids 100 5 /ffs/test/cbcl/wbiesing/testdata/5k_assemblathon_randomreadids  \"bin/genomix -kmerLength 55 -localOutput ~/result/500k_reads_P4 -pipelineOrder BUILD_HADOOP,MERGE -followsGraphBuild true -localInput \""
+    exit 1
+fi
 
 INFILE=$1
 NUMLINES=$2
