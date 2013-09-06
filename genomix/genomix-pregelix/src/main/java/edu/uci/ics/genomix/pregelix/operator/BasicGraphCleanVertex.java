@@ -393,6 +393,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         if(isTandemRepeat()){
             tmpValue.setAsCopy(getVertexValue());
             tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+            while(isTandemRepeat(tmpValue))
+                tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             sendSettledMsgToAllNeighborNodes(tmpValue);
@@ -701,6 +703,20 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return false;
     }
     
+    public boolean isTandemRepeat(VertexValueWritable value){
+        for(byte d : DirectionFlag.values){
+            Iterator<VKmerBytesWritable> it = value.getEdgeList(d).getKeys();
+            while(it.hasNext()){
+                repeatKmer.setAsCopy(it.next());
+                if(repeatKmer.equals(getVertexId())){
+                    repeatDir = d;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     public byte flipDir(byte dir){
         switch(dir){
             case DirectionFlag.DIR_FF:
@@ -779,6 +795,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         if(isTandemRepeat()){
             tmpValue.setAsCopy(getVertexValue());
             tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+            while(isTandemRepeat(tmpValue))
+                tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             sendSettledMsgToAllNeighborNodes(tmpValue);

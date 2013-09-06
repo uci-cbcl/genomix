@@ -21,8 +21,9 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
 //                "Triangle", "Rectangle", 
 //                "synthetic",
 //                "SmallGenome_5"
-                "MultiTandemRepeat",
-                "MultiTandemRepeat2",
+//                "MultiTandemRepeat",
+//                "MultiTandemRepeat2",
+//                "TandemRepeatAndCycle"
                 "MultiTandemRepeat3"
         };
         init(pattern, testSet);
