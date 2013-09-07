@@ -77,12 +77,15 @@ public class P1ForPathMergeVertex extends
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
+            addFakeVertex();
             startSendMsg();
-            voteToHalt();
         } else if (getSuperstep() == 2)
-            initState(msgIterator);
+            if(isFakeVertex())
+                initState(msgIterator);
+            else voteToHalt();
         else if (getSuperstep() % 4 == 3 && getSuperstep() <= maxIteration) {
-            if(isHeadNode()){
+            if(!isFakeVertex()){
+                if(isHeadNode()){
                 byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
                 switch(headMergeDir){
                     case State.HEAD_SHOULD_MERGEWITHPREV:
@@ -94,6 +97,10 @@ public class P1ForPathMergeVertex extends
                 }
             } else
                 voteToHalt();
+            } else{ //is FakeVertex
+                
+            }
+            
         } else if (getSuperstep() % 4 == 0 && getSuperstep() <= maxIteration) {
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
@@ -107,20 +114,26 @@ public class P1ForPathMergeVertex extends
             if(isHeadNode())
                 broadcastMergeMsg(false);
         } else if (getSuperstep() % 4 == 2 && getSuperstep() <= maxIteration) {
-            receivedMsg.clear();
-            while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                receivedMsg.add(incomingMsg);
-            }
-            if(receivedMsg.size() == 2){ //#incomingMsg == even
-                for(int i = 0; i < 2; i++)
-                    processMerge(receivedMsg.get(i));
-            } else{
-                boolean isHead = isHeadNode();
-                processMerge(receivedMsg.get(0));
-                if(isHead){
-                    
-                } 
+            if(!msgIterator.hasNext() && isDeadNode())
+                deleteVertex(getVertexId());
+            else{
+                receivedMsg.clear();
+                while(msgIterator.hasNext()){
+                    incomingMsg = msgIterator.next();
+                    receivedMsg.add(incomingMsg);
+                }
+                if(receivedMsg.size() == 2){ //#incomingMsg == even
+                    for(int i = 0; i < 2; i++)
+                        processMerge(receivedMsg.get(i));
+                } else{
+                    boolean isHead = isHeadNode();
+                    processMerge(receivedMsg.get(0));
+                    if(isHead){
+                        // NON-FAKE and Final vertice send msg to FAKE vertex 
+                        sendMsgToFakeVertex();
+                        voteToHalt();
+                    }
+                }
             }
         } else
             voteToHalt();

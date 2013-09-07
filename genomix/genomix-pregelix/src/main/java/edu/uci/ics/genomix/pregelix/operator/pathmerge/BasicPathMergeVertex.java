@@ -394,12 +394,16 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 configureMergeMsgForSuccessor(getNextDestVertexId());
                 if(deleteSelf)
                     deleteVertex(getVertexId());
+                else
+                    getVertexValue().setState(State.IS_DEAD);
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
                 configureMergeMsgForPredecessor(getPrevDestVertexId());
                 if(deleteSelf)
                     deleteVertex(getVertexId());
+                else
+                    getVertexValue().setState(State.IS_DEAD);
                 break; 
         }
     }
