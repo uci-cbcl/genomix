@@ -66,7 +66,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         EdgeWritable edge = new EdgeWritable();
         edge.setKey(incomingMsg.getSourceVertexId());
         edge.setReadIDs(incomingMsg.getNode().getEdgeList(meToNeighborDir).getReadIDs(getVertexId()));
-        getVertexValue().getEdgeList(neighborToMeDir).add(edge);
+        getVertexValue().getEdgeList(neighborToMeDir).unionAdd(edge);
     }
     
     /**
