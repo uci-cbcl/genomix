@@ -85,11 +85,11 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             VKmerBytesWritable kmer = new VKmerBytesWritable();
             kmerList = new VKmerListWritable();
             if(reverseKmer.compareTo(tmpKmer) > 0){
-                kmerDir.set(i, KmerDir.FORWARD);
+                kmerDir.add(KmerDir.FORWARD);
                 kmer.setAsCopy(tmpKmer);
             }
             else{
-                kmerDir.set(i, KmerDir.REVERSE);
+                kmerDir.add(KmerDir.REVERSE);
                 kmer.setAsCopy(reverseKmer);
             }
             if(!kmerMapper.containsKey(kmer)){

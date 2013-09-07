@@ -37,6 +37,7 @@ public class P1ForPathMergeVertex extends
             destVertexId = new VKmerBytesWritable();
         inFlag = 0;
         outFlag = 0;
+        headFlag = getHeadFlag();
         headMergeDir = getHeadMergeDir();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
@@ -185,7 +186,8 @@ public class P1ForPathMergeVertex extends
                         // NON-FAKE and Final vertice send msg to FAKE vertex 
                         sendMsgToFakeVertex();
                         voteToHalt();
-                    }
+                    } else
+                        activate();
                 }
             }
         } else
