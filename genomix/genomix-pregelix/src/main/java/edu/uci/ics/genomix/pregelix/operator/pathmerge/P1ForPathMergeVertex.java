@@ -10,6 +10,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
 /**
@@ -56,6 +57,10 @@ public class P1ForPathMergeVertex extends
             kmerList = new VKmerListWritable();
         else
             kmerList.reset();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+//        else
+//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
     }
     
     /**

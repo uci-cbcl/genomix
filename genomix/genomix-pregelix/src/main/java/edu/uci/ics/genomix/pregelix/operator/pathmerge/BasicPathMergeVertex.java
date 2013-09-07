@@ -190,20 +190,18 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * This vertex tries to merge with next vertex and send update msg to predecesspr
      */
     public void sendUpdateMsgToPredecessor(boolean flag){
-        if(getVertexValue().hasNextDest()){
-            setStateAsMergeWithNext();
+        setStateAsMergeWithNext();
+        if(getVertexValue().hasNextDest())
             broadcastUpdateMsg(flag);   
-        }
     }
     
     /**
      * This vertex tries to merge with next vertex and send update msg to successor
      */
     public void sendUpdateMsgToSuccessor(boolean flag){
-        if(getVertexValue().hasPrevDest()){
-            setStateAsMergeWithPrev();
+        setStateAsMergeWithPrev();
+        if(getVertexValue().hasPrevDest())
             broadcastUpdateMsg(flag);
-        }
     }
     
     /**
@@ -360,16 +358,20 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 configureMergeMsgForSuccessor(getNextDestVertexId());
                 if(deleteSelf)
                     deleteVertex(getVertexId());
-                else
+                else{
                     getVertexValue().setState(State.IS_DEAD);
+                    activate();
+                }
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
                 configureMergeMsgForPredecessor(getPrevDestVertexId());
                 if(deleteSelf)
                     deleteVertex(getVertexId());
-                else
+                else{
                     getVertexValue().setState(State.IS_DEAD);
+                    activate();
+                }
                 break; 
         }
     }
