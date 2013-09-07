@@ -3,7 +3,9 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
@@ -71,6 +73,51 @@ public class P1ForPathMergeVertex extends
                 fakeVertex.setByRead(kmerSize + 1, fake.getBytes(), 0); 
             }
         }
+        if(tmpKmer == null)
+            tmpKmer = new VKmerBytesWritable();
+        headMergeDir = getHeadMergeDir();
+        if(reverseKmer == null)
+            reverseKmer = new VKmerBytesWritable();
+        if(kmerList == null)
+            kmerList = new VKmerListWritable();
+        else
+            kmerList.reset();
+    }
+    
+    /**
+     * map reduce in FakeNode
+     */
+    public void aggregateMsgAndGroupInFakeNode(Iterator<PathMergeMessageWritable> msgIterator){
+        kmerMapper.clear();
+        /** Mapper **/
+        mapKeyByInternalKmer(msgIterator);
+        /** Reducer **/
+        reduceKeyByInternalKmer();
+    }
+    
+    /**
+     * typical for P1
+     */
+    @Override
+    public void reduceKeyByInternalKmer(){
+        for(VKmerBytesWritable key : kmerMapper.keySet()){
+            kmerList = kmerMapper.get(key);
+            //always delete kmerList(1), keep kmerList(0)
+            
+            //send kill message to kmerList(1), and carry with kmerList(0) to update edgeLists of kmerList(1)'s neighbor
+            outgoingMsg.setFlag(MessageFlag.KILL);
+            outgoingMsg.getNode().setInternalKmer(kmerList.getPosition(0));
+            destVertexId.setAsCopy(kmerList.getPosition(1));
+            sendMsg(destVertexId, outgoingMsg);
+            
+            //send update message to kmerList(0) to add the edgeList of kmerList(1)
+            outgoingMsg.reset();
+            outgoingMsg.setFlag(MessageFlag.UPDATE);
+            for(byte d: DirectionFlag.values)
+                outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+            destVertexId.setAsCopy(kmerList.getPosition(0));
+            sendMsg(destVertexId, outgoingMsg);
+        }
     }
     
     @Override
@@ -98,7 +145,9 @@ public class P1ForPathMergeVertex extends
             } else
                 voteToHalt();
             } else{ //is FakeVertex
-                
+                // Fake vertex agregates message and group them by actual kmer (1) 
+                aggregateMsgAndGroupInFakeNode(msgIterator);
+                voteToHalt();
             }
             
         } else if (getSuperstep() % 4 == 0 && getSuperstep() <= maxIteration) {
@@ -125,6 +174,8 @@ public class P1ForPathMergeVertex extends
                 if(receivedMsg.size() == 2){ //#incomingMsg == even
                     for(int i = 0; i < 2; i++)
                         processMerge(receivedMsg.get(i));
+                    //final vertex
+                    voteToHalt();
                 } else{
                     boolean isHead = isHeadNode();
                     processMerge(receivedMsg.get(0));

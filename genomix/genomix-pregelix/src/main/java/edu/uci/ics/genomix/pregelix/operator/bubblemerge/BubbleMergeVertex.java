@@ -339,7 +339,7 @@ public class BubbleMergeVertex extends
                 incomingMsg = msgIterator.next();
                 if(incomingMsg.getFlag() == MessageFlag.KILL){
                     broadcaseKillselfAndNoticeToUpdateEdges();
-                    //set statistics counter: Num_RemovedTips
+                    //set statistics counter: Num_RemovedBubbles
                     updateStatisticsCounter(StatisticsCounter.Num_RemovedBubbles);
                     getVertexValue().setCounters(counters);
                 }
