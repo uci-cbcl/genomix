@@ -19,6 +19,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         state &= State.SHOULD_MERGE_CLEAR;
         state |= State.SHOULD_MERGEWITHPREV;
         getVertexValue().setState(state);
+        activate();
     }
     
     public void setStateAsMergeWithNext(){
@@ -26,6 +27,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         state &= State.SHOULD_MERGE_CLEAR;
         state |= State.SHOULD_MERGEWITHNEXT;
         getVertexValue().setState(state);
+        activate();
     }
     
     /**
