@@ -188,6 +188,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
     }
     
+    public boolean isReceiveUpdateMsg(){
+        byte updateFlag = (byte) (incomingMsg.getFlag() & MessageFlag.UPDATE_MASK);
+        return updateFlag == MessageFlag.UPDATE;
+        
+    }
+    
     public boolean isResponseKillMsg(){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);

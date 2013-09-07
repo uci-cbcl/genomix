@@ -127,7 +127,7 @@ public class P1ForPathMergeVertex extends
             addFakeVertex();
             startSendMsg();
         } else if (getSuperstep() == 2)
-            if(isFakeVertex())
+            if(!isFakeVertex())
                 initState(msgIterator);
             else voteToHalt();
         else if (getSuperstep() % 4 == 3 && getSuperstep() <= maxIteration) {
@@ -151,12 +151,19 @@ public class P1ForPathMergeVertex extends
             }
         } else if (getSuperstep() % 4 == 0 && getSuperstep() <= maxIteration) {
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                processUpdate();
-                if(isHaltNode())
-                    voteToHalt();
-                else
-                    activate();
+                //TODO
+                if(isReceiveKillMsg()){
+                    broadcaseKillself();
+                } else if(isReceiveUpdateMsg()){
+                    
+                } else{
+                    incomingMsg = msgIterator.next();
+                    processUpdate();
+                    if(isHaltNode())
+                        voteToHalt();
+                    else
+                        activate();
+                }
             }
         } else if (getSuperstep() % 4 == 1 && getSuperstep() <= maxIteration) {
             if(isHeadNode())
