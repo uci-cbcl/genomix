@@ -20,6 +20,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -47,7 +49,7 @@ import edu.uci.ics.genomix.hyracks.graph.util.GenerateGraphViz;
 @SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
 public class ParameteredTestCaseForSet {
-    public static final DirType testSetType = DirType.SINGLEREAD;
+    public static final DirType testSetType = DirType.MULTIPLE_TANDEM_REPEAT;
     public String dataPath;
     public int KmerSize;
     
@@ -64,10 +66,12 @@ public class ParameteredTestCaseForSet {
         try {
             dirSet = ts.getAllTestInputinDir();
             for (String testDirPointer : dirSet) {
-                String[] paraForSTest = testDirPointer.split("_");
-                if(paraForSTest.length != 2)
-                    throw new Exception("the number of paramters is not enough");
-                data.add(new Object[] { testDirPointer, paraForSTest[1].substring(1)});
+                Pattern kPattern = Pattern.compile("_k(\\d+)");
+                Matcher m = kPattern.matcher(testDirPointer);
+                boolean found = m.find();
+                if (!found)
+                    throw new Exception("the number of parameters is not enough");
+                data.add(new Object[] { testDirPointer, m.group(1)});
             }
         } catch (IOException e) {
             e.printStackTrace();

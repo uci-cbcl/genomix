@@ -161,8 +161,8 @@ public class Driver {
     }
 
     public static void main(String[] args) throws Exception {
-        //        String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",
-        //                "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-frameSize", "252"};
+//                String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",
+//                        "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-hyracksBuildOutputText", "true"};
         GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
 
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
@@ -170,7 +170,8 @@ public class Driver {
         String IODirs = jobConf.get(GenomixJobConf.HYRACKS_IO_DIRS, null);
         int numOfDuplicate = IODirs != null ? IODirs.split(",").length : 4;
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
-        if (Boolean.getBoolean(jobConf.get(GenomixJobConf.HYRACKS_BUILD_OUTPUT_TEXT)))
+        
+        if (Boolean.parseBoolean(jobConf.get(GenomixJobConf.HYRACKS_BUILD_OUTPUT_TEXT)))
             jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         else
             jobConf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
