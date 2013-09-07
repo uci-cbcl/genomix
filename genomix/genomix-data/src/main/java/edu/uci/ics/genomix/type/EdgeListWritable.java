@@ -370,4 +370,9 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         // didn't find the edge; add a copy of it now
         edges.add(new EdgeWritable(otherEdge));
     }
+    
+    public void unionAdd(EdgeListWritable otherEdgeList){
+        for(EdgeWritable otherEdge : otherEdgeList)
+            unionAdd(otherEdge);
+    }
 }

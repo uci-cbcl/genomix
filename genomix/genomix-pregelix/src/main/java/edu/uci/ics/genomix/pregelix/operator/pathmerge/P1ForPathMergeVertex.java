@@ -12,36 +12,10 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
-/*
- * vertexId: BytesWritable
- * vertexValue: ByteWritable
- * edgeValue: NullWritable
- * message: MessageWritable
- * 
- * DNA:
- * A: 00
- * C: 01
- * G: 10
- * T: 11
- * 
- * succeed node
- *  A 00000001 1
- *  G 00000010 2
- *  C 00000100 4
- *  T 00001000 8
- * precursor node
- *  A 00010000 16
- *  G 00100000 32
- *  C 01000000 64
- *  T 10000000 128
- *  
- * For example, ONE LINE in input file: 00,01,10	0001,0010,
- * That means that vertexId is ACG, its succeed node is A and its precursor node is C.
- * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
- * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
- */
 /**
- * Naive Algorithm for path merge graph
+ * Graph clean pattern: P1(Naive-algorithm) for path merge 
+ * @author anbangx
+ *
  */
 public class P1ForPathMergeVertex extends
     MapReduceVertex<VertexValueWritable, PathMergeMessageWritable> {
@@ -151,24 +125,38 @@ public class P1ForPathMergeVertex extends
                 voteToHalt();
             }
         } else if (getSuperstep() % 4 == 0 && getSuperstep() <= maxIteration) {
-            while(msgIterator.hasNext()){
-                //TODO
-                if(isReceiveKillMsg()){
-                    broadcaseKillself();
-                } else if(isReceiveUpdateMsg()){
-                    
-                } else{
+            if(!isFakeVertex()){
+                while(msgIterator.hasNext()){
                     incomingMsg = msgIterator.next();
-                    processUpdate();
-                    if(isHaltNode())
+                    if(isReceiveKillMsg()){
+                        broadcaseKillself();
+                    } else if(isReceiveUpdateMsg()){
+                        for(byte dir : DirectionFlag.values){
+                            byte updateDir = flipDirection(dir, incomingMsg.isFlip());
+                            getVertexValue().getEdgeList(updateDir).unionAdd(incomingMsg.getEdgeList(dir));
+                        }
                         voteToHalt();
-                    else
-                        activate();
+                    } else{
+                        processUpdate();
+                        if(isHaltNode())
+                            voteToHalt();
+                        else
+                            activate();
+                    }
                 }
             }
+            
         } else if (getSuperstep() % 4 == 1 && getSuperstep() <= maxIteration) {
-            if(isHeadNode())
-                broadcastMergeMsg(false);
+            if(!isFakeVertex()){
+                if(isResponseKillMsg()){
+                    responseToDeadVertex();
+                    voteToHalt();
+                } else{
+                    if(isHeadNode())
+                        broadcastMergeMsg(false);
+                }
+            }
+            
         } else if (getSuperstep() % 4 == 2 && getSuperstep() <= maxIteration) {
             if(!msgIterator.hasNext() && isDeadNode())
                 deleteVertex(getVertexId());
