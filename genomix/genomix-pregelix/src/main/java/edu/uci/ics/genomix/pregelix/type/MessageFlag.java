@@ -20,9 +20,6 @@ public class MessageFlag extends VertexStateFlag {
     
     public static final byte DIR_FROM_DEADVERTEX = 0b1 << 5;
     public static final byte DEAD_MASK = 0b1 << 5;
-
-    public static final byte STOP = 0b1 << 2;
-    public static final byte STOP_MASK = 0b1 << 2;
     
     public static String getFlagAsString(byte code) {
         return "ERROR_BAD_MESSAGE";

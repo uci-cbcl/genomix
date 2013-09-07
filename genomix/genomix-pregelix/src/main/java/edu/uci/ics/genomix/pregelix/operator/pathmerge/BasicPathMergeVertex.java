@@ -1,7 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
-
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
@@ -281,16 +279,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
         return false;
     }
-    /**
-     * send merge message to neighber for P1
-     * @throws IOException 
-     */
-    public void sendMergeMsgForP1(MessageWritable msg){
-        outgoingMsg.setUpdateMsg(false);
-        if (getHeadFlag() > 0)//is_tail, for P1
-            outFlag |= MessageFlag.STOP;
-        sendMergeMsgByIncomingMsgDir();
-    }
     
     public void sendMergeMsgByIncomingMsgDir(){
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
@@ -305,28 +293,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 configureMergeMsgForPredecessor(incomingMsg.getSourceVertexId()); 
                 break; 
         }
-    }
-    
-    /**
-     * send merge message to neighber for P1
-     */
-    public void responseMergeMsgToPrevNode(){
-        outFlag = 0;
-        if (getVertexValue().getState() == State.IS_HEAD)//is_tail
-            outFlag |= MessageFlag.STOP;
-        configureMergeMsgForPredecessor(getPrevDestVertexId());
-        deleteVertex(getVertexId());
-    }
-    
-    /**
-     *  for P1
-     */
-    public void responseMergeMsgToNextNode(){
-        outFlag = 0;
-        if (getVertexValue().getState() == State.IS_HEAD)//is_tail
-            outFlag |= MessageFlag.STOP;
-        configureMergeMsgForSuccessor(getNextDestVertexId());
-        deleteVertex(getVertexId());
     }
     
     /**

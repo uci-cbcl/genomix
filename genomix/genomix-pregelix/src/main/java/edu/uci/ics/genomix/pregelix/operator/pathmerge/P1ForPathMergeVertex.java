@@ -133,23 +133,22 @@ public class P1ForPathMergeVertex extends
         else if (getSuperstep() % 4 == 3 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
                 if(isHeadNode()){
-                byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
-                switch(headMergeDir){
-                    case State.HEAD_SHOULD_MERGEWITHPREV:
-                        sendUpdateMsgToSuccessor(true);
-                        break;
-                    case State.HEAD_SHOULD_MERGEWITHNEXT:
-                        sendUpdateMsgToPredecessor(true);
-                        break;
-                }
-            } else
-                voteToHalt();
+                    byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
+                    switch(headMergeDir){
+                        case State.HEAD_SHOULD_MERGEWITHPREV:
+                            sendUpdateMsgToSuccessor(true);
+                            break;
+                        case State.HEAD_SHOULD_MERGEWITHNEXT:
+                            sendUpdateMsgToPredecessor(true);
+                            break;
+                    }
+                } else
+                    voteToHalt();
             } else{ //is FakeVertex
                 // Fake vertex agregates message and group them by actual kmer (1) 
                 aggregateMsgAndGroupInFakeNode(msgIterator);
                 voteToHalt();
             }
-            
         } else if (getSuperstep() % 4 == 0 && getSuperstep() <= maxIteration) {
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
