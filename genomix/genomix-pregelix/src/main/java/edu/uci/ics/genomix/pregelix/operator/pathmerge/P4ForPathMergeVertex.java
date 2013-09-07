@@ -181,7 +181,7 @@ public class P4ForPathMergeVertex extends
                 if(isHaltNode())
                     voteToHalt();
                 else
-                    this.activate();
+                    activate();
             }
         } else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self
@@ -214,7 +214,7 @@ public class P4ForPathMergeVertex extends
                 }
                 else{
                     getVertexValue().setCounters(counters);
-                    this.activate();
+                    activate();
                 }
             }
         }

@@ -9,7 +9,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /*
  * vertexId: BytesWritable
@@ -45,7 +44,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 public class P1ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
     
-    private ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
+    private ArrayList<PathMergeMessageWritable> receivedMsg = new ArrayList<PathMergeMessageWritable>();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -61,7 +60,10 @@ public class P1ForPathMergeVertex extends
             destVertexId = new VKmerBytesWritable();
         inFlag = 0;
         outFlag = 0;
-        receivedMsgList.clear();
+        headMergeDir = getHeadMergeDir();
+        if(repeatKmer == null)
+            repeatKmer = new VKmerBytesWritable();
+        tmpValue.reset();
     }
     
     public void chooseDirAndSendMsg(){
@@ -114,25 +116,40 @@ public class P1ForPathMergeVertex extends
             voteToHalt();
         } else if (getSuperstep() == 2)
             initState(msgIterator);
-        else if (getSuperstep() % 2 == 1 && getSuperstep() <= maxIteration) {
-            sendMsgToPathVertex(msgIterator);
-            voteToHalt();
-        } else if (getSuperstep() % 2 == 0 && getSuperstep() > 2 && getSuperstep() <= maxIteration) {
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                receivedMsgList.add(incomingMsg);
-            }
-            /** if receive two messages, break the symmetric **/
-            if(receivedMsgList.size() > 0){
-                if(VertexUtil.isPathVertex(getVertexValue()) || canMergeWithHead(receivedMsgList.get(0))){
-                    /** choose update and merge direction **/
-                    sendUpdateMsg(receivedMsgList.get(0));
-                    outFlag = 0;
-                    sendMergeMsgForP1(receivedMsgList.get(0));
-                    deleteVertex(getVertexId());
+        else if (getSuperstep() % 4 == 3 && getSuperstep() <= maxIteration) {
+            if(isHeadNode()){
+                byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
+                switch(headMergeDir){
+                    case State.HEAD_SHOULD_MERGEWITHPREV:
+                        sendUpdateMsgToSuccessor(true);
+                        break;
+                    case State.HEAD_SHOULD_MERGEWITHNEXT:
+                        sendUpdateMsgToPredecessor(true);
+                        break;
                 }
+            } else
+                voteToHalt();
+        } else if (getSuperstep() % 4 == 0 && getSuperstep() <= maxIteration) {
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                processUpdate();
+                if(isHaltNode())
+                    voteToHalt();
+                else
+                    activate();
             }
-            voteToHalt();
+        } else if (getSuperstep() % 4 == 1 && getSuperstep() <= maxIteration) {
+            if(isHeadNode())
+                broadcastMergeMsg();
+        } else if (getSuperstep() % 4 == 2 && getSuperstep() <= maxIteration) {
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                receivedMsg.add(incomingMsg);
+            }
+            if(receivedMsg.size() == 2){
+                for(int i = 0; i < 2; i++)
+                    processMerge();
+            }
         } else
             voteToHalt();
     }
