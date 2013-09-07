@@ -90,16 +90,16 @@ public class P1ForPathMergeVertex extends
     public void aggregateMsgAndGroupInFakeNode(Iterator<PathMergeMessageWritable> msgIterator){
         kmerMapper.clear();
         /** Mapper **/
-        mapKeyByInternalKmer(msgIterator);
+        ArrayList<Byte> kmerDir = mapKeyByInternalKmer(msgIterator);
+        boolean isFlip = kmerDir.get(0) == kmerDir.get(1) ? false : true;
         /** Reducer **/
-        reduceKeyByInternalKmer();
+        reduceKeyByInternalKmer(isFlip);
     }
     
     /**
      * typical for P1
      */
-    @Override
-    public void reduceKeyByInternalKmer(){
+    public void reduceKeyByInternalKmer(boolean isFlip){
         for(VKmerBytesWritable key : kmerMapper.keySet()){
             kmerList = kmerMapper.get(key);
             //always delete kmerList(1), keep kmerList(0)
@@ -113,6 +113,7 @@ public class P1ForPathMergeVertex extends
             //send update message to kmerList(0) to add the edgeList of kmerList(1)
             outgoingMsg.reset();
             outgoingMsg.setFlag(MessageFlag.UPDATE);
+            outgoingMsg.setFlip(isFlip);
             for(byte d: DirectionFlag.values)
                 outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
             destVertexId.setAsCopy(kmerList.getPosition(0));
