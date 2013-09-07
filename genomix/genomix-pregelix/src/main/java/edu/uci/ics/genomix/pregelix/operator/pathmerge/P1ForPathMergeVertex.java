@@ -42,7 +42,7 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag;
  * Naive Algorithm for path merge graph
  */
 public class P1ForPathMergeVertex extends
-    BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
+    MapReduceVertex<VertexValueWritable, PathMergeMessageWritable> {
     
     private ArrayList<PathMergeMessageWritable> receivedMsg = new ArrayList<PathMergeMessageWritable>();
     /**
@@ -64,50 +64,15 @@ public class P1ForPathMergeVertex extends
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
-    }
-    
-    public void chooseDirAndSendMsg(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
-                sendSettledMsgToNextNode();
-                break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
-                sendSettledMsgToPrevNode();
-                break;
-        }
-    }
-    /**
-     * head node sends message to path node
-     */
-    public void sendMsgToPathVertex(Iterator<PathMergeMessageWritable> msgIterator) {
-        if (getSuperstep() == 3) {
-            if(getVertexValue().getState() == State.IS_HEAD)
-                outFlag |= MessageFlag.IS_HEAD;
-            sendSettledMsgToAllNextNodes(getVertexValue());
-        } else {
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                byte stopFlag = (byte) (incomingMsg.getFlag() & MessageFlag.STOP_MASK);
-                if (stopFlag != MessageFlag.STOP) {
-                    if(incomingMsg.isUpdateMsg())
-                        processUpdate();
-                    else{
-                        processMerge();
-                        /** after merge with next node, keep merge with next one **/
-                        chooseDirAndSendMsg();
-                    }
-                } else {
-                    processMerge();
-                    getVertexValue().setState(State.IS_FINAL);
-                }
+        synchronized(lock){
+            if(fakeVertex == null){
+                fakeVertex = new VKmerBytesWritable();
+                String fake = generateString(kmerSize + 1);//generaterRandomString(kmerSize + 1);
+                fakeVertex.setByRead(kmerSize + 1, fake.getBytes(), 0); 
             }
         }
     }
-
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -140,15 +105,22 @@ public class P1ForPathMergeVertex extends
             }
         } else if (getSuperstep() % 4 == 1 && getSuperstep() <= maxIteration) {
             if(isHeadNode())
-                broadcastMergeMsg();
+                broadcastMergeMsg(false);
         } else if (getSuperstep() % 4 == 2 && getSuperstep() <= maxIteration) {
+            receivedMsg.clear();
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
                 receivedMsg.add(incomingMsg);
             }
-            if(receivedMsg.size() == 2){
+            if(receivedMsg.size() == 2){ //#incomingMsg == even
                 for(int i = 0; i < 2; i++)
-                    processMerge();
+                    processMerge(receivedMsg.get(i));
+            } else{
+                boolean isHead = isHeadNode();
+                processMerge(receivedMsg.get(0));
+                if(isHead){
+                    
+                } 
             }
         } else
             voteToHalt();

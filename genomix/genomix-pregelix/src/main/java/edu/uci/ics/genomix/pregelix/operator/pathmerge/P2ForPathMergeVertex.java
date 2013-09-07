@@ -85,17 +85,6 @@ public class P2ForPathMergeVertex extends
     }
     
     /**
-     * 
-     */
-    public String generateString(int length){
-        StringBuffer outputBuffer = new StringBuffer(length);
-        for (int i = 0; i < length; i++){
-           outputBuffer.append("A");
-        }
-        return outputBuffer.toString();
-    }
-    
-    /**
      * add fake vertex
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })

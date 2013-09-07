@@ -383,7 +383,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * send merge message to neighber for P4
      */
-    public void broadcastMergeMsg(){
+    public void broadcastMergeMsg(boolean deleteSelf){
         if(headFlag > 0){
             outFlag |= MessageFlag.IS_HEAD;
             outFlag |= headMergeDir;
@@ -392,12 +392,14 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             case State.SHOULD_MERGEWITHNEXT:
                 /** configure merge msg for successor **/
                 configureMergeMsgForSuccessor(getNextDestVertexId());
-                deleteVertex(getVertexId());
+                if(deleteSelf)
+                    deleteVertex(getVertexId());
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
                 configureMergeMsgForPredecessor(getPrevDestVertexId());
-                deleteVertex(getVertexId());
+                if(deleteSelf)
+                    deleteVertex(getVertexId());
                 break; 
         }
     }

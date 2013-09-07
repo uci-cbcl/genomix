@@ -46,6 +46,17 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             tmpKmer = new VKmerBytesWritable();
     }
     
+    /**
+     * 
+     */
+    public String generateString(int length){
+        StringBuffer outputBuffer = new StringBuffer(length);
+        for (int i = 0; i < length; i++){
+           outputBuffer.append("A");
+        }
+        return outputBuffer.toString();
+    }
+    
     public void sendMsgToFakeVertex(){
         outgoingMsg.reset();
         if(!getVertexValue().isFakeVertex()){
