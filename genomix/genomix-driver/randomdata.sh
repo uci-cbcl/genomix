@@ -22,7 +22,10 @@ for i in `seq 1 $NUM_FILES`;
 do
     mkdir -p $OUTDIR/random_set_$i || (echo "chouldn't make the output dir $OUTDIR/random_set_$i" && exit 1)
     sort -R $INFILE | head -n $NUMLINES > $OUTDIR/random_set_$i/random.readid
-    eval "$CMD $OUTDIR/random_set_$i/random.readid"  || exit 1
+    eval "$CMD $OUTDIR/random_set_$i/random.readid" 2>&1 | tee $OUTDIR/logs/random_set_$i
+    if [ ${PIPESTATUS[0]} -eq 0 ]; then
+        rm -rf $OUTDIR/logs/random_set_$i
+    fi
 done
 
 
