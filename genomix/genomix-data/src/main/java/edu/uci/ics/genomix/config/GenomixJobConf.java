@@ -226,9 +226,6 @@ public class GenomixJobConf extends JobConf {
                     Patterns.SCAFFOLD, Patterns.MERGE
             };
     
-    
-    
-    
     private String[] extraArguments = {};
     
     private static Map<String, Long> tickTimes = new HashMap<String, Long>(); 

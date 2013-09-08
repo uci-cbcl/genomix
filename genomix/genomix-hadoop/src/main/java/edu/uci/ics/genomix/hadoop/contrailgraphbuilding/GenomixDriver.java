@@ -18,7 +18,6 @@ import org.kohsuke.args4j.Option;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
-
 @SuppressWarnings("deprecation")
 public class GenomixDriver {
     
@@ -35,7 +34,7 @@ public class GenomixDriver {
         @Option(name = "-kmer-size", usage = "the size of kmer", required = true)
         public int sizeKmer;
         
-        @Option(name = "-num-lines-per-map", usage = "the number of lines per map", required = true)
+        @Option(name = "-num-lines-per-map", usage = "the number of lines per map", required = false)
         public int linesPerMap;
     }
     
@@ -55,9 +54,10 @@ public class GenomixDriver {
         conf.setMapOutputValueClass(NodeWritable.class);
         
         //InputFormat and OutputFormat for Reducer
-        conf.setInputFormat(NLineInputFormat.class);
-        conf.setInt("mapred.line.input.format.linespermap", linesPerMap);
+//        conf.setInputFormat(NLineInputFormat.class);
+//        conf.setInt("mapred.line.input.format.linespermap", linesPerMap);
 //        conf.setInt("io.sort.mb", 150);
+        conf.setInputFormat(TextInputFormat.class);
         if (seqOutput == true)
             conf.setOutputFormat(SequenceFileOutputFormat.class);
         else
