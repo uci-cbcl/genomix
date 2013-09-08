@@ -1,51 +1,31 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
-/*
- * vertexId: BytesWritable
- * vertexValue: ByteWritable
- * edgeValue: NullWritable
- * message: MessageWritable
- * 
- * DNA:
- * A: 00
- * C: 01
- * G: 10
- * T: 11
- * 
- * succeed node
- *  A 00000001 1
- *  G 00000010 2
- *  C 00000100 4
- *  T 00001000 8
- * precursor node
- *  A 00010000 16
- *  G 00100000 32
- *  C 01000000 64
- *  T 10000000 128
- *  
- * For example, ONE LINE in input file: 00,01,10	0001,0010,
- * That means that vertexId is ACG, its succeed node is A and its precursor node is C.
- * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
- * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
- */
 /**
- * Naive Algorithm for path merge graph
+ * Graph clean pattern: P1(Naive-algorithm) for path merge 
+ * @author anbangx
+ *
  */
 public class P1ForPathMergeVertex extends
-    BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
+    MapReduceVertex<VertexValueWritable, PathMergeMessageWritable> {
     
-    private ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
+    private ArrayList<PathMergeMessageWritable> receivedMsg = new ArrayList<PathMergeMessageWritable>();
+    private HashMap<VKmerBytesWritable, ArrayList<Byte>> dirMapper = new HashMap<VKmerBytesWritable, ArrayList<Byte>>();
+    
+    private EdgeWritable tmpEdge = new EdgeWritable();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -61,79 +41,279 @@ public class P1ForPathMergeVertex extends
             destVertexId = new VKmerBytesWritable();
         inFlag = 0;
         outFlag = 0;
-        receivedMsgList.clear();
+        headFlag = getHeadFlag();
+        headMergeDir = getHeadMergeDir();
+        if(repeatKmer == null)
+            repeatKmer = new VKmerBytesWritable();
+        tmpValue.reset();
+        synchronized(lock){
+            if(fakeVertex == null){
+                fakeVertex = new VKmerBytesWritable();
+                String fake = generateString(kmerSize + 1);//generaterRandomString(kmerSize + 1);
+                fakeVertex.setByRead(kmerSize + 1, fake.getBytes(), 0); 
+            }
+        }
+        if(tmpKmer == null)
+            tmpKmer = new VKmerBytesWritable();
+        headMergeDir = getHeadMergeDir();
+        if(reverseKmer == null)
+            reverseKmer = new VKmerBytesWritable();
+        if(kmerList == null)
+            kmerList = new VKmerListWritable();
+        else
+            kmerList.reset();
+        if(getSuperstep() == 1)
+            StatisticsAggregator.preGlobalCounters.clear();
+//        else
+//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        counters.clear();
+        getVertexValue().getCounters().clear();
     }
     
-    public void chooseDirAndSendMsg(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
-                sendSettledMsgToNextNode();
-                break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
-                sendSettledMsgToPrevNode();
-                break;
-        }
-    }
     /**
-     * head node sends message to path node
+     * map reduce in FakeNode
      */
-    public void sendMsgToPathVertex(Iterator<PathMergeMessageWritable> msgIterator) {
-        if (getSuperstep() == 3) {
-            if(getVertexValue().getState() == State.IS_HEAD)
-                outFlag |= MessageFlag.IS_HEAD;
-            sendSettledMsgToAllNextNodes(getVertexValue());
-        } else {
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                byte stopFlag = (byte) (incomingMsg.getFlag() & MessageFlag.STOP_MASK);
-                if (stopFlag != MessageFlag.STOP) {
-                    if(incomingMsg.isUpdateMsg())
-                        processUpdate();
-                    else{
-                        processMerge();
-                        /** after merge with next node, keep merge with next one **/
-                        chooseDirAndSendMsg();
-                    }
-                } else {
-                    processMerge();
-                    getVertexValue().setState(State.IS_FINAL);
-                }
+    public void aggregateMsgAndGroupInFakeNode(Iterator<PathMergeMessageWritable> msgIterator){
+        kmerMapper.clear();
+        dirMapper.clear();
+        /** Mapper **/
+        mapKeyByInternalKmer(msgIterator);
+        /** Reducer **/
+        reduceKeyByInternalKmer();
+    }
+    
+    /**
+     * typical for P1
+     */
+    @Override
+    public void mapKeyByInternalKmer(Iterator<PathMergeMessageWritable> msgIterator){
+        byte dir = 0;
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            String kmerString = incomingMsg.getInternalKmer().toString();
+            tmpKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
+            reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
+
+            VKmerBytesWritable kmer = new VKmerBytesWritable();
+            kmerList = new VKmerListWritable();
+            if(reverseKmer.compareTo(tmpKmer) > 0){
+                dir = KmerDir.FORWARD;
+                kmer.setAsCopy(tmpKmer);
+            }
+            else{
+                dir = KmerDir.REVERSE;
+                kmer.setAsCopy(reverseKmer);
+            }
+            if(!kmerMapper.containsKey(kmer)){
+                //kmerList.reset();
+                kmerList.append(incomingMsg.getSourceVertexId());
+                kmerMapper.put(kmer, kmerList);
+            } else{
+                kmerList.setCopy(kmerMapper.get(kmer));
+                kmerList.append(incomingMsg.getSourceVertexId());
+                kmerMapper.put(kmer, kmerList);
+            }
+            //dirMapper
+            ArrayList<Byte> dirList = new ArrayList<Byte>();
+            if(!dirMapper.containsKey(kmer)){
+                dirList.clear();
+                dirList.add(dir);
+                dirMapper.put(kmer, dirList);
+            } else{
+                dirList.clear();
+                dirList.addAll(dirMapper.get(kmer));
+                dirList.add(dir);
+                dirMapper.put(kmer, dirList);
             }
         }
     }
+    
+    /**
+     * typical for P1
+     */
+    @Override
+    public void reduceKeyByInternalKmer(){
+        for (VKmerBytesWritable key : kmerMapper.keySet()) {
+            kmerList = kmerMapper.get(key);
+            //always delete kmerList(1), keep kmerList(0)
 
+            //send kill message to kmerList(1), and carry with kmerList(0) to update edgeLists of kmerList(1)'s neighbor
+            outgoingMsg.setFlag(MessageFlag.KILL);
+            outgoingMsg.getNode().setInternalKmer(kmerList.getPosition(0));
+            boolean isFlip = dirMapper.get(key).get(0) == dirMapper.get(key).get(1) ? false : true;
+            outgoingMsg.setFlip(isFlip);
+            destVertexId.setAsCopy(kmerList.getPosition(1));
+            sendMsg(destVertexId, outgoingMsg);
+        }
+    }
+ 
+    /**
+     * typical for P1
+     * do some remove operations on adjMap after receiving the info about dead Vertex
+     */
+    public void responseToDeadVertexAndUpdateEdges(){
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        
+        if(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()) != null){
+            tmpEdge.setAsCopy(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()));
+            
+            getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
+        }
+        tmpEdge.setKey(incomingMsg.getNode().getInternalKmer());
+        byte updateDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
+        getVertexValue().getEdgeList(updateDir).unionAdd(tmpEdge);
+    }
+    
+    /**
+     * head send update message
+     */
+    public void headSendUpdateMsg(){
+        if(isHeadNode()){
+            byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
+            switch(headMergeDir){
+                case State.HEAD_SHOULD_MERGEWITHPREV:
+                    sendUpdateMsgToSuccessor(true);
+                    break;
+                case State.HEAD_SHOULD_MERGEWITHNEXT:
+                    sendUpdateMsgToPredecessor(true);
+                    break;
+            }
+        } else
+            voteToHalt();
+    }
+    
+    /**
+     * process update when receiving update msg
+     */
+    public void processUpdateOnceReceiveMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            processUpdate();
+            if(isHaltNode())
+                voteToHalt();
+            else
+                activate();
+        }
+    }
+    /**
+     * aggregate received msg
+     */
+    public void aggregateReceivedMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        receivedMsg.clear();
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            receivedMsg.add(incomingMsg);
+        }
+    }
+    
+    /**
+     * process message directly
+     */
+    public void processMessageDirectly(){
+        for(int i = 0; i < 2; i++)
+            processMerge(receivedMsg.get(i));
+        //final vertex
+        getVertexValue().setState(MessageFlag.IS_HALT);
+        voteToHalt();
+    }
+    
+    /**
+     * processMerge and sendMsgToFake
+     */
+    public void processMergeAndSendMsgToFake(){
+        boolean isHead = isHeadNode();
+        boolean isDead = isDeadNode();
+        processMerge(receivedMsg.get(0));
+        if(isHead || isDead){
+            // NON-FAKE and Final vertice send msg to FAKE vertex 
+            sendMsgToFakeVertex();
+            //final vertex
+            getVertexValue().setState(MessageFlag.IS_HALT);
+            voteToHalt();
+        } else
+            activate();
+    }
+    
+    /**
+     * if receive kill msg, broadcaseKillself
+     */
+    public void broadcaseKillselfOnceReceiveKillMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            if(isReceiveKillMsg()){
+                outgoingMsg.setInternalKmer(incomingMsg.getNode().getInternalKmer());
+                outgoingMsg.setFlip(incomingMsg.isFlip());
+                broadcaseKillself();
+            } 
+        }
+    }
+    
+    /**
+     * if receive dead msg, responseToDeadVertexAndUpdateEdges
+     */
+    public void responseToDeadVertexAndUpdateEdgesOnceReceiveDeadMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            if(isResponseKillMsg())
+                responseToDeadVertexAndUpdateEdges();
+        } 
+        if(isHeadNode())
+            activate();
+        else
+            voteToHalt();
+    }
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
+            addFakeVertex();
             startSendMsg();
-            voteToHalt();
         } else if (getSuperstep() == 2)
-            initState(msgIterator);
-        else if (getSuperstep() % 2 == 1 && getSuperstep() <= maxIteration) {
-            sendMsgToPathVertex(msgIterator);
-            voteToHalt();
-        } else if (getSuperstep() % 2 == 0 && getSuperstep() > 2 && getSuperstep() <= maxIteration) {
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                receivedMsgList.add(incomingMsg);
-            }
-            /** if receive two messages, break the symmetric **/
-            if(receivedMsgList.size() > 0){
-                if(VertexUtil.isPathVertex(getVertexValue()) || canMergeWithHead(receivedMsgList.get(0))){
-                    /** choose update and merge direction **/
-                    sendUpdateMsg(receivedMsgList.get(0));
-                    outFlag = 0;
-                    sendMergeMsgForP1(receivedMsgList.get(0));
-                    deleteVertex(getVertexId());
+            if(!isFakeVertex())
+                initState(msgIterator);
+            else voteToHalt();
+        else if (getSuperstep() % 7 == 3 && getSuperstep() <= maxIteration) {
+            //head send update message
+            headSendUpdateMsg();
+        } else if (getSuperstep() % 7 == 4 && getSuperstep() <= maxIteration) {
+            //process update when receiving updateMsg
+            processUpdateOnceReceiveMsg(msgIterator);
+        } else if (getSuperstep() % 7 == 5 && getSuperstep() <= maxIteration) {
+            //head broadcastMergeMsg, while non-head voteToHalt
+            if(isHeadNode())
+                broadcastMergeMsg(false);
+            else
+                voteToHalt();
+        } else if (getSuperstep() % 7 == 6 && getSuperstep() <= maxIteration) {
+            if(!msgIterator.hasNext() && isDeadNode())
+                deleteVertex(getVertexId());
+            else{
+                //aggregate received msg
+                aggregateReceivedMsg(msgIterator);
+                if(receivedMsg.size() == 2){ //#incomingMsg == even
+                    //processMerge directly
+                    processMessageDirectly();
+                } else if(receivedMsg.size() == 1){
+                    //processMerge and sendMsgToFake
+                    processMergeAndSendMsgToFake();
                 }
             }
-            voteToHalt();
-        } else
+        } else if (getSuperstep() % 7 == 0 && getSuperstep() <= maxIteration){
+            if(isFakeVertex()){//is FakeVertex
+                // Fake vertex agregates message and group them by actual kmer (1) 
+                aggregateMsgAndGroupInFakeNode(msgIterator);
+                voteToHalt();
+            }
+        } else if (getSuperstep() % 7 == 1 && getSuperstep() <= maxIteration){
+            //if receive kill msg, broadcaseKillself
+            broadcaseKillselfOnceReceiveKillMsg(msgIterator);
+        } else if (getSuperstep() % 7 == 2 && getSuperstep() <= maxIteration){
+            //if receive dead msg, responseToDeadVertexAndUpdateEdges
+            responseToDeadVertexAndUpdateEdgesOnceReceiveDeadMsg(msgIterator);
+        }
+        else
             voteToHalt();
     }
 

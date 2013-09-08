@@ -1,7 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
-
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
@@ -21,6 +19,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         state &= State.SHOULD_MERGE_CLEAR;
         state |= State.SHOULD_MERGEWITHPREV;
         getVertexValue().setState(state);
+        activate();
     }
     
     public void setStateAsMergeWithNext(){
@@ -28,6 +27,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         state &= State.SHOULD_MERGE_CLEAR;
         state |= State.SHOULD_MERGEWITHNEXT;
         getVertexValue().setState(state);
+        activate();
     }
     
     /**
@@ -192,20 +192,18 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * This vertex tries to merge with next vertex and send update msg to predecesspr
      */
     public void sendUpdateMsgToPredecessor(boolean flag){
-        if(getVertexValue().hasNextDest()){
-            setStateAsMergeWithNext();
+        setStateAsMergeWithNext();
+        if(getVertexValue().hasNextDest())
             broadcastUpdateMsg(flag);   
-        }
     }
     
     /**
      * This vertex tries to merge with next vertex and send update msg to successor
      */
     public void sendUpdateMsgToSuccessor(boolean flag){
-        if(getVertexValue().hasPrevDest()){
-            setStateAsMergeWithPrev();
+        setStateAsMergeWithPrev();
+        if(getVertexValue().hasPrevDest())
             broadcastUpdateMsg(flag);
-        }
     }
     
     /**
@@ -281,16 +279,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
         return false;
     }
-    /**
-     * send merge message to neighber for P1
-     * @throws IOException 
-     */
-    public void sendMergeMsgForP1(MessageWritable msg){
-        outgoingMsg.setUpdateMsg(false);
-        if (getHeadFlag() > 0)//is_tail, for P1
-            outFlag |= MessageFlag.STOP;
-        sendMergeMsgByIncomingMsgDir();
-    }
     
     public void sendMergeMsgByIncomingMsgDir(){
         byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
@@ -305,28 +293,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 configureMergeMsgForPredecessor(incomingMsg.getSourceVertexId()); 
                 break; 
         }
-    }
-    
-    /**
-     * send merge message to neighber for P1
-     */
-    public void responseMergeMsgToPrevNode(){
-        outFlag = 0;
-        if (getVertexValue().getState() == State.IS_HEAD)//is_tail
-            outFlag |= MessageFlag.STOP;
-        configureMergeMsgForPredecessor(getPrevDestVertexId());
-        deleteVertex(getVertexId());
-    }
-    
-    /**
-     *  for P1
-     */
-    public void responseMergeMsgToNextNode(){
-        outFlag = 0;
-        if (getVertexValue().getState() == State.IS_HEAD)//is_tail
-            outFlag |= MessageFlag.STOP;
-        configureMergeMsgForSuccessor(getNextDestVertexId());
-        deleteVertex(getVertexId());
     }
     
     /**
@@ -383,7 +349,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * send merge message to neighber for P4
      */
-    public void broadcastMergeMsg(){
+    public void broadcastMergeMsg(boolean deleteSelf){
         if(headFlag > 0){
             outFlag |= MessageFlag.IS_HEAD;
             outFlag |= headMergeDir;
@@ -392,12 +358,22 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             case State.SHOULD_MERGEWITHNEXT:
                 /** configure merge msg for successor **/
                 configureMergeMsgForSuccessor(getNextDestVertexId());
-                deleteVertex(getVertexId());
+                if(deleteSelf)
+                    deleteVertex(getVertexId());
+                else{
+                    getVertexValue().setState(State.IS_DEAD);
+                    activate();
+                }
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
                 configureMergeMsgForPredecessor(getPrevDestVertexId());
-                deleteVertex(getVertexId());
+                if(deleteSelf)
+                    deleteVertex(getVertexId());
+                else{
+                    getVertexValue().setState(State.IS_DEAD);
+                    activate();
+                }
                 break; 
         }
     }

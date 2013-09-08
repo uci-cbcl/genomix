@@ -69,6 +69,7 @@ public class JobGenerator {
     private static void generateP1ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(P1ForPathMergeVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class); //GraphCleanInputFormat
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);

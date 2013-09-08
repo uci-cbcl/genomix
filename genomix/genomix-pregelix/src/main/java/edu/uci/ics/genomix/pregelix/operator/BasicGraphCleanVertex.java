@@ -90,10 +90,15 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
+    //TODO make it correct
     public byte getHeadFlag(){
-        if(getVertexValue().getState() == MessageFlag.IS_HALT)
-            return 0;
+//        return (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         return (byte)(getVertexValue().getState() & State.IS_HEAD);
+    }
+    
+    public boolean isHeadNode(){
+        byte state = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
+        return state == State.IS_HEAD;
     }
     
     /**
@@ -184,14 +189,16 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
     }
     
+    public boolean isReceiveUpdateMsg(){
+        byte updateFlag = (byte) (incomingMsg.getFlag() & MessageFlag.UPDATE_MASK);
+        return updateFlag == MessageFlag.UPDATE;
+        
+    }
+    
     public boolean isResponseKillMsg(){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
         return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
-    }
-    
-    public boolean isHeadNode(){
-        return selfFlag == State.IS_HEAD;
     }
     
     public boolean isPathNode(){
@@ -664,21 +671,23 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void addFakeVertex(){
-        if(!fakeVertexExist){
-            //add a fake vertex
-            Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-            vertex.getMsgList().clear();
-            vertex.getEdges().clear();
-            
-            VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
-            vertexValue.setState(State.IS_FAKE);
-            vertexValue.setFakeVertex(true);
-            
-            vertex.setVertexId(fakeVertex);
-            vertex.setVertexValue(vertexValue);
-            
-            addVertex(fakeVertex, vertex);
-            fakeVertexExist = true;
+        synchronized(lock){
+            if(!fakeVertexExist){
+                //add a fake vertex
+                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+                vertex.getMsgList().clear();
+                vertex.getEdges().clear();
+                
+                VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
+                vertexValue.setState(State.IS_FAKE);
+                vertexValue.setFakeVertex(true);
+                
+                vertex.setVertexId(fakeVertex);
+                vertex.setVertexValue(vertexValue);
+                
+                addVertex(fakeVertex, vertex);
+                fakeVertexExist = true;
+            }
         }
     }
     

@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -13,6 +14,11 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
 	BasicPathMergeVertex<V, M>{
+    
+    public static class KmerDir{
+        public static final byte FORWARD = 1 << 0;
+        public static final byte REVERSE = 1 << 1;
+    }
     
     protected VKmerBytesWritable reverseKmer;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
@@ -46,6 +52,17 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             tmpKmer = new VKmerBytesWritable();
     }
     
+    /**
+     * 
+     */
+    public String generateString(int length){
+        StringBuffer outputBuffer = new StringBuffer(length);
+        for (int i = 0; i < length; i++){
+           outputBuffer.append("A");
+        }
+        return outputBuffer.toString();
+    }
+    
     public void sendMsgToFakeVertex(){
         outgoingMsg.reset();
         if(!getVertexValue().isFakeVertex()){
@@ -57,6 +74,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     }
     
     public void mapKeyByInternalKmer(Iterator<M> msgIterator){
+//        ArrayList<Byte> kmerDir = new ArrayList<Byte>();
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
@@ -65,10 +83,14 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
 
             VKmerBytesWritable kmer = new VKmerBytesWritable();
             kmerList = new VKmerListWritable();
-            if(reverseKmer.compareTo(tmpKmer) > 0)
+            if(reverseKmer.compareTo(tmpKmer) > 0){
+//                kmerDir.add(KmerDir.FORWARD);
                 kmer.setAsCopy(tmpKmer);
-            else
+            }
+            else{
+//                kmerDir.add(KmerDir.REVERSE);
                 kmer.setAsCopy(reverseKmer);
+            }
             if(!kmerMapper.containsKey(kmer)){
                 //kmerList.reset();
                 kmerList.append(incomingMsg.getSourceVertexId());
