@@ -187,6 +187,7 @@ public class P1ForPathMergeVertex extends
                     for(int i = 0; i < 2; i++)
                         processMerge(receivedMsg.get(i));
                     //final vertex
+                    getVertexValue().setState(MessageFlag.IS_HALT);
                     voteToHalt();
                 } else{
                     boolean isHead = isHeadNode();

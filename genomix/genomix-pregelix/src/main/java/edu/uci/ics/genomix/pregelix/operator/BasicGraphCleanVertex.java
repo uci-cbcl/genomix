@@ -670,21 +670,23 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void addFakeVertex(){
-        if(!fakeVertexExist){
-            //add a fake vertex
-            Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-            vertex.getMsgList().clear();
-            vertex.getEdges().clear();
-            
-            VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
-            vertexValue.setState(State.IS_FAKE);
-            vertexValue.setFakeVertex(true);
-            
-            vertex.setVertexId(fakeVertex);
-            vertex.setVertexValue(vertexValue);
-            
-            addVertex(fakeVertex, vertex);
-            fakeVertexExist = true;
+        synchronized(lock){
+            if(!fakeVertexExist){
+                //add a fake vertex
+                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+                vertex.getMsgList().clear();
+                vertex.getEdges().clear();
+                
+                VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
+                vertexValue.setState(State.IS_FAKE);
+                vertexValue.setFakeVertex(true);
+                
+                vertex.setVertexId(fakeVertex);
+                vertex.setVertexValue(vertexValue);
+                
+                addVertex(fakeVertex, vertex);
+                fakeVertexExist = true;
+            }
         }
     }
     

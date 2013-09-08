@@ -37,8 +37,12 @@ public class GraphCleanOutputFormat extends
         @Override
         public void writeVertex(Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, ?> vertex)
                 throws IOException, InterruptedException {
-            BasicGraphCleanVertex.fakeVertexExist = false;
-            boolean isFake = ((byte)vertex.getVertexValue().getState() & State.FAKEFLAG_MASK) > 0;
+            boolean isFake = false;
+            synchronized(BasicGraphCleanVertex.lock){
+                BasicGraphCleanVertex.fakeVertexExist = false;
+                BasicGraphCleanVertex.fakeVertex = null;
+                isFake = ((byte)vertex.getVertexValue().getState() & State.FAKEFLAG_MASK) > 0;
+            }
             if(!isFake)
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
         }
