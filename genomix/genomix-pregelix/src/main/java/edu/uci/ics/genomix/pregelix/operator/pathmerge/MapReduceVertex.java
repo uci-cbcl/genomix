@@ -73,8 +73,8 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         }
     }
     
-    public ArrayList<Byte> mapKeyByInternalKmer(Iterator<M> msgIterator){
-        ArrayList<Byte> kmerDir = new ArrayList<Byte>();
+    public void mapKeyByInternalKmer(Iterator<M> msgIterator){
+//        ArrayList<Byte> kmerDir = new ArrayList<Byte>();
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
@@ -84,11 +84,11 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             VKmerBytesWritable kmer = new VKmerBytesWritable();
             kmerList = new VKmerListWritable();
             if(reverseKmer.compareTo(tmpKmer) > 0){
-                kmerDir.add(KmerDir.FORWARD);
+//                kmerDir.add(KmerDir.FORWARD);
                 kmer.setAsCopy(tmpKmer);
             }
             else{
-                kmerDir.add(KmerDir.REVERSE);
+//                kmerDir.add(KmerDir.REVERSE);
                 kmer.setAsCopy(reverseKmer);
             }
             if(!kmerMapper.containsKey(kmer)){
@@ -101,7 +101,6 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
                 kmerMapper.put(kmer, kmerList);
             }
         }
-        return kmerDir;
     }
     
     public void reduceKeyByInternalKmer(){
