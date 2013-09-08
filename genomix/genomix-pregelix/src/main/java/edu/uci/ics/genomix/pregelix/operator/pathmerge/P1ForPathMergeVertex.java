@@ -163,19 +163,22 @@ public class P1ForPathMergeVertex extends
             }
         } else if (getSuperstep() % 4 == 1 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
-                if(msgIterator.hasNext()){
+                while(msgIterator.hasNext()){
                     incomingMsg = msgIterator.next();
                     if(isResponseKillMsg()){
                         responseToDeadVertexAndUpdateEdges();
-                        voteToHalt();
+//                        voteToHalt();
                     }
-                } else{
+                } 
+//                if(!msgIterator.hasNext()){
                     if(isHeadNode())
                         broadcastMergeMsg(false);
-                }
+                    else
+                        voteToHalt();
+//                } 
             }
         } else if (getSuperstep() % 4 == 2 && getSuperstep() <= maxIteration) {
-            if(!msgIterator.hasNext() && isDeadNode())
+            if(!msgIterator.hasNext() && isDeadNode()) //!msgIterator.hasNext() && 
                 deleteVertex(getVertexId());
             else{
                 receivedMsg.clear();
@@ -189,12 +192,14 @@ public class P1ForPathMergeVertex extends
                     //final vertex
                     getVertexValue().setState(MessageFlag.IS_HALT);
                     voteToHalt();
-                } else{
+                } else if(receivedMsg.size() == 1){
                     boolean isHead = isHeadNode();
                     processMerge(receivedMsg.get(0));
                     if(isHead){
                         // NON-FAKE and Final vertice send msg to FAKE vertex 
                         sendMsgToFakeVertex();
+                        //final vertex
+                        getVertexValue().setState(MessageFlag.IS_HALT);
                         voteToHalt();
                     } else
                         activate();

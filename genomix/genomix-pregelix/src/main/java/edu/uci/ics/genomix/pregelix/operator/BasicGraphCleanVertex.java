@@ -90,14 +90,15 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
+    //TODO make it correct
     public byte getHeadFlag(){
-        if(getVertexValue().getState() == MessageFlag.IS_HALT)
-            return 0;
+//        return (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         return (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
     public boolean isHeadNode(){
-        return getHeadFlag() > 0;
+        byte state = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
+        return state == State.IS_HEAD;
     }
     
     /**
