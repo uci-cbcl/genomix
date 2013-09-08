@@ -275,22 +275,17 @@ public class P1ForPathMergeVertex extends
                 initState(msgIterator);
             else voteToHalt();
         else if (getSuperstep() % 7 == 3 && getSuperstep() <= maxIteration) {
-            if(!isFakeVertex()){
-                //head send update message
-                headSendUpdateMsg();
-            } 
+            //head send update message
+            headSendUpdateMsg();
         } else if (getSuperstep() % 7 == 4 && getSuperstep() <= maxIteration) {
-            if(!isFakeVertex()){
-                //process update when receiving updateMsg
-                processUpdateOnceReceiveMsg(msgIterator);
-            }
+            //process update when receiving updateMsg
+            processUpdateOnceReceiveMsg(msgIterator);
         } else if (getSuperstep() % 7 == 5 && getSuperstep() <= maxIteration) {
-            if(!isFakeVertex()){
-                if(isHeadNode())
-                    broadcastMergeMsg(false);
-                else
-                    voteToHalt();
-            }
+            //head broadcastMergeMsg, while non-head voteToHalt
+            if(isHeadNode())
+                broadcastMergeMsg(false);
+            else
+                voteToHalt();
         } else if (getSuperstep() % 7 == 6 && getSuperstep() <= maxIteration) {
             if(!msgIterator.hasNext() && isDeadNode())
                 deleteVertex(getVertexId());
