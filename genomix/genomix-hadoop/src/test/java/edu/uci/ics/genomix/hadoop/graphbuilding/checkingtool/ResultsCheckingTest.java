@@ -39,7 +39,7 @@ import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
- * This test only applied on SequenceInputFormat，
+ * This test only applied on SequenceInputFormat
  *
  */
 
