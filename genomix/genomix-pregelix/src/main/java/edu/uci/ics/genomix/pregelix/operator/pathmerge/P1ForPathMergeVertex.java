@@ -78,14 +78,12 @@ public class P1ForPathMergeVertex extends
         dirMapper.clear();
         /** Mapper **/
         mapKeyByInternalKmer(msgIterator);
-//        boolean isFlip = kmerDir.get(0) == kmerDir.get(1) ? false : true;
         /** Reducer **/
         reduceKeyByInternalKmer();
     }
     
     /**
      * typical for P1
-     * @return 
      */
     @Override
     public void mapKeyByInternalKmer(Iterator<PathMergeMessageWritable> msgIterator){
@@ -167,6 +165,105 @@ public class P1ForPathMergeVertex extends
         getVertexValue().getEdgeList(updateDir).unionAdd(tmpEdge);
     }
     
+    /**
+     * head send update message
+     */
+    public void headSendUpdateMsg(){
+        if(isHeadNode()){
+            byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
+            switch(headMergeDir){
+                case State.HEAD_SHOULD_MERGEWITHPREV:
+                    sendUpdateMsgToSuccessor(true);
+                    break;
+                case State.HEAD_SHOULD_MERGEWITHNEXT:
+                    sendUpdateMsgToPredecessor(true);
+                    break;
+            }
+        } else
+            voteToHalt();
+    }
+    
+    /**
+     * process update when receiving update msg
+     */
+    public void processUpdateOnceReceiveMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            processUpdate();
+            if(isHaltNode())
+                voteToHalt();
+            else
+                activate();
+        }
+    }
+    /**
+     * aggregate received msg
+     */
+    public void aggregateReceivedMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        receivedMsg.clear();
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            receivedMsg.add(incomingMsg);
+        }
+    }
+    
+    /**
+     * process message directly
+     */
+    public void processMessageDirectly(){
+        for(int i = 0; i < 2; i++)
+            processMerge(receivedMsg.get(i));
+        //final vertex
+        getVertexValue().setState(MessageFlag.IS_HALT);
+        voteToHalt();
+    }
+    
+    /**
+     * processMerge and sendMsgToFake
+     */
+    public void processMergeAndSendMsgToFake(){
+        boolean isHead = isHeadNode();
+        boolean isDead = isDeadNode();
+        processMerge(receivedMsg.get(0));
+        if(isHead || isDead){
+            // NON-FAKE and Final vertice send msg to FAKE vertex 
+            sendMsgToFakeVertex();
+            //final vertex
+            getVertexValue().setState(MessageFlag.IS_HALT);
+            voteToHalt();
+        } else
+            activate();
+    }
+    
+    /**
+     * if receive kill msg, broadcaseKillself
+     */
+    public void broadcaseKillselfOnceReceiveKillMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            if(isReceiveKillMsg()){
+                outgoingMsg.setInternalKmer(incomingMsg.getNode().getInternalKmer());
+                outgoingMsg.setFlip(incomingMsg.isFlip());
+                broadcaseKillself();
+            } 
+        }
+    }
+    
+    /**
+     * if receive dead msg, responseToDeadVertexAndUpdateEdges
+     */
+    public void responseToDeadVertexAndUpdateEdgesOnceReceiveDeadMsg(Iterator<PathMergeMessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            if(isResponseKillMsg())
+                responseToDeadVertexAndUpdateEdges();
+        } 
+        if(isHeadNode())
+            activate();
+        else
+            voteToHalt();
+    }
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -179,29 +276,13 @@ public class P1ForPathMergeVertex extends
             else voteToHalt();
         else if (getSuperstep() % 7 == 3 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
-                if(isHeadNode()){
-                    byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
-                    switch(headMergeDir){
-                        case State.HEAD_SHOULD_MERGEWITHPREV:
-                            sendUpdateMsgToSuccessor(true);
-                            break;
-                        case State.HEAD_SHOULD_MERGEWITHNEXT:
-                            sendUpdateMsgToPredecessor(true);
-                            break;
-                    }
-                } else
-                    voteToHalt();
+                //head send update message
+                headSendUpdateMsg();
             } 
         } else if (getSuperstep() % 7 == 4 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
-                while(msgIterator.hasNext()){
-                    incomingMsg = msgIterator.next();
-                    processUpdate();
-                    if(isHaltNode())
-                        voteToHalt();
-                    else
-                        activate();
-                }
+                //process update when receiving updateMsg
+                processUpdateOnceReceiveMsg(msgIterator);
             }
         } else if (getSuperstep() % 7 == 5 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
@@ -214,29 +295,14 @@ public class P1ForPathMergeVertex extends
             if(!msgIterator.hasNext() && isDeadNode())
                 deleteVertex(getVertexId());
             else{
-                receivedMsg.clear();
-                while(msgIterator.hasNext()){
-                    incomingMsg = msgIterator.next();
-                    receivedMsg.add(incomingMsg);
-                }
+                //aggregate received msg
+                aggregateReceivedMsg(msgIterator);
                 if(receivedMsg.size() == 2){ //#incomingMsg == even
-                    for(int i = 0; i < 2; i++)
-                        processMerge(receivedMsg.get(i));
-                    //final vertex
-                    getVertexValue().setState(MessageFlag.IS_HALT);
-                    voteToHalt();
+                    //processMerge directly
+                    processMessageDirectly();
                 } else if(receivedMsg.size() == 1){
-                    boolean isHead = isHeadNode();
-                    boolean isDead = isDeadNode();
-                    processMerge(receivedMsg.get(0));
-                    if(isHead || isDead){
-                        // NON-FAKE and Final vertice send msg to FAKE vertex 
-                        sendMsgToFakeVertex();
-                        //final vertex
-                        getVertexValue().setState(MessageFlag.IS_HALT);
-                        voteToHalt();
-                    } else
-                        activate();
+                    //processMerge and sendMsgToFake
+                    processMergeAndSendMsgToFake();
                 }
             }
         } else if (getSuperstep() % 7 == 0 && getSuperstep() <= maxIteration){
@@ -246,24 +312,11 @@ public class P1ForPathMergeVertex extends
                 voteToHalt();
             }
         } else if (getSuperstep() % 7 == 1 && getSuperstep() <= maxIteration){
-            while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                if(isReceiveKillMsg()){
-                    outgoingMsg.setInternalKmer(incomingMsg.getNode().getInternalKmer());
-                    outgoingMsg.setFlip(incomingMsg.isFlip());
-                    broadcaseKillself();
-                } 
-            }
+            //if receive kill msg, broadcaseKillself
+            broadcaseKillselfOnceReceiveKillMsg(msgIterator);
         } else if (getSuperstep() % 7 == 2 && getSuperstep() <= maxIteration){
-            while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                if(isResponseKillMsg())
-                    responseToDeadVertexAndUpdateEdges();
-            } 
-            if(isHeadNode())
-                activate();
-            else
-                voteToHalt();
+            //if receive dead msg, responseToDeadVertexAndUpdateEdges
+            responseToDeadVertexAndUpdateEdgesOnceReceiveDeadMsg(msgIterator);
         }
         else
             voteToHalt();
