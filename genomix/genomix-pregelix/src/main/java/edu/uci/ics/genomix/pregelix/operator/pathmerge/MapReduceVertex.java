@@ -75,7 +75,6 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     
     public ArrayList<Byte> mapKeyByInternalKmer(Iterator<M> msgIterator){
         ArrayList<Byte> kmerDir = new ArrayList<Byte>();
-        int i = 0;
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
@@ -101,7 +100,6 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
                 kmerList.append(incomingMsg.getSourceVertexId());
                 kmerMapper.put(kmer, kmerList);
             }
-            i++;
         }
         return kmerDir;
     }
