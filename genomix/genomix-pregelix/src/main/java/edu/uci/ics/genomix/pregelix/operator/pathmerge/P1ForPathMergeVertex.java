@@ -12,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex.KmerDir;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
 /**
@@ -25,7 +24,6 @@ public class P1ForPathMergeVertex extends
     
     private ArrayList<PathMergeMessageWritable> receivedMsg = new ArrayList<PathMergeMessageWritable>();
     private HashMap<VKmerBytesWritable, ArrayList<Byte>> dirMapper = new HashMap<VKmerBytesWritable, ArrayList<Byte>>();
-    private ArrayList<Byte> dirList = new ArrayList<Byte>();
     
     private EdgeWritable tmpEdge = new EdgeWritable();
     /**
@@ -118,6 +116,7 @@ public class P1ForPathMergeVertex extends
                 kmerMapper.put(kmer, kmerList);
             }
             //dirMapper
+            ArrayList<Byte> dirList = new ArrayList<Byte>();
             if(!dirMapper.containsKey(kmer)){
                 dirList.clear();
                 dirList.add(dir);
@@ -136,7 +135,6 @@ public class P1ForPathMergeVertex extends
      */
     @Override
     public void reduceKeyByInternalKmer(){
-        int i = 0;
         for (VKmerBytesWritable key : kmerMapper.keySet()) {
             kmerList = kmerMapper.get(key);
             //always delete kmerList(1), keep kmerList(0)
@@ -148,7 +146,6 @@ public class P1ForPathMergeVertex extends
             outgoingMsg.setFlip(isFlip);
             destVertexId.setAsCopy(kmerList.getPosition(1));
             sendMsg(destVertexId, outgoingMsg);
-            i = i + 2;
         }
     }
  
@@ -180,7 +177,7 @@ public class P1ForPathMergeVertex extends
             if(!isFakeVertex())
                 initState(msgIterator);
             else voteToHalt();
-        else if (getSuperstep() % 4 == 3 && getSuperstep() <= maxIteration) {
+        else if (getSuperstep() % 7 == 3 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
                 if(isHeadNode()){
                     byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
@@ -194,46 +191,27 @@ public class P1ForPathMergeVertex extends
                     }
                 } else
                     voteToHalt();
-            } else{ //is FakeVertex
-                // Fake vertex agregates message and group them by actual kmer (1) 
-                aggregateMsgAndGroupInFakeNode(msgIterator);
-                voteToHalt();
-            }
-        } else if (getSuperstep() % 4 == 0 && getSuperstep() <= maxIteration) {
+            } 
+        } else if (getSuperstep() % 7 == 4 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
                 while(msgIterator.hasNext()){
                     incomingMsg = msgIterator.next();
-                    if(isReceiveKillMsg()){
-                        outgoingMsg.setInternalKmer(incomingMsg.getNode().getInternalKmer());
-                        outgoingMsg.setFlip(incomingMsg.isFlip());
-                        broadcaseKillself();
-                    } else{
-                        processUpdate();
-                        if(isHaltNode())
-                            voteToHalt();
-                        else
-                            activate();
-                    }
+                    processUpdate();
+                    if(isHaltNode())
+                        voteToHalt();
+                    else
+                        activate();
                 }
             }
-        } else if (getSuperstep() % 4 == 1 && getSuperstep() <= maxIteration) {
+        } else if (getSuperstep() % 7 == 5 && getSuperstep() <= maxIteration) {
             if(!isFakeVertex()){
-                while(msgIterator.hasNext()){
-                    incomingMsg = msgIterator.next();
-                    if(isResponseKillMsg()){
-                        responseToDeadVertexAndUpdateEdges();
-//                        voteToHalt();
-                    }
-                } 
-//                if(!msgIterator.hasNext()){
-                    if(isHeadNode())
-                        broadcastMergeMsg(false);
-                    else
-                        voteToHalt();
-//                } 
+                if(isHeadNode())
+                    broadcastMergeMsg(false);
+                else
+                    voteToHalt();
             }
-        } else if (getSuperstep() % 4 == 2 && getSuperstep() <= maxIteration) {
-            if(!msgIterator.hasNext() && isDeadNode()) //!msgIterator.hasNext() && 
+        } else if (getSuperstep() % 7 == 6 && getSuperstep() <= maxIteration) {
+            if(!msgIterator.hasNext() && isDeadNode())
                 deleteVertex(getVertexId());
             else{
                 receivedMsg.clear();
@@ -261,7 +239,33 @@ public class P1ForPathMergeVertex extends
                         activate();
                 }
             }
-        } else
+        } else if (getSuperstep() % 7 == 0 && getSuperstep() <= maxIteration){
+            if(isFakeVertex()){//is FakeVertex
+                // Fake vertex agregates message and group them by actual kmer (1) 
+                aggregateMsgAndGroupInFakeNode(msgIterator);
+                voteToHalt();
+            }
+        } else if (getSuperstep() % 7 == 1 && getSuperstep() <= maxIteration){
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                if(isReceiveKillMsg()){
+                    outgoingMsg.setInternalKmer(incomingMsg.getNode().getInternalKmer());
+                    outgoingMsg.setFlip(incomingMsg.isFlip());
+                    broadcaseKillself();
+                } 
+            }
+        } else if (getSuperstep() % 7 == 2 && getSuperstep() <= maxIteration){
+            while(msgIterator.hasNext()){
+                incomingMsg = msgIterator.next();
+                if(isResponseKillMsg())
+                    responseToDeadVertexAndUpdateEdges();
+            } 
+            if(isHeadNode())
+                activate();
+            else
+                voteToHalt();
+        }
+        else
             voteToHalt();
     }
 
