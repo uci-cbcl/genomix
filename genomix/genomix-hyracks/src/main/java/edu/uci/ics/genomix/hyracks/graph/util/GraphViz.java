@@ -76,7 +76,7 @@ public class GraphViz {
     /**
      * Where is your dot program located? It will be called externally.
      */
-    private static String DOT = "dot";
+//    private static String DOT = "dot";
 //    private static String DOT = "/usr/local/bin/dot"; // Linux
     //   private static String DOT = "c:/Program Files/Graphviz2.26.3/bin/dot.exe";	// Windows
 
@@ -202,6 +202,7 @@ public class GraphViz {
             Runtime rt = Runtime.getRuntime();
 
             // patch by Mike Chenault
+            String DOT = OSValidator.getDotPath();
             String[] args = { DOT, "-T" + type, dot.getAbsolutePath(), "-o", img.getAbsolutePath() };
             Process p = rt.exec(args);
 
