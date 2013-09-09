@@ -17,7 +17,6 @@ OUTDIR=$4
 CMD=$5
 
 rm -rf $OUTDIR
-rm -rf $OUTDIR/logs
 mkdir -p $OUTDIR/logs
 
 for i in `seq 1 $NUM_FILES`;
@@ -26,9 +25,8 @@ do
     sort -R $INFILE | head -n $NUMLINES > $OUTDIR/random_set_$i/random.readid
     eval "$CMD $OUTDIR/random_set_$i/random.readid" 2>&1 | tee $OUTDIR/logs/random_set_$i
     if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        rm -rf $OUTDIR/logs/random_set_$i
+        mv $OUTDIR/logs/random_set_$i $OUTDIR/logs/error/random_set_$i
     fi
 done
-
 
 
