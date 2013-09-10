@@ -17,39 +17,7 @@ public class VertexValueWritable
     extends NodeWritable{
 
     private static final long serialVersionUID = 1L;
-
-//    public static class State extends VertexStateFlag{   
-//        public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b0 << 2; //use for initiating head
-//        public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b1 << 2;
-//        public static final byte HEAD_SHOULD_MERGE_MASK = 0b1 << 2;
-//        public static final byte HEAD_SHOULD_MERGE_CLEAR = (byte) 11001011;
-//        
-//        public static final byte NO_MERGE = 0b00 << 3;
-//        public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
-//        public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
-//        public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
-//        public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
-//        
-//        public static final byte UNCHANGE = 0b0 << 3;
-//        public static final byte KILL = 0b1 << 3;
-//        public static final byte KILL_MASK = 0b1 << 3;
-//        
-//        public static final byte DIR_FROM_DEADVERTEX = 0b10 << 3;
-//        public static final byte DEAD_MASK = 0b10 << 3;
-//    }
-//    
-//    public static class VertexStateFlag extends FakeFlag {
-//        public static final byte IS_NON = 0b00 << 5;
-//        public static final byte IS_HEAD = 0b01 << 5;
-//        public static final byte IS_FINAL = 0b10 << 5;
-//        
-//        public static final byte IS_OLDHEAD = 0b11 << 5;
-//        
-//        public static final byte IS_HALT = 0b1111110;
-//        public static final byte IS_DEAD = 0b0111110;
-//        public static final byte VERTEX_MASK = 0b11 << 5; 
-//        public static final byte VERTEX_CLEAR = (byte) 11001111;
-//    }
+    
     public static class HeadMergeDir{
         public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b0 << 2; //use for initiating head
         public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b1 << 2;
