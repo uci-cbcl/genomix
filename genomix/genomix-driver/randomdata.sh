@@ -17,7 +17,7 @@ OUTDIR=$4
 CMD=$5
 
 rm -rf $OUTDIR
-mkdir -p $OUTDIR/logs
+mkdir -p $OUTDIR/logs/error
 
 for i in `seq 1 $NUM_FILES`;
 do

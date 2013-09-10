@@ -4,7 +4,7 @@
 
 if [ $# -ne 2 ]; then
 	echo "Please provide 2 parameters: infile.readids, outdir"
-	echo "For example:	$0 /data/users/anbangx/testdata/tail600000 /data/users/anbangx/graphbuild"
+	echo "For example:	$0 /ffs/test/cbcl/anbangx/data/tail600000 /ffs/test/cbcl/anbangx/data/graphbuild"
 	exit 1
 fi
 
