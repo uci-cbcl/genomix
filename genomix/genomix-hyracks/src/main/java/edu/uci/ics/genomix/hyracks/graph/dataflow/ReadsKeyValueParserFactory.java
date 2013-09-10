@@ -160,10 +160,22 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
 
             private void SplitReads(long readID, byte[] array, IFrameWriter writer) {
+                boolean verbose = false;
                 /*first kmer*/
                 if (kmerSize >= array.length) {
                     throw new IllegalArgumentException("kmersize (k="+kmerSize+") is larger than the read length (" + array.length + ")");
                 }
+                
+                if (readID == 12009721) {
+                    verbose = true;
+                    System.out.println("found it: " + readID);
+                } else if (readID == 11934501) {
+                    verbose = true;
+                    System.out.println("found it: " + readID);
+                } else {
+                    verbose = false;
+                }
+                
                 curNode.reset();
                 nextNode.reset();
                 tempEdge.reset();
@@ -180,7 +192,11 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 else
                     curNode.getEndReads().append(readId);
                 setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readIdList, tempEdge);
+                
                 writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
+                if (verbose) {
+                    System.out.println("First kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
+                }
                 /*middle kmer*/
                 int i = kmerSize + 1;
                 for (; i < array.length; i++) {
@@ -193,10 +209,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
                     setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readIdList, tempEdge);
                     writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
+                    if (verbose) {
+                        System.out.println("middle kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
+                    }
                 }
 
                 /*last kmer*/
                 writeToFrame(nextForwardKmer, nextReverseKmer, nextKmerDir, nextNode, writer);
+                if (verbose) {
+                    System.out.println("last kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
+                }
             }
 
             public void setThisReadId(PositionListWritable readIdList, PositionWritable readId, byte mateId, long readID, int posId) {
