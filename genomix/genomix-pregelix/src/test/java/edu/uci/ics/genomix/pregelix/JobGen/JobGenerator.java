@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
+import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
@@ -302,6 +304,23 @@ public class JobGenerator {
                 + "ScaffoldingGraph.xml");
     }
     
+    private static void generateSymmetryCheckerGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
+        job.setVertexClass(SymmetryCheckerVertex.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
+        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(CheckerOutputFormat.class);
+        job.setDynamicVertexValueSize(true);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genSymmetryCheckerGraph() throws IOException {
+        generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase
+                + "SymmetryCheckerGraph.xml");
+    }
+    
     public static void main(String[] args) throws IOException {
         genUnrollTandemRepeatGraph();
         genMapReduceGraph();
@@ -318,6 +337,7 @@ public class JobGenerator {
         genSplitRepeatGraph();
         getBFSTraverseGraph();
         genScaffoldingGraph();
+        genSymmetryCheckerGraph();
     }
 
 }

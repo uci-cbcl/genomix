@@ -66,6 +66,7 @@ public class VertexValueWritable
         
         public static final byte IS_HALT = 0b100 << 3;
         public static final byte IS_DEAD = 0b101 << 3;
+        public static final byte IS_ERROR = 0b110 << 3;
         
         public static final byte VERTEX_MASK = 0b111 << 3; 
         public static final byte VERTEX_CLEAR = (byte)1000111;
