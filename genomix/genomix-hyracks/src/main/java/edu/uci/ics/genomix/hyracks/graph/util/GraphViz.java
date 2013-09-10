@@ -33,6 +33,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 
+import edu.uci.ics.genomix.config.OSValidator;
+
 /**
  * <dl>
  * <dt>Purpose: GraphViz Java API

@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hyracks.graph.util;
+package edu.uci.ics.genomix.config;
 
 public class OSValidator {
     
