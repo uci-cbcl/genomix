@@ -85,7 +85,7 @@ public class P4ForPathMergeVertex extends
         
         if(fh == null){
             try {
-                fh = new FileHandler("logs/P4", false);
+                fh = new FileHandler("logs/P4.log", 0, 1, false);
                 logger.addHandler(fh);
             } catch (SecurityException | IOException e) {
                 e.printStackTrace();

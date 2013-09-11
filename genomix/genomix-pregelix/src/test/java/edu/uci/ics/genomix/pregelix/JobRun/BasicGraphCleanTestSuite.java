@@ -60,7 +60,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
     private MiniDFSCluster dfsCluster;
 
     private JobConf conf = new JobConf();
-    private int numberOfNC = 2;
+    private int numberOfNC = 1;
     
     public void setUp() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
