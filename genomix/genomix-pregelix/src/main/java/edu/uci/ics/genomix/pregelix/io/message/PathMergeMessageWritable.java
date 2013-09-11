@@ -125,4 +125,18 @@ public class PathMergeMessageWritable extends MessageWritable{
         out.writeBoolean(isFlip);
         out.writeBoolean(updateMsg);
     }
+    
+    @Override
+    public String toString(){
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append('{');
+        sbuilder.append("src:");
+        sbuilder.append(getSourceVertexId().toString()).append("\t");
+        sbuilder.append("node:");
+        sbuilder.append(node.toString()).append("\t");
+        sbuilder.append("Flip:").append(isFlip).append("\t");
+        sbuilder.append("updateMsg").append(updateMsg);
+        sbuilder.append('}');
+        return sbuilder.toString();
+    }
 }

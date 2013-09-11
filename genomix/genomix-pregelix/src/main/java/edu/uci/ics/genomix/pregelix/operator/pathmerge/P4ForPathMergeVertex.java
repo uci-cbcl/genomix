@@ -27,7 +27,6 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
  */
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
-
     //logger
     Logger logger = Logger.getLogger(P4ForPathMergeVertex.class.getName());
     FileHandler fh;
@@ -140,7 +139,17 @@ public class P4ForPathMergeVertex extends
      * Logging the vertexId and vertexValue 
      */
     public void loggingNode(byte loggingType){
-        formatter.set(loggingType, getSuperstep(), getVertexId(), getVertexValue());
+        formatter.setVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
+        fh.setFormatter(formatter);
+        String logMessage = LoggingType.getContent(loggingType);
+        logger.log(Level.INFO, logMessage);
+    }
+    
+    /**
+     * Logging message
+     */
+    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg){
+        formatter.setMessageLog(loggingType, getSuperstep(), getVertexId(), msg);
         fh.setFormatter(formatter);
         String logMessage = LoggingType.getContent(loggingType);
         logger.log(Level.INFO, logMessage);

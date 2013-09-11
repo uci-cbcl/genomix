@@ -25,32 +25,38 @@ public class PathMergeLogFormatter extends Formatter{
         loggingType = -1;
     }
     
-    public void set(byte loggingType, long step, VKmerBytesWritable vertexId, VertexValueWritable vertexValue){
-        setStep(step);
-        switch(loggingType){
-            case LoggingType.ORIGIN:
-                setVertexId(vertexId);
-                setVertexValue(vertexValue);
-                break;
-        }
-    }
-    
-    public void setOriginLog(long step, VKmerBytesWritable vertexId, VertexValueWritable vertexValue){
+    public void setVertexLog(byte loggingType, long step, VKmerBytesWritable vertexId, VertexValueWritable vertexValue){
+        setLoggingType(loggingType);
         setStep(step);
         setVertexId(vertexId);
         setVertexValue(vertexValue);
     }
     
+    public void setMessageLog(byte loggingType, long step, VKmerBytesWritable vertexId, PathMergeMessageWritable msg){
+        setLoggingType(loggingType);
+        setStep(step);
+        setVertexId(vertexId);
+        setMsg(msg);
+    }
+    
     @Override
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder();
-        
         builder.append("Step: " + step + "\r\n");
         if (!formatMessage(record).equals(""))
             builder.append(formatMessage(record) + "\r\n");
-        builder.append("VertexId: " + vertexId.toString() + "\r\n");
-        builder.append("VertexValue: " + vertexValue.toString() + "\r\n");
-        
+        switch(loggingType){
+            case LoggingType.ORIGIN:
+            case LoggingType.AFTER_UPDATE:
+                builder.append("VertexId: " + vertexId.toString() + "\r\n");
+                builder.append("VertexValue: " + vertexValue.toString() + "\r\n");
+                break;
+            case LoggingType.RECEIVE_MSG:
+                builder.append("VertexId: " + vertexId.toString() + "\r\n");
+                builder.append("Message: " + msg.toString() + "\r\n");
+                break;
+        }
+       
         builder.append("\n");
         return builder.toString();
     }
