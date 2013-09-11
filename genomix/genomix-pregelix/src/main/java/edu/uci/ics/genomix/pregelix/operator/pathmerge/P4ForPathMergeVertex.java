@@ -17,8 +17,8 @@ import edu.uci.ics.genomix.pregelix.log.PathMergeLogFormatter;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge 
@@ -85,7 +85,7 @@ public class P4ForPathMergeVertex extends
         
         if(fh == null){
             try {
-                fh = new FileHandler("logs/P4.log", 0, 1, false);
+                fh = new FileHandler("logs/P4.log", 0, 1, true);
                 logger.addHandler(fh);
             } catch (SecurityException | IOException e) {
                 e.printStackTrace();

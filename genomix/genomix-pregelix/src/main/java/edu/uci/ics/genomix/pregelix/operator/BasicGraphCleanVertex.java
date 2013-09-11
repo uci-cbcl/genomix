@@ -1,11 +1,20 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
+
+import com.sun.org.apache.commons.logging.Log;
+import com.sun.org.apache.commons.logging.LogFactory;
+
+import java.util.logging.LogManager;
 
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -21,6 +30,7 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeListWritable;
@@ -30,6 +40,9 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, V, NullWritable, M> {
+
+    private static final Logger LOG = Logger.getLogger(BasicGraphCleanVertex.class.getName());
+    
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
@@ -69,6 +82,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
+//        LOG.info("In base class initVertex! woohoo!");
+        LOG.fine("this is a fine message");
         if (kmerSize == -1)
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         if (maxIteration < 0)
