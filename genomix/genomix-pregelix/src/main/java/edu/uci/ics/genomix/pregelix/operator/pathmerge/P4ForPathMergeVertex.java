@@ -1,14 +1,11 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;

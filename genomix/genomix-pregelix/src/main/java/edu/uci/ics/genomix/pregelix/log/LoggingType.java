@@ -7,7 +7,7 @@ public class LoggingType {
     public static String getContent(byte type){
         switch(type){
             case LoggingType.ORIGIN:
-                return "Origin";
+                return "Before any operations";
         }
         return null;
         

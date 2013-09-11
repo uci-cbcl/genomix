@@ -38,6 +38,27 @@ public class VertexValueWritable
         
         public static final byte VERTEX_MASK = 0b111 << 3; 
         public static final byte VERTEX_CLEAR = (byte)1000111;
+        
+        public static String getContent(byte stateFlag){
+            switch(stateFlag & VERTEX_MASK){
+                case IS_NON:
+                    return "IS_NON";
+                case IS_HEAD:
+                    return "IS_HEAD";
+                case IS_FINAL:
+                    return "IS_FINAL";
+                case IS_OLDHEAD:
+                    return "IS_OLDHEAD";
+                case IS_HALT:
+                    return "IS_HALT";
+                case IS_DEAD:
+                    return "IS_DEAD";
+                case IS_ERROR:
+                    return "IS_ERROR";
+                    
+            }
+            return null;
+        }
     }
     
     public static class State extends VertexStateFlag{   
@@ -255,5 +276,10 @@ public class VertexValueWritable
             default:
                 throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
         }
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString() + "\t" + State.getContent(state);
     }
 }
