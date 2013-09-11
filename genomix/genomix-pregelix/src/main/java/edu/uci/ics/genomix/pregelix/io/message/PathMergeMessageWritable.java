@@ -25,6 +25,7 @@ public class PathMergeMessageWritable extends MessageWritable{
     }
     
     public void setAsCopy(PathMergeMessageWritable other){
+        super.setAsCopy(other);
         this.node.setAsCopy(other.getNode());
         this.isFlip = other.isFlip();
         this.updateMsg = other.isUpdateMsg();
@@ -130,12 +131,12 @@ public class PathMergeMessageWritable extends MessageWritable{
     public String toString(){
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        sbuilder.append("src:");
-        sbuilder.append(getSourceVertexId().toString()).append("\t");
+        sbuilder.append("src:[");
+        sbuilder.append(getSourceVertexId().toString()).append(']').append("\t");
         sbuilder.append("node:");
         sbuilder.append(node.toString()).append("\t");
         sbuilder.append("Flip:").append(isFlip).append("\t");
-        sbuilder.append("updateMsg").append(updateMsg);
+        sbuilder.append("updateMsg:").append(updateMsg);
         sbuilder.append('}');
         return sbuilder.toString();
     }

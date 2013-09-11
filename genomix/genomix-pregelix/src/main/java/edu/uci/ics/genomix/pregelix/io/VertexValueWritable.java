@@ -92,6 +92,16 @@ public class VertexValueWritable
 //        return this;
 //    }
     
+    public void setAsCopy(VertexValueWritable other){
+        setNode(other.getNode());
+        state = other.getState();
+        isFakeVertex = other.isFakeVertex();
+        counters.clear();
+        counters.putAll(other.getCounters());
+        scaffoldingMap.clear();
+        scaffoldingMap.putAll(other.getScaffoldingMap());
+    }
+    
     public void setNode(NodeWritable node){
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
                 node.getInternalKmer(), node.getAverageCoverage());

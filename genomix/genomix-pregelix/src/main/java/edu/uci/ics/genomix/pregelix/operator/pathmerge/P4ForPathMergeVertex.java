@@ -139,6 +139,7 @@ public class P4ForPathMergeVertex extends
      * Logging the vertexId and vertexValue 
      */
     public void loggingNode(byte loggingType){
+        formatter.reset();
         formatter.setVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
         fh.setFormatter(formatter);
         String logMessage = LoggingType.getContent(loggingType);
@@ -148,8 +149,9 @@ public class P4ForPathMergeVertex extends
     /**
      * Logging message
      */
-    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg){
-        formatter.setMessageLog(loggingType, getSuperstep(), getVertexId(), msg);
+    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest){
+        formatter.reset();
+        formatter.setMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
         fh.setFormatter(formatter);
         String logMessage = LoggingType.getContent(loggingType);
         logger.log(Level.INFO, logMessage);
@@ -158,7 +160,6 @@ public class P4ForPathMergeVertex extends
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
-        loggingNode(LoggingType.ORIGIN);
 
         if (getSuperstep() == 1)
             startSendMsg();
@@ -218,7 +219,11 @@ public class P4ForPathMergeVertex extends
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
+                /** logging incomingMsg **/
+                loggingMessage(LoggingType.RECEIVE_MSG, incomingMsg, null);
+                loggingNode(LoggingType.BEFORE_OPERATIONS);
                 processUpdate();
+                loggingNode(LoggingType.AFTER_UPDATE);
                 if(isHaltNode())
                     voteToHalt();
                 else
@@ -227,6 +232,8 @@ public class P4ForPathMergeVertex extends
         } else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self
             broadcastMergeMsg(true);
+//            /** logging outgoingMsg **/
+//            loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getNextDestVertexId());
         } else if (getSuperstep() % 4 == 2){
             //merge tmpKmer
             while (msgIterator.hasNext()) {

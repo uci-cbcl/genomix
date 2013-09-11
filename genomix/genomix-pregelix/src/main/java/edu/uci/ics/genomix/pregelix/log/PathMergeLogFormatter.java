@@ -14,6 +14,7 @@ public class PathMergeLogFormatter extends Formatter{
     private VertexValueWritable vertexValue;
     
     private PathMergeMessageWritable msg;
+    private VKmerBytesWritable destinationId;
     
     private byte loggingType; 
     
@@ -22,6 +23,16 @@ public class PathMergeLogFormatter extends Formatter{
         vertexId = new VKmerBytesWritable();
         vertexValue = new VertexValueWritable();
         msg = new PathMergeMessageWritable();
+        destinationId = new VKmerBytesWritable();
+        loggingType = -1;
+    }
+    
+    public void reset(){
+        step = -1;
+        vertexId.reset(0);
+        vertexValue.reset();
+        msg.reset();
+        destinationId.reset(0);
         loggingType = -1;
     }
     
@@ -32,11 +43,12 @@ public class PathMergeLogFormatter extends Formatter{
         setVertexValue(vertexValue);
     }
     
-    public void setMessageLog(byte loggingType, long step, VKmerBytesWritable vertexId, PathMergeMessageWritable msg){
+    public void setMessageLog(byte loggingType, long step, VKmerBytesWritable vertexId, PathMergeMessageWritable msg, VKmerBytesWritable dest){
         setLoggingType(loggingType);
         setStep(step);
         setVertexId(vertexId);
         setMsg(msg);
+        setDestinationId(dest);
     }
     
     @Override
@@ -44,14 +56,21 @@ public class PathMergeLogFormatter extends Formatter{
         StringBuilder builder = new StringBuilder();
         builder.append("Step: " + step + "\r\n");
         if (!formatMessage(record).equals(""))
-            builder.append(formatMessage(record) + "\r\n");
+            builder.append(formatMessage(record));
         switch(loggingType){
-            case LoggingType.ORIGIN:
+            case LoggingType.BEFORE_OPERATIONS:
             case LoggingType.AFTER_UPDATE:
+                builder.append("\r\n");
                 builder.append("VertexId: " + vertexId.toString() + "\r\n");
                 builder.append("VertexValue: " + vertexValue.toString() + "\r\n");
                 break;
             case LoggingType.RECEIVE_MSG:
+                builder.append(" from " + msg.getSourceVertexId().toString() + "\r\n");
+                builder.append("VertexId: " + vertexId.toString() + "\r\n");
+                builder.append("Message: " + msg.toString() + "\r\n");
+                break;
+            case LoggingType.SEND_MSG:
+                builder.append(" to " + destinationId.toString() + "\r\n");
                 builder.append("VertexId: " + vertexId.toString() + "\r\n");
                 builder.append("Message: " + msg.toString() + "\r\n");
                 break;
@@ -91,6 +110,15 @@ public class PathMergeLogFormatter extends Formatter{
 
     public void setMsg(PathMergeMessageWritable msg) {
         this.msg.setAsCopy(msg);
+    }
+    
+    public VKmerBytesWritable getDestinationId() {
+        return destinationId;
+    }
+
+    public void setDestinationId(VKmerBytesWritable destinationId) {
+        if(destinationId != null)
+            this.destinationId.setAsCopy(destinationId);
     }
 
     public byte getLoggingType() {
