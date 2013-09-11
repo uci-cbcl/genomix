@@ -1,13 +1,19 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.log.LoggingType;
+import edu.uci.ics.genomix.pregelix.log.PathMergeLogFormatter;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
@@ -22,6 +28,11 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
 
+    //logger
+    Logger logger = Logger.getLogger(P4ForPathMergeVertex.class.getName());
+    FileHandler fh;
+    PathMergeLogFormatter formatter = new PathMergeLogFormatter();
+    
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
     private Random randGenerator;
@@ -72,6 +83,15 @@ public class P4ForPathMergeVertex extends
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
+        
+        if(fh == null){
+            try {
+                fh = new FileHandler("logs/P4", false);
+                logger.addHandler(fh);
+            } catch (SecurityException | IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
@@ -116,9 +136,21 @@ public class P4ForPathMergeVertex extends
         return false;
     }
     
+    /**
+     * Logging the vertexId and vertexValue 
+     */
+    public void loggingNode(byte loggingType){
+        formatter.set(getSuperstep(), getVertexId(), getVertexValue());
+        fh.setFormatter(formatter);
+        String logMessage = LoggingType.getContent(loggingType);
+        logger.log(Level.INFO, logMessage);
+    }
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
+        loggingNode(LoggingType.ORIGIN);
+
         if (getSuperstep() == 1)
             startSendMsg();
         else if (getSuperstep() == 2)
