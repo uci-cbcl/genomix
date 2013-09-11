@@ -140,7 +140,7 @@ public class P4ForPathMergeVertex extends
      * Logging the vertexId and vertexValue 
      */
     public void loggingNode(byte loggingType){
-        formatter.set(getSuperstep(), getVertexId(), getVertexValue());
+        formatter.set(loggingType, getSuperstep(), getVertexId(), getVertexValue());
         fh.setFormatter(formatter);
         String logMessage = LoggingType.getContent(loggingType);
         logger.log(Level.INFO, logMessage);

@@ -4,6 +4,7 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class PathMergeLogFormatter extends Formatter{
@@ -12,13 +13,29 @@ public class PathMergeLogFormatter extends Formatter{
     private VKmerBytesWritable vertexId;
     private VertexValueWritable vertexValue;
     
+    private PathMergeMessageWritable msg;
+    
+    private byte loggingType; 
+    
     public PathMergeLogFormatter(){
         step = -1;
         vertexId = new VKmerBytesWritable();
         vertexValue = new VertexValueWritable();
+        msg = new PathMergeMessageWritable();
+        loggingType = -1;
     }
     
-    public void set(long step, VKmerBytesWritable vertexId, VertexValueWritable vertexValue){
+    public void set(byte loggingType, long step, VKmerBytesWritable vertexId, VertexValueWritable vertexValue){
+        setStep(step);
+        switch(loggingType){
+            case LoggingType.ORIGIN:
+                setVertexId(vertexId);
+                setVertexValue(vertexValue);
+                break;
+        }
+    }
+    
+    public void setOriginLog(long step, VKmerBytesWritable vertexId, VertexValueWritable vertexValue){
         setStep(step);
         setVertexId(vertexId);
         setVertexValue(vertexValue);
@@ -60,6 +77,22 @@ public class PathMergeLogFormatter extends Formatter{
 
     public void setVertexValue(VertexValueWritable vertexValue) {
         this.vertexValue.setAsCopy(vertexValue);
+    }
+
+    public PathMergeMessageWritable getMsg() {
+        return msg;
+    }
+
+    public void setMsg(PathMergeMessageWritable msg) {
+        this.msg.setAsCopy(msg);
+    }
+
+    public byte getLoggingType() {
+        return loggingType;
+    }
+
+    public void setLoggingType(byte loggingType) {
+        this.loggingType = loggingType;
     }
     
 }
