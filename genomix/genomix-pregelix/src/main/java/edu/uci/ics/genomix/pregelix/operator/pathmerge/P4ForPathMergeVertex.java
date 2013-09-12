@@ -2,14 +2,12 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.Iterator;
 import java.util.Random;
-import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.log.LoggingType;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -24,9 +22,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
-    //logger
-    Logger logger = Logger.getLogger(P4ForPathMergeVertex.class.getName());
-    
+
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
     private Random randGenerator;
@@ -121,22 +117,6 @@ public class P4ForPathMergeVertex extends
         return false;
     }
     
-    /**
-     * Logging the vertexId and vertexValue 
-     */
-    public void loggingNode(byte loggingType){
-        String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
-        logger.fine(logMessage);
-    }
-    
-    /**
-     * Logging message
-     */
-    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest){
-        String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
-        logger.fine(logMessage);
-    }
-    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -200,8 +180,8 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 /** logging incomingMsg **/
-                loggingMessage(LoggingType.RECEIVE_MSG, incomingMsg, null);
                 loggingNode(LoggingType.BEFORE_OPERATIONS);
+                loggingMessage(LoggingType.RECEIVE_MSG, incomingMsg, null);
                 processUpdate();
                 loggingNode(LoggingType.AFTER_UPDATE);
                 if(isHaltNode())
@@ -212,8 +192,6 @@ public class P4ForPathMergeVertex extends
         } else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self
             broadcastMergeMsg(true);
-//            /** logging outgoingMsg **/
-//            loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getNextDestVertexId());
         } else if (getSuperstep() % 4 == 2){
             //merge tmpKmer
             while (msgIterator.hasNext()) {

@@ -16,7 +16,7 @@ public class LoggingType {
             case LoggingType.RECEIVE_MSG:
                 return "Receive message";
             case LoggingType.SEND_MSG:
-                return "Send message ";
+                return "Send message";
         }
         return null;
         
