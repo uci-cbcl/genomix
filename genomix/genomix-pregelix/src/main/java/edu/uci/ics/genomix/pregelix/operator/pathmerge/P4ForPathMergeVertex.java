@@ -1,9 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,7 +11,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.log.LoggingType;
-import edu.uci.ics.genomix.pregelix.log.PathMergeLogFormatter;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
@@ -29,8 +26,6 @@ public class P4ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
     //logger
     Logger logger = Logger.getLogger(P4ForPathMergeVertex.class.getName());
-    FileHandler fh;
-    PathMergeLogFormatter formatter = new PathMergeLogFormatter();
     
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
@@ -82,15 +77,6 @@ public class P4ForPathMergeVertex extends
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
-        
-        if(fh == null){
-            try {
-                fh = new FileHandler("logs/P4.log", 0, 1, true);
-                logger.addHandler(fh);
-            } catch (SecurityException | IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
@@ -139,20 +125,14 @@ public class P4ForPathMergeVertex extends
      * Logging the vertexId and vertexValue 
      */
     public void loggingNode(byte loggingType){
-        formatter.reset();
-        formatter.setVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
-        fh.setFormatter(formatter);
         String logMessage = LoggingType.getContent(loggingType);
-        logger.log(Level.INFO, logMessage);
+        logger.fine(logMessage);
     }
     
     /**
      * Logging message
      */
     public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest){
-        formatter.reset();
-        formatter.setMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
-        fh.setFormatter(formatter);
         String logMessage = LoggingType.getContent(loggingType);
         logger.log(Level.INFO, logMessage);
     }
