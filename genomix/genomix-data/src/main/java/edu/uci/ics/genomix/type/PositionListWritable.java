@@ -120,11 +120,11 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     public void unionUpdateCappedCount(PositionListWritable otherList) {
         HashSet<PositionWritable> uniqueElements = new HashSet<PositionWritable>(valueCount + otherList.valueCount);
         for (PositionWritable pos : this) {
-            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
+//            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
                 uniqueElements.add(new PositionWritable(pos));
         }
         for (PositionWritable pos : otherList) {
-            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
+//            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
                 uniqueElements.add(new PositionWritable(pos));
         }
         valueCount = 0;
