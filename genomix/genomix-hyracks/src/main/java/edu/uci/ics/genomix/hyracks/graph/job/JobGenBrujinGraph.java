@@ -27,7 +27,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.driver.GenomixDriver;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
