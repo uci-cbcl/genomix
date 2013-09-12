@@ -102,10 +102,15 @@ public class SingleLongReadCreateTool {
         FileUtils.writeStringToFile(new File(targetPath), targetStr);
     }
     
-    public void cleanDiskFile() throws IOException {
+    public void cleanDiskFile() throws IOException, InterruptedException {
         File targetFile = new File(targetPath);
-        if(targetFile.exists())
-            targetFile.delete();
+        if(targetFile.getParentFile().exists()){
+        String cleanFile = "rm -r -f " + targetFile.getParent();
+        Process p = Runtime.getRuntime().exec(cleanFile);
+        p.waitFor();
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to delete the path" + targetFile.getParent());
+        }
     }
     
     public String getTestDir() {
