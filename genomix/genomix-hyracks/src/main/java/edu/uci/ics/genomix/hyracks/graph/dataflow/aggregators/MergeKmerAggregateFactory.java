@@ -21,9 +21,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -39,11 +39,11 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
     private static final Logger LOG = Logger.getLogger(MergeKmerAggregateFactory.class.getName());
     
     private final int kmerSize;
-    
+
     public MergeKmerAggregateFactory(int k) {
         this.kmerSize = k;
     }
-    
+
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
@@ -51,16 +51,17 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
         final int frameSize = ctx.getFrameSize();
         KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new IAggregatorDescriptor() {
-            
+
             private NodeWritable readNode = new NodeWritable();
-            
+//            private KmerBytesWritable readKmer = new KmerBytesWritable();
+
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, fieldId);
                 int offset = tupleOffset + fieldStart + accessor.getFieldSlotsLength();
                 return offset;
             }
-            
+
             @Override
             public AggregateState createAggregateStates() {
                 return new AggregateState(new NodeWritable());
@@ -71,14 +72,34 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                     AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 localUniNode.reset();
+
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                for (byte d: DirectionFlag.values) {
+                
+//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+//                        System.out.println("Global init before***********************************************************");
+//                        System.out.println("---------->readNode  "
+//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                        System.out.println("---------->localUniNode "
+//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                    }
+//                }
+                
+                for (byte d : DirectionFlag.values) {
                     localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
                 localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
                 localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
-                
+//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+//                        System.out.println("Global init after ***********************************************************");
+//                        System.out.println("---------->readNode  "
+//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                        System.out.println("---------->localUniNode "
+//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                    }
+//                }
             }
 
             @Override
@@ -90,13 +111,34 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 NodeWritable localUniNode = (NodeWritable) state.state;
+//                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                for (byte d: DirectionFlag.values) {
+                
+//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+//                        System.out.println("Global before ***********************************************************");
+//                        System.out.println("---------->readNode  "
+//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                        System.out.println("---------->localUniNode "
+//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                    }
+//                }
+                
+                for (byte d : DirectionFlag.values) {
                     localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
                 }
                 localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
                 localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
+//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+//                        System.out.println("Global after ***********************************************************");
+//                        System.out.println("---------->readNode  "
+//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                        System.out.println("---------->localUniNode "
+//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+//                    }
+//                }
             }
 
             @Override

@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 
 public class EdgeListWritable implements WritableComparable<EdgeListWritable>, Serializable, Iterable<EdgeWritable>{
@@ -318,6 +319,13 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             this.remove(toRemove.getKey());
     }
 
+//    public void appendEdgeList(EdgeListWritable other) {
+//        for (EdgeWritable e : other.edges) {
+//            this.edges.addAll(other.edges.clone());
+//        }
+//    }
+    
+    
     /**
      * Adds all edges in edgeList to me.  If I have the same edge as `other`, that entry will be the union of both sets of readIDs.
      * 
@@ -327,7 +335,6 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         // TODO test this function properly
         // TODO perhaps there's a more efficient way to do this?
         HashMap<VKmerBytesWritable, PositionListWritable> unionEdges = new HashMap<VKmerBytesWritable, PositionListWritable>(edges.size() + other.edges.size());
-        
         for (EdgeWritable e : edges) {
             VKmerBytesWritable key = e.getKey();
             if (unionEdges.containsKey(key)) {
@@ -338,6 +345,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
                 unionEdges.put(key, new PositionListWritable(e.getReadIDs())); // make a new copy of their list
             }
         }
+        
         for (EdgeWritable e : other.edges) {
             VKmerBytesWritable key = e.getKey();
             if (unionEdges.containsKey(key)) {

@@ -43,7 +43,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     private VKmerBytesWritable internalKmer;
 
     private float averageCoverage;
-
+    
+//    public boolean foundMe;
+//    public String previous;
+//    public int stepCount;
     // merge/update directions
     public static class DirectionFlag {
         public static final byte DIR_FF = 0b00 << 0;
@@ -80,6 +83,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                                                  // set kmerlength
                                                  // Optimization: VKmer
         averageCoverage = 0;
+//        this.foundMe = false;
+//        this.previous = "";
+//        this.stepCount = 0;
     }
 
     public NodeWritable(EdgeListWritable[] edges, PositionListWritable startReads, PositionListWritable endReads,

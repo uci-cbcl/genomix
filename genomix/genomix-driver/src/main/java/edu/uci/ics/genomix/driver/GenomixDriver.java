@@ -75,7 +75,7 @@ public class GenomixDriver {
         LOG.info("Building Graph using Hyracks...");
         manager.startCluster(ClusterType.HYRACKS);
         GenomixJobConf.tick("buildGraphWithHyracks");
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
+        conf.set(GenomixJobConf.OUTPUT_FORMAT, Boolean.parseBoolean(conf.get(GenomixJobConf.HYRACKS_BUILD_OUTPUT_TEXT)) ? GenomixJobConf.OUTPUT_FORMAT_TEXT : GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         String hyracksIP = runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS);
         int hyracksPort = runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT));
@@ -253,10 +253,10 @@ public class GenomixDriver {
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
         String[] myArgs = {
                 "-runLocal", "true",
-                "-kmerLength", "5",
+                "-kmerLength", "55",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
-                "-localInput", "../genomix-pregelix/data/input/reads/pathmerge",
+                "-localInput", "tail600000",
                 //                        "-localInput", "/home/wbiesing/code/biggerInput",
                 //                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
                 //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
@@ -264,8 +264,11 @@ public class GenomixDriver {
                 //                        "-localOutput", "output-skip",
                 //                            "-pipelineOrder", "BUILD,MERGE",
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-                //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000", 
-                "-pipelineOrder", "MERGE" };
+                //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
+//                "-localOutput", "testout",
+                "-pipelineOrder", "BUILD_HYRACKS",
+                "-hyracksBuildOutputText", "true",
+                };
         // allow Eclipse to run the maven-generated scripts
                 if (System.getProperty("app.home") == null)
                     System.setProperty("app.home", new File("target/appassembler").getAbsolutePath());
@@ -273,8 +276,8 @@ public class GenomixDriver {
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-//        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
-          GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+//          GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
     }

@@ -49,7 +49,7 @@ import edu.uci.ics.genomix.hyracks.graph.util.GenerateGraphViz;
 @SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
 public class ParameteredTestCaseForSet {
-    public static final DirType testSetType = DirType.MULTIPLE_TANDEM_REPEAT;
+    public static final DirType testSetType = DirType.RANDOM;
     public String dataPath;
     public int KmerSize;
     
