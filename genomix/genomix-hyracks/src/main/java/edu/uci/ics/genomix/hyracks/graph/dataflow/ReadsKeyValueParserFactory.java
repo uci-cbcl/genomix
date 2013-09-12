@@ -17,6 +17,7 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,7 +48,7 @@ import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
-    private static final Log LOG = LogFactory.getLog(ReadsKeyValueParserFactory.class);
+    private static final Logger LOG = Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
 
     public static final int OutputKmerField = 0;
     public static final int OutputNodeField = 1;

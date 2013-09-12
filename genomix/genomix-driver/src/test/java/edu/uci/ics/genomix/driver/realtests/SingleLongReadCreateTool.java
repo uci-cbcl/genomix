@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.uci.ics.genomix.driver.GenomixDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 
@@ -19,7 +21,7 @@ public class SingleLongReadCreateTool {
      * target path: relative path: longreadfortest
      */
     private static final char[] symbols = new char[4];
-    private static final Log LOG = LogFactory.getLog(Driver.class);
+    private static final Logger LOG = Logger.getLogger(Driver.class.getName());
     static {
         symbols[0] = 'A';
         symbols[1] = 'C';

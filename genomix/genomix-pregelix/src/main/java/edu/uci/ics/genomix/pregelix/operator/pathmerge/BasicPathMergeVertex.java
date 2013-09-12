@@ -4,6 +4,8 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.log.LogUtil;
+import edu.uci.ics.genomix.pregelix.log.LoggingType;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeWritable;
@@ -364,6 +366,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     getVertexValue().setState(State.IS_DEAD);
                     activate();
                 }
+                /** logging outgoingMsg **/
+                loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getNextDestVertexId());
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
@@ -374,6 +378,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     getVertexValue().setState(State.IS_DEAD);
                     activate();
                 }
+                /** logging outgoingMsg **/
+                loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getPrevDestVertexId());
                 break; 
         }
     }
@@ -387,5 +393,21 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
         return 0;
         
+    }
+    
+    /**
+     * Logging the vertexId and vertexValue 
+     */
+    public void loggingNode(byte loggingType){
+        String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
+        logger.fine(logMessage);
+    }
+    
+    /**
+     * Logging message
+     */
+    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest){
+        String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
+        logger.fine(logMessage);
     }
 }

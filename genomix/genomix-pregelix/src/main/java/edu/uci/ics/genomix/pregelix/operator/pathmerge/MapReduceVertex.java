@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,6 +25,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     /**
      * initiate kmerSize, maxIteration
      */
+    @SuppressWarnings("unchecked")
     @Override
     public void initVertex() {
         super.initVertex();

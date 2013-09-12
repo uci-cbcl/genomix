@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -30,6 +31,10 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, V, NullWritable, M> {
+
+    //logger
+    public Logger logger = Logger.getLogger(BasicGraphCleanVertex.class.getName());
+    
     public static int kmerSize = -1;
     public static int maxIteration = -1;
     
@@ -74,13 +79,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         if (maxIteration < 0)
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
-
-        
-//        if (getSuperstep() == 1) {
-//            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-//            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-//            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
-//        }
     }
     
     /**

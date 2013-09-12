@@ -86,7 +86,7 @@
 				<configuration>
 					<forkMode>pertest</forkMode>
 					<argLine>-enableassertions -Xmx2047m -Dfile.encoding=UTF-8
-						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
+						-Djava.util.logging.config.file=src/test/resources/conf/logging.properties</argLine>
 					<includes>
 						<include>**/*TestSuite.java</include>
 						<include>**/*Test.java</include>

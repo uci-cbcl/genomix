@@ -19,6 +19,11 @@ public class MessageWritable implements Writable, WritableSizable {
         flag = 0;
     }
     
+    public void setAsCopy(MessageWritable other){
+        setSourceVertexId(other.getSourceVertexId());
+        flag = other.getFlag();
+    }
+    
     public void reset(){
         sourceVertexId.reset(0);
         flag = 0;

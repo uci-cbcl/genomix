@@ -15,11 +15,14 @@
 
 package edu.uci.ics.genomix.config;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.LogManager;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -38,6 +41,31 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
+
+    static {
+        loadLoggingFile();
+    }
+    
+    /**
+     * Utility to catch logging.properties when they aren't set using JVM parameters.
+     * 
+     * Prefer logging.properties from the following four places (in order):
+     *   1. the passed in system property "java.util.logging.config.file" (if it exists, we won't change anything)
+     *   2. ${app.home}/conf/logging.properties
+     *   3. src/main/resources/conf/logging.properties
+     *   4. src/test/resources/conf/logging.properties
+     */
+    private static void loadLoggingFile() {
+        if (System.getProperty("java.util.logging.config.file") == null) {
+            String logBasePath = new File("src/main/resources/conf/logging.properties").isFile() ? "src/main/resources" : "src/test/resources";
+            String logProperties = System.getProperty("app.home", logBasePath) + "/conf/logging.properties";
+            try {
+                LogManager.getLogManager().readConfiguration(new FileInputStream(logProperties));
+            } catch (SecurityException | IOException e) {
+                System.err.println("Couldn't read the given log file: " + logProperties + "\n" + e.getStackTrace());
+            }
+        }
+    }
 
     /* The following section ties together command-line options with a global JobConf
      * Each variable has an annotated, command-line Option which is private here but 

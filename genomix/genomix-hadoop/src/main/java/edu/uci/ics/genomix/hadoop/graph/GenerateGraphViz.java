@@ -64,7 +64,7 @@ public class GenerateGraphViz {
         gv.addln(gv.end_graph());
         System.out.println(gv.getDotSource());
 
-        String type = "svg";
+        String type = "ps";
         File folder = new File(destDir);
         folder.mkdirs();
         File out = new File(destDir + "/result." + type); // Linux

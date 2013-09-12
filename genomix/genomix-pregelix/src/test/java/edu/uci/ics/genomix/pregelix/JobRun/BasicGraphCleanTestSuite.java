@@ -42,7 +42,7 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 @SuppressWarnings("deprecation")
 public class BasicGraphCleanTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(BasicGraphCleanTestSuite.class.getName());
-
+    
     protected static String PreFix; //parameter
     protected static String SufFix; //parameter
     protected static ArrayList<String> TestDir = new ArrayList<String>(); //parameter
@@ -51,8 +51,8 @@ public class BasicGraphCleanTestSuite extends TestSuite {
     protected static String HADOOP_CONF_PATH; //initiated by ACTUAL_RESULT_DIR
     
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
-    private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/cluster/stores.properties";
-    private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/cluster/cluster.properties";
+    private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/conf/stores.properties";
+    private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/conf/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
 
     public static final String HDFS_INPUTPATH = "/TestSet";
@@ -60,7 +60,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
     private MiniDFSCluster dfsCluster;
 
     private JobConf conf = new JobConf();
-    private int numberOfNC = 2;
+    private int numberOfNC = 1;
     
     public void setUp() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
@@ -70,6 +70,8 @@ public class BasicGraphCleanTestSuite extends TestSuite {
         LOGGER.info("Hyracks mini-cluster started");
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
+        File logDir = new File("logs");
+        FileUtils.cleanDirectory(logDir);//TODO make it more general
         startHDFS();
     }
 

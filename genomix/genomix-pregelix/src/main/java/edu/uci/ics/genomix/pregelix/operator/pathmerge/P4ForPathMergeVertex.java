@@ -8,11 +8,12 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.log.LoggingType;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge 
@@ -119,6 +120,7 @@ public class P4ForPathMergeVertex extends
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
+
         if (getSuperstep() == 1)
             startSendMsg();
         else if (getSuperstep() == 2)
@@ -177,7 +179,11 @@ public class P4ForPathMergeVertex extends
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
+                /** logging incomingMsg **/
+                loggingNode(LoggingType.BEFORE_OPERATIONS);
+                loggingMessage(LoggingType.RECEIVE_MSG, incomingMsg, null);
                 processUpdate();
+                loggingNode(LoggingType.AFTER_UPDATE);
                 if(isHaltNode())
                     voteToHalt();
                 else

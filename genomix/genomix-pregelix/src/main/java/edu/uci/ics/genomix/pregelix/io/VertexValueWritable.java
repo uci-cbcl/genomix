@@ -17,39 +17,7 @@ public class VertexValueWritable
     extends NodeWritable{
 
     private static final long serialVersionUID = 1L;
-
-//    public static class State extends VertexStateFlag{   
-//        public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b0 << 2; //use for initiating head
-//        public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b1 << 2;
-//        public static final byte HEAD_SHOULD_MERGE_MASK = 0b1 << 2;
-//        public static final byte HEAD_SHOULD_MERGE_CLEAR = (byte) 11001011;
-//        
-//        public static final byte NO_MERGE = 0b00 << 3;
-//        public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 3;
-//        public static final byte SHOULD_MERGEWITHPREV = 0b10 << 3;
-//        public static final byte SHOULD_MERGE_MASK = 0b11 << 3;
-//        public static final byte SHOULD_MERGE_CLEAR = 0b1100111;
-//        
-//        public static final byte UNCHANGE = 0b0 << 3;
-//        public static final byte KILL = 0b1 << 3;
-//        public static final byte KILL_MASK = 0b1 << 3;
-//        
-//        public static final byte DIR_FROM_DEADVERTEX = 0b10 << 3;
-//        public static final byte DEAD_MASK = 0b10 << 3;
-//    }
-//    
-//    public static class VertexStateFlag extends FakeFlag {
-//        public static final byte IS_NON = 0b00 << 5;
-//        public static final byte IS_HEAD = 0b01 << 5;
-//        public static final byte IS_FINAL = 0b10 << 5;
-//        
-//        public static final byte IS_OLDHEAD = 0b11 << 5;
-//        
-//        public static final byte IS_HALT = 0b1111110;
-//        public static final byte IS_DEAD = 0b0111110;
-//        public static final byte VERTEX_MASK = 0b11 << 5; 
-//        public static final byte VERTEX_CLEAR = (byte) 11001111;
-//    }
+    
     public static class HeadMergeDir{
         public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b0 << 2; //use for initiating head
         public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b1 << 2;
@@ -70,6 +38,27 @@ public class VertexValueWritable
         
         public static final byte VERTEX_MASK = 0b111 << 3; 
         public static final byte VERTEX_CLEAR = (byte)1000111;
+        
+        public static String getContent(byte stateFlag){
+            switch(stateFlag & VERTEX_MASK){
+                case IS_NON:
+                    return "IS_NON";
+                case IS_HEAD:
+                    return "IS_HEAD";
+                case IS_FINAL:
+                    return "IS_FINAL";
+                case IS_OLDHEAD:
+                    return "IS_OLDHEAD";
+                case IS_HALT:
+                    return "IS_HALT";
+                case IS_DEAD:
+                    return "IS_DEAD";
+                case IS_ERROR:
+                    return "IS_ERROR";
+                    
+            }
+            return null;
+        }
     }
     
     public static class State extends VertexStateFlag{   
@@ -102,6 +91,16 @@ public class VertexValueWritable
 //    public VertexValueWritable get(){
 //        return this;
 //    }
+    
+    public void setAsCopy(VertexValueWritable other){
+        setNode(other.getNode());
+        state = other.getState();
+        isFakeVertex = other.isFakeVertex();
+        counters.clear();
+        counters.putAll(other.getCounters());
+        scaffoldingMap.clear();
+        scaffoldingMap.putAll(other.getScaffoldingMap());
+    }
     
     public void setNode(NodeWritable node){
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
@@ -287,5 +286,10 @@ public class VertexValueWritable
             default:
                 throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
         }
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString() + "\t" + State.getContent(state);
     }
 }
