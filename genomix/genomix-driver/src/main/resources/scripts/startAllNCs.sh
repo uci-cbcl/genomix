@@ -9,7 +9,7 @@ pid_re="^[0-9]+$"
 for i in `cat conf/slaves`
 do
    # ssh to the slave machine and capture its hostname and 
-   SLAVE_PID=$( ssh -n $i "cd \"${GENOMIX_HOME}\" &>/dev/null; export JAVA_HOME=${JAVA_HOME} &>/dev/null ; bin/startnc.sh $1" )
+   SLAVE_PID=$( ssh -n $i "cd \"${GENOMIX_HOME}\" &>/dev/null; export JAVA_HOME=${JAVA_HOME} &>/dev/null ; export NCJAVA_OPTS="$NCJAVA_OPTS" &>/dev/null ; bin/startnc.sh $1" )
    if [[ "$SLAVE_PID" =~ $pid_re ]] ; then
      printf "slave: %s\t%s\n"  "$i" "$SLAVE_PID"
      printf "%s\t%s\n"  "$i" "$SLAVE_PID" >> $PID_FILE
