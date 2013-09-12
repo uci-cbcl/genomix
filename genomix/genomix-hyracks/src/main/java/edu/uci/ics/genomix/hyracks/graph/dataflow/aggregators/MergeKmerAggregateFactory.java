@@ -17,6 +17,7 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +36,7 @@ import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
 public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
     private static final long serialVersionUID = 1L;
-    private static final Log LOG = LogFactory.getLog(MergeKmerAggregateFactory.class);
+    private static final Logger LOG = Logger.getLogger(MergeKmerAggregateFactory.class.getName());
     
     private final int kmerSize;
     
@@ -111,7 +112,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 NodeWritable localUniNode = (NodeWritable) state.state;
                 try {
                     if (localUniNode.getSerializedLength() > frameSize / 2) {
-                        LOG.warn("MergeKmer: output data kmerByteSize is too big: " + localUniNode.getSerializedLength());
+                        LOG.warning("MergeKmer: output data kmerByteSize is too big: " + localUniNode.getSerializedLength());
                     }
                     fieldOutput.write(localUniNode.marshalToByteArray(), 0, localUniNode.getSerializedLength());
                     tupleBuilder.addFieldEndOffset();

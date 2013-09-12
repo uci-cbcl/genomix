@@ -43,13 +43,19 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 public class GenomixJobConf extends JobConf {
 
     static {
-        /*
-         * Prefer logging.properties from the following four places (in order):
-         *   1. the passed in system property "java.util.logging.config.file"
-         *   2. ${app.home}/conf/logging.properties
-         *   3. src/main/resources/conf/logging.properties
-         *   4. src/test/resources/conf/logging.properties
-         */
+        loadLoggingFile();
+    }
+    
+    /**
+     * Utility to catch logging.properties when they aren't set using JVM parameters.
+     * 
+     * Prefer logging.properties from the following four places (in order):
+     *   1. the passed in system property "java.util.logging.config.file" (if it exists, we won't change anything)
+     *   2. ${app.home}/conf/logging.properties
+     *   3. src/main/resources/conf/logging.properties
+     *   4. src/test/resources/conf/logging.properties
+     */
+    private static void loadLoggingFile() {
         if (System.getProperty("java.util.logging.config.file") == null) {
             String logBasePath = new File("src/main/resources/conf/logging.properties").isFile() ? "src/main/resources" : "src/test/resources";
             String logProperties = System.getProperty("app.home", logBasePath) + "/conf/logging.properties";
@@ -60,7 +66,6 @@ public class GenomixJobConf extends JobConf {
             }
         }
     }
-    
 
     /* The following section ties together command-line options with a global JobConf
      * Each variable has an annotated, command-line Option which is private here but 

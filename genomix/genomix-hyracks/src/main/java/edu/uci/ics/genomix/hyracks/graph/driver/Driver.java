@@ -22,9 +22,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -54,7 +53,7 @@ public class Driver {
         BUILD_UNMERGED_GRAPH,
     }
 
-    private static final Log LOG = LogFactory.getLog(Driver.class);
+    private static final Logger LOG = Logger.getLogger(Driver.class.getName());
     private JobGen jobGen;
     private boolean profiling;
 

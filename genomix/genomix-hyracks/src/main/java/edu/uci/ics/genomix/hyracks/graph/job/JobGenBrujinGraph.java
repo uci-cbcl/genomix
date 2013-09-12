@@ -17,6 +17,7 @@ package edu.uci.ics.genomix.hyracks.graph.job;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,6 +27,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.driver.GenomixDriver;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerNormarlizedComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
@@ -79,7 +81,7 @@ public class JobGenBrujinGraph extends JobGen {
     }
 
     protected ConfFactory hadoopJobConfFactory;
-    protected static final Log LOG = LogFactory.getLog(JobGenBrujinGraph.class);
+    private static final Logger LOG = Logger.getLogger(JobGenBrujinGraph.class.getName());
     private static final int DEFAULT_FRAME_LIMIT = 4096;
     private static final int DEFAULT_FRAME_SIZE = 65535;
     protected String[] ncNodeNames;
@@ -93,7 +95,7 @@ public class JobGenBrujinGraph extends JobGen {
     protected OutputFormat outputFormat;
 
     protected void logDebug(String status) {
-        LOG.debug(status + " nc nodes:" + ncNodeNames.length);
+        LOG.fine(status + " nc nodes:" + ncNodeNames.length);
     }
 
     public JobGenBrujinGraph(GenomixJobConf job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
