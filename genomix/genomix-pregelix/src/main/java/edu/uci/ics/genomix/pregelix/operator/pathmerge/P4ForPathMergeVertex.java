@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.Iterator;
 import java.util.Random;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -10,6 +9,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.log.LoggingType;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -125,7 +125,7 @@ public class P4ForPathMergeVertex extends
      * Logging the vertexId and vertexValue 
      */
     public void loggingNode(byte loggingType){
-        String logMessage = LoggingType.getContent(loggingType);
+        String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
         logger.fine(logMessage);
     }
     
@@ -133,8 +133,8 @@ public class P4ForPathMergeVertex extends
      * Logging message
      */
     public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest){
-        String logMessage = LoggingType.getContent(loggingType);
-        logger.log(Level.INFO, logMessage);
+        String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
+        logger.fine(logMessage);
     }
     
     @Override
