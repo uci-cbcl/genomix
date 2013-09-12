@@ -240,9 +240,9 @@ public class JobGenBrujinGraph extends JobGen {
     protected void initJobConfiguration(Scheduler scheduler) throws HyracksDataException {
         Configuration conf = confFactory.getConf();
         kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
-        frameLimits = conf.getInt(GenomixJobConf.FRAME_LIMIT, DEFAULT_FRAME_LIMIT);
+        frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
 //        tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
-        frameSize = conf.getInt(GenomixJobConf.FRAME_SIZE, DEFAULT_FRAME_SIZE);
+        frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
         System.out.println(DEFAULT_FRAME_SIZE);
         System.out.println(frameSize);
         String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
