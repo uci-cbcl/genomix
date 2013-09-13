@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.JobGen;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Random;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
@@ -128,6 +129,7 @@ public class JobGenerator {
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmerBytesWritable.class);
         job.setOutputValueClass(VertexValueWritable.class);
+        job.getConfiguration().setLong(GenomixJobConf.P4_RANDOM_SEED, new Random().nextLong());
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

@@ -220,6 +220,7 @@ public class GenomixJobConf extends JobConf {
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.max.readids.per.edge";
+    public static final String P4_RANDOM_SEED = "genomix.p4.random.seed";
     
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
