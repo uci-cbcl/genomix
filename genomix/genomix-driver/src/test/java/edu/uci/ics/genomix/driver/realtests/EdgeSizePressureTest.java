@@ -72,10 +72,10 @@ public class EdgeSizePressureTest {
         
         test.cleanDiskFile();
         test.createInputData(options.countOfLines);
+        System.out.println("create complete!");
         String[] esPressureArgs = {"-runLocal", "true", "-kmerLength", String.valueOf(options.kmerLength), "-saveIntermediateResults",
                 "true", "-localInput", test.getTestDir(), "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
         GenomixDriver.main(esPressureArgs);
-        System.out.println("complete!");
-        test.cleanDiskFile();
+//        test.cleanDiskFile();
     }
 }
