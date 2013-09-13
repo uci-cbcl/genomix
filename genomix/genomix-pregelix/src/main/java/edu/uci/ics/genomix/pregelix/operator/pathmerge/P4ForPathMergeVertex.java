@@ -180,10 +180,14 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 /** logging incomingMsg **/
-                loggingNode(LoggingType.BEFORE_OPERATIONS);
-                loggingMessage(LoggingType.RECEIVE_MSG, incomingMsg, null);
+                if(incomingMsg.getSourceVertexId().toString().equals("ACAACTACGTCGCGCTGTTCACCGGGGAGAAAAATCGGTTCCTCCCCGGCGGGGC")){
+                    loggingNode(LoggingType.BEFORE_OPERATIONS);
+                    loggingMessage(LoggingType.RECEIVE_MSG, incomingMsg, null);
+                }
                 processUpdate();
-                loggingNode(LoggingType.AFTER_UPDATE);
+                if(incomingMsg.getSourceVertexId().toString().equals("ACAACTACGTCGCGCTGTTCACCGGGGAGAAAAATCGGTTCCTCCCCGGCGGGGC")){
+                    loggingNode(LoggingType.AFTER_UPDATE);
+                }
                 if(isHaltNode())
                     voteToHalt();
                 else
