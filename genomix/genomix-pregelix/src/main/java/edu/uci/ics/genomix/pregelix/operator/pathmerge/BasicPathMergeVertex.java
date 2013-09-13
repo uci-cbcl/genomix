@@ -367,7 +367,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     activate();
                 }
                 /** logging outgoingMsg **/
-                loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getNextDestVertexId());
+//                loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getNextDestVertexId());
                 break;
             case State.SHOULD_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
@@ -379,7 +379,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     activate();
                 }
                 /** logging outgoingMsg **/
-                loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getPrevDestVertexId());
+//                loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getPrevDestVertexId());
                 break; 
         }
     }
