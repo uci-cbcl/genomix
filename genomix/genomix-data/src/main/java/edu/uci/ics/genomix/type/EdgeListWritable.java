@@ -284,7 +284,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     }
 
     public void remove(VKmerBytesWritable toRemove) {
-        remove(toRemove, false);
+        remove(toRemove, true);
     }
 
     /*
