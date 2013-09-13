@@ -228,7 +228,8 @@ public class GenomixJobConf extends JobConf {
     public static final String RUN_LOCAL = "genomix.runLocal";
 
     // TODO should these also be command line options?
-    public static final String FRAME_SIZE = "genomix.framesize";
+//    public static final String FRAME_SIZE = "genomix.framesize";
+    public static final String FRAME_SIZE = "pregelix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
     public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
     public static final String OUTPUT_FORMAT = "genomix.graph.output";
