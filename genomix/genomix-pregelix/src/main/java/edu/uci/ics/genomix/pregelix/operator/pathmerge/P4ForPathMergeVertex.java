@@ -123,7 +123,7 @@ public class P4ForPathMergeVertex extends
 //            voteToHalt();
 //            return;
 //        }
-//        initVertex();
+        initVertex();
 
         if (getSuperstep() == 1)
             startSendMsg();
