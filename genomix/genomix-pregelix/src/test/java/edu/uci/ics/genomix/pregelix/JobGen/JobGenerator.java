@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
+
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
@@ -324,6 +326,7 @@ public class JobGenerator {
     }
     
     public static void main(String[] args) throws IOException {
+        FileUtils.forceMkdir(new File(outputBase));
         genUnrollTandemRepeatGraph();
         genMapReduceGraph();
         genP1ForMergeGraph();
