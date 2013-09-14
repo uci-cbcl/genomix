@@ -119,11 +119,11 @@ public class P4ForPathMergeVertex extends
     
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
-        if(getSuperstep() > 6){
-            voteToHalt();
-            return;
-        }
-        initVertex();
+//        if(getSuperstep() > 4){
+//            voteToHalt();
+//            return;
+//        }
+//        initVertex();
 
         if (getSuperstep() == 1)
             startSendMsg();
