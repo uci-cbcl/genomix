@@ -58,11 +58,9 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
     protected byte repeatDir; //for detect tandemRepeat
     protected VKmerBytesWritable tmpKmer = null;
-//    protected byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
     protected byte selfFlag;
-//    protected byte headMergeDir;
     
     protected EdgeListWritable incomingEdgeList = null; //SplitRepeat
     protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat
@@ -80,13 +78,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
-    
-//    /**
-//     * reset headFlag
-//     */
-//    public void resetHeadFlag(){
-//        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
-//    }
     
     //TODO make it correct
     public byte getHeadFlag(){

@@ -65,7 +65,6 @@ public class P4ForPathMergeVertex extends
         outFlag = (byte)0;
         inFlag = (byte)0;
         // Node may be marked as head b/c it's a real head or a real tail
-//        headFlag = getHeadFlag(); // TODO be a boolean?
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
@@ -127,8 +126,6 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
-//            outFlag |= headFlag; // TODO are these necessary?
-//            outFlag |= State.NO_MERGE;
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
@@ -138,8 +135,8 @@ public class P4ForPathMergeVertex extends
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue()); // TODO HEAD CAN MERGE // TODO headFlag compare not equals, not == 0
-            hasPrev = setPrevInfo(getVertexValue()); // TODO this extra logic should go inside the function
+            hasNext = setNextInfo(getVertexValue()); // TODO HEAD CAN MERGE 
+            hasPrev = setPrevInfo(getVertexValue());
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
