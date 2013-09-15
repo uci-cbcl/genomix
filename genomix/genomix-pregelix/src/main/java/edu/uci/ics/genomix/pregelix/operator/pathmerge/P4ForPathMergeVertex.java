@@ -50,8 +50,8 @@ public class P4ForPathMergeVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
-        randSeed = getSuperstep();
-        randGenerator = new Random(randSeed);
+        randSeed = getSuperstep(); // TODO use the updated version from this morning
+        randGenerator = new Random(randSeed); // TODO don't need to create every iteration
         if (probBeingRandomHead < 0)
             probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
         hasNext = false;
@@ -62,7 +62,7 @@ public class P4ForPathMergeVertex extends
         outFlag = (byte)0;
         inFlag = (byte)0;
         // Node may be marked as head b/c it's a real head or a real tail
-        headFlag = getHeadFlag();
+        headFlag = getHeadFlag(); // TODO be a boolean?
         headMergeDir = getHeadMergeDir();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
@@ -77,7 +77,7 @@ public class P4ForPathMergeVertex extends
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
         // "deterministically random", based on node id
-        randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 100000 * getSuperstep());//randSeed + nodeID.hashCode()
+        randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * getSuperstep());//randSeed + nodeID.hashCode()
         for(int i = 0; i < 500; i++)
             randGenerator.nextFloat();
         return randGenerator.nextFloat() < probBeingRandomHead;
@@ -87,13 +87,15 @@ public class P4ForPathMergeVertex extends
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
+    	// TODO combine into one loop?
+    	// TODO make sure the degree is correct
         if (value.getFFList().getCountOfPosition() > 0) {
-            nextKmer.setAsCopy(value.getFFList().get(0).getKey());
+            nextKmer.setAsCopy(value.getFFList().get(0).getKey());  // TODO reference?
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
         if (value.getFRList().getCountOfPosition() > 0) {
-            nextKmer.setAsCopy(value.getFRList().get(0).getKey());
+            nextKmer.setAsCopy(value.getFRList().get(0).getKey()); // TODO reference?
             nextHead = isNodeRandomHead(nextKmer);
             return true;
         }
@@ -126,20 +128,19 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
-            outFlag |= headFlag;
-            
+            outFlag |= headFlag; // TODO are these necessary?
             outFlag |= State.NO_MERGE;
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
-            curKmer.setAsCopy(getVertexId());
+            curKmer.setAsCopy(getVertexId());  // TODO make a reference
             
             curHead = isNodeRandomHead(curKmer);
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT));
-            hasPrev = setPrevInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHPREV));
+            hasNext = setNextInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT)); // TODO HEAD CAN MERGE // TODO headFlag compare not equals, not == 0
+            hasPrev = setPrevInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHPREV)); // TODO this extra logic should go inside the function
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
