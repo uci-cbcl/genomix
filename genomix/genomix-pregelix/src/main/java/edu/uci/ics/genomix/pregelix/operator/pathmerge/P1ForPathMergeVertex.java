@@ -167,12 +167,12 @@ public class P1ForPathMergeVertex extends
      */
     public void headSendUpdateMsg(){
         if(isHeadNode()){
-            byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
+            byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
             switch(headMergeDir){
-                case State.HEAD_SHOULD_MERGEWITHPREV:
+                case State.HEAD_CAN_MERGEWITHPREV:
                     sendUpdateMsgToSuccessor(true);
                     break;
-                case State.HEAD_SHOULD_MERGEWITHNEXT:
+                case State.HEAD_CAN_MERGEWITHNEXT:
                     sendUpdateMsgToPredecessor(true);
                     break;
             }

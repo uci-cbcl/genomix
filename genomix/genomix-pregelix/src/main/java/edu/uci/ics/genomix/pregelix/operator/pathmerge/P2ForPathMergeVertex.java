@@ -204,7 +204,7 @@ public class P2ForPathMergeVertex extends
             this.activate();
             resetSelfFlag();
             outFlag |= MessageFlag.IS_HEAD;
-            outFlag |= getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK;
+            outFlag |= getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK;
         } else if(selfFlag == State.IS_OLDHEAD){
             outFlag |= MessageFlag.IS_OLDHEAD;
             voteToHalt();
@@ -215,11 +215,11 @@ public class P2ForPathMergeVertex extends
     public void headSendMergeMsg(){
         outgoingMsg.reset();
         outgoingMsg.setUpdateMsg(false);
-        switch(getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK){
-            case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
+        switch(getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK){
+            case MessageFlag.HEAD_CAN_MERGEWITHPREV:
                 sendSettledMsgToAllPrevNodes(getVertexValue());
                 break;
-            case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
+            case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
                 sendSettledMsgToAllNextNodes(getVertexValue());
                 break;
         }
@@ -358,8 +358,8 @@ public class P2ForPathMergeVertex extends
                     //set head should merge dir in state
                     if((receivedMsgList.get(i).getFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_HEAD){
                         byte state =  getVertexValue().getState();
-                        state &= MessageFlag.HEAD_SHOULD_MERGE_CLEAR;
-                        byte dir = (byte)(receivedMsgList.get(i).getFlag() & MessageFlag.HEAD_SHOULD_MERGE_MASK);
+                        state &= MessageFlag.HEAD_CAN_MERGE_CLEAR;
+                        byte dir = (byte)(receivedMsgList.get(i).getFlag() & MessageFlag.HEAD_CAN_MERGE_MASK);
                         switch(receivedMsgList.get(i).getFlag() & MessageFlag.DIR_MASK){
                             case MessageFlag.DIR_FF:
                             case MessageFlag.DIR_RR:
@@ -410,11 +410,11 @@ public class P2ForPathMergeVertex extends
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                flag = ((getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHPREV);
+                flag = ((getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK) == MessageFlag.HEAD_CAN_MERGEWITHPREV);
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
-                flag = ((getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK) == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT);
+                flag = ((getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK) == MessageFlag.HEAD_CAN_MERGEWITHNEXT);
                 break;
         }
         return isHaltNode() || (isHeadNode() && flag);

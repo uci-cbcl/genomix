@@ -105,12 +105,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public byte getHeadMergeDir(){
-        return (byte) (getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
+        return (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
     }
     
     public byte getHeadFlagAndMergeDir(){
         byte flagAndMergeDir = (byte)(getVertexValue().getState() & State.IS_HEAD);
-        flagAndMergeDir |= (byte)(getVertexValue().getState() & State.HEAD_SHOULD_MERGE_MASK);
+        flagAndMergeDir |= (byte)(getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
         return flagAndMergeDir;
     }
     
@@ -121,11 +121,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                flagAndMergeDir |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
-                flagAndMergeDir |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
                 break;
         }
         return flagAndMergeDir;
@@ -408,13 +408,13 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue())){
                 byte state = 0;
                 state |= State.IS_HEAD;
-                state |= State.HEAD_SHOULD_MERGEWITHPREV;
+                state |= State.HEAD_CAN_MERGEWITHPREV;
                 getVertexValue().setState(state);
                 activate();
             } else if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue())){
             	byte state = 0;
                 state |= State.IS_HEAD;
-                state |= State.HEAD_SHOULD_MERGEWITHNEXT;
+                state |= State.HEAD_CAN_MERGEWITHNEXT;
                 getVertexValue().setState(state);
                 activate();
             }
@@ -444,11 +444,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                state |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                state |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR:
-                state |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                state |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
                 break;
         }
         getVertexValue().setState(state);
@@ -576,7 +576,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void setStateAsNoMerge(){
     	byte state = getVertexValue().getState();
-    	state &= State.SHOULD_MERGE_CLEAR;
+    	state &= State.CAN_MERGE_CLEAR;
         state |= State.NO_MERGE;
         getVertexValue().setState(state);
         activate();  //could we be more careful about activate?
@@ -798,14 +798,14 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue()) && getVertexValue().outDegree() == 0){
                 outFlag = 0;
                 outFlag |= MessageFlag.IS_HEAD;
-                outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+                outFlag |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
                 getVertexValue().setState(outFlag);
                 activate();
             }
             if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue()) && getVertexValue().inDegree() == 0){
                 outFlag = 0;
                 outFlag |= MessageFlag.IS_HEAD;
-                outFlag |= MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
+                outFlag |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
                 getVertexValue().setState(outFlag);
                 activate();
             }

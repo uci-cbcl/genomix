@@ -18,16 +18,16 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 	
     public void setStateAsMergeWithPrev(){
         byte state = getVertexValue().getState();
-        state &= State.SHOULD_MERGE_CLEAR;
-        state |= State.SHOULD_MERGEWITHPREV;
+        state &= State.CAN_MERGE_CLEAR;
+        state |= State.CAN_MERGEWITHPREV;
         getVertexValue().setState(state);
         activate();
     }
     
     public void setStateAsMergeWithNext(){
         byte state = getVertexValue().getState();
-        state &= State.SHOULD_MERGE_CLEAR;
-        state |= State.SHOULD_MERGEWITHNEXT;
+        state &= State.CAN_MERGE_CLEAR;
+        state |= State.CAN_MERGEWITHNEXT;
         getVertexValue().setState(state);
         activate();
     }
@@ -81,10 +81,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public byte flipHeadMergeDir(byte d, boolean isFlip){
         if(isFlip){
             switch(d){
-                case State.HEAD_SHOULD_MERGEWITHPREV:
-                    return State.HEAD_SHOULD_MERGEWITHNEXT;
-                case State.HEAD_SHOULD_MERGEWITHNEXT:
-                    return State.HEAD_SHOULD_MERGEWITHPREV;
+                case State.HEAD_CAN_MERGEWITHPREV:
+                    return State.HEAD_CAN_MERGEWITHNEXT;
+                case State.HEAD_CAN_MERGEWITHNEXT:
+                    return State.HEAD_CAN_MERGEWITHPREV;
                     default:
                         return 0;
             }
@@ -106,9 +106,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 
         if((inFlag & MessageFlag.IS_HEAD) > 0){
             byte state = getVertexValue().getState();
-            state &= State.HEAD_SHOULD_MERGE_CLEAR;
+            state &= State.HEAD_CAN_MERGE_CLEAR;
             state |= State.IS_HEAD;
-            byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_SHOULD_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
+            byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_CAN_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
             state |= headMergeDir;
             getVertexValue().setState(state);
         }
@@ -177,12 +177,12 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public void broadcastUpdateMsg(boolean flag){
         if((getVertexValue().getState() & State.VERTEX_MASK) == State.IS_HEAD && (outFlag & State.VERTEX_MASK) != State.IS_FINAL)
             outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK){
-            case State.SHOULD_MERGEWITHPREV:
+        switch(getVertexValue().getState() & State.CAN_MERGE_MASK){
+            case State.CAN_MERGEWITHPREV:
                 /** confugure updateMsg for successor **/
                 configureUpdateMsgForSuccessor(flag);
                 break;
-            case State.SHOULD_MERGEWITHNEXT:
+            case State.CAN_MERGEWITHNEXT:
                 /** confugure updateMsg for predecessor **/
                 configureUpdateMsgForPredecessor(flag);
                 break; 
@@ -243,11 +243,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public void headSendUpdateMsg(){
         outgoingMsg.reset();
         outgoingMsg.setUpdateMsg(true);
-        switch(getVertexValue().getState() & MessageFlag.HEAD_SHOULD_MERGE_MASK){
-            case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
+        switch(getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK){
+            case MessageFlag.HEAD_CAN_MERGEWITHPREV:
                 sendUpdateMsgToSuccessor(false);
                 break;
-            case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
+            case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
                 sendUpdateMsgToPredecessor(false);
                 break;
         }
@@ -356,8 +356,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outFlag |= MessageFlag.IS_HEAD;
             outFlag |= getHeadMergeDir();
         }
-        switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK) {
-            case State.SHOULD_MERGEWITHNEXT:
+        switch(getVertexValue().getState() & State.CAN_MERGE_MASK) {
+            case State.CAN_MERGEWITHNEXT:
                 /** configure merge msg for successor **/
                 configureMergeMsgForSuccessor(getNextDestVertexId());
                 if(deleteSelf)
@@ -369,7 +369,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 /** logging outgoingMsg **/
                 loggingMessage(LoggingType.SEND_MSG, outgoingMsg, getNextDestVertexId());
                 break;
-            case State.SHOULD_MERGEWITHPREV:
+            case State.CAN_MERGEWITHPREV:
                 /** configure merge msg for predecessor **/
                 configureMergeMsgForPredecessor(getPrevDestVertexId());
                 if(deleteSelf)
@@ -386,10 +386,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     
     public byte revertHeadMergeDir(byte headMergeDir){
         switch(headMergeDir){
-            case MessageFlag.HEAD_SHOULD_MERGEWITHPREV:
-                return MessageFlag.HEAD_SHOULD_MERGEWITHNEXT;
-            case MessageFlag.HEAD_SHOULD_MERGEWITHNEXT:
-                return MessageFlag.HEAD_SHOULD_MERGEWITHPREV;
+            case MessageFlag.HEAD_CAN_MERGEWITHPREV:
+                return MessageFlag.HEAD_CAN_MERGEWITHNEXT;
+            case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
+                return MessageFlag.HEAD_CAN_MERGEWITHPREV;
         }
         return 0;
         

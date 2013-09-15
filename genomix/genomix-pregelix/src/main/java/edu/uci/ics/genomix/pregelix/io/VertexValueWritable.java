@@ -19,10 +19,10 @@ public class VertexValueWritable
     private static final long serialVersionUID = 1L;
     
     public static class HeadMergeDir{
-        public static final byte HEAD_SHOULD_MERGEWITHPREV = 0b0 << 2; //use for initiating head
-        public static final byte HEAD_SHOULD_MERGEWITHNEXT = 0b1 << 2;
-        public static final byte HEAD_SHOULD_MERGE_MASK = 0b1 << 2;
-        public static final byte HEAD_SHOULD_MERGE_CLEAR = (byte)1000011;
+        public static final byte HEAD_CAN_MERGEWITHPREV = 0b0 << 2; //use for initiating head
+        public static final byte HEAD_CAN_MERGEWITHNEXT = 0b1 << 2;
+        public static final byte HEAD_CAN_MERGE_MASK = 0b1 << 2;
+        public static final byte HEAD_CAN_MERGE_CLEAR = (byte)1000011;
     }
     
     public static class VertexStateFlag extends HeadMergeDir{
@@ -63,10 +63,10 @@ public class VertexValueWritable
     
     public static class State extends VertexStateFlag{   
         public static final byte NO_MERGE = 0b00 << 0;
-        public static final byte SHOULD_MERGEWITHNEXT = 0b01 << 0;
-        public static final byte SHOULD_MERGEWITHPREV = 0b10 << 0;
-        public static final byte SHOULD_MERGE_MASK = 0b11 << 0;
-        public static final byte SHOULD_MERGE_CLEAR = 0b1111100;
+        public static final byte CAN_MERGEWITHNEXT = 0b01 << 0;
+        public static final byte CAN_MERGEWITHPREV = 0b10 << 0;
+        public static final byte CAN_MERGE_MASK = 0b11 << 0;
+        public static final byte CAN_MERGE_CLEAR = 0b1111100;
         
         public static final byte IS_NONFAKE = 0 << 6;
         public static final byte IS_FAKE = 1 << 6;
