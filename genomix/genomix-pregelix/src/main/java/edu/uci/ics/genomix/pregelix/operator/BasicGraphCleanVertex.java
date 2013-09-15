@@ -58,11 +58,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
     protected byte repeatDir; //for detect tandemRepeat
     protected VKmerBytesWritable tmpKmer = null;
-    protected byte headFlag;
+//    protected byte headFlag;
     protected byte outFlag;
     protected byte inFlag;
     protected byte selfFlag;
-    protected byte headMergeDir;
+//    protected byte headMergeDir;
     
     protected EdgeListWritable incomingEdgeList = null; //SplitRepeat
     protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat
@@ -81,12 +81,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
     
-    /**
-     * reset headFlag
-     */
-    public void resetHeadFlag(){
-        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
-    }
+//    /**
+//     * reset headFlag
+//     */
+//    public void resetHeadFlag(){
+//        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
+//    }
     
     //TODO make it correct
     public byte getHeadFlag(){
@@ -587,7 +587,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void setStateAsNoMerge(){
     	byte state = getVertexValue().getState();
-    	//state |= State.SHOULD_MERGE_CLEAR;
+    	state &= State.SHOULD_MERGE_CLEAR;
         state |= State.NO_MERGE;
         getVertexValue().setState(state);
         activate();  //could we be more careful about activate?

@@ -65,8 +65,7 @@ public class P4ForPathMergeVertex extends
         outFlag = (byte)0;
         inFlag = (byte)0;
         // Node may be marked as head b/c it's a real head or a real tail
-        headFlag = getHeadFlag(); // TODO be a boolean?
-        headMergeDir = getHeadMergeDir();
+//        headFlag = getHeadFlag(); // TODO be a boolean?
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
@@ -90,6 +89,8 @@ public class P4ForPathMergeVertex extends
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
+        if((!isHeadNode() || (isHeadNode() && getHeadMergeDir() == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT)))
+            return false;
     	// TODO make sure the degree is correct
         for(byte dir : OutgoingListFlag.values){
             if(value.getEdgeList(dir).getCountOfPosition() > 0){
@@ -105,6 +106,8 @@ public class P4ForPathMergeVertex extends
      * set prevKmer to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
+        if((!isHeadNode() || (isHeadNode() && getHeadMergeDir() == MessageFlag.HEAD_SHOULD_MERGEWITHPREV)))
+            return false;
         for(byte dir : IncomingListFlag.values){
             if(value.getEdgeList(dir).getCountOfPosition() > 0){
                 prevKmer = value.getEdgeList(dir).get(0).getKey(); 
@@ -124,19 +127,19 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
-            outFlag |= headFlag; // TODO are these necessary?
-            outFlag |= State.NO_MERGE;
+//            outFlag |= headFlag; // TODO are these necessary?
+//            outFlag |= State.NO_MERGE;
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
-            curKmer = getVertexId();  // TODO make a reference
+            curKmer = getVertexId();
             
             curHead = isNodeRandomHead(curKmer);
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT)); // TODO HEAD CAN MERGE // TODO headFlag compare not equals, not == 0
-            hasPrev = setPrevInfo(getVertexValue()) && (headFlag == 0 || (headFlag > 0 && headMergeDir == MessageFlag.HEAD_SHOULD_MERGEWITHPREV)); // TODO this extra logic should go inside the function
+            hasNext = setNextInfo(getVertexValue()); // TODO HEAD CAN MERGE // TODO headFlag compare not equals, not == 0
+            hasPrev = setPrevInfo(getVertexValue()); // TODO this extra logic should go inside the function
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {

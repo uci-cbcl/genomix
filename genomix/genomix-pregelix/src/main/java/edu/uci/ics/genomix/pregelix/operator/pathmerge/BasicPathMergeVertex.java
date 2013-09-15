@@ -352,9 +352,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * send merge message to neighber for P4
      */
     public void broadcastMergeMsg(boolean deleteSelf){
-        if(headFlag > 0){
+        if(isHeadNode()){
             outFlag |= MessageFlag.IS_HEAD;
-            outFlag |= headMergeDir;
+            outFlag |= getHeadMergeDir();
         }
         switch(getVertexValue().getState() & State.SHOULD_MERGE_MASK) {
             case State.SHOULD_MERGEWITHNEXT:
