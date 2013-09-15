@@ -17,7 +17,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 	BasicGraphCleanVertex<V, M>{
 	
     public void setStateAsMergeWithPrev(){
-        byte state = getVertexValue().getState();
+        short state = getVertexValue().getState();
         state &= State.CAN_MERGE_CLEAR;
         state |= State.CAN_MERGEWITHPREV;
         getVertexValue().setState(state);
@@ -25,7 +25,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     public void setStateAsMergeWithNext(){
-        byte state = getVertexValue().getState();
+        short state = getVertexValue().getState();
         state &= State.CAN_MERGE_CLEAR;
         state |= State.CAN_MERGEWITHNEXT;
         getVertexValue().setState(state);
@@ -105,7 +105,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
 
         if((inFlag & MessageFlag.IS_HEAD) > 0){
-            byte state = getVertexValue().getState();
+            short state = getVertexValue().getState();
             state &= State.HEAD_CAN_MERGE_CLEAR;
             state |= State.IS_HEAD;
             byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_CAN_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));

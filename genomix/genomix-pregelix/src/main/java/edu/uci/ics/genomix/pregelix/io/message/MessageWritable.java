@@ -12,7 +12,7 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
 public class MessageWritable implements Writable, WritableSizable {
     
     private VKmerBytesWritable sourceVertexId; // stores srcNode id
-    private byte flag; // stores message type
+    private short flag; // stores message type
     
     public MessageWritable(){
         sourceVertexId = new VKmerBytesWritable();
@@ -46,11 +46,11 @@ public class MessageWritable implements Writable, WritableSizable {
         this.sourceVertexId.setAsCopy(sourceVertexId);
     }
 
-    public byte getFlag() {
+    public short getFlag() {
         return flag;
     }
 
-    public void setFlag(byte flag) {
+    public void setFlag(short flag) {
         this.flag = flag;
     }
 
@@ -59,13 +59,13 @@ public class MessageWritable implements Writable, WritableSizable {
     public void readFields(DataInput in) throws IOException {
         reset();
         sourceVertexId.readFields(in);
-        flag = in.readByte();
+        flag = in.readShort();
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         sourceVertexId.write(out);
-        out.writeByte(flag);
+        out.writeShort(flag);
     }
 
     @Override

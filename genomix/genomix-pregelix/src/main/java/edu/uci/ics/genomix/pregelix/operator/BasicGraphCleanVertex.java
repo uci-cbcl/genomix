@@ -58,9 +58,9 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
     protected byte repeatDir; //for detect tandemRepeat
     protected VKmerBytesWritable tmpKmer = null;
-    protected byte outFlag;
-    protected byte inFlag;
-    protected byte selfFlag;
+    protected short outFlag;
+    protected short inFlag;
+    protected short selfFlag;
     
     protected EdgeListWritable incomingEdgeList = null; //SplitRepeat
     protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat
@@ -135,7 +135,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * set head state
      */
     public void setHeadState(){
-        byte state = getVertexValue().getState();
+        short state = getVertexValue().getState();
         state &= State.VERTEX_CLEAR;
         state |= State.IS_HEAD;
         getVertexValue().setState(state);
@@ -145,7 +145,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * set final state
      */
     public void setFinalState(){
-        byte state = getVertexValue().getState();
+        short state = getVertexValue().getState();
         state &= State.VERTEX_CLEAR;
         state |= State.IS_FINAL;
         getVertexValue().setState(state);
@@ -156,7 +156,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * set stop flag
      */
     public void setStopFlag(){
-        byte state = getVertexValue().getState();
+        short state = getVertexValue().getState();
         state &= State.VERTEX_CLEAR;
         state |= State.IS_FINAL;
         getVertexValue().setState(state);
@@ -464,31 +464,31 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         else{
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                if(isHeadNode()){
-                    if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
-                        getVertexValue().setState(State.IS_NON);
-                        voteToHalt();
-                    }
-                } else{
-                    setHeadMergeDir();
-                    activate();
-                    }
-//                if (!isHeadNode()) {
-//                    if (VertexUtil.isPathVertex(getVertexValue())) {
-//                        setHeadMergeDir();
-//                        activate();
-//                    } 
-//                    else {
-//                        getVertexValue().setState(MessageFlag.IS_HALT);
+//                if(isHeadNode()){
+//                    if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
+//                        getVertexValue().setState(State.IS_NON);
 //                        voteToHalt();
 //                    }
-//                } else if (getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()) {
+//                } else{
+//                    setHeadMergeDir();
 //                    activate();
-//                } else { // already set up 
-//                    // if headMergeDir are not the same
-//                    getVertexValue().setState(MessageFlag.IS_HALT);
-//                    voteToHalt();
-//                }
+//                    }
+                if (!isHeadNode()) {
+                    if (VertexUtil.isPathVertex(getVertexValue())) {
+                        setHeadMergeDir();
+                        activate();
+                    } 
+                    else {
+                        getVertexValue().setState(MessageFlag.IS_HALT);
+                        voteToHalt();
+                    }
+                } else if (getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()) {
+                    activate();
+                } else { // already set up 
+                    // if headMergeDir are not the same
+                    getVertexValue().setState(MessageFlag.IS_HALT);
+                    voteToHalt();
+                }
             }
         }
     }
@@ -586,7 +586,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * set state as no_merge
      */
     public void setStateAsNoMerge(){
-    	byte state = getVertexValue().getState();
+        short state = getVertexValue().getState();
     	state &= State.CAN_MERGE_CLEAR;
         state |= State.NO_MERGE;
         getVertexValue().setState(state);

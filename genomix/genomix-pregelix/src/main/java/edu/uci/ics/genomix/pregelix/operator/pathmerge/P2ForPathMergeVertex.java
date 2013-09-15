@@ -197,7 +197,7 @@ public class P2ForPathMergeVertex extends
         outgoingMsg.setUpdateMsg(false);
         outgoingMsg.setApexMap(getVertexValue().getApexMap());
         if(selfFlag == State.IS_HEAD){
-            byte state = getVertexValue().getState(); 
+            short state = getVertexValue().getState(); 
             state &= State.VERTEX_CLEAR;
             state |= State.IS_OLDHEAD;
             getVertexValue().setState(state);
@@ -357,7 +357,7 @@ public class P2ForPathMergeVertex extends
                 for(int i = 0; i < 2; i++){
                     //set head should merge dir in state
                     if((receivedMsgList.get(i).getFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_HEAD){
-                        byte state =  getVertexValue().getState();
+                        short state =  getVertexValue().getState();
                         state &= MessageFlag.HEAD_CAN_MERGE_CLEAR;
                         byte dir = (byte)(receivedMsgList.get(i).getFlag() & MessageFlag.HEAD_CAN_MERGE_MASK);
                         switch(receivedMsgList.get(i).getFlag() & MessageFlag.DIR_MASK){

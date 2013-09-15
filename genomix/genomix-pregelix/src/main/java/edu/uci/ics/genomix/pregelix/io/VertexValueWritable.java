@@ -19,27 +19,27 @@ public class VertexValueWritable
     private static final long serialVersionUID = 1L;
     
     public static class HeadMergeDir{
-        public static final byte HEAD_CAN_MERGEWITHPREV = 0b0 << 2; //use for initiating head
-        public static final byte HEAD_CAN_MERGEWITHNEXT = 0b1 << 2;
-        public static final byte HEAD_CAN_MERGE_MASK = 0b1 << 2;
-        public static final byte HEAD_CAN_MERGE_CLEAR = (byte)1000011;
+        public static final byte HEAD_CAN_MERGEWITHPREV = 0b00 << 2; //use for initiating head
+        public static final byte HEAD_CAN_MERGEWITHNEXT = 0b01 << 2;
+        public static final byte HEAD_CAN_MERGE_MASK = 0b11 << 2;
+        public static final byte HEAD_CAN_MERGE_CLEAR = (byte)0000011;
     }
     
     public static class VertexStateFlag extends HeadMergeDir{
-        public static final byte IS_NON = 0b000 << 3;
-        public static final byte IS_HEAD = 0b001 << 3;
-        public static final byte IS_FINAL = 0b010 << 3;
+        public static final byte IS_NON = 0b000 << 4;
+        public static final byte IS_HEAD = 0b001 << 4;
+        public static final byte IS_FINAL = 0b010 << 4;
         
-        public static final byte IS_OLDHEAD = 0b011 << 3;
+        public static final byte IS_OLDHEAD = 0b011 << 4;
         
-        public static final byte IS_HALT = 0b100 << 3;
-        public static final byte IS_DEAD = 0b101 << 3;
-        public static final byte IS_ERROR = 0b110 << 3;
+        public static final byte IS_HALT = 0b100 << 4;
+        public static final byte IS_DEAD = 0b101 << 4;
+        public static final byte IS_ERROR = 0b110 << 4;
         
-        public static final byte VERTEX_MASK = 0b111 << 3; 
-        public static final byte VERTEX_CLEAR = (byte)1000111;
+        public static final byte VERTEX_MASK = 0b111 << 4; 
+        public static final byte VERTEX_CLEAR = (byte)0001111;
         
-        public static String getContent(byte stateFlag){
+        public static String getContent(short stateFlag){
             switch(stateFlag & VERTEX_MASK){
                 case IS_NON:
                     return "IS_NON";
@@ -68,13 +68,13 @@ public class VertexValueWritable
         public static final byte CAN_MERGE_MASK = 0b11 << 0;
         public static final byte CAN_MERGE_CLEAR = 0b1111100;
         
-        public static final byte IS_NONFAKE = 0 << 6;
-        public static final byte IS_FAKE = 1 << 6;
+        public static final short IS_NONFAKE = 0 << 7;
+        public static final short IS_FAKE = 1 << 7;
         
-        public static final byte FAKEFLAG_MASK = (byte) 1 << 6;
+        public static final short FAKEFLAG_MASK = 1 << 7;
     }
     
-    private byte state;
+    private short state;
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
     private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap; //use for scaffolding, think optimaztion way
@@ -163,7 +163,7 @@ public class VertexValueWritable
         this.setFRList(outgoingList.getReverseList());
     }
 
-    public byte getState() {
+    public short getState() {
         return state;
     }
  
@@ -175,7 +175,7 @@ public class VertexValueWritable
         this.isFakeVertex = isFakeVertex;
     }
 
-    public void setState(byte state) {
+    public void setState(short state) {
         this.state = state;
     }
     
@@ -209,7 +209,7 @@ public class VertexValueWritable
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        this.state = in.readByte();
+        this.state = in.readShort();
         this.isFakeVertex = in.readBoolean();
         this.counters.readFields(in);
         scaffoldingMap.readFields(in);
@@ -218,7 +218,7 @@ public class VertexValueWritable
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        out.writeByte(this.state);
+        out.writeShort(this.state);
         out.writeBoolean(this.isFakeVertex);
         this.counters.write(out);
         scaffoldingMap.write(out);

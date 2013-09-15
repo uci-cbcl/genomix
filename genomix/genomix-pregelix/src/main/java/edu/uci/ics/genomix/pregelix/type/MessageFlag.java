@@ -13,14 +13,14 @@ public class MessageFlag extends VertexStateFlag {
     
     public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
     
-    public static final byte UNCHANGE = 0b0 << 6;
-    public static final byte UPDATE = 0b01 << 5; //reuse 0b0 << 6, becasue UNCHANGE and UPDATE use for different patterns
-    public static final byte KILL = 0b1 << 6;
-    public static final byte KILL_MASK = 0b1 << 6;
+    public static final short UNCHANGE = 0b0 << 8;
+    public static final short UPDATE = 0b01 << 7; //reuse 0b0 << 6, becasue UNCHANGE and UPDATE use for different patterns
+    public static final short KILL = 0b1 << 8;
+    public static final short KILL_MASK = 0b1 << 8;
     
-    public static final byte UPDATE_MASK = 0b11 << 5;
-    public static final byte DIR_FROM_DEADVERTEX = 0b1 << 5;
-    public static final byte DEAD_MASK = 0b1 << 5;
+    public static final short UPDATE_MASK = 0b11 << 7;
+    public static final short DIR_FROM_DEADVERTEX = 0b1 << 7;
+    public static final short DEAD_MASK = 0b1 << 7;
     
     public static String getFlagAsString(byte code) {
         return "ERROR_BAD_MESSAGE";

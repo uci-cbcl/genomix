@@ -11,6 +11,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
@@ -202,7 +203,7 @@ public class SplitRepeatVertex extends
     }
     
     public void updateEdgeListPointToNewVertex(){
-        byte meToNeighborDir = incomingMsg.getFlag();
+        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
         
         getVertexValue().getEdgeList(neighborToMeDir).removeSubEdge(incomingMsg.getDeletedEdge());

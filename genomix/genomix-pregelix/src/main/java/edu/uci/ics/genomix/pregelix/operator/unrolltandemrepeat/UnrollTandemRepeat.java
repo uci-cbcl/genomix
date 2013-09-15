@@ -7,6 +7,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeWritable;
@@ -102,9 +103,9 @@ public class UnrollTandemRepeat extends
      * update edges
      */
     public void updateEdges(){
-        byte flipDir = flipDir(incomingMsg.getFlag());
+        byte flipDir = flipDir((byte)(incomingMsg.getFlag() & MessageFlag.DEAD_MASK));
         byte prevNeighborToMe = mirrorDirection(flipDir);
-        byte curNeighborToMe = mirrorDirection(incomingMsg.getFlag());
+        byte curNeighborToMe = mirrorDirection((byte)(incomingMsg.getFlag() & MessageFlag.DEAD_MASK));
         tmpEdge.setAsCopy(getVertexValue().getEdgeList(prevNeighborToMe).getEdge(incomingMsg.getSourceVertexId()));
         getVertexValue().getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
         getVertexValue().getEdgeList(curNeighborToMe).add(tmpEdge);
