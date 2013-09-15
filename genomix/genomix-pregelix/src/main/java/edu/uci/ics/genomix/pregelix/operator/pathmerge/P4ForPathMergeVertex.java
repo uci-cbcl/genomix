@@ -13,6 +13,8 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
+import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
@@ -87,17 +89,13 @@ public class P4ForPathMergeVertex extends
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
-    	// TODO combine into one loop?
     	// TODO make sure the degree is correct
-        if (value.getFFList().getCountOfPosition() > 0) {
-            nextKmer.setAsCopy(value.getFFList().get(0).getKey());  // TODO reference?
-            nextHead = isNodeRandomHead(nextKmer);
-            return true;
-        }
-        if (value.getFRList().getCountOfPosition() > 0) {
-            nextKmer.setAsCopy(value.getFRList().get(0).getKey()); // TODO reference?
-            nextHead = isNodeRandomHead(nextKmer);
-            return true;
+        for(byte dir : OutgoingListFlag.values){
+            if(value.getEdgeList(dir).getCountOfPosition() > 0){
+                nextKmer = value.getEdgeList(dir).get(0).getKey(); 
+                nextHead = isNodeRandomHead(nextKmer);
+                return true;
+            }
         }
         return false;
     }
@@ -106,15 +104,12 @@ public class P4ForPathMergeVertex extends
      * set prevKmer to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
-        if (value.getRRList().getCountOfPosition() > 0) {
-            prevKmer.setAsCopy(value.getRRList().get(0).getKey());
-            prevHead = isNodeRandomHead(prevKmer);
-            return true;
-        }
-        if (value.getRFList().getCountOfPosition() > 0) {
-            prevKmer.setAsCopy(value.getRFList().get(0).getKey());
-            prevHead = isNodeRandomHead(prevKmer);
-            return true;
+        for(byte dir : IncomingListFlag.values){
+            if(value.getEdgeList(dir).getCountOfPosition() > 0){
+                prevKmer = value.getEdgeList(dir).get(0).getKey(); 
+                prevHead = isNodeRandomHead(prevKmer);
+                return true;
+            }
         }
         return false;
     }

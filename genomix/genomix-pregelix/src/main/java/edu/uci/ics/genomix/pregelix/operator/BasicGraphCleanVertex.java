@@ -91,7 +91,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     //TODO make it correct
     public byte getHeadFlag(){
 //        return (byte)(getVertexValue().getState() & State.VERTEX_MASK);
-        return (byte)(getVertexValue().getState() & State.ISs_HEAD);
+        return (byte)(getVertexValue().getState() & State.IS_HEAD);
     }
     
     public boolean isHeadNode(){
@@ -395,16 +395,21 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
+     * get a copy of the original Kmer without TandemRepeat
+     */
+    public void getCopyWithoutTandemRepeats(V vertexValue){
+        tmpValue.setAsCopy(vertexValue);
+        tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+        while(isTandemRepeat(tmpValue))
+            tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+    }
+    /**
      * start sending message
      */
     public void startSendMsg() {
         if(isTandemRepeat()){
         	//TODO make a function
         	getCopyWithoutTandemRepeats(getVertexValue());
-//            tmpValue.setAsCopy(getVertexValue());
-//            tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
-//            while(isTandemRepeat(tmpValue))
-//                tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             sendSettledMsgToAllNeighborNodes(tmpValue);
