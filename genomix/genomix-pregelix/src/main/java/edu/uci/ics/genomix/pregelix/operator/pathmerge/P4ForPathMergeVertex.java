@@ -27,7 +27,7 @@ public class P4ForPathMergeVertex extends
 
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
-    private Random randGenerator;
+    private Random randGenerator = null;
     
     private VKmerBytesWritable curKmer = new VKmerBytesWritable();
     private VKmerBytesWritable nextKmer = new VKmerBytesWritable();
@@ -53,7 +53,8 @@ public class P4ForPathMergeVertex extends
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
         randSeed = getSuperstep(); // TODO use the updated version from this morning
-        randGenerator = new Random(randSeed); // TODO don't need to create every iteration
+        if(randGenerator == null)
+            randGenerator = new Random(randSeed);
         if (probBeingRandomHead < 0)
             probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
         hasNext = false;
