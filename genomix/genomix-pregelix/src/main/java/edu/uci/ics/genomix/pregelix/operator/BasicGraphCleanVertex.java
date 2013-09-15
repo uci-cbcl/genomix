@@ -398,7 +398,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * start sending message
      */
     public void startSendMsg() {
-        if(isTandemRepeat()){
+        if(isTandemRepeat(getVertexValue())){
         	getCopyWithoutTandemRepeats(getVertexValue());
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
@@ -431,7 +431,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             }
         }
         if(!VertexUtil.isActiveVertex(getVertexValue())
-                || isTandemRepeat()){
+                || isTandemRepeat(getVertexValue())){
             getVertexValue().setState(State.IS_HALT);
             voteToHalt();
         }
@@ -474,8 +474,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                       }
                   } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
                       activate();
-                  } else{ /** already set up **/
-                      /** if headMergeDir are not the same **/
+                  } else{ // already set up 
+                      // if headMergeDir are not the same
                       getVertexValue().setState(MessageFlag.IS_HALT);
                       voteToHalt();
                   }
@@ -698,26 +698,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0;
     }
     
-    /**
-     * check if it is a tandem repeat
-     */
-    public boolean isTandemRepeat(){
-    	//TODO ONLY ONE FUNCTION
-    	VKmerBytesWritable kmerToCheck;
-        for(byte d : DirectionFlag.values){
-            Iterator<VKmerBytesWritable> it = getVertexValue().getEdgeList(d).getKeys();
-            while(it.hasNext()){
-            	kmerToCheck = it.next();
-                if(kmerToCheck.equals(getVertexId())){
-                	repeatKmer.setAsCopy(kmerToCheck);
-                    repeatDir = d;
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
     public boolean isTandemRepeat(VertexValueWritable value){
         for(byte d : DirectionFlag.values){
             Iterator<VKmerBytesWritable> it = value.getEdgeList(d).getKeys();
@@ -807,7 +787,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * start sending message for P2
      */
     public void startSendMsgForP2() {
-        if(isTandemRepeat()){
+        if(isTandemRepeat(getVertexValue())){
             tmpValue.setAsCopy(getVertexValue());
             tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
             while(isTandemRepeat(tmpValue))
@@ -839,7 +819,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             }
         }
         if(!VertexUtil.isActiveVertex(getVertexValue())
-                || isTandemRepeat()){
+                || isTandemRepeat(getVertexValue())){
             getVertexValue().setState(MessageFlag.IS_HALT);
             voteToHalt();
         }
