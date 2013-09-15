@@ -403,6 +403,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             sendSettledMsgToAllNeighborNodes(tmpValue);
+            voteToHalt();
         } else{
         	// update internal state
             if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue())){
@@ -418,7 +419,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 getVertexValue().setState(state);
                 activate();
             }
-            
             // send to neighbors
             if (VertexUtil.isVertexWithManyIncoming(getVertexValue())) {
                 outFlag = 0;
@@ -429,11 +429,9 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 outFlag |= MessageFlag.IS_HEAD;
                 sendSettledMsgToAllNextNodes(getVertexValue());
             }
-        }
-        if(!VertexUtil.isActiveVertex(getVertexValue())
-                || isTandemRepeat(getVertexValue())){
-            getVertexValue().setState(State.IS_HALT);
-            voteToHalt();
+            //if UnmergeVertex, voteToHalt()
+            if(VertexUtil.isUnMergeVertex(getVertexValue()))
+                    voteToHalt();
         }
     }
 
@@ -698,12 +696,14 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public boolean isTandemRepeat(VertexValueWritable value){
+        VKmerBytesWritable kmerToCheck;
         for(byte d : DirectionFlag.values){
             Iterator<VKmerBytesWritable> it = value.getEdgeList(d).getKeys();
             while(it.hasNext()){
-                repeatKmer.setAsCopy(it.next());
+                kmerToCheck = it.next();
                 if(repeatKmer.equals(getVertexId())){
                     repeatDir = d;
+                    repeatKmer.setAsCopy(kmerToCheck);
                     return true;
                 }
             }
@@ -817,11 +817,19 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 voteToHalt();
             }
         }
-        if(!VertexUtil.isActiveVertex(getVertexValue())
+        if(!VertexUtil.isCanMergeVertex(getVertexValue())
                 || isTandemRepeat(getVertexValue())){
             getVertexValue().setState(MessageFlag.IS_HALT);
             voteToHalt();
         }
+    }
+    
+    public boolean isInactiveNode(){
+        return VertexUtil.isUnMergeVertex(getVertexValue()) || isTandemRepeat(getVertexValue());
+    }
+    
+    public boolean isActiveNode(){
+        return !isInactiveNode();
     }
     
 }
