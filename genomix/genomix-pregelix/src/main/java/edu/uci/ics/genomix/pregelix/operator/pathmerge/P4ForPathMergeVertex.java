@@ -88,7 +88,7 @@ public class P4ForPathMergeVertex extends
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
-        if((!isHeadNode() || (isHeadNode() && getHeadMergeDir() == MessageFlag.HEAD_SHOULD_MERGEWITHNEXT)))
+        if(isHeadNode() && getHeadMergeDir() != MessageFlag.HEAD_SHOULD_MERGEWITHNEXT)
             return false;
     	// TODO make sure the degree is correct
         for(byte dir : OutgoingListFlag.values){
@@ -105,7 +105,7 @@ public class P4ForPathMergeVertex extends
      * set prevKmer to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
-        if((!isHeadNode() || (isHeadNode() && getHeadMergeDir() == MessageFlag.HEAD_SHOULD_MERGEWITHPREV)))
+        if(isHeadNode() && getHeadMergeDir() != MessageFlag.HEAD_SHOULD_MERGEWITHPREV)
             return false;
         for(byte dir : IncomingListFlag.values){
             if(value.getEdgeList(dir).getCountOfPosition() > 0){
@@ -125,11 +125,11 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() == 2)
             initState(msgIterator);
         else if (getSuperstep() % 4 == 3){
+            //initiate merge_dir
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
             curKmer = getVertexId();
-            
             curHead = isNodeRandomHead(curKmer);
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
@@ -198,7 +198,7 @@ public class P4ForPathMergeVertex extends
                 // set statistics counter: Num_MergedNodes
                 updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
                 /** if it's a tandem repeat, which means detecting cycle **/
-                if(isTandemRepeat()){
+                if(isTandemRepeat(getVertexValue())){
                     for(byte d : DirectionFlag.values)
                         getVertexValue().getEdgeList(d).reset();
                     getVertexValue().setState(MessageFlag.IS_HALT);

@@ -114,7 +114,7 @@ public class UnrollTandemRepeat extends
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
         if(getSuperstep() == 1){
-            if(isTandemRepeat() && repeatCanBeMerged()){
+            if(isTandemRepeat(getVertexValue()) && repeatCanBeMerged()){
                 mergeTandemRepeat();
                 //set statistics counter: Num_RemovedTips
                 updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);

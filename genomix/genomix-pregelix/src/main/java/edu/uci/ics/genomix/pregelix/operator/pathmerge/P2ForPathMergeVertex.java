@@ -428,7 +428,7 @@ public class P2ForPathMergeVertex extends
             incomingMsg = msgIterator.next();
             if(isHaltNode())
                 voteToHalt();
-            else if(isHeadNode() && !isTandemRepeat()){
+            else if(isHeadNode() && !isTandemRepeat(getVertexValue())){
                 if(isValidPath()){
                     setHeadMergeDir();
                     //set deleteKmer and deleteDir
