@@ -207,7 +207,7 @@ public class P4ForPathMergeVertex extends
                     getVertexValue().setCounters(counters);
                     voteToHalt();
                 }/** head meets head, stop **/ 
-                else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == MessageFlag.IS_HEAD)){
+                else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == State.IS_HEAD)){
                     getVertexValue().setState(MessageFlag.IS_HALT);
                     // set statistics counter: Num_MergedPaths
                     updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);

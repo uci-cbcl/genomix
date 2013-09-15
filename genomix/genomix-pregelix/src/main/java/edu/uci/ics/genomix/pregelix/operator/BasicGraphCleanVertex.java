@@ -463,28 +463,32 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             voteToHalt();
         else{
             while (msgIterator.hasNext()) {
-//                incomingMsg = msgIterator.next();
-//                if(isHeadNode()){
-//                    if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir())
-//                        activate();
-//                    
-//                }
-                if (!isHeadNode()) {
-                    if (VertexUtil.isPathVertex(getVertexValue())) {
-                        setHeadMergeDir();
-                        activate();
-                    } 
-                    else {
-                        getVertexValue().setState(MessageFlag.IS_HALT);
+                incomingMsg = msgIterator.next();
+                if(isHeadNode()){
+                    if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
+                        getVertexValue().setState(State.IS_NON);
                         voteToHalt();
                     }
-                } else if (getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()) {
+                } else{
+                    setHeadMergeDir();
                     activate();
-                } else { // already set up 
-                    // if headMergeDir are not the same
-                    getVertexValue().setState(MessageFlag.IS_HALT);
-                    voteToHalt();
-                }
+                    }
+//                if (!isHeadNode()) {
+//                    if (VertexUtil.isPathVertex(getVertexValue())) {
+//                        setHeadMergeDir();
+//                        activate();
+//                    } 
+//                    else {
+//                        getVertexValue().setState(MessageFlag.IS_HALT);
+//                        voteToHalt();
+//                    }
+//                } else if (getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()) {
+//                    activate();
+//                } else { // already set up 
+//                    // if headMergeDir are not the same
+//                    getVertexValue().setState(MessageFlag.IS_HALT);
+//                    voteToHalt();
+//                }
             }
         }
     }
