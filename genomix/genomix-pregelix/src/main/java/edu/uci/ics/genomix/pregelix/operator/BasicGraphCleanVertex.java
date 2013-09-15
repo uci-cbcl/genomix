@@ -403,6 +403,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             sendSettledMsgToAllNeighborNodes(tmpValue);
+            getVertexValue().setState(State.IS_HALT);
             voteToHalt();
         } else{
         	// update internal state
@@ -430,8 +431,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 sendSettledMsgToAllNextNodes(getVertexValue());
             }
             //if UnmergeVertex, voteToHalt()
-            if(VertexUtil.isUnMergeVertex(getVertexValue()))
-                    voteToHalt();
+            if(VertexUtil.isUnMergeVertex(getVertexValue())){
+                getVertexValue().setState(State.IS_HALT);
+                voteToHalt();
+            }
         }
     }
 
@@ -456,27 +459,33 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * initiate head, rear and path node
      */
     public void initState(Iterator<M> msgIterator) {
-        if(isHaltNode())
+        if(isInactiveNode())
             voteToHalt();
         else{
-        	  while (msgIterator.hasNext()) {
-                  incomingMsg = msgIterator.next();
-                  if(!isHeadNode()){
-                      if(VertexUtil.isPathVertex(getVertexValue())){
-                          setHeadMergeDir();
-                          activate();
-                      } else{
-                          getVertexValue().setState(MessageFlag.IS_HALT);
-                          voteToHalt();
-                      }
-                  } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
-                      activate();
-                  } else{ // already set up 
-                      // if headMergeDir are not the same
-                      getVertexValue().setState(MessageFlag.IS_HALT);
-                      voteToHalt();
-                  }
-              }
+            while (msgIterator.hasNext()) {
+//                incomingMsg = msgIterator.next();
+//                if(isHeadNode()){
+//                    if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir())
+//                        activate();
+//                    
+//                }
+                if (!isHeadNode()) {
+                    if (VertexUtil.isPathVertex(getVertexValue())) {
+                        setHeadMergeDir();
+                        activate();
+                    } 
+                    else {
+                        getVertexValue().setState(MessageFlag.IS_HALT);
+                        voteToHalt();
+                    }
+                } else if (getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()) {
+                    activate();
+                } else { // already set up 
+                    // if headMergeDir are not the same
+                    getVertexValue().setState(MessageFlag.IS_HALT);
+                    voteToHalt();
+                }
+            }
         }
     }
     
@@ -824,10 +833,16 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         }
     }
     
+    /**
+     * non-head && non-path 
+     */
     public boolean isInactiveNode(){
         return VertexUtil.isUnMergeVertex(getVertexValue()) || isTandemRepeat(getVertexValue());
     }
     
+    /**
+     * head and path 
+     */
     public boolean isActiveNode(){
         return !isInactiveNode();
     }

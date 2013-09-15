@@ -174,10 +174,12 @@ public class VertexUtil {
         return value.outDegree() > 1;
     }
     
+    // head or path
     public static boolean isCanMergeVertex(VertexValueWritable value){
         return value.inDegree() == 1 || value.outDegree() == 1;
     }
     
+    // non-head and non-path
     public static boolean isUnMergeVertex(VertexValueWritable value){
         return !isCanMergeVertex(value);
     }
