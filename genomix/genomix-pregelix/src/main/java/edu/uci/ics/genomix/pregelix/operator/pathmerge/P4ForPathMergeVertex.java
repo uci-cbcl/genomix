@@ -85,6 +85,22 @@ public class P4ForPathMergeVertex extends
     }
     
     /**
+     * set prevKmer to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
+     */
+    protected boolean setPrevInfo(VertexValueWritable value) {
+        if(isHeadNode() && getHeadMergeDir() != MessageFlag.HEAD_SHOULD_MERGEWITHPREV)
+            return false;
+        for(byte dir : IncomingListFlag.values){
+            if(value.getEdgeList(dir).getCountOfPosition() > 0){
+                prevKmer = value.getEdgeList(dir).get(0).getKey(); 
+                prevHead = isNodeRandomHead(prevKmer);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
@@ -101,22 +117,6 @@ public class P4ForPathMergeVertex extends
         return false;
     }
 
-    /**
-     * set prevKmer to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
-     */
-    protected boolean setPrevInfo(VertexValueWritable value) {
-        if(isHeadNode() && getHeadMergeDir() != MessageFlag.HEAD_SHOULD_MERGEWITHPREV)
-            return false;
-        for(byte dir : IncomingListFlag.values){
-            if(value.getEdgeList(dir).getCountOfPosition() > 0){
-                prevKmer = value.getEdgeList(dir).get(0).getKey(); 
-                prevHead = isNodeRandomHead(prevKmer);
-                return true;
-            }
-        }
-        return false;
-    }
-    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();

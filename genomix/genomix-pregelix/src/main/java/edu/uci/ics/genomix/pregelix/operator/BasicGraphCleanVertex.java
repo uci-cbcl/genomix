@@ -458,14 +458,13 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * initiate head, rear and path node
      */
     public void initState(Iterator<M> msgIterator) {
-    	//TODO move out of while loop
         if(isHaltNode())
             voteToHalt();
         else{
         	  while (msgIterator.hasNext()) {
                   incomingMsg = msgIterator.next();
-                  if(!isHeadNode()){ //&& !isTandemRepeat()
-                      if(isValidPath()){
+                  if(!isHeadNode()){
+                      if(VertexUtil.isPathVertex(getVertexValue())){
                           setHeadMergeDir();
                           activate();
                       } else{
