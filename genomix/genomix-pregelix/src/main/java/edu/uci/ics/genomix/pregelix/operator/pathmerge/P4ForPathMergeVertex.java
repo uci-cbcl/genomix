@@ -129,7 +129,7 @@ public class P4ForPathMergeVertex extends
             setStateAsNoMerge();
             
             // only PATH vertices are present. Find the ID's for my neighbors
-            curKmer.setAsCopy(getVertexId());  // TODO make a reference
+            curKmer = getVertexId();  // TODO make a reference
             
             curHead = isNodeRandomHead(curKmer);
             
