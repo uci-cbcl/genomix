@@ -45,7 +45,6 @@ public class P2ForPathMergeVertex extends
         if (maxIteration < 0)
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
-        headFlag = (byte)(getVertexValue().getState() & State.IS_HEAD);
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         outFlag = 0;
         if(incomingMsg == null)
@@ -72,7 +71,6 @@ public class P2ForPathMergeVertex extends
             destVertexId = new VKmerBytesWritable();
         if(tmpKmer == null)
             tmpKmer = new VKmerBytesWritable();
-        headMergeDir = getHeadMergeDir();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
@@ -430,7 +428,7 @@ public class P2ForPathMergeVertex extends
             incomingMsg = msgIterator.next();
             if(isHaltNode())
                 voteToHalt();
-            else if(getHeadFlag() != MessageFlag.IS_HEAD && !isTandemRepeat()){
+            else if(isHeadNode() && !isTandemRepeat()){
                 if(isValidPath()){
                     setHeadMergeDir();
                     //set deleteKmer and deleteDir

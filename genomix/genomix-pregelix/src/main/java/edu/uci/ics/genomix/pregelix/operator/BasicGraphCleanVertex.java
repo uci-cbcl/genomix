@@ -80,10 +80,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     //TODO make it correct
-    public byte getHeadFlag(){
-//        return (byte)(getVertexValue().getState() & State.VERTEX_MASK);
-        return (byte)(getVertexValue().getState() & State.IS_HEAD);
-    }
+//    public byte getHeadFlag(){
+////        return (byte)(getVertexValue().getState() & State.VERTEX_MASK);
+//        return (byte)(getVertexValue().getState() & State.IS_HEAD);
+//    }
     
     public boolean isHeadNode(){
         byte state = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
@@ -399,7 +399,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void startSendMsg() {
         if(isTandemRepeat()){
-        	//TODO make a function
         	getCopyWithoutTandemRepeats(getVertexValue());
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;

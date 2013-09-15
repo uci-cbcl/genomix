@@ -41,8 +41,6 @@ public class P1ForPathMergeVertex extends
             destVertexId = new VKmerBytesWritable();
         inFlag = 0;
         outFlag = 0;
-        headFlag = getHeadFlag();
-        headMergeDir = getHeadMergeDir();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
@@ -55,7 +53,6 @@ public class P1ForPathMergeVertex extends
         }
         if(tmpKmer == null)
             tmpKmer = new VKmerBytesWritable();
-        headMergeDir = getHeadMergeDir();
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
         if(kmerList == null)
