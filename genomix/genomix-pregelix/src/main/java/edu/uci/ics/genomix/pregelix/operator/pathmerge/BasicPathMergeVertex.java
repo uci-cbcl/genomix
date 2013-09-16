@@ -209,7 +209,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * This vertex tries to merge with next vertex and send update msg to predecesspr
      */
     public void sendUpdateMsgToPredecessor(boolean flag){
-        setStateAsMergeWithNext(); // TODO I thought you were only sending an update to the predecessor???
         if(getVertexValue().hasNextDest())
             broadcastUpdateMsg(flag);   
     }
@@ -218,7 +217,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * This vertex tries to merge with next vertex and send update msg to successor
      */
     public void sendUpdateMsgToSuccessor(boolean flag){
-        setStateAsMergeWithPrev();
+        
         if(getVertexValue().hasPrevDest())
             broadcastUpdateMsg(flag);
     }

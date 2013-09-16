@@ -133,15 +133,17 @@ public class P4ForPathMergeVertex extends
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue()); // TODO HEAD CAN MERGE 
+            hasNext = setNextInfo(getVertexValue());
             hasPrev = setPrevInfo(getVertexValue());
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
+                        setStateAsMergeWithNext();
                 		sendUpdateMsgToPredecessor(true); 
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
+                        setStateAsMergeWithPrev();
                         sendUpdateMsgToSuccessor(true);
                     } 
                 }
@@ -151,18 +153,21 @@ public class P4ForPathMergeVertex extends
                          if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
+                            setStateAsMergeWithNext();
                             sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasPrev) {
                         // no previous node
                         if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                             // merge towards tail in forward dir
+                            setStateAsMergeWithNext();
                             sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasNext) {
                         // no next node
                         if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                             // merge towards tail in reverse dir
+                            setStateAsMergeWithPrev();
                             sendUpdateMsgToSuccessor(true);
                         }
                     }
