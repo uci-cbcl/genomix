@@ -351,8 +351,8 @@ public class GenomixJobConf extends JobConf {
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
         
-        if (getFloat(PATHMERGE_RANDOM_RANDSEED, -1) == -1)
-            setFloat(PATHMERGE_RANDOM_RANDSEED, System.currentTimeMillis());
+        if (getLong(PATHMERGE_RANDOM_RANDSEED, -1) == -1)
+            setLong(PATHMERGE_RANDOM_RANDSEED, System.currentTimeMillis());
         
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
