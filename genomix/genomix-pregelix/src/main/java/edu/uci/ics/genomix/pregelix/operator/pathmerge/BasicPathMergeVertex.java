@@ -133,6 +133,38 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         getVertexValue().processMerges(neighborToMeDir, msg.getNode(), kmerSize);
     }
     
+    
+    /**
+     * send UPDATE msg   boolean: true == P4, false == P2
+     */
+    public void sendUpdateMsg(boolean isP4, boolean isToPredecessor){ 
+        outgoingMsg.setSourceVertexId(getVertexId());
+        // TODO pass in the vertexId rather than isP4 (removes this block）
+        if(isP4)
+            outgoingMsg.setFlip(ifFilpWithSuccessor());
+        else 
+            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
+        
+        
+        // TODO pass in isForward
+        byte[] mergeDirs = isToPredecessor ? OutgoingListFlag.values : IncomingListFlag.values;
+        byte[] updateDirs = isToPredecessor ? IncomingListFlag.values : OutgoingListFlag.values;
+        
+        for(byte dir : mergeDirs)
+            outgoingMsg.getNode().setEdgeList(dir, getVertexValue().getEdgeList(dir));  // TODO check
+        
+        for(byte dir : updateDirs){
+            kmerIterator = getVertexValue().getEdgeList(dir).getKeys();
+            while(kmerIterator.hasNext()){
+                outFlag &= MessageFlag.DIR_CLEAR;
+                outFlag |= dir;
+                outgoingMsg.setFlag(outFlag);
+                destVertexId.setAsCopy(kmerIterator.next()); //TODO does destVertexId need deep copy?
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
+    
     /**
      * configure UPDATE msg   boolean: true == P4, false == P2
      */
@@ -218,21 +250,21 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
 
-    /**
-     * This vertex tries to merge with next vertex and send update msg to predecesspr
-     */
-    public void sendUpdateMsgToPredecessor(boolean flag){
-        if(getVertexValue().hasNextDest())  //TODO delete
-            broadcastUpdateMsg(flag);   
-    }
-    
-    /**
-     * This vertex tries to merge with next vertex and send update msg to successor
-     */
-    public void sendUpdateMsgToSuccessor(boolean flag){
-        if(getVertexValue().hasPrevDest())
-            broadcastUpdateMsg(flag);
-    }
+//    /**
+//     * This vertex tries to merge with next vertex and send update msg to predecesspr
+//     */
+//    public void sendUpdateMsgToPredecessor(boolean flag){
+//        if(getVertexValue().hasNextDest())  //TODO delete
+//            broadcastUpdateMsg(flag);   
+//    }
+//    
+//    /**
+//     * This vertex tries to merge with next vertex and send update msg to successor
+//     */
+//    public void sendUpdateMsgToSuccessor(boolean flag){
+//        if(getVertexValue().hasPrevDest())
+//            broadcastUpdateMsg(flag);
+//    }
     
     /**
      * override sendUpdateMsg and use incomingMsg as parameter automatically

@@ -510,6 +510,24 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return true;
     }
     
+    
+    /**
+     * check if A need to be filpped with neighbor
+     */
+    public boolean ifFlipWithNeighbor(boolean withPrecessor){
+        if(withPrecessor){
+            if(getVertexValue().getRRList().isEmpty())
+                return true;
+            else
+                return false;
+        } else{
+            if(getVertexValue().getFFList().isEmpty())
+                return true;
+            else
+                return false;
+        }
+    }
+    
     /**
      * check if A need to be filpped with predecessor
      */
