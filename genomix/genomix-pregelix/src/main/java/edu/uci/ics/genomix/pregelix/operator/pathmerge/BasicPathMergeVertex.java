@@ -35,11 +35,14 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * updateAdjList
      */
     public void processUpdate(){
+    	// A -> B -> C with B merging with C
         inFlag = incomingMsg.getFlag();
-        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);  // A -> B dir
+        byte neighborToMeDir = mirrorDirection(meToNeighborDir);  // B -> A dir
         
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
+        // TODO if you want, this logic could be figured out when sending the update from B
+        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());  // A -> C after the merge
+         // TODO add C -> A dir and call node.updateEdges directly
         getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(),
                 neighborToMergeDir, incomingMsg.getNode());
     }
@@ -73,7 +76,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * merge and updateAdjList merge with one neighbor
      */
-    public void processMerge(){
+    public void processMerge(){ // TODO remove me
         processMerge(incomingMsg);
     }
     
@@ -120,7 +123,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
 
-        if(isNonHeadReceivedFromHead()){
+        if(isNonHeadReceivedFromHead()){ // TODO? why sepcial-case the path vs heads?  just aggregate your state flags
             short state = getVertexValue().getState();
             state &= State.HEAD_CAN_MERGE_CLEAR;
             byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_CAN_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
@@ -134,12 +137,14 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * configure UPDATE msg   boolean: true == P4, false == P2
      */
-    public void configureUpdateMsgForPredecessor(boolean flag){
+    public void configureUpdateMsgForPredecessor(boolean isP4){ 
         outgoingMsg.setSourceVertexId(getVertexId());
+        // TODO pass in isForward
         for(byte d: OutgoingListFlag.values)
-            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+            outgoingMsg.getNode().setEdgeList(d, getVertexValue().getEdgeList(d));  // TODO check
         
-        if(flag)
+     // TODO pass in the vertexId rather than isP4 (removes this block）
+        if(isP4)
             outgoingMsg.setFlip(ifFilpWithSuccessor());
         else 
             outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
@@ -147,7 +152,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         kmerIterator = getVertexValue().getRFList().getKeys();
         while(kmerIterator.hasNext()){
             destVertexId.setAsCopy(kmerIterator.next());
-            setPredecessorToMeDir(destVertexId);
+            setPredecessorToMeDir(destVertexId); // TODO DON'T NEED TO SEARCH for this
             outgoingMsg.setFlag(outFlag);
             sendMsg(destVertexId, outgoingMsg);
         }
@@ -209,7 +214,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * This vertex tries to merge with next vertex and send update msg to predecesspr
      */
     public void sendUpdateMsgToPredecessor(boolean flag){
-        if(getVertexValue().hasNextDest())
+        if(getVertexValue().hasNextDest())  //TODO delete
             broadcastUpdateMsg(flag);   
     }
     
@@ -328,7 +333,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         setSuccessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
-        outgoingMsg.setFlip(ifFlipWithPredecessor());
+        outgoingMsg.setFlip(ifFlipWithPredecessor()); // TODO seems incorrect for outgoing... why predecessor?  //TODO REMOVE this flip boolean completely
 //        for(byte d: IncomingListFlag.values)
 //            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setNode(getVertexValue().getNode());
@@ -369,7 +374,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         switch(getVertexValue().getState() & State.CAN_MERGE_MASK) {
             case State.CAN_MERGEWITHNEXT:
                 // configure merge msg for successor
-                configureMergeMsgForSuccessor(getNextDestVertexId());
+                configureMergeMsgForSuccessor(getNextDestVertexId()); // TODO getDestVertexId(DIRECTION), then remove the switch statement, sendMergeMsg(DIRECTION)
                 if(deleteSelf)
                     deleteVertex(getVertexId());
                 else{

@@ -127,7 +127,8 @@ public class P4ForPathMergeVertex extends
             startSendMsg();
         else if (getSuperstep() == 2)
             initState(msgIterator);
-        else if (getSuperstep() % 4 == 3){
+        else if (getSuperstep() % 4 == 3){ 
+        	// TODO separate function for this block
             //initiate merge_dir
             setStateAsNoMerge();
             
@@ -137,14 +138,15 @@ public class P4ForPathMergeVertex extends
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue());
+            hasNext = setNextInfo(getVertexValue());  // TODO make this false if the node is restricted by its neighbors or by structure 
             hasPrev = setPrevInfo(getVertexValue());
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
                         setStateAsMergeWithNext();
-                		sendUpdateMsgToPredecessor(true); 
+//                        configureUpdateMsg(isNextOrPrevious?, getVertexValue()); // TODO change to sendmsg or sendUpdateFrom...
+                		sendUpdateMsgToPredecessor(true); //TODO all of these can be simplified
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
                         setStateAsMergeWithPrev();
@@ -176,15 +178,18 @@ public class P4ForPathMergeVertex extends
                         }
                     }
                 }
-            }
+            }  // TODO else voteToHalt (when you combine steps 2 and 3)
             this.activate();
         }
-        else if (getSuperstep() % 4 == 0){
+        else if (getSuperstep() % 4 == 0){  
+        	// TODO separate function for this step
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                processUpdate();
-                if(isInactiveNode() || isHeadUnableToMerge())
+                processUpdate();  // TODO pass incomingMsg as a parameter
+                
+                // TODO move outside the loop
+                if(isInactiveNode() || isHeadUnableToMerge())  // check structure and neighbor restriction 
                     voteToHalt();
                 else
                     activate();
@@ -197,19 +202,19 @@ public class P4ForPathMergeVertex extends
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 /** process merge **/
-                processMerge();
+                processMerge(); // TODO use incomingMsg as a parameter
                 // set statistics counter: Num_MergedNodes
                 updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
                 /** if it's a tandem repeat, which means detecting cycle **/
-                if(isTandemRepeat(getVertexValue())){
+                if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is cocrect (try several times) 
                     for(byte d : DirectionFlag.values)
-                        getVertexValue().getEdgeList(d).reset();
+                        getVertexValue().getEdgeList(d).reset(); // TODO don't remove tandem repeats but DO stop merging  // we shouldn't need to update neighbors 
                     // set statistics counter: Num_TandemRepeats
-                    updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats);
+                    updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats); // TODO cycle instead of tandem repeat
                     getVertexValue().setCounters(counters);
-                    voteToHalt();
+                    voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
                 }/** head meets head, stop **/ 
-                else if(VertexUtil.isUnMergeVertex(getVertexValue()) || isHeadMeetsHead()){
+                else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead()){
                     getVertexValue().setState(State.HEAD_CANNOT_MERGE);
                     // set statistics counter: Num_MergedPaths
                     updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
@@ -217,7 +222,7 @@ public class P4ForPathMergeVertex extends
                     voteToHalt();
                 }
                 else{
-                    getVertexValue().setCounters(counters);
+                    getVertexValue().setCounters(counters); // TODO move all the setCounter calls outside the if/else blocks
                     activate();
                 }
             }

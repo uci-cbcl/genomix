@@ -254,6 +254,7 @@ public class VertexValueWritable
      * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
      */
     public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
+    	// TODO remove this function (use updateEdges)
         byte replaceDir = mirrorDirection(deleteDir);
         this.getNode().updateEdges(deleteDir, toDelete, updateDir, replaceDir, other, true);
     }
@@ -267,8 +268,8 @@ public class VertexValueWritable
      * Process any changes to value.  This is for merging.  nodeToAdd should be only edge
      */
     public void processMerges(byte mergeDir, NodeWritable node, int kmerSize){
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
-        mergeDir = (byte)(mergeDir & MessageFlag.DIR_MASK);
+        KmerBytesWritable.setGlobalKmerLength(kmerSize); // TODO Do this once at the init of your function, then you don't need it as a parameter here
+        mergeDir = (byte)(mergeDir & MessageFlag.DIR_MASK); // TODO move this dir outside and remove this function
         super.getNode().mergeWithNode(mergeDir, node);
     }
     

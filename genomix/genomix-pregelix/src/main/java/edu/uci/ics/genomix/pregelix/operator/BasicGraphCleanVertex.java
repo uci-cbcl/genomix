@@ -62,7 +62,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected short inFlag;
     protected short selfFlag;
     
-    protected EdgeListWritable incomingEdgeList = null; //SplitRepeat
+    protected EdgeListWritable incomingEdgeList = null; //SplitRepeat // TODO Push as much data to subclasses as makes sense to
     protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat
     protected byte incomingEdgeDir = 0; //SplitRepeat
     protected byte outgoingEdgeDir = 0; //SplitRepeat
@@ -104,7 +104,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return (byte)(incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
     }
     
-    public byte getHeadMergeDir(){
+    public byte getHeadMergeDir(){ // TODO push it to derived class
         return (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
     }
     
@@ -203,6 +203,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * get destination vertex
      */
     public VKmerBytesWritable getPrevDestVertexId() {
+    	// TODO check length of RF and RR == 1; throw exception otherwise
         if (!getVertexValue().getRFList().isEmpty()){ //#RFList() > 0
             kmerIterator = getVertexValue().getRFList().getKeys();
             return kmerIterator.next();
@@ -473,11 +474,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 switch(getHeadMergeDir()){
-                    case State.NON_HEAD:
+                    case State.NON_HEAD: // TODO Change name to Path
                         setHeadMergeDir();
                         activate();
                         break;
-                    case State.HEAD_CAN_MERGEWITHPREV:
+                    case State.HEAD_CAN_MERGEWITHPREV: // TODO aggregate all the incomingMsgs first, then make a decision about halting
                     case State.HEAD_CAN_MERGEWITHNEXT:
                         if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
                             getVertexValue().setState(State.HEAD_CANNOT_MERGE);
@@ -555,7 +556,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public void setPredecessorToMeDir(VKmerBytesWritable toFind){
-        outFlag &= MessageFlag.DIR_CLEAR;
+        outFlag &= MessageFlag.DIR_CLEAR;  // TODO WHAT HAPPENS IF THE NODE IS IN YOUR R AND YOUR RF?
         if(getVertexValue().getRFList().contains(toFind))
             outFlag |= MessageFlag.DIR_RF;
         else if(getVertexValue().getRRList().contains(toFind))
@@ -567,13 +568,14 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void setSuccessorToMeDir(){
         outFlag &= MessageFlag.DIR_CLEAR;
-        if(!getVertexValue().getFFList().isEmpty())
+        if(!getVertexValue().getFFList().isEmpty()) // TODO == 1 rather than isEmpty
             outFlag |= MessageFlag.DIR_FF;
         else if(!getVertexValue().getFRList().isEmpty())
             outFlag |= MessageFlag.DIR_FR;
+        // TODO else exception
     }
     
-    public void setSuccessorToMeDir(VKmerBytesWritable toFind){
+    public void setSuccessorToMeDir(VKmerBytesWritable toFind){ // TODO you should never have to FIND...
         outFlag &= MessageFlag.DIR_CLEAR;
         if(getVertexValue().getFFList().contains(toFind))
             outFlag |= MessageFlag.DIR_FF;
@@ -613,7 +615,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * check if need filp
      */
-    public byte flipDirection(byte neighborDir, boolean flip){
+    public byte flipDirection(byte neighborDir, boolean flip){ // TODO use NodeWritable
         if(flip){
             switch (neighborDir) {
                 case MessageFlag.DIR_FF:
@@ -840,7 +842,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * non-head && non-path 
      */
     public boolean isInactiveNode(){
-        return VertexUtil.isUnMergeVertex(getVertexValue()) || isTandemRepeat(getVertexValue());
+        return !VertexUtil.isCanMergeVertex(getVertexValue()) || isTandemRepeat(getVertexValue());
     }
     
     /**
