@@ -298,7 +298,9 @@ public class GenomixClusterManager {
         String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "stopAllNCs.sh";
         Process p = Runtime.getRuntime().exec(stopNCCmd);
+        LOG.info("Waiting for completion");
         p.waitFor(); // wait for ssh 
+        LOG.info("done waiting");
     }
 
     private void addClusterShutdownHook(final ClusterType clusterType) {
