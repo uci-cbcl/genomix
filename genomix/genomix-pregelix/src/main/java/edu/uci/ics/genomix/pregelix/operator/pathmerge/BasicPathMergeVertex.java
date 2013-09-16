@@ -366,10 +366,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      */
     public void broadcastMergeMsg(boolean deleteSelf){
         outFlag |= getHeadMergeDir();
-//        if(isHeadNode()){
-//            outFlag |= MessageFlag.IS_HEAD;
-//            outFlag |= getHeadMergeDir();
-//        }
         switch(getVertexValue().getState() & State.CAN_MERGE_MASK) {
             case State.CAN_MERGEWITHNEXT:
                 // configure merge msg for successor

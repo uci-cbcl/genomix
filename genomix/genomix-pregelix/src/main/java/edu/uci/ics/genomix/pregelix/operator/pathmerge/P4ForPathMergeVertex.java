@@ -51,9 +51,9 @@ public class P4ForPathMergeVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
-        randSeed = getSuperstep(); // TODO use the updated version from this morning
+        randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.P4_RANDOM_SEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if(randGenerator == null)
-            randGenerator = new Random(randSeed);
+            randGenerator = new Random(randSeed); 
         if (probBeingRandomHead < 0)
             probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
         hasNext = false;
@@ -118,6 +118,10 @@ public class P4ForPathMergeVertex extends
 
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
+//        if(getSuperstep() > 4){
+//            voteToHalt();
+//            return;
+//        }
         initVertex();
         if (getSuperstep() == 1)
             startSendMsg();
