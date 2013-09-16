@@ -23,7 +23,7 @@ public class EdgeSizePressureTest {
         public int countOfLines;
         
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
-        private boolean runLocal = false;
+        public boolean runLocal = false;
     }
     
     public EdgeSizePressureTest() {
