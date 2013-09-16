@@ -217,7 +217,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * This vertex tries to merge with next vertex and send update msg to successor
      */
     public void sendUpdateMsgToSuccessor(boolean flag){
-        
         if(getVertexValue().hasPrevDest())
             broadcastUpdateMsg(flag);
     }
