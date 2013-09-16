@@ -101,8 +101,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * check if head receives message from head
      */
-    public boolean isHeadMeetsHead(){
-        boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
+    public boolean isHeadMeetsHead(boolean selfFlag){
         boolean msgFlag = (getMsgMergeDir() == MessageFlag.HEAD_CAN_MERGEWITHPREV || getMsgMergeDir() == MessageFlag.HEAD_CAN_MERGEWITHNEXT);
         return selfFlag && msgFlag;
     }
@@ -143,7 +142,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         for(byte d: OutgoingListFlag.values)
             outgoingMsg.getNode().setEdgeList(d, getVertexValue().getEdgeList(d));  // TODO check
         
-     // TODO pass in the vertexId rather than isP4 (removes this block）
+        // TODO pass in the vertexId rather than isP4 (removes this block）
         if(isP4)
             outgoingMsg.setFlip(ifFilpWithSuccessor());
         else 
@@ -151,16 +150,21 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         
         kmerIterator = getVertexValue().getRFList().getKeys();
         while(kmerIterator.hasNext()){
-            destVertexId.setAsCopy(kmerIterator.next());
-            setPredecessorToMeDir(destVertexId); // TODO DON'T NEED TO SEARCH for this
+            outFlag &= MessageFlag.DIR_CLEAR;
+            outFlag |= MessageFlag.DIR_RF;
             outgoingMsg.setFlag(outFlag);
+            destVertexId.setAsCopy(kmerIterator.next());
+            // TODO DON'T NEED TO SEARCH for this
+//            setPredecessorToMeDir(destVertexId); 
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = getVertexValue().getRRList().getKeys();
         while(kmerIterator.hasNext()){
-            destVertexId.setAsCopy(kmerIterator.next());
-            setPredecessorToMeDir(destVertexId);
+            outFlag &= MessageFlag.DIR_CLEAR;
+            outFlag |= MessageFlag.DIR_RR;
             outgoingMsg.setFlag(outFlag);
+            destVertexId.setAsCopy(kmerIterator.next());
+//            setPredecessorToMeDir(destVertexId);
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -177,16 +181,20 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         
         kmerIterator = getVertexValue().getFFList().getKeys();
         while(kmerIterator.hasNext()){
-            destVertexId.setAsCopy(kmerIterator.next());
-            setSuccessorToMeDir(destVertexId);
+            outFlag &= MessageFlag.DIR_CLEAR;
+            outFlag |= MessageFlag.DIR_FF;
             outgoingMsg.setFlag(outFlag);
+            destVertexId.setAsCopy(kmerIterator.next());
+//            setSuccessorToMeDir(destVertexId);
             sendMsg(destVertexId, outgoingMsg);
         }
         kmerIterator = getVertexValue().getFRList().getKeys();
         while(kmerIterator.hasNext()){
-            destVertexId.setAsCopy(kmerIterator.next());
-            setSuccessorToMeDir(destVertexId);
+            outFlag &= MessageFlag.DIR_CLEAR;
+            outFlag |= MessageFlag.DIR_FR;
             outgoingMsg.setFlag(outFlag);
+            destVertexId.setAsCopy(kmerIterator.next());
+//            setSuccessorToMeDir(destVertexId);
             sendMsg(destVertexId, outgoingMsg);
         }
     }

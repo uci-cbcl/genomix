@@ -118,10 +118,6 @@ public class P4ForPathMergeVertex extends
 
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
-//        if(getSuperstep() > 4){
-//            voteToHalt();
-//            return;
-//        }
         initVertex();
         if (getSuperstep() == 1)
             startSendMsg();
@@ -201,6 +197,7 @@ public class P4ForPathMergeVertex extends
             //merge tmpKmer
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
+                boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
                 /** process merge **/
                 processMerge(); // TODO use incomingMsg as a parameter
                 // set statistics counter: Num_MergedNodes
@@ -214,7 +211,7 @@ public class P4ForPathMergeVertex extends
                     getVertexValue().setCounters(counters);
                     voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
                 }/** head meets head, stop **/ 
-                else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead()){
+                else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead(selfFlag)){
                     getVertexValue().setState(State.HEAD_CANNOT_MERGE);
                     // set statistics counter: Num_MergedPaths
                     updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
