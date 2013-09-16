@@ -24,7 +24,7 @@ public class VertexValueWritable
         public static final byte HEAD_CAN_MERGEWITHPREV = 0b10 << 2; //use for initiating head
         public static final byte HEAD_CAN_MERGEWITHNEXT = 0b11 << 2;
         public static final byte HEAD_CAN_MERGE_MASK = 0b11 << 2;
-        public static final byte HEAD_CAN_MERGE_CLEAR = (byte)0000011;
+        public static final byte HEAD_CAN_MERGE_CLEAR = (byte)11110011;
     }
     
     public static class VertexStateFlag extends HeadMergeDir{

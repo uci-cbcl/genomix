@@ -8,10 +8,9 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.log.LoggingType;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
@@ -78,7 +77,7 @@ public class P4ForPathMergeVertex extends
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
         // "deterministically random", based on node id
-        randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * getSuperstep());//randSeed + nodeID.hashCode()
+        randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 10000 * getSuperstep());//randSeed + nodeID.hashCode()
         for(int i = 0; i < 500; i++)
             randGenerator.nextFloat();
         return randGenerator.nextFloat() < probBeingRandomHead;
@@ -88,7 +87,7 @@ public class P4ForPathMergeVertex extends
      * set prevKmer to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
      */
     protected boolean setPrevInfo(VertexValueWritable value) {
-        if(isHeadNode() && getHeadMergeDir() != MessageFlag.HEAD_CAN_MERGEWITHPREV)
+        if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT)
             return false;
         for(byte dir : IncomingListFlag.values){
             if(value.getEdgeList(dir).getCountOfPosition() > 0){
@@ -104,7 +103,7 @@ public class P4ForPathMergeVertex extends
      * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
      */
     protected boolean setNextInfo(VertexValueWritable value) {
-        if(isHeadNode() && getHeadMergeDir() != MessageFlag.HEAD_CAN_MERGEWITHNEXT)
+        if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV)
             return false;
     	// TODO make sure the degree is correct
         for(byte dir : OutgoingListFlag.values){
@@ -175,12 +174,8 @@ public class P4ForPathMergeVertex extends
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                /** logging incomingMsg **/
-                loggingNode(LoggingType.BEFORE_OPERATIONS);
-                loggingMessage(LoggingType.RECEIVE_MSG, incomingMsg, null);
                 processUpdate();
-                loggingNode(LoggingType.AFTER_UPDATE);
-                if(isHaltNode())
+                if(isInactiveNode() || isHeadUnableToMerge())
                     voteToHalt();
                 else
                     activate();
@@ -192,7 +187,6 @@ public class P4ForPathMergeVertex extends
             //merge tmpKmer
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                selfFlag = (byte) (State.VERTEX_MASK & getVertexValue().getState());
                 /** process merge **/
                 processMerge();
                 // set statistics counter: Num_MergedNodes
@@ -201,14 +195,13 @@ public class P4ForPathMergeVertex extends
                 if(isTandemRepeat(getVertexValue())){
                     for(byte d : DirectionFlag.values)
                         getVertexValue().getEdgeList(d).reset();
-                    getVertexValue().setState(MessageFlag.IS_HALT);
                     // set statistics counter: Num_TandemRepeats
                     updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats);
                     getVertexValue().setCounters(counters);
                     voteToHalt();
                 }/** head meets head, stop **/ 
-                else if((getMsgFlag() == MessageFlag.IS_HEAD && selfFlag == State.IS_HEAD)){
-                    getVertexValue().setState(MessageFlag.IS_HALT);
+                else if(VertexUtil.isUnMergeVertex(getVertexValue()) || isHeadMeetsHead()){
+                    getVertexValue().setState(State.HEAD_CANNOT_MERGE);
                     // set statistics counter: Num_MergedPaths
                     updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
                     getVertexValue().setCounters(counters);
