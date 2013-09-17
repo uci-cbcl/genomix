@@ -50,7 +50,7 @@ public class P4ForPathMergeVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
-        randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.P4_RANDOM_SEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
+        randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if(randGenerator == null)
             randGenerator = new Random(randSeed); 
         if (probBeingRandomHead < 0)
@@ -88,11 +88,16 @@ public class P4ForPathMergeVertex extends
     protected boolean setPrevInfo(VertexValueWritable value) {
         if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT)
             return false;
-        for(byte dir : IncomingListFlag.values){
-            if(value.getEdgeList(dir).getCountOfPosition() > 0){
-                prevKmer = value.getEdgeList(dir).get(0).getKey(); 
-                prevHead = isNodeRandomHead(prevKmer);
-                return true;
+        if (isTandemRepeat(value)) {
+            return false;
+        }
+        if (value.inDegree() == 1) {
+            for(byte dir : IncomingListFlag.values){
+                if(value.getEdgeList(dir).getCountOfPosition() > 0){
+                    prevKmer = value.getEdgeList(dir).get(0).getKey(); 
+                    prevHead = isNodeRandomHead(prevKmer);
+                    return true;
+                }
             }
         }
         return false;
@@ -104,12 +109,17 @@ public class P4ForPathMergeVertex extends
     protected boolean setNextInfo(VertexValueWritable value) {
         if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV)
             return false;
+        if (isTandemRepeat(value)) {
+            return false;
+        }
     	// TODO make sure the degree is correct
-        for(byte dir : OutgoingListFlag.values){
-            if(value.getEdgeList(dir).getCountOfPosition() > 0){
-                nextKmer = value.getEdgeList(dir).get(0).getKey(); 
-                nextHead = isNodeRandomHead(nextKmer);
-                return true;
+        if (value.outDegree() == 1) {
+            for(byte dir : OutgoingListFlag.values){
+                if(value.getEdgeList(dir).getCountOfPosition() > 0){
+                    nextKmer = value.getEdgeList(dir).get(0).getKey(); 
+                    nextHead = isNodeRandomHead(nextKmer);
+                    return true;
+                }
             }
         }
         return false;
