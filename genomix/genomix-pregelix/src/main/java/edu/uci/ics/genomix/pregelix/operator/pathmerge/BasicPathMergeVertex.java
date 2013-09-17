@@ -379,32 +379,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         sendMsg(mergeDest, outgoingMsg);
     }
     
-//    /**
-//     * configure MERGE msg
-//     */
-//    public void configureMergeMsgForPredecessorByIncomingMsg(){
-//        setPredecessorToMeDir();
-//        outgoingMsg.setFlag(outFlag);        
-//        outgoingMsg.setFlip(ifFilpWithSuccessor());
-//        outgoingMsg.setSourceVertexId(getVertexId());
-//        for(byte d: OutgoingListFlag.values)
-//            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-//        outgoingMsg.setNode(getVertexValue().getNode());
-////        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-//        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
-//    }
-//    
-//    public void configureMergeMsgForSuccessorByIncomingMsg(){
-//        setSuccessorToMeDir();
-//        outgoingMsg.setFlag(outFlag);
-//        outgoingMsg.setFlip(ifFlipWithPredecessor());
-//        outgoingMsg.setSourceVertexId(getVertexId());
-//        for(byte d: IncomingListFlag.values)
-//            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-//        outgoingMsg.setNode(getVertexValue().getNode());
-////        outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-//        sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
-//    }
     /**
      * send merge message to neighber for P4
      */

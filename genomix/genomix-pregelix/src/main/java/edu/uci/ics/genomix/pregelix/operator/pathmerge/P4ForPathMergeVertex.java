@@ -119,7 +119,108 @@ public class P4ForPathMergeVertex extends
         }
         return false;
     }
-
+    
+    /**
+     * step1 : sendUpdates
+     */
+    public void sendUpdates(){
+        //initiate merge_dir
+        setStateAsNoMerge();
+        
+        // only PATH vertices are present. Find the ID's for my neighbors
+        curKmer = getVertexId();
+        curHead = isNodeRandomHead(curKmer);
+        
+        // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
+        // We prevent merging towards non-path nodes
+        hasNext = setNextInfo(getVertexValue());  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
+        hasPrev = setPrevInfo(getVertexValue());
+        if (hasNext || hasPrev) {
+            if (curHead) {
+                if (hasNext && !nextHead) {
+                    // compress this head to the forward tail
+                    setStateAsMergeDir(mergeWithNext);
+                    sendUpdateMsg(isP4, toPredecessor);
+                } else if (hasPrev && !prevHead) {
+                    // compress this head to the reverse tail
+                    setStateAsMergeDir(mergeWithPrev);
+                    sendUpdateMsg(isP4, toSuccessor);
+                } 
+            }
+            else {
+                // I'm a tail
+                if (hasNext && hasPrev) {
+                     if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
+                        // tails on both sides, and I'm the "local minimum"
+                        // compress me towards the tail in forward dir
+                        setStateAsMergeDir(mergeWithNext);
+                        sendUpdateMsg(isP4, toPredecessor);
+                    }
+                } else if (!hasPrev) {
+                    // no previous node
+                    if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
+                        // merge towards tail in forward dir
+                        setStateAsMergeDir(mergeWithNext);
+                        sendUpdateMsg(isP4, toPredecessor);
+                    }
+                } else if (!hasNext) {
+                    // no next node
+                    if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
+                        // merge towards tail in reverse dir
+                        setStateAsMergeDir(mergeWithPrev);
+                        sendUpdateMsg(isP4, toSuccessor);
+                    }
+                }
+            }
+        }  // TODO else voteToHalt (when I combine steps 2 and 3)
+        this.activate();
+    }
+    
+    /**
+     * step2: receiveUpdates
+     */
+    public void receiveUpdates(Iterator<PathMergeMessageWritable> msgIterator){
+        //update neighber
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            processUpdate(incomingMsg);
+        }
+        if(isInactiveNode() || isHeadUnableToMerge()) // check structure and neighbor restriction 
+            voteToHalt();
+        else
+            activate();
+    }
+    
+    /**
+     * step4: processMerges 
+     */
+    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator){
+      //merge tmpKmer
+        while (msgIterator.hasNext()) {
+            boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
+            incomingMsg = msgIterator.next();
+            /** process merge **/
+            processMerge(incomingMsg);
+            // set statistics counter: Num_MergedNodes
+            updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
+            /** if it's a tandem repeat, which means detecting cycle **/
+            if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is correct (try several times) 
+                // set statistics counter: Num_Cycles
+                updateStatisticsCounter(StatisticsCounter.Num_Cycles); // TODO cycle instead of tandem repeat
+                voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
+            }/** head meets head, stop **/ 
+            else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead(selfFlag)){
+                getVertexValue().setState(State.HEAD_CANNOT_MERGE);
+                // set statistics counter: Num_MergedPaths
+                updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
+                voteToHalt();
+            }else{
+                activate();
+            }
+            getVertexValue().setCounters(counters);
+        }
+    }
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
@@ -127,99 +228,15 @@ public class P4ForPathMergeVertex extends
             startSendMsg();
         else if (getSuperstep() == 2)
             initState(msgIterator);
-        else if (getSuperstep() % 4 == 3){ 
-        	// TODO separate function for this block
-            //initiate merge_dir
-            setStateAsNoMerge();
-            
-            // only PATH vertices are present. Find the ID's for my neighbors
-            curKmer = getVertexId();
-            curHead = isNodeRandomHead(curKmer);
-            
-            // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
-            // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue());  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
-            hasPrev = setPrevInfo(getVertexValue());
-            if (hasNext || hasPrev) {
-                if (curHead) {
-                    if (hasNext && !nextHead) {
-                        // compress this head to the forward tail
-                        setStateAsMergeDir(mergeWithNext);
-                        sendUpdateMsg(isP4, toPredecessor);
-                    } else if (hasPrev && !prevHead) {
-                        // compress this head to the reverse tail
-                        setStateAsMergeDir(mergeWithPrev);
-                        sendUpdateMsg(isP4, toSuccessor);
-                    } 
-                }
-                else {
-                    // I'm a tail
-                    if (hasNext && hasPrev) {
-                         if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
-                            // tails on both sides, and I'm the "local minimum"
-                            // compress me towards the tail in forward dir
-                            setStateAsMergeDir(mergeWithNext);
-                            sendUpdateMsg(isP4, toPredecessor);
-                        }
-                    } else if (!hasPrev) {
-                        // no previous node
-                        if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
-                            // merge towards tail in forward dir
-                            setStateAsMergeDir(mergeWithNext);
-                            sendUpdateMsg(isP4, toPredecessor);
-                        }
-                    } else if (!hasNext) {
-                        // no next node
-                        if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
-                            // merge towards tail in reverse dir
-                            setStateAsMergeDir(mergeWithPrev);
-                            sendUpdateMsg(isP4, toSuccessor);
-                        }
-                    }
-                }
-            }  // TODO else voteToHalt (when I combine steps 2 and 3)
-            this.activate();
-        }
-        else if (getSuperstep() % 4 == 0){  
-        	// TODO separate function for this step
-            //update neighber
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                processUpdate(incomingMsg);
-            }
-            if(isInactiveNode() || isHeadUnableToMerge()) // check structure and neighbor restriction 
-                voteToHalt();
-            else
-                activate();
-        } else if (getSuperstep() % 4 == 1){
+        else if (getSuperstep() % 4 == 3)
+            sendUpdates();
+        else if (getSuperstep() % 4 == 0)  
+            receiveUpdates(msgIterator);
+        else if (getSuperstep() % 4 == 1){
             //send message to the merge object and kill self
             broadcastMergeMsg(true);
-        } else if (getSuperstep() % 4 == 2){
-            //merge tmpKmer
-            while (msgIterator.hasNext()) {
-                boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
-                incomingMsg = msgIterator.next();
-                /** process merge **/
-                processMerge(incomingMsg);
-                // set statistics counter: Num_MergedNodes
-                updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
-                /** if it's a tandem repeat, which means detecting cycle **/
-                if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is correct (try several times) 
-                    // set statistics counter: Num_Cycles
-                    updateStatisticsCounter(StatisticsCounter.Num_Cycles); // TODO cycle instead of tandem repeat
-                    voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
-                }/** head meets head, stop **/ 
-                else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead(selfFlag)){
-                    getVertexValue().setState(State.HEAD_CANNOT_MERGE);
-                    // set statistics counter: Num_MergedPaths
-                    updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
-                    voteToHalt();
-                }else{
-                    activate();
-                }
-                getVertexValue().setCounters(counters);
-            }
-        }
+        } else if (getSuperstep() % 4 == 2)
+            receiveMerges(msgIterator);
     }
 
     public static void main(String[] args) throws Exception {
