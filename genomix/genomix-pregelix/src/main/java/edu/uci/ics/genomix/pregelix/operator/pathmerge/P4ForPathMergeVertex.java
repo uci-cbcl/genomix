@@ -146,16 +146,11 @@ public class P4ForPathMergeVertex extends
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
                         setStateAsMergeDir(mergeWithNext);
-//                        setStateAsMergeWithNext();
-//                        configureUpdateMsg(isNextOrPrevious?, getVertexValue()); // TODO change to sendmsg or sendUpdateFrom...
                         sendUpdateMsg(isP4, toPredecessor);
-//                        sendUpdateMsgToPredecessor(true); //TODO all of these can be simplified
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
                         setStateAsMergeDir(mergeWithPrev);
-//                        setStateAsMergeWithPrev();
                         sendUpdateMsg(isP4, toSuccessor);
-//                        sendUpdateMsgToSuccessor(true);
                     } 
                 }
                 else {
@@ -165,27 +160,21 @@ public class P4ForPathMergeVertex extends
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
                             setStateAsMergeDir(mergeWithNext);
-//                            setStateAsMergeWithNext();
                             sendUpdateMsg(isP4, toPredecessor);
-//                            sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasPrev) {
                         // no previous node
                         if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                             // merge towards tail in forward dir
-//                            setStateAsMergeWithNext();
                             setStateAsMergeDir(mergeWithNext);
                             sendUpdateMsg(isP4, toPredecessor);
-//                            sendUpdateMsgToPredecessor(true);
                         }
                     } else if (!hasNext) {
                         // no next node
                         if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                             // merge towards tail in reverse dir
-//                            setStateAsMergeWithPrev();
                             setStateAsMergeDir(mergeWithPrev);
                             sendUpdateMsg(isP4, toSuccessor);
-//                            sendUpdateMsgToSuccessor(true);
                         }
                     }
                 }
@@ -197,9 +186,8 @@ public class P4ForPathMergeVertex extends
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                processUpdate(incomingMsg);  // TODO pass incomingMsg as a parameter
+                processUpdate(incomingMsg);
             }
-            // TODO move outside the loop
             if(isInactiveNode() || isHeadUnableToMerge()) // check structure and neighbor restriction 
                 voteToHalt();
             else
@@ -213,11 +201,11 @@ public class P4ForPathMergeVertex extends
                 boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
                 incomingMsg = msgIterator.next();
                 /** process merge **/
-                processMerge(incomingMsg); // TODO use incomingMsg as a parameter
+                processMerge(incomingMsg);
                 // set statistics counter: Num_MergedNodes
                 updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
                 /** if it's a tandem repeat, which means detecting cycle **/
-                if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is cocrect (try several times) 
+                if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is correct (try several times) 
                     for(byte d : DirectionFlag.values)
                         getVertexValue().getEdgeList(d).reset(); // TODO don't remove tandem repeats but DO stop merging  // we shouldn't need to update neighbors 
                     // set statistics counter: Num_Cycles
@@ -232,7 +220,7 @@ public class P4ForPathMergeVertex extends
                 }else{
                     activate();
                 }
-                getVertexValue().setCounters(counters); // TODO move all the setCounter calls outside the if/else blocks
+                getVertexValue().setCounters(counters);
             }
         }
     }
