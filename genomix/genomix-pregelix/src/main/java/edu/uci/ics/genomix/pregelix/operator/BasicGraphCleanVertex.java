@@ -298,7 +298,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         //TODO THE less context you send, the better  (send simple messages)
         byte dirs[] = toPredecessor ? IncomingListFlag.values : OutgoingListFlag.values;
         for(byte dir : dirs){
-            kmerIterator = value.getEdgeList(dir).getKeys(); // RFList
+            kmerIterator = value.getEdgeList(dir).getKeys();
             while(kmerIterator.hasNext()){
                 outFlag &= MessageFlag.DIR_CLEAR;
                 outFlag |= dir;
@@ -341,7 +341,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         }
         return true;
     }
-    
     
     /**
      * check if A need to be filpped with neighbor
