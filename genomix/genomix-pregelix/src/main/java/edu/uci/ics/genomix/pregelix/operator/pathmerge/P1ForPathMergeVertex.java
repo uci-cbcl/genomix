@@ -170,10 +170,10 @@ public class P1ForPathMergeVertex extends
             byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
             switch(headMergeDir){
                 case State.HEAD_CAN_MERGEWITHPREV:
-                    sendUpdateMsgToSuccessor(true);
+                    sendUpdateMsg(isP1, toSuccessor);
                     break;
                 case State.HEAD_CAN_MERGEWITHNEXT:
-                    sendUpdateMsgToPredecessor(true);
+                    sendUpdateMsg(isP1, toPredecessor);
                     break;
             }
         } else

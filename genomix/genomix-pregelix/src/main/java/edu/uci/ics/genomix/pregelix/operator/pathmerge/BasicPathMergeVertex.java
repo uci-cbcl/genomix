@@ -14,7 +14,15 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
 	BasicGraphCleanVertex<V, M>{
-	
+    protected static final boolean isP1 = true;
+    protected static final boolean isP2 = false;
+    protected static final boolean isP4 = true;
+    
+    protected static final boolean toPredecessor = true;
+    protected static final boolean toSuccessor = false;
+    protected static final boolean mergeWithPrev = true;
+    protected static final boolean mergeWithNext = false;
+    
     public void setStateAsMergeDir(boolean mergeWithPre){
         short state = getVertexValue().getState();
         state &= State.CAN_MERGE_CLEAR;
@@ -150,7 +158,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         byte[] updateDirs = toPredecessor ? IncomingListFlag.values : OutgoingListFlag.values;
         
         for(byte dir : mergeDirs)
-            outgoingMsg.getNode().setEdgeList(dir, getVertexValue().getEdgeList(dir));  // TODO check
+            outgoingMsg.getNode().setEdgeList(dir, getVertexValue().getEdgeList(dir));
         
         for(byte dir : updateDirs){
             kmerIterator = getVertexValue().getEdgeList(dir).getKeys();
@@ -163,108 +171,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             }
         }
     }
-    
-    /**
-     * configure UPDATE msg   boolean: true == P4, false == P2
-     */
-    public void configureUpdateMsgForPredecessor(boolean isP4){ 
-        outgoingMsg.setSourceVertexId(getVertexId());
-        // TODO pass in isForward
-        for(byte d: OutgoingListFlag.values)
-            outgoingMsg.getNode().setEdgeList(d, getVertexValue().getEdgeList(d));  // TODO check
-        
-        // TODO pass in the vertexId rather than isP4 (removes this block）
-        if(isP4)
-            outgoingMsg.setFlip(ifFilpWithSuccessor());
-        else 
-            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
-        
-        kmerIterator = getVertexValue().getRFList().getKeys();
-        while(kmerIterator.hasNext()){
-            outFlag &= MessageFlag.DIR_CLEAR;
-            outFlag |= MessageFlag.DIR_RF;
-            outgoingMsg.setFlag(outFlag);
-            destVertexId.setAsCopy(kmerIterator.next());
-            // TODO DON'T NEED TO SEARCH for this
-//            setPredecessorToMeDir(destVertexId); 
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        kmerIterator = getVertexValue().getRRList().getKeys();
-        while(kmerIterator.hasNext()){
-            outFlag &= MessageFlag.DIR_CLEAR;
-            outFlag |= MessageFlag.DIR_RR;
-            outgoingMsg.setFlag(outFlag);
-            destVertexId.setAsCopy(kmerIterator.next());
-//            setPredecessorToMeDir(destVertexId);
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-    
-    public void configureUpdateMsgForSuccessor(boolean flag){
-        outgoingMsg.setSourceVertexId(getVertexId());
-        for(byte d: IncomingListFlag.values)
-            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        
-        if(flag)
-            outgoingMsg.setFlip(ifFlipWithPredecessor()); 
-        else
-            outgoingMsg.setFlip(ifFlipWithPredecessor(incomingMsg.getSourceVertexId()));
-        
-        kmerIterator = getVertexValue().getFFList().getKeys();
-        while(kmerIterator.hasNext()){
-            outFlag &= MessageFlag.DIR_CLEAR;
-            outFlag |= MessageFlag.DIR_FF;
-            outgoingMsg.setFlag(outFlag);
-            destVertexId.setAsCopy(kmerIterator.next());
-//            setSuccessorToMeDir(destVertexId);
-            sendMsg(destVertexId, outgoingMsg);
-        }
-        kmerIterator = getVertexValue().getFRList().getKeys();
-        while(kmerIterator.hasNext()){
-            outFlag &= MessageFlag.DIR_CLEAR;
-            outFlag |= MessageFlag.DIR_FR;
-            outgoingMsg.setFlag(outFlag);
-            destVertexId.setAsCopy(kmerIterator.next());
-//            setSuccessorToMeDir(destVertexId);
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-    
-	/**
-     * send update message to neighber  boolean: true == P4, false == P2
-     */
-    public void broadcastUpdateMsg(boolean flag){
-//        if((getVertexValue().getState() & State.VERTEX_MASK) == State.IS_HEAD && (outFlag & State.VERTEX_MASK) != State.IS_FINAL)
-//            outFlag |= MessageFlag.IS_HEAD;
-        switch(getVertexValue().getState() & State.CAN_MERGE_MASK){
-            case State.CAN_MERGEWITHPREV:
-                /** confugure updateMsg for successor **/
-                configureUpdateMsgForSuccessor(flag);
-                break;
-            case State.CAN_MERGEWITHNEXT:
-                /** confugure updateMsg for predecessor **/
-                configureUpdateMsgForPredecessor(flag);
-                break; 
-        }
-    }
-    
 
-    /**
-     * This vertex tries to merge with next vertex and send update msg to predecesspr
-     */
-    public void sendUpdateMsgToPredecessor(boolean flag){
-        if(getVertexValue().hasNextDest())  //TODO delete
-            broadcastUpdateMsg(flag);   
-    }
-    
-    /**
-     * This vertex tries to merge with next vertex and send update msg to successor
-     */
-    public void sendUpdateMsgToSuccessor(boolean flag){
-        if(getVertexValue().hasPrevDest())
-            broadcastUpdateMsg(flag);
-    }
-    
     /**
      * override sendUpdateMsg and use incomingMsg as parameter automatically
      */
@@ -288,11 +195,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         switch(neighborToMeDir){
             case MessageFlag.DIR_FF:
             case MessageFlag.DIR_FR:
-                sendUpdateMsgToPredecessor(false);
+                sendUpdateMsg(isP2, toPredecessor);
                 break;
             case MessageFlag.DIR_RF:
             case MessageFlag.DIR_RR: 
-                sendUpdateMsgToSuccessor(false);
+                sendUpdateMsg(isP2, toSuccessor);
                 break;
         }
     }
@@ -302,10 +209,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         outgoingMsg.setUpdateMsg(true);
         switch(getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK){
             case MessageFlag.HEAD_CAN_MERGEWITHPREV:
-                sendUpdateMsgToSuccessor(false);
+                sendUpdateMsg(isP2, toSuccessor);
                 break;
             case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
-                sendUpdateMsgToPredecessor(false);
+                sendUpdateMsg(isP2, toPredecessor);
                 break;
         }
     }
@@ -361,7 +268,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         setPredecessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
-        outgoingMsg.setFlip(ifFilpWithSuccessor());
 //        for(byte d: OutgoingListFlag.values)
 //            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setNode(getVertexValue().getNode());
@@ -372,7 +278,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         setSuccessorToMeDir();
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
-        outgoingMsg.setFlip(ifFlipWithPredecessor()); // TODO seems incorrect for outgoing... why predecessor?  //TODO REMOVE this flip boolean completely
 //        for(byte d: IncomingListFlag.values)
 //            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setNode(getVertexValue().getNode());
@@ -382,13 +287,13 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * send merge message to neighber for P4, send message to the merge object and kill self
      */
-    public void broadcastMergeMsg(boolean deleteSelf){
+    public void broadcastMergeMsg(boolean isP4){
         outFlag |= getHeadMergeDir();
         switch(getVertexValue().getState() & State.CAN_MERGE_MASK) {
             case State.CAN_MERGEWITHNEXT:
                 // configure merge msg for successor
                 configureMergeMsgForSuccessor(getNextDestVertexId()); // TODO getDestVertexId(DIRECTION), then remove the switch statement, sendMergeMsg(DIRECTION)
-                if(deleteSelf)
+                if(isP4)
                     deleteVertex(getVertexId());
                 else{
                     getVertexValue().setState(State.IS_DEAD);
@@ -398,7 +303,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             case State.CAN_MERGEWITHPREV:
                 // configure merge msg for predecessor
                 configureMergeMsgForPredecessor(getPrevDestVertexId());
-                if(deleteSelf)
+                if(isP4)
                     deleteVertex(getVertexId());
                 else{
                     getVertexValue().setState(State.IS_DEAD);

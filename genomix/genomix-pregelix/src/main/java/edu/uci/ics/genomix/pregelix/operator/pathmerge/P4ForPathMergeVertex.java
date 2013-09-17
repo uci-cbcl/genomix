@@ -22,11 +22,6 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
-    private static final boolean isP4 = true;
-    private static final boolean toPredecessor = true;
-    private static final boolean toSuccessor = false;
-    private static final boolean mergeWithPrev = true;
-    private static final boolean mergeWithNext = false;
     
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
