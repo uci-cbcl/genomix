@@ -81,8 +81,8 @@ public class JobGenBrujinGraph extends JobGen {
 
     protected ConfFactory hadoopJobConfFactory;
     private static final Logger LOG = Logger.getLogger(JobGenBrujinGraph.class.getName());
-    private static final int DEFAULT_FRAME_LIMIT = 4096;
-    private static final int DEFAULT_FRAME_SIZE = 65535;
+    public static final int DEFAULT_FRAME_LIMIT = 4096;
+    public static final int DEFAULT_FRAME_SIZE = 65535;
     protected String[] ncNodeNames;
     protected String[] readSchedule;
 
