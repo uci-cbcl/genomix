@@ -11,6 +11,7 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -83,46 +84,33 @@ public class P4ForPathMergeVertex extends
     }
     
     /**
-     * set prevKmer to the element that's previous (in the node's RR or RF list), returning true when there is a previous neighbor
+     * checks if there is a valid, mergeable neighbor in the given direction.  sets next/prev Kmer and next/prev Head to the valid neighbor's values
      */
-    protected boolean setPrevInfo(VertexValueWritable value) {
-        if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT)
+    protected boolean setNeighbor(VertexValueWritable value, DIR direction) {
+    	byte headState = direction == DIR.PREVIOUS ? State.HEAD_CAN_MERGEWITHNEXT : State.HEAD_CAN_MERGEWITHPREV;
+    	int degree = direction == DIR.PREVIOUS ? value.inDegree() : value.outDegree();
+        if(getHeadMergeDir() == headState)
             return false;
-        if (isTandemRepeat(value)) {
-            return false;
-        }
-        if (value.inDegree() == 1) {
-            for(byte dir : IncomingListFlag.values){
-                if(value.getEdgeList(dir).getCountOfPosition() > 0){
-                    prevKmer = value.getEdgeList(dir).get(0).getKey(); 
-                    prevHead = isNodeRandomHead(prevKmer);
-                    return true;
-                }
+        if (degree != 1)
+        	throw new IllegalStateException("Node is not HEAD_CANMERGE but has degree of " + degree + " in " + direction + " direction\n" + value);
+        if (isTandemRepeat(value))
+        	throw new IllegalStateException("Node is tandem repeat but is trying to send update message! " + value);
+        
+        byte[] dirs = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
+        for(byte dir : dirs){
+            if(value.getEdgeList(dir).getCountOfPosition() > 0){
+            	if (direction == DIR.NEXT) {
+	                nextKmer = value.getEdgeList(dir).get(0).getKey(); 
+	                nextHead = isNodeRandomHead(nextKmer);
+	                return true;
+            	} else {
+            		prevKmer = value.getEdgeList(dir).get(0).getKey(); 
+	                prevHead = isNodeRandomHead(prevKmer);
+	                return true;
+            	}
             }
         }
-        return false;
-    }
-    
-    /**
-     * set nextKmer to the element that's next (in the node's FF or FR list), returning true when there is a next neighbor
-     */
-    protected boolean setNextInfo(VertexValueWritable value) {
-        if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV)
-            return false;
-        if (isTandemRepeat(value)) {
-            return false;
-        }
-    	// TODO make sure the degree is correct
-        if (value.outDegree() == 1) {
-            for(byte dir : OutgoingListFlag.values){
-                if(value.getEdgeList(dir).getCountOfPosition() > 0){
-                    nextKmer = value.getEdgeList(dir).get(0).getKey(); 
-                    nextHead = isNodeRandomHead(nextKmer);
-                    return true;
-                }
-            }
-        }
-        return false;
+        throw new IllegalStateException("outdegree apparently 0? but not HEAD_CAN_MERGEWITHPREV..." + value.outDegree() + "\n" + value);
     }
     
     /**
@@ -138,18 +126,18 @@ public class P4ForPathMergeVertex extends
         
         // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
         // We prevent merging towards non-path nodes
-        hasNext = setNextInfo(getVertexValue());  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
-        hasPrev = setPrevInfo(getVertexValue());
+        hasNext = setNeighbor(getVertexValue(), DIR.NEXT);  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
+        hasPrev = setNeighbor(getVertexValue(), DIR.PREVIOUS);
         if (hasNext || hasPrev) {
             if (curHead) {
                 if (hasNext && !nextHead) {
                     // compress this head to the forward tail
-                    setStateAsMergeDir(mergeWithNext);
-                    sendUpdateMsg(isP4, toPredecessor);
+                    setStateAsMergeDir(DIR.NEXT);
+                    sendUpdateMsg(isP4, DIR.PREVIOUS);
                 } else if (hasPrev && !prevHead) {
                     // compress this head to the reverse tail
-                    setStateAsMergeDir(mergeWithPrev);
-                    sendUpdateMsg(isP4, toSuccessor);
+                    setStateAsMergeDir(DIR.PREVIOUS);
+                    sendUpdateMsg(isP4, DIR.NEXT);
                 } 
             }
             else {
@@ -158,22 +146,22 @@ public class P4ForPathMergeVertex extends
                      if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                         // tails on both sides, and I'm the "local minimum"
                         // compress me towards the tail in forward dir
-                        setStateAsMergeDir(mergeWithNext);
-                        sendUpdateMsg(isP4, toPredecessor);
+                        setStateAsMergeDir(DIR.NEXT);
+                        sendUpdateMsg(isP4, DIR.PREVIOUS);
                     }
                 } else if (!hasPrev) {
                     // no previous node
                     if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                         // merge towards tail in forward dir
-                        setStateAsMergeDir(mergeWithNext);
-                        sendUpdateMsg(isP4, toPredecessor);
+                        setStateAsMergeDir(DIR.NEXT);
+                        sendUpdateMsg(isP4, DIR.PREVIOUS);
                     }
                 } else if (!hasNext) {
                     // no next node
                     if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                         // merge towards tail in reverse dir
-                        setStateAsMergeDir(mergeWithPrev);
-                        sendUpdateMsg(isP4, toSuccessor);
+                        setStateAsMergeDir(DIR.PREVIOUS);
+                        sendUpdateMsg(isP4, DIR.NEXT);
                     }
                 }
             }
@@ -214,7 +202,7 @@ public class P4ForPathMergeVertex extends
                 updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
                 voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
             }/** head meets head, stop **/ 
-            else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead(selfFlag)){
+            else if(isInactiveNode() || isHeadMeetsHead(selfFlag)){
                 getVertexValue().setState(State.HEAD_CANNOT_MERGE);
                 // set statistics counter: Num_MergedPaths
                 updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);

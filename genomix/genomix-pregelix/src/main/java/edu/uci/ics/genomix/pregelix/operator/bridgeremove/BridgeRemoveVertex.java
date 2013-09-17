@@ -11,6 +11,7 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
@@ -83,10 +84,10 @@ public class BridgeRemoveVertex extends
         if (getSuperstep() == 1) {
             //filter bridge vertex
             if(VertexUtil.isUpBridgeVertex(getVertexValue())){
-                sendSettledMsgs(toPredecessor, getVertexValue());
+                sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
             }
             else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
-                sendSettledMsgs(toSuccessor, getVertexValue());
+                sendSettledMsgs(DIR.NEXT, getVertexValue());
             }
         }
         else if (getSuperstep() == 2){

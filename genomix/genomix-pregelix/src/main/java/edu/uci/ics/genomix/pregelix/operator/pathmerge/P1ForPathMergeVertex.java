@@ -7,6 +7,7 @@ import java.util.Iterator;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
@@ -170,10 +171,10 @@ public class P1ForPathMergeVertex extends
             byte headMergeDir = (byte)(getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
             switch(headMergeDir){
                 case State.HEAD_CAN_MERGEWITHPREV:
-                    sendUpdateMsg(isP1, toSuccessor);
+                    sendUpdateMsg(isP1, DIR.NEXT);
                     break;
                 case State.HEAD_CAN_MERGEWITHNEXT:
-                    sendUpdateMsg(isP1, toPredecessor);
+                    sendUpdateMsg(isP1, DIR.PREVIOUS);
                     break;
             }
         } else

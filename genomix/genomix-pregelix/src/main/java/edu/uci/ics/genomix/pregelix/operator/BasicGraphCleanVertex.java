@@ -24,6 +24,7 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -33,14 +34,8 @@ import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, V, NullWritable, M> {
-    protected static final boolean toPredecessor = true;
-    protected static final boolean toSuccessor = false;
-    protected static final boolean mergeWithPrev = true;
-    protected static final boolean mergeWithNext = false;
-    protected static final boolean predecessorToMe = true;
-    protected static final boolean successorToMe = false;
-    
-    //logger
+	
+	//logger
     public Logger logger = Logger.getLogger(BasicGraphCleanVertex.class.getName());
     
     public static int kmerSize = -1;
@@ -294,9 +289,9 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * head send message to all neighbor nodes
      */
-    public void sendSettledMsgs(boolean toPredecessor, VertexValueWritable value){
+    public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         //TODO THE less context you send, the better  (send simple messages)
-        byte dirs[] = toPredecessor ? IncomingListFlag.values : OutgoingListFlag.values;
+        byte dirs[] = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
         for(byte dir : dirs){
             kmerIterator = value.getEdgeList(dir).getKeys();
             while(kmerIterator.hasNext()){
@@ -311,8 +306,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public void sendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
-        sendSettledMsgs(true, value);
-        sendSettledMsgs(false, value);
+        sendSettledMsgs(DIR.PREVIOUS, value);
+        sendSettledMsgs(DIR.NEXT, value);
     }
     
     /**
@@ -396,10 +391,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * set neighborToMe Dir
      */
-    public void setNeighborToMeDir(boolean predecessorToMe){
+    public void setNeighborToMeDir(DIR predecessorToMe){
         if(getVertexValue().getDegree(predecessorToMe) != 1)
             throw new IllegalArgumentException("In merge dir, the degree is not 1");
-        byte[] dirs = predecessorToMe ? IncomingListFlag.values : OutgoingListFlag.values;
+        byte[] dirs = predecessorToMe == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
         outFlag &= MessageFlag.DIR_CLEAR;
         
         if(getVertexValue().getEdgeList(dirs[0]).getCountOfPosition() == 1){

@@ -20,6 +20,7 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageType;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -217,10 +218,10 @@ public class P2ForPathMergeVertex extends
         outgoingMsg.setUpdateMsg(false);
         switch(getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK){
             case MessageFlag.HEAD_CAN_MERGEWITHPREV:
-                sendSettledMsgs(toPredecessor, getVertexValue());
+                sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
                 break;
             case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
-                sendSettledMsgs(toSuccessor, getVertexValue());
+                sendSettledMsgs(DIR.NEXT, getVertexValue());
                 break;
         }
     }
@@ -254,7 +255,7 @@ public class P2ForPathMergeVertex extends
      * configure MERGE msg For P2
      */
     public void configureP2MergeMsgForPredecessor(VKmerBytesWritable mergeDest){
-        setNeighborToMeDir(predecessorToMe);
+        setNeighborToMeDir(DIR.PREVIOUS);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFilpWithSuccessor());
@@ -263,7 +264,7 @@ public class P2ForPathMergeVertex extends
     }
     
     public void configureP2MergeMsgForSuccessor(VKmerBytesWritable mergeDest){
-        setNeighborToMeDir(successorToMe);
+        setNeighborToMeDir(DIR.NEXT);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFlipWithPredecessor());

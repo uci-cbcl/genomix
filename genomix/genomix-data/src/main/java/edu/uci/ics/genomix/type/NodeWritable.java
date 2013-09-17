@@ -28,6 +28,11 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.uci.ics.genomix.data.Marshal;
 
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
+	
+	public enum DIR {
+		NEXT,
+		PREVIOUS
+	}
 
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
@@ -59,7 +64,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
     }
     
-    public static class IncomingListFlag {
+    public static class IncomingListFlag { // TODO refactor as a function using DIR
         public static final byte DIR_RF = 0b10 << 0;
         public static final byte DIR_RR = 0b11 << 0;
 
@@ -560,8 +565,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return edges[DirectionFlag.DIR_FF].getCountOfPosition() + edges[DirectionFlag.DIR_FR].getCountOfPosition();
     }
     
-    public int getDegree(boolean prev){
-        return prev ? inDegree() : outDegree();
+    public int getDegree(DIR direction){
+        return direction == DIR.PREVIOUS ? inDegree() : outDegree();
     }
     /*
      * Return if this node is a "path" compressible node, that is, it has an
