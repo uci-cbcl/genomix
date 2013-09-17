@@ -64,6 +64,10 @@ public class SplitRepeatVertex extends
 
     private EdgeWritable deletedEdge = new EdgeWritable();
     private Set<EdgeAndDir> deletedEdges = new HashSet<EdgeAndDir>();//A set storing deleted edges
+    private EdgeListWritable incomingEdgeList = null; //SplitRepeat 
+    private EdgeListWritable outgoingEdgeList = null; //SplitRepeat
+    private byte incomingEdgeDir = 0; //SplitRepeat
+    private byte outgoingEdgeDir = 0; //SplitRepeat
     
     /**
      * initiate kmerSize, maxIteration
@@ -125,6 +129,18 @@ public class SplitRepeatVertex extends
         createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
     }
    
+    /**
+     * use for SplitRepeatVertex
+     * @param i
+     */
+    public void setEdgeListAndEdgeDir(int i){
+        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
+        incomingEdgeDir = connectedTable[i][0];
+        
+        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
+        outgoingEdgeDir = connectedTable[i][1];
+    }
+    
     public void setNeighborEdgeIntersection(EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
         incomingReadIdSet.clear();
         long[] incomingReadIds = incomingEdge.getReadIDs().toReadIDArray();
