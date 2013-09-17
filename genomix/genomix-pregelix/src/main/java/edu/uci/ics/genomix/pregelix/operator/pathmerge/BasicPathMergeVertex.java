@@ -50,9 +50,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         
         // TODO if you want, this logic could be figured out when sending the update from B
         byte neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());  // A -> C after the merge
-         // TODO add C -> A dir and call node.updateEdges directly
-        getVertexValue().processUpdates(neighborToMeDir, msg.getSourceVertexId(),
-                neighborToMergeDir, msg.getNode());
+        byte replaceDir = mirrorDirection(neighborToMeDir); // C -> A dir
+        getVertexValue().getNode().updateEdges(neighborToMeDir, msg.getSourceVertexId(), 
+                neighborToMergeDir, replaceDir, msg.getNode(), true);
     }
     
     /**
@@ -380,7 +380,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     /**
-     * send merge message to neighber for P4
+     * send merge message to neighber for P4, send message to the merge object and kill self
      */
     public void broadcastMergeMsg(boolean deleteSelf){
         outFlag |= getHeadMergeDir();

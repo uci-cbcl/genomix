@@ -233,7 +233,6 @@ public class P4ForPathMergeVertex extends
         else if (getSuperstep() % 4 == 0)  
             receiveUpdates(msgIterator);
         else if (getSuperstep() % 4 == 1){
-            //send message to the merge object and kill self
             broadcastMergeMsg(true);
         } else if (getSuperstep() % 4 == 2)
             receiveMerges(msgIterator);
