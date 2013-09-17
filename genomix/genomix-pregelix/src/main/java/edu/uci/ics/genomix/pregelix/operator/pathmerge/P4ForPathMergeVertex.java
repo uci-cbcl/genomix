@@ -206,8 +206,6 @@ public class P4ForPathMergeVertex extends
                 updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
                 /** if it's a tandem repeat, which means detecting cycle **/
                 if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is correct (try several times) 
-                    for(byte d : DirectionFlag.values)
-                        getVertexValue().getEdgeList(d).reset(); // TODO don't remove tandem repeats but DO stop merging  // we shouldn't need to update neighbors 
                     // set statistics counter: Num_Cycles
                     updateStatisticsCounter(StatisticsCounter.Num_Cycles); // TODO cycle instead of tandem repeat
                     voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
