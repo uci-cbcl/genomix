@@ -12,9 +12,12 @@ public class FrameSizePressureTest {
 
         @Option(name = "-readLength", usage = "the length of this single long read", required = true)
         public int readLength;
+        
+        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
+        private boolean runLocal = false;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception{
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
@@ -28,6 +31,6 @@ public class FrameSizePressureTest {
         String[] fsPressureArgs = { "-kmerLength", String.valueOf(options.kmerLength), "-saveIntermediateResults",
                 "true", "-localInput", test.getTestDir(), "-pipelineOrder", "BUILD_HYRACKS,MERGE" };
         GenomixDriver.main(fsPressureArgs);
+        test.cleanDiskFile();
     }
-
 }
