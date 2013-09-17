@@ -197,7 +197,7 @@ public class P4ForPathMergeVertex extends
             //update neighber
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
-                processUpdate();  // TODO pass incomingMsg as a parameter
+                processUpdate(incomingMsg);  // TODO pass incomingMsg as a parameter
                 
                 // TODO move outside the loop
                 if(isInactiveNode() || isHeadUnableToMerge())  // check structure and neighbor restriction 

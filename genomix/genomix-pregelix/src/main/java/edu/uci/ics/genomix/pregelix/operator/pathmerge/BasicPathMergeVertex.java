@@ -42,17 +42,17 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * updateAdjList
      */
-    public void processUpdate(){
+    public void processUpdate(M msg){
     	// A -> B -> C with B merging with C
-        inFlag = incomingMsg.getFlag();
+        inFlag = msg.getFlag();
         byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);  // A -> B dir
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);  // B -> A dir
         
         // TODO if you want, this logic could be figured out when sending the update from B
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());  // A -> C after the merge
+        byte neighborToMergeDir = flipDirection(neighborToMeDir, msg.isFlip());  // A -> C after the merge
          // TODO add C -> A dir and call node.updateEdges directly
-        getVertexValue().processUpdates(neighborToMeDir, incomingMsg.getSourceVertexId(),
-                neighborToMergeDir, incomingMsg.getNode());
+        getVertexValue().processUpdates(neighborToMeDir, msg.getSourceVertexId(),
+                neighborToMergeDir, msg.getNode());
     }
     
     /**
