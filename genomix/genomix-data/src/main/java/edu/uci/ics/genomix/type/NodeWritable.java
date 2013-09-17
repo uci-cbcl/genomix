@@ -555,7 +555,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public int outDegree() {
         return edges[DirectionFlag.DIR_FF].getCountOfPosition() + edges[DirectionFlag.DIR_FR].getCountOfPosition();
     }
-
+    
+    public int getDegree(boolean prev){
+        return prev ? inDegree() : outDegree();
+    }
     /*
      * Return if this node is a "path" compressible node, that is, it has an
      * in-degree and out-degree of 1

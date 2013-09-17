@@ -25,9 +25,11 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, V, NullWritable, M> {
@@ -563,42 +565,19 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * set adjMessage to predecessor(from successor)
+     * set neighborToMe Dir
      */
-    public void setPredecessorToMeDir(){
+    public void setNeighborToMeDir(boolean predecessorToMe){
+        if(getVertexValue().getDegree(predecessorToMe) != 1)
+            throw new IllegalArgumentException("In merge dir, the degree is not 1");
+        byte[] dirs = predecessorToMe ? IncomingListFlag.values : OutgoingListFlag.values;
         outFlag &= MessageFlag.DIR_CLEAR;
-        if(!getVertexValue().getRFList().isEmpty())
-            outFlag |= MessageFlag.DIR_RF;
-        else if(!getVertexValue().getRRList().isEmpty())
-            outFlag |= MessageFlag.DIR_RR;
-    }
-    
-    public void setPredecessorToMeDir(VKmerBytesWritable toFind){
-        outFlag &= MessageFlag.DIR_CLEAR;  // TODO WHAT HAPPENS IF THE NODE IS IN YOUR R AND YOUR RF?
-        if(getVertexValue().getRFList().contains(toFind))
-            outFlag |= MessageFlag.DIR_RF;
-        else if(getVertexValue().getRRList().contains(toFind))
-            outFlag |= MessageFlag.DIR_RR;
-    }
-    
-    /**
-     * set adjMessage to successor(from predecessor)
-     */
-    public void setSuccessorToMeDir(){
-        outFlag &= MessageFlag.DIR_CLEAR;
-        if(!getVertexValue().getFFList().isEmpty()) // TODO == 1 rather than isEmpty
-            outFlag |= MessageFlag.DIR_FF;
-        else if(!getVertexValue().getFRList().isEmpty())
-            outFlag |= MessageFlag.DIR_FR;
-        // TODO else exception
-    }
-    
-    public void setSuccessorToMeDir(VKmerBytesWritable toFind){ // TODO you should never have to FIND...
-        outFlag &= MessageFlag.DIR_CLEAR;
-        if(getVertexValue().getFFList().contains(toFind))
-            outFlag |= MessageFlag.DIR_FF;
-        else if(getVertexValue().getFRList().contains(toFind))
-            outFlag |= MessageFlag.DIR_FR;
+        
+        if(getVertexValue().getEdgeList(dirs[0]).getCountOfPosition() == 1){
+            outFlag |= dirs[0];
+        } else if(getVertexValue().getEdgeList(dirs[1]).getCountOfPosition() == 1){
+            outFlag |= dirs[1];
+        }
     }
     
     /**

@@ -30,7 +30,6 @@ import java.util.List;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 
 public class EdgeListWritable implements WritableComparable<EdgeListWritable>, Serializable, Iterable<EdgeWritable>{

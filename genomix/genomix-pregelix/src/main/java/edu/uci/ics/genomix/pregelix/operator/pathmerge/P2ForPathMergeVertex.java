@@ -254,7 +254,7 @@ public class P2ForPathMergeVertex extends
      * configure MERGE msg For P2
      */
     public void configureP2MergeMsgForPredecessor(VKmerBytesWritable mergeDest){
-        setPredecessorToMeDir();
+        setNeighborToMeDir(predecessorToMe);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFilpWithSuccessor());
@@ -263,7 +263,7 @@ public class P2ForPathMergeVertex extends
     }
     
     public void configureP2MergeMsgForSuccessor(VKmerBytesWritable mergeDest){
-        setSuccessorToMeDir();
+        setNeighborToMeDir(successorToMe);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFlipWithPredecessor());

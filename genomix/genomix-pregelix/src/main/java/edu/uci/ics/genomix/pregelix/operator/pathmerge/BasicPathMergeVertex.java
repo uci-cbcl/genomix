@@ -22,6 +22,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     protected static final boolean toSuccessor = false;
     protected static final boolean mergeWithPrev = true;
     protected static final boolean mergeWithNext = false;
+    protected static final boolean predecessorToMe = true;
+    protected static final boolean successorToMe = false;
     
     public void setStateAsMergeDir(boolean mergeWithPre){
         short state = getVertexValue().getState();
@@ -218,7 +220,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     public void sendMergeMsgToSuccessor(){
-        setSuccessorToMeDir();
+        setNeighborToMeDir(successorToMe);
         if(ifFlipWithPredecessor())
             outgoingMsg.setFlip(true);
         else
@@ -262,10 +264,23 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     /**
+     * send MERGE msg
+     */
+    public void sendMergeMsg(boolean toPredecessor, VKmerBytesWritable mergeDest){
+        setNeighborToMeDir(predecessorToMe);
+        outgoingMsg.setFlag(outFlag);
+        outgoingMsg.setSourceVertexId(getVertexId());
+//        for(byte d: OutgoingListFlag.values)
+//            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+        outgoingMsg.setNode(getVertexValue().getNode());
+        sendMsg(mergeDest, outgoingMsg);
+    }
+    
+    /**
      * configure MERGE msg  TODO: delete edgelist, merge configureMergeMsgForPredecessor and configureMergeMsgForPredecessorByIn...
      */
     public void configureMergeMsgForPredecessor(VKmerBytesWritable mergeDest){
-        setPredecessorToMeDir();
+        setNeighborToMeDir(predecessorToMe);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
 //        for(byte d: OutgoingListFlag.values)
@@ -275,7 +290,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     public void configureMergeMsgForSuccessor(VKmerBytesWritable mergeDest){
-        setSuccessorToMeDir();
+        setNeighborToMeDir(successorToMe);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
 //        for(byte d: IncomingListFlag.values)
