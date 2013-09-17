@@ -195,7 +195,7 @@ public class P4ForPathMergeVertex extends
      * step4: processMerges 
      */
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator){
-      //merge tmpKmer
+        //merge tmpKmer
         while (msgIterator.hasNext()) {
             boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
             incomingMsg = msgIterator.next();
@@ -204,9 +204,9 @@ public class P4ForPathMergeVertex extends
             // set statistics counter: Num_MergedNodes
             updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
             /** if it's a tandem repeat, which means detecting cycle **/
-            if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is correct (try several times) 
+            if(isTandemRepeat(getVertexValue())){
                 // set statistics counter: Num_Cycles
-                updateStatisticsCounter(StatisticsCounter.Num_Cycles); // TODO cycle instead of tandem repeat
+                updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
                 voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
             }/** head meets head, stop **/ 
             else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead(selfFlag)){
