@@ -26,6 +26,8 @@ public class P4ForPathMergeVertex extends
     private static final boolean isP4 = true;
     private static final boolean toPredecessor = true;
     private static final boolean toSuccessor = false;
+    private static final boolean mergeWithPrev = true;
+    private static final boolean mergeWithNext = false;
     
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
@@ -137,19 +139,21 @@ public class P4ForPathMergeVertex extends
             
             // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
             // We prevent merging towards non-path nodes
-            hasNext = setNextInfo(getVertexValue());  // TODO make this false if the node is restricted by its neighbors or by structure 
+            hasNext = setNextInfo(getVertexValue());  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
             hasPrev = setPrevInfo(getVertexValue());
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
                         // compress this head to the forward tail
-                        setStateAsMergeWithNext();
+                        setStateAsMergeDir(mergeWithNext);
+//                        setStateAsMergeWithNext();
 //                        configureUpdateMsg(isNextOrPrevious?, getVertexValue()); // TODO change to sendmsg or sendUpdateFrom...
                         sendUpdateMsg(isP4, toPredecessor);
 //                        sendUpdateMsgToPredecessor(true); //TODO all of these can be simplified
                     } else if (hasPrev && !prevHead) {
                         // compress this head to the reverse tail
-                        setStateAsMergeWithPrev();
+                        setStateAsMergeDir(mergeWithPrev);
+//                        setStateAsMergeWithPrev();
                         sendUpdateMsg(isP4, toSuccessor);
 //                        sendUpdateMsgToSuccessor(true);
                     } 
@@ -160,7 +164,8 @@ public class P4ForPathMergeVertex extends
                          if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                             // tails on both sides, and I'm the "local minimum"
                             // compress me towards the tail in forward dir
-                            setStateAsMergeWithNext();
+                            setStateAsMergeDir(mergeWithNext);
+//                            setStateAsMergeWithNext();
                             sendUpdateMsg(isP4, toPredecessor);
 //                            sendUpdateMsgToPredecessor(true);
                         }
@@ -168,7 +173,8 @@ public class P4ForPathMergeVertex extends
                         // no previous node
                         if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                             // merge towards tail in forward dir
-                            setStateAsMergeWithNext();
+//                            setStateAsMergeWithNext();
+                            setStateAsMergeDir(mergeWithNext);
                             sendUpdateMsg(isP4, toPredecessor);
 //                            sendUpdateMsgToPredecessor(true);
                         }
@@ -176,13 +182,14 @@ public class P4ForPathMergeVertex extends
                         // no next node
                         if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                             // merge towards tail in reverse dir
-                            setStateAsMergeWithPrev();
+//                            setStateAsMergeWithPrev();
+                            setStateAsMergeDir(mergeWithPrev);
                             sendUpdateMsg(isP4, toSuccessor);
 //                            sendUpdateMsgToSuccessor(true);
                         }
                     }
                 }
-            }  // TODO else voteToHalt (when you combine steps 2 and 3)
+            }  // TODO else voteToHalt (when I combine steps 2 and 3)
             this.activate();
         }
         else if (getSuperstep() % 4 == 0){  

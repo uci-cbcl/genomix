@@ -15,6 +15,14 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
 	BasicGraphCleanVertex<V, M>{
 	
+    public void setStateAsMergeDir(boolean mergeWithPre){
+        short state = getVertexValue().getState();
+        state &= State.CAN_MERGE_CLEAR;
+        state |= mergeWithPre ? State.CAN_MERGEWITHPREV : State.CAN_MERGEWITHNEXT;
+        getVertexValue().setState(state);
+        activate();
+    }
+    
     public void setStateAsMergeWithPrev(){
         short state = getVertexValue().getState();
         state &= State.CAN_MERGE_CLEAR;
