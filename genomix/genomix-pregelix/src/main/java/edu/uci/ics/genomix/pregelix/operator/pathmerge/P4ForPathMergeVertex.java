@@ -89,11 +89,13 @@ public class P4ForPathMergeVertex extends
     protected boolean setPrevInfo(VertexValueWritable value) {
         if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT)
             return false;
-        for(byte dir : IncomingListFlag.values){
-            if(value.getEdgeList(dir).getCountOfPosition() > 0){
-                prevKmer = value.getEdgeList(dir).get(0).getKey(); 
-                prevHead = isNodeRandomHead(prevKmer);
-                return true;
+        if (value.inDegree() == 1) {
+            for(byte dir : IncomingListFlag.values){
+                if(value.getEdgeList(dir).getCountOfPosition() > 0){
+                    prevKmer = value.getEdgeList(dir).get(0).getKey(); 
+                    prevHead = isNodeRandomHead(prevKmer);
+                    return true;
+                }
             }
         }
         return false;
@@ -106,11 +108,13 @@ public class P4ForPathMergeVertex extends
         if(getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV)
             return false;
     	// TODO make sure the degree is correct
-        for(byte dir : OutgoingListFlag.values){
-            if(value.getEdgeList(dir).getCountOfPosition() > 0){
-                nextKmer = value.getEdgeList(dir).get(0).getKey(); 
-                nextHead = isNodeRandomHead(nextKmer);
-                return true;
+        if (value.outDegree() == 1) {
+            for(byte dir : OutgoingListFlag.values){
+                if(value.getEdgeList(dir).getCountOfPosition() > 0){
+                    nextKmer = value.getEdgeList(dir).get(0).getKey(); 
+                    nextHead = isNodeRandomHead(nextKmer);
+                    return true;
+                }
             }
         }
         return false;
@@ -136,6 +140,10 @@ public class P4ForPathMergeVertex extends
             // We prevent merging towards non-path nodes
             hasNext = setNextInfo(getVertexValue());  // TODO make this false if the node is restricted by its neighbors or by structure 
             hasPrev = setPrevInfo(getVertexValue());
+            if (isTandemRepeat(getVertexValue())) {
+                hasNext = false;
+                hasPrev = false;
+            }
             if (hasNext || hasPrev) {
                 if (curHead) {
                     if (hasNext && !nextHead) {
