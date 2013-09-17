@@ -21,13 +21,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     protected static final boolean isP2 = false;
     protected static final boolean isP4 = true;
     
-    protected static final boolean toPredecessor = true;
-    protected static final boolean toSuccessor = false;
-    protected static final boolean mergeWithPrev = true;
-    protected static final boolean mergeWithNext = false;
-    protected static final boolean predecessorToMe = true;
-    protected static final boolean successorToMe = false;
-    
     public byte getHeadMergeDir(){
         return (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
     }
@@ -35,7 +28,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public byte getMsgMergeDir(){
         return (byte) (incomingMsg.getFlag() & MessageFlag.HEAD_CAN_MERGE_MASK);
     }
-    
     /**
      * start sending message
      */
@@ -57,7 +49,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // send to neighbors
             else if (VertexUtil.isVertexWithManyIncoming(getVertexValue())){
                 outFlag = 0;
-                sendSettledMsgToAllPrevNodes(getVertexValue());
+                sendSettledMsgs(toPredecessor, getVertexValue());
             }
             
             /** check outgoing **/
@@ -71,7 +63,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // send to neighbors
             else if (VertexUtil.isVertexWithManyOutgoing(getVertexValue())){
                 outFlag = 0;
-                sendSettledMsgToAllNextNodes(getVertexValue());
+                sendSettledMsgs(toSuccessor, getVertexValue());
             }
             
             if(VertexUtil.isUnMergeVertex(getVertexValue()))

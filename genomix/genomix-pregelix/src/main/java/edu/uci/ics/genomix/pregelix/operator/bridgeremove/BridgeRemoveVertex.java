@@ -83,10 +83,10 @@ public class BridgeRemoveVertex extends
         if (getSuperstep() == 1) {
             //filter bridge vertex
             if(VertexUtil.isUpBridgeVertex(getVertexValue())){
-                sendSettledMsgToAllNextNodes(getVertexValue());
+                sendSettledMsgs(toPredecessor, getVertexValue());
             }
             else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
-                sendSettledMsgToAllPrevNodes(getVertexValue());
+                sendSettledMsgs(toSuccessor, getVertexValue());
             }
         }
         else if (getSuperstep() == 2){
