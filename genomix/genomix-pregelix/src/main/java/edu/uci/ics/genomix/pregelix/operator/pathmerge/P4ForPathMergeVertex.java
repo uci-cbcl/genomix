@@ -210,10 +210,10 @@ public class P4ForPathMergeVertex extends
         } else if (getSuperstep() % 4 == 2){
             //merge tmpKmer
             while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
                 boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
+                incomingMsg = msgIterator.next();
                 /** process merge **/
-                processMerge(); // TODO use incomingMsg as a parameter
+                processMerge(incomingMsg); // TODO use incomingMsg as a parameter
                 // set statistics counter: Num_MergedNodes
                 updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
                 /** if it's a tandem repeat, which means detecting cycle **/

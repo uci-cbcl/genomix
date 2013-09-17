@@ -81,13 +81,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         getVertexValue().getEdgeList(neighborToMeDir).unionAdd(edge);
     }
     
-    /**
-     * merge and updateAdjList merge with one neighbor
-     */
-    public void processMerge(){ // TODO remove me
-        processMerge(incomingMsg);
-    }
-    
     public byte flipHeadMergeDir(byte d, boolean isFlip){
         if(isFlip){
             switch(d){
