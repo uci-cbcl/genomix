@@ -220,22 +220,19 @@ public class P4ForPathMergeVertex extends
                 if(isTandemRepeat(getVertexValue())){  // TODO check 3 node cycle to make sure the update is cocrect (try several times) 
                     for(byte d : DirectionFlag.values)
                         getVertexValue().getEdgeList(d).reset(); // TODO don't remove tandem repeats but DO stop merging  // we shouldn't need to update neighbors 
-                    // set statistics counter: Num_TandemRepeats
-                    updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats); // TODO cycle instead of tandem repeat
-                    getVertexValue().setCounters(counters);
+                    // set statistics counter: Num_Cycles
+                    updateStatisticsCounter(StatisticsCounter.Num_Cycles); // TODO cycle instead of tandem repeat
                     voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
                 }/** head meets head, stop **/ 
                 else if(!VertexUtil.isCanMergeVertex(getVertexValue()) || isHeadMeetsHead(selfFlag)){
                     getVertexValue().setState(State.HEAD_CANNOT_MERGE);
                     // set statistics counter: Num_MergedPaths
                     updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
-                    getVertexValue().setCounters(counters);
                     voteToHalt();
-                }
-                else{
-                    getVertexValue().setCounters(counters); // TODO move all the setCounter calls outside the if/else blocks
+                }else{
                     activate();
                 }
+                getVertexValue().setCounters(counters); // TODO move all the setCounter calls outside the if/else blocks
             }
         }
     }

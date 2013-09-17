@@ -10,6 +10,7 @@ public class StatisticsCounter {
     public static final byte Num_RemovedBridges = 0b0110 << 0;
     public static final byte Num_SplitRepeats = 0b0111 << 0;
     public static final byte Num_Scaffodings = 0b1000 << 0;
+    public static final byte Num_Cycles = 0b1001 << 0;
     
     public final static class COUNTER_CONTENT{
         public static String getContent(byte code){
@@ -41,6 +42,9 @@ public class StatisticsCounter {
                     break;
                 case Num_Scaffodings:
                     r = "num of scaffoldings";
+                    break;
+                case Num_Cycles:
+                    r = "num of cycles";
                     break;
             }
             return r;
