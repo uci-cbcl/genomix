@@ -186,7 +186,7 @@ public class P1ForPathMergeVertex extends
     public void processUpdateOnceReceiveMsg(Iterator<PathMergeMessageWritable> msgIterator){
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
-            processUpdate();
+            processUpdate(incomingMsg);
             if(isHaltNode())
                 voteToHalt();
             else

@@ -32,7 +32,7 @@ public class GraphBuildingTestSuite extends TestSuite{
 //        + "P2_8"
 //        + "SmallCycle"
 //        + "sameWithEdge"
-        + "FR_RF_Simple"
+        + "ThreeNodesCycle"
     };
 //          + "SimpleRectangle", PreFix + File.separator
 //          + "MediumRectangle", PreFix + File.separator

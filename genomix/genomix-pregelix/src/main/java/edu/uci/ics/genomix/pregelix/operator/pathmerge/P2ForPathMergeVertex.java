@@ -563,7 +563,7 @@ public class P2ForPathMergeVertex extends
                         voteToHalt();
                     } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isValidUpateNode())){// only old head update edges
                         if(!isHaltNode())
-                            processUpdate();
+                            processUpdate(incomingMsg);
                         voteToHalt();
                     } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
                         sendFinalMergeMsg();
