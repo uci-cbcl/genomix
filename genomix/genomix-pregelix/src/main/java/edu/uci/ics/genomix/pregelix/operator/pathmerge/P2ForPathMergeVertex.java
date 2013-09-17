@@ -217,10 +217,10 @@ public class P2ForPathMergeVertex extends
         outgoingMsg.setUpdateMsg(false);
         switch(getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK){
             case MessageFlag.HEAD_CAN_MERGEWITHPREV:
-                sendSettledMsgToAllPrevNodes(getVertexValue());
+                sendSettledMsgs(toPredecessor, getVertexValue());
                 break;
             case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
-                sendSettledMsgToAllNextNodes(getVertexValue());
+                sendSettledMsgs(toSuccessor, getVertexValue());
                 break;
         }
     }
