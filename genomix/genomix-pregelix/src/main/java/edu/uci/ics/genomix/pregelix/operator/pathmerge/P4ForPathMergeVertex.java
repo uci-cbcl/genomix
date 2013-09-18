@@ -10,7 +10,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
@@ -200,7 +199,7 @@ public class P4ForPathMergeVertex extends
             if(isTandemRepeat(getVertexValue())){
                 // set statistics counter: Num_Cycles
                 updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
-                voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
+                voteToHalt();
             }/** head meets head, stop **/ 
             else if(isInactiveNode() || isHeadMeetsHead(selfFlag)){
                 getVertexValue().setState(State.HEAD_CANNOT_MERGE);

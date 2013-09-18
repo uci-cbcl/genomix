@@ -18,7 +18,7 @@ public class VertexValueWritable
     private static final long serialVersionUID = 1L;
     
     public static class HeadMergeDir{
-        public static final byte NON_HEAD = 0b00 << 2;
+        public static final byte PATH_NON_HEAD = 0b00 << 2;
         public static final byte HEAD_CANNOT_MERGE = 0b01 << 2;
         public static final byte HEAD_CAN_MERGEWITHPREV = 0b10 << 2; //use for initiating head
         public static final byte HEAD_CAN_MERGEWITHNEXT = 0b11 << 2;
@@ -88,11 +88,6 @@ public class VertexValueWritable
         scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
     }
 
-//    TODO: figure out why can't use
-//    public VertexValueWritable get(){
-//        return this;
-//    }
-    
     public void setAsCopy(VertexValueWritable other){
         setNode(other.getNode());
         state = other.getState();
@@ -248,16 +243,6 @@ public class VertexValueWritable
         this.getEdgeList(dir).remove(nodeToDelete);
     }
     
-    
-//    /**
-//     * Process any changes to value.  This is for edge updates.  nodeToAdd should be only edge
-//     */
-//    public void processUpdates(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, NodeWritable other){
-//    	// TODO remove this function (use updateEdges)
-//        byte replaceDir = mirrorDirection(deleteDir);
-//        this.getNode().updateEdges(deleteDir, toDelete, updateDir, replaceDir, other, true);
-//    }
-    
     public void processFinalUpdates(byte deleteDir, byte updateDir, NodeWritable other){
         byte replaceDir = mirrorDirection(deleteDir);
         this.getNode().updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
@@ -268,7 +253,6 @@ public class VertexValueWritable
      */
     public void processMerges(byte mergeDir, NodeWritable node, int kmerSize){
         KmerBytesWritable.setGlobalKmerLength(kmerSize); // TODO Do this once at the init of your function, then you don't need it as a parameter here
-        mergeDir = (byte)(mergeDir & MessageFlag.DIR_MASK); // TODO move this dir outside and remove this function
         super.getNode().mergeWithNode(mergeDir, node);
     }
     

@@ -104,7 +104,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             while (msgIterator.hasNext()) {
                 incomingMsg = msgIterator.next();
                 switch(getHeadMergeDir()){
-                    case State.NON_HEAD: // TODO Change name to Path
+                    case State.PATH_NON_HEAD:
                         setHeadMergeDir();
                         activate();
                         break;
