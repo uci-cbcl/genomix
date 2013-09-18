@@ -10,6 +10,8 @@ public class MessageFlag extends VertexStateFlag {
     public static final byte DIR_RR = 0b11 << 0;
     public static final byte DIR_MASK = 0b11 << 0;
     public static final byte DIR_CLEAR = 0b1111100 << 0;
+    public static final short REPLACE_DIR_MASK = 0b11 << 0;
+    public static final short REPLACE_DIR_CLEAR = 0b11111111111100 << 0;
     
     public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
     
@@ -21,6 +23,20 @@ public class MessageFlag extends VertexStateFlag {
     public static final short UPDATE_MASK = 0b11 << 7;
     public static final short DIR_FROM_DEADVERTEX = 0b1 << 7;
     public static final short DEAD_MASK = 0b1 << 7;
+    
+    public static final short MERGE_DIR_FF = 0b00 << 9;
+    public static final short MERGE_DIR_FR = 0b01 << 9;
+    public static final short MERGE_DIR_RF = 0b10 << 9;
+    public static final short MERGE_DIR_RR = 0b11 << 9;
+    public static final short MERGE_DIR_MASK = 0b11 << 9;
+    public static final short MERGE_DIR_CLEAR = 0b11100111111111;
+    
+    public static final short DELETE_DIR_FF = 0b00 << 11;
+    public static final short DELETE_DIR_FR = 0b01 << 11;
+    public static final short DELETE_DIR_RF = 0b10 << 11;
+    public static final short DELETE_DIR_RR = 0b11 << 11;
+    public static final short DELETE_DIR_MASK = 0b11 << 11;
+    public static final short DELETE_DIR_CLEAR = 0b10011111111111;
     
     public static String getFlagAsString(byte code) {
         return "ERROR_BAD_MESSAGE";

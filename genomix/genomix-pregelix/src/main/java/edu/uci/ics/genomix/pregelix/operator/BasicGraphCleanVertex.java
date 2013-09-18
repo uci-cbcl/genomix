@@ -375,8 +375,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * check if A need to be filpped with neighbor
      */
-    public boolean ifFlipWithNeighbor(boolean withPrecessor){
-        if(withPrecessor){
+    public boolean ifFlipWithNeighbor(DIR direction){
+        if(direction == DIR.PREVIOUS){
             if(getVertexValue().getRRList().isEmpty())
                 return true;
             else
