@@ -54,6 +54,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     protected M incomingMsg = null; 
     protected M outgoingMsg = null; 
+    protected M aggregatingMsg = null;
     protected VKmerBytesWritable destVertexId = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable(); 
     protected Iterator<VKmerBytesWritable> kmerIterator;
@@ -287,7 +288,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * head send message to all neighbor nodes
+     * send message to all neighbor nodes
      */
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         //TODO THE less context you send, the better  (send simple messages)
@@ -308,6 +309,40 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void sendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
         sendSettledMsgs(DIR.PREVIOUS, value);
         sendSettledMsgs(DIR.NEXT, value);
+    }
+    
+    /**
+     * head send message to all neighbor nodes
+     */
+    public void headSendSettledMsgs(DIR direction, VertexValueWritable value){
+        //TODO THE less context you send, the better  (send simple messages)
+        byte dirs[] = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
+        for(byte dir : dirs){
+            kmerIterator = value.getEdgeList(dir).getKeys();
+            while(kmerIterator.hasNext()){
+                outFlag &= MessageFlag.HEAD_CAN_MERGE_CLEAR;
+                byte meToNeighborDir = mirrorDirection(dir);
+                switch(meToNeighborDir){
+                    case MessageFlag.DIR_FF:
+                    case MessageFlag.DIR_FR:
+                        outFlag |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
+                        break;
+                    case MessageFlag.DIR_RF:
+                    case MessageFlag.DIR_RR:
+                        outFlag |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
+                        break;  
+                }
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                destVertexId.setAsCopy(kmerIterator.next());
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
+    
+    public void headSendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
+        headSendSettledMsgs(DIR.PREVIOUS, value);
+        headSendSettledMsgs(DIR.NEXT, value);
     }
     
     /**
