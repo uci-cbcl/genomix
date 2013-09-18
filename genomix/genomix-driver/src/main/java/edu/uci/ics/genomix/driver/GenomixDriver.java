@@ -35,6 +35,8 @@ import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
+import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
+import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.P2InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
@@ -123,6 +125,9 @@ public class GenomixDriver {
                 job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
             }
         }
+        if (job.getClass().equals(SymmetryCheckerVertex.class)) {
+            job.setVertexOutputFormatClass(CheckerOutputFormat.class);
+        }
         pregelixJobs.add(job);
         followingBuild = false;
     }
@@ -207,6 +212,10 @@ public class GenomixDriver {
                     break;
                 case DUMP_FASTA:
                     DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
+                    break;
+                case CHECK_SYMMETRY:
+                    setOutput(conf, Patterns.CHECK_SYMMETRY);
+                    addJob(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
                     break;
             }
         }
