@@ -101,6 +101,64 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
     }
     
+    public void setStateAsMergeDir(DIR direction){
+        short state = getVertexValue().getState();
+        state &= State.CAN_MERGE_CLEAR;
+        state |= direction == DIR.PREVIOUS ? State.CAN_MERGEWITHPREV : State.CAN_MERGEWITHNEXT;
+        getVertexValue().setState(state);
+        activate();
+    }
+
+    /**
+     * send UPDATE msg   boolean: true == P4, false == P2
+     */
+    public void sendUpdateMsg(boolean isP4, DIR direction){ 
+     // TODO pass in the vertexId rather than isP4 (removes this block）
+//        if(isP4)
+//            outgoingMsg.setFlip(ifFlipWithNeighbor(revertDirection)); //ifFilpWithSuccessor()
+//        else 
+//            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
+        
+        DIR revertDirection = revert(direction);
+        byte[] mergeDirs = direction == DIR.PREVIOUS ? OutgoingListFlag.values : IncomingListFlag.values;
+        byte[] updateDirs = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
+        
+        //set deleteKmer
+        outgoingMsg.setSourceVertexId(getVertexId());
+        
+        //set replaceDir
+        setReplaceDir(mergeDirs);
+                
+        for(byte dir : updateDirs){
+            kmerIterator = getVertexValue().getEdgeList(dir).getKeys();
+            while(kmerIterator.hasNext()){
+                //set deleteDir
+                byte deleteDir = setDeleteDir(dir);
+                //set mergeDir, so it won't need flip
+                byte mergeDir = flipDirection(deleteDir, ifFlipWithNeighbor(revertDirection));
+                outFlag &= MessageFlag.MERGE_DIR_CLEAR;
+                outFlag |= (mergeDir << 9);
+                outgoingMsg.setFlag(outFlag);
+                destVertexId.setAsCopy(kmerIterator.next()); //TODO does destVertexId need deep copy?
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
+    
+    /**
+     * updateAdjList
+     */
+    public void processUpdate(M msg){
+    	// A -> B -> C with B merging with C
+        inFlag = msg.getFlag();
+        byte deleteDir = (byte) ((inFlag & MessageFlag.DELETE_DIR_MASK) >> 11); // B -> A dir
+        byte mergeDir = (byte) ((inFlag & MessageFlag.MERGE_DIR_MASK) >> 9); // C -> A dir
+        byte replaceDir = (byte) ((inFlag & MessageFlag.REPLACE_DIR_MASK)); // C -> B dir
+        
+        getVertexValue().getNode().updateEdges(deleteDir, msg.getSourceVertexId(), 
+                mergeDir, replaceDir, msg.getNode(), true);
+    }
+    
     public void aggregateMsg(Iterator<M> msgIterator){
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
@@ -140,35 +198,30 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
     }
     
-    public void setStateAsMergeDir(DIR direction){
-        short state = getVertexValue().getState();
-        state &= State.CAN_MERGE_CLEAR;
-        state |= direction == DIR.PREVIOUS ? State.CAN_MERGEWITHPREV : State.CAN_MERGEWITHNEXT;
-        getVertexValue().setState(state);
-        activate();
-    }
-        
-    /**
-     * updateAdjList
-     */
-    public void processUpdate(M msg){
-    	// A -> B -> C with B merging with C
-        inFlag = msg.getFlag();
-        byte deleteDir = (byte) ((inFlag & MessageFlag.DELETE_DIR_MASK) >> 11); // B -> A dir
-        byte mergeDir = (byte) ((inFlag & MessageFlag.MERGE_DIR_MASK) >> 9); // C -> A dir
-        byte replaceDir = (byte) ((inFlag & MessageFlag.REPLACE_DIR_MASK)); // C -> B dir
-        
-//        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);  // A -> B dir
-//        byte neighborToMeDir = mirrorDirection(meToNeighborDir);  // B -> A dir
-//        
-//        // TODO if you want, this logic could be figured out when sending the update from B
-//        byte mergeToMeDir = (byte) ((inFlag & MessageFlag.MERGE_DIR_MASK) >> 9);//flipDirection(neighborToMeDir, msg.isFlip());  // C -> A dir after the merge
-//        byte mergeToNeighborDir = mirrorDirection(neighborToMeDir); // C -> B dir
-        getVertexValue().getNode().updateEdges(deleteDir, msg.getSourceVertexId(), 
-                mergeDir, replaceDir, msg.getNode(), true);
+    public void setReplaceDir(byte[] mergeDirs){
+        byte replaceDir = 0;
+        for(byte dir : mergeDirs){
+            int num = getVertexValue().getEdgeList(dir).getCountOfPosition();
+            if(num > 0){
+                if(num != 1)
+                    throw new IllegalStateException("Only can sendUpdateMsg to degree = 1 direction!");
+                outgoingMsg.getNode().setEdgeList(dir, getVertexValue().getEdgeList(dir));
+                replaceDir = dir;
+                break;
+            }
+        }
+        outFlag &= MessageFlag.REPLACE_DIR_CLEAR;
+        outFlag |= replaceDir;
     }
     
+    public byte setDeleteDir(byte dir){
+        byte deleteDir = mirrorDirection(dir);
+        outFlag &= MessageFlag.DELETE_DIR_CLEAR;
+        outFlag |= (deleteDir << 11);
+        return deleteDir;
+    }
     
+//-------------------------------
     /**
      * final updateAdjList
      */
@@ -248,56 +301,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         getVertexValue().processMerges(neighborToMeDir, msg.getNode(), kmerSize);
     }
     
-    /**
-     * send UPDATE msg   boolean: true == P4, false == P2
-     */
-    public void sendUpdateMsg(boolean isP4, DIR direction){ 
-     // TODO pass in the vertexId rather than isP4 (removes this block）
-//        if(isP4)
-//            outgoingMsg.setFlip(ifFlipWithNeighbor(revertDirection)); //ifFilpWithSuccessor()
-//        else 
-//            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
-        
-        DIR revertDirection = revert(direction);
-        byte[] mergeDirs = direction == DIR.PREVIOUS ? OutgoingListFlag.values : IncomingListFlag.values;
-        byte[] updateDirs = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
-        
-        //set deleteKmer
-        outgoingMsg.setSourceVertexId(getVertexId());
-        
-        //set replaceDir
-        byte replaceDir = 0;
-        for(byte dir : mergeDirs){
-            int num = getVertexValue().getEdgeList(dir).getCountOfPosition();
-            if(num > 0){
-                if(num != 1)
-                    throw new IllegalStateException("Only can sendUpdateMsg to degree = 1 direction!");
-                outgoingMsg.getNode().setEdgeList(dir, getVertexValue().getEdgeList(dir));
-                replaceDir = dir;
-                break;
-            }
-        }
-        outFlag &= MessageFlag.REPLACE_DIR_CLEAR;
-        outFlag |= replaceDir;
-                
-        for(byte dir : updateDirs){
-            kmerIterator = getVertexValue().getEdgeList(dir).getKeys();
-            while(kmerIterator.hasNext()){
-                //set deleteDir
-                byte deleteDir = mirrorDirection(dir);
-                outFlag &= MessageFlag.DELETE_DIR_CLEAR;
-                outFlag |= (deleteDir << 11);
-                //set mergeDir, so it won't need flip
-                byte mergeDir = flipDirection(deleteDir, ifFlipWithNeighbor(revertDirection));
-                outFlag &= MessageFlag.MERGE_DIR_CLEAR;
-                outFlag |= (mergeDir << 9);
-                outgoingMsg.setFlag(outFlag);
-                destVertexId.setAsCopy(kmerIterator.next()); //TODO does destVertexId need deep copy?
-                sendMsg(destVertexId, outgoingMsg);
-            }
-        }
-    }
-
     /**
      * override sendUpdateMsg and use incomingMsg as parameter automatically
      */
