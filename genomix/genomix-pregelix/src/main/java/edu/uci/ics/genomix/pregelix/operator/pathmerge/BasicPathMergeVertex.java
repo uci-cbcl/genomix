@@ -163,7 +163,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * send MERGE msg
      */
     public void sendMergeMsg(boolean isP4){
-        outFlag |= getHeadMergeDir();
+        byte restrictedDirs = (byte)(getVertexValue().getState() & DIR.MASK);
+        outFlag |= restrictedDirs;
         
         DIR direction = null;
         byte mergeDir = (byte)(getVertexValue().getState() & State.CAN_MERGE_MASK);
@@ -270,6 +271,12 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // degree > 1 can't merge in that direction
             dirsToRestrict = EnumSet.noneOf(DIR.class);
             for (DIR dir : DIR.values()) {
+                if (vertex.getDegree(dir) == 0 || vertex.getDegree(dir) > 1){
+                    short restrictedDirs = getVertexValue().getState();
+                    restrictedDirs |= dir.get();
+                    getVertexValue().setState(restrictedDirs);
+                    activate();
+                }
                 if (vertex.getDegree(dir) > 1)
                     dirsToRestrict.add(dir);
             }
@@ -280,13 +287,33 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             for (byte d : NodeWritable.edgeTypesInDir(dir)) {
                 for (VKmerBytesWritable destId : vertex.getEdgeList(d).getKeys()) {
                     outgoingMsg.reset();
-                    outgoingMsg.setFlag(dir.mirror().get());
+                    outgoingMsg.setFlag(DIR.mirror(d).get());
                     sendMsg(destId, outgoingMsg);
                 }
             }
         }
     }
     
+    /**
+     * initiate head, rear and path node
+     */
+    public void recieveRestrictions(Iterator<M> msgIterator) {
+        short restrictedDirs = 0;
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            restrictedDirs |= incomingMsg.getFlag();
+        }
+        // special case: tandem repeats cannot merge at all
+        if (isTandemRepeat(getVertexValue())) {
+            restrictedDirs |= DIR.PREVIOUS.get();
+            restrictedDirs |= DIR.NEXT.get();
+        }
+        
+        short selfRestrictedDirs = (short) (getVertexValue().getState() & DIR.MASK);
+        selfRestrictedDirs |= restrictedDirs;
+        getVertexValue().setState(selfRestrictedDirs);
+        activate();
+    }
 //------------------------------------
     /**
      * final updateAdjList
@@ -316,14 +343,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     
     public byte flipHeadMergeDir(byte d, boolean isFlip){
         if(isFlip){
-            switch(d){
-                case State.HEAD_CAN_MERGEWITHPREV:
-                    return State.HEAD_CAN_MERGEWITHNEXT;
-                case State.HEAD_CAN_MERGEWITHNEXT:
-                    return State.HEAD_CAN_MERGEWITHPREV;
-                    default:
-                        return 0;
-            }
+            return DIR.mirrorFromByte((byte)(d & DIR.MASK));  
         } else
             return d;
     }
@@ -356,13 +376,16 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
 
-        if(isNonHeadReceivedFromHead()){ // TODO? why sepcial-case the path vs heads?  just aggregate your state flags
-            short state = getVertexValue().getState();
-            state &= State.HEAD_CAN_MERGE_CLEAR;
-            byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_CAN_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
-            state |= headMergeDir;
-            getVertexValue().setState(state);
-        }
+//        if(isNonHeadReceivedFromHead()){ // TODO? why sepcial-case the path vs heads?  just aggregate your state flags
+//            short state = getVertexValue().getState();
+//            state &= State.HEAD_CAN_MERGE_CLEAR;
+//            byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_CAN_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
+//            state |= headMergeDir;
+//            getVertexValue().setState(state);
+//        }
+        short state = getVertexValue().getState();  
+        state |= flipHeadMergeDir((byte)(inFlag & DIR.MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
+        getVertexValue().setState(state);
         
         getVertexValue().processMerges(neighborToMeDir, msg.getNode(), kmerSize);
     }

@@ -57,6 +57,26 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             return mirror(this);
         }
         
+        public static DIR mirror(byte dir){
+            switch(dir){
+                case DirectionFlag.DIR_FF:
+                case DirectionFlag.DIR_RF:
+                    return PREVIOUS;
+                case DirectionFlag.DIR_FR:
+                case DirectionFlag.DIR_RR:
+                    return NEXT;
+            }
+            return null;
+        }
+        
+        public static byte mirrorFromByte(short b){
+            b &= MASK;
+            if(b != 0)
+                return mirror(fromByte(b)).get();
+            else
+                return 0;
+        }
+        
         public static DIR fromByte(short b) {
             b &= MASK;
             if (b == PREVIOUS.val)

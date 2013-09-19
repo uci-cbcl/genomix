@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -11,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -35,6 +37,8 @@ public class P4ForPathMergeVertex extends
     private boolean curHead;
     private boolean nextHead;
     private boolean prevHead;
+    private byte nextDir;
+    private byte prevDir;
     
     /**
      * initiate kmerSize, maxIteration
@@ -117,6 +121,33 @@ public class P4ForPathMergeVertex extends
     }
     
     /**
+     * checks if there is a valid, mergeable neighbor in the given direction.  sets hasNext/Prev, next/prevDir, Kmer and Head
+     */
+    protected void checkNeighbors() {
+        VertexValueWritable vertex = getVertexValue();
+        EnumSet<DIR> restrictedDirs = DIR.enumSetFromByte(vertex.getState());
+        // NEXT restricted by neighbor or by my edges? 
+        if (restrictedDirs.contains(DIR.NEXT) || vertex.outDegree() != 1) {
+            hasNext = false;
+        } else {
+            hasNext = true;
+            nextDir = vertex.getEdgeList(DirectionFlag.DIR_FF).getCountOfPosition() > 0 ? DirectionFlag.DIR_FF : DirectionFlag.DIR_FR; 
+            nextKmer = vertex.getEdgeList(nextDir).get(0).getKey();
+            nextHead = isNodeRandomHead(nextKmer);
+        }
+
+        // PREVIOUS restricted by neighbor or by my edges? 
+        if (restrictedDirs.contains(DIR.PREVIOUS) || vertex.inDegree() != 1) {
+            hasPrev = false;
+        } else {
+            hasPrev = true;
+            prevDir = vertex.getEdgeList(DirectionFlag.DIR_RF).getCountOfPosition() > 0 ? DirectionFlag.DIR_RF : DirectionFlag.DIR_RR; 
+            prevKmer = vertex.getEdgeList(prevDir).get(0).getKey();
+            prevHead = isNodeRandomHead(prevKmer);
+        }
+    }
+    
+    /**
      * step1 : sendUpdates
      */
     public void sendUpdates(){
@@ -129,8 +160,7 @@ public class P4ForPathMergeVertex extends
         
         // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
         // We prevent merging towards non-path nodes
-        hasNext = setNeighbor(getVertexValue(), DIR.NEXT);  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
-        hasPrev = setNeighbor(getVertexValue(), DIR.PREVIOUS);
+        checkNeighbors();
         DIR mergeDir = null;
         if (hasNext || hasPrev) {
             if (curHead) {
@@ -181,10 +211,15 @@ public class P4ForPathMergeVertex extends
             incomingMsg = msgIterator.next();
             processUpdate(incomingMsg);
         }
-        if(isInactiveNode() || isHeadUnableToMerge()) // check structure and neighbor restriction 
+        checkNeighbors();
+        if (!hasNext && !hasPrev)
             voteToHalt();
         else
             activate();
+//        if(isInactiveNode() || isHeadUnableToMerge()) // check structure and neighbor restriction 
+//            voteToHalt();
+//        else
+//            activate();
     }
     
     /**
@@ -193,7 +228,7 @@ public class P4ForPathMergeVertex extends
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator){
         //merge tmpKmer
         while (msgIterator.hasNext()) {
-            boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
+//            boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
             incomingMsg = msgIterator.next();
             /** process merge **/
             processMerge(incomingMsg);
@@ -201,18 +236,28 @@ public class P4ForPathMergeVertex extends
             updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
             /** if it's a tandem repeat, which means detecting cycle **/
             if(isTandemRepeat(getVertexValue())){
+                short state = getVertexValue().getState(); 
+                state |= (short) (DIR.NEXT.get() | DIR.PREVIOUS.get());
+                getVertexValue().setState(state);
                 // set statistics counter: Num_Cycles
                 updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
                 voteToHalt();
-            }/** head meets head, stop **/ 
-            else if(isInactiveNode() || isHeadMeetsHead(selfFlag)){
-                getVertexValue().setState(State.HEAD_CANNOT_MERGE);
-                // set statistics counter: Num_MergedPaths
-                updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
+            }
+            /** head meets head, stop **/ 
+            checkNeighbors();
+            if (!hasNext && !hasPrev){
                 voteToHalt();
             }else{
                 activate();
             }
+//            else if(isInactiveNode() || isHeadMeetsHead(selfFlag)){
+//                getVertexValue().setState(State.HEAD_CANNOT_MERGE);
+//                // set statistics counter: Num_MergedPaths
+//                updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
+//                voteToHalt();
+//            }else{
+//                activate();
+//            }
             getVertexValue().setCounters(counters);
         }
     }
@@ -221,9 +266,9 @@ public class P4ForPathMergeVertex extends
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1)
-            startSendMsg();
+            restrictNeighbors();
         else if (getSuperstep() == 2)
-            initState(msgIterator);
+            recieveRestrictions(msgIterator);
         else if (getSuperstep() % 4 == 3)
             sendUpdates();
         else if (getSuperstep() % 4 == 0)  
