@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.EnumSet;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -30,8 +31,49 @@ import edu.uci.ics.genomix.data.Marshal;
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
 	
 	public enum DIR {
-		NEXT,
-		PREVIOUS
+	    PREVIOUS((byte) (0b01 << 2)),
+        NEXT((byte) (0b10 << 2));
+        
+        public static final byte MASK = (byte)(0b11 << 2); 
+        
+        private final byte val;
+        private DIR(byte val) {
+            this.val = val;
+        }
+        public final byte get() {
+            return val;
+        }
+        public static DIR mirror(DIR direction) {
+            switch (direction) {
+                case PREVIOUS:
+                    return NEXT;
+                case NEXT:
+                    return PREVIOUS;
+                default:
+                    throw new IllegalArgumentException("test");
+            }
+        }
+        public DIR mirror() {
+            return mirror(this);
+        }
+        
+        public static DIR fromByte(short b) {
+            b &= MASK;
+            if (b == PREVIOUS.val)
+                return PREVIOUS;
+            if (b == NEXT.val)
+                return NEXT;
+            return null;  
+        }
+        
+        public static EnumSet<DIR> enumSetFromByte(short s) {
+            EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
+            if ((s & PREVIOUS.get()) != 0)
+                retSet.add(DIR.PREVIOUS);
+            if ((s & NEXT.get()) != 0)
+                retSet.add(DIR.NEXT);
+            return retSet;
+        }
 	}
 
     private static final long serialVersionUID = 1L;
@@ -76,6 +118,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         public static final byte DIR_FR = 0b01 << 0;
 
         public static final byte[] values = {DIR_FF, DIR_FR };
+    }
+    
+    public static final byte[] edgeTypesInDir(DIR direction) {
+        return direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
     }
     
     public NodeWritable() {

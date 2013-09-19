@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -11,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
@@ -130,7 +132,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         setReplaceDir(mergeDirs);
                 
         for(byte dir : updateDirs){
-            kmerIterator = getVertexValue().getEdgeList(dir).getKeys();
+            kmerIterator = getVertexValue().getEdgeList(dir).getKeyIterator();
             while(kmerIterator.hasNext()){
                 //set deleteDir
                 byte deleteDir = setDeleteDir(dir);
@@ -253,7 +255,39 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         outFlag &= MessageFlag.MERGE_DIR_CLEAR;
         outFlag |= (mergeDir << 9);
     }
-//----------------------------------
+//------------------------------------
+    /**
+     * Send merge restrictions to my neighbor nodes
+     */
+    public void restrictNeighbors() {
+        EnumSet<DIR> dirsToRestrict;
+        V vertex = getVertexValue();
+        if(isTandemRepeat(vertex)) {
+            // tandem repeats are not allowed to merge at all
+            dirsToRestrict = EnumSet.of(DIR.NEXT, DIR.PREVIOUS);
+        }
+        else {
+            // degree > 1 can't merge in that direction
+            dirsToRestrict = EnumSet.noneOf(DIR.class);
+            for (DIR dir : DIR.values()) {
+                if (vertex.getDegree(dir) > 1)
+                    dirsToRestrict.add(dir);
+            }
+        }
+        
+        // send a message to each neighbor indicating they can't merge towards me
+        for (DIR dir : dirsToRestrict) {
+            for (byte d : NodeWritable.edgeTypesInDir(dir)) {
+                for (VKmerBytesWritable destId : vertex.getEdgeList(d).getKeys()) {
+                    outgoingMsg.reset();
+                    outgoingMsg.setFlag(dir.mirror().get());
+                    sendMsg(destId, outgoingMsg);
+                }
+            }
+        }
+    }
+    
+//------------------------------------
     /**
      * final updateAdjList
      */
