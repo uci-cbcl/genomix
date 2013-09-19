@@ -207,8 +207,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public VKmerBytesWritable getDestVertexId(DIR direction){
         int degree = getVertexValue().getDegree(direction);
-        if(degree > 0)
-            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1");
+        if(degree > 1)
+            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
         
         if(degree == 1){
             byte[] dirs = (direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values);
@@ -220,35 +220,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return null;
     }
     
-    public VKmerBytesWritable getPrevDestVertexId() {
-    	// TODO check length of RF and RR == 1; throw exception otherwise
-//        if(getVertexValue().inDegree() > 0)
-//            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1");
-        if (!getVertexValue().getRFList().isEmpty()){ //#RFList() > 0
-            kmerIterator = getVertexValue().getRFList().getKeys();
-            return kmerIterator.next();
-        } else if (!getVertexValue().getRRList().isEmpty()){ //#RRList() > 0
-            kmerIterator = getVertexValue().getRRList().getKeys();
-            return kmerIterator.next();
-        } else {
-            return null;
-        }
-    }
-    
-    public VKmerBytesWritable getNextDestVertexId() {
-//        if(getVertexValue().outDegree() > 0)
-//            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1");
-        if (!getVertexValue().getFFList().isEmpty()){ //#FFList() > 0
-            kmerIterator = getVertexValue().getFFList().getKeys();
-            return kmerIterator.next();
-        } else if (!getVertexValue().getFRList().isEmpty()){ //#FRList() > 0
-            kmerIterator = getVertexValue().getFRList().getKeys();
-            return kmerIterator.next();
-        } else {
-            return null;  
-        }
-    }
-
     /**
      * get destination vertex
      */
@@ -296,7 +267,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             else if(!getVertexValue().getRRList().isEmpty())
                 outgoingMsg.setFlag(MessageFlag.DIR_RR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.setAsCopy(getPrevDestVertexId());
+            destVertexId.setAsCopy(getDestVertexId(DIR.PREVIOUS));
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -312,7 +283,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             else if(!getVertexValue().getFRList().isEmpty())
                 outgoingMsg.setFlag(MessageFlag.DIR_FR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.setAsCopy(getNextDestVertexId());
+            destVertexId.setAsCopy(getDestVertexId(DIR.NEXT));
             sendMsg(destVertexId, outgoingMsg);
         }
     }

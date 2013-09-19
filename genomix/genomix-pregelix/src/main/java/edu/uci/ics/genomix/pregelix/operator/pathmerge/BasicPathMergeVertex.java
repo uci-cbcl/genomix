@@ -174,7 +174,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setNode(getVertexValue().getNode()); //half of edges are enough
-            destVertexId = (direction == DIR.PREVIOUS ? getPrevDestVertexId() : getNextDestVertexId()); //getDestVertexId(direction)
+            destVertexId = getDestVertexId(direction); //(direction == DIR.PREVIOUS ? getPrevDestVertexId() : getNextDestVertexId()); //getDestVertexId(direction)
             sendMsg(destVertexId, outgoingMsg);
             
             if(isP4)
@@ -390,7 +390,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         	outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
-        sendMsg(getNextDestVertexId(), outgoingMsg);
+        sendMsg(getDestVertexId(DIR.NEXT), outgoingMsg);
     }
     
     public boolean canMergeWithHead(MessageWritable msg){
