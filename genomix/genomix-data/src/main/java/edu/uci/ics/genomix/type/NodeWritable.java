@@ -51,7 +51,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		        case NEXT:
 		            return PREVIOUS;
 		        default:
-		            throw new IllegalArgumentException("test");
+		            throw new IllegalArgumentException("Invalid direction given: " + direction);
 		    }
 		}
 		public DIR mirror() {
@@ -67,6 +67,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		    return null;  
 		}
 		
+		public static byte fromSet(EnumSet<DIR> set) {
+            byte b = 0;
+            if (set.contains(PREVIOUS))
+                b |= PREVIOUS.val;
+            if (set.contains(NEXT))
+                b |= NEXT.val;
+            return b;  
+        }
+		
 		public static EnumSet<DIR> enumSetFromByte(short s) {
 		    EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
 		    if ((s & PREVIOUS.get()) != 0)
@@ -75,6 +84,18 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 retSet.add(DIR.NEXT);
 		    return retSet;
 		}
+		
+		/**
+		 * Given a byte representing NEXT, PREVIOUS, or both, return an enumset representing PREVIOUS, NEXT, or both, respectively. 
+		 */
+		public static EnumSet<DIR> flipSetFromByte(short s) {
+            EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
+            if ((s & PREVIOUS.get()) != 0)
+                retSet.add(DIR.NEXT);
+            if ((s & NEXT.get()) != 0)
+                retSet.add(DIR.PREVIOUS);
+            return retSet;
+        }
 	}
 
 
@@ -200,6 +221,20 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                     break;
             }
             throw new IllegalStateException("Logic Error or unrecognized direction... original values were: " + BtoA + " and " + BtoC);
+        }
+
+        public static boolean causesFlip(byte direction) {
+            direction &= DIR_MASK;
+            switch (direction) {
+                case DIR_FF:
+                case DIR_RR:
+                    return false;
+                case DIR_FR:
+                case DIR_RF:
+                    return true;
+                default:
+                    throw new IllegalArgumentException("unrecognized direction: " + direction);
+            }
         }
     }
     
