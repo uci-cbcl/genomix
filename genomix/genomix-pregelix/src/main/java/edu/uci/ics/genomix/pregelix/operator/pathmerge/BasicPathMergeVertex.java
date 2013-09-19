@@ -135,11 +135,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 //set deleteDir
                 byte deleteDir = setDeleteDir(dir);
                 //set mergeDir, so it won't need flip
-                byte mergeDir = flipDirection(deleteDir, ifFlipWithNeighbor(revertDirection));
-                outFlag &= MessageFlag.MERGE_DIR_CLEAR;
-                outFlag |= (mergeDir << 9);
+                setMergeDir(deleteDir, revertDirection);
                 outgoingMsg.setFlag(outFlag);
-                destVertexId.setAsCopy(kmerIterator.next()); //TODO does destVertexId need deep copy?
+                destVertexId = kmerIterator.next(); //TODO does destVertexId need deep copy?
                 sendMsg(destVertexId, outgoingMsg);
             }
         }
@@ -157,6 +155,35 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         
         getVertexValue().getNode().updateEdges(deleteDir, msg.getSourceVertexId(), 
                 mergeDir, replaceDir, msg.getNode(), true);
+    }
+    
+    /**
+     * send MERGE msg
+     */
+    public void sendMergeMsg(boolean isP4){
+        outFlag |= getHeadMergeDir();
+        
+        DIR direction = null;
+        byte mergeDir = (byte)(getVertexValue().getState() & State.CAN_MERGE_MASK);
+        if(mergeDir == State.CAN_MERGEWITHPREV)
+            direction = DIR.PREVIOUS;
+        else if(mergeDir == State.CAN_MERGEWITHNEXT)
+            direction = DIR.NEXT;
+        if(direction != null){
+            setNeighborToMeDir(direction);
+            outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setSourceVertexId(getVertexId());
+            outgoingMsg.setNode(getVertexValue().getNode()); //half of edges are enough
+            destVertexId = (direction == DIR.PREVIOUS ? getPrevDestVertexId() : getNextDestVertexId()); //getDestVertexId(direction)
+            sendMsg(destVertexId, outgoingMsg);
+            
+            if(isP4)
+                deleteVertex(getVertexId());
+            else{
+                getVertexValue().setState(State.IS_DEAD);
+                activate();
+            }
+        }
     }
     
     public void aggregateMsg(Iterator<M> msgIterator){
@@ -221,7 +248,12 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         return deleteDir;
     }
     
-//-------------------------------
+    public void setMergeDir(byte deleteDir, DIR revertDirection){
+        byte mergeDir = flipDirection(deleteDir, ifFlipWithNeighbor(revertDirection));
+        outFlag &= MessageFlag.MERGE_DIR_CLEAR;
+        outFlag |= (mergeDir << 9);
+    }
+//----------------------------------
     /**
      * final updateAdjList
      */
@@ -387,37 +419,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             case MessageFlag.DIR_RR:
                 configureMergeMsgForPredecessor(incomingMsg.getSourceVertexId()); 
                 break; 
-        }
-    }
-    
-    /**
-     * send MERGE msg
-     */
-    public void sendMergeMsg(boolean isP4){
-        outFlag |= getHeadMergeDir();
-        
-        DIR direction = null;
-        byte mergeDir = (byte)(getVertexValue().getState() & State.CAN_MERGE_MASK);
-        if(mergeDir == State.CAN_MERGEWITHPREV)
-            direction = DIR.PREVIOUS;
-        else if(mergeDir == State.CAN_MERGEWITHNEXT)
-            direction = DIR.NEXT;
-        if(direction != null){
-            setNeighborToMeDir(direction);
-            outgoingMsg.setFlag(outFlag);
-            outgoingMsg.setSourceVertexId(getVertexId());
-    //        for(byte d: OutgoingListFlag.values)
-    //            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-            outgoingMsg.setNode(getVertexValue().getNode());
-            destVertexId.setAsCopy(direction == DIR.PREVIOUS ? getPrevDestVertexId() : getNextDestVertexId());
-            sendMsg(destVertexId, outgoingMsg);
-            
-            if(isP4)
-                deleteVertex(getVertexId());
-            else{
-                getVertexValue().setState(State.IS_DEAD);
-                activate();
-            }
         }
     }
     

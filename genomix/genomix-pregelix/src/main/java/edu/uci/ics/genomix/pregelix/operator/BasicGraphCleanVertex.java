@@ -191,11 +191,39 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return selfFlag != State.IS_HEAD && selfFlag != State.IS_OLDHEAD;
     }
     
+    public byte[] getDirList(DIR direction){
+        byte[] values = new byte[2];
+        if(direction == DIR.PREVIOUS)
+            values = IncomingListFlag.values;
+        else if(direction == DIR.NEXT)
+            values = OutgoingListFlag.values;
+        else
+            throw new IllegalArgumentException("DIR should only have two options: PREVIOUS or NEXT!");
+        return values;
+    }
+    
     /**
      * get destination vertex
      */
+    public VKmerBytesWritable getDestVertexId(DIR direction){
+        int degree = getVertexValue().getDegree(direction);
+        if(degree > 0)
+            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1");
+        
+        if(degree == 1){
+            byte[] dirs = (direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values);
+            for(byte dir : dirs){
+                if(getVertexValue().getEdgeList(dir).getCountOfPosition() > 0)
+                    return getVertexValue().getEdgeList(dir).get(0).getKey();
+            }
+        }
+        return null;
+    }
+    
     public VKmerBytesWritable getPrevDestVertexId() {
     	// TODO check length of RF and RR == 1; throw exception otherwise
+//        if(getVertexValue().inDegree() > 0)
+//            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1");
         if (!getVertexValue().getRFList().isEmpty()){ //#RFList() > 0
             kmerIterator = getVertexValue().getRFList().getKeys();
             return kmerIterator.next();
@@ -208,6 +236,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public VKmerBytesWritable getNextDestVertexId() {
+//        if(getVertexValue().outDegree() > 0)
+//            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1");
         if (!getVertexValue().getFFList().isEmpty()){ //#FFList() > 0
             kmerIterator = getVertexValue().getFFList().getKeys();
             return kmerIterator.next();
