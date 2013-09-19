@@ -111,7 +111,7 @@ public class GenomixJobConf extends JobConf {
         private int clusterWaitTime = -1;
         
         @Option(name = "-drawStatistics", usage = "Plot coverage statistics after graphbuilding stages", required = false)
-        private boolean drawStatistics = false;
+        private boolean drawStatistics = false;  // TODO make this a proper map-reduce job
 
         // Graph cleaning
         @Option(name = "-bridgeRemove_maxLength", usage = "Nodes with length <= bridgeRemoveLength that bridge separate paths are removed from the graph", required = false)
@@ -121,7 +121,7 @@ public class GenomixJobConf extends JobConf {
         private float bubbleMerge_maxDissimilarity = -1;
 
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
-        private int graphCleanMaxIterations = -1;
+        private int graphCleanMaxIterations = -1; // TODO respect this value in pregelix
         
         @Option(name = "-pathMergeRandom_randSeed", usage = "The seed used in the random path-merge algorithm", required = false)
         private long pathMergeRandom_randSeed = -1;
@@ -139,6 +139,7 @@ public class GenomixJobConf extends JobConf {
         private int maxReadIDsPerEdge = -1;
         
         // Hyracks/Pregelix Setup
+        // TODO remove ip and port?  (refactor Nan's driver)
         @Option(name = "-ip", usage = "IP address of the cluster controller", required = false)
         private String ipAddress;
         
@@ -161,7 +162,7 @@ public class GenomixJobConf extends JobConf {
     /**
      * the set of patterns that can be applied to the graph 
      */
-    public static enum Patterns {
+    public static enum Patterns {  // TODO static needed for other place we use enum?
         BUILD,
         BUILD_HYRACKS,
         BUILD_HADOOP,
@@ -232,13 +233,13 @@ public class GenomixJobConf extends JobConf {
 //    public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_SIZE = "pregelix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
-    public static final String GROUPBY_TYPE = "genomix.graph.groupby.type";
+    public static final String GROUPBY_TYPE = "genomix.graph.groupby.type"; // TODO strip this out
     public static final String OUTPUT_FORMAT = "genomix.graph.output";
 
-    public static final String GROUPBY_TYPE_PRECLUSTER = "precluster";
+    public static final String GROUPBY_TYPE_PRECLUSTER = "precluster"; // TODO remove
     
-    public static final String JOB_PLAN_GRAPHBUILD = "graphbuild";
-    public static final String JOB_PLAN_GRAPHSTAT = "graphstat";
+    public static final String JOB_PLAN_GRAPHBUILD = "graphbuild"; // TODO remove
+    public static final String JOB_PLAN_GRAPHSTAT = "graphstat"; // TODO remove
 
     public static final String OUTPUT_FORMAT_BINARY = "genomix.outputformat.binary";
     public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
@@ -256,7 +257,7 @@ public class GenomixJobConf extends JobConf {
                     Patterns.SCAFFOLD, Patterns.MERGE
             };
     
-    private String[] extraArguments = {};
+    private String[] extraArguments = {};  // TODO remove extraArguments
     
     private static Map<String, Long> tickTimes = new HashMap<String, Long>(); 
     
@@ -294,7 +295,7 @@ public class GenomixJobConf extends JobConf {
     /**
      * retrieve any unparsed arguments from parseArguments. Returns an empty array if we weren't initialized use fromArguments()
      */
-    public String[] getExtraArguments() {
+    public String[] getExtraArguments() { // TODO remove
         return extraArguments;
     }
        
@@ -456,7 +457,7 @@ public class GenomixJobConf extends JobConf {
             return System.currentTimeMillis() - time;
     }
 
-    public static void setGlobalStaticConstants(Configuration conf) {
+    public static void setGlobalStaticConstants(Configuration conf) { // TODO make sure everyone uses this version
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
 //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
     }

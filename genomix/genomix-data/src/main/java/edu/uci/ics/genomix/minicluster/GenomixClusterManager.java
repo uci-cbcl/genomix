@@ -236,6 +236,7 @@ public class GenomixClusterManager {
                         Path jarDestDir = new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH) + "/jar-dependencies");
                         // dist cache requires absolute paths. we have to use the working directory if HDFS_WORK_PATH is relative
                         if (!jarDestDir.isAbsolute()) {
+                        	// TODO move this to a single function
                             // working dir is the correct base, but we must use the path version (not a URI). Get URI and strip out leading identifiers
                             String hostNameRE = "([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*";
                             String[] workDirs = dfs.getWorkingDirectory().toString()
