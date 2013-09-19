@@ -14,6 +14,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /**
  * Graph clean pattern: P1(Naive-algorithm) for path merge 
@@ -262,15 +263,85 @@ public class P1ForPathMergeVertex extends
             voteToHalt();
     }
     
+        /**
+         * start sending message
+         */
+        public void startSendMsg() {
+            if(isTandemRepeat(getVertexValue())){
+                copyWithoutTandemRepeats(getVertexValue(), tmpValue);
+                outFlag = 0;
+                sendSettledMsgToAllNeighborNodes(tmpValue);
+                voteToHalt();
+            } else{
+                /** check incoming **/
+                // update internal state
+                if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue())){
+                    byte state = 0;
+                    state |= State.HEAD_CAN_MERGEWITHPREV;
+                    getVertexValue().setState(state);
+                    activate();
+                } 
+                // send to neighbors
+                else if (VertexUtil.isVertexWithManyIncoming(getVertexValue())){
+                    outFlag = 0;
+                    sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
+                     }
+                
+                /** check outgoing **/
+                // update internal state
+                if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue())){
+                    byte state = 0;
+                    state |= State.HEAD_CAN_MERGEWITHNEXT;
+                    getVertexValue().setState(state);
+                    activate();
+                } 
+                // send to neighbors
+                else if (VertexUtil.isVertexWithManyOutgoing(getVertexValue())){
+                    outFlag = 0;
+                    sendSettledMsgs(DIR.NEXT, getVertexValue());
+                     }
+                
+                if(VertexUtil.isUnMergeVertex(getVertexValue()))
+                    voteToHalt();
+             }
+         }
+        
+            public void initState(Iterator<PathMergeMessageWritable> msgIterator) {
+                    if(isInactiveNode())
+                        voteToHalt();
+                    else{
+                        while (msgIterator.hasNext()) {
+                            incomingMsg = msgIterator.next();
+                            switch(getHeadMergeDir()){
+                                case State.NON_HEAD: // TODO Change name to Path
+                                    setHeadMergeDir();
+                                    activate();
+                                    break;
+                                case State.HEAD_CAN_MERGEWITHPREV: // TODO aggregate all the incomingMsgs first, then make a decision about halting
+                                case State.HEAD_CAN_MERGEWITHNEXT:
+                                    if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
+                                        getVertexValue().setState(State.HEAD_CANNOT_MERGE);
+                                        voteToHalt();
+                                    }
+                                    break;
+                                case State.HEAD_CANNOT_MERGE:
+                                    voteToHalt();
+                                    break;
+                            }
+                        }
+                    }
+            }
+
+    
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
             addFakeVertex();
-            restrictNeighbors();
+            startSendMsg();
         } else if (getSuperstep() == 2)
             if(!isFakeVertex())
-                recieveRestrictions(msgIterator);
+                initState(msgIterator);
             else voteToHalt();
         else if (getSuperstep() % 7 == 3 && getSuperstep() <= maxIteration) {
             //head send update message
