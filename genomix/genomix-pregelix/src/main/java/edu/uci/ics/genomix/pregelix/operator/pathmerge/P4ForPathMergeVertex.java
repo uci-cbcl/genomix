@@ -131,16 +131,15 @@ public class P4ForPathMergeVertex extends
         // We prevent merging towards non-path nodes
         hasNext = setNeighbor(getVertexValue(), DIR.NEXT);  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
         hasPrev = setNeighbor(getVertexValue(), DIR.PREVIOUS);
+        DIR mergeDir = null;
         if (hasNext || hasPrev) {
             if (curHead) {
                 if (hasNext && !nextHead) {
                     // compress this head to the forward tail
-                    setStateAsMergeDir(DIR.NEXT);
-                    sendUpdateMsg(isP4, DIR.PREVIOUS);
+                    mergeDir = DIR.NEXT;
                 } else if (hasPrev && !prevHead) {
                     // compress this head to the reverse tail
-                    setStateAsMergeDir(DIR.PREVIOUS);
-                    sendUpdateMsg(isP4, DIR.NEXT);
+                    mergeDir = DIR.PREVIOUS;
                 } 
             }
             else {
@@ -149,27 +148,28 @@ public class P4ForPathMergeVertex extends
                      if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                         // tails on both sides, and I'm the "local minimum"
                         // compress me towards the tail in forward dir
-                        setStateAsMergeDir(DIR.NEXT);
-                        sendUpdateMsg(isP4, DIR.PREVIOUS);
+                        mergeDir = DIR.NEXT;
                     }
                 } else if (!hasPrev) {
                     // no previous node
                     if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                         // merge towards tail in forward dir
-                        setStateAsMergeDir(DIR.NEXT);
-                        sendUpdateMsg(isP4, DIR.PREVIOUS);
+                        mergeDir = DIR.NEXT;
                     }
                 } else if (!hasNext) {
                     // no next node
                     if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                         // merge towards tail in reverse dir
-                        setStateAsMergeDir(DIR.PREVIOUS);
-                        sendUpdateMsg(isP4, DIR.NEXT);
+                        mergeDir = DIR.PREVIOUS;
                     }
                 }
             }
         }  // TODO else voteToHalt (when I combine steps 2 and 3)
-        this.activate();
+        if(mergeDir != null){
+            setStateAsMergeDir(mergeDir);
+            sendUpdateMsg(isP4, revert(mergeDir));
+            this.activate();
+        }
     }
     
     /**

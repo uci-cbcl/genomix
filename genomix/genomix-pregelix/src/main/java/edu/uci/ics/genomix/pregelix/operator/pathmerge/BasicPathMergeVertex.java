@@ -33,6 +33,15 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public byte getAggregatingMsgMergeDir(){
         return (byte) (aggregatingMsg.getFlag() & MessageFlag.HEAD_CAN_MERGE_MASK);
     }
+    
+    public boolean isHeadUnableToMerge(){
+        byte state = (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
+        return state == State.HEAD_CANNOT_MERGE;
+    }
+    
+    public DIR revert(DIR direction){
+        return direction == DIR.PREVIOUS ? DIR.NEXT : DIR.PREVIOUS;
+    }
     /**
      * start sending message
      */
@@ -76,11 +85,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
     }
 
-    public boolean isHeadUnableToMerge(){
-        byte state = (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
-        return state == State.HEAD_CANNOT_MERGE;
-    }
-    
     /**
      * initiate head, rear and path node
      */
@@ -89,41 +93,50 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             voteToHalt();
         else{
             if(msgIterator.hasNext()){
-                while (msgIterator.hasNext()) {
-                    incomingMsg = msgIterator.next();
-                    //aggregate all the incomingMsgs first
-                    switch(getAggregatingMsgMergeDir()){
-                        case State.PATH_NON_HEAD:
-                            aggregatingMsg.setFlag(getMsgMergeDir());
-                            activate();
-                            break;
-                        case State.HEAD_CAN_MERGEWITHPREV:
-                        case State.HEAD_CAN_MERGEWITHNEXT:
-                            if (getAggregatingMsgMergeDir() != getMsgMergeDir())
-                                aggregatingMsg.setFlag(State.HEAD_CANNOT_MERGE);
-                            break;
-                        case State.HEAD_CANNOT_MERGE:
-                            break;
-                    }
-                    
-                }
-                switch(getHeadMergeDir()){
-                    case State.PATH_NON_HEAD:
-                        getVertexValue().setState(getAggregatingMsgMergeDir());
-                        activate();
-                        break;
-                    case State.HEAD_CAN_MERGEWITHPREV:
-                    case State.HEAD_CAN_MERGEWITHNEXT:
-                        if (getHeadMergeDir() != getAggregatingMsgMergeDir()){
-                            getVertexValue().setState(State.HEAD_CANNOT_MERGE);
-                            voteToHalt();
-                        }
-                        break;
-                    case State.HEAD_CANNOT_MERGE:
-                        voteToHalt();
-                        break;
-                }
+                // aggregate all the incomingMsgs first
+                aggregateMsg(msgIterator);
+                // update state based on aggregateMsg
+                updateState();
             }
+        }
+    }
+    
+    public void aggregateMsg(Iterator<M> msgIterator){
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            //aggregate all the incomingMsgs first
+            switch(getAggregatingMsgMergeDir()){
+                case State.PATH_NON_HEAD:
+                    aggregatingMsg.setFlag(getMsgMergeDir());
+                    activate();
+                    break;
+                case State.HEAD_CAN_MERGEWITHPREV:
+                case State.HEAD_CAN_MERGEWITHNEXT:
+                    if (getAggregatingMsgMergeDir() != getMsgMergeDir())
+                        aggregatingMsg.setFlag(State.HEAD_CANNOT_MERGE);
+                    break;
+                case State.HEAD_CANNOT_MERGE:
+                    break;
+            }
+        }
+    }
+    
+    public void updateState(){
+        switch(getHeadMergeDir()){
+            case State.PATH_NON_HEAD:
+                getVertexValue().setState(getAggregatingMsgMergeDir());
+                activate();
+                break;
+            case State.HEAD_CAN_MERGEWITHPREV:
+            case State.HEAD_CAN_MERGEWITHNEXT:
+                if (getHeadMergeDir() != getAggregatingMsgMergeDir()){
+                    getVertexValue().setState(State.HEAD_CANNOT_MERGE);
+                    voteToHalt();
+                }
+                break;
+            case State.HEAD_CANNOT_MERGE:
+                voteToHalt();
+                break;
         }
     }
     
@@ -154,6 +167,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         getVertexValue().getNode().updateEdges(deleteDir, msg.getSourceVertexId(), 
                 mergeDir, replaceDir, msg.getNode(), true);
     }
+    
     
     /**
      * final updateAdjList
@@ -234,7 +248,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         getVertexValue().processMerges(neighborToMeDir, msg.getNode(), kmerSize);
     }
     
-    
     /**
      * send UPDATE msg   boolean: true == P4, false == P2
      */
@@ -245,8 +258,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 //        else 
 //            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
         
-        
-        DIR revertDirection = direction == DIR.PREVIOUS ? DIR.NEXT : DIR.PREVIOUS;
+        DIR revertDirection = revert(direction);
         byte[] mergeDirs = direction == DIR.PREVIOUS ? OutgoingListFlag.values : IncomingListFlag.values;
         byte[] updateDirs = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
         
