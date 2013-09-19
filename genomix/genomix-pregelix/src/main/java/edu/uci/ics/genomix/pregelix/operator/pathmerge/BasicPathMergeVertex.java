@@ -378,14 +378,32 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * send MERGE msg
      */
-    public void sendMergeMsg(boolean toPredecessor, VKmerBytesWritable mergeDest){
-        setNeighborToMeDir(DIR.PREVIOUS);
-        outgoingMsg.setFlag(outFlag);
-        outgoingMsg.setSourceVertexId(getVertexId());
-//        for(byte d: OutgoingListFlag.values)
-//            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
-        outgoingMsg.setNode(getVertexValue().getNode());
-        sendMsg(mergeDest, outgoingMsg);
+    public void sendMergeMsg(boolean isP4){
+        outFlag |= getHeadMergeDir();
+        
+        DIR direction = null;
+        byte mergeDir = (byte)(getVertexValue().getState() & State.CAN_MERGE_MASK);
+        if(mergeDir == State.CAN_MERGEWITHPREV)
+            direction = DIR.PREVIOUS;
+        else if(mergeDir == State.CAN_MERGEWITHNEXT)
+            direction = DIR.NEXT;
+        if(direction != null){
+            setNeighborToMeDir(direction);
+            outgoingMsg.setFlag(outFlag);
+            outgoingMsg.setSourceVertexId(getVertexId());
+    //        for(byte d: OutgoingListFlag.values)
+    //            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
+            outgoingMsg.setNode(getVertexValue().getNode());
+            destVertexId.setAsCopy(direction == DIR.PREVIOUS ? getPrevDestVertexId() : getNextDestVertexId());
+            sendMsg(destVertexId, outgoingMsg);
+            
+            if(isP4)
+                deleteVertex(getVertexId());
+            else{
+                getVertexValue().setState(State.IS_DEAD);
+                activate();
+            }
+        }
     }
     
     /**
@@ -409,35 +427,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 //            outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setNode(getVertexValue().getNode());
         sendMsg(mergeDest, outgoingMsg);
-    }
-    
-    /**
-     * send merge message to neighber for P4, send message to the merge object and kill self
-     */
-    public void broadcastMergeMsg(boolean isP4){
-        outFlag |= getHeadMergeDir();
-        switch(getVertexValue().getState() & State.CAN_MERGE_MASK) {
-            case State.CAN_MERGEWITHNEXT:
-                // configure merge msg for successor
-                configureMergeMsgForSuccessor(getNextDestVertexId()); // TODO getDestVertexId(DIRECTION), then remove the switch statement, sendMergeMsg(DIRECTION)
-                if(isP4)
-                    deleteVertex(getVertexId());
-                else{
-                    getVertexValue().setState(State.IS_DEAD);
-                    activate();
-                }
-                break;
-            case State.CAN_MERGEWITHPREV:
-                // configure merge msg for predecessor
-                configureMergeMsgForPredecessor(getPrevDestVertexId());
-                if(isP4)
-                    deleteVertex(getVertexId());
-                else{
-                    getVertexValue().setState(State.IS_DEAD);
-                    activate();
-                }
-                break; 
-        }
     }
     
     public byte revertHeadMergeDir(byte headMergeDir){

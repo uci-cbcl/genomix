@@ -281,7 +281,7 @@ public class P1ForPathMergeVertex extends
         } else if (getSuperstep() % 7 == 5 && getSuperstep() <= maxIteration) {
             //head broadcastMergeMsg, while non-head voteToHalt
             if(isHeadNode())
-                broadcastMergeMsg(false);
+                sendMergeMsg(isP1);
             else
                 voteToHalt();
         } else if (getSuperstep() % 7 == 6 && getSuperstep() <= maxIteration) {

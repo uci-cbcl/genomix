@@ -426,10 +426,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * set neighborToMe Dir
      */
-    public void setNeighborToMeDir(DIR predecessorToMe){
-        if(getVertexValue().getDegree(predecessorToMe) != 1)
+    public void setNeighborToMeDir(DIR direction){
+        if(getVertexValue().getDegree(direction) != 1)
             throw new IllegalArgumentException("In merge dir, the degree is not 1");
-        byte[] dirs = predecessorToMe == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
+        byte[] dirs = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
         outFlag &= MessageFlag.DIR_CLEAR;
         
         if(getVertexValue().getEdgeList(dirs[0]).getCountOfPosition() == 1){
