@@ -245,7 +245,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.getNode().setEdgeList(dir, getVertexValue().getEdgeList(dir));
         
         for(byte dir : updateDirs){
-            kmerIterator = getVertexValue().getEdgeList(dir).getKeys();
+            kmerIterator = getVertexValue().getEdgeList(dir).getKeyIterator();
             while(kmerIterator.hasNext()){
                 outFlag &= MessageFlag.DIR_CLEAR;
                 outFlag |= dir;

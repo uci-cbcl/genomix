@@ -196,10 +196,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public VKmerBytesWritable getPrevDestVertexId() {
     	// TODO check length of RF and RR == 1; throw exception otherwise
         if (!getVertexValue().getRFList().isEmpty()){ //#RFList() > 0
-            kmerIterator = getVertexValue().getRFList().getKeys();
+            kmerIterator = getVertexValue().getRFList().getKeyIterator();
             return kmerIterator.next();
         } else if (!getVertexValue().getRRList().isEmpty()){ //#RRList() > 0
-            kmerIterator = getVertexValue().getRRList().getKeys();
+            kmerIterator = getVertexValue().getRRList().getKeyIterator();
             return kmerIterator.next();
         } else {
             return null;
@@ -208,10 +208,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     public VKmerBytesWritable getNextDestVertexId() {
         if (!getVertexValue().getFFList().isEmpty()){ //#FFList() > 0
-            kmerIterator = getVertexValue().getFFList().getKeys();
+            kmerIterator = getVertexValue().getFFList().getKeyIterator();
             return kmerIterator.next();
         } else if (!getVertexValue().getFRList().isEmpty()){ //#FRList() > 0
-            kmerIterator = getVertexValue().getFRList().getKeys();
+            kmerIterator = getVertexValue().getFRList().getKeyIterator();
             return kmerIterator.next();
         } else {
             return null;  
@@ -223,12 +223,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public VKmerBytesWritable getPrevDestVertexIdAndSetFlag() {
         if (!getVertexValue().getRFList().isEmpty()){ // #RFList() > 0
-            kmerIterator = getVertexValue().getRFList().getKeys();
+            kmerIterator = getVertexValue().getRFList().getKeyIterator();
             outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_RF;
             return kmerIterator.next();
         } else if (!getVertexValue().getRRList().isEmpty()){ // #RRList() > 0
-            kmerIterator = getVertexValue().getRRList().getKeys();
+            kmerIterator = getVertexValue().getRRList().getKeyIterator();
             outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_RR;
             return kmerIterator.next();
@@ -239,12 +239,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     public VKmerBytesWritable getNextDestVertexIdAndSetFlag() {
         if (!getVertexValue().getFFList().isEmpty()){ // #FFList() > 0
-            kmerIterator = getVertexValue().getFFList().getKeys();
+            kmerIterator = getVertexValue().getFFList().getKeyIterator();
             outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_FF;
             return kmerIterator.next();
         } else if (!getVertexValue().getFRList().isEmpty()){ // #FRList() > 0
-            kmerIterator = getVertexValue().getFRList().getKeys();
+            kmerIterator = getVertexValue().getFRList().getKeyIterator();
             outFlag &= MessageFlag.DIR_CLEAR;
             outFlag |= MessageFlag.DIR_FR;
             return kmerIterator.next();
@@ -293,7 +293,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         //TODO THE less context you send, the better  (send simple messages)
         byte dirs[] = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
         for(byte dir : dirs){
-            kmerIterator = value.getEdgeList(dir).getKeys();
+            kmerIterator = value.getEdgeList(dir).getKeyIterator();
             while(kmerIterator.hasNext()){
                 outFlag &= MessageFlag.DIR_CLEAR;
                 outFlag |= dir;

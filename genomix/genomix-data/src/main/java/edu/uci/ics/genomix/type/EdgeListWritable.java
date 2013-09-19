@@ -222,7 +222,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     /**
      * return an iterator over the keys of this edgeList.  Using the iterator.remove() function will remove the entire edge (not just the keys you're iterating over!) 
      */
-    public Iterator<VKmerBytesWritable> getKeys() {
+    public Iterator<VKmerBytesWritable> getKeyIterator() {
         Iterator<VKmerBytesWritable> it = new Iterator<VKmerBytesWritable>() {
 
             private int currentIndex = 0;
@@ -245,6 +245,15 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         return it;
     }
     
+    public Iterable<VKmerBytesWritable> getKeys() {
+        return new Iterable<VKmerBytesWritable>() {
+            @Override
+            public Iterator<VKmerBytesWritable> iterator() {
+                return getKeyIterator();
+            }
+        };
+    }
+    
     public PositionListWritable getReadIDs(VKmerBytesWritable key) {
         for (EdgeWritable e : this) {
             if (e.getKey().equals(key))
@@ -255,7 +264,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     
     
     public boolean contains(VKmerBytesWritable toFind){
-        Iterator<VKmerBytesWritable> posIterator = this.getKeys();
+        Iterator<VKmerBytesWritable> posIterator = this.getKeyIterator();
         while (posIterator.hasNext()) {
             if (toFind.equals(posIterator.next()))
                 return true;
@@ -268,7 +277,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
      * exception if not in this list.
      */
     public void remove(VKmerBytesWritable toRemove, boolean ignoreMissing) {
-        Iterator<VKmerBytesWritable> posIterator = this.getKeys();
+        Iterator<VKmerBytesWritable> posIterator = this.getKeyIterator();
         while (posIterator.hasNext()) {
             if (toRemove.equals(posIterator.next())) {
                 posIterator.remove();
