@@ -32,36 +32,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public byte getMsgMergeDir(){
         return (byte) (incomingMsg.getFlag() & MessageFlag.HEAD_CAN_MERGE_MASK);
     }
-    /**
-     * Send merge restrictions to my neighbor nodes
-     */
-    public void restrictNeighbors() {
-        EnumSet<DIR> dirsToRestrict;
-        V vertex = getVertexValue();
-        if(isTandemRepeat(vertex)) {
-            // tandem repeats are not allowed to merge at all
-            dirsToRestrict = EnumSet.of(DIR.NEXT, DIR.PREVIOUS);
-        }
-        else {
-            // degree > 1 can't merge in that direction
-            dirsToRestrict = EnumSet.noneOf(DIR.class);
-            for (DIR dir : DIR.values()) {
-                if (vertex.getDegree(dir) > 1)
-                    dirsToRestrict.add(dir);
-            }
-        }
-        
-        // send a message to each neighbor indicating they can't merge towards me
-        for (DIR dir : dirsToRestrict) {
-            for (byte d : NodeWritable.edgeTypesInDir(dir)) {
-                for (VKmerBytesWritable destId : vertex.getEdgeList(d).getKeys()) {
-                    outgoingMsg.reset();
-                    outgoingMsg.setFlag(dir.mirror().get());
-                    sendMsg(destId, outgoingMsg);
-                }
-            }
-        }
-    }
 
     public void setHeadMergeDir(){
         byte state = 0;
@@ -83,23 +53,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public boolean isHeadUnableToMerge(){
         byte state = (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
         return state == State.HEAD_CANNOT_MERGE;
-    }
-    
-    /**
-     * initiate head, rear and path node
-     */
-    public void recieveRestrictions(Iterator<M> msgIterator) {
-        short restrictedDirs = 0;
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            restrictedDirs |= incomingMsg.getFlag();
-        }
-        // special case: tandem repeats cannot merge at all
-        if (isTandemRepeat(getVertexValue())) {
-            restrictedDirs |= DIR.PREVIOUS.get();
-            restrictedDirs |= DIR.NEXT.get();
-        }
-        getVertexValue().setState(restrictedDirs);
     }
     
     public void setStateAsMergeDir(DIR direction){

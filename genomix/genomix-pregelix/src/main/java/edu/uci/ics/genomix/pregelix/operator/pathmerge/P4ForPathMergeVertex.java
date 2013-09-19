@@ -84,6 +84,61 @@ public class P4ForPathMergeVertex extends
         counters.clear();
         getVertexValue().getCounters().clear();
     }
+    
+    /**
+     * Send merge restrictions to my neighbor nodes
+     */
+    public void restrictNeighbors() {
+        EnumSet<DIR> dirsToRestrict;
+        VertexValueWritable vertex = getVertexValue();
+        if(isTandemRepeat(vertex)) {
+            // tandem repeats are not allowed to merge at all
+            dirsToRestrict = EnumSet.of(DIR.NEXT, DIR.PREVIOUS);
+        }
+        else {
+            // degree > 1 can't merge in that direction
+            dirsToRestrict = EnumSet.noneOf(DIR.class);
+            for (DIR dir : DIR.values()) {
+                if (vertex.getDegree(dir) > 1)
+                    dirsToRestrict.add(dir);
+            }
+        }
+        
+        // send a message to each neighbor indicating they can't merge towards me
+        for (DIR dir : dirsToRestrict) {
+            for (byte d : NodeWritable.edgeTypesInDir(dir)) {
+                for (VKmerBytesWritable destId : vertex.getEdgeList(d).getKeys()) {
+                    outgoingMsg.reset();
+//                    outgoingMsg.setFlag(dir.mirror().get());
+                    outgoingMsg.setFlag(DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)).get());
+                    LOG.info("send restriction from " + getVertexId() + " to " + destId + " in my " + d + " and their " + DirectionFlag.mirrorEdge(d) + " (" + DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)) + "); I am " + getVertexValue());
+                    sendMsg(destId, outgoingMsg);
+                }
+            }
+        }
+    }
+    
+    /**
+     * initiate head, rear and path node
+     */
+    public void recieveRestrictions(Iterator<PathMergeMessageWritable> msgIterator) {
+        short restrictedDirs = 0;
+        while (msgIterator.hasNext()) {
+            LOG.info("before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
+            incomingMsg = msgIterator.next();
+            restrictedDirs |= incomingMsg.getFlag();
+            LOG.info("after restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
+            activate();
+        }
+        // special case: tandem repeats cannot merge at all
+        if (isTandemRepeat(getVertexValue())) {
+            restrictedDirs |= DIR.PREVIOUS.get();
+            restrictedDirs |= DIR.NEXT.get();
+            LOG.info("after tandem repeat restriction: " + DIR.fromByte(restrictedDirs));
+            voteToHalt();
+        }
+        getVertexValue().setState(restrictedDirs);
+    }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
         // "deterministically random", based on node id
@@ -91,7 +146,7 @@ public class P4ForPathMergeVertex extends
         for(int i = 0; i < 500; i++)
             randGenerator.nextFloat();
         boolean isHead = randGenerator.nextFloat() < probBeingRandomHead;
-        LOG.info("randomHead: " + nodeKmer + "=" + isHead);
+//        LOG.info("randomHead: " + nodeKmer + "=" + isHead);
         return isHead;
     }
     
@@ -165,7 +220,11 @@ public class P4ForPathMergeVertex extends
                 }
             }
         }
-        LOG.info("merge dir chosen:" + getVertexValue());
+        if ((getVertexValue().getState() & P4State.MERGE) == 0) {
+            LOG.info("No merge for " + getVertexId());
+        } else {
+            LOG.info("Merge from " + getVertexId() + " towards " + (getVertexValue().getState() & DirectionFlag.DIR_MASK) + "; node is " + getVertexValue());
+        }
     }
     
     public void updateNeighbors() {
@@ -186,7 +245,7 @@ public class P4ForPathMergeVertex extends
         for (byte updateEdge : updateEdges) {
             outgoingMsg.reset();
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setFlag(updateEdge);  // neighbor's edge to me (so he can remove me) 
+            outgoingMsg.setFlag(DirectionFlag.mirrorEdge(updateEdge));  // neighbor's edge to me (so he can remove me) 
             for (byte mergeEdge : mergeEdges) {
                 byte newDir = DirectionFlag.resolveLinkThroughMiddleNode(updateEdge, mergeEdge);
                 outgoingMsg.getNode().setEdgeList(newDir, getVertexValue().getEdgeList(mergeEdge));  // copy into outgoingMsg
@@ -194,6 +253,7 @@ public class P4ForPathMergeVertex extends
             
             // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
             for (VKmerBytesWritable dest : vertex.getEdgeList(updateEdge).getKeys()) {
+                LOG.info("send update message from " + getVertexId() + " to " + dest + ": " + outgoingMsg);
                 sendMsg(dest, outgoingMsg);
             }
         }
@@ -202,8 +262,8 @@ public class P4ForPathMergeVertex extends
     public void receiveUpdates(Iterator<PathMergeMessageWritable> msgIterator){
         VertexValueWritable vertex = getVertexValue(); 
         NodeWritable node = vertex.getNode();
-        LOG.info("before update from neighbor: " + getVertexValue());
         while (msgIterator.hasNext()) {
+            LOG.info("before update from neighbor: " + getVertexValue());
             incomingMsg = msgIterator.next();
             // remove the edge to the node that will merge elsewhere
             node.getEdgeList((byte)(incomingMsg.getFlag() & DirectionFlag.DIR_MASK)).remove(incomingMsg.getSourceVertexId());
@@ -211,29 +271,35 @@ public class P4ForPathMergeVertex extends
             for (byte dir : DirectionFlag.values) {
                 node.getEdgeList(dir).unionUpdate(incomingMsg.getEdgeList(dir));
             }
+            LOG.info("after update from neighbor: " + getVertexValue());
         }
         checkNeighbors();
         if (!hasNext && !hasPrev)
             voteToHalt();
         else
             activate();
-        LOG.info("after update from neighbor: " + getVertexValue());
     }
     
     public void broadcastMerge() {
         VertexValueWritable vertex = getVertexValue();
-        if ((vertex.getState() & P4State.MERGE) != 0) {
+        short state = vertex.getState();
+        if ((state & P4State.MERGE) != 0) {
             outgoingMsg.reset();
             // tell neighbor where this is coming from (so they can merge kmers and delete)
             byte mergeDir = (byte)(vertex.getState() & DirectionFlag.DIR_MASK);
-            byte restrictedDirs = (byte)(vertex.getState() & DIR.MASK);
-            outgoingMsg.setFlag((short) (DirectionFlag.mirrorEdge(mergeDir) | restrictedDirs)); // TODO make the node flipped...
+            byte neighborRestrictions = DIR.fromSet(DirectionFlag.causesFlip(mergeDir) ? DIR.flipSetFromByte(state) : DIR.enumSetFromByte(state));
+            
+            outgoingMsg.setFlag((short) (DirectionFlag.mirrorEdge(mergeDir) | neighborRestrictions));
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setNode(vertex.getNode());
             if (vertex.getDegree(DirectionFlag.dirFromEdgeType(mergeDir)) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeDir + " direction != 1!\n" + vertex);
             VKmerBytesWritable dest = vertex.getEdgeList(mergeDir).get(0).getKey();
+            LOG.info("send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState()) + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
             sendMsg(dest, outgoingMsg);
+            
+            LOG.info("killing self: " + getVertexId());
+            deleteVertex(getVertexId());
         }
     }
     
@@ -243,16 +309,17 @@ public class P4ForPathMergeVertex extends
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
         NodeWritable node = vertex.getNode();
-        LOG.info("before merge: " + getVertexValue());
-        short state = vertex.getState(); 
+        short state = vertex.getState();
         byte senderDir;
         int numMerged = 0;
         while (msgIterator.hasNext()) {
+            LOG.info("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             incomingMsg = msgIterator.next();
             senderDir = (byte) (incomingMsg.getFlag() & DirectionFlag.DIR_MASK);
-            node.mergeWithNode(senderDir, node);
+            node.mergeWithNode(senderDir, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK);  // update incoming restricted directions
             numMerged++;
+            LOG.info("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
         }
         if(isTandemRepeat(getVertexValue())) {
             state |= (DIR.NEXT.get() | DIR.PREVIOUS.get());  // tandem repeats can't merge anymore
@@ -261,14 +328,12 @@ public class P4ForPathMergeVertex extends
 //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
 //      getVertexValue().setCounters(counters);
         vertex.setState(state);
-        
-        LOG.info("after merge: " + getVertexValue());
     }
     
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
-        if (getSuperstep() > 4) {
+        if (getSuperstep() >= 4) {
             LOG.info("test");
         }
             
