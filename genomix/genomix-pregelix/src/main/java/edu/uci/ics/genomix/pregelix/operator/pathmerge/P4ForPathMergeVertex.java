@@ -1,17 +1,23 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -23,6 +29,8 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 public class P4ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
+    
+    private static final Logger LOG = Logger.getLogger(P4ForPathMergeVertex.class.getName());
     
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
@@ -36,6 +44,8 @@ public class P4ForPathMergeVertex extends
     private boolean curHead;
     private boolean nextHead;
     private boolean prevHead;
+    private byte nextDir;
+    private byte prevDir;
     
     /**
      * initiate kmerSize, maxIteration
@@ -80,64 +90,56 @@ public class P4ForPathMergeVertex extends
         randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 10000 * getSuperstep());//randSeed + nodeID.hashCode()
         for(int i = 0; i < 500; i++)
             randGenerator.nextFloat();
-        return randGenerator.nextFloat() < probBeingRandomHead;
+        boolean isHead = randGenerator.nextFloat() < probBeingRandomHead;
+        LOG.info("randomHead: " + nodeKmer + "=" + isHead);
+        return isHead;
     }
     
     /**
-     * checks if there is a valid, mergeable neighbor in the given direction.  sets next/prev Kmer and next/prev Head to the valid neighbor's values
+     * checks if there is a valid, mergeable neighbor in the given direction.  sets hasNext/Prev, next/prevDir, Kmer and Head
      */
-    protected boolean setNeighbor(VertexValueWritable value, DIR direction) {
-    	byte headState = direction == DIR.PREVIOUS ? State.HEAD_CAN_MERGEWITHNEXT : State.HEAD_CAN_MERGEWITHPREV;
-    	int degree = direction == DIR.PREVIOUS ? value.inDegree() : value.outDegree();
-        if(getHeadMergeDir() == headState)
-            return false;
-        if (degree != 1)
-        	throw new IllegalStateException("Node is not HEAD_CANMERGE but has degree of " + degree + " in " + direction + " direction\n" + value);
-        if (isTandemRepeat(value))
-        	throw new IllegalStateException("Node is tandem repeat but is trying to send update message! " + value);
-        
-        byte[] dirs = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
-        for(byte dir : dirs){
-            if(value.getEdgeList(dir).getCountOfPosition() > 0){
-            	if (direction == DIR.NEXT) {
-	                nextKmer = value.getEdgeList(dir).get(0).getKey(); 
-	                nextHead = isNodeRandomHead(nextKmer);
-	                return true;
-            	} else {
-            		prevKmer = value.getEdgeList(dir).get(0).getKey(); 
-	                prevHead = isNodeRandomHead(prevKmer);
-	                return true;
-            	}
-            }
+    protected void checkNeighbors() {
+        VertexValueWritable vertex = getVertexValue();
+        EnumSet<DIR> restrictedDirs = DIR.enumSetFromByte(vertex.getState());
+        // NEXT restricted by neighbor or by my edges? 
+        if (restrictedDirs.contains(DIR.NEXT) || vertex.outDegree() != 1) {
+            hasNext = false;
+        } else {
+            hasNext = true;
+            nextDir = vertex.getEdgeList(DirectionFlag.DIR_FF).getCountOfPosition() > 0 ? DirectionFlag.DIR_FF : DirectionFlag.DIR_FR; 
+            nextKmer = vertex.getEdgeList(nextDir).get(0).getKey();
+            nextHead = isNodeRandomHead(nextKmer);
         }
-        throw new IllegalStateException("outdegree apparently 0? but not HEAD_CAN_MERGEWITHPREV..." + value.outDegree() + "\n" + value);
+
+        // PREVIOUS restricted by neighbor or by my edges? 
+        if (restrictedDirs.contains(DIR.PREVIOUS) || vertex.inDegree() != 1) {
+            hasPrev = false;
+        } else {
+            hasPrev = true;
+            prevDir = vertex.getEdgeList(DirectionFlag.DIR_RF).getCountOfPosition() > 0 ? DirectionFlag.DIR_RF : DirectionFlag.DIR_RR; 
+            prevKmer = vertex.getEdgeList(prevDir).get(0).getKey();
+            prevHead = isNodeRandomHead(prevKmer);
+        }
     }
     
-    /**
-     * step1 : sendUpdates
-     */
-    public void sendUpdates(){
+    public void chooseMergeDir() {
         //initiate merge_dir
-        setStateAsNoMerge();
+        setMerge(P4State.NO_MERGE);
         
-        // only PATH vertices are present. Find the ID's for my neighbors
         curKmer = getVertexId();
         curHead = isNodeRandomHead(curKmer);
+        checkNeighbors();
         
-        // the headFlag and tailFlag's indicate if the node is at the beginning or end of a simple path. 
-        // We prevent merging towards non-path nodes
-        hasNext = setNeighbor(getVertexValue(), DIR.NEXT);  // TODO make this false if the node is restricted by its neighbors or by structure(when you combine steps 2 and 3) 
-        hasPrev = setNeighbor(getVertexValue(), DIR.PREVIOUS);
-        if (hasNext || hasPrev) {
+        if (!hasNext && !hasPrev) {
+            voteToHalt();  // this node can never merge (restricted by neighbors or my structure)
+        } else {
             if (curHead) {
                 if (hasNext && !nextHead) {
                     // compress this head to the forward tail
-                    setStateAsMergeDir(DIR.NEXT);
-                    sendUpdateMsg(isP4, DIR.PREVIOUS);
+                    setMerge((byte) (nextDir | P4State.MERGE));
                 } else if (hasPrev && !prevHead) {
                     // compress this head to the reverse tail
-                    setStateAsMergeDir(DIR.PREVIOUS);
-                    sendUpdateMsg(isP4, DIR.NEXT);
+                    setMerge((byte) (prevDir | P4State.MERGE));
                 } 
             }
             else {
@@ -146,89 +148,143 @@ public class P4ForPathMergeVertex extends
                      if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                         // tails on both sides, and I'm the "local minimum"
                         // compress me towards the tail in forward dir
-                        setStateAsMergeDir(DIR.NEXT);
-                        sendUpdateMsg(isP4, DIR.PREVIOUS);
+                        setMerge((byte) (nextDir | P4State.MERGE));
                     }
                 } else if (!hasPrev) {
                     // no previous node
                     if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                         // merge towards tail in forward dir
-                        setStateAsMergeDir(DIR.NEXT);
-                        sendUpdateMsg(isP4, DIR.PREVIOUS);
+                        setMerge((byte) (nextDir | P4State.MERGE));
                     }
                 } else if (!hasNext) {
                     // no next node
                     if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                         // merge towards tail in reverse dir
-                        setStateAsMergeDir(DIR.PREVIOUS);
-                        sendUpdateMsg(isP4, DIR.NEXT);
+                        setMerge((byte) (prevDir | P4State.MERGE));
                     }
                 }
             }
-        }  // TODO else voteToHalt (when I combine steps 2 and 3)
-        this.activate();
+        }
+        LOG.info("merge dir chosen:" + getVertexValue());
     }
     
-    /**
-     * step2: receiveUpdates
-     */
+    public void updateNeighbors() {
+        VertexValueWritable vertex = getVertexValue();
+        short state = vertex.getState();
+        if ((state & P4State.MERGE) == 0) {
+            return;  // no merge requested; don't have to update neighbors
+        }
+        
+        DIR mergeDir = DirectionFlag.dirFromEdgeType((byte)state);
+        byte[] mergeEdges = NodeWritable.edgeTypesInDir(mergeDir);
+        
+        DIR updateDir = mergeDir.mirror();
+        byte[] updateEdges = NodeWritable.edgeTypesInDir(updateDir);
+        
+        // prepare the update message s.t. the receiver can do a simple unionupdate
+        // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
+        for (byte updateEdge : updateEdges) {
+            outgoingMsg.reset();
+            outgoingMsg.setSourceVertexId(getVertexId());
+            outgoingMsg.setFlag(updateEdge);  // neighbor's edge to me (so he can remove me) 
+            for (byte mergeEdge : mergeEdges) {
+                byte newDir = DirectionFlag.resolveLinkThroughMiddleNode(updateEdge, mergeEdge);
+                outgoingMsg.getNode().setEdgeList(newDir, getVertexValue().getEdgeList(mergeEdge));  // copy into outgoingMsg
+            }
+            
+            // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
+            for (VKmerBytesWritable dest : vertex.getEdgeList(updateEdge).getKeys()) {
+                sendMsg(dest, outgoingMsg);
+            }
+        }
+    }
+    
     public void receiveUpdates(Iterator<PathMergeMessageWritable> msgIterator){
-        //update neighber
+        VertexValueWritable vertex = getVertexValue(); 
+        NodeWritable node = vertex.getNode();
+        LOG.info("before update from neighbor: " + getVertexValue());
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            processUpdate(incomingMsg);
+            // remove the edge to the node that will merge elsewhere
+            node.getEdgeList((byte)(incomingMsg.getFlag() & DirectionFlag.DIR_MASK)).remove(incomingMsg.getSourceVertexId());
+            // add the node this neighbor will merge into
+            for (byte dir : DirectionFlag.values) {
+                node.getEdgeList(dir).unionUpdate(incomingMsg.getEdgeList(dir));
+            }
         }
-        if(isInactiveNode() || isHeadUnableToMerge()) // check structure and neighbor restriction 
+        checkNeighbors();
+        if (!hasNext && !hasPrev)
             voteToHalt();
         else
             activate();
+        LOG.info("after update from neighbor: " + getVertexValue());
+    }
+    
+    public void broadcastMerge() {
+        VertexValueWritable vertex = getVertexValue();
+        if ((vertex.getState() & P4State.MERGE) != 0) {
+            outgoingMsg.reset();
+            // tell neighbor where this is coming from (so they can merge kmers and delete)
+            byte mergeDir = (byte)(vertex.getState() & DirectionFlag.DIR_MASK);
+            byte restrictedDirs = (byte)(vertex.getState() & DIR.MASK);
+            outgoingMsg.setFlag((short) (DirectionFlag.mirrorEdge(mergeDir) | restrictedDirs)); // TODO make the node flipped...
+            outgoingMsg.setSourceVertexId(getVertexId());
+            outgoingMsg.setNode(vertex.getNode());
+            if (vertex.getDegree(DirectionFlag.dirFromEdgeType(mergeDir)) != 1)
+                throw new IllegalStateException("Merge attempted in node with degree in " + mergeDir + " direction != 1!\n" + vertex);
+            VKmerBytesWritable dest = vertex.getEdgeList(mergeDir).get(0).getKey();
+            sendMsg(dest, outgoingMsg);
+        }
     }
     
     /**
      * step4: processMerges 
      */
-    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator){
-        //merge tmpKmer
+    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
+        VertexValueWritable vertex = getVertexValue();
+        NodeWritable node = vertex.getNode();
+        LOG.info("before merge: " + getVertexValue());
+        short state = vertex.getState(); 
+        byte senderDir;
+        int numMerged = 0;
         while (msgIterator.hasNext()) {
-            boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
             incomingMsg = msgIterator.next();
-            /** process merge **/
-            processMerge(incomingMsg);
-            // set statistics counter: Num_MergedNodes
-            updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
-            /** if it's a tandem repeat, which means detecting cycle **/
-            if(isTandemRepeat(getVertexValue())){
-                // set statistics counter: Num_Cycles
-                updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
-                voteToHalt();  // TODO make sure you're checking structure to preclude tandem repeats
-            }/** head meets head, stop **/ 
-            else if(isInactiveNode() || isHeadMeetsHead(selfFlag)){
-                getVertexValue().setState(State.HEAD_CANNOT_MERGE);
-                // set statistics counter: Num_MergedPaths
-                updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
-                voteToHalt();
-            }else{
-                activate();
-            }
-            getVertexValue().setCounters(counters);
+            senderDir = (byte) (incomingMsg.getFlag() & DirectionFlag.DIR_MASK);
+            node.mergeWithNode(senderDir, node);
+            state |= (byte) (incomingMsg.getFlag() & DIR.MASK);  // update incoming restricted directions
+            numMerged++;
         }
+        if(isTandemRepeat(getVertexValue())) {
+            state |= (DIR.NEXT.get() | DIR.PREVIOUS.get());  // tandem repeats can't merge anymore
+//          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
+        }
+//      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
+//      getVertexValue().setCounters(counters);
+        vertex.setState(state);
+        
+        LOG.info("after merge: " + getVertexValue());
     }
     
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
-        if (getSuperstep() == 1)
-            startSendMsg();
-        else if (getSuperstep() == 2)
-            initState(msgIterator);
-        else if (getSuperstep() % 4 == 3)
-            sendUpdates();
-        else if (getSuperstep() % 4 == 0)  
+        if (getSuperstep() > 4) {
+            LOG.info("test");
+        }
+            
+        if (getSuperstep() == 1) {
+            restrictNeighbors();
+        } else if (getSuperstep() % 2 == 0) {
+            if (getSuperstep() == 2)
+                recieveRestrictions(msgIterator);
+            else
+                receiveMerges(msgIterator);
+            chooseMergeDir();
+            updateNeighbors();
+        } else if (getSuperstep() % 2 == 1) {
             receiveUpdates(msgIterator);
-        else if (getSuperstep() % 4 == 1){
-            broadcastMergeMsg(true);
-        } else if (getSuperstep() % 4 == 2)
-            receiveMerges(msgIterator);
+            broadcastMerge();
+        }
     }
 
     public static void main(String[] args) throws Exception {

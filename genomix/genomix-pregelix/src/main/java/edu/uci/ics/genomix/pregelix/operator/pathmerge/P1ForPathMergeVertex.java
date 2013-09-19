@@ -267,10 +267,10 @@ public class P1ForPathMergeVertex extends
         initVertex();
         if (getSuperstep() == 1) {
             addFakeVertex();
-            startSendMsg();
+            restrictNeighbors();
         } else if (getSuperstep() == 2)
             if(!isFakeVertex())
-                initState(msgIterator);
+                recieveRestrictions(msgIterator);
             else voteToHalt();
         else if (getSuperstep() % 7 == 3 && getSuperstep() <= maxIteration) {
             //head send update message

@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -11,7 +12,9 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
 import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -30,45 +33,33 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         return (byte) (incomingMsg.getFlag() & MessageFlag.HEAD_CAN_MERGE_MASK);
     }
     /**
-     * start sending message
+     * Send merge restrictions to my neighbor nodes
      */
-    public void startSendMsg() {
-        if(isTandemRepeat(getVertexValue())){
-            getCopyWithoutTandemRepeats(getVertexValue());
-            outFlag = 0;
-            sendSettledMsgToAllNeighborNodes(tmpValue);
-            voteToHalt();
-        } else{
-            /** check incoming **/
-            // update internal state
-            if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue())){
-                byte state = 0;
-                state |= State.HEAD_CAN_MERGEWITHPREV;
-                getVertexValue().setState(state);
-                activate();
-            } 
-            // send to neighbors
-            else if (VertexUtil.isVertexWithManyIncoming(getVertexValue())){
-                outFlag = 0;
-                sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
+    public void restrictNeighbors() {
+        EnumSet<DIR> dirsToRestrict;
+        V vertex = getVertexValue();
+        if(isTandemRepeat(vertex)) {
+            // tandem repeats are not allowed to merge at all
+            dirsToRestrict = EnumSet.of(DIR.NEXT, DIR.PREVIOUS);
+        }
+        else {
+            // degree > 1 can't merge in that direction
+            dirsToRestrict = EnumSet.noneOf(DIR.class);
+            for (DIR dir : DIR.values()) {
+                if (vertex.getDegree(dir) > 1)
+                    dirsToRestrict.add(dir);
             }
-            
-            /** check outgoing **/
-            // update internal state
-            if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue())){
-                byte state = 0;
-                state |= State.HEAD_CAN_MERGEWITHNEXT;
-                getVertexValue().setState(state);
-                activate();
-            } 
-            // send to neighbors
-            else if (VertexUtil.isVertexWithManyOutgoing(getVertexValue())){
-                outFlag = 0;
-                sendSettledMsgs(DIR.NEXT, getVertexValue());
+        }
+        
+        // send a message to each neighbor indicating they can't merge towards me
+        for (DIR dir : dirsToRestrict) {
+            for (byte d : NodeWritable.edgeTypesInDir(dir)) {
+                for (VKmerBytesWritable destId : vertex.getEdgeList(d).getKeys()) {
+                    outgoingMsg.reset();
+                    outgoingMsg.setFlag(dir.mirror().get());
+                    sendMsg(destId, outgoingMsg);
+                }
             }
-            
-            if(VertexUtil.isUnMergeVertex(getVertexValue()))
-                voteToHalt();
         }
     }
 
@@ -97,30 +88,18 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * initiate head, rear and path node
      */
-    public void initState(Iterator<M> msgIterator) {
-        if(isInactiveNode())
-            voteToHalt();
-        else{
-            while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                switch(getHeadMergeDir()){
-                    case State.NON_HEAD: // TODO Change name to Path
-                        setHeadMergeDir();
-                        activate();
-                        break;
-                    case State.HEAD_CAN_MERGEWITHPREV: // TODO aggregate all the incomingMsgs first, then make a decision about halting
-                    case State.HEAD_CAN_MERGEWITHNEXT:
-                        if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
-                            getVertexValue().setState(State.HEAD_CANNOT_MERGE);
-                            voteToHalt();
-                        }
-                        break;
-                    case State.HEAD_CANNOT_MERGE:
-                        voteToHalt();
-                        break;
-                }
-            }
+    public void recieveRestrictions(Iterator<M> msgIterator) {
+        short restrictedDirs = 0;
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            restrictedDirs |= incomingMsg.getFlag();
         }
+        // special case: tandem repeats cannot merge at all
+        if (isTandemRepeat(getVertexValue())) {
+            restrictedDirs |= DIR.PREVIOUS.get();
+            restrictedDirs |= DIR.NEXT.get();
+        }
+        getVertexValue().setState(restrictedDirs);
     }
     
     public void setStateAsMergeDir(DIR direction){
@@ -380,6 +359,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         outgoingMsg.setNode(getVertexValue().getNode());
         sendMsg(mergeDest, outgoingMsg);
     }
+    
     
     /**
      * send merge message to neighber for P4, send message to the merge object and kill self

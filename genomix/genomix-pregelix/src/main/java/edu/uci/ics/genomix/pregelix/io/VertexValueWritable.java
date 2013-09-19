@@ -75,6 +75,15 @@ public class VertexValueWritable
         public static final short FAKEFLAG_MASK = 1 << 7;
     }
     
+    public static class P4State {
+        // 2 bits for DirectionFlag, then 2 bits for set of DIR's
+        // each merge has an edge-type direction (e.g., FF)
+        public static final byte NO_MERGE = 0b0 << 4;
+        public static final byte MERGE = 0b1 << 4;
+        public static final byte MERGE_CLEAR = 0b1101100; // clear the MERGE/NO_MERGE and the MERGE_DIRECTION
+        public static final byte MERGE_MASK = 0b0010011;
+    }
+    
     private short state;
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
