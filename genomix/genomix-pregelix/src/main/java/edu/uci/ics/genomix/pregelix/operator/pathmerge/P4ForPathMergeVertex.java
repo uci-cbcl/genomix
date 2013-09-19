@@ -216,10 +216,6 @@ public class P4ForPathMergeVertex extends
             voteToHalt();
         else
             activate();
-//        if(isInactiveNode() || isHeadUnableToMerge()) // check structure and neighbor restriction 
-//            voteToHalt();
-//        else
-//            activate();
     }
     
     /**
@@ -228,7 +224,6 @@ public class P4ForPathMergeVertex extends
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator){
         //merge tmpKmer
         while (msgIterator.hasNext()) {
-//            boolean selfFlag = (getHeadMergeDir() == State.HEAD_CAN_MERGEWITHPREV || getHeadMergeDir() == State.HEAD_CAN_MERGEWITHNEXT);
             incomingMsg = msgIterator.next();
             /** process merge **/
             processMerge(incomingMsg);
@@ -246,18 +241,12 @@ public class P4ForPathMergeVertex extends
             /** head meets head, stop **/ 
             checkNeighbors();
             if (!hasNext && !hasPrev){
+                // set statistics counter: Num_MergedPaths
+                updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
                 voteToHalt();
             }else{
                 activate();
             }
-//            else if(isInactiveNode() || isHeadMeetsHead(selfFlag)){
-//                getVertexValue().setState(State.HEAD_CANNOT_MERGE);
-//                // set statistics counter: Num_MergedPaths
-//                updateStatisticsCounter(StatisticsCounter.Num_MergedPaths);
-//                voteToHalt();
-//            }else{
-//                activate();
-//            }
             getVertexValue().setCounters(counters);
         }
     }
@@ -267,16 +256,18 @@ public class P4ForPathMergeVertex extends
         initVertex();
         if (getSuperstep() == 1)
             restrictNeighbors();
-        else if (getSuperstep() == 2)
-            recieveRestrictions(msgIterator);
-        else if (getSuperstep() % 4 == 3)
+        else if (getSuperstep() % 2 == 0){
+            if (getSuperstep() == 2)
+                recieveRestrictions(msgIterator);
+            else
+                receiveMerges(msgIterator);
+            
             sendUpdates();
-        else if (getSuperstep() % 4 == 0)  
+        }
+        else if (getSuperstep() % 2 == 1){
             receiveUpdates(msgIterator);
-        else if (getSuperstep() % 4 == 1){
             sendMergeMsg(isP4);
-        } else if (getSuperstep() % 4 == 2)
-            receiveMerges(msgIterator);
+        }
     }
 
     public static void main(String[] args) throws Exception {
