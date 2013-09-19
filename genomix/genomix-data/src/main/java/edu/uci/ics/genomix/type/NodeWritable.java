@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.EnumSet;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -30,9 +31,52 @@ import edu.uci.ics.genomix.data.Marshal;
 public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
 	
 	public enum DIR {
-		NEXT,
-		PREVIOUS
+		
+	    PREVIOUS((byte) (0b01 << 2)),
+		NEXT((byte) (0b10 << 2));
+		
+		public static final byte MASK = (byte)(0b11 << 2); 
+		
+		private final byte val;
+		private DIR(byte val) {
+	        this.val = val;
+	    }
+		public final byte get() {
+		    return val;
+		}
+		public static DIR mirror(DIR direction) {
+		    switch (direction) {
+		        case PREVIOUS:
+		            return NEXT;
+		        case NEXT:
+		            return PREVIOUS;
+		        default:
+		            throw new IllegalArgumentException("test");
+		    }
+		}
+		public DIR mirror() {
+		    return mirror(this);
+		}
+		
+		public static DIR fromByte(short b) {
+		    b &= MASK;
+		    if (b == PREVIOUS.val)
+		        return PREVIOUS;
+		    if (b == NEXT.val)
+		        return NEXT;
+		    return null;  
+		}
+		
+		public static EnumSet<DIR> enumSetFromByte(short s) {
+		    EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
+		    if ((s & PREVIOUS.get()) != 0)
+		        retSet.add(DIR.PREVIOUS);
+		    if ((s & NEXT.get()) != 0)
+                retSet.add(DIR.NEXT);
+		    return retSet;
+		}
 	}
+
 
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
@@ -62,7 +106,104 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         public static final byte DIR_CLEAR = 0b1111100 << 0;
 
         public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
+        
+        /**
+         * Returns the edge dir for B->A when the A->B edge is type @dir
+         */
+        public static byte mirrorEdge(byte edgeType) {
+            switch (edgeType) {
+                case DIR_FF:
+                    return DIR_RR;
+                case DIR_FR:
+                    return DIR_FR;
+                case DIR_RF:
+                    return DIR_RF;
+                case DIR_RR:
+                    return DIR_FF;
+                default:
+                    throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
+            }
+        }
+        
+        public static DIR dirFromEdgeType(byte b) {
+            switch(b & DirectionFlag.DIR_MASK) {
+                case DIR_FF:
+                case DIR_FR:
+                    return DIR.NEXT;
+                case DIR_RF:
+                case DIR_RR:
+                    return DIR.PREVIOUS;
+                default:
+                    throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + b);
+                    
+            }
+        }
+        
+        /**
+         * return the edgetype corresponding to moving across edge1 and edge2.
+         * 
+         *  So if A <-e1- B -e2-> C, we will return the relationship from A -> C
+         *  
+         *  If the relationship isn't a valid path (e.g., e1,e2 are both FF), an exception is raised.
+         */
+        public static byte resolveLinkThroughMiddleNode(byte BtoA, byte BtoC) {
+            BtoA &= DIR_MASK;
+            BtoC &= DIR_MASK;
+            byte AtoB = mirrorEdge(BtoA);
+            // two rules apply: 
+            //      1) the internal letters must be the same (so FF, RF will be an error)
+            //      2) the final direction is the 1st letter of AtoB + 2nd letter of BtoC
+            // TODO? maybe we could use the string version to resolve this following above rules
+            switch(AtoB) {
+                case DIR_FF:
+                    switch (BtoC) {
+                        case DIR_FF:
+                        case DIR_FR:
+                            return BtoC;
+                        case DIR_RF:
+                        case DIR_RR:
+                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                    }
+                    break;
+                case DIR_FR:
+                    switch (BtoC) {
+                        case DIR_FF:
+                        case DIR_FR:
+                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                        case DIR_RF:
+                            return DIR_FF;
+                        case DIR_RR:
+                            return DIR_FR;
+                    }
+                    break;
+                case DIR_RF:
+                    switch (BtoC) {
+                        case DIR_FF:
+                            return DIR_RF;
+                        case DIR_FR:
+                            return DIR_RR;
+                        case DIR_RF:
+                        case DIR_RR:
+                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                    }
+                    break;
+                case DIR_RR:
+                    switch (BtoC) {
+                        case DIR_FF:
+                        case DIR_FR:
+                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                        case DIR_RF:
+                            return DIR_RF;
+                        case DIR_RR:
+                            return DIR_RR;
+                    }
+                    break;
+            }
+            throw new IllegalStateException("Logic Error or unrecognized direction... original values were: " + BtoA + " and " + BtoC);
+        }
     }
+    
+    
     
     public static class IncomingListFlag { // TODO refactor as a function using DIR
         public static final byte DIR_RF = 0b10 << 0;
@@ -77,6 +218,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
         public static final byte[] values = {DIR_FF, DIR_FR };
     }
+    
+    public static final byte[] edgeTypesInDir(DIR direction) {
+        return direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
+    }
+    
     
     public NodeWritable() {
         for (byte d : DirectionFlag.values) {
