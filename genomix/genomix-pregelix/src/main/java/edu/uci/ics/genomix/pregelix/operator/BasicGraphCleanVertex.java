@@ -16,6 +16,7 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
@@ -348,12 +349,13 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     /**
      * get a copy of the original Kmer without TandemRepeat
+     * @param destVertex 
      */
-    public void getCopyWithoutTandemRepeats(V vertexValue){
-        tmpValue.setAsCopy(vertexValue);
-        tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
-        while(isTandemRepeat(tmpValue))
-            tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+    public void copyWithoutTandemRepeats(V srcVertex, VertexValueWritable destVertex){
+        destVertex.setAsCopy(srcVertex);
+        destVertex.getEdgeList(repeatDir).remove(repeatKmer);
+        while(isTandemRepeat(destVertex))
+            destVertex.getEdgeList(repeatDir).remove(repeatKmer);
     }
     
     /**
@@ -449,6 +451,17 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         state |= State.NO_MERGE;
         getVertexValue().setState(state);
         activate();  //TODO could we be more careful about activate?
+    }
+    
+    /**
+     * set state as no_merge
+     */
+    public void setMerge(byte mergeState){
+        short state = getVertexValue().getState();
+        state &= P4State.MERGE_CLEAR;
+        state |= (mergeState & P4State.MERGE_MASK);
+        getVertexValue().setState(state);
+        activate();
     }
     
     /**
@@ -566,21 +579,35 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0;
     }
     
-    public boolean isTandemRepeat(VertexValueWritable value){
-        VKmerBytesWritable kmerToCheck;
+    /**
+     * Look inside of vertex for the given edge, returning the direction we found it in (or null) 
+     */
+    public static Byte findEdge(VKmerBytesWritable id, VertexValueWritable vertex){
+        // TODO move into Node?
         for(byte d : DirectionFlag.values){
-            Iterator<VKmerBytesWritable> it = value.getEdgeList(d).getKeyIterator();
-            while(it.hasNext()){
-                kmerToCheck = it.next();
-                if(kmerToCheck.equals(getVertexId())){
-                    repeatDir = d;
-                    repeatKmer.setAsCopy(kmerToCheck);
-                    return true;
-                }
+            for (VKmerBytesWritable curKey : vertex.getEdgeList(d).getKeys()) {
+                if(curKey.equals(id)) // points to self
+                    return d;
             }
         }
-        return false;
+        return null;
     }
+    
+    public boolean isTandemRepeat(VertexValueWritable value){
+            VKmerBytesWritable kmerToCheck;
+            for(byte d : DirectionFlag.values){
+                Iterator<VKmerBytesWritable> it = value.getEdgeList(d).getKeyIterator();
+                while(it.hasNext()){
+                    kmerToCheck = it.next();
+                    if(kmerToCheck.equals(getVertexId())){
+                        repeatDir = d;
+                        repeatKmer.setAsCopy(kmerToCheck);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     
     public byte flipDir(byte dir){
         switch(dir){
