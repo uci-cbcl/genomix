@@ -177,7 +177,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setNode(getVertexValue().getNode()); //half of edges are enough
-            destVertexId = getDestVertexId(direction); //(direction == DIR.PREVIOUS ? getPrevDestVertexId() : getNextDestVertexId()); //getDestVertexId(direction)
+            destVertexId = getDestVertexId(direction);
             sendMsg(destVertexId, outgoingMsg);
             
             if(isP4)
@@ -376,13 +376,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
         byte neighborToMeDir = mirrorDirection(meToNeighborDir);
 
-//        if(isNonHeadReceivedFromHead()){ // TODO? why sepcial-case the path vs heads?  just aggregate your state flags
-//            short state = getVertexValue().getState();
-//            state &= State.HEAD_CAN_MERGE_CLEAR;
-//            byte headMergeDir = flipHeadMergeDir((byte)(inFlag & MessageFlag.HEAD_CAN_MERGE_MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
-//            state |= headMergeDir;
-//            getVertexValue().setState(state);
-//        }
         short state = getVertexValue().getState();  
         state |= flipHeadMergeDir((byte)(inFlag & DIR.MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
         getVertexValue().setState(state);

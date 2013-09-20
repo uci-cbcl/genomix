@@ -490,22 +490,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         if(applyDelete)
             edges[deleteDir].remove(toDelete);
         edges[updateDir].unionUpdate(other.edges[replaceDir]);
-//        switch (replaceDir) {
-//            case DirectionFlag.DIR_FF:
-//            case DirectionFlag.DIR_FR:
-//                if (other.inDegree() != 1)
-//                    throw new IllegalStateException("In update, expected other node's indegree to be 1!" + this + other);
-//                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-//                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
-//                break;
-//            case DirectionFlag.DIR_RF:
-//            case DirectionFlag.DIR_RR:
-//                if (other.outDegree() != 1)
-//                    throw new IllegalStateException("In update, expected other node's outdegree to be 1!" + this + other);
-//                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-//                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
-//                break;
-//        }
     }
     
     /**
