@@ -62,7 +62,9 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     
     public void setAsCopy(EdgeListWritable otherEdge){
         reset();
-        edges.addAll(otherEdge.edges); // TODO make a deep copy
+        for (EdgeWritable e : otherEdge.edges) {
+            add(e);
+        }
     }
 
     public void reset() {
