@@ -171,7 +171,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             BtoA &= DIR_MASK;
             BtoC &= DIR_MASK;
             byte AtoB = mirrorEdge(BtoA);
-            // two rules apply: 
+            // a valid path must exist from A to C
+            // specifically, two rules apply for AtoB and BtoC
             //      1) the internal letters must be the same (so FF, RF will be an error)
             //      2) the final direction is the 1st letter of AtoB + 2nd letter of BtoC
             // TODO? maybe we could use the string version to resolve this following above rules
