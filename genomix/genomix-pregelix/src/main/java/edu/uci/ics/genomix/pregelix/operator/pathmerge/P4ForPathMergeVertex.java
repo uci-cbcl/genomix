@@ -96,7 +96,8 @@ public class P4ForPathMergeVertex extends
         if(isTandemRepeat(vertex)) {
             // tandem repeats are not allowed to merge at all
             dirsToRestrict = EnumSet.of(DIR.NEXT, DIR.PREVIOUS);
-            state |= DIR.NEXT.get() | DIR.PREVIOUS.get();  // tandem repeats are excluded from any merging
+            state |= DIR.NEXT.get();
+            state |= DIR.PREVIOUS.get();
             updated = true;
         }
         else {
@@ -137,21 +138,28 @@ public class P4ForPathMergeVertex extends
      */
     public void recieveRestrictions(Iterator<PathMergeMessageWritable> msgIterator) {
         short restrictedDirs = 0;  // the directions (NEXT/PREVIOUS) that I'm not allowed to merge in
+        boolean updated = false;
         while (msgIterator.hasNext()) {
 //            LOG.info("before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
             incomingMsg = msgIterator.next();
             restrictedDirs |= incomingMsg.getFlag();
 //            LOG.info("after restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
-            activate();
+            updated = true;
         }
         // special case: tandem repeats cannot merge at all
         if (isTandemRepeat(getVertexValue())) {
             restrictedDirs |= DIR.PREVIOUS.get();
             restrictedDirs |= DIR.NEXT.get();
 //            LOG.info("after tandem repeat restriction: " + DIR.fromByte(restrictedDirs));
-            voteToHalt();
+            updated = true;
         }
-        getVertexValue().setState(restrictedDirs);
+        if (updated) {
+            getVertexValue().setState(restrictedDirs);
+            if (DIR.enumSetFromByte(restrictedDirs).containsAll(EnumSet.allOf(DIR.class)))
+                voteToHalt();
+            else 
+                activate();
+        }
     }
 
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
@@ -199,7 +207,7 @@ public class P4ForPathMergeVertex extends
         curHead = isNodeRandomHead(curKmer);
         checkNeighbors();
         
-        if (!hasNext && !hasPrev) {
+        if (!hasNext && !hasPrev) { // TODO check if logic for previous updates is the same as here (just look at internal flags?)
             voteToHalt();  // this node can never merge (restricted by neighbors or my structure)
         } else {
             if (curHead) {
@@ -276,6 +284,7 @@ public class P4ForPathMergeVertex extends
     public void receiveUpdates(Iterator<PathMergeMessageWritable> msgIterator){
         VertexValueWritable vertex = getVertexValue(); 
         NodeWritable node = vertex.getNode();
+        boolean updated = false;
         while (msgIterator.hasNext()) {
 //            LOG.info("before update from neighbor: " + getVertexValue());
             incomingMsg = msgIterator.next();
@@ -285,13 +294,21 @@ public class P4ForPathMergeVertex extends
             for (byte dir : DirectionFlag.values) {
                 node.getEdgeList(dir).unionUpdate(incomingMsg.getEdgeList(dir));
             }
+            updated = true;
 //            LOG.info("after update from neighbor: " + getVertexValue());
         }
-        checkNeighbors();
-        if (!hasNext && !hasPrev)
-            voteToHalt();
-        else
-            activate();
+        if (updated) {
+            if (DIR.enumSetFromByte(vertex.getState()).containsAll(EnumSet.allOf(DIR.class)))
+                voteToHalt();
+            else 
+                activate();
+        }
+            
+//            checkNeighbors();
+//            if (!hasNext && !hasPrev)
+//                voteToHalt();
+//            else
+//                activate();
     }
     
     public void broadcastMerge() {
@@ -324,6 +341,7 @@ public class P4ForPathMergeVertex extends
         VertexValueWritable vertex = getVertexValue();
         NodeWritable node = vertex.getNode();
         short state = vertex.getState();
+        boolean updated = false;
         byte senderDir;
         int numMerged = 0;
         while (msgIterator.hasNext()) {
@@ -333,15 +351,25 @@ public class P4ForPathMergeVertex extends
             node.mergeWithNode(senderDir, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK);  // update incoming restricted directions
             numMerged++;
+            updated = true;
 //            LOG.info("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
         }
         if(isTandemRepeat(getVertexValue())) {
-            state |= (DIR.NEXT.get() | DIR.PREVIOUS.get());  // tandem repeats can't merge anymore
+            // tandem repeats can't merge anymore
+            state |= DIR.NEXT.get();
+            state |= DIR.PREVIOUS.get();
+            updated = true;
 //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
 //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
 //      getVertexValue().setCounters(counters);
-        vertex.setState(state);
+        if (updated) {
+            vertex.setState(state);
+            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class)))
+                voteToHalt();
+            else 
+                activate();
+        }
     }
     
     @Override
