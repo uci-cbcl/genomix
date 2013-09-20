@@ -28,7 +28,7 @@ import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class NodeWritable implements WritableComparable<NodeWritable>, Serializable {
+public class NodeWritable implements WritableComparable<NodeWritable>, Serializable { // TODO is it more efficient to just use binaryComparable with Comparator?
 	
 	public enum DIR {
 		
@@ -58,7 +58,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		    return mirror(this);
 		}
 		
-		public static DIR fromByte(short b) {
+		public static DIR fromByte(short b) { // TODO remove this function 
+			//TODO change shorts to byte? (anbangx) 
 		    b &= MASK;
 		    if (b == PREVIOUS.val)
 		        return PREVIOUS;
@@ -118,7 +119,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 //    public String previous;
 //    public int stepCount;
     // merge/update directions
-    public static class DirectionFlag {
+    public static class DirectionFlag { // TODO change to "EdgeType" and make enum-based
         public static final byte DIR_FF = 0b00 << 0;
         public static final byte DIR_FR = 0b01 << 0;
         public static final byte DIR_RF = 0b10 << 0;
