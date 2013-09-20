@@ -21,8 +21,10 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.Map;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -738,6 +740,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 }
                 break;
         }
+    }
+    
+    /**
+     * Debug helper function to find the edge associated with the given kmer
+     */
+    public Map.Entry<Byte, EdgeWritable> findEdge(final VKmerBytesWritable kmer) {
+        for (byte dir : DirectionFlag.values) {
+            for (EdgeWritable e : edges[dir]) {
+                if (e.getKey().equals(kmer))
+                    return new AbstractMap.SimpleEntry<Byte, EdgeWritable>(dir, e);
+            }
+        }
+        return null;
     }
 
     public int inDegree() {
