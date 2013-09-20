@@ -101,7 +101,7 @@ public class P4ForPathMergeVertex extends
             updated = true;
         }
         else {
-            // degree > 1 can't merge in that direction
+            // degree > 1 can't merge in that direction; == 0 means we are a tip 
             dirsToRestrict = EnumSet.noneOf(DIR.class);
             for (DIR dir : DIR.values()) {
                 if (vertex.getDegree(dir) > 1 || vertex.getDegree(dir) == 0) {
@@ -144,13 +144,6 @@ public class P4ForPathMergeVertex extends
             incomingMsg = msgIterator.next();
             restrictedDirs |= incomingMsg.getFlag();
 //            LOG.info("after restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
-            updated = true;
-        }
-        // special case: tandem repeats cannot merge at all
-        if (isTandemRepeat(getVertexValue())) {
-            restrictedDirs |= DIR.PREVIOUS.get();
-            restrictedDirs |= DIR.NEXT.get();
-//            LOG.info("after tandem repeat restriction: " + DIR.fromByte(restrictedDirs));
             updated = true;
         }
         if (updated) {
@@ -355,7 +348,7 @@ public class P4ForPathMergeVertex extends
 //            LOG.info("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
         }
         if(isTandemRepeat(getVertexValue())) {
-            // tandem repeats can't merge anymore
+            // tandem repeats can't merge anymore; restrict all future merges
             state |= DIR.NEXT.get();
             state |= DIR.PREVIOUS.get();
             updated = true;
