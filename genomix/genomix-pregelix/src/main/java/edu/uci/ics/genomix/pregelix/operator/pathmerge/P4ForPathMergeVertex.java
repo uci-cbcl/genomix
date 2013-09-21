@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
@@ -37,8 +37,8 @@ public class P4ForPathMergeVertex extends
     private boolean curHead;
     private boolean nextHead;
     private boolean prevHead;
-    private byte nextDir;
-    private byte prevDir;
+    private EDGETYPE nextEdgetype;
+    private EDGETYPE prevEdgetype;
     
     /**
      * initiate kmerSize, maxIteration
@@ -114,11 +114,12 @@ public class P4ForPathMergeVertex extends
         
         // send a message to each neighbor indicating they can't merge towards me
         for (DIR dir : dirsToRestrict) {
-            for (byte d : NodeWritable.edgeTypesInDir(dir)) {
-                for (VKmerBytesWritable destId : vertex.getEdgeList(d).getKeys()) {
+            for (EDGETYPE et : NodeWritable.edgeTypesInDir(dir)) {
+                for (VKmerBytesWritable destId : vertex.getEdgeList(et).getKeys()) {
                     outgoingMsg.reset();
 //                    outgoingMsg.setFlag(dir.mirror().get());
-                    outgoingMsg.setFlag(DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)).get());
+                    outgoingMsg.setFlag(et.mirrorEdge().dir().get());
+                    
 //                    LOG.info("send restriction from " + getVertexId() + " to " + destId + " in my " + d + " and their " + DirectionFlag.mirrorEdge(d) + " (" + DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)) + "); I am " + getVertexValue());
                     sendMsg(destId, outgoingMsg);
                 }
@@ -159,7 +160,7 @@ public class P4ForPathMergeVertex extends
     }
     
     /**
-     * checks if there is a valid, mergeable neighbor in the given direction.  sets hasNext/Prev, next/prevDir, Kmer and Head
+     * checks if there is a valid, mergeable neighbor in the given direction.  sets hasNext/Prev, next/prevEdgetype, Kmer and Head
      */
     protected void checkNeighbors() {
         VertexValueWritable vertex = getVertexValue();
@@ -169,8 +170,8 @@ public class P4ForPathMergeVertex extends
             hasNext = false;
         } else {
             hasNext = true;
-            nextDir = vertex.getEdgeList(DirectionFlag.DIR_FF).getCountOfPosition() > 0 ? DirectionFlag.DIR_FF : DirectionFlag.DIR_FR; 
-            nextKmer = vertex.getEdgeList(nextDir).get(0).getKey();
+            nextEdgetype = vertex.getEdgeList(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
+            nextKmer = vertex.getEdgeList(nextEdgetype).get(0).getKey();
             nextHead = isNodeRandomHead(nextKmer);
         }
 
@@ -179,8 +180,8 @@ public class P4ForPathMergeVertex extends
             hasPrev = false;
         } else {
             hasPrev = true;
-            prevDir = vertex.getEdgeList(DirectionFlag.DIR_RF).getCountOfPosition() > 0 ? DirectionFlag.DIR_RF : DirectionFlag.DIR_RR; 
-            prevKmer = vertex.getEdgeList(prevDir).get(0).getKey();
+            prevEdgetype = vertex.getEdgeList(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
+            prevKmer = vertex.getEdgeList(prevEdgetype).get(0).getKey();
             prevHead = isNodeRandomHead(prevKmer);
         }
     }
@@ -199,10 +200,10 @@ public class P4ForPathMergeVertex extends
             if (curHead) {
                 if (hasNext && !nextHead) {
                     // compress this head to the forward tail
-                    setMerge((byte) (nextDir | P4State.MERGE));
+                    setMerge((byte) (nextEdgetype.get() | P4State.MERGE));
                 } else if (hasPrev && !prevHead) {
                     // compress this head to the reverse tail
-                    setMerge((byte) (prevDir | P4State.MERGE));
+                    setMerge((byte) (prevEdgetype.get() | P4State.MERGE));
                 } 
             }
             else {
@@ -211,19 +212,19 @@ public class P4ForPathMergeVertex extends
                      if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                         // tails on both sides, and I'm the "local minimum"
                         // compress me towards the tail in forward dir
-                        setMerge((byte) (nextDir | P4State.MERGE));
+                        setMerge((byte) (nextEdgetype.get() | P4State.MERGE));
                     }
                 } else if (!hasPrev) {
                     // no previous node
                     if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                         // merge towards tail in forward dir
-                        setMerge((byte) (nextDir | P4State.MERGE));
+                        setMerge((byte) (nextEdgetype.get() | P4State.MERGE));
                     }
                 } else if (!hasNext) {
                     // no next node
                     if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                         // merge towards tail in reverse dir
-                        setMerge((byte) (prevDir | P4State.MERGE));
+                        setMerge((byte) (prevEdgetype.get() | P4State.MERGE));
                     }
                 }
             }

@@ -50,7 +50,7 @@ public class UnrollTandemRepeat extends
      */
     public boolean repeatCanBeMerged(){
         tmpValue.setAsCopy(getVertexValue());
-        tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+        tmpValue.getEdgeList(repeatEdgetype).remove(repeatKmer);
         boolean hasFlip = false;
         /** pick one edge and flip **/
         for(byte d : DirectionFlag.values){
@@ -77,8 +77,8 @@ public class UnrollTandemRepeat extends
      * merge tandem repeat
      */
     public void mergeTandemRepeat(){
-        getVertexValue().getInternalKmer().mergeWithKmerInDir(repeatDir, kmerSize, getVertexId());
-        getVertexValue().getEdgeList(repeatDir).remove(getVertexId());
+        getVertexValue().getInternalKmer().mergeWithKmerInDir(repeatEdgetype, kmerSize, getVertexId());
+        getVertexValue().getEdgeList(repeatEdgetype).remove(getVertexId());
         boolean hasFlip = false;
         /** pick one edge and flip **/
         for(byte d : DirectionFlag.values){

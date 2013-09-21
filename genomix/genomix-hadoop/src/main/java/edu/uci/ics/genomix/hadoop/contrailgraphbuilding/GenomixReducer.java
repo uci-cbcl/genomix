@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.mapred.JobConf;
@@ -10,7 +11,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 @SuppressWarnings("deprecation")
@@ -38,8 +39,8 @@ public class GenomixReducer extends MapReduceBase implements
 		
 		while (values.hasNext()) {
 		    tmpNode.setAsCopy(values.next());
-		    for (byte d: DirectionFlag.values) {
-		        outputNode.getEdgeList(d).unionUpdate(tmpNode.getEdgeList(d));
+		    for (EDGETYPE e: EnumSet.allOf(EDGETYPE.class)) {
+		        outputNode.getEdgeList(e).unionUpdate(tmpNode.getEdgeList(e));
 		    }
 		    outputNode.getStartReads().unionUpdate(tmpNode.getStartReads());
 		    outputNode.getEndReads().unionUpdate(tmpNode.getEndReads());
