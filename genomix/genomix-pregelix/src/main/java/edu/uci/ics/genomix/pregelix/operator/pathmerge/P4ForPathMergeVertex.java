@@ -117,7 +117,6 @@ public class P4ForPathMergeVertex extends
             for (EDGETYPE et : NodeWritable.edgeTypesInDir(dir)) {
                 for (VKmerBytesWritable destId : vertex.getEdgeList(et).getKeys()) {
                     outgoingMsg.reset();
-//                    outgoingMsg.setFlag(dir.mirror().get());
                     outgoingMsg.setFlag(et.mirror().dir().get());
                     
 //                    LOG.info("send restriction from " + getVertexId() + " to " + destId + " in my " + d + " and their " + DirectionFlag.mirrorEdge(d) + " (" + DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)) + "); I am " + getVertexValue());
@@ -358,9 +357,6 @@ public class P4ForPathMergeVertex extends
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) {
         initVertex();
-//        if (getSuperstep() >= 4) {
-//            LOG.info("test");
-//        }
             
         if (getSuperstep() == 1) {
             restrictNeighbors();

@@ -122,9 +122,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public enum EDGETYPE {
         
         FF((byte)(0b00 << 0)),
-        FR((byte)(0b00 << 0)),
-        RF((byte)(0b00 << 0)),
-        RR((byte)(0b00 << 0));
+        FR((byte)(0b01 << 0)),
+        RF((byte)(0b10 << 0)),
+        RR((byte)(0b11 << 0));
         
         public static final byte MASK = (byte)(0b11 << 0); 
         private final byte val;
