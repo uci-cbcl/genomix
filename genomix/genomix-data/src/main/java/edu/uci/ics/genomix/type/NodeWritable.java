@@ -156,7 +156,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         /**
          * Returns the edge dir for B->A when the A->B edge is type @dir
          */
-        public static EDGETYPE mirrorEdge(EDGETYPE edgeType){
+        public EDGETYPE mirror(){
+            return mirror(this);
+        }
+        
+        public static EDGETYPE mirror(EDGETYPE edgeType){
             switch (edgeType) {
                 case FF:
                     return RR;
@@ -169,10 +173,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 default:
                     throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
             }
-        }
-        
-        public EDGETYPE mirrorEdge(){
-            return mirrorEdge(this);
         }
         
         public DIR dir() {
@@ -200,7 +200,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
          *  If the relationship isn't a valid path (e.g., e1,e2 are both FF), an exception is raised.
          */
         public static EDGETYPE resolveLinkThroughMiddleNode(EDGETYPE BtoA, EDGETYPE BtoC) {
-            EDGETYPE AtoB = mirrorEdge(BtoA);
+            EDGETYPE AtoB = mirror(BtoA);
             // a valid path must exist from A to C
             // specifically, two rules apply for AtoB and BtoC
             //      1) the internal letters must be the same (so FF, RF will be an error)
@@ -254,6 +254,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             throw new IllegalStateException("Logic Error or unrecognized direction... original values were: " + BtoA + " and " + BtoC);
         }
         
+        public boolean causesFlip(){
+            return causesFlip(this);
+        }
         public static boolean causesFlip(EDGETYPE edgeType) {
             switch (edgeType) {
                 case FF:
@@ -266,145 +269,30 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                     throw new IllegalArgumentException("unrecognized direction: " + edgeType);
             }
         }
+        
+        /**
+         * check if need filp
+         */
+        public EDGETYPE flip(){
+            return flip(this);
+        }
+        
+        public static EDGETYPE flip(EDGETYPE neighborToMe){ // TODO use NodeWritable
+            switch (neighborToMe) {
+                case FF:
+                    return FR;
+                case FR:
+                    return FF;
+                case RF:
+                    return RR;
+                case RR:
+                    return RF;
+                default:
+                    throw new RuntimeException("Unrecognized direction for neighborDir: " + neighborToMe);
+            }
+        }
     }
-//    
-//    public static class DirectionFlag { // TODO change to "EdgeType" and make enum-based
-//        public static final byte DIR_FF = 0b00 << 0;
-//        public static final byte DIR_FR = 0b00 << 0;
-//        public static final byte DIR_RF = 0b10 << 0;
-//        public static final byte DIR_RR = 0b11 << 0;
-//        public static final byte DIR_MASK = 0b11 << 0;
-//        public static final byte DIR_CLEAR = 0b1111100 << 0;
-//
-//        public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
-//        
-//        /**
-//         * Returns the edge dir for B->A when the A->B edge is type @dir
-//         */
-//        public static byte mirrorEdge(byte edgeType) {
-//            switch (edgeType) {
-//                case DIR_FF:
-//                    return DIR_RR;
-//                case DIR_FR:
-//                    return DIR_FR;
-//                case DIR_RF:
-//                    return DIR_RF;
-//                case DIR_RR:
-//                    return DIR_FF;
-//                default:
-//                    throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
-//            }
-//        }
-//        
-//        public static DIR dirFromEdgeType(byte b) {
-//            switch(b & DirectionFlag.DIR_MASK) {
-//                case DIR_FF:
-//                case DIR_FR:
-//                    return DIR.NEXT;
-//                case DIR_RF:
-//                case DIR_RR:
-//                    return DIR.PREVIOUS;
-//                default:
-//                    throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + b);
-//                    
-//            }
-//        }
-//        
-//        /**
-//         * return the edgetype corresponding to moving across edge1 and edge2.
-//         * 
-//         *  So if A <-e1- B -e2-> C, we will return the relationship from A -> C
-//         *  
-//         *  If the relationship isn't a valid path (e.g., e1,e2 are both FF), an exception is raised.
-//         */
-//        public static byte resolveLinkThroughMiddleNode(byte BtoA, byte BtoC) {
-//            BtoA &= DIR_MASK;
-//            BtoC &= DIR_MASK;
-//            byte AtoB = mirrorEdge(BtoA);
-//            // a valid path must exist from A to C
-//            // specifically, two rules apply for AtoB and BtoC
-//            //      1) the internal letters must be the same (so FF, RF will be an error)
-//            //      2) the final direction is the 1st letter of AtoB + 2nd letter of BtoC
-//            // TODO? maybe we could use the string version to resolve this following above rules
-//            switch(AtoB) {
-//                case DIR_FF:
-//                    switch (BtoC) {
-//                        case DIR_FF:
-//                        case DIR_FR:
-//                            return BtoC;
-//                        case DIR_RF:
-//                        case DIR_RR:
-//                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-//                    }
-//                    break;
-//                case DIR_FR:
-//                    switch (BtoC) {
-//                        case DIR_FF:
-//                        case DIR_FR:
-//                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-//                        case DIR_RF:
-//                            return DIR_FF;
-//                        case DIR_RR:
-//                            return DIR_FR;
-//                    }
-//                    break;
-//                case DIR_RF:
-//                    switch (BtoC) {
-//                        case DIR_FF:
-//                            return DIR_RF;
-//                        case DIR_FR:
-//                            return DIR_RR;
-//                        case DIR_RF:
-//                        case DIR_RR:
-//                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-//                    }
-//                    break;
-//                case DIR_RR:
-//                    switch (BtoC) {
-//                        case DIR_FF:
-//                        case DIR_FR:
-//                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-//                        case DIR_RF:
-//                            return DIR_RF;
-//                        case DIR_RR:
-//                            return DIR_RR;
-//                    }
-//                    break;
-//            }
-//            throw new IllegalStateException("Logic Error or unrecognized direction... original values were: " + BtoA + " and " + BtoC);
-//        }
-//
-//        public static boolean causesFlip(byte direction) {
-//            direction &= DIR_MASK;
-//            switch (direction) {
-//                case DIR_FF:
-//                case DIR_RR:
-//                    return false;
-//                case DIR_FR:
-//                case DIR_RF:
-//                    return true;
-//                default:
-//                    throw new IllegalArgumentException("unrecognized direction: " + direction);
-//            }
-//        }
-//    }
-    
-    
-    
-//    public static class IncomingListFlag { // TODO refactor as a function using DIR
-//        public static final byte DIR_RF = 0b10 << 0;
-//        public static final byte DIR_RR = 0b11 << 0;
-//
-//        public static final byte[] values = {DIR_RF, DIR_RR };
-//    }
-//    
-//    public static class OutgoingListFlag {
-//        public static final byte DIR_FF = 0b00 << 0;
-//        public static final byte DIR_FR = 0b01 << 0;
-//
-//        public static final byte[] values = {DIR_FF, DIR_FR };
-//    }
-    
+        
     public static final EnumSet<EDGETYPE> edgeTypesInDir(DIR direction) {
         return direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
     }

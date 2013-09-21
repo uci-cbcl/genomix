@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
@@ -151,8 +152,8 @@ public class P1ForPathMergeVertex extends
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
     public void responseToDeadVertexAndUpdateEdges(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
         if(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()) != null){
             tmpEdge.setAsCopy(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()));

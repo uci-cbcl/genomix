@@ -118,7 +118,7 @@ public class P4ForPathMergeVertex extends
                 for (VKmerBytesWritable destId : vertex.getEdgeList(et).getKeys()) {
                     outgoingMsg.reset();
 //                    outgoingMsg.setFlag(dir.mirror().get());
-                    outgoingMsg.setFlag(et.mirrorEdge().dir().get());
+                    outgoingMsg.setFlag(et.mirror().dir().get());
                     
 //                    LOG.info("send restriction from " + getVertexId() + " to " + destId + " in my " + d + " and their " + DirectionFlag.mirrorEdge(d) + " (" + DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)) + "); I am " + getVertexValue());
                     sendMsg(destId, outgoingMsg);
@@ -239,25 +239,26 @@ public class P4ForPathMergeVertex extends
     public void updateNeighbors() {
         VertexValueWritable vertex = getVertexValue();
         short state = vertex.getState();
+        EDGETYPE edgeType = EDGETYPE.fromByte(state);
         if ((state & P4State.MERGE) == 0) {
             return;  // no merge requested; don't have to update neighbors
         }
         
-        DIR mergeDir = DirectionFlag.dirFromEdgeType((byte)state);
-        byte[] mergeEdges = NodeWritable.edgeTypesInDir(mergeDir);
+        DIR mergeDir = edgeType.dir(); 
+        EnumSet<EDGETYPE> mergeEdges = NodeWritable.edgeTypesInDir(mergeDir);
         
         DIR updateDir = mergeDir.mirror();
-        byte[] updateEdges = NodeWritable.edgeTypesInDir(updateDir); // 
+        EnumSet<EDGETYPE> updateEdges = NodeWritable.edgeTypesInDir(updateDir);  
         
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
-        for (byte updateEdge : updateEdges) {
+        for (EDGETYPE updateEdge : updateEdges) {
             outgoingMsg.reset();
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setFlag(DirectionFlag.mirrorEdge(updateEdge));  // neighbor's edge to me (so he can remove me) 
-            for (byte mergeEdge : mergeEdges) {
-                byte newDir = DirectionFlag.resolveLinkThroughMiddleNode(updateEdge, mergeEdge);
-                outgoingMsg.getNode().setEdgeList(newDir, getVertexValue().getEdgeList(mergeEdge));  // copy into outgoingMsg
+            outgoingMsg.setFlag(updateEdge.mirror().get());  // neighbor's edge to me (so he can remove me) 
+            for (EDGETYPE mergeEdge : mergeEdges) {
+                EDGETYPE newEdgetype = EDGETYPE.resolveLinkThroughMiddleNode(updateEdge, mergeEdge);
+                outgoingMsg.getNode().setEdgeList(newEdgetype, getVertexValue().getEdgeList(mergeEdge));  // copy into outgoingMsg
             }
             
             // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
@@ -276,10 +277,10 @@ public class P4ForPathMergeVertex extends
 //            LOG.info("before update from neighbor: " + getVertexValue());
             incomingMsg = msgIterator.next();
             // remove the edge to the node that will merge elsewhere
-            node.getEdgeList((byte)(incomingMsg.getFlag() & DirectionFlag.DIR_MASK)).remove(incomingMsg.getSourceVertexId());
+            node.getEdgeList(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
-            for (byte dir : DirectionFlag.values) {
-                node.getEdgeList(dir).unionUpdate(incomingMsg.getEdgeList(dir));
+            for (EDGETYPE edgeType : EnumSet.allOf(EDGETYPE.class)) {
+                node.getEdgeList(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
             }
             updated = true;
 //            LOG.info("after update from neighbor: " + getVertexValue());
@@ -298,15 +299,15 @@ public class P4ForPathMergeVertex extends
         if ((state & P4State.MERGE) != 0) {
             outgoingMsg.reset();
             // tell neighbor where this is coming from (so they can merge kmers and delete)
-            byte mergeDir = (byte)(vertex.getState() & DirectionFlag.DIR_MASK);
-            byte neighborRestrictions = DIR.fromSet(DirectionFlag.causesFlip(mergeDir) ? DIR.flipSetFromByte(state) : DIR.enumSetFromByte(state));
+            EDGETYPE mergeEdgetype = EDGETYPE.fromByte(vertex.getState());
+            byte neighborRestrictions = DIR.fromSet(mergeEdgetype.causesFlip() ? DIR.flipSetFromByte(state) : DIR.enumSetFromByte(state));
             
-            outgoingMsg.setFlag((short) (DirectionFlag.mirrorEdge(mergeDir) | neighborRestrictions));
+            outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setNode(vertex.getNode());
-            if (vertex.getDegree(DirectionFlag.dirFromEdgeType(mergeDir)) != 1)
-                throw new IllegalStateException("Merge attempted in node with degree in " + mergeDir + " direction != 1!\n" + vertex);
-            VKmerBytesWritable dest = vertex.getEdgeList(mergeDir).get(0).getKey();
+            if (vertex.getDegree(mergeEdgetype.dir()) != 1)
+                throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype + " direction != 1!\n" + vertex);
+            VKmerBytesWritable dest = vertex.getEdgeList(mergeEdgetype).get(0).getKey();
 //            LOG.info("send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState()) + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
             sendMsg(dest, outgoingMsg);
             
@@ -323,14 +324,14 @@ public class P4ForPathMergeVertex extends
         NodeWritable node = vertex.getNode();
         short state = vertex.getState();
         boolean updated = false;
-        byte senderDir;
+        EDGETYPE senderEdgetype;
         @SuppressWarnings("unused")
         int numMerged = 0;
         while (msgIterator.hasNext()) {
 //            LOG.info("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             incomingMsg = msgIterator.next();
-            senderDir = (byte) (incomingMsg.getFlag() & DirectionFlag.DIR_MASK);
-            node.mergeWithNode(senderDir, incomingMsg.getNode());
+            senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
+            node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK);  // update incoming restricted directions
             numMerged++;
             updated = true;

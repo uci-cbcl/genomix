@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -11,8 +12,7 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
-import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
@@ -53,8 +53,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 //            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
         
         DIR revertDirection = revert(direction);
-        byte[] mergeDirs = direction == DIR.PREVIOUS ? OutgoingListFlag.values : IncomingListFlag.values;
-        byte[] updateDirs = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
+        EnumSet<EDGETYPE> mergeDirs = direction == DIR.PREVIOUS ? EDGETYPE.OUTGOING : EDGETYPE.INCOMING;
+        EnumSet<EDGETYPE> updateDirs = direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
         
         //set deleteKmer
         outgoingMsg.setSourceVertexId(getVertexId());
@@ -62,11 +62,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         //set replaceDir
         setReplaceDir(mergeDirs);
                 
-        for(byte dir : updateDirs){
+        for(EDGETYPE dir : updateDirs){
             kmerIterator = getVertexValue().getEdgeList(dir).getKeyIterator();
             while(kmerIterator.hasNext()){
                 //set deleteDir
-                byte deleteDir = setDeleteDir(dir);
+                EDGETYPE deleteDir = setDeleteDir(dir);
                 //set mergeDir, so it won't need flip
                 setMergeDir(deleteDir, revertDirection);
                 outgoingMsg.setFlag(outFlag);
@@ -159,9 +159,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
     }
     
-    public void setReplaceDir(byte[] mergeDirs){
-        byte replaceDir = 0;
-        for(byte dir : mergeDirs){
+    public void setReplaceDir(EnumSet<EDGETYPE> mergeDirs){
+        EDGETYPE replaceDir = null;
+        for(EDGETYPE dir : mergeDirs){
             int num = getVertexValue().getEdgeList(dir).getCountOfPosition();
             if(num > 0){
                 if(num != 1)
@@ -172,7 +172,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             }
         }
         outFlag &= MessageFlag.REPLACE_DIR_CLEAR;
-        outFlag |= replaceDir;
+        outFlag |= replaceDir.get();
     }
     
     public byte setDeleteDir(byte dir){
@@ -182,10 +182,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         return deleteDir;
     }
     
-    public void setMergeDir(byte deleteDir, DIR revertDirection){
-        byte mergeDir = flipDirection(deleteDir, ifFlipWithNeighbor(revertDirection));
+    public void setMergeDir(EDGETYPE deleteDir, DIR revertDirection){
+        EDGETYPE mergeDir = ifFlipWithNeighbor(revertDirection) ? deleteDir.flip() : deleteDir;
         outFlag &= MessageFlag.MERGE_DIR_CLEAR;
-        outFlag |= (mergeDir << 9);
+        outFlag |= mergeDir.get();
     }
     
     /**

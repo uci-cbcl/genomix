@@ -7,8 +7,8 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 public class SymmetryCheckerVertex extends
     BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
@@ -43,8 +43,8 @@ public class SymmetryCheckerVertex extends
             //check if the corresponding edge exists
             while(msgIterator.hasNext()){
                 incomingMsg = msgIterator.next();
-                byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-                byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+                EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+                EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
                 boolean exist = getVertexValue().getEdgeList(neighborToMeDir).contains(incomingMsg.getSourceVertexId());
                 if(!exist){
                     getVertexValue().setState(State.IS_ERROR);
