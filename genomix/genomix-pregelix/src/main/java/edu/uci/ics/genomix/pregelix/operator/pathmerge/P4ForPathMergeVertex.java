@@ -78,76 +78,6 @@ public class P4ForPathMergeVertex extends
         getVertexValue().getCounters().clear();
     }
     
-    /**
-     * Send merge restrictions to my neighbor nodes
-     */
-    public void restrictNeighbors() {
-        EnumSet<DIR> dirsToRestrict;
-        VertexValueWritable vertex = getVertexValue();
-        short state = vertex.getState();
-        boolean updated = false;
-        if(isTandemRepeat(vertex)) {
-            // tandem repeats are not allowed to merge at all
-            dirsToRestrict = EnumSet.of(DIR.NEXT, DIR.PREVIOUS);
-            state |= DIR.NEXT.get();
-            state |= DIR.PREVIOUS.get();
-            updated = true;
-        }
-        else {
-            // degree > 1 can't merge in that direction; == 0 means we are a tip 
-            dirsToRestrict = EnumSet.noneOf(DIR.class);
-            for (DIR dir : DIR.values()) {
-                if (vertex.getDegree(dir) > 1 || vertex.getDegree(dir) == 0) {
-                    dirsToRestrict.add(dir);
-                    state |= dir.get();
-                    updated = true;
-                }
-            }
-        }
-        if (updated) {
-            vertex.setState(state);
-            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class)))
-            	voteToHalt();
-            else 
-            	activate();
-        }
-        
-        // send a message to each neighbor indicating they can't merge towards me
-        for (DIR dir : dirsToRestrict) {
-            for (EDGETYPE et : NodeWritable.edgeTypesInDir(dir)) {
-                for (VKmerBytesWritable destId : vertex.getEdgeList(et).getKeys()) {
-                    outgoingMsg.reset();
-                    outgoingMsg.setFlag(et.mirror().dir().get());
-                    
-//                    LOG.info("send restriction from " + getVertexId() + " to " + destId + " in my " + d + " and their " + DirectionFlag.mirrorEdge(d) + " (" + DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)) + "); I am " + getVertexValue());
-                    sendMsg(destId, outgoingMsg);
-                }
-            }
-        }
-    }
-    
-    /**
-     * initiate head, rear and path node
-     */
-    public void recieveRestrictions(Iterator<PathMergeMessageWritable> msgIterator) {
-        short restrictedDirs = 0;  // the directions (NEXT/PREVIOUS) that I'm not allowed to merge in
-        boolean updated = false;
-        while (msgIterator.hasNext()) {
-//            LOG.info("before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
-            incomingMsg = msgIterator.next();
-            restrictedDirs |= incomingMsg.getFlag();
-//            LOG.info("after restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
-            updated = true;
-        }
-        if (updated) {
-            getVertexValue().setState(restrictedDirs);
-            if (DIR.enumSetFromByte(restrictedDirs).containsAll(EnumSet.allOf(DIR.class)))
-                voteToHalt();
-            else 
-                activate();
-        }
-    }
-
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
         // "deterministically random", based on node id
         randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 10000 * getSuperstep());//randSeed + nodeID.hashCode()
@@ -244,10 +174,10 @@ public class P4ForPathMergeVertex extends
         }
         
         DIR mergeDir = edgeType.dir(); 
-        EnumSet<EDGETYPE> mergeEdges = NodeWritable.edgeTypesInDir(mergeDir);
+        EnumSet<EDGETYPE> mergeEdges = mergeDir.edgeType();
         
         DIR updateDir = mergeDir.mirror();
-        EnumSet<EDGETYPE> updateEdges = NodeWritable.edgeTypesInDir(updateDir);  
+        EnumSet<EDGETYPE> updateEdges = updateDir.edgeType();
         
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
