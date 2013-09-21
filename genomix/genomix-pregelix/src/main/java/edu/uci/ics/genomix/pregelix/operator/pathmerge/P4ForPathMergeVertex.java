@@ -292,7 +292,7 @@ public class P4ForPathMergeVertex extends
         }
     }
     
-    public void broadcastMerge() {
+    public void sendMergeMsg() {
         VertexValueWritable vertex = getVertexValue();
         short state = vertex.getState();
         if ((state & P4State.MERGE) != 0) {
@@ -369,7 +369,7 @@ public class P4ForPathMergeVertex extends
             updateNeighbors();
         } else if (getSuperstep() % 2 == 1) {
             receiveUpdates(msgIterator);
-            broadcastMerge();
+            sendMergeMsg();
         }
     }
 

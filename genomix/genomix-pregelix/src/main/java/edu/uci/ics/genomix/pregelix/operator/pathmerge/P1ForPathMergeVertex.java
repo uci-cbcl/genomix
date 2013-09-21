@@ -264,74 +264,74 @@ public class P1ForPathMergeVertex extends
             voteToHalt();
     }
     
-        /**
-         * start sending message
-         */
-        public void startSendMsg() {
-            if(isTandemRepeat(getVertexValue())){
-                copyWithoutTandemRepeats(getVertexValue(), tmpValue);
+    /**
+     * start sending message
+     */
+    public void startSendMsg() {
+        if(isTandemRepeat(getVertexValue())){
+            copyWithoutTandemRepeats(getVertexValue(), tmpValue);
+            outFlag = 0;
+            sendSettledMsgToAllNeighborNodes(tmpValue);
+            voteToHalt();
+        } else{
+            /** check incoming **/
+            // update internal state
+            if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue())){
+                byte state = 0;
+                state |= State.HEAD_CAN_MERGEWITHPREV;
+                getVertexValue().setState(state);
+                activate();
+            } 
+            // send to neighbors
+            else if (VertexUtil.isVertexWithManyIncoming(getVertexValue())){
                 outFlag = 0;
-                sendSettledMsgToAllNeighborNodes(tmpValue);
+                sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
+                 }
+            
+            /** check outgoing **/
+            // update internal state
+            if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue())){
+                byte state = 0;
+                state |= State.HEAD_CAN_MERGEWITHNEXT;
+                getVertexValue().setState(state);
+                activate();
+            } 
+            // send to neighbors
+            else if (VertexUtil.isVertexWithManyOutgoing(getVertexValue())){
+                outFlag = 0;
+                sendSettledMsgs(DIR.NEXT, getVertexValue());
+                 }
+            
+            if(VertexUtil.isUnMergeVertex(getVertexValue()))
                 voteToHalt();
-            } else{
-                /** check incoming **/
-                // update internal state
-                if (VertexUtil.isVertexWithOnlyOneIncoming(getVertexValue())){
-                    byte state = 0;
-                    state |= State.HEAD_CAN_MERGEWITHPREV;
-                    getVertexValue().setState(state);
-                    activate();
-                } 
-                // send to neighbors
-                else if (VertexUtil.isVertexWithManyIncoming(getVertexValue())){
-                    outFlag = 0;
-                    sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
-                     }
-                
-                /** check outgoing **/
-                // update internal state
-                if (VertexUtil.isVertexWithOnlyOneOutgoing(getVertexValue())){
-                    byte state = 0;
-                    state |= State.HEAD_CAN_MERGEWITHNEXT;
-                    getVertexValue().setState(state);
-                    activate();
-                } 
-                // send to neighbors
-                else if (VertexUtil.isVertexWithManyOutgoing(getVertexValue())){
-                    outFlag = 0;
-                    sendSettledMsgs(DIR.NEXT, getVertexValue());
-                     }
-                
-                if(VertexUtil.isUnMergeVertex(getVertexValue()))
-                    voteToHalt();
-             }
          }
-        
-            public void initState(Iterator<PathMergeMessageWritable> msgIterator) {
-                    if(isInactiveNode())
-                        voteToHalt();
-                    else{
-                        while (msgIterator.hasNext()) {
-                            incomingMsg = msgIterator.next();
-                            switch(getHeadMergeDir()){
-                                case State.PATH_NON_HEAD: // TODO Change name to Path
-                                    setHeadMergeDir();
-                                    activate();
-                                    break;
-                                case State.HEAD_CAN_MERGEWITHPREV: // TODO aggregate all the incomingMsgs first, then make a decision about halting
-                                case State.HEAD_CAN_MERGEWITHNEXT:
-                                    if(true){ //if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
-                                        getVertexValue().setState(State.HEAD_CANNOT_MERGE);
-                                        voteToHalt();
-                                    }
-                                    break;
-                                case State.HEAD_CANNOT_MERGE:
+     }
+    
+        public void initState(Iterator<PathMergeMessageWritable> msgIterator) {
+                if(isInactiveNode())
+                    voteToHalt();
+                else{
+                    while (msgIterator.hasNext()) {
+                        incomingMsg = msgIterator.next();
+                        switch(getHeadMergeDir()){
+                            case State.PATH_NON_HEAD: // TODO Change name to Path
+                                setHeadMergeDir();
+                                activate();
+                                break;
+                            case State.HEAD_CAN_MERGEWITHPREV: // TODO aggregate all the incomingMsgs first, then make a decision about halting
+                            case State.HEAD_CAN_MERGEWITHNEXT:
+                                if(true){ //if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
+                                    getVertexValue().setState(State.HEAD_CANNOT_MERGE);
                                     voteToHalt();
-                                    break;
-                            }
+                                }
+                                break;
+                            case State.HEAD_CANNOT_MERGE:
+                                voteToHalt();
+                                break;
                         }
                     }
-            }
+                }
+        }
 
     
     @Override
