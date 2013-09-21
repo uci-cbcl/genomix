@@ -431,7 +431,7 @@ public class P2ForPathMergeVertex extends
             if(isHaltNode())
                 voteToHalt();
             else if(isHeadNode() && !isTandemRepeat(getVertexValue())){
-                if(isValidPath()){
+                if(true){ //isValidPath()
                     setHeadMergeDir();
                     //set deleteKmer and deleteDir
                     KmerAndDirWritable kmerAndDir = new KmerAndDirWritable();
@@ -445,7 +445,7 @@ public class P2ForPathMergeVertex extends
                     getVertexValue().setState(MessageFlag.IS_HALT);
                     voteToHalt();
                 }
-            } else if(getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()){
+            } else if(isHeadNode()){ //getHeadFlagAndMergeDir() == getMsgFlagAndMergeDir()
                 activate();
             } else{ // already set up
                 // if headMergeDir are not the same

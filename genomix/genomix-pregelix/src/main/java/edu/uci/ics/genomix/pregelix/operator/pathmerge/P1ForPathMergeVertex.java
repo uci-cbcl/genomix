@@ -320,7 +320,7 @@ public class P1ForPathMergeVertex extends
                                     break;
                                 case State.HEAD_CAN_MERGEWITHPREV: // TODO aggregate all the incomingMsgs first, then make a decision about halting
                                 case State.HEAD_CAN_MERGEWITHNEXT:
-                                    if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
+                                    if(true){ //if (getHeadFlagAndMergeDir() != getMsgFlagAndMergeDir()){
                                         getVertexValue().setState(State.HEAD_CANNOT_MERGE);
                                         voteToHalt();
                                     }
