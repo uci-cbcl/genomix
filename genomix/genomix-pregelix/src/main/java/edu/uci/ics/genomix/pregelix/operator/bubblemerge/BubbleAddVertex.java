@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
@@ -7,7 +8,7 @@ import org.apache.hadoop.io.NullWritable;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -35,8 +36,8 @@ public class BubbleAddVertex extends
     private VKmerBytesWritable insertedBubble = new VKmerBytesWritable("ATA"); //reverse
     private VKmerBytesWritable internalKmerInNewBubble = new VKmerBytesWritable("ATG");
     private float coverageOfInsertedBubble = 1;
-    private byte majorToNewBubbleDir = MessageFlag.DIR_FR;
-    private byte minorToNewBubbleDir = MessageFlag.DIR_FR;
+    private EDGETYPE majorToNewBubbleDir = EDGETYPE.FR;
+    private EDGETYPE minorToNewBubbleDir = EDGETYPE.FR;
     
     private EdgeListWritable[] edges = new EdgeListWritable[4];
     
@@ -95,20 +96,20 @@ public class BubbleAddVertex extends
         addVertex(insertedBubble, vertex);
     }
     
-    public void addEdgeToInsertedBubble(byte meToNewBubbleDir, VKmerBytesWritable insertedBubble){
+    public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmerBytesWritable insertedBubble){
         EdgeWritable newEdge = new EdgeWritable();
         newEdge.setKey(insertedBubble);
         newEdge.appendReadID(0);
-        byte newBubbleToMeDir = mirrorDirection(meToNewBubbleDir);
+        EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror(); 
         getVertexValue().getEdgeList(newBubbleToMeDir).add(newEdge);
     }
     
     public void setupEdgeForInsertedBubble(){
-        for (byte d : DirectionFlag.values) {
-            edges[d] = new EdgeListWritable();
+        for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
+            edges[et.get()] = new EdgeListWritable();
         }
-        edges[majorToNewBubbleDir].add(majorVertexId);
-        edges[minorToNewBubbleDir].add(minorVertexId);
+        edges[majorToNewBubbleDir.get()].add(majorVertexId);
+        edges[minorToNewBubbleDir.get()].add(minorVertexId);
     }
     
     @Override

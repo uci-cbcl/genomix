@@ -637,14 +637,14 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         }
     }
 //
-//    /**
-//     * update my edge list
-//     */
-//    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, byte replaceDir, NodeWritable other, boolean applyDelete){
-//        if(applyDelete)
-//            edges[deleteDir].remove(toDelete);
-//        edges[updateDir].unionUpdate(other.edges[replaceDir]);
-//    }
+    /**
+     * update my edge list
+     */
+    public void updateEdges(EDGETYPE deleteDir, VKmerBytesWritable toDelete, EDGETYPE updateDir, EDGETYPE replaceDir, NodeWritable other, boolean applyDelete){
+        if(applyDelete)
+            edges[deleteDir.get()].remove(toDelete);
+        edges[updateDir.get()].unionUpdate(other.edges[replaceDir.get()]);
+    }
     
     /**
      * merge my edge list (both kmers and readIDs) with those of `other`.  Assumes that `other` is doing the flipping, if any.

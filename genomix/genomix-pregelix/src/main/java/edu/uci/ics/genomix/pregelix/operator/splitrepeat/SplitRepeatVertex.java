@@ -11,10 +11,10 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -28,20 +28,20 @@ public class SplitRepeatVertex extends
     BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessageWritable>{
     
     public class EdgeAndDir{
-        private byte dir;
+        private EDGETYPE edgeType;
         private EdgeWritable edge;
         
         public EdgeAndDir(){
-            dir = 0;
+            edgeType = null;
             edge = new EdgeWritable();
         }
 
-        public byte getDir() {
-            return dir;
+        public EDGETYPE getDir() {
+            return edgeType;
         }
 
-        public void setDir(byte dir) {
-            this.dir = dir;
+        public void setDir(EDGETYPE dir) {
+            this.edgeType = dir;
         }
 
         public EdgeWritable getEdge() {
@@ -174,11 +174,11 @@ public class SplitRepeatVertex extends
         deletedEdge.setReadIDs(neighborEdgeIntersection);
         outgoingMsg.setDeletedEdge(deletedEdge);
         
-        outgoingMsg.setFlag(incomingEdgeDir);
+        outgoingMsg.setFlag(incomingEdgeType.get());
         destVertexId.setAsCopy(incomingEdge.getKey());
         sendMsg(destVertexId, outgoingMsg);
         
-        outgoingMsg.setFlag(outgoingEdgeDir);
+        outgoingMsg.setFlag(outgoingEdgeType.get());
         destVertexId.setAsCopy(outgoingEdge.getKey());
         sendMsg(destVertexId, outgoingMsg);
     }
@@ -199,12 +199,12 @@ public class SplitRepeatVertex extends
     }
     
     public void deleteEdgeFromOldVertex(EdgeAndDir deleteEdge){
-        getVertexValue().getEdgeList(deleteEdge.dir).removeSubEdge(deleteEdge.getEdge());
+        getVertexValue().getEdgeList(deleteEdge.edgeType).removeSubEdge(deleteEdge.getEdge());
     }
     
     public void updateEdgeListPointToNewVertex(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());//(byte) (incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
         getVertexValue().getEdgeList(neighborToMeDir).removeSubEdge(incomingMsg.getDeletedEdge());
         getVertexValue().getEdgeList(neighborToMeDir).add(incomingMsg.getCreatedEdge());

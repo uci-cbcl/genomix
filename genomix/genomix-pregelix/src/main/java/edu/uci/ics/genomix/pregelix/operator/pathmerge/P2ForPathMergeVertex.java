@@ -21,6 +21,7 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageType;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -227,25 +228,25 @@ public class P2ForPathMergeVertex extends
     }
     
     public void sendP2MergeMsgByIncomingMsgDir(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         switch(meToNeighborDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 outgoingMsg.setMessageType(P2MessageType.FROM_SUCCESSOR);
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 outgoingMsg.setMessageType(P2MessageType.FROM_PREDECESSOR);
                 break;
         }
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 configureP2MergeMsgForSuccessor(incomingMsg.getSourceVertexId());
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 configureP2MergeMsgForPredecessor(incomingMsg.getSourceVertexId()); 
                 break; 
         }
@@ -276,8 +277,8 @@ public class P2ForPathMergeVertex extends
      * final merge and updateAdjList  having parameter for p2
      */
     public void processP2Merge(P2PathMergeMessageWritable msg){
-        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK); 
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(msg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
         getVertexValue().getMergeNode(msg.getMessageType()).mergeWithNode(neighborToMeDir, msg.getNode());
         getVertexValue().getNode().mergeWithNodeWithoutKmer(neighborToMeDir, msg.getNode());
@@ -291,32 +292,32 @@ public class P2ForPathMergeVertex extends
         outFlag |= MessageFlag.IS_FINAL;
         outgoingMsg.setUpdateMsg(false);
         outgoingMsg.setApexMap(getVertexValue().getApexMap());
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         switch(meToNeighborDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 outgoingMsg.setMessageType(P2MessageType.FROM_SUCCESSOR);
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 outgoingMsg.setMessageType(P2MessageType.FROM_PREDECESSOR);
                 break;
         }
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 outFlag &= MessageFlag.DIR_CLEAR;
-                outFlag |= neighborToMeDir;
+                outFlag |= neighborToMeDir.get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
                 outgoingMsg.setNode(getVertexValue().getPrependMergeNode());
                 sendMsg(incomingMsg.getSourceVertexId(), outgoingMsg);
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 outFlag &= MessageFlag.DIR_CLEAR;
-                outFlag |= neighborToMeDir;       
+                outFlag |= neighborToMeDir.get();       
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
                 outgoingMsg.setNode(getVertexValue().getAppendMergeNode());
@@ -405,16 +406,16 @@ public class P2ForPathMergeVertex extends
      * check if it is a valid update node
      */
     public boolean isValidUpateNode(){
-        byte meToNeighborDir = (byte)(incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         boolean flag = false;
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 flag = ((getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK) == MessageFlag.HEAD_CAN_MERGEWITHPREV);
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 flag = ((getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK) == MessageFlag.HEAD_CAN_MERGEWITHNEXT);
                 break;
         }
@@ -459,8 +460,9 @@ public class P2ForPathMergeVertex extends
      */
     public void updateApexEdges(){
         KmerAndDirWritable deleteEdge = incomingMsg.getApexMap().get(getVertexId());
-        if(deleteEdge != null && getVertexValue().getEdgeList(deleteEdge.getDeleteDir()).contains(deleteEdge.getDeleteKmer())) //avoid to delete twice
-            getVertexValue().getEdgeList(deleteEdge.getDeleteDir()).remove(deleteEdge.getDeleteKmer());
+        EDGETYPE deleteEdgeType = EDGETYPE.fromByte(deleteEdge.getDeleteDir());
+        if(deleteEdge != null && getVertexValue().getEdgeList(deleteEdgeType).contains(deleteEdge.getDeleteKmer())) //avoid to delete twice
+            getVertexValue().getEdgeList(deleteEdgeType).remove(deleteEdge.getDeleteKmer());
         processFinalUpdate2();
         getVertexValue().setState(MessageFlag.IS_HALT);
         voteToHalt();

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -96,17 +97,17 @@ public class BubbleMergeVertex extends
                     outgoingKmer.setAsCopy(outgoingEdge.getKey());
                     majorVertexId.setAsCopy(incomingKmer.compareTo(outgoingKmer) >= 0 ? incomingKmer : outgoingKmer);
                     minorVertexId.setAsCopy(incomingKmer.compareTo(outgoingKmer) < 0 ? incomingKmer : outgoingKmer);
-                    byte majorToMeDir = (incomingKmer.compareTo(outgoingKmer) >= 0 ? incomingEdgeDir : outgoingEdgeDir);
-                    byte meToMajorDir = mirrorDirection(majorToMeDir);
-                    byte minorToMeDir = (incomingKmer.compareTo(outgoingKmer) < 0 ? incomingEdgeDir : outgoingEdgeDir);
-                    byte meToMinorDir = mirrorDirection(minorToMeDir);
+                    EDGETYPE majorToMeDir = (incomingKmer.compareTo(outgoingKmer) >= 0 ? incomingEdgeType : outgoingEdgeType);
+                    EDGETYPE meToMajorDir = majorToMeDir.mirror();
+                    EDGETYPE minorToMeDir = (incomingKmer.compareTo(outgoingKmer) < 0 ? incomingEdgeType : outgoingEdgeType);
+                    EDGETYPE meToMinorDir = minorToMeDir.mirror();
                     
                     /** setup outgoingMsg **/
                     outgoingMsg.setMajorVertexId(majorVertexId);
                     outgoingMsg.setSourceVertexId(getVertexId());
                     outgoingMsg.setNode(getVertexValue().getNode());
-                    outgoingMsg.setMeToMajorDir(meToMajorDir);
-                    outgoingMsg.setMeToMinorDir(meToMinorDir);
+                    outgoingMsg.setMeToMajorDir(meToMajorDir.get());
+                    outgoingMsg.setMeToMinorDir(meToMinorDir.get());
                     sendMsg(minorVertexId, outgoingMsg);
                 }
             }
@@ -225,10 +226,10 @@ public class BubbleMergeVertex extends
     }
     
     public void removeEdgesToMajorAndMinor(){
-        byte meToMajorDir = incomingMsg.getMeToMajorDir();
-        byte majorToMeDir = mirrorDirection(meToMajorDir);
-        byte meToMinorDir = incomingMsg.getMeToMinorDir();
-        byte minorToMeDir = mirrorDirection(meToMinorDir);
+        EDGETYPE meToMajorDir = EDGETYPE.fromByte(incomingMsg.getMeToMajorDir());
+        EDGETYPE majorToMeDir = meToMajorDir.mirror();
+        EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorDir());
+        EDGETYPE minorToMeDir = meToMinorDir.mirror();
         getVertexValue().getEdgeList(majorToMeDir).remove(incomingMsg.getMajorVertexId());
         getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
     }
@@ -262,8 +263,8 @@ public class BubbleMergeVertex extends
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
     public void responseToDeadVertexAndUpdateEdges(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
         if(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()) != null){
             tmpEdge.setAsCopy(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()));
@@ -271,7 +272,7 @@ public class BubbleMergeVertex extends
             getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
         }
         tmpEdge.setKey(incomingMsg.getTopCoverageVertexId());
-        byte updateDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
+        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flip() : neighborToMeDir;
         getVertexValue().getEdgeList(updateDir).unionAdd(tmpEdge);
     }
     

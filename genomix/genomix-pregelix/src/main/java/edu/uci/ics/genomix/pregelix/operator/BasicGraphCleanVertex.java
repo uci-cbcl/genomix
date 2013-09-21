@@ -452,7 +452,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * Returns the edge dir for B->A when the A->B edge is type @dir
      */
-    public byte mirrorDirection(byte dir) {
+    public byte meToNeighborDir(byte dir) {
         switch (dir) {
             case MessageFlag.DIR_FF:
                 return MessageFlag.DIR_RR;

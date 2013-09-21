@@ -82,9 +82,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public void processUpdate(M msg){
     	// A -> B -> C with B merging with C
         inFlag = msg.getFlag();
-        byte deleteDir = (byte) ((inFlag & MessageFlag.DELETE_DIR_MASK) >> 11); // B -> A dir
-        byte mergeDir = (byte) ((inFlag & MessageFlag.MERGE_DIR_MASK) >> 9); // C -> A dir
-        byte replaceDir = (byte) ((inFlag & MessageFlag.REPLACE_DIR_MASK)); // C -> B dir
+        EDGETYPE deleteDir = EDGETYPE.fromByte((short) ((inFlag & MessageFlag.DELETE_DIR_MASK) >> 11)); // B -> A dir
+        EDGETYPE mergeDir = EDGETYPE.fromByte((short) ((inFlag & MessageFlag.MERGE_DIR_MASK) >> 9)); // C -> A dir
+        EDGETYPE replaceDir = EDGETYPE.fromByte((short)(inFlag & MessageFlag.REPLACE_DIR_MASK)); // C -> B dir
         
         getVertexValue().getNode().updateEdges(deleteDir, msg.getSourceVertexId(), 
                 mergeDir, replaceDir, msg.getNode(), true);
@@ -175,10 +175,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         outFlag |= replaceDir.get();
     }
     
-    public byte setDeleteDir(byte dir){
-        byte deleteDir = mirrorDirection(dir);
+    public EDGETYPE setDeleteDir(EDGETYPE dir){
+        EDGETYPE deleteDir = dir.mirror();
         outFlag &= MessageFlag.DELETE_DIR_CLEAR;
-        outFlag |= (deleteDir << 11);
+        outFlag |= deleteDir.get();
         return deleteDir;
     }
     
@@ -193,10 +193,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      */
     public void processFinalUpdate(){
         inFlag = incomingMsg.getFlag();
-        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
-        byte neighborToMergeDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
+        EDGETYPE neighborToMergeDir = incomingMsg.isFlip() ? neighborToMeDir.flip() : neighborToMeDir;
         getVertexValue().processFinalUpdates(neighborToMeDir, neighborToMergeDir, incomingMsg.getNode());
     }
     
@@ -205,8 +205,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      */
     public void processFinalUpdate2(){
         inFlag = incomingMsg.getFlag();
-        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(inFlag);
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
         EdgeWritable edge = new EdgeWritable();
         edge.setKey(incomingMsg.getSourceVertexId());
@@ -239,8 +239,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      */
     public void processMerge(PathMergeMessageWritable msg){
         inFlag = msg.getFlag();
-        byte meToNeighborDir = (byte) (inFlag & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(inFlag);
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
 
         short state = getVertexValue().getState();  
 //        state |= flipHeadMergeDir((byte)(inFlag & DIR.MASK), isDifferentDirWithMergeKmer(neighborToMeDir));
@@ -267,15 +267,15 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public void sendUpdateMsgForP2(MessageWritable msg){
         outgoingMsg.reset();
         outgoingMsg.setUpdateMsg(true);
-        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 sendUpdateMsg(isP2, DIR.PREVIOUS);
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR: 
+            case RF:
+            case RR: 
                 sendUpdateMsg(isP2, DIR.NEXT);
                 break;
         }
@@ -301,7 +301,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         else
             outgoingMsg.setFlip(false);
         outgoingMsg.setFlag(outFlag);
-        for(byte d: IncomingListFlag.values)
+        for(EDGETYPE d: EDGETYPE.INCOMING)
         	outgoingMsg.setEdgeList(d, getVertexValue().getEdgeList(d));
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
@@ -309,29 +309,29 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
     
     public boolean canMergeWithHead(MessageWritable msg){
-        byte meToNeighborDir = (byte) (msg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(msg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 return getVertexValue().outDegree() == 1;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 return getVertexValue().inDegree() == 1;    
         }
         return false;
     }
     
     public void sendMergeMsgByIncomingMsgDir(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 configureMergeMsgForSuccessor(incomingMsg.getSourceVertexId());
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 configureMergeMsgForPredecessor(incomingMsg.getSourceVertexId()); 
                 break; 
         }
@@ -392,15 +392,15 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      */
     public void setHeadMergeDir(){
         byte state = 0;
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 state |= State.HEAD_CAN_MERGEWITHPREV;
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 state |= State.HEAD_CAN_MERGEWITHNEXT;
                 break;
         }

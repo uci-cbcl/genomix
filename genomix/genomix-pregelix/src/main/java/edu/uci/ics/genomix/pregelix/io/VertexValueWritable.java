@@ -6,7 +6,6 @@ import edu.uci.ics.genomix.pregelix.io.common.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -113,35 +112,35 @@ public class VertexValueWritable
     }
     
     public EdgeListWritable getFFList() {
-        return getEdgeList(DirectionFlag.DIR_FF);
+        return getEdgeList(EDGETYPE.FF);
     }
 
     public EdgeListWritable getFRList() {
-        return getEdgeList(DirectionFlag.DIR_FR);
+        return getEdgeList(EDGETYPE.FR);
     }
 
     public EdgeListWritable getRFList() {
-        return getEdgeList(DirectionFlag.DIR_RF);
+        return getEdgeList(EDGETYPE.RF);
     }
 
     public EdgeListWritable getRRList() {
-        return getEdgeList(DirectionFlag.DIR_RR);
+        return getEdgeList(EDGETYPE.RR);
     }
     
     public void setFFList(EdgeListWritable forwardForwardList){
-        setEdgeList(DirectionFlag.DIR_FF, forwardForwardList);
+        setEdgeList(EDGETYPE.FF, forwardForwardList);
     }
     
     public void setFRList(EdgeListWritable forwardReverseList){
-        setEdgeList(DirectionFlag.DIR_FR, forwardReverseList);
+        setEdgeList(EDGETYPE.FR, forwardReverseList);
     }
     
     public void setRFList(EdgeListWritable reverseForwardList){
-        setEdgeList(DirectionFlag.DIR_RF, reverseForwardList);
+        setEdgeList(EDGETYPE.RF, reverseForwardList);
     }
 
     public void setRRList(EdgeListWritable reverseReverseList){
-        setEdgeList(DirectionFlag.DIR_RR, reverseReverseList);
+        setEdgeList(EDGETYPE.RR, reverseReverseList);
     }
     
     public AdjacencyListWritable getIncomingList() {
@@ -247,40 +246,21 @@ public class VertexValueWritable
     /**
      * Delete the corresponding edge
      */
-    public void processDelete(byte neighborToDeleteDir, EdgeWritable nodeToDelete){
-        byte dir = (byte)(neighborToDeleteDir & MessageFlag.DIR_MASK);
-        this.getEdgeList(dir).remove(nodeToDelete);
+    public void processDelete(EDGETYPE neighborToDeleteEdgetype, EdgeWritable nodeToDelete){
+        this.getEdgeList(neighborToDeleteEdgetype).remove(nodeToDelete);
     }
     
-    public void processFinalUpdates(byte deleteDir, byte updateDir, NodeWritable other){
-        byte replaceDir = mirrorDirection(deleteDir);
+    public void processFinalUpdates(EDGETYPE deleteDir, EDGETYPE updateDir, NodeWritable other){
+        EDGETYPE replaceDir = deleteDir.mirror();
         this.getNode().updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
     }
     
     /**
      * Process any changes to value.  This is for merging.  nodeToAdd should be only edge
      */
-    public void processMerges(byte mergeDir, NodeWritable node, int kmerSize){
+    public void processMerges(EDGETYPE mergeDir, NodeWritable node, int kmerSize){
         KmerBytesWritable.setGlobalKmerLength(kmerSize); // TODO Do this once at the init of your function, then you don't need it as a parameter here
         super.getNode().mergeWithNode(mergeDir, node);
-    }
-    
-    /**
-     * Returns the edge dir for B->A when the A->B edge is type @dir
-     */
-    public byte mirrorDirection(byte dir) {
-        switch (dir) {
-            case MessageFlag.DIR_FF:
-                return MessageFlag.DIR_RR;
-            case MessageFlag.DIR_FR:
-                return MessageFlag.DIR_FR;
-            case MessageFlag.DIR_RF:
-                return MessageFlag.DIR_RF;
-            case MessageFlag.DIR_RR:
-                return MessageFlag.DIR_FF;
-            default:
-                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
-        }
     }
     
     @Override

@@ -6,6 +6,7 @@ import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -55,7 +56,7 @@ public class TipAddVertex extends
    
     private VKmerBytesWritable splitNode = new VKmerBytesWritable("CTA");
     private VKmerBytesWritable insertedTip = new VKmerBytesWritable("AGC");
-    private byte tipToSplitDir = MessageFlag.DIR_RF;
+    private EDGETYPE tipToSplitDir = EDGETYPE.RF;
     /**
      * initiate kmerSize, length
      */
@@ -66,7 +67,7 @@ public class TipAddVertex extends
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertTip(byte dir, EdgeListWritable edgeList, VKmerBytesWritable insertedTip){
+    public void insertTip(EDGETYPE dir, EdgeListWritable edgeList, VKmerBytesWritable insertedTip){
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
@@ -94,7 +95,7 @@ public class TipAddVertex extends
         return edgeList;
     }
     
-    public void addEdgeToInsertedTip(byte dir, VKmerBytesWritable insertedTip){
+    public void addEdgeToInsertedTip(EDGETYPE dir, VKmerBytesWritable insertedTip){
         EdgeWritable newEdge = new EdgeWritable();
         newEdge.setKey(insertedTip);
         newEdge.appendReadID(0);
@@ -130,7 +131,7 @@ public class TipAddVertex extends
                 /** add edge pointing to insertedTip **/
                 addEdgeToInsertedTip(tipToSplitDir, insertedTip);
                 /** insert tip **/
-                byte splitToTipDir = mirrorDirection(tipToSplitDir);
+                EDGETYPE splitToTipDir = tipToSplitDir.mirror();
                 insertTip(splitToTipDir, getEdgeListFromKmer(splitNode), insertedTip);
             }
         }

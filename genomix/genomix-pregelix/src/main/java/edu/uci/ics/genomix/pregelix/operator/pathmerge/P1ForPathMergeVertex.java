@@ -161,7 +161,7 @@ public class P1ForPathMergeVertex extends
             getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
         }
         tmpEdge.setKey(incomingMsg.getNode().getInternalKmer());
-        byte updateDir = flipDirection(neighborToMeDir, incomingMsg.isFlip());
+        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flip() : neighborToMeDir; 
         getVertexValue().getEdgeList(updateDir).unionAdd(tmpEdge);
     }
     
