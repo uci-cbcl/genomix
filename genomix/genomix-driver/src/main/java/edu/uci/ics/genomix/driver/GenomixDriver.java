@@ -58,6 +58,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  */
 public class GenomixDriver {
 
+    public static final Logger GENOMIX_ROOT_LOG = Logger.getLogger("edu.uci.ics.genomix");  // here only so we can control children loggers 
     private static final Logger LOG = Logger.getLogger(GenomixDriver.class.getName());
     private static final String HADOOP_CONF = "hadoop.conf.xml";
     private String prevOutput;
