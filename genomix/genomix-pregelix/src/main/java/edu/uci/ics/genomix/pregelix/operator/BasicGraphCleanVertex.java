@@ -194,24 +194,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * get destination vertex
      */
-    public VKmerBytesWritable getDestVertexId(DIR direction){
-        int degree = getVertexValue().getDegree(direction);
-        if(degree > 1)
-            throw new IllegalArgumentException("getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
-        
-        if(degree == 1){
-            EnumSet<EDGETYPE> edgeTypes = (direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
-            for(EDGETYPE e : edgeTypes){
-                if(getVertexValue().getEdgeList(e).getCountOfPosition() > 0)
-                    return getVertexValue().getEdgeList(e).get(0).getKey();
-            }
-        }
-        return null;
-    }
-    
-    /**
-     * get destination vertex
-     */
     public VKmerBytesWritable getPrevDestVertexIdAndSetFlag() {
         if (!getVertexValue().getRFList().isEmpty()){ // #RFList() > 0
             kmerIterator = getVertexValue().getRFList().getKeyIterator();
@@ -705,4 +687,23 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         outgoingEdgeType = connectedTable[i][1];
     }
     
+//2013.9.21 ------------------------------------------------------------------//
+    /**
+     * get destination vertex 
+     */
+    public VKmerBytesWritable getDestVertexId(DIR direction){
+        int degree = getVertexValue().getDegree(direction);
+        if(degree > 1)
+            throw new IllegalArgumentException("degree > 1, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
+        
+        if(degree == 1){
+            EnumSet<EDGETYPE> edgeTypes = direction.edgeType();
+            for(EDGETYPE et : edgeTypes){
+                if(getVertexValue().getEdgeList(et).getCountOfPosition() > 0)
+                    return getVertexValue().getEdgeList(et).get(0).getKey();
+            }
+        }
+        //degree in this direction == 0
+        throw new IllegalArgumentException("degree > 0, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
+    }
 }

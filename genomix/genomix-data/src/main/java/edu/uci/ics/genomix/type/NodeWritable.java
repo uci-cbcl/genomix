@@ -369,8 +369,16 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         return internalKmer.getKmerLetterLength();
     }
     
+    //This function works on only this case: in this DIR, vertex has and only has one EDGETYPE
     public EDGETYPE getEdgetypeFromDir(DIR direction){
-        EnumSet<EDGETYPE> ets = DIR.
+        if(getDegree(direction) != 1)
+            throw new IllegalArgumentException("getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
+        EnumSet<EDGETYPE> ets = direction.edgeType(); 
+        for(EDGETYPE et : ets){
+            if(getEdgeList(et).getCountOfPosition() > 0)
+                return et;
+        }
+        return null;
     }
     
     public EdgeListWritable getEdgeList(EDGETYPE edgeType) {
