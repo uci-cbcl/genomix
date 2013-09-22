@@ -50,7 +50,7 @@ public class RemoveLowCoverageVertex extends
         getVertexValue().getCounters().clear();
     }
     
-    public void lowCoverageVertexBroadcaseKillself(){
+    public void detectLowCoverageVertex(){
         if(getVertexValue().getAvgCoverage() <= minAverageCoverage){
             //broadcase kill self
             broadcastKillself();
@@ -78,7 +78,7 @@ public class RemoveLowCoverageVertex extends
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
         if(getSuperstep() == 1)
-            lowCoverageVertexBroadcaseKillself();
+            detectLowCoverageVertex();
         else if(getSuperstep() == 2){
             if(deadNodeSet.contains(getVertexId()))
                 cleanupDeadVertex();

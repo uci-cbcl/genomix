@@ -281,30 +281,30 @@ public class BubbleMergeVertex extends
         initVertex();
         if (getSuperstep() == 1) {
             if(VertexUtil.isBubbleVertex(getVertexValue())){
-                /** clean allDeleteSet **/
+                // clean allDeleteSet 
                 allDeletedSet.clear();
-                /** add a fake node **/
+                // add a fake node
                 addFakeVertex();
-                /** send bubble and major vertex msg to minor vertex **/
+                // send bubble and major vertex msg to minor vertex 
                 sendBubbleAndMajorVertexMsgToMinorVertex();
             }
         } else if (getSuperstep() == 2){
             if(!isFakeVertex()){
-                /** aggregate bubble nodes and grouped by major vertex **/
+                // aggregate bubble nodes and grouped by major vertex
                 aggregateBubbleNodesByMajorNode(msgIterator);
                 
                 for(VKmerBytesWritable prevId : receivedMsgMap.keySet()){
                     receivedMsgList.clear();
                     receivedMsgList.addAll(receivedMsgMap.get(prevId));
                     if(receivedMsgList.size() > 1){ // filter bubble
-                        /** for each majorVertex, sort the node by decreasing order of coverage **/
+                        // for each majorVertex, sort the node by decreasing order of coverage
                         receivedMsgList = receivedMsgMap.get(prevId);
                         Collections.sort(receivedMsgList, new BubbleMergeMessageWritable.SortByCoverage());
                         
-                        /** process similarSet, keep the unchanged set and deleted set & add coverage to unchange node **/
+                        // process similarSet, keep the unchanged set and deleted set & add coverage to unchange node 
                         processSimilarSetToUnchangeSetAndDeletedSet();
                         
-                        /** send message to the unchanged set for updating coverage & send kill message to the deleted set **/ 
+                        // send message to the unchanged set for updating coverage & send kill message to the deleted set
                         processUnchangedSet();
                         processDeletedSet();
                     }
@@ -318,7 +318,7 @@ public class BubbleMergeVertex extends
                         broadcaseUpdateEdges();
                     } else 
                     if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
-                        /** update Node including average coverage **/
+                        // update Node including average coverage 
                         getVertexValue().setNode(incomingMsg.getNode());
                     }
                 }

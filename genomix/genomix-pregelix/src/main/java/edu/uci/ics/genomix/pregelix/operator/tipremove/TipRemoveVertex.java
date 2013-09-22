@@ -56,31 +56,44 @@ public class TipRemoveVertex extends
             return null;
     }
     
+    /**
+     * step1
+     */
+    public void detectTip(){
+        EDGETYPE neighborToTipEdgetype = getTipEdgetype();
+        //I'm tip and my length is less than the minimum
+        if(neighborToTipEdgetype != null && getVertexValue().getKmerLength() <= length){ 
+            EDGETYPE tipToNeighborEdgetype = neighborToTipEdgetype.mirror();
+            outgoingMsg.setFlag(tipToNeighborEdgetype.get());
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId = getDestVertexId(neighborToTipEdgetype.dir());
+            sendMsg(destVertexId, outgoingMsg);
+            deleteVertex(getVertexId());
+            
+            //set statistics counter: Num_RemovedTips
+            updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
+            getVertexValue().setCounters(counters);
+        }
+    }
+    
+    /**
+     * step2
+     */
+    public void responseToDeadTip(Iterator<MessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            EDGETYPE tipToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
+            getVertexValue().getEdgeList(tipToMeEdgetype).remove(incomingMsg.getSourceVertexId());
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
-        if(getSuperstep() == 1){
-            EDGETYPE neighborToTipEdgetype = getTipEdgetype();
-            //I'm tip and my length is less than the minimum
-            if(neighborToTipEdgetype != null && getVertexValue().getKmerLength() <= length){ 
-                EDGETYPE tipToNeighborEdgetype = neighborToTipEdgetype.mirror();
-                outgoingMsg.setFlag(tipToNeighborEdgetype.get());
-                outgoingMsg.setSourceVertexId(getVertexId());
-                destVertexId = getDestVertexId(neighborToTipEdgetype.dir());
-                sendMsg(destVertexId, outgoingMsg);
-                deleteVertex(getVertexId());
-                
-                //set statistics counter: Num_RemovedTips
-                updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-                getVertexValue().setCounters(counters);
-            }
-        } else if(getSuperstep() == 2){
-            while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                EDGETYPE tipToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-                getVertexValue().getEdgeList(tipToMeEdgetype).remove(incomingMsg.getSourceVertexId());
-            }
-        }
+        if(getSuperstep() == 1)
+            detectTip();
+        else if(getSuperstep() == 2)
+            responseToDeadTip(msgIterator);
         voteToHalt();
     }
 
