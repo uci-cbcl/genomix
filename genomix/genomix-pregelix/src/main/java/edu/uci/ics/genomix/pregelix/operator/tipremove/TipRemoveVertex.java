@@ -82,42 +82,6 @@ public class TipRemoveVertex extends
             }
         }
         voteToHalt();
-        
-//        if(getSuperstep() == 1){
-//            if(VertexUtil.isIncomingTipVertex(getVertexValue())){
-//            	if(getVertexValue().getKmerLength() <= length){
-//            	    sendSettledMsgToNextNode();
-//            		deleteVertex(getVertexId());
-//                    //set statistics counter: Num_RemovedTips
-//                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-//                    getVertexValue().setCounters(counters);
-//            	}
-//            }
-//            else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
-//                if(getVertexValue().getKmerLength() <= length){
-//                    sendSettledMsgToPrevNode();
-//                    deleteVertex(getVertexId());
-//                    //set statistics counter: Num_RemovedTips
-//                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-//                    getVertexValue().setCounters(counters);
-//                }
-//            }
-//            else if(VertexUtil.isSingleVertex(getVertexValue())){
-//                if(getVertexValue().getKmerLength() <= length){
-//                    deleteVertex(getVertexId());
-//                    //set statistics counter: Num_RemovedTips
-//                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-//                    getVertexValue().setCounters(counters);
-//                }
-//            }
-//        }
-//        else if(getSuperstep() == 2){
-//        	while(msgIterator.hasNext()){
-//        		incomingMsg = msgIterator.next();
-//        		responseToDeadVertex();
-//        	}
-//        }
-//        voteToHalt();
     }
 
     public static void main(String[] args) throws Exception {

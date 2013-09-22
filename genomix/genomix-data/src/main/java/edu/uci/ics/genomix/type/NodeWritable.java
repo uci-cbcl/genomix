@@ -114,6 +114,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             RR((byte)(0b11 << 0));
             
             public static final byte MASK = (byte)(0b11 << 0); 
+            public static final byte CLEAR = (byte)(0b1111100 << 0);
             private final byte val;
             
             private EDGETYPE(byte val){

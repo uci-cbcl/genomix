@@ -560,22 +560,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return null;
     }
     
-    public boolean isTandemRepeat(VertexValueWritable value){
-            VKmerBytesWritable kmerToCheck;
-            for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                Iterator<VKmerBytesWritable> it = value.getEdgeList(et).getKeyIterator();
-                while(it.hasNext()){
-                    kmerToCheck = it.next();
-                    if(kmerToCheck.equals(getVertexId())){
-                        repeatEdgetype = et;
-                        repeatKmer.setAsCopy(kmerToCheck);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    
     /**
      * set statistics counter
      */
@@ -689,7 +673,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
 //2013.9.21 ------------------------------------------------------------------//
     /**
-     * get destination vertex 
+     * get destination vertex ex. RemoveTip
      */
     public VKmerBytesWritable getDestVertexId(DIR direction){
         int degree = getVertexValue().getDegree(direction);
@@ -705,5 +689,41 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         }
         //degree in this direction == 0
         throw new IllegalArgumentException("degree > 0, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
+    }
+    
+    /**
+     * check if I am a tandemRepeat 
+     */
+    public boolean isTandemRepeat(VertexValueWritable value){
+        VKmerBytesWritable kmerToCheck;
+        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+            Iterator<VKmerBytesWritable> it = value.getEdgeList(et).getKeyIterator();
+            while(it.hasNext()){
+                kmerToCheck = it.next();
+                if(kmerToCheck.equals(getVertexId())){
+                    repeatEdgetype = et;
+                    repeatKmer.setAsCopy(kmerToCheck);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * broadcastKillself ex. RemoveLow
+     */
+    public void broadcastKillself(){
+        VertexValueWritable vertex = getVertexValue();
+        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+            for(VKmerBytesWritable kmer : vertex.getEdgeList(et).getKeys()){
+                outFlag &= EDGETYPE.CLEAR;
+                outFlag |= et.mirror().get();
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                destVertexId = kmer;
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
     }
 }

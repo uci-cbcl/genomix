@@ -21,6 +21,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 public class UnrollTandemRepeat extends
     BasicGraphCleanVertex<VertexValueWritable, MessageWritable>{
+    
     private EdgeWritable tmpEdge = new EdgeWritable();
     
     /**
@@ -52,13 +53,13 @@ public class UnrollTandemRepeat extends
         tmpValue.setAsCopy(getVertexValue());
         tmpValue.getEdgeList(repeatEdgetype).remove(repeatKmer);
         boolean hasFlip = false;
-        /** pick one edge and flip **/
+        // pick one edge and flip 
         for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
             for(EdgeWritable edge : tmpValue.getEdgeList(et)){
                 EDGETYPE flipDir = et.flip();
                 tmpValue.getEdgeList(flipDir).add(edge);
                 tmpValue.getEdgeList(et).remove(edge);
-                /** setup hasFlip to go out of the loop **/
+                // setup hasFlip to go out of the loop 
                 hasFlip = true;
                 break;
             }
@@ -117,8 +118,8 @@ public class UnrollTandemRepeat extends
         if(getSuperstep() == 1){
             if(isTandemRepeat(getVertexValue()) && repeatCanBeMerged()){
                 mergeTandemRepeat();
-                //set statistics counter: Num_RemovedTips
-                updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
+                //set statistics counter: Num_TandemRepeats
+                updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats);
                 getVertexValue().setCounters(counters);
             }
             voteToHalt();
