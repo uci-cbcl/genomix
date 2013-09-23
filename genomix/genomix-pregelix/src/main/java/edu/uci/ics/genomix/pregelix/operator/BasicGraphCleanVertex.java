@@ -663,7 +663,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * use for SplitRepeatVertex and BubbleMerge
      * @param i
      */
-    public void setEdgeListAndEdgeDir(int i){
+    public void setEdgeListAndEdgeType(int i){
         incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
         incomingEdgeType = connectedTable[i][0];
         

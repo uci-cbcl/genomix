@@ -219,7 +219,7 @@ public class SplitRepeatVertex extends
                 /** process connectedTable **/
                 for(int i = 0; i < 4; i++){
                     /** set edgeList and edgeDir based on connectedTable **/
-                    setEdgeListAndEdgeDir(i);
+                    setEdgeListAndEdgeType(i);
                     
                     for(EdgeWritable incomingEdge : incomingEdgeList){
                         for(EdgeWritable outgoingEdge : outgoingEdgeList){
