@@ -11,7 +11,6 @@ import java.util.Set;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -21,7 +20,6 @@ import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /**
@@ -381,7 +379,7 @@ public class BubbleMergeVertex extends
 //            while(msgIterator.hasNext()) {
 //                incomingMsg = msgIterator.next();
 //                if(incomingMsg.getFlag() == MessageFlag.KILL){
-//                    broadcaseKillselfAndNoticeToUpdateEdges();
+                    broadcaseKillselfAndNoticeToUpdateEdges();
 //                    //set statistics counter: Num_RemovedBubbles
 //                    updateStatisticsCounter(StatisticsCounter.Num_RemovedBubbles);
 //                    getVertexValue().setCounters(counters);
@@ -391,7 +389,7 @@ public class BubbleMergeVertex extends
 //            while(msgIterator.hasNext()) {
 //                incomingMsg = msgIterator.next();
 //                if(isResponseKillMsg()){
-//                    responseToDeadVertexAndUpdateEdges();
+                    responseToDeadVertexAndUpdateEdges();
 //                }
 //            }
 //        }
