@@ -114,7 +114,8 @@ public class EdgeWritableTest {
         VKmerBytesWritable kmer2 = new VKmerBytesWritable("ATAGCTGAC");
         elist.add(new EdgeWritable(kmer2, plist1));
         
-        Iterator<VKmerBytesWritable> keyIter = elist.getKeys();
+        Iterator<VKmerBytesWritable> keyIter = elist.getKeys().iterator();//TODO
+             
         Assert.assertTrue(keyIter.hasNext());
         Assert.assertEquals(kmer1, keyIter.next());
         Assert.assertEquals(kmer2, keyIter.next());
