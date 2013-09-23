@@ -1,8 +1,10 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -52,7 +54,16 @@ public class P4ForPathMergeVertex extends
     private byte nextDir;
     private byte prevDir;
     
-    private static final VKmerBytesWritable problemKmer = new VKmerBytesWritable("CCCGGCCTCCAGCGTGGGATACGCGAAGATGCCGCCGTAGGTGAGAATCTGGTTC");
+    private static final List<VKmerBytesWritable> problemKmers = Arrays.asList(
+            new VKmerBytesWritable("CCCGGCCTCCAGCGTGGGATACGCGAAGATGCCGCCGTAGGTGAGAATCTGGTTC"),
+            new VKmerBytesWritable("GCAGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            new VKmerBytesWritable("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            new VKmerBytesWritable("GAGCAGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            new VKmerBytesWritable("GGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            new VKmerBytesWritable("AGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            new VKmerBytesWritable("GCGACGTGCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            new VKmerBytesWritable("GTCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+            );
     private boolean verbose;
     
     /**
@@ -91,8 +102,12 @@ public class P4ForPathMergeVertex extends
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
-        
-        verbose = getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer);
+
+        verbose = false;
+        for (VKmerBytesWritable pk : problemKmers)
+            verbose |= getVertexValue().getNode().findEdge(pk) != null || getVertexId().equals(pk);
+        if (verbose)
+            LOG.fine("iteration " + getSuperstep());
     }
     
     /**
@@ -133,7 +148,8 @@ public class P4ForPathMergeVertex extends
         for (DIR dir : dirsToRestrict) {
             for (byte d : NodeWritable.edgeTypesInDir(dir)) {
                 for (VKmerBytesWritable destId : vertex.getEdgeList(d).getKeys()) {
-                    verbose |= destId.equals(problemKmer);
+                    for (VKmerBytesWritable pk : problemKmers)
+                        verbose |= destId.equals(pk);
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(DirectionFlag.dirFromEdgeType(DirectionFlag.mirrorEdge(d)).get());
                     if (verbose)
@@ -152,7 +168,8 @@ public class P4ForPathMergeVertex extends
         boolean updated = false;
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            verbose |= incomingMsg.getNode().findEdge(problemKmer) != null || incomingMsg.getSourceVertexId().equals(problemKmer);
+            for (VKmerBytesWritable pk : problemKmers)
+                verbose |= incomingMsg.getNode().findEdge(pk) != null || incomingMsg.getSourceVertexId().equals(pk);
             if (verbose)
                 LOG.fine("before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
             restrictedDirs |= incomingMsg.getFlag();
@@ -282,7 +299,8 @@ public class P4ForPathMergeVertex extends
                 byte newDir = DirectionFlag.resolveLinkThroughMiddleNode(updateEdge, mergeEdge);
                 outgoingMsg.getNode().setEdgeList(newDir, getVertexValue().getEdgeList(mergeEdge));  // copy into outgoingMsg
             }
-            verbose |= outgoingMsg.getNode().findEdge(problemKmer) != null;
+            for (VKmerBytesWritable pk : problemKmers)
+                verbose |= outgoingMsg.getNode().findEdge(pk) != null;
             
             // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
             for (VKmerBytesWritable dest : vertex.getEdgeList(updateEdge).getKeys()) {
@@ -300,7 +318,8 @@ public class P4ForPathMergeVertex extends
         ArrayList<PathMergeMessageWritable> allSeenMsgs = new ArrayList<PathMergeMessageWritable>();
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            verbose |= incomingMsg.getNode().findEdge(problemKmer) != null || incomingMsg.getSourceVertexId().equals(problemKmer);
+            for (VKmerBytesWritable pk : problemKmers)
+                verbose |= incomingMsg.getNode().findEdge(pk) != null || incomingMsg.getSourceVertexId().equals(pk);
             if (verbose)
                 LOG.fine("before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
@@ -349,7 +368,8 @@ public class P4ForPathMergeVertex extends
             if (vertex.getDegree(DirectionFlag.dirFromEdgeType(mergeDir)) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeDir + " direction != 1!\n" + vertex);
             VKmerBytesWritable dest = vertex.getEdgeList(mergeDir).get(0).getKey();
-            verbose |= outgoingMsg.getNode().findEdge(problemKmer) != null || dest.equals(problemKmer);
+            for (VKmerBytesWritable pk : problemKmers)
+                verbose |= outgoingMsg.getNode().findEdge(pk) != null || dest.equals(pk);
             if (verbose)
                 LOG.fine("send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState()) + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
             sendMsg(dest, outgoingMsg);
@@ -372,7 +392,8 @@ public class P4ForPathMergeVertex extends
         int numMerged = 0;
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            verbose |= incomingMsg.getNode().findEdge(problemKmer) != null;
+            for (VKmerBytesWritable pk : problemKmers)
+                verbose |= incomingMsg.getNode().findEdge(pk) != null;
             if (verbose)
                 LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             senderDir = (byte) (incomingMsg.getFlag() & DirectionFlag.DIR_MASK);
