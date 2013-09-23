@@ -15,15 +15,14 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.KmerUtil;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 public class EdgeListWritableTest {
 
@@ -52,18 +51,18 @@ public class EdgeListWritableTest {
         for (long i = numelements * 2 / 3; i < numelements; i++) {
             plist3.appendReadId(i);
         }
-        n1.getEdgeList(DirectionFlag.DIR_RF).add(new EdgeWritable(k2, plist1));
-        Assert.assertEquals(numelements / 3, n1.getEdgeList(DirectionFlag.DIR_RF).get(0).getReadIDs()
+        n1.getEdgeList(EDGETYPE.FF).add(new EdgeWritable(k2, plist1));
+        Assert.assertEquals(numelements / 3, n1.getEdgeList(EDGETYPE.RF).get(0).getReadIDs()
                 .getCountOfPosition());
-        n1.getEdgeList(DirectionFlag.DIR_RF).unionUpdate(
+        n1.getEdgeList(EDGETYPE.RF).unionUpdate(
                 new EdgeListWritable(Arrays.asList(new EdgeWritable(k2, plist2))));
-        Assert.assertEquals(numelements * 2 / 3 + numoverlap, n1.getEdgeList(DirectionFlag.DIR_RF).get(0).getReadIDs()
+        Assert.assertEquals(numelements * 2 / 3 + numoverlap, n1.getEdgeList(EDGETYPE.RF).get(0).getReadIDs()
                 .getCountOfPosition());
-        n1.getEdgeList(DirectionFlag.DIR_RF).unionUpdate(
+        n1.getEdgeList(EDGETYPE.RF).unionUpdate(
                 new EdgeListWritable(Arrays.asList(new EdgeWritable(k2, plist3))));
-        Assert.assertEquals(numelements, n1.getEdgeList(DirectionFlag.DIR_RF).get(0).getReadIDs().getCountOfPosition());
+        Assert.assertEquals(numelements, n1.getEdgeList(EDGETYPE.RF).get(0).getReadIDs().getCountOfPosition());
 
-        long[] allReadIDs = n1.getEdgeList(DirectionFlag.DIR_RF).get(0).readIDArray();
+        long[] allReadIDs = n1.getEdgeList(EDGETYPE.RF).get(0).readIDArray();
         // make sure all readids are accounted for...
         for (long i = 0; i < numelements; i++) {
             boolean found = false;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2013 by The Regents of the University of California
+* Copyright 2009-2013 by The Regents of the University of California
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
@@ -32,7 +32,7 @@ import edu.uci.ics.genomix.data.Marshal;
  * NodeWritable. Kmer length should be set once during configuration and should
  * never change.
  */
-public class KmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
+public class KmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { // TODO make consistent with NodeWritable
 
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = {};
@@ -220,7 +220,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param start
      */
     @SuppressWarnings("static-access")
-    public void setByRead(byte[] stringBytes, int start) {
+    public void setByRead(byte[] stringBytes, int start) {  // TODO "setFromStringBytes"
         byte l = 0;
         int bytecount = 0;
         int bcount = this.getBytesUsed() - 1;
@@ -248,7 +248,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param start
      *            position
      */
-    public void setByReadReverse(byte[] array, int start) {
+    public void setByReadReverse(byte[] array, int start) { // TODO "setReversedFromStringBytes"
         byte l = 0;
         int bytecount = 0;
         int bcount = getBytesUsed() - 1;
@@ -307,7 +307,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      *            Input new gene character
      * @return the shiftout gene, in gene code format
      */
-    public byte shiftKmerWithPreChar(byte c) {
+    public byte shiftKmerWithPreChar(byte c) { // TODO remove
         return shiftKmerWithPreCode(GeneCode.getCodeFromSymbol(c));
     }
 
@@ -318,7 +318,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      *            Input new gene code
      * @return the shiftout gene, in gene code format
      */
-    public byte shiftKmerWithPreCode(byte c) {
+    public byte shiftKmerWithPreCode(byte c) { // TODO remove
         int pos = ((lettersInKmer - 1) % 4) << 1;
         byte output = (byte) ((bytes[offset] >> pos) & 0x03);
         for (int i = 0; i < getBytesUsed() - 1; i++) {
@@ -406,7 +406,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         KmerBytesWritable.bytesUsed = bytesUsed;
     }
 
-    public static class Comparator extends WritableComparator {
+    public static class Comparator extends WritableComparator { // TODO do we need this?
         public Comparator() {
             super(KmerBytesWritable.class);
         }

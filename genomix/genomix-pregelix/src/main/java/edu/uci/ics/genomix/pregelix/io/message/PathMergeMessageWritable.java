@@ -3,13 +3,14 @@ package edu.uci.ics.genomix.pregelix.io.message;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.EnumSet;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 public class PathMergeMessageWritable extends MessageWritable{
     
@@ -46,20 +47,20 @@ public class PathMergeMessageWritable extends MessageWritable{
         this.node.setInternalKmer(internalKmer);
     }
     
-    public EdgeListWritable getEdgeList(byte dir) {
-        return node.getEdgeList((byte) (dir & DirectionFlag.DIR_MASK));
+    public EdgeListWritable getEdgeList(EDGETYPE edgeType) {
+        return node.getEdgeList(edgeType);
     }
     
     public EdgeWritable getNeighborEdge(){
-        for(byte d : DirectionFlag.values){
-            if(!getEdgeList(d).isEmpty())
-                return getEdgeList(d).get(0);
+        for(EDGETYPE e : EnumSet.allOf(EDGETYPE.class)){
+            if(!getEdgeList(e).isEmpty())
+                return getEdgeList(e).get(0);
         }
         return null;
     }
 
-    public void setEdgeList(byte dir, EdgeListWritable edgeList) {
-        this.node.setEdgeList((byte) (dir & DirectionFlag.DIR_MASK), edgeList);
+    public void setEdgeList(EDGETYPE edgeType, EdgeListWritable edgeList) {
+        this.node.setEdgeList(edgeType, edgeList);
     }
     
     public PositionListWritable getStartReads() {

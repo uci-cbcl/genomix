@@ -17,6 +17,7 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
@@ -24,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -85,8 +86,8 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 //                    }
 //                }
                 
-                for (byte d : DirectionFlag.values) {
-                    localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
+                for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
                 }
                 localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
                 localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
@@ -124,8 +125,8 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 //                    }
 //                }
                 
-                for (byte d : DirectionFlag.values) {
-                    localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
+                for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
                 }
                 localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
                 localUniNode.getEndReads().unionUpdate(readNode.getEndReads());

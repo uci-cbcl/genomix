@@ -36,15 +36,15 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
 
     private static final long serialVersionUID = 1L;
     private static final int SIZE_INT = 4;
-    
+
     protected EdgeWritable edgeIter = new EdgeWritable();
-    
+
     private ArrayList<EdgeWritable> edges;
 
     public EdgeListWritable() {
         edges = new ArrayList<EdgeWritable>(1);
     }
-    
+
     /**
      * Set the internal readIDs when the given positionList has readid, position, and mateid set
      */
@@ -52,14 +52,14 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         this();
         setAsCopy(other);
     }
-    
+
     public EdgeListWritable(List<EdgeWritable> otherList) {
         this();
         for (EdgeWritable e : otherList) {
             add(e);
         }
     }
-    
+
     public void setAsCopy(EdgeListWritable otherEdge){
         reset();
         for (EdgeWritable e : otherEdge.edges) {
@@ -70,33 +70,33 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     public void reset() {
         edges.clear();
     }
-    
+
     public EdgeWritable get(int i) {
         return edges.get(i);
     }
-    
+
     public boolean add(EdgeWritable element) {
         return edges.add(new EdgeWritable(element));
     }
-    
+
     public boolean add(VKmerBytesWritable kmer) {
         EdgeWritable edge = new EdgeWritable();
         edge.setKey(kmer);
         return edges.add(edge);
     }
-    
+
     public EdgeWritable set(int i, EdgeWritable element) {
         return edges.set(i, element);
     }
-    
+
     public boolean isEmpty(){
         return getCountOfPosition() == 0;
     }
-    
+
     public int getCountOfPosition() {
         return edges.size();
     }
-        
+
     public int getLength() {
         int total = SIZE_INT;
         for (EdgeWritable e : edges) {
@@ -104,7 +104,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         }
         return total;
     }
-	
+
     public EdgeWritable getEdge(VKmerBytesWritable key){
         for(EdgeWritable edge : edges){
             if(edge.getKey().equals(key)){
@@ -114,7 +114,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         return null;
     }
 	/**
-     * Return this Edge's representation as a new byte array 
+     * Return this Edge's representation as a new byte array
      */
     public byte[] marshalToByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(getLength());
@@ -122,7 +122,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         write(out);
         return baos.toByteArray();
     }
-    
+
     public void setAsCopy(byte[] data, int offset) {
         int curOffset = offset;
         int count = Marshal.getInt(data, offset);
@@ -135,7 +135,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             curOffset += e.getLength();
         }
     }
-    
+
     public void setAsReference(byte[] data, int offset) {
         int curOffset = offset;
         int count = Marshal.getInt(data, offset);
@@ -146,7 +146,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             curOffset += edges.get(i).getLength();
         }
     }
-	
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(edges.size());
@@ -171,7 +171,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
      */
     @Override
     public int compareTo(EdgeListWritable other) {
-        int result = Integer.compare(edges.size(), other.edges.size()); 
+        int result = Integer.compare(edges.size(), other.edges.size());
         if (result != 0) {
             return result;
         }
@@ -183,21 +183,21 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         }
         return 0;
     }
-        
+
     @Override
     public int hashCode() {
         return edges.hashCode();
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (! (o instanceof EdgeListWritable))
             return false;
-            
+
         EdgeListWritable ew = (EdgeListWritable) o;
         return compareTo(ew) == 0;
     }
-    
+
     /**
      * this version of toString sorts the readIds so they're a little easier to see
      */
@@ -220,9 +220,9 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     public Iterator<EdgeWritable> iterator() {
         return edges.iterator();
     }
-    
+
     /**
-     * return an iterator over the keys of this edgeList.  Using the iterator.remove() function will remove the entire edge (not just the keys you're iterating over!) 
+     * return an iterator over the keys of this edgeList.  Using the iterator.remove() function will remove the entire edge (not just the keys you're iterating over!)
      */
     public Iterator<VKmerBytesWritable> getKeyIterator() {
         Iterator<VKmerBytesWritable> it = new Iterator<VKmerBytesWritable>() {
@@ -263,8 +263,8 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         }
         throw new IllegalArgumentException("Cannot get readIDs for VKmer \""+ key +"\". They key was not in the edgeList!");
     }
-    
-    
+
+
     public boolean contains(VKmerBytesWritable toFind){
         Iterator<VKmerBytesWritable> posIterator = this.getKeyIterator();
         while (posIterator.hasNext()) {
@@ -273,7 +273,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         }
         return false;
     }
-    
+
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.
@@ -283,7 +283,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         while (posIterator.hasNext()) {
             if (toRemove.equals(posIterator.next())) {
                 posIterator.remove();
-                return; // break as soon as the element is found 
+                return; // break as soon as the element is found
             }
         }
         // element was not found
@@ -305,7 +305,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         while (edgeIterator.hasNext()) {
             if (toRemove.equals(edgeIterator.next())) {
                 edgeIterator.remove();
-                return;  // found it. return early. 
+                return;  // found it. return early.
             }
         }
         // element not found.
@@ -318,7 +318,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     public void remove(EdgeWritable toRemove) {
         remove(toRemove, false);
     }
-    
+
     public void removeSubEdge(EdgeWritable toRemove){
         Iterator<Long> it = toRemove.readIDIter();
         while(it.hasNext()){
@@ -334,11 +334,11 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
 //            this.edges.addAll(other.edges.clone());
 //        }
 //    }
-    
-    
+
+
     /**
      * Adds all edges in edgeList to me.  If I have the same edge as `other`, that entry will be the union of both sets of readIDs.
-     * 
+     *
      * NOTE: This function may change the order of the original list!
      */
     public void unionUpdate(EdgeListWritable other) {
@@ -355,7 +355,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
                 unionEdges.put(key, new PositionListWritable(e.getReadIDs())); // make a new copy of their list
             }
         }
-        
+
         for (EdgeWritable e : other.edges) {
             VKmerBytesWritable key = e.getKey();
             if (unionEdges.containsKey(key)) {
@@ -388,7 +388,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         // didn't find the edge; add a copy of it now
         edges.add(new EdgeWritable(otherEdge));
     }
-    
+
     public void unionAdd(EdgeListWritable otherEdgeList){
         for(EdgeWritable otherEdge : otherEdgeList)
             unionAdd(otherEdge);

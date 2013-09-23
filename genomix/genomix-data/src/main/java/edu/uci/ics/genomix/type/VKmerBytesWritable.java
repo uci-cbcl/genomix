@@ -27,7 +27,7 @@ import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.data.KmerUtil;
 import edu.uci.ics.genomix.data.Marshal;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 
 /**
@@ -35,7 +35,7 @@ import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
  * Note: `offset` as used in this class is the offset at which the *kmer*
  * begins. There is a {@value HEADER_SIZE}-byte header preceding the kmer
  */
-public class VKmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { 
+public class VKmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { // TODO should be Writable<VKmer> 
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 }; // int indicating 0 length
     protected static final int HEADER_SIZE = 4; // number of bytes for header info
@@ -653,27 +653,27 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         mergeWithRRKmer(kmerSize, new VKmerBytesWritable(kmer.toString()));
     }
 
-    public void mergeWithKmerInDir(byte dir, int initialKmerSize, VKmerBytesWritable kmer) {
-        switch (dir & DirectionFlag.DIR_MASK) {
-            case DirectionFlag.DIR_FF:
+    public void mergeWithKmerInDir(EDGETYPE edgeType, int initialKmerSize, VKmerBytesWritable kmer) {
+        switch (edgeType) {
+            case FF:
                 mergeWithFFKmer(initialKmerSize, kmer);
                 break;
-            case DirectionFlag.DIR_FR:
+            case FR:
                 mergeWithFRKmer(initialKmerSize, kmer);
                 break;
-            case DirectionFlag.DIR_RF:
+            case RF:
                 mergeWithRFKmer(initialKmerSize, kmer);
                 break;
-            case DirectionFlag.DIR_RR:
+            case RR:
                 mergeWithRRKmer(initialKmerSize, kmer);
                 break;
             default:
-                throw new RuntimeException("Direction not recognized: " + dir);
+                throw new RuntimeException("Direction not recognized: " + edgeType);
         }
     }
-    public void mergeWithKmerInDir(byte dir, int initialKmerSize, KmerBytesWritable kmer) {
+    public void mergeWithKmerInDir(EDGETYPE edgeType, int initialKmerSize, KmerBytesWritable kmer) {
         // TODO make this more efficient
-        mergeWithKmerInDir(dir, initialKmerSize, new VKmerBytesWritable(kmer.toString()));
+        mergeWithKmerInDir(edgeType, initialKmerSize, new VKmerBytesWritable(kmer.toString()));
     }
 
     public KmerBytesWritable asFixedLengthKmer() {

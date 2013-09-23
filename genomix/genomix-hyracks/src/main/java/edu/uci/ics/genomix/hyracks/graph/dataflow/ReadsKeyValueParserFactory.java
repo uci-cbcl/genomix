@@ -31,9 +31,9 @@ import org.apache.hadoop.mapred.lib.NLineInputFormat;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -251,27 +251,27 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     NodeWritable nextNode, PositionListWritable readIdList, EdgeWritable tempEdge) {
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.FORWARD) {
                     tempEdge.setAsCopy(nextForwardKmer, readIdList);
-                    curNode.getEdgeList(DirectionFlag.DIR_FF).add(tempEdge);
+                    curNode.getEdgeList(EDGETYPE.FF).add(tempEdge);
                     tempEdge.setAsCopy(curForwardKmer, readIdList);
-                    nextNode.getEdgeList(DirectionFlag.DIR_RR).add(tempEdge);
+                    nextNode.getEdgeList(EDGETYPE.RR).add(tempEdge);
                 }
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.REVERSE) {
                     tempEdge.setAsCopy(nextReverseKmer, readIdList);
-                    curNode.getEdgeList(DirectionFlag.DIR_FR).add(tempEdge);
+                    curNode.getEdgeList(EDGETYPE.FR).add(tempEdge);
                     tempEdge.setAsCopy(curForwardKmer, readIdList);
-                    nextNode.getEdgeList(DirectionFlag.DIR_FR).add(tempEdge);
+                    nextNode.getEdgeList(EDGETYPE.FR).add(tempEdge);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.FORWARD) {
                     tempEdge.setAsCopy(nextForwardKmer, readIdList);
-                    curNode.getEdgeList(DirectionFlag.DIR_RF).add(tempEdge);
+                    curNode.getEdgeList(EDGETYPE.RF).add(tempEdge);
                     tempEdge.setAsCopy(curReverseKmer, readIdList);
-                    nextNode.getEdgeList(DirectionFlag.DIR_RF).add(tempEdge);
+                    nextNode.getEdgeList(EDGETYPE.RF).add(tempEdge);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.REVERSE) {
                     tempEdge.setAsCopy(nextReverseKmer, readIdList);
-                    curNode.getEdgeList(DirectionFlag.DIR_RR).add(tempEdge);
+                    curNode.getEdgeList(EDGETYPE.RR).add(tempEdge);
                     tempEdge.setAsCopy(curReverseKmer, readIdList);
-                    nextNode.getEdgeList(DirectionFlag.DIR_FF).add(tempEdge);
+                    nextNode.getEdgeList(EDGETYPE.FF).add(tempEdge);
                 }
             }
 

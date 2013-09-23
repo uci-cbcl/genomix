@@ -7,7 +7,6 @@ import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -18,11 +17,11 @@ import org.apache.hadoop.mapred.lib.NLineInputFormat;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 @SuppressWarnings("deprecation")
 public class GenomixMapper extends MapReduceBase implements
@@ -202,14 +201,14 @@ public class GenomixMapper extends MapReduceBase implements
     				    edgeForPreKmer.setKey(preForwardKmer);
     				    edgeForPreKmer.setReadIDs(nodeIdList);
     				    edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForPreKmer);
+    				    outputNode.setEdgeList(EDGETYPE.RR, edgeListForPreKmer);
     					break;
     				case REVERSE:
                         edgeListForPreKmer.reset();
                         edgeForPreKmer.setKey(preReverseKmer);
                         edgeForPreKmer.setReadIDs(nodeIdList);
                         edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForPreKmer);
+    				    outputNode.setEdgeList(EDGETYPE.RF, edgeListForPreKmer);
     					break;
     			}
     			break;
@@ -220,14 +219,14 @@ public class GenomixMapper extends MapReduceBase implements
                         edgeForPreKmer.setKey(preForwardKmer);
                         edgeForPreKmer.setReadIDs(nodeIdList);
                         edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForPreKmer);
+    				    outputNode.setEdgeList(EDGETYPE.FR, edgeListForPreKmer);
     					break;
     				case REVERSE:
     				    edgeListForPreKmer.reset();
                         edgeForPreKmer.setKey(preReverseKmer);
                         edgeForPreKmer.setReadIDs(nodeIdList);
                         edgeListForPreKmer.add(edgeForPreKmer);
-    				    outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForPreKmer);
+    				    outputNode.setEdgeList(EDGETYPE.FF, edgeListForPreKmer);
     					break;
     			}
     			break;
@@ -243,14 +242,14 @@ public class GenomixMapper extends MapReduceBase implements
     				    edgeForNextKmer.setKey(nextForwardKmer);
     				    edgeForNextKmer.setReadIDs(nodeIdList);
     				    edgeListForNextKmer.add(edgeForNextKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FF, edgeListForNextKmer);
+    					outputNode.setEdgeList(EDGETYPE.FF, edgeListForNextKmer);
     					break;
     				case REVERSE:
     				    edgeListForNextKmer.reset();
                         edgeForNextKmer.setKey(nextReverseKmer);
                         edgeForNextKmer.setReadIDs(nodeIdList);
                         edgeListForNextKmer.add(edgeForNextKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_FR, edgeListForNextKmer);
+    					outputNode.setEdgeList(EDGETYPE.FR, edgeListForNextKmer);
     					break;
     			}
     			break;
@@ -262,14 +261,14 @@ public class GenomixMapper extends MapReduceBase implements
                         edgeForNextKmer.setReadIDs(nodeIdList);
                         edgeListForNextKmer.add(edgeForNextKmer);
     				    new EdgeListWritable(Arrays.asList(new EdgeWritable(nextForwardKmer, nodeIdList)));
-    					outputNode.setEdgeList(DirectionFlag.DIR_RF, edgeListForNextKmer);
+    					outputNode.setEdgeList(EDGETYPE.RF, edgeListForNextKmer);
     					break;
     				case REVERSE:
     				    edgeListForNextKmer.reset();
                         edgeForNextKmer.setKey(nextReverseKmer);
                         edgeForNextKmer.setReadIDs(nodeIdList);
                         edgeListForNextKmer.add(edgeForNextKmer);
-    					outputNode.setEdgeList(DirectionFlag.DIR_RR, edgeListForNextKmer);
+    					outputNode.setEdgeList(EDGETYPE.RR, edgeListForNextKmer);
     					break;
     			}
     			break;
