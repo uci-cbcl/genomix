@@ -25,6 +25,11 @@ public class PathMergeMessageWritable extends MessageWritable{
         updateMsg = false;
     }
     
+    public PathMergeMessageWritable(PathMergeMessageWritable other){
+        this();
+        this.setAsCopy(other);
+    }
+    
     public void setAsCopy(PathMergeMessageWritable other){
         super.setAsCopy(other);
         this.node.setAsCopy(other.getNode());

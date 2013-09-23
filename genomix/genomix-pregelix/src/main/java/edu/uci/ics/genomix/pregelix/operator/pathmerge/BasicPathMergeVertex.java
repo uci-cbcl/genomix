@@ -462,7 +462,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * initiate head, rear and path node
      */
     public void recieveRestrictions(Iterator<M> msgIterator) {
-        short restrictedDirs = 0;  // the directions (NEXT/PREVIOUS) that I'm not allowed to merge in
+        short restrictedDirs = getVertexValue().getState();  // the directions (NEXT/PREVIOUS) that I'm not allowed to merge in
         boolean updated = false;
         while (msgIterator.hasNext()) {
 //            LOG.info("before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
@@ -598,4 +598,5 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                 activate();
         }
     }
+    
 }
