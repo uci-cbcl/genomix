@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -73,18 +74,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected EDGETYPE incomingEdgeType; //SplitRepeat and BubbleMerge
     protected EDGETYPE outgoingEdgeType; //SplitRepeat and BubbleMerge
     
-    protected static final List<VKmerBytesWritable> problemKmers = Arrays.asList(
-//            new VKmerBytesWritable("CCCGGCCTCCAGCGTGGGATACGCGAAGATGCCGCCGTAGGTGAGAATCTGGTTC"),
-//            new VKmerBytesWritable("GCAGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-//            new VKmerBytesWritable("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-//            new VKmerBytesWritable("GAGCAGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-//            new VKmerBytesWritable("GGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-//            new VKmerBytesWritable("AGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-//            new VKmerBytesWritable("GCGACGTGCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-//            new VKmerBytesWritable("GTCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
-            new VKmerBytesWritable("AACACCGAGGGCGTGCCGACGAACCCCGAGGCCTACGCGAAGATGCGCGGCTGGA")
-            );
-    protected static final boolean debug = false;
+    protected static List<VKmerBytesWritable> problemKmers = null;
+    protected boolean debug = false;
     protected boolean verbose = false;
     
     protected HashMapWritable<ByteWritable, VLongWritable> counters = new HashMapWritable<ByteWritable, VLongWritable>();
@@ -98,6 +89,13 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         
+        if (problemKmers == null && getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
+            debug = true;
+            problemKmers = new ArrayList<VKmerBytesWritable>();
+            for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
+                problemKmers.add(new VKmerBytesWritable(kmer));
+        }
+                
         verbose = false;
         for (VKmerBytesWritable problemKmer : problemKmers)
             verbose |= debug && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));

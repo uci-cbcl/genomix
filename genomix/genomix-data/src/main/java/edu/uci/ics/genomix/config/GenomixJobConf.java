@@ -155,6 +155,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-hyracksBuildOutputText", usage = "text output for hyracks build (debug option)", required=false)
         private boolean hyracksBuildOutputText = false;
         
+        @Option(name = "-debugKmers", usage = "Log all interactions with the given comma-separated list of kmers at the FINE log level (check conf/logging.properties to specify an output location)", required=false)
+        private String debugKmers = null;
+        
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
     }
@@ -229,6 +232,7 @@ public class GenomixJobConf extends JobConf {
     public static final String PORT = "genomix.port";
     public static final String PROFILE = "genomix.profile";
     public static final String RUN_LOCAL = "genomix.runLocal";
+    public static final String DEBUG_KMERS = "genomix.debugKmers";
 
     // TODO should these also be command line options?
 //    public static final String FRAME_SIZE = "genomix.framesize";
@@ -418,6 +422,7 @@ public class GenomixJobConf extends JobConf {
             
         setBoolean(RUN_LOCAL, opts.runLocal);
         setBoolean(HYRACKS_BUILD_OUTPUT_TEXT, opts.hyracksBuildOutputText);
+        set(DEBUG_KMERS, opts.debugKmers);
         
         // Hyracks/Pregelix Setup
         if (opts.ipAddress != null)
