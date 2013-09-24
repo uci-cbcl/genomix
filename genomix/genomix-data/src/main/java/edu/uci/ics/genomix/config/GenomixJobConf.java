@@ -422,7 +422,8 @@ public class GenomixJobConf extends JobConf {
             
         setBoolean(RUN_LOCAL, opts.runLocal);
         setBoolean(HYRACKS_BUILD_OUTPUT_TEXT, opts.hyracksBuildOutputText);
-        set(DEBUG_KMERS, opts.debugKmers);
+        if (opts.debugKmers != null)
+            set(DEBUG_KMERS, opts.debugKmers);
         
         // Hyracks/Pregelix Setup
         if (opts.ipAddress != null)
