@@ -1,13 +1,9 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jfree.util.Log;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;

@@ -205,7 +205,7 @@ public class P1ForPathMergeVertex extends
     }
     
     /**
-     * for P0
+     * for P1
      */
     public void sendMergeMsg() {
         VertexValueWritable vertex = getVertexValue();
