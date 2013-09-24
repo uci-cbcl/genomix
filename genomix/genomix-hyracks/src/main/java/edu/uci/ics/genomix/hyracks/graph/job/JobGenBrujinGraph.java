@@ -124,7 +124,7 @@ public class JobGenBrujinGraph extends JobGen {
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, aggregator,
                         combineRed);
                 obj[1] = new MToNPartitioningMergingConnectorDescriptor(jobSpec, partition, keyFields,
-                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) });
+                        new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, normalizer);
                 obj[2] = new PreclusteredGroupOperatorDescriptor(jobSpec, keyFields,
                         new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(pointable) }, merger,
                         finalRec);
