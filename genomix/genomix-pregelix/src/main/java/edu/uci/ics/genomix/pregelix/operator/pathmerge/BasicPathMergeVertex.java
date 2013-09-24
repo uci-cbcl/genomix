@@ -576,57 +576,12 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                         + " direction != 1!\n" + vertex);
             VKmerBytesWritable dest = vertex.getEdgeList(mergeEdgetype).get(0).getKey();
             sendMsg(dest, outgoingMsg);
-            deleteVertex(getVertexId());
 
             if (verbose) {
                 LOG.fine("send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg
                         + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState())
                         + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
-                LOG.fine("killing self: " + getVertexId());
             }
-        }
-    }
-
-    /**
-     * step4: receive and process Merges
-     */
-    public void receiveMerges(Iterator<M> msgIterator) {
-        VertexValueWritable vertex = getVertexValue();
-        NodeWritable node = vertex.getNode();
-        short state = vertex.getState();
-        boolean updated = false;
-        EDGETYPE senderEdgetype;
-        @SuppressWarnings("unused")
-        int numMerged = 0;
-        while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
-            if (verbose)
-                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
-            senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
-            state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
-            numMerged++;
-            updated = true;
-            if (verbose)
-                LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
-        }
-        if (isTandemRepeat(getVertexValue())) {
-            // tandem repeats can't merge anymore; restrict all future merges
-            state |= DIR.NEXT.get();
-            state |= DIR.PREVIOUS.get();
-            updated = true;
-            if (verbose)
-                LOG.fine("recieveMerges is a tandem repeat: " + getVertexId() + " " + getVertexValue());
-            //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
-        }
-        //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
-        //      getVertexValue().setCounters(counters);
-        if (updated) {
-            vertex.setState(state);
-            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class)))
-                voteToHalt();
-            else
-                activate();
         }
     }
 

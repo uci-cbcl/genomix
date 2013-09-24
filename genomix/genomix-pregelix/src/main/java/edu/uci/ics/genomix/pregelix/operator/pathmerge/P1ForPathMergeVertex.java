@@ -230,33 +230,14 @@ public class P1ForPathMergeVertex extends
     /**
      * for P1
      */
+    @Override
     public void sendMergeMsg() {
-        VertexValueWritable vertex = getVertexValue();
-        short state = vertex.getState();
-        if ((state & P4State.MERGE) != 0) {
-            outgoingMsg.reset();
-            // tell neighbor where this is coming from (so they can merge kmers and delete)
-            EDGETYPE mergeEdgetype = EDGETYPE.fromByte(vertex.getState());
-            byte neighborRestrictions = DIR.fromSet(mergeEdgetype.causesFlip() ? DIR.flipSetFromByte(state) : DIR.enumSetFromByte(state));
-            
-            outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(vertex.getNode());
-            if (vertex.getDegree(mergeEdgetype.dir()) != 1)
-                throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
-                        + " direction != 1!\n" + vertex);
-            VKmerBytesWritable dest = vertex.getEdgeList(mergeEdgetype).get(0).getKey();
-            sendMsg(dest, outgoingMsg);
-            
-            if (verbose) {
-                LOG.fine("send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg
-                        + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState())
-                        + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
-            }
-            
+        super.sendMergeMsg();
+        short state = getVertexValue().getState();
+        if ((getVertexValue().getState() & P4State.MERGE) != 0) {
             // set flag to NO_MERGE instead of deleteVertex
             state |= P4State.NO_MERGE;
-            vertex.setState(state);
+            getVertexValue().setState(state);
             voteToHalt();
         }
     }

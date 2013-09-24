@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
@@ -161,6 +162,61 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         if (verbose) {
             LOG.fine("Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
                     + "; node is " + getVertexValue());
+        }
+    }
+
+    /**
+     * for P4
+     */
+    @Override
+    public void sendMergeMsg(){
+        super.sendMergeMsg();
+        if ((getVertexValue().getState() & P4State.MERGE) != 0) {
+            deleteVertex(getVertexId());
+            LOG.fine("killing self: " + getVertexId());
+        }
+    }
+    
+    /**
+     * step4: receive and process Merges
+     */
+    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
+        VertexValueWritable vertex = getVertexValue();
+        NodeWritable node = vertex.getNode();
+        short state = vertex.getState();
+        boolean updated = false;
+        EDGETYPE senderEdgetype;
+        @SuppressWarnings("unused")
+        int numMerged = 0;
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            if (verbose)
+                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+            senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
+            node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
+            state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
+            numMerged++;
+            updated = true;
+            if (verbose)
+                LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+        }
+        if (isTandemRepeat(getVertexValue())) {
+            // tandem repeats can't merge anymore; restrict all future merges
+            state |= DIR.NEXT.get();
+            state |= DIR.PREVIOUS.get();
+            updated = true;
+            if (verbose)
+                LOG.fine("recieveMerges is a tandem repeat: " + getVertexId() + " " + getVertexValue());
+            //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
+        }
+        //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
+        //      getVertexValue().setCounters(counters);
+        if (updated) {
+            vertex.setState(state);
+            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class)))
+                voteToHalt();
+            else
+                activate();
         }
     }
 
