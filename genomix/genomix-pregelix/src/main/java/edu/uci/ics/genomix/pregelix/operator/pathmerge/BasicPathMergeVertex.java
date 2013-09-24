@@ -499,7 +499,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         for (EDGETYPE updateEdge : updateEdges) {
             outgoingMsg.reset();
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setFlag(updateEdge.mirror().get());  // neighbor's edge to me (so he can remove me) 
+            outFlag = 0;
+            outFlag |= MessageFlag.TO_UPDATE | updateEdge.mirror().get(); // neighbor's edge to me (so he can remove me)
+            outgoingMsg.setFlag(outFlag);
             for (EDGETYPE mergeEdge : mergeEdges) {
                 EDGETYPE newEdgetype = EDGETYPE.resolveLinkThroughMiddleNode(updateEdge, mergeEdge);
                 outgoingMsg.getNode().setEdgeList(newEdgetype, getVertexValue().getEdgeList(mergeEdge));  // copy into outgoingMsg

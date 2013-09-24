@@ -26,6 +26,13 @@ public class VertexValueWritable
     }
     
     public static class VertexStateFlag extends HeadMergeDir{
+        public static final byte TO_UPDATE = 0b01 << 5;
+        public static final byte TO_OTHER = 0b10 << 5;
+        public static final byte TO_NEIGHBOR = 0b11 << 5;
+        public static final byte MSG_MASK = 0b11 << 5; 
+        public static final byte MSG_CLEAR = (byte)0011111;
+        
+        //TODO clean up code
         public static final byte IS_NON = 0b000 << 4;
         public static final byte IS_HEAD = 0b001 << 4;
         public static final byte IS_FINAL = 0b010 << 4;
