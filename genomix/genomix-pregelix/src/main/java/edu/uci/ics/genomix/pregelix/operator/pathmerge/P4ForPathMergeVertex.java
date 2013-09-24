@@ -159,7 +159,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             }
         }
         if (verbose) {
-            LOG.fine("Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
+            LOG.fine("Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
                     + "; node is " + getVertexValue());
         }
     }
