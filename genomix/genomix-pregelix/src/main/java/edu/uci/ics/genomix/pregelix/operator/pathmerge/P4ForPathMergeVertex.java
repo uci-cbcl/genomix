@@ -17,19 +17,18 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * Graph clean pattern: P4(Smart-algorithm) for path merge 
+ * Graph clean pattern: P4(Smart-algorithm) for path merge
+ * 
  * @author anbangx
- *
  */
-public class P4ForPathMergeVertex extends
-    BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
-    
+public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
+
     private static final Logger LOG = Logger.getLogger(P4ForPathMergeVertex.class.getName());
-    
+
     private static long randSeed = 1; //static for save memory
     private float probBeingRandomHead = -1;
     private Random randGenerator = null;
-    
+
     private VKmerBytesWritable curKmer = new VKmerBytesWritable();
     private VKmerBytesWritable nextKmer = new VKmerBytesWritable();
     private VKmerBytesWritable prevKmer = new VKmerBytesWritable();
@@ -40,41 +39,42 @@ public class P4ForPathMergeVertex extends
     private boolean prevHead;
     private EDGETYPE nextEdgetype;
     private EDGETYPE prevEdgetype;
-    
+
     /**
      * initiate kmerSize, maxIteration
      */
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
+        if (incomingMsg == null)
             incomingMsg = new PathMergeMessageWritable();
-        if(outgoingMsg == null)
+        if (outgoingMsg == null)
             outgoingMsg = new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
+        if (destVertexId == null)
             destVertexId = new VKmerBytesWritable();
         randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
-        if(randGenerator == null)
-            randGenerator = new Random(randSeed); 
+        if (randGenerator == null)
+            randGenerator = new Random(randSeed);
         if (probBeingRandomHead < 0)
-            probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
+            probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(
+                    GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
         hasNext = false;
         hasPrev = false;
         curHead = false;
         nextHead = false;
         prevHead = false;
-        outFlag = (byte)0;
-        inFlag = (byte)0;
+        outFlag = (byte) 0;
+        inFlag = (byte) 0;
         // Node may be marked as head b/c it's a real head or a real tail
-        if(repeatKmer == null)
+        if (repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
-        if(getSuperstep() == 1)
+        if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-//        else
-//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        //        else
+        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
@@ -82,16 +82,14 @@ public class P4ForPathMergeVertex extends
     protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
         // "deterministically random", based on node id
         randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 10000 * getSuperstep());//randSeed + nodeID.hashCode()
-        for(int i = 0; i < 500; i++)
+        for (int i = 0; i < 500; i++)  // destroy initial correlation between similar seeds 
             randGenerator.nextFloat();
         boolean isHead = randGenerator.nextFloat() < probBeingRandomHead;
-        if (verbose)
-            LOG.fine("randomHead: " + nodeKmer + "=" + isHead);
         return isHead;
     }
-    
+
     /**
-     * checks if there is a valid, mergeable neighbor in the given direction.  sets hasNext/Prev, next/prevEdgetype, Kmer and Head
+     * checks if there is a valid, mergeable neighbor in the given direction. sets hasNext/Prev, next/prevEdgetype, Kmer and Head
      */
     protected void checkNeighbors() {
         VertexValueWritable vertex = getVertexValue();
@@ -116,17 +114,17 @@ public class P4ForPathMergeVertex extends
             prevHead = isNodeRandomHead(prevKmer);
         }
     }
-    
+
     public void chooseMergeDir() {
         //initiate merge_dir
         setMerge(P4State.NO_MERGE);
-        
+
         curKmer = getVertexId();
         curHead = isNodeRandomHead(curKmer);
         checkNeighbors();
-        
+
         if (!hasNext && !hasPrev) { // TODO check if logic for previous updates is the same as here (just look at internal flags?)
-            voteToHalt();  // this node can never merge (restricted by neighbors or my structure)
+            voteToHalt(); // this node can never merge (restricted by neighbors or my structure)
         } else {
             if (curHead) {
                 if (hasNext && !nextHead) {
@@ -135,12 +133,12 @@ public class P4ForPathMergeVertex extends
                 } else if (hasPrev && !prevHead) {
                     // compress this head to the reverse tail
                     setMerge((byte) (prevEdgetype.get() | P4State.MERGE));
-                } 
-            }
-            else {
+                }
+            } else {
                 // I'm a tail
                 if (hasNext && hasPrev) {
-                     if ((!nextHead && !prevHead) && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
+                    if ((!nextHead && !prevHead)
+                            && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                         // tails on both sides, and I'm the "local minimum"
                         // compress me towards the tail in forward dir
                         setMerge((byte) (nextEdgetype.get() | P4State.MERGE));
@@ -161,18 +159,15 @@ public class P4ForPathMergeVertex extends
             }
         }
         if (verbose) {
-//            if ((getVertexValue().getState() & P4State.MERGE) == 0) {
-//                LOG.fine("No merge for " + getVertexId());
-//            } else {
-                LOG.fine("Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState())) + "; node is " + getVertexValue());
-//            }
+            LOG.fine("Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
+                    + "; node is " + getVertexValue());
         }
     }
-    
+
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws HyracksDataException {
         initVertex();
-            
+
         if (getSuperstep() == 1) {
             restrictNeighbors();
         } else if (getSuperstep() % 2 == 0) {
