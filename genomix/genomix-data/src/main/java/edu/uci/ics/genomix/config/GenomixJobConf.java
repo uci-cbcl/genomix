@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -201,7 +202,28 @@ public class GenomixJobConf extends JobConf {
             for (String p : steps.split(",")) {
                 result.add(Patterns.valueOf(p));
             }
-            return result.toArray(new Patterns[0]);
+            return result.toArray(new Patterns[result.size()]);
+        }
+        
+        /**
+         * make sure a given pattern array is valid
+         * 
+         *  BUILD* options must be first
+         *  only one BUILD* option
+         */
+        public static void verifyPatterns(Patterns[] patterns) {
+            EnumSet<Patterns> buildSteps = EnumSet.of(BUILD, BUILD_HYRACKS, BUILD_HADOOP);
+            int lastBuildIndex = -1;
+            int countBuildIndex = 0;
+            for (int i=patterns.length - 1; i >= 0; i--)
+                if (buildSteps.contains(patterns[i])) {
+                    lastBuildIndex = i;
+                    countBuildIndex++;
+                }
+            if (countBuildIndex > 1)
+                throw new IllegalArgumentException("Invalid -pipelineOrder specified!  At most one BUILD* step is allowed! Requested -pipelineOrder was " + StringUtils.join(patterns, ","));
+            if (lastBuildIndex != -1 && lastBuildIndex != 0)
+                throw new IllegalArgumentException("Invalid -pipelineOrder specified!  BUILD* step must come before all other steps! Requested -pipelineOrder was " + StringUtils.join(patterns, ","));
         }
     }
     
@@ -342,6 +364,8 @@ public class GenomixJobConf extends JobConf {
         
         if (Integer.parseInt(conf.get(MAX_READIDS_PER_EDGE)) < 0)
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
+        
+        Patterns.verifyPatterns(Patterns.arrayFromString(conf.get(GenomixJobConf.PIPELINE_ORDER)));
 
 //        // Hyracks/Pregelix Advanced Setup
 //        if (conf.get(IP_ADDRESS) == null)
