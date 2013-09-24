@@ -102,32 +102,51 @@ public class P0ForPathMergeVertex extends
             PathMergeMessageWritable msg = receivedMsgList.get(0);
             senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
             state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
-            //determine if merge. if head msg meets head and #receiveMsg = 1
+            VKmerBytesWritable me = getVertexId();
+            VKmerBytesWritable other = msg.getSourceVertexId();
+            // determine if merge. if head msg meets head and #receiveMsg = 1
             if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class))){
-                VKmerBytesWritable me = getVertexId();
-                VKmerBytesWritable other = msg.getSourceVertexId();
                 if(me.compareTo(other) < 0){
                     node.mergeWithNode(senderEdgetype, msg.getNode());
                     numMerged++;
                     updated = true;
                     deleteVertex(other);
                 } else{
-                    EDGETYPE otherToMe = EDGETYPE.fromByte(msg.getFlag());
-                    NodeWritable msgNode = msg.getNode();
-                    msgNode.getEdgeList(otherToMe).remove(me);
-                    outgoingMsg.reset();
+                    // broadcast kill self and update pointer to new kmer
+                    node.mergeWithNode(senderEdgetype, msg.getNode());
                     outgoingMsg.setSourceVertexId(me);
                     outgoingMsg.getNode().setInternalKmer(other);
+                    outFlag = 0;
+                    outFlag |= MessageFlag.TO_NEIGHBOR;
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        EDGETYPE neighborToOther = senderEdgetype.causesFlip() ? et.flip() : et;
-                        EDGETYPE otherToNeighbor = neighborToOther.mirror();
-                        outFlag = 0;
-                        outFlag |= MessageFlag.TO_NEIGHBOR | et.mirror().get() | otherToNeighbor.get() << 9;
-                        outgoingMsg.setFlag(outFlag);
-                        
-                        for (VKmerBytesWritable dest : msgNode.getEdgeList(senderEdgetype).getKeys()) 
-                            sendMsg(dest, outgoingMsg);
+                        for(VKmerBytesWritable kmer : vertex.getEdgeList(et).getKeys()){
+                            EDGETYPE meToNeighbor = et.mirror();
+                            EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flip() : meToNeighbor;
+                            outFlag &= EDGETYPE.CLEAR;
+                            outFlag &= MessageFlag.MERGE_DIR_CLEAR;
+                            outFlag |= meToNeighbor.get() | otherToNeighbor.get() << 9;
+                            outgoingMsg.setFlag(outFlag);
+                            destVertexId = kmer;
+                            sendMsg(destVertexId, outgoingMsg);
+                        }
                     }
+                    
+//                    EDGETYPE otherToMe = EDGETYPE.fromByte(msg.getFlag());
+//                    NodeWritable msgNode = msg.getNode();
+//                    msgNode.getEdgeList(otherToMe).remove(me);
+//                    outgoingMsg.reset();
+//                    outgoingMsg.setSourceVertexId(me);
+//                    outgoingMsg.getNode().setInternalKmer(other);
+//                    for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+//                        EDGETYPE neighborToOther = senderEdgetype.causesFlip() ? et.flip() : et;
+//                        EDGETYPE otherToNeighbor = neighborToOther.mirror();
+//                        outFlag = 0;
+//                        outFlag |= MessageFlag.TO_NEIGHBOR | et.mirror().get() | otherToNeighbor.get() << 9;
+//                        outgoingMsg.setFlag(outFlag);
+//                        
+//                        for (VKmerBytesWritable dest : msgNode.getEdgeList(senderEdgetype).getKeys()) 
+//                            sendMsg(dest, outgoingMsg);
+//                    }
                     
                     // 1. send message to other to add edges
 //                    outgoingMsg.reset();
@@ -163,7 +182,7 @@ public class P0ForPathMergeVertex extends
                 node.mergeWithNode(senderEdgetype, msg.getNode());
                 numMerged++;
                 updated = true;
-                deleteVertex(msg.getSourceVertexId());
+                deleteVertex(other);
             }
         }
         
@@ -227,11 +246,13 @@ public class P0ForPathMergeVertex extends
             EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
             
             VKmerBytesWritable deletedKmer = incomingMsg.getSourceVertexId();
-            EdgeWritable deletedEdge = value.getEdgeList(deleteToMe).getEdge(deletedKmer);
-            deletedEdge.setKey(incomingMsg.getInternalKmer());
-            
-            value.getEdgeList(deleteToMe).remove(deletedKmer);
-            value.getEdgeList(aliveToMe).unionAdd(deletedEdge);
+            if(value.getEdgeList(deleteToMe).contains(deletedKmer)){
+                EdgeWritable deletedEdge = value.getEdgeList(deleteToMe).getEdge(deletedKmer);
+                value.getEdgeList(deleteToMe).remove(deletedKmer);
+                
+                deletedEdge.setKey(incomingMsg.getInternalKmer());
+                value.getEdgeList(aliveToMe).unionAdd(deletedEdge);
+            }
             voteToHalt();
         }
     }
