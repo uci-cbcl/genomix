@@ -41,7 +41,7 @@ import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.P2InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P0ForPathMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
@@ -173,7 +173,7 @@ public class GenomixDriver {
                     break;
                 case MERGE_P1:
                     setOutput(conf, Patterns.MERGE_P1);
-                    addJob(P0ForPathMergeVertex.getConfiguredJob(conf, P0ForPathMergeVertex.class));
+                    addJob(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
                     break;
                 case MERGE_P2:
                     setOutput(conf, Patterns.MERGE_P2);
