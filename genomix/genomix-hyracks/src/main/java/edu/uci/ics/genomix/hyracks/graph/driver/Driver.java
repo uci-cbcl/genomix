@@ -141,10 +141,10 @@ public class Driver {
     private DeploymentId prepareJobs() throws Exception {
         URLClassLoader classLoader = (URLClassLoader) this.getClass().getClassLoader();
         List<String> jars = new ArrayList<String>();
+        LOG.info("Deploying jar files to NC's");
         URL[] urls = classLoader.getURLs();
         for (URL url : urls)
             if (url.toString().endsWith(".jar")) {
-                LOG.info(url.toString());
                 jars.add(new File(url.getPath()).toString());
             }
         DeploymentId deploymentId = hcc.deployBinary(jars);
