@@ -58,9 +58,12 @@ public class P1ForPathMergeVertex extends
         
         //choose merge dir -- principle: only merge with nextDir
         if(restrictedDirs.size() == 1){
-            EDGETYPE edgeType = restrictedDirs.contains(DIR.PREVIOUS) ? vertex.getEdgetypeFromDir(DIR.NEXT) : vertex.getEdgetypeFromDir(DIR.PREVIOUS);
-            state |= P4State.MERGE | edgeType.get();
-            updated = true;
+        	if((restrictedDirs.contains(DIR.PREVIOUS) && vertex.getDegree(DIR.NEXT) == 1) 
+        			|| (restrictedDirs.contains(DIR.NEXT) && vertex.getDegree(DIR.PREVIOUS) == 1)){
+	            EDGETYPE edgeType = restrictedDirs.contains(DIR.PREVIOUS) ? vertex.getEdgetypeFromDir(DIR.NEXT) : vertex.getEdgetypeFromDir(DIR.PREVIOUS);
+	            state |= P4State.MERGE | edgeType.get();
+	            updated = true;
+        	}
         }
         
         getVertexValue().setState(state);
