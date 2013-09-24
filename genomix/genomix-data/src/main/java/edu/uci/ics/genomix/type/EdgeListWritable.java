@@ -36,7 +36,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
 
     private static final long serialVersionUID = 1L;
     private static final int SIZE_INT = 4;
-
+    
     protected EdgeWritable edgeIter = new EdgeWritable();
 
     private ArrayList<EdgeWritable> edges;

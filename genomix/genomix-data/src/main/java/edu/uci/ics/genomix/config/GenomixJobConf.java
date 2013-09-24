@@ -35,6 +35,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
@@ -472,5 +473,7 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) { // TODO make sure everyone uses this version
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
 //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
+        
+        EdgeWritable.logReadIds = Boolean.parseBoolean(conf.get(GenomixJobConf.LOG_READIDS));
     }
 }

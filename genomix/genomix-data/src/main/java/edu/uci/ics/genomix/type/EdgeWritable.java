@@ -32,6 +32,7 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
 
     private static final long serialVersionUID = 1L;
     
+    public static boolean logReadIds = false;
 //    public static int MAX_READ_IDS_PER_EDGE = 250;
     
     private VKmerBytesWritable key;
@@ -249,15 +250,20 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        sbuilder.append(key.toString()).append(":[");
-        String delim = "";
-        long[] ids = readIDs.toReadIDArray();
-        Arrays.sort(ids);
-        for (long id : ids) {
-            sbuilder.append(delim).append(id);
-            delim = ",";
+        sbuilder.append(key.toString());
+        if(logReadIds){
+            sbuilder.append(":[");
+            String delim = "";
+            long[] ids = readIDs.toReadIDArray();
+            Arrays.sort(ids);
+            for (long id : ids) {
+                sbuilder.append(delim).append(id);
+                delim = ",";
+            }
+            sbuilder.append("]");
         }
-        sbuilder.append("]}");
+        sbuilder.append("}");
+        
         return sbuilder.toString();
     }
 }

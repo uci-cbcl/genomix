@@ -138,23 +138,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return flagAndMergeDir;
     }
     
-//    public byte getMsgFlagAndMergeDir(){
-//        byte flagAndMergeDir = (byte)(getVertexValue().getState() & State.IS_HEAD);
-//        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-//        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-//        switch(neighborToMeDir){
-//            case MessageFlag.DIR_FF:
-//            case MessageFlag.DIR_FR:
-//                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
-//                break;
-//            case MessageFlag.DIR_RF:
-//            case MessageFlag.DIR_RR:
-//                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
-//                break;
-//        }
-//        return flagAndMergeDir;
-//    }
-    
     /**
      * set head state
      */
