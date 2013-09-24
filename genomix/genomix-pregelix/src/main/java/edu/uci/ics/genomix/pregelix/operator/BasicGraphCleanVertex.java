@@ -76,6 +76,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected static List<VKmerBytesWritable> problemKmers = null;
     protected boolean debug = false;
     protected boolean verbose = false;
+    protected boolean logReadIds = false;
     
     protected HashMapWritable<ByteWritable, VLongWritable> counters = new HashMapWritable<ByteWritable, VLongWritable>();
     /**

@@ -158,6 +158,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-debugKmers", usage = "Log all interactions with the given comma-separated list of kmers at the FINE log level (check conf/logging.properties to specify an output location)", required=false)
         private String debugKmers = null;
         
+        @Option(name = "-logReadIds", usage = "Log all readIds with the selected edges at the FINE log level (check conf/logging.properties to specify an output location)", required=false)
+        private boolean logReadIds = false;
+        
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
     }
@@ -233,6 +236,7 @@ public class GenomixJobConf extends JobConf {
     public static final String PROFILE = "genomix.profile";
     public static final String RUN_LOCAL = "genomix.runLocal";
     public static final String DEBUG_KMERS = "genomix.debugKmers";
+    public static final String LOG_READIDS = "genomix.logReadIds";
 
     // TODO should these also be command line options?
 //    public static final String FRAME_SIZE = "genomix.framesize";
@@ -424,6 +428,7 @@ public class GenomixJobConf extends JobConf {
         setBoolean(HYRACKS_BUILD_OUTPUT_TEXT, opts.hyracksBuildOutputText);
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
+        setBoolean(LOG_READIDS, opts.logReadIds);
         
         // Hyracks/Pregelix Setup
         if (opts.ipAddress != null)
