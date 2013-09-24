@@ -10,6 +10,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -69,7 +70,7 @@ public class P0ForPathMergeVertex extends
     }
     
     /**
-     * step4: receive and process Merges 
+     * step4: receive and process Merges  for P0
      */
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
@@ -95,6 +96,7 @@ public class P0ForPathMergeVertex extends
               state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
               numMerged++;
               updated = true;
+              deleteVertex(msg.getSourceVertexId());
             }
         } else if(receivedMsgList.size() == 1){ // even number of nodes
             PathMergeMessageWritable msg = receivedMsgList.get(0);
@@ -108,40 +110,60 @@ public class P0ForPathMergeVertex extends
                     node.mergeWithNode(senderEdgetype, msg.getNode());
                     numMerged++;
                     updated = true;
+                    deleteVertex(other);
                 } else{
-                    node.mergeWithNode(senderEdgetype, msg.getNode());
-                    // 1. send message to other to add edges
-                    outgoingMsg.reset();
-                    for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        outgoingMsg.getNode().setEdgeList(senderEdgetype.causesFlip() ? et.flip() : et,
-                                node.getEdgeList(et));
-                    }
-                    outFlag = 0;
-                    outFlag |= MessageFlag.TO_OTHER;
-                    outgoingMsg.setFlag(outFlag);
-                    sendMsg(other, outgoingMsg);
-                    
-                    // 2. send message to neighbor to update edge from toMe to toOther
+                    EDGETYPE otherToMe = EDGETYPE.fromByte(msg.getFlag());
+                    NodeWritable msgNode = msg.getNode();
+                    msgNode.getEdgeList(otherToMe).remove(me);
                     outgoingMsg.reset();
                     outgoingMsg.setSourceVertexId(me);
                     outgoingMsg.getNode().setInternalKmer(other);
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        EDGETYPE meToNeighbor = et.mirror();
-                        EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flip() : meToNeighbor;
+                        EDGETYPE neighborToOther = senderEdgetype.causesFlip() ? et.flip() : et;
+                        EDGETYPE otherToNeighbor = neighborToOther.mirror();
                         outFlag = 0;
-                        outFlag |= MessageFlag.TO_NEIGHBOR | meToNeighbor.get() | otherToNeighbor.get() << 9;
+                        outFlag |= MessageFlag.TO_NEIGHBOR | et.mirror().get() | otherToNeighbor.get() << 9;
                         outgoingMsg.setFlag(outFlag);
                         
-                        for (VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()) 
+                        for (VKmerBytesWritable dest : msgNode.getEdgeList(senderEdgetype).getKeys()) 
                             sendMsg(dest, outgoingMsg);
                     }
                     
-                    deleteVertex(getVertexId());
+                    // 1. send message to other to add edges
+//                    outgoingMsg.reset();
+//                    for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+//                        outgoingMsg.getNode().setEdgeList(senderEdgetype.causesFlip() ? et.flip() : et,
+//                                node.getEdgeList(et));
+//                    }
+//                    outFlag = 0;
+//                    outFlag |= MessageFlag.TO_OTHER;
+//                    outgoingMsg.setFlag(outFlag);
+//                    sendMsg(other, outgoingMsg);
+                    
+                    // 2. send message to neighbor to update edge from toMe to toOther
+//                    outgoingMsg.reset();
+//                    outgoingMsg.setSourceVertexId(me);
+//                    outgoingMsg.getNode().setInternalKmer(other);
+//                    for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+//                        EDGETYPE meToNeighbor = et.mirror();
+//                        EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flip() : meToNeighbor;
+//                        outFlag = 0;
+//                        outFlag |= MessageFlag.TO_NEIGHBOR | meToNeighbor.get() | otherToNeighbor.get() << 9;
+//                        outgoingMsg.setFlag(outFlag);
+//                        
+//                        for (VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()) 
+//                            sendMsg(dest, outgoingMsg);
+//                    }
+                    
+                    state |= P4State.NO_MERGE;
+                    vertex.setState(state);
+                    voteToHalt();
                 }
             } else{
                 node.mergeWithNode(senderEdgetype, msg.getNode());
                 numMerged++;
                 updated = true;
+                deleteVertex(msg.getSourceVertexId());
             }
         }
         
@@ -174,11 +196,12 @@ public class P0ForPathMergeVertex extends
                 case MessageFlag.TO_UPDATE:
                     updateMsgs.add(new PathMergeMessageWritable(incomingMsg));
                     break;
-                case MessageFlag.TO_OTHER:
-                    otherMsgs.add(new PathMergeMessageWritable(incomingMsg));
-                    break;
+//                case MessageFlag.TO_OTHER:
+//                    otherMsgs.add(new PathMergeMessageWritable(incomingMsg));
+//                    break;
                 case MessageFlag.TO_NEIGHBOR:
                     neighborMsgs.add(new PathMergeMessageWritable(incomingMsg));
+                    break;
                 default:
                     throw new IllegalStateException("Message types are allowd for only TO_UPDATE, TO_OTHER and TO_NEIGHBOR!");
             }
@@ -202,8 +225,41 @@ public class P0ForPathMergeVertex extends
             incomingMsg = msgIterator.next();
             EDGETYPE deleteToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
             EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
-            value.getEdgeList(deleteToMe).remove(incomingMsg.getSourceVertexId());
-            value.getEdgeList(aliveToMe).add(incomingMsg.getInternalKmer());
+            
+            VKmerBytesWritable deletedKmer = incomingMsg.getSourceVertexId();
+            EdgeWritable deletedEdge = value.getEdgeList(deleteToMe).getEdge(deletedKmer);
+            deletedEdge.setKey(incomingMsg.getInternalKmer());
+            
+            value.getEdgeList(deleteToMe).remove(deletedKmer);
+            value.getEdgeList(aliveToMe).unionAdd(deletedEdge);
+            voteToHalt();
+        }
+    }
+    
+    /**
+     * for P0
+     */
+    public void sendMergeMsg() {
+        VertexValueWritable vertex = getVertexValue();
+        short state = vertex.getState();
+        if ((state & P4State.MERGE) != 0) {
+            outgoingMsg.reset();
+            // tell neighbor where this is coming from (so they can merge kmers and delete)
+            EDGETYPE mergeEdgetype = EDGETYPE.fromByte(vertex.getState());
+            byte neighborRestrictions = DIR.fromSet(mergeEdgetype.causesFlip() ? DIR.flipSetFromByte(state) : DIR.enumSetFromByte(state));
+            
+            outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
+            outgoingMsg.setSourceVertexId(getVertexId());
+            outgoingMsg.setNode(vertex.getNode());
+            if (vertex.getDegree(mergeEdgetype.dir()) != 1)
+                throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype + " direction != 1!\n" + vertex);
+            VKmerBytesWritable dest = vertex.getEdgeList(mergeEdgetype).get(0).getKey();
+//            LOG.info("send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState()) + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
+            sendMsg(dest, outgoingMsg);
+            
+//            LOG.info("killing self: " + getVertexId());
+            state |= P4State.NO_MERGE;
+            vertex.setState(state);
             voteToHalt();
         }
     }
@@ -225,7 +281,7 @@ public class P0ForPathMergeVertex extends
             catagorizeMsg(msgIterator);
             
             receiveUpdates(updateMsgs.iterator());
-            receiveToOther(otherMsgs.iterator());
+//            receiveToOther(otherMsgs.iterator());
             receiveToNeighbor(neighborMsgs.iterator());
             
             sendMergeMsg();
