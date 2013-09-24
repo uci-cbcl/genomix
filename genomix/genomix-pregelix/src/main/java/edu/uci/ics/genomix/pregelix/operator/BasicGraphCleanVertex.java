@@ -89,11 +89,13 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         
-        if (problemKmers == null && getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
-            debug = true;
+        if (problemKmers == null) {
             problemKmers = new ArrayList<VKmerBytesWritable>();
-            for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
-                problemKmers.add(new VKmerBytesWritable(kmer));
+            if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
+                debug = true;
+                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
+                    problemKmers.add(new VKmerBytesWritable(kmer));
+            }
         }
                 
         verbose = false;
