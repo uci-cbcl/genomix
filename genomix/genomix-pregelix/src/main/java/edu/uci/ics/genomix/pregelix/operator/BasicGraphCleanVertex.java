@@ -1,9 +1,10 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleEntry;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -28,12 +29,10 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.OutgoingListFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
-import edu.uci.ics.genomix.type.NodeWritable.IncomingListFlag;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, V, NullWritable, M> {
@@ -48,21 +47,22 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public static boolean fakeVertexExist = false;
     public static VKmerBytesWritable fakeVertex = null;
     
-    public byte[][] connectedTable = new byte[][]{
-            {MessageFlag.DIR_RF, MessageFlag.DIR_FF},
-            {MessageFlag.DIR_RF, MessageFlag.DIR_FR},
-            {MessageFlag.DIR_RR, MessageFlag.DIR_FF},
-            {MessageFlag.DIR_RR, MessageFlag.DIR_FR}
+    public EDGETYPE[][] connectedTable = new EDGETYPE[][]{
+            {EDGETYPE.RF, EDGETYPE.FF},
+            {EDGETYPE.RF, EDGETYPE.FR},
+            {EDGETYPE.RR, EDGETYPE.FF},
+            {EDGETYPE.RR, EDGETYPE.FR}
     };
     
     protected M incomingMsg = null; 
     protected M outgoingMsg = null; 
+    protected M aggregatingMsg = null;
     protected VKmerBytesWritable destVertexId = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable(); 
     protected Iterator<VKmerBytesWritable> kmerIterator;
     protected VKmerListWritable kmerList = null;
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
-    protected byte repeatDir; //for detect tandemRepeat
+    protected EDGETYPE repeatEdgetype; //for detect tandemRepeat
     protected VKmerBytesWritable tmpKmer = null;
     protected short outFlag;
     protected short inFlag;
@@ -70,8 +70,22 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     protected EdgeListWritable incomingEdgeList = null; //SplitRepeat and BubbleMerge
     protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat and BubbleMerge
-    protected byte incomingEdgeDir = 0; //SplitRepeat and BubbleMerge
-    protected byte outgoingEdgeDir = 0; //SplitRepeat and BubbleMerge
+    protected EDGETYPE incomingEdgeType; //SplitRepeat and BubbleMerge
+    protected EDGETYPE outgoingEdgeType; //SplitRepeat and BubbleMerge
+    
+    protected static final List<VKmerBytesWritable> problemKmers = Arrays.asList(
+//            new VKmerBytesWritable("CCCGGCCTCCAGCGTGGGATACGCGAAGATGCCGCCGTAGGTGAGAATCTGGTTC"),
+//            new VKmerBytesWritable("GCAGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+//            new VKmerBytesWritable("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+//            new VKmerBytesWritable("GAGCAGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+//            new VKmerBytesWritable("GGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+//            new VKmerBytesWritable("AGGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+//            new VKmerBytesWritable("GCGACGTGCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+//            new VKmerBytesWritable("GTCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            new VKmerBytesWritable("AACACCGAGGGCGTGCCGACGAACCCCGAGGCCTACGCGAAGATGCGCGGCTGGA")
+            );
+    protected static final boolean debug = false;
+    protected boolean verbose = false;
     
     protected HashMapWritable<ByteWritable, VLongWritable> counters = new HashMapWritable<ByteWritable, VLongWritable>();
     /**
@@ -83,6 +97,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         if (maxIteration < 0)
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        
+        verbose = false;
+        for (VKmerBytesWritable problemKmer : problemKmers)
+            verbose |= debug && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
     }
     
     public boolean isHeadNode(){
@@ -120,22 +138,22 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         return flagAndMergeDir;
     }
     
-    public byte getMsgFlagAndMergeDir(){
-        byte flagAndMergeDir = (byte)(getVertexValue().getState() & State.IS_HEAD);
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
-                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
-                break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
-                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
-                break;
-        }
-        return flagAndMergeDir;
-    }
+//    public byte getMsgFlagAndMergeDir(){
+//        byte flagAndMergeDir = (byte)(getVertexValue().getState() & State.IS_HEAD);
+//        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+//        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+//        switch(neighborToMeDir){
+//            case MessageFlag.DIR_FF:
+//            case MessageFlag.DIR_FR:
+//                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
+//                break;
+//            case MessageFlag.DIR_RF:
+//            case MessageFlag.DIR_RR:
+//                flagAndMergeDir |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
+//                break;
+//        }
+//        return flagAndMergeDir;
+//    }
     
     /**
      * set head state
@@ -196,34 +214,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * get destination vertex
      */
-    public VKmerBytesWritable getPrevDestVertexId() {
-    	// TODO check length of RF and RR == 1; throw exception otherwise
-        if (!getVertexValue().getRFList().isEmpty()){ //#RFList() > 0
-            kmerIterator = getVertexValue().getRFList().getKeyIterator();
-            return kmerIterator.next();
-        } else if (!getVertexValue().getRRList().isEmpty()){ //#RRList() > 0
-            kmerIterator = getVertexValue().getRRList().getKeyIterator();
-            return kmerIterator.next();
-        } else {
-            return null;
-        }
-    }
-    
-    public VKmerBytesWritable getNextDestVertexId() {
-        if (!getVertexValue().getFFList().isEmpty()){ //#FFList() > 0
-            kmerIterator = getVertexValue().getFFList().getKeyIterator();
-            return kmerIterator.next();
-        } else if (!getVertexValue().getFRList().isEmpty()){ //#FRList() > 0
-            kmerIterator = getVertexValue().getFRList().getKeyIterator();
-            return kmerIterator.next();
-        } else {
-            return null;  
-        }
-    }
-
-    /**
-     * get destination vertex
-     */
     public VKmerBytesWritable getPrevDestVertexIdAndSetFlag() {
         if (!getVertexValue().getRFList().isEmpty()){ // #RFList() > 0
             kmerIterator = getVertexValue().getRFList().getKeyIterator();
@@ -268,7 +258,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             else if(!getVertexValue().getRRList().isEmpty())
                 outgoingMsg.setFlag(MessageFlag.DIR_RR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.setAsCopy(getPrevDestVertexId());
+            destVertexId.setAsCopy(getDestVertexId(DIR.PREVIOUS));
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -284,22 +274,22 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             else if(!getVertexValue().getFRList().isEmpty())
                 outgoingMsg.setFlag(MessageFlag.DIR_FR);
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.setAsCopy(getNextDestVertexId());
+            destVertexId.setAsCopy(getDestVertexId(DIR.NEXT));
             sendMsg(destVertexId, outgoingMsg);
         }
     }
     
     /**
-     * head send message to all neighbor nodes
+     * send message to all neighbor nodes
      */
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         //TODO THE less context you send, the better  (send simple messages)
-        byte dirs[] = direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
-        for(byte dir : dirs){
-            kmerIterator = value.getEdgeList(dir).getKeyIterator();
+        EnumSet<EDGETYPE> edgeTypes = (direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
+        for(EDGETYPE e : edgeTypes){
+            kmerIterator = value.getEdgeList(e).getKeyIterator();
             while(kmerIterator.hasNext()){
                 outFlag &= MessageFlag.DIR_CLEAR;
-                outFlag |= dir;
+                outFlag |= e.get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
                 destVertexId.setAsCopy(kmerIterator.next());
@@ -314,38 +304,72 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
+     * head send message to all neighbor nodes
+     */
+    public void headSendSettledMsgs(DIR direction, VertexValueWritable value){
+        //TODO THE less context you send, the better  (send simple messages)
+        EnumSet<EDGETYPE> edgeTypes = (direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
+        for(EDGETYPE e : edgeTypes){
+            kmerIterator = value.getEdgeList(e).getKeyIterator();
+            while(kmerIterator.hasNext()){
+                outFlag &= MessageFlag.HEAD_CAN_MERGE_CLEAR;
+                EDGETYPE meToNeighborEdgeType = e.mirror();
+                switch(meToNeighborEdgeType){
+                    case FF:
+                    case FR:
+                        outFlag |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
+                        break;
+                    case RF:
+                    case RR:
+                        outFlag |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
+                        break;  
+                }
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                destVertexId.setAsCopy(kmerIterator.next());
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
+    
+    public void headSendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
+        headSendSettledMsgs(DIR.PREVIOUS, value);
+        headSendSettledMsgs(DIR.NEXT, value);
+    }
+    
+    /**
      * get a copy of the original Kmer without TandemRepeat
      * @param destVertex 
      */
     public void copyWithoutTandemRepeats(V srcVertex, VertexValueWritable destVertex){
         destVertex.setAsCopy(srcVertex);
-        destVertex.getEdgeList(repeatDir).remove(repeatKmer);
+        destVertex.getEdgeList(repeatEdgetype).remove(repeatKmer);
         while(isTandemRepeat(destVertex))
-            destVertex.getEdgeList(repeatDir).remove(repeatKmer);
+            destVertex.getEdgeList(repeatEdgetype).remove(repeatKmer);
     }
     
-    /**
-     * check if it is valid path
-     */
-    public boolean isValidPath(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-        switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
-                return getVertexValue().inDegree() == 1;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
-                return getVertexValue().outDegree() == 1;
-        }
-        return true;
-    }
+//    /**
+//     * check if it is valid path
+//     */
+//    public boolean isValidPath(){
+//        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
+//        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+//        switch(neighborToMeDir){
+//            case MessageFlag.DIR_FF:
+//            case MessageFlag.DIR_FR:
+//                return getVertexValue().inDegree() == 1;
+//            case MessageFlag.DIR_RF:
+//            case MessageFlag.DIR_RR:
+//                return getVertexValue().outDegree() == 1;
+//        }
+//        return true;
+//    }
     
     /**
      * check if A need to be filpped with neighbor
      */
-    public boolean ifFlipWithNeighbor(boolean withPrecessor){
-        if(withPrecessor){
+    public boolean ifFlipWithNeighbor(DIR direction){
+        if(direction == DIR.PREVIOUS){
             if(getVertexValue().getRRList().isEmpty())
                 return true;
             else
@@ -395,17 +419,14 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * set neighborToMe Dir
      */
-    public void setNeighborToMeDir(DIR predecessorToMe){
-        if(getVertexValue().getDegree(predecessorToMe) != 1)
+    public void setNeighborToMeDir(DIR direction){
+        if(getVertexValue().getDegree(direction) != 1)
             throw new IllegalArgumentException("In merge dir, the degree is not 1");
-        byte[] dirs = predecessorToMe == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
+        EnumSet<EDGETYPE> edgeTypes = direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
         outFlag &= MessageFlag.DIR_CLEAR;
         
-        if(getVertexValue().getEdgeList(dirs[0]).getCountOfPosition() == 1){
-            outFlag |= dirs[0];
-        } else if(getVertexValue().getEdgeList(dirs[1]).getCountOfPosition() == 1){
-            outFlag |= dirs[1];
-        }
+        for (EDGETYPE et : edgeTypes)
+            outFlag |= et.get();
     }
     
     /**
@@ -433,7 +454,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * Returns the edge dir for B->A when the A->B edge is type @dir
      */
-    public byte mirrorDirection(byte dir) {
+    public byte meToNeighborDir(byte dir) {
         switch (dir) {
             case MessageFlag.DIR_FF:
                 return MessageFlag.DIR_RR;
@@ -497,8 +518,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
     public void responseToDeadVertex(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
         getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
     }
@@ -548,46 +569,15 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * Look inside of vertex for the given edge, returning the direction we found it in (or null) 
      */
-    public static Byte findEdge(VKmerBytesWritable id, VertexValueWritable vertex){
+    public static EDGETYPE findEdge(VKmerBytesWritable id, VertexValueWritable vertex){
         // TODO move into Node?
-        for(byte d : DirectionFlag.values){
-            for (VKmerBytesWritable curKey : vertex.getEdgeList(d).getKeys()) {
+        for(EDGETYPE e : EnumSet.allOf(EDGETYPE.class)){
+            for (VKmerBytesWritable curKey : vertex.getEdgeList(e).getKeys()) {
                 if(curKey.equals(id)) // points to self
-                    return d;
+                    return e;
             }
         }
         return null;
-    }
-    
-    public boolean isTandemRepeat(VertexValueWritable value){
-            VKmerBytesWritable kmerToCheck;
-            for(byte d : DirectionFlag.values){
-                Iterator<VKmerBytesWritable> it = value.getEdgeList(d).getKeyIterator();
-                while(it.hasNext()){
-                    kmerToCheck = it.next();
-                    if(kmerToCheck.equals(getVertexId())){
-                        repeatDir = d;
-                        repeatKmer.setAsCopy(kmerToCheck);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    
-    public byte flipDir(byte dir){
-        switch(dir){
-            case DirectionFlag.DIR_FF:
-                return DirectionFlag.DIR_RF;
-            case DirectionFlag.DIR_FR:
-                return DirectionFlag.DIR_RR;
-            case DirectionFlag.DIR_RF:
-                return DirectionFlag.DIR_FF;
-            case DirectionFlag.DIR_RR:
-                return DirectionFlag.DIR_FR;
-            default:
-                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
-        }
     }
     
     /**
@@ -639,9 +629,9 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void startSendMsgForP2() {
         if(isTandemRepeat(getVertexValue())){
             tmpValue.setAsCopy(getVertexValue());
-            tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+            tmpValue.getEdgeList(repeatEdgetype).remove(repeatKmer);
             while(isTandemRepeat(tmpValue))
-                tmpValue.getEdgeList(repeatDir).remove(repeatKmer);
+                tmpValue.getEdgeList(repeatEdgetype).remove(repeatKmer);
             outFlag = 0;
             outFlag |= MessageFlag.IS_HEAD;
             sendSettledMsgToAllNeighborNodes(tmpValue);
@@ -693,12 +683,67 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * use for SplitRepeatVertex and BubbleMerge
      * @param i
      */
-    public void setEdgeListAndEdgeDir(int i){
+    public void setEdgeListAndEdgeType(int i){
         incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
-        incomingEdgeDir = connectedTable[i][0];
+        incomingEdgeType = connectedTable[i][0];
         
         outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
-        outgoingEdgeDir = connectedTable[i][1];
+        outgoingEdgeType = connectedTable[i][1];
     }
     
+//2013.9.21 ------------------------------------------------------------------//
+    /**
+     * get destination vertex ex. RemoveTip
+     */
+    public VKmerBytesWritable getDestVertexId(DIR direction){
+        int degree = getVertexValue().getDegree(direction);
+        if(degree > 1)
+            throw new IllegalArgumentException("degree > 1, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
+        
+        if(degree == 1){
+            EnumSet<EDGETYPE> edgeTypes = direction.edgeType();
+            for(EDGETYPE et : edgeTypes){
+                if(getVertexValue().getEdgeList(et).getCountOfPosition() > 0)
+                    return getVertexValue().getEdgeList(et).get(0).getKey();
+            }
+        }
+        //degree in this direction == 0
+        throw new IllegalArgumentException("degree > 0, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
+    }
+    
+    /**
+     * check if I am a tandemRepeat 
+     */
+    public boolean isTandemRepeat(VertexValueWritable value){
+        VKmerBytesWritable kmerToCheck;
+        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+            Iterator<VKmerBytesWritable> it = value.getEdgeList(et).getKeyIterator();
+            while(it.hasNext()){
+                kmerToCheck = it.next();
+                if(kmerToCheck.equals(getVertexId())){
+                    repeatEdgetype = et;
+                    repeatKmer.setAsCopy(kmerToCheck);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * broadcastKillself ex. RemoveLow
+     */
+    public void broadcastKillself(){
+        VertexValueWritable vertex = getVertexValue();
+        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+            for(VKmerBytesWritable kmer : vertex.getEdgeList(et).getKeys()){
+                outFlag &= EDGETYPE.CLEAR;
+                outFlag |= et.mirror().get();
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                destVertexId = kmer;
+                sendMsg(destVertexId, outgoingMsg);
+            }
+        }
+    }
 }

@@ -7,6 +7,7 @@ import org.apache.hadoop.io.NullWritable;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -33,8 +34,8 @@ public class BridgeAddVertex extends
     private VKmerBytesWritable upBridge = new VKmerBytesWritable("ATA");
     private VKmerBytesWritable downBridge = new VKmerBytesWritable("ACG");
     private VKmerBytesWritable insertedBridge = new VKmerBytesWritable("GTA");
-    private byte bridgeToUpDir = MessageFlag.DIR_FR; 
-    private byte bridgeToDownDir = MessageFlag.DIR_RF; 
+    private EDGETYPE bridgeToUpDir = EDGETYPE.FR; 
+    private EDGETYPE bridgeToDownDir = EDGETYPE.RF; 
     
     /**
      * initiate kmerSize, maxIteration
@@ -49,7 +50,7 @@ public class BridgeAddVertex extends
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertBridge(byte dirToUp, EdgeListWritable edgeListToUp, byte dirToDown,
+    public void insertBridge(EDGETYPE dirToUp, EdgeListWritable edgeListToUp, EDGETYPE dirToDown,
             EdgeListWritable edgeListToDown, VKmerBytesWritable insertedBridge){
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
@@ -79,7 +80,7 @@ public class BridgeAddVertex extends
         return edgeList;
     }
     
-    public void addEdgeToInsertedBridge(byte dir, VKmerBytesWritable insertedBridge){
+    public void addEdgeToInsertedBridge(EDGETYPE dir, VKmerBytesWritable insertedBridge){
         EdgeWritable newEdge = new EdgeWritable();
         newEdge.setKey(insertedBridge);
         newEdge.appendReadID(0);
@@ -110,7 +111,7 @@ public class BridgeAddVertex extends
         if(getSuperstep() == 1){
             if(getVertexId().toString().equals("ATA")){
                 /** add edge pointing to inserted bridge **/
-                byte upToBridgeDir = mirrorDirection(bridgeToUpDir);
+                EDGETYPE upToBridgeDir = bridgeToUpDir.mirror(); 
                 addEdgeToInsertedBridge(upToBridgeDir, insertedBridge);
                 
                 /** insert bridge **/
@@ -120,7 +121,7 @@ public class BridgeAddVertex extends
             } 
             else if(getVertexId().toString().equals("ACG")){
                 /** add edge pointing to new bridge **/
-                byte downToBridgeDir = mirrorDirection(bridgeToDownDir);
+                EDGETYPE downToBridgeDir = bridgeToDownDir.mirror(); 
                 addEdgeToInsertedBridge(downToBridgeDir, insertedBridge);
             }
         }

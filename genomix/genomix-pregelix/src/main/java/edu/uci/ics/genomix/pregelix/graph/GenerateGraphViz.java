@@ -13,8 +13,8 @@ import org.apache.hadoop.io.SequenceFile;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
 
 public class GenerateGraphViz {
 
@@ -132,25 +132,25 @@ public class GenerateGraphViz {
     public static String convertEdgeToGraph(String outputNode, NodeWritable value){
         String outputEdge = "";
         Iterator<EdgeWritable> edgeIterator;
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FF).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.FF).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next(); 
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"black\" label =\"FF: " +
                     edge.printReadIdSet() + "\"]\n";
         }
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.FR).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"blue\" label =\"FR: " +
                     edge.printReadIdSet() + "\"]\n";
         }
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.RF).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"green\" label =\"RF: " +
                     edge.printReadIdSet() + "\"]\n";
         }
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.RR).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"red\" label =\"RR: " +
@@ -171,25 +171,25 @@ public class GenerateGraphViz {
     public static String convertEdgeToGraph(String outputNode, VertexValueWritable value){
         String outputEdge = "";
         Iterator<EdgeWritable> edgeIterator;
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FF).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.FF).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next(); 
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"black\" label =\"FF: " +
                     edge.printReadIdSet() + "\"]\n";
         }
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_FR).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.FR).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"blue\" label =\"FR: " +
                     edge.printReadIdSet() + "\"]\n";
         }
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RF).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.RF).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"green\" label =\"RF: " +
                     edge.printReadIdSet() + "\"]\n";
         }
-        edgeIterator = value.getEdgeList(DirectionFlag.DIR_RR).iterator();
+        edgeIterator = value.getEdgeList(EDGETYPE.RR).iterator();
         while(edgeIterator.hasNext()){
             EdgeWritable edge = edgeIterator.next();
             outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"red\" label =\"RR: " +

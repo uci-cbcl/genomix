@@ -64,11 +64,11 @@ public class GenomixDriver {
     private String prevOutput;
     private String curOutput;
     private int stepNum;
-    private List<PregelixJob> pregelixJobs;
+    private List<PregelixJob> pregelixJobs; // TODO add sanity checks to pipeline order
     private boolean followingBuild = false; // need to adapt the graph immediately after building
-    private boolean runLocal;
-    private int numCoresPerMachine;
-    private int numMachines;
+    private boolean runLocal = false;
+    private int numCoresPerMachine; // TODO remove ?
+    private int numMachines; // TODO remove ?
 
     private GenomixClusterManager manager;
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
@@ -78,12 +78,14 @@ public class GenomixDriver {
         LOG.info("Building Graph using Hyracks...");
         manager.startCluster(ClusterType.HYRACKS);
         GenomixJobConf.tick("buildGraphWithHyracks");
+        // TODO move this to parser
         conf.set(GenomixJobConf.OUTPUT_FORMAT, Boolean.parseBoolean(conf.get(GenomixJobConf.HYRACKS_BUILD_OUTPUT_TEXT)) ? GenomixJobConf.OUTPUT_FORMAT_TEXT : GenomixJobConf.OUTPUT_FORMAT_BINARY);
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
+        
         String hyracksIP = runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS);
         int hyracksPort = runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT));
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(hyracksIP, hyracksPort, numCoresPerMachine);
-        hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
+        hyracksDriver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE))); // TODO fix name of plan
         followingBuild = true;
         manager.stopCluster(ClusterType.HYRACKS);
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");

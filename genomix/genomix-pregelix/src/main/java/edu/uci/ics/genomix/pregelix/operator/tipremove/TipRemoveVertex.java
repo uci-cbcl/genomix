@@ -8,8 +8,9 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 
 /**
  * Remove tip or single node when l > constant
@@ -41,44 +42,58 @@ public class TipRemoveVertex extends
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-
+    
+    /**
+     * detect the tip and figure out what edgeType neighborToTip is
+     */
+    public EDGETYPE getTipEdgetype(){
+        VertexValueWritable vertex = getVertexValue();
+        if(vertex.getDegree(DIR.PREVIOUS) == 0 && vertex.getDegree(DIR.NEXT) == 1){ //INCOMING TIP
+            return vertex.getEdgetypeFromDir(DIR.NEXT);
+        } else if(vertex.getDegree(DIR.PREVIOUS) == 1 && vertex.getDegree(DIR.NEXT) == 0){ //OUTGOING TIP
+            return vertex.getEdgetypeFromDir(DIR.PREVIOUS);
+        } else
+            return null;
+    }
+    
+    /**
+     * step1
+     */
+    public void detectTip(){
+        EDGETYPE neighborToTipEdgetype = getTipEdgetype();
+        //I'm tip and my length is less than the minimum
+        if(neighborToTipEdgetype != null && getVertexValue().getKmerLength() <= length){ 
+            EDGETYPE tipToNeighborEdgetype = neighborToTipEdgetype.mirror();
+            outgoingMsg.setFlag(tipToNeighborEdgetype.get());
+            outgoingMsg.setSourceVertexId(getVertexId());
+            destVertexId = getDestVertexId(neighborToTipEdgetype.dir());
+            sendMsg(destVertexId, outgoingMsg);
+            deleteVertex(getVertexId());
+            
+            //set statistics counter: Num_RemovedTips
+            updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
+            getVertexValue().setCounters(counters);
+        }
+    }
+    
+    /**
+     * step2
+     */
+    public void responseToDeadTip(Iterator<MessageWritable> msgIterator){
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            EDGETYPE tipToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
+            getVertexValue().getEdgeList(tipToMeEdgetype).remove(incomingMsg.getSourceVertexId());
+        }
+    }
+    
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex(); 
-        if(getSuperstep() == 1){
-            if(VertexUtil.isIncomingTipVertex(getVertexValue())){
-            	if(getVertexValue().getKmerLength() <= length){
-            	    sendSettledMsgToNextNode();
-            		deleteVertex(getVertexId());
-                    //set statistics counter: Num_RemovedTips
-                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-                    getVertexValue().setCounters(counters);
-            	}
-            }
-            else if(VertexUtil.isOutgoingTipVertex(getVertexValue())){
-                if(getVertexValue().getKmerLength() <= length){
-                    sendSettledMsgToPrevNode();
-                    deleteVertex(getVertexId());
-                    //set statistics counter: Num_RemovedTips
-                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-                    getVertexValue().setCounters(counters);
-                }
-            }
-            else if(VertexUtil.isSingleVertex(getVertexValue())){
-                if(getVertexValue().getKmerLength() <= length){
-                    deleteVertex(getVertexId());
-                    //set statistics counter: Num_RemovedTips
-                    updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-                    getVertexValue().setCounters(counters);
-                }
-            }
-        }
-        else if(getSuperstep() == 2){
-        	while(msgIterator.hasNext()){
-        		incomingMsg = msgIterator.next();
-        		responseToDeadVertex();
-        	}
-        }
+        if(getSuperstep() == 1)
+            detectTip();
+        else if(getSuperstep() == 2)
+            responseToDeadTip(msgIterator);
         voteToHalt();
     }
 

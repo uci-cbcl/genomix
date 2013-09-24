@@ -8,10 +8,10 @@ import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.EdgeDirs;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 public class BFSTraverseVertex extends
     BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessageWritable> {
@@ -86,54 +86,54 @@ public class BFSTraverseVertex extends
         kmerList.append(getVertexId());
         outgoingMsg.setPathList(kmerList);
         outgoingMsg.setReadId(incomingMsg.getReadId()); //only one readId
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
         /** set edgeDirs **/
         setEdgeDirs(meToNeighborDir, neighborToMeDir);
         switch(neighborToMeDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_FR:
+            case FF:
+            case FR:
                 sendSettledMsgs(DIR.PREVIOUS ,getVertexValue());
                 break;
-            case MessageFlag.DIR_RF:
-            case MessageFlag.DIR_RR:
+            case RF:
+            case RR:
                 sendSettledMsgs(DIR.NEXT, getVertexValue());
                 break;
         }
     }
     
-    public void setEdgeDirs(byte meToNeighborDir, byte neighborToMeDir){
+    public void setEdgeDirs(EDGETYPE meToNeighborDir, EDGETYPE neighborToMeDir){
         edgeDirsList.clear();
         edgeDirsList.addAll(incomingMsg.getEdgeDirsList());
         if(edgeDirsList.isEmpty()){ //first time from srcNode
             /** set srcNode's next dir **/
             edgeDirs.reset();
-            edgeDirs.setNextToMeDir(meToNeighborDir);
+            edgeDirs.setNextToMeDir(meToNeighborDir.get());
             edgeDirsList.add(new EdgeDirs(edgeDirs)); 
             /** set curNode's prev dir **/
             edgeDirs.reset();
-            edgeDirs.setPrevToMeDir(neighborToMeDir);
+            edgeDirs.setPrevToMeDir(neighborToMeDir.get());
             edgeDirsList.add(new EdgeDirs(edgeDirs));
         } else {
             /** set preNode's next dir **/
             edgeDirs.set(edgeDirsList.get(edgeDirsList.size() - 1));
-            edgeDirs.setNextToMeDir(meToNeighborDir);
+            edgeDirs.setNextToMeDir(meToNeighborDir.get());
             edgeDirsList.set(edgeDirsList.size() - 1, new EdgeDirs(edgeDirs));
             /** set curNode's prev dir **/
             edgeDirs.reset();
-            edgeDirs.setPrevToMeDir(neighborToMeDir);
+            edgeDirs.setPrevToMeDir(neighborToMeDir.get());
             edgeDirsList.add(new EdgeDirs(edgeDirs));
         }
         outgoingMsg.setEdgeDirsList(edgeDirsList);
     }
     
     public boolean isValidDestination(){
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
         if(incomingMsg.isDestFlip())
-            return neighborToMeDir == MessageFlag.DIR_RF || neighborToMeDir == MessageFlag.DIR_RR;
+            return neighborToMeDir == EDGETYPE.RF || neighborToMeDir == EDGETYPE.RR;
         else
-            return neighborToMeDir == MessageFlag.DIR_FF || neighborToMeDir == MessageFlag.DIR_FR;
+            return neighborToMeDir == EDGETYPE.FF || neighborToMeDir == EDGETYPE.FR;
     }
     
     public void sendMsgToPathNodeToAddCommondReadId(){
@@ -164,8 +164,8 @@ public class BFSTraverseVertex extends
         kmerList.setCopy(incomingMsg.getPathList());
         kmerList.append(getVertexId());
         incomingMsg.setPathList(kmerList);
-        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         setEdgeDirs(meToNeighborDir, neighborToMeDir);
         incomingMsg.setEdgeDirsList(outgoingMsg.getEdgeDirsList());
     }
@@ -176,12 +176,12 @@ public class BFSTraverseVertex extends
         byte prevToMeDir = incomingMsg.getEdgeDirsList().get(0).getPrevToMeDir();
         tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(0));
         if(tmpKmer.getKmerLetterLength() != 0)
-            getVertexValue().getEdgeList(prevToMeDir).getReadIDs(tmpKmer).appendReadId(readId);
+            getVertexValue().getEdgeList(EDGETYPE.fromByte(prevToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
         //set readId to next edge
         byte nextToMeDir = incomingMsg.getEdgeDirsList().get(0).getNextToMeDir();
         tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(1));
         if(tmpKmer.getKmerLetterLength() != 0)
-            getVertexValue().getEdgeList(nextToMeDir).getReadIDs(tmpKmer).appendReadId(readId);
+            getVertexValue().getEdgeList(EDGETYPE.fromByte(nextToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
     }
     
     @Override

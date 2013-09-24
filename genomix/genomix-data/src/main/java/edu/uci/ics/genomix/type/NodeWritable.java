@@ -78,7 +78,14 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 b |= NEXT.val;
             return b;  
         }
+		public final EnumSet<EDGETYPE> edgeType(){
+		    return edgeTypesInDir(this);
+		}
 		
+	    public static final EnumSet<EDGETYPE> edgeTypesInDir(DIR direction) {
+	        return direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
+	    }
+	    
 		public static EnumSet<DIR> enumSetFromByte(short s) {
 		    EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
 		    if ((s & PREVIOUS.get()) != 0)
@@ -100,8 +107,182 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             return retSet;
         }
 	}
-
-
+	
+    public enum EDGETYPE {
+            
+            FF((byte)(0b00 << 0)),
+            FR((byte)(0b01 << 0)),
+            RF((byte)(0b10 << 0)),
+            RR((byte)(0b11 << 0));
+            
+            public static final byte MASK = (byte)(0b11 << 0); 
+            public static final byte CLEAR = (byte)(0b1111100 << 0);
+            private final byte val;
+            
+            private EDGETYPE(byte val){
+                this.val = val;
+            }
+            
+            public final byte get(){
+                return val;
+            }
+            
+            public static final EnumSet<EDGETYPE> INCOMING = EnumSet.of(RF, RR);
+            public static final EnumSet<EDGETYPE> OUTGOING = EnumSet.of(FF, FR);
+                    
+            public static EDGETYPE fromByte(short b) {
+                b &= MASK;
+                if(b == FF.val)
+                    return FF;
+                if(b == FR.val)
+                    return FR;
+                if(b == RF.val)
+                    return RF;
+                if(b == RR.val)
+                    return RR;
+                return null;
+    
+            }
+            /**
+             * Returns the edge dir for B->A when the A->B edge is type @dir
+             */
+            public EDGETYPE mirror(){
+                return mirror(this);
+            }
+            
+            public static EDGETYPE mirror(EDGETYPE edgeType){
+                switch (edgeType) {
+                    case FF:
+                        return RR;
+                    case FR:
+                        return FR;
+                    case RF:
+                        return RF;
+                    case RR:
+                        return FF;
+                    default:
+                        throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
+                }
+            }
+            
+            public DIR dir() {
+                return dir(this);
+            }
+            
+            public static DIR dir(EDGETYPE edgeType){ // .dir static / non-static
+                switch(edgeType){
+                    case FF:
+                    case FR:
+                        return DIR.NEXT;
+                    case RF:
+                    case RR:
+                        return DIR.PREVIOUS;
+                    default:
+                        throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
+                }
+            }
+            
+            /**
+             * return the edgetype corresponding to moving across edge1 and edge2.
+             * 
+             *  So if A <-e1- B -e2-> C, we will return the relationship from A -> C
+             *  
+             *  If the relationship isn't a valid path (e.g., e1,e2 are both FF), an exception is raised.
+             */
+            public static EDGETYPE resolveLinkThroughMiddleNode(EDGETYPE BtoA, EDGETYPE BtoC) {
+                EDGETYPE AtoB = mirror(BtoA);
+                // a valid path must exist from A to C
+                // specifically, two rules apply for AtoB and BtoC
+                //      1) the internal letters must be the same (so FF, RF will be an error)
+                //      2) the final direction is the 1st letter of AtoB + 2nd letter of BtoC
+                // TODO? maybe we could use the string version to resolve this following above rules
+                switch(AtoB) {
+                    case FF:
+                        switch (BtoC) {
+                            case FF:
+                            case FR:
+                                return BtoC;
+                            case RF:
+                            case RR:
+                                throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                        }
+                        break;
+                    case FR:
+                        switch (BtoC) {
+                            case FF:
+                            case FR:
+                                throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                            case RF:
+                                return FF;
+                            case RR:
+                                return FR;
+                        }
+                        break;
+                    case RF:
+                        switch (BtoC) {
+                            case FF:
+                                return RF;
+                            case FR:
+                                return RR;
+                            case RF:
+                            case RR:
+                                throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                        }
+                        break;
+                    case RR:
+                        switch (BtoC) {
+                            case FF:
+                            case FR:
+                                throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
+                            case RF:
+                                return RF;
+                            case RR:
+                                return RR;
+                        }
+                        break;
+                }
+                throw new IllegalStateException("Logic Error or unrecognized direction... original values were: " + BtoA + " and " + BtoC);
+            }
+            
+            public boolean causesFlip(){
+                return causesFlip(this);
+            }
+            public static boolean causesFlip(EDGETYPE edgeType) {
+                switch (edgeType) {
+                    case FF:
+                    case RR:
+                        return false;
+                    case FR:
+                    case RF:
+                        return true;
+                    default:
+                        throw new IllegalArgumentException("unrecognized direction: " + edgeType);
+                }
+            }
+            
+            /**
+             * check if need filp
+             */
+            public EDGETYPE flip(){
+                return flip(this);
+            }
+            
+            public static EDGETYPE flip(EDGETYPE neighborToMe){ // TODO use NodeWritable
+                switch (neighborToMe) {
+                    case FF:
+                        return FR;
+                    case FR:
+                        return FF;
+                    case RF:
+                        return RR;
+                    case RR:
+                        return RF;
+                    default:
+                        throw new RuntimeException("Unrecognized direction for neighborDir: " + neighborToMe);
+                }
+            }
+        }
+        
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
 
@@ -121,151 +302,12 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 //    public String previous;
 //    public int stepCount;
     // merge/update directions
-    public static class DirectionFlag { // TODO change to "EdgeType" and make enum-based
-        public static final byte DIR_FF = 0b00 << 0;
-        public static final byte DIR_FR = 0b01 << 0;
-        public static final byte DIR_RF = 0b10 << 0;
-        public static final byte DIR_RR = 0b11 << 0;
-        public static final byte DIR_MASK = 0b11 << 0;
-        public static final byte DIR_CLEAR = 0b1111100 << 0;
-
-        public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
-        
-        /**
-         * Returns the edge dir for B->A when the A->B edge is type @dir
-         */
-        public static byte mirrorEdge(byte edgeType) {
-            switch (edgeType) {
-                case DIR_FF:
-                    return DIR_RR;
-                case DIR_FR:
-                    return DIR_FR;
-                case DIR_RF:
-                    return DIR_RF;
-                case DIR_RR:
-                    return DIR_FF;
-                default:
-                    throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
-            }
-        }
-        
-        public static DIR dirFromEdgeType(byte b) {
-            switch(b & DirectionFlag.DIR_MASK) {
-                case DIR_FF:
-                case DIR_FR:
-                    return DIR.NEXT;
-                case DIR_RF:
-                case DIR_RR:
-                    return DIR.PREVIOUS;
-                default:
-                    throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + b);
-                    
-            }
-        }
-        
-        /**
-         * return the edgetype corresponding to moving across edge1 and edge2.
-         * 
-         *  So if A <-e1- B -e2-> C, we will return the relationship from A -> C
-         *  
-         *  If the relationship isn't a valid path (e.g., e1,e2 are both FF), an exception is raised.
-         */
-        public static byte resolveLinkThroughMiddleNode(byte BtoA, byte BtoC) {
-            BtoA &= DIR_MASK;
-            BtoC &= DIR_MASK;
-            byte AtoB = mirrorEdge(BtoA);
-            // a valid path must exist from A to C
-            // specifically, two rules apply for AtoB and BtoC
-            //      1) the internal letters must be the same (so FF, RF will be an error)
-            //      2) the final direction is the 1st letter of AtoB + 2nd letter of BtoC
-            // TODO? maybe we could use the string version to resolve this following above rules
-            switch(AtoB) {
-                case DIR_FF:
-                    switch (BtoC) {
-                        case DIR_FF:
-                        case DIR_FR:
-                            return BtoC;
-                        case DIR_RF:
-                        case DIR_RR:
-                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-                    }
-                    break;
-                case DIR_FR:
-                    switch (BtoC) {
-                        case DIR_FF:
-                        case DIR_FR:
-                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-                        case DIR_RF:
-                            return DIR_FF;
-                        case DIR_RR:
-                            return DIR_FR;
-                    }
-                    break;
-                case DIR_RF:
-                    switch (BtoC) {
-                        case DIR_FF:
-                            return DIR_RF;
-                        case DIR_FR:
-                            return DIR_RR;
-                        case DIR_RF:
-                        case DIR_RR:
-                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-                    }
-                    break;
-                case DIR_RR:
-                    switch (BtoC) {
-                        case DIR_FF:
-                        case DIR_FR:
-                            throw new IllegalArgumentException("Tried to resolve an invalid link type: A --" + AtoB + "--> B --" + BtoC + "--> C");
-                        case DIR_RF:
-                            return DIR_RF;
-                        case DIR_RR:
-                            return DIR_RR;
-                    }
-                    break;
-            }
-            throw new IllegalStateException("Logic Error or unrecognized direction... original values were: " + BtoA + " and " + BtoC);
-        }
-
-        public static boolean causesFlip(byte direction) {
-            direction &= DIR_MASK;
-            switch (direction) {
-                case DIR_FF:
-                case DIR_RR:
-                    return false;
-                case DIR_FR:
-                case DIR_RF:
-                    return true;
-                default:
-                    throw new IllegalArgumentException("unrecognized direction: " + direction);
-            }
-        }
-    }
-    
-    
-    
-    public static class IncomingListFlag { // TODO refactor as a function using DIR
-        public static final byte DIR_RF = 0b10 << 0;
-        public static final byte DIR_RR = 0b11 << 0;
-
-        public static final byte[] values = {DIR_RF, DIR_RR };
-    }
-    
-    public static class OutgoingListFlag {
-        public static final byte DIR_FF = 0b00 << 0;
-        public static final byte DIR_FR = 0b01 << 0;
-
-        public static final byte[] values = {DIR_FF, DIR_FR };
-    }
-    
-    public static final byte[] edgeTypesInDir(DIR direction) {
-        return direction == DIR.PREVIOUS ? IncomingListFlag.values : OutgoingListFlag.values;
-    }
     
     
     public NodeWritable() {
-        for (byte d : DirectionFlag.values) {
-            edges[d] = new EdgeListWritable();
+        
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            edges[e.get()] = new EdgeListWritable();
         }
         startReads = new PositionListWritable();
         endReads = new PositionListWritable();
@@ -299,8 +341,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     public void setAsCopy(EdgeListWritable[] edges, PositionListWritable startReads, PositionListWritable endReads,
             VKmerBytesWritable kmer2, float coverage) {
-        for (byte d : DirectionFlag.values) {
-            this.edges[d].setAsCopy(edges[d]);
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            this.edges[e.get()].setAsCopy(edges[e.get()]);
         }
         this.startReads.set(startReads);
         this.endReads.set(endReads);
@@ -309,8 +351,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public void reset() {
-        for (byte d : DirectionFlag.values) {
-            edges[d].reset();
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            edges[e.get()].reset();
         }
         startReads.reset();
         endReads.reset();
@@ -329,13 +371,25 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public int getKmerLength() {
         return internalKmer.getKmerLetterLength();
     }
-
-    public EdgeListWritable getEdgeList(byte dir) {
-        return edges[dir & DirectionFlag.DIR_MASK];
+    
+    //This function works on only this case: in this DIR, vertex has and only has one EDGETYPE
+    public EDGETYPE getEdgetypeFromDir(DIR direction){
+        if(getDegree(direction) != 1)
+            throw new IllegalArgumentException("getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
+        EnumSet<EDGETYPE> ets = direction.edgeType(); 
+        for(EDGETYPE et : ets){
+            if(getEdgeList(et).getCountOfPosition() > 0)
+                return et;
+        }
+        return null;
+    }
+    
+    public EdgeListWritable getEdgeList(EDGETYPE edgeType) {
+        return edges[edgeType.get() & EDGETYPE.MASK];
     }
 
-    public void setEdgeList(byte dir, EdgeListWritable edgeList) {
-        this.edges[dir & DirectionFlag.DIR_MASK].setAsCopy(edgeList);
+    public void setEdgeList(EDGETYPE edgeType, EdgeListWritable edgeList) {
+        this.edges[edgeType.get() & EDGETYPE.MASK].setAsCopy(edgeList);
     }
     
     public EdgeListWritable[] getEdges() {
@@ -407,8 +461,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
      */
     public int getSerializedLength() {
         int length = 0;
-        for (byte d : DirectionFlag.values) {
-            length += edges[d].getLength();
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            length += edges[e.get()].getLength();
         }
         length += startReads.getLength();
         length += endReads.getLength();
@@ -429,9 +483,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     public void setAsCopy(byte[] data, int offset) {
         int curOffset = offset;
-        for (byte d : DirectionFlag.values) {
-            edges[d].setAsCopy(data, curOffset);
-            curOffset += edges[d].getLength();
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            edges[e.get()].setAsCopy(data, curOffset);
+            curOffset += edges[e.get()].getLength();
         }
         startReads.set(data, curOffset);
         curOffset += startReads.getLength();
@@ -444,9 +498,9 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     public void setAsReference(byte[] data, int offset) {
         int curOffset = offset;
-        for (byte d : DirectionFlag.values) {
-            edges[d].setAsReference(data, curOffset);
-            curOffset += edges[d].getLength();
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            edges[e.get()].setAsReference(data, curOffset);
+            curOffset += edges[e.get()].getLength();
         }
         startReads.setNewReference(data, curOffset);
         curOffset += startReads.getLength();
@@ -460,8 +514,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 
     @Override
     public void write(DataOutput out) throws IOException {
-        for (byte d : DirectionFlag.values) {
-            edges[d].write(out);
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            edges[e.get()].write(out);
         }
         startReads.write(out);
         endReads.write(out);
@@ -472,8 +526,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
-        for (byte d : DirectionFlag.values) {
-            edges[d].readFields(in);
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            edges[e.get()].readFields(in);
         }
         startReads.readFields(in);
         endReads.readFields(in);
@@ -504,8 +558,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             return false;
 
         NodeWritable nw = (NodeWritable) o;
-        for (byte d : DirectionFlag.values) {
-            if (!edges[d].equals(nw.edges[d]))
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            if (!edges[e.get()].equals(nw.edges[e.get()]))
                 return false;
         }
         
@@ -517,8 +571,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        for (byte d : DirectionFlag.values) {
-            sbuilder.append(edges[d].toString()).append('\t');
+        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            sbuilder.append(edges[e.get()].toString()).append('\t');
         }
         sbuilder.append("{5':" + startReads.toString() + ", ~5':" + endReads.toString() + "}").append('\t');
         sbuilder.append(internalKmer.toString()).append('\t');
@@ -543,23 +597,23 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
      * @param other
      *            : the node to merge with. I should have a `dir` edge towards `other`
      */
-    public void mergeWithNode(byte dir, final NodeWritable other) {
-        mergeEdges(dir, other);
-        mergeStartAndEndReadIDs(dir, other);
+    public void mergeWithNode(EDGETYPE edgeType, final NodeWritable other) {
+        mergeEdges(edgeType, other);
+        mergeStartAndEndReadIDs(edgeType, other);
         mergeCoverage(other);
-        internalKmer.mergeWithKmerInDir(dir, KmerBytesWritable.lettersInKmer, other.internalKmer);
+        internalKmer.mergeWithKmerInDir(edgeType, KmerBytesWritable.lettersInKmer, other.internalKmer);
     }
     
-    public void mergeWithNodeWithoutKmer(byte dir, final NodeWritable other) {
-        mergeEdges(dir, other);
-        mergeStartAndEndReadIDs(dir, other);
+    public void mergeWithNodeWithoutKmer(EDGETYPE edgeType, final NodeWritable other) {
+        mergeEdges(edgeType, other);
+        mergeStartAndEndReadIDs(edgeType, other);
         mergeCoverage(other);
     }
     
     public void mergeWithNodeWithoutKmer(final NodeWritable other) {
-        byte dir = DirectionFlag.DIR_FF;
-        mergeEdges(dir, other);
-        mergeStartAndEndReadIDs(dir, other);
+        EDGETYPE edgeType = EDGETYPE.FF;
+        mergeEdges(edgeType, other);
+        mergeStartAndEndReadIDs(edgeType, other);
         mergeCoverage(other);
     }
 
@@ -601,91 +655,76 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
             }
         }
     }
-
+//
     /**
      * update my edge list
      */
-    public void updateEdges(byte deleteDir, VKmerBytesWritable toDelete, byte updateDir, byte replaceDir, NodeWritable other, boolean applyDelete){
+    public void updateEdges(EDGETYPE deleteDir, VKmerBytesWritable toDelete, EDGETYPE updateDir, EDGETYPE replaceDir, NodeWritable other, boolean applyDelete){
         if(applyDelete)
-            edges[deleteDir].remove(toDelete);
-        switch (replaceDir) {
-            case DirectionFlag.DIR_FF:
-            case DirectionFlag.DIR_FR:
-                if (other.inDegree() != 1)
-                    throw new IllegalStateException("In update, expected other node's indegree to be 1!" + this + other);
-                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
-                break;
-            case DirectionFlag.DIR_RF:
-            case DirectionFlag.DIR_RR:
-                if (other.outDegree() != 1)
-                    throw new IllegalStateException("In update, expected other node's outdegree to be 1!" + this + other);
-                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-                edges[updateDir].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
-                break;
-        }
+            edges[deleteDir.get()].remove(toDelete);
+        edges[updateDir.get()].unionUpdate(other.edges[replaceDir.get()]);
     }
     
     /**
      * merge my edge list (both kmers and readIDs) with those of `other`.  Assumes that `other` is doing the flipping, if any.
      */
-    public void mergeEdges(byte dir, NodeWritable other) {
-        switch (dir & DirectionFlag.DIR_MASK) {
-            case DirectionFlag.DIR_FF:
+    public void mergeEdges(EDGETYPE edgeType, NodeWritable other) {
+        switch (edgeType) {
+            case FF:
                 if (outDegree() > 1)
                     throw new IllegalArgumentException("Illegal FF merge attempted! My outgoing degree is " + outDegree() + " in " + toString());
                 if (other.inDegree() > 1)
                     throw new IllegalArgumentException("Illegal FF merge attempted! Other incoming degree is " + other.inDegree() + " in " + other.toString());
-                edges[DirectionFlag.DIR_FF].setAsCopy(other.edges[DirectionFlag.DIR_FF]);
-                edges[DirectionFlag.DIR_FR].setAsCopy(other.edges[DirectionFlag.DIR_FR]);
+                edges[EDGETYPE.FF.get()].setAsCopy(other.edges[EDGETYPE.FF.get()]);
+                edges[EDGETYPE.FR.get()].setAsCopy(other.edges[EDGETYPE.FR.get()]);
                 break;
-            case DirectionFlag.DIR_FR:
+            case FR:
                 if (outDegree() > 1)
                     throw new IllegalArgumentException("Illegal FR merge attempted! My outgoing degree is " + outDegree() + " in " + toString());
                 if (other.outDegree() > 1)
                     throw new IllegalArgumentException("Illegal FR merge attempted! Other outgoing degree is " + other.outDegree() + " in " + other.toString());
-                edges[DirectionFlag.DIR_FF].setAsCopy(other.edges[DirectionFlag.DIR_RF]);
-                edges[DirectionFlag.DIR_FR].setAsCopy(other.edges[DirectionFlag.DIR_RR]);
+                edges[EDGETYPE.FF.get()].setAsCopy(other.edges[EDGETYPE.RF.get()]);
+                edges[EDGETYPE.FR.get()].setAsCopy(other.edges[EDGETYPE.RR.get()]);
                 break;
-            case DirectionFlag.DIR_RF:
+            case RF:
                 if (inDegree() > 1)
                     throw new IllegalArgumentException("Illegal RF merge attempted! My incoming degree is " + inDegree() + " in " + toString());
                 if (other.inDegree() > 1)
                     throw new IllegalArgumentException("Illegal RF merge attempted! Other incoming degree is " + other.inDegree() + " in " + other.toString());
-                edges[DirectionFlag.DIR_RF].setAsCopy(other.edges[DirectionFlag.DIR_FF]);
-                edges[DirectionFlag.DIR_RR].setAsCopy(other.edges[DirectionFlag.DIR_FR]);
+                edges[EDGETYPE.RF.get()].setAsCopy(other.edges[EDGETYPE.FF.get()]);
+                edges[EDGETYPE.RR.get()].setAsCopy(other.edges[EDGETYPE.FR.get()]);
                 break;
-            case DirectionFlag.DIR_RR:
+            case RR:
                 if (inDegree() > 1)
                     throw new IllegalArgumentException("Illegal RR merge attempted! My incoming degree is " + inDegree() + " in " + toString());
                 if (other.outDegree() > 1)
                     throw new IllegalArgumentException("Illegal RR merge attempted! Other outgoing degree is " + other.outDegree() + " in " + other.toString());
-                edges[DirectionFlag.DIR_RF].setAsCopy(other.edges[DirectionFlag.DIR_RF]);
-                edges[DirectionFlag.DIR_RR].setAsCopy(other.edges[DirectionFlag.DIR_RR]);
+                edges[EDGETYPE.RF.get()].setAsCopy(other.edges[EDGETYPE.RF.get()]);
+                edges[EDGETYPE.RR.get()].setAsCopy(other.edges[EDGETYPE.RR.get()]);
                 break;
         }
     }
 
     private void addEdges(boolean flip, NodeWritable other) {
         if (!flip) {
-            for (byte d : DirectionFlag.values) {
-                edges[d].unionUpdate(other.edges[d]);
+            for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+                edges[e.get()].unionUpdate(other.edges[e.get()]);
             }
         } else {
-            edges[DirectionFlag.DIR_FF].unionUpdate(other.edges[DirectionFlag.DIR_RF]);
-            edges[DirectionFlag.DIR_FR].unionUpdate(other.edges[DirectionFlag.DIR_RR]);
-            edges[DirectionFlag.DIR_RF].unionUpdate(other.edges[DirectionFlag.DIR_FF]);
-            edges[DirectionFlag.DIR_RR].unionUpdate(other.edges[DirectionFlag.DIR_FR]);
+            edges[EDGETYPE.FF.get()].unionUpdate(other.edges[EDGETYPE.RF.get()]);
+            edges[EDGETYPE.FR.get()].unionUpdate(other.edges[EDGETYPE.RR.get()]);
+            edges[EDGETYPE.RF.get()].unionUpdate(other.edges[EDGETYPE.FF.get()]);
+            edges[EDGETYPE.RR.get()].unionUpdate(other.edges[EDGETYPE.FR.get()]);
         }
     }
 
-    private void mergeStartAndEndReadIDs(byte dir, NodeWritable other) {
+    private void mergeStartAndEndReadIDs(EDGETYPE edgeType, NodeWritable other) {
         int K = KmerBytesWritable.lettersInKmer;
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
         int newOtherOffset, newThisOffset;
-        switch (dir & DirectionFlag.DIR_MASK) {
-            case DirectionFlag.DIR_FF:
+        switch (edgeType) {
+            case FF:
                 newOtherOffset = thisLength - K + 1;
                 // stream theirs in with my offset
                 for (PositionWritable p : other.startReads) {
@@ -695,7 +734,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                     endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
                 break;
-            case DirectionFlag.DIR_FR:
+            case FR:
                 newOtherOffset = thisLength - K + 1 + otherLength - K;
                 // stream theirs in, offset and flipped
                 for (PositionWritable p : other.startReads) {
@@ -705,7 +744,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                     startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
                 break;
-            case DirectionFlag.DIR_RF:
+            case RF:
                 newThisOffset = otherLength - K + 1;
                 newOtherOffset = otherLength - K;
                 // shift my offsets (other is prepended)
@@ -723,7 +762,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                     startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
                 break;
-            case DirectionFlag.DIR_RR:
+            case RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
                 for (PositionWritable p : startReads) {
@@ -743,24 +782,26 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     /**
-     * Debug helper function to find the edge associated with the given kmer
+     * Debug helper function to find the edge associated with the given kmer.
+     * 
+     * Note: may be very slow-- does a linear scan of all edges!
      */
-    public Map.Entry<Byte, EdgeWritable> findEdge(final VKmerBytesWritable kmer) {
-        for (byte dir : DirectionFlag.values) {
-            for (EdgeWritable e : edges[dir]) {
+    public Map.Entry<EDGETYPE, EdgeWritable> findEdge(final VKmerBytesWritable kmer) {
+        for (EDGETYPE dir : EDGETYPE.values()) {
+            for (EdgeWritable e : edges[dir.get()]) {
                 if (e.getKey().equals(kmer))
-                    return new AbstractMap.SimpleEntry<Byte, EdgeWritable>(dir, e);
+                    return new AbstractMap.SimpleEntry<EDGETYPE, EdgeWritable>(dir, e);
             }
         }
         return null;
     }
 
     public int inDegree() {
-        return edges[DirectionFlag.DIR_RR].getCountOfPosition() + edges[DirectionFlag.DIR_RF].getCountOfPosition();
+        return edges[EDGETYPE.RR.get()].getCountOfPosition() + edges[EDGETYPE.RF.get()].getCountOfPosition();
     }
 
     public int outDegree() {
-        return edges[DirectionFlag.DIR_FF].getCountOfPosition() + edges[DirectionFlag.DIR_FR].getCountOfPosition();
+        return edges[EDGETYPE.FF.get()].getCountOfPosition() + edges[EDGETYPE.FR.get()].getCountOfPosition();
     }
     
     public int getDegree(DIR direction){

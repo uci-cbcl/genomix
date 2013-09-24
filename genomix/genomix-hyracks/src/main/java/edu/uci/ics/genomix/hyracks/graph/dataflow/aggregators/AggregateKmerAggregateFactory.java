@@ -17,12 +17,13 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DirectionFlag;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -98,8 +99,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 //                        localUniNode.foundMe = true;
 //                    }
 //                }
-                for (byte d: DirectionFlag.values) {
-                    localUniNode.getEdgeList(d).unionUpdate((readNode.getEdgeList(d)));
+                for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+                    localUniNode.getEdgeList(e).unionUpdate((readNode.getEdgeList(e)));
                 }
                 localUniNode.getStartReads().appendList(readNode.getStartReads());
                 localUniNode.getEndReads().appendList(readNode.getEndReads());
@@ -115,8 +116,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
 //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                for (byte d: DirectionFlag.values) {
-                    localUniNode.getEdgeList(d).unionUpdate(readNode.getEdgeList(d));
+                for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
                 }
                 localUniNode.getStartReads().appendList(readNode.getStartReads());
                 localUniNode.getEndReads().appendList(readNode.getEndReads());

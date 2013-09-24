@@ -246,7 +246,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         };
         return it;
     }
-
+    
     public Iterable<VKmerBytesWritable> getKeys() {
         return new Iterable<VKmerBytesWritable>() {
             @Override
@@ -255,7 +255,7 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
             }
         };
     }
-
+    
     public PositionListWritable getReadIDs(VKmerBytesWritable key) {
         for (EdgeWritable e : this) {
             if (e.getKey().equals(key))

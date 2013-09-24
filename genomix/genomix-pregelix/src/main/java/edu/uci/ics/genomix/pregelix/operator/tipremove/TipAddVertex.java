@@ -6,6 +6,7 @@ import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -16,38 +17,10 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
-/*
- * vertexId: BytesWritable
- * vertexValue: ByteWritable
- * edgeValue: NullWritable
- * message: MessageWritable
- * 
- * DNA:
- * A: 00
- * C: 01
- * G: 10
- * T: 11
- * 
- * succeed node
- *  A 00000001 1
- *  G 00000010 2
- *  C 00000100 4
- *  T 00001000 8
- * precursor node
- *  A 00010000 16
- *  G 00100000 32
- *  C 01000000 64
- *  T 10000000 128
- *  
- * For example, ONE LINE in input file: 00,01,10    0001,0010,
- * That means that vertexId is ACG, its succeed node is A and its precursor node is C.
- * The succeed node and precursor node will be stored in vertexValue and we don't use edgeValue.
- * The details about message are in edu.uci.ics.pregelix.example.io.MessageWritable. 
- */
 /**
- *  Remove tip or single node when l > constant
+ * @author anbangx
+ * Add tip 
  */
 public class TipAddVertex extends
         Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
@@ -55,7 +28,7 @@ public class TipAddVertex extends
    
     private VKmerBytesWritable splitNode = new VKmerBytesWritable("CTA");
     private VKmerBytesWritable insertedTip = new VKmerBytesWritable("AGC");
-    private byte tipToSplitDir = MessageFlag.DIR_RF;
+    private EDGETYPE tipToSplitDir = EDGETYPE.FR;
     /**
      * initiate kmerSize, length
      */
@@ -66,7 +39,7 @@ public class TipAddVertex extends
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertTip(byte dir, EdgeListWritable edgeList, VKmerBytesWritable insertedTip){
+    public void insertTip(EDGETYPE dir, EdgeListWritable edgeList, VKmerBytesWritable insertedTip){
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
@@ -94,29 +67,11 @@ public class TipAddVertex extends
         return edgeList;
     }
     
-    public void addEdgeToInsertedTip(byte dir, VKmerBytesWritable insertedTip){
+    public void addEdgeToInsertedTip(EDGETYPE dir, VKmerBytesWritable insertedTip){
         EdgeWritable newEdge = new EdgeWritable();
         newEdge.setKey(insertedTip);
         newEdge.appendReadID(0);
         getVertexValue().getEdgeList(dir).add(newEdge);
-    }
-    
-    /**
-     * Returns the edge dir for B->A when the A->B edge is type @dir
-     */
-    public byte mirrorDirection(byte dir) {
-        switch (dir) {
-            case MessageFlag.DIR_FF:
-                return MessageFlag.DIR_RR;
-            case MessageFlag.DIR_FR:
-                return MessageFlag.DIR_FR;
-            case MessageFlag.DIR_RF:
-                return MessageFlag.DIR_RF;
-            case MessageFlag.DIR_RR:
-                return MessageFlag.DIR_FF;
-            default:
-                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
-        }
     }
     
     /**
@@ -130,7 +85,7 @@ public class TipAddVertex extends
                 /** add edge pointing to insertedTip **/
                 addEdgeToInsertedTip(tipToSplitDir, insertedTip);
                 /** insert tip **/
-                byte splitToTipDir = mirrorDirection(tipToSplitDir);
+                EDGETYPE splitToTipDir = tipToSplitDir.mirror();
                 insertTip(splitToTipDir, getEdgeListFromKmer(splitNode), insertedTip);
             }
         }

@@ -8,6 +8,7 @@ import java.util.Comparator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 public class BubbleMergeMessageWritable extends MessageWritable{
 
@@ -19,8 +20,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     private VKmerBytesWritable majorVertexId; //use for MergeBubble
     private VKmerBytesWritable minorVertexId;
     private NodeWritable node; //except kmer, other field should be updated when MergeBubble
-    private byte meToMajorDir;
-    private byte meToMinorDir;
+    private byte meToMajorEdgetype;
+    private byte meToMinorEdgetype;
     private VKmerBytesWritable topCoverageVertexId;
     private boolean isFlip;
     
@@ -29,8 +30,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId = new VKmerBytesWritable();
         minorVertexId = new VKmerBytesWritable();
         node = new NodeWritable();
-        meToMajorDir = 0;
-        meToMinorDir = 0;
+        meToMajorEdgetype = 0;
+        meToMinorEdgetype = 0;
         topCoverageVertexId = new VKmerBytesWritable();
         isFlip = false;
     }
@@ -45,8 +46,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         this.setMajorVertexId(msg.getMajorVertexId());
         this.setMinorVertexId(msg.getMinorVertexId());
         this.setNode(msg.node);
-        this.setMeToMajorDir(msg.meToMajorDir);
-        this.setMeToMinorDir(msg.meToMinorDir);
+        this.setMeToMajorEdgetype(msg.meToMajorEdgetype);
+        this.setMeToMinorEdgetype(msg.meToMinorEdgetype);
         this.setTopCoverageVertexId(msg.topCoverageVertexId);
         this.setFlip(msg.isFlip());
     }
@@ -56,19 +57,20 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId.reset(0);
         minorVertexId.reset(0);
         node.reset();
-        meToMajorDir = 0;
-        meToMinorDir = 0;
+        meToMajorEdgetype = 0;
+        meToMinorEdgetype = 0;
         topCoverageVertexId.reset(0);
         isFlip = false;
     }
     
     public byte getRelativeDirToMajor(){
-        switch(meToMajorDir){
-            case MessageFlag.DIR_FF:
-            case MessageFlag.DIR_RR:
+        EDGETYPE et = EDGETYPE.fromByte(meToMajorEdgetype);
+        switch(et){
+            case FF:
+            case RR:
                 return DirToMajor.FORWARD;
-            case MessageFlag.DIR_FR:
-            case MessageFlag.DIR_RF:
+            case FR:
+            case RF:
                 return DirToMajor.REVERSE;
         }
         return 0;
@@ -115,22 +117,22 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         this.node.setAsCopy(node);
     }
     
-    public byte getMeToMajorDir() {
-        return meToMajorDir;
+    public byte getMeToMajorEdgetype() {
+        return meToMajorEdgetype;
     }
 
-    public void setMeToMajorDir(byte meToMajorDir) {
-        this.meToMajorDir = meToMajorDir;
+    public void setMeToMajorEdgetype(byte meToMajorEdgetype) {
+        this.meToMajorEdgetype = meToMajorEdgetype;
     }
 
-    public byte getMeToMinorDir() {
-        return meToMinorDir;
+    public byte getMeToMinorEdgetype() {
+        return meToMinorEdgetype;
     }
 
-    public void setMeToMinorDir(byte meToMinorDir) {
-        this.meToMinorDir = meToMinorDir;
+    public void setMeToMinorEdgetype(byte meToMinorEdgetype) {
+        this.meToMinorEdgetype = meToMinorEdgetype;
     }
-    
+
     public boolean isFlip() {
         return isFlip;
     }
@@ -146,8 +148,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId.readFields(in);
         minorVertexId.readFields(in);
         node.readFields(in);
-        meToMajorDir = in.readByte();
-        meToMinorDir = in.readByte();
+        meToMajorEdgetype = in.readByte();
+        meToMinorEdgetype = in.readByte();
         topCoverageVertexId.readFields(in);
         isFlip = in.readBoolean();
     }
@@ -158,8 +160,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId.write(out);
         minorVertexId.write(out);
         node.write(out);
-        out.writeByte(meToMajorDir);
-        out.write(meToMinorDir);
+        out.writeByte(meToMajorEdgetype);
+        out.write(meToMinorEdgetype);
         topCoverageVertexId.write(out);
         out.writeBoolean(isFlip);
     }
