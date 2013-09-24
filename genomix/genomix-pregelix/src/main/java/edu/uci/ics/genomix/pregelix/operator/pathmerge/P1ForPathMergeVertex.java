@@ -76,7 +76,8 @@ public class P1ForPathMergeVertex extends
             voteToHalt();
         
         if (verbose) {
-            LOG.fine("Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
+            LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                    + "Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
                     + "; node is " + getVertexValue());
         }
     }
@@ -104,7 +105,8 @@ public class P1ForPathMergeVertex extends
         // odd number of nodes
         if(receivedMsgList.size() == 2){
             if (verbose)
-                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                        + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             for(PathMergeMessageWritable msg : receivedMsgList){
                 senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
                 node.mergeWithNode(senderEdgetype, msg.getNode());
@@ -115,10 +117,11 @@ public class P1ForPathMergeVertex extends
                 LOG.fine("killing self: " + msg.getSourceVertexId());
             }
             if (verbose)
-                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+                LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
         } else if(receivedMsgList.size() == 1){ // even number of nodes
             if (verbose)
-                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                        + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             PathMergeMessageWritable msg = receivedMsgList.get(0);
             senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
             state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
@@ -163,7 +166,7 @@ public class P1ForPathMergeVertex extends
                 LOG.fine("killing self: " + other);
             }
             if (verbose)
-                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+                LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
         }
         
         if(isTandemRepeat(getVertexValue())) {
@@ -207,7 +210,8 @@ public class P1ForPathMergeVertex extends
     public void receiveToNeighbor(Iterator<PathMergeMessageWritable> msgIterator){
         VertexValueWritable value = getVertexValue();
         if (verbose)
-            LOG.fine("before update from dead vertex: " + value);
+            LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                    + "before update from dead vertex: " + value);
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             EDGETYPE deleteToMe = EDGETYPE.fromByte(incomingMsg.getFlag());

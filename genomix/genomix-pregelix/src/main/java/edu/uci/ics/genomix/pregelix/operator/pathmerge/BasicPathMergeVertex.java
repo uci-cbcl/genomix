@@ -417,7 +417,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         getVertexValue().setState(state);
     }
 
-    // 2013.9.21 --------------------------------------------------------------------------------------------------//
+// 2013.9.21 --------------------------------------------------------------------------------------------------//
     /**
      * Send merge restrictions to my neighbor nodes
      */
@@ -458,7 +458,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(et.mirror().dir().get());
                     if (verbose)
-                        LOG.fine("send restriction from " + getVertexId() + " to " + destId + " in my " + et
+                        LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                                + "send restriction from " + getVertexId() + " to " + destId + " in my " + et
                                 + " and their " + et.mirror() + " (" + EDGETYPE.dir(et.mirror()) + "); I am "
                                 + getVertexValue());
                     sendMsg(destId, outgoingMsg);
@@ -475,7 +476,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         boolean updated = false;
         while (msgIterator.hasNext()) {
             if (verbose)
-                LOG.fine("before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                        + "before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
             incomingMsg = msgIterator.next();
             restrictedDirs |= incomingMsg.getFlag();
             if (verbose)
@@ -521,7 +523,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
             for (VKmerBytesWritable dest : vertex.getEdgeList(updateEdge).getKeys()) {
                 if (verbose)
-                    LOG.fine("send update message from " + getVertexId() + " to " + dest + ": " + outgoingMsg);
+                    LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                            + "send update message from " + getVertexId() + " to " + dest + ": " + outgoingMsg);
                 sendMsg(dest, outgoingMsg);
             }
         }
@@ -535,7 +538,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if (verbose)
-                LOG.fine("before update from neighbor: " + getVertexValue());
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                        + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
             node.getEdgeList(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
@@ -578,7 +582,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             sendMsg(dest, outgoingMsg);
 
             if (verbose) {
-                LOG.fine("send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
+                        + "send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg
                         + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState())
                         + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
             }
