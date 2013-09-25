@@ -33,6 +33,7 @@ import org.kohsuke.args4j.CmdLineException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
+import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
@@ -135,6 +136,10 @@ public class GenomixDriver {
                 queuePregelixJob(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
                 curOutput = prevOutput;  // use previous job's output
                 break;
+            case STATS:
+                flushPendingJobs(conf);
+                GraphStatistics.saveGraphStats(prevOutput, curOutput, conf);
+                curOutput = prevOutput;  // use previous job's output
         }
     }
     

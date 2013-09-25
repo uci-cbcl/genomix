@@ -186,7 +186,8 @@ public class GenomixJobConf extends JobConf {
         SCAFFOLD,
         SPLIT_REPEAT,
         DUMP_FASTA,
-        CHECK_SYMMETRY;
+        CHECK_SYMMETRY,
+        STATS;
         
         /**
          * Get a comma-separated pipeline from the given array of Patterns
