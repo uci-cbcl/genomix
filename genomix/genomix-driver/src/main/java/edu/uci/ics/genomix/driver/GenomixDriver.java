@@ -62,7 +62,6 @@ public class GenomixDriver {
 
     public static final Logger GENOMIX_ROOT_LOG = Logger.getLogger("edu.uci.ics.genomix");  // here only so we can control children loggers 
     private static final Logger LOG = Logger.getLogger(GenomixDriver.class.getName());
-    private static final String HADOOP_CONF = "hadoop.conf.xml";
     private String prevOutput;
     private String curOutput;
     private int stepNum;
@@ -163,13 +162,10 @@ public class GenomixDriver {
         manager.startCluster(ClusterType.HADOOP);
         GenomixJobConf.tick("buildGraphWithHadoop");
         
-        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
-        conf.writeXml(confOutput); // TODO pass the conf rather than writing it
-        confOutput.close();
         edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
         hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine * numMachines,
-                Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, HADOOP_CONF);
-        FileUtils.deleteQuietly(new File(HADOOP_CONF));
+                Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, conf);
+        
         System.out.println("Finished job Hadoop-Build-Graph");
         followingBuild = true;
         
