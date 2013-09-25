@@ -69,8 +69,8 @@ public class GenomixDriver {
     private List<PregelixJob> pregelixJobs;
     private boolean followingBuild = false; // need to adapt the graph immediately after building
     private boolean runLocal = false;
-    private int numCoresPerMachine; // TODO remove ?
-    private int numMachines; // TODO remove ?
+    private int numCoresPerMachine;
+    private int numMachines;
 
     private GenomixClusterManager manager;
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
@@ -235,16 +235,16 @@ public class GenomixDriver {
     }
     
     private void initGenomix(GenomixJobConf conf) throws Exception {
-        DriverUtils.updateCCProperties(conf);
-        numCoresPerMachine = conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
-        numMachines = conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r").length; // split on newlines
         GenomixJobConf.setGlobalStaticConstants(conf);
+        DriverUtils.updateCCProperties(conf);
+        numCoresPerMachine = DriverUtils.getNumCoresPerMachine(conf);
+        numMachines = DriverUtils.getSlaveList(conf).length;
         followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
         manager = new GenomixClusterManager(runLocal, conf);
-        manager.stopCluster(ClusterType.HYRACKS); // shut down any existing NCs and CCs // TODO necessary to force a shutdown?
+        manager.stopCluster(ClusterType.HYRACKS); // shut down any existing NCs and CCs
     }
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {

@@ -76,7 +76,7 @@ public class DriverUtils {
         CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
                 + File.separator + "cluster.properties"));
         if (conf.get(GenomixJobConf.IP_ADDRESS) == null)
-            conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
+            conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost")); // TODO runLocal shouldn't require calling the outside script
         if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
             conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
         }
@@ -183,6 +183,14 @@ public class DriverUtils {
         if (bw != null)
             bw.close();
         LOG.info("Dump graph to fasta took " + GenomixJobConf.tock("dumpGraph") + "ms");
+    }
+
+    public static int getNumCoresPerMachine(GenomixJobConf conf) {
+        return conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
+    }
+
+    public static String[] getSlaveList(GenomixJobConf conf) {
+        return conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r"); // split on newlines
     }
 
 }
