@@ -14,6 +14,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
@@ -57,7 +58,7 @@ public class GenomixMapper extends MapReduceBase implements
     
     @Override
     public void configure(JobConf job) {
-        KMER_SIZE = Integer.parseInt(job.get("sizeKmer"));
+        KMER_SIZE = Integer.parseInt(job.get(GenomixJobConf.KMER_LENGTH));
         KmerBytesWritable.setGlobalKmerLength(KMER_SIZE);
         preForwardKmer = new VKmerBytesWritable();
         preReverseKmer = new VKmerBytesWritable();
