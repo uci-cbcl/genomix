@@ -48,9 +48,9 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 @SuppressWarnings("deprecation")
 public class Driver {
     public static enum Plan {
-        BUILD_DEBRUJIN_GRAPH,
-        CHECK_KMERREADER,
-        BUILD_UNMERGED_GRAPH,
+        BUILD_OLD_DEBRUJIN_GRAPH_STEP1,
+        BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER,
+        BUILD_DEBRUIJN_GRAPH,
     }
 
     private static final Logger LOG = Logger.getLogger(Driver.class.getName());
@@ -73,7 +73,7 @@ public class Driver {
     }
 
     public void runJob(GenomixJobConf job) throws HyracksException {
-        runJob(job, Plan.BUILD_UNMERGED_GRAPH, false);
+        runJob(job, Plan.BUILD_DEBRUIJN_GRAPH, false);
     }
 
     public void runJob(GenomixJobConf job, Plan planChoice, boolean profiling) throws HyracksException {
@@ -104,13 +104,13 @@ public class Driver {
             Map<String, NodeControllerInfo> ncMap = hcc.getNodeControllerInfos();
             LOG.info("ncmap:" + ncMap.size() + " " + ncMap.keySet().toString());
             switch (planChoice) {
-                case BUILD_DEBRUJIN_GRAPH:
+                case BUILD_OLD_DEBRUJIN_GRAPH_STEP1:
                     jobGen = new JobGenBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
-                case CHECK_KMERREADER:
+                case BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER:
                     jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
-                case BUILD_UNMERGED_GRAPH:
+                case BUILD_DEBRUIJN_GRAPH:
                     jobGen = new JobGenUnMergedGraph(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
                 default:
@@ -192,6 +192,6 @@ public class Driver {
         dfs.delete(new Path(jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR)), true);
 
         Driver driver = new Driver(ipAddress, port, numOfDuplicate);
-        driver.runJob(jobConf, Plan.BUILD_UNMERGED_GRAPH, bProfiling);
+        driver.runJob(jobConf, Plan.BUILD_DEBRUIJN_GRAPH, bProfiling);
     }
 }

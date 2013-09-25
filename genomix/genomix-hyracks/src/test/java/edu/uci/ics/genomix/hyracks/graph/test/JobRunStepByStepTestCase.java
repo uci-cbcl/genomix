@@ -71,7 +71,7 @@ public class JobRunStepByStepTestCase {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
-        driver.runJob(conf, Plan.CHECK_KMERREADER, true);
+        driver.runJob(conf, Plan.BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER, true);
         dumpResult();
     }
     
@@ -79,7 +79,7 @@ public class JobRunStepByStepTestCase {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(conf, Plan.BUILD_DEBRUJIN_GRAPH, true);
+        driver.runJob(conf, Plan.BUILD_OLD_DEBRUJIN_GRAPH_STEP1, true);
         dumpResult();
     }
     
@@ -87,7 +87,7 @@ public class JobRunStepByStepTestCase {
         conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         cleanUpReEntry();
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
-        driver.runJob(conf, Plan.BUILD_UNMERGED_GRAPH, true);
+        driver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, true);
         dumpResult();
     }
     

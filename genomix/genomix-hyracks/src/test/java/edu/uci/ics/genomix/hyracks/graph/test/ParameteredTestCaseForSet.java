@@ -160,7 +160,7 @@ public class ParameteredTestCaseForSet {
         conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         conf.setInt(GenomixJobConf.FRAME_LIMIT, JobGenBrujinGraph.DEFAULT_FRAME_LIMIT);
         conf.setInt(GenomixJobConf.FRAME_SIZE, JobGenBrujinGraph.DEFAULT_FRAME_SIZE);
-        driver.runJob(new GenomixJobConf(conf), Plan.BUILD_UNMERGED_GRAPH, true);
+        driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUIJN_GRAPH, true);
         dumpResult();
         
 //        Assert.assertEquals(true,
