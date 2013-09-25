@@ -1,12 +1,14 @@
 package edu.uci.ics.genomix.pregelix.operator.tipremove;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -19,6 +21,8 @@ import edu.uci.ics.genomix.type.NodeWritable.DIR;
  */
 public class TipRemoveVertex extends
         BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+    
+    private static final Logger LOG = Logger.getLogger(TipRemoveVertex.class.getName());
     private int length = -1;
     
     /**
@@ -70,6 +74,13 @@ public class TipRemoveVertex extends
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
             
+            if(verbose){
+                LOG.fine("I'm tip! " + "\r\n"
+                		+ "My vertexId is " + getVertexId() + "\r\n"
+                        + "My vertexValue is " + getVertexValue() + "\r\n"
+                        + "Kill self and broadcast kill self to " + destVertexId + "\r\n"
+                        + "The message is: " + outgoingMsg + "\r\n\n");
+            }
             //set statistics counter: Num_RemovedTips
             updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
             getVertexValue().setCounters(counters);
@@ -80,10 +91,25 @@ public class TipRemoveVertex extends
      * step2
      */
     public void responseToDeadTip(Iterator<MessageWritable> msgIterator){
+        if(verbose){
+            LOG.fine("Before update " + "\r\n"
+                    + "My vertexId is " + getVertexId() + "\r\n"
+                    + "My vertexValue is " + getVertexValue() + "\r\n\n");
+        }
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             EDGETYPE tipToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
             getVertexValue().getEdgeList(tipToMeEdgetype).remove(incomingMsg.getSourceVertexId());
+            
+            if(verbose){
+                LOG.fine("Receive message from tip!" + incomingMsg.getSourceVertexId() + "\r\n"
+                        + "The tipToMeEdgetype in message is: " + tipToMeEdgetype + "\r\n\n");
+            }
+        }
+        if(verbose){
+            LOG.fine("After update " + "\r\n"
+                    + "My vertexId is " + getVertexId() + "\r\n"
+                    + "My vertexValue is " + getVertexValue() + "\r\n\n");
         }
     }
     

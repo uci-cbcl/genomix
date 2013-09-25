@@ -174,7 +174,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         super.sendMergeMsg();
         if ((getVertexValue().getState() & P4State.MERGE) != 0) {
             deleteVertex(getVertexId());
-            LOG.fine("killing self: " + getVertexId());
+            if (verbose) 
+                LOG.fine("killing self: " + getVertexId());
         }
     }
     
