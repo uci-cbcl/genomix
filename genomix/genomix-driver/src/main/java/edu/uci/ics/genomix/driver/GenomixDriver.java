@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.kohsuke.args4j.CmdLineException;
@@ -138,7 +139,8 @@ public class GenomixDriver {
                 break;
             case STATS:
                 flushPendingJobs(conf);
-                GraphStatistics.saveGraphStats(prevOutput, curOutput, conf);
+                Counters stats = GraphStatistics.run(prevOutput, curOutput, conf); 
+                GraphStatistics.saveGraphStats(curOutput, stats, conf);
                 curOutput = prevOutput;  // use previous job's output
         }
     }

@@ -5,12 +5,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.server.namenode.dfshealth_jsp;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.Counters.Group;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -52,8 +55,9 @@ public class GraphStatistics extends MapReduceBase implements
         reporter.getCounter("degree-bins", Integer.toString(value.inDegree() + value.outDegree())).increment(1);
         reporter.getCounter("totals", "degree").increment(value.inDegree() + value.outDegree());
 
-        reporter.getCounter("kmerLength-bins", Integer.toString(value.getKmerLength())).increment(1);
-        reporter.getCounter("totals", "kmerLength").increment(value.getKmerLength());
+        int kmerLength = value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength(); 
+        reporter.getCounter("kmerLength-bins", Integer.toString(kmerLength)).increment(1);
+        reporter.getCounter("totals", "kmerLength").increment(kmerLength);
 
         reporter.getCounter("coverage-bins", Integer.toString(Math.round(value.getAverageCoverage()))).increment(1);
         reporter.getCounter("totals", "coverage").increment(Math.round(value.getAverageCoverage()));
@@ -72,7 +76,7 @@ public class GraphStatistics extends MapReduceBase implements
             for (EdgeWritable e : value.getEdgeList(et)) {
                 totalEdgeReads += e.getReadIDs().getCountOfPosition();
                 if (e.getKey().equals(key)) {
-                    reporter.getCounter("totals", et + "-selfEdge").increment(1);
+                    reporter.getCounter("totals", "selfEdge-" + et).increment(1);
                     totalSelf += 1;
                 }
             }
@@ -86,13 +90,16 @@ public class GraphStatistics extends MapReduceBase implements
 
         for (DIR d : DIR.values())
             if (value.getDegree(d) == 0)
-                reporter.getCounter("totals", d + "-tips").increment(1);
+                reporter.getCounter("totals", "tips-" + d).increment(1);
 
         if (value.inDegree() == 0 && value.outDegree() == 0)
-            reporter.getCounter("totals", "BOTH-tips").increment(1);
+            reporter.getCounter("totals", "tips-BOTH").increment(1);
     }
 
-    public static RunningJob run(String inputPath, String outputPath, GenomixJobConf baseConf) throws IOException {
+    /**
+     * Run a map-reduce aggregator to get statistics on the graph (stored in returned job's counters)
+     */
+    public static Counters run(String inputPath, String outputPath, GenomixJobConf baseConf) throws IOException {
         GenomixJobConf conf = new GenomixJobConf(baseConf);
         conf.setJobName("Graph Statistics");
         conf.setMapperClass(GraphStatistics.class);
@@ -106,23 +113,32 @@ public class GraphStatistics extends MapReduceBase implements
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(outputPath), true);
         RunningJob job = JobClient.runJob(conf);
-        return job;
+        dfs.delete(new Path(outputPath), true);  // we have NO output (just counters) 
+        return job.getCounters();
     }
+    
+    
 
     /**
      * run a map-reduce job on the given input graph and save a simple text file of the relevant counters
      */
-    public static void saveGraphStats(String inputPath, String outputPath, GenomixJobConf conf) throws IOException {
-        FileSystem dfs = FileSystem.get(conf);
-        dfs.mkdirs(new Path(outputPath));
-        PrintWriter writer = new PrintWriter(outputPath + File.separator + "stats.txt", "UTF-8");
-        RunningJob finishedJob = run(inputPath, outputPath + ".tmpout", conf);
-        for (Group g : finishedJob.getCounters()) {
+    public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
+        // get relevant counters
+        TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>();
+        for (Group g : jobCounters) {
             if (!g.getName().endsWith("-bins")) {  // skip "*-bins" (there are tons of these; they are for for graphing)
                 for (Counter c : g) {
-                    writer.println(g.getName() + "." + c.getName() + " = " + c.getCounter());
+                    sortedCounters.put(g.getName() + "." + c.getName(), c.getCounter());
                 }
             }
+        }
+        
+        FileSystem dfs = FileSystem.get(conf);
+        dfs.mkdirs(new Path(outputDir));
+        FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "stats.txt"), true);
+        PrintWriter writer = new PrintWriter(outstream);
+        for (Entry<String, Long> e : sortedCounters.entrySet()) {
+            writer.println(e.getKey() + " = " + e.getValue());
         }
         writer.close();
     }
