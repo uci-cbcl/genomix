@@ -29,8 +29,8 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = (M) new PathMergeMessageWritable();
+//        if(incomingMsg == null)
+//            incomingMsg = (M) new PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = (M) new PathMergeMessageWritable();
         else
@@ -76,7 +76,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     public void mapKeyByInternalKmer(Iterator<M> msgIterator){
 //        ArrayList<Byte> kmerDir = new ArrayList<Byte>();
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            M incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
             tmpKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
             reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
@@ -117,7 +117,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     
     public void finalVertexResponseToFakeVertex(Iterator<M> msgIterator){
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            M incomingMsg = msgIterator.next();
             inFlag = incomingMsg.getFlag();
             if(inFlag == MessageFlag.KILL){
                 broadcaseKillself();
@@ -149,9 +149,9 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             finalVertexResponseToFakeVertex(msgIterator);
         } else if(getSuperstep() == 5){
             while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                if(isResponseKillMsg())
-                    responseToDeadVertex();
+                M incomingMsg = msgIterator.next();
+                if(isResponseKillMsg(incomingMsg))
+                    responseToDeadVertex(incomingMsg);
             }
             voteToHalt();
         }

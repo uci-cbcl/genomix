@@ -32,8 +32,8 @@ public class P1ForPathMergeVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = new PathMergeMessageWritable();
+//        if(incomingMsg == null)
+//            incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new PathMergeMessageWritable();
         else
@@ -192,7 +192,7 @@ public class P1ForPathMergeVertex extends
         otherMsgs.clear();
         neighborMsgs.clear();
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            PathMergeMessageWritable incomingMsg = msgIterator.next();
             byte msgType = (byte) (incomingMsg.getFlag() & MessageFlag.MSG_MASK);
             switch(msgType){
                 case MessageFlag.TO_UPDATE:
@@ -213,7 +213,7 @@ public class P1ForPathMergeVertex extends
             LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                     + "before update from dead vertex: " + value);
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            PathMergeMessageWritable incomingMsg = msgIterator.next();
             EDGETYPE deleteToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
             EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
             

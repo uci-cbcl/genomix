@@ -71,8 +71,8 @@ public class SplitRepeatVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = new SplitRepeatMessageWritable();
+//        if(incomingMsg == null)
+//            incomingMsg = new SplitRepeatMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
         else
@@ -202,7 +202,7 @@ public class SplitRepeatVertex extends
         getVertexValue().getEdgeList(deleteEdge.edgeType).removeSubEdge(deleteEdge.getEdge());
     }
     
-    public void updateEdgeListPointToNewVertex(){
+    public void updateEdgeListPointToNewVertex(SplitRepeatMessageWritable incomingMsg){
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());//(byte) (incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
@@ -264,9 +264,9 @@ public class SplitRepeatVertex extends
             }
         } else if(getSuperstep() == 2){
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                SplitRepeatMessageWritable incomingMsg = msgIterator.next();
                 // update edgelist to new/created vertex
-                updateEdgeListPointToNewVertex();
+                updateEdgeListPointToNewVertex(incomingMsg);
             }
             voteToHalt();
         }

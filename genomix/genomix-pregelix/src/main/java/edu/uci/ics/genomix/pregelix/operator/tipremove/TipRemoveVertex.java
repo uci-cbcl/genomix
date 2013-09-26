@@ -36,8 +36,8 @@ public class TipRemoveVertex extends
         //TODO incomingMsg shouldn't be a member variable
         if(MIN_LENGTH_TO_KEEP == -1)
             MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.TIP_REMOVE_MAX_LENGTH));
-        if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
+//        if(incomingMsg == null)
+//            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
@@ -100,11 +100,11 @@ public class TipRemoveVertex extends
                     + "My vertexId is " + getVertexId() + "\r\n"
                     + "My vertexValue is " + getVertexValue() + "\r\n\n");
         }
-    	MessageWritable msg;
+    	MessageWritable incomingMsg;
     	while(msgIterator.hasNext()){
-            msg = msgIterator.next();
-            EDGETYPE meToTipEdgetype = EDGETYPE.fromByte(msg.getFlag());
-            getVertexValue().getEdgeList(meToTipEdgetype).remove(msg.getSourceVertexId());
+    	    incomingMsg = msgIterator.next();
+            EDGETYPE meToTipEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
+            getVertexValue().getEdgeList(meToTipEdgetype).remove(incomingMsg.getSourceVertexId());
             
             if(verbose){
                 LOG.fine("Receive message from tip!" + incomingMsg.getSourceVertexId() + "\r\n"

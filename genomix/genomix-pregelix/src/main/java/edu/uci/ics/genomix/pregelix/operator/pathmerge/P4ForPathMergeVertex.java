@@ -47,8 +47,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void initVertex() {
         super.initVertex();
-        if (incomingMsg == null)
-            incomingMsg = new PathMergeMessageWritable();
+//        if (incomingMsg == null)
+//            incomingMsg = new PathMergeMessageWritable();
         if (outgoingMsg == null)
             outgoingMsg = new PathMergeMessageWritable();
         else
@@ -191,7 +191,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         @SuppressWarnings("unused")
         int numMerged = 0;
         while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
+            PathMergeMessageWritable incomingMsg = msgIterator.next();
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                         + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));

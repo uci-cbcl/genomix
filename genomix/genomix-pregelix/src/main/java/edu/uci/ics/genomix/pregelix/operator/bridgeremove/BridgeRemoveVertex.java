@@ -33,8 +33,8 @@ public class BridgeRemoveVertex extends
         super.initVertex();
         if(length == -1)
             length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
-        if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
+//        if(incomingMsg == null)
+//            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
@@ -97,9 +97,10 @@ public class BridgeRemoveVertex extends
             removeBridge();
         }
         else if(getSuperstep() == 3){
+            //TODO fix
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                responseToDeadVertex();
+                MessageWritable incomingMsg = msgIterator.next();
+                responseToDeadVertex(incomingMsg);
             }
         }
         voteToHalt();

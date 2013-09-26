@@ -60,8 +60,8 @@ public class BubbleMergeVertex extends
         super.initVertex();
         if(dissimilarThreshold == -1)
             dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
-        if(incomingMsg == null)
-            incomingMsg = new BubbleMergeMessageWritable();
+//        if(incomingMsg == null)
+//            incomingMsg = new BubbleMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessageWritable();
         else
@@ -131,7 +131,7 @@ public class BubbleMergeVertex extends
     @SuppressWarnings({ "unchecked" })
     public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessageWritable> msgIterator){
         while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
+            BubbleMergeMessageWritable incomingMsg = msgIterator.next();
             if(!receivedMsgMap.containsKey(incomingMsg.getMajorVertexId())){
                 receivedMsgList.clear();
                 receivedMsgList.add(incomingMsg);
@@ -249,7 +249,7 @@ public class BubbleMergeVertex extends
 //        }
 //    }
     
-    public void removeEdgesToMajorAndMinor(){
+    public void removeEdgesToMajorAndMinor(BubbleMergeMessageWritable incomingMsg){
         EDGETYPE meToMajorDir = EDGETYPE.fromByte(incomingMsg.getMeToMajorEdgetype());
         EDGETYPE majorToMeDir = meToMajorDir.mirror();
         EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorEdgetype());
@@ -258,7 +258,7 @@ public class BubbleMergeVertex extends
         getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
     }
     
-    public void broadcaseUpdateEdges(){
+    public void broadcaseUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
         outFlag |= MessageFlag.KILL;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
@@ -271,7 +271,7 @@ public class BubbleMergeVertex extends
     /**
      * broadcast kill self to all neighbors and send message to update neighbor's edges ***
      */
-    public void broadcaseKillselfAndNoticeToUpdateEdges(){
+    public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
         outFlag |= MessageFlag.KILL;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
@@ -286,7 +286,7 @@ public class BubbleMergeVertex extends
     /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
-    public void responseToDeadVertexAndUpdateEdges(){
+    public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
@@ -339,7 +339,7 @@ public class BubbleMergeVertex extends
                 deleteVertex(getVertexId());
             else{
                 while(msgIterator.hasNext()){
-                    incomingMsg = msgIterator.next();
+                    BubbleMergeMessageWritable incomingMsg = msgIterator.next();
                     short msgType = (short) (incomingMsg.getFlag() & MessageFlag.MSG_TYPE_MASK);
                     switch(msgType){
                         case MessageFlag.UPDATE:
@@ -379,7 +379,7 @@ public class BubbleMergeVertex extends
 //            while(msgIterator.hasNext()) {
 //                incomingMsg = msgIterator.next();
 //                if(incomingMsg.getFlag() == MessageFlag.KILL){
-                    broadcaseKillselfAndNoticeToUpdateEdges();
+//                    broadcaseKillselfAndNoticeToUpdateEdges();
 //                    //set statistics counter: Num_RemovedBubbles
 //                    updateStatisticsCounter(StatisticsCounter.Num_RemovedBubbles);
 //                    getVertexValue().setCounters(counters);
@@ -389,7 +389,7 @@ public class BubbleMergeVertex extends
 //            while(msgIterator.hasNext()) {
 //                incomingMsg = msgIterator.next();
 //                if(isResponseKillMsg()){
-                    responseToDeadVertexAndUpdateEdges();
+//                    responseToDeadVertexAndUpdateEdges();
 //                }
 //            }
 //        }

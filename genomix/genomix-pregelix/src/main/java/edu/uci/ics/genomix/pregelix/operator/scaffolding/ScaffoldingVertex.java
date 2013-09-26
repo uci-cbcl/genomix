@@ -122,37 +122,37 @@ public class ScaffoldingVertex extends
             deleteVertex(getVertexId());
         } else if(getSuperstep() == 3){
             if(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
                 // begin to BFS
-                initialBroadcaseBFSTraverse();
+                initialBroadcaseBFSTraverse(incomingMsg);
             }
             voteToHalt();
         } else if(getSuperstep() > 3){
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
                 if(incomingMsg.isTraverseMsg()){
                     // check if find destination 
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
-                        if(isValidDestination()){
+                        if(isValidDestination(incomingMsg)){
                             // final step to process BFS -- pathList and dirList
-                            finalProcessBFS();
+                            finalProcessBFS(incomingMsg);
                             // send message to all the path nodes to add this common readId
-                            sendMsgToPathNodeToAddCommondReadId();
+                            sendMsgToPathNodeToAddCommondReadId(incomingMsg);
                             //set statistics counter: Num_RemovedLowCoverageNodes
                             incrementCounter(StatisticsCounter.Num_Scaffodings);
                             getVertexValue().setCounters(counters);
                         }
                         else{
                             //continue to BFS
-                            broadcaseBFSTraverse();
+                            broadcaseBFSTraverse(incomingMsg);
                         }
                     } else {
                         //continue to BFS
-                        broadcaseBFSTraverse();
+                        broadcaseBFSTraverse(incomingMsg);
                     }
                 } else{
                     // append common readId to the corresponding edge
-                    appendCommonReadId();
+                    appendCommonReadId(incomingMsg);
                 }
             }
             voteToHalt();

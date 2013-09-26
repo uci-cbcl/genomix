@@ -54,7 +54,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             {EDGETYPE.RR, EDGETYPE.FR}
     };
     
-    protected M incomingMsg = null; // TODO doesn't need to be a member variable
+//    protected M incomingMsg = null; // TODO doesn't need to be a member variable
     protected M outgoingMsg = null; 
     protected M aggregatingMsg = null;
     protected VKmerBytesWritable destVertexId = null;
@@ -89,8 +89,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         
+        configureDebugOption();
         //TODO fix globalAggregator
-        //TODO move to one function
+    }
+    
+    public void configureDebugOption(){
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmerBytesWritable>();
             if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
@@ -126,14 +129,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void resetSelfFlag(){
         selfFlag = (byte)(getVertexValue().getState() & MessageFlag.VERTEX_MASK);
     }
-    
-    /**
-     * get Vertex state
-     */
-    public byte getMsgFlag(){
-        return (byte)(incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
-    }
-    
+
     public byte getHeadFlagAndMergeDir(){
         byte flagAndMergeDir = (byte)(getVertexValue().getState() & State.IS_HEAD);
         flagAndMergeDir |= (byte)(getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
@@ -174,19 +170,19 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * check the message type
      */
-    public boolean isReceiveKillMsg(){
+    public boolean isReceiveKillMsg(M incomingMsg){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
         return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
     }
     
-    public boolean isReceiveUpdateMsg(){
+    public boolean isReceiveUpdateMsg(M incomingMsg){
         byte updateFlag = (byte) (incomingMsg.getFlag() & MessageFlag.UPDATE_MASK);
         return updateFlag == MessageFlag.UPDATE;
         
     }
     
-    public boolean isResponseKillMsg(){
+    public boolean isResponseKillMsg(M incomingMsg){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
         return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
@@ -502,7 +498,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
-    public void responseToDeadVertex(){
+    public void responseToDeadVertex(M incomingMsg){
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
