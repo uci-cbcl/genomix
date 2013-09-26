@@ -256,7 +256,7 @@ public class BubbleMergeVertex extends
     
     public void broadcaseUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL;
+        outFlag |= MessageFlag.KILL2;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
@@ -269,7 +269,7 @@ public class BubbleMergeVertex extends
      */
     public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL;
+        outFlag |= MessageFlag.KILL2;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());

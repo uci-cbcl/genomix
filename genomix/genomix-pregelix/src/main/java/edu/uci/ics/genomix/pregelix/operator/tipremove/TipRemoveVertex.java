@@ -96,27 +96,7 @@ public class TipRemoveVertex extends
      * step2
      */
     public void processUpdates(Iterator<MessageWritable> msgIterator){
-        if(verbose){
-            LOG.fine("Before update " + "\r\n"
-                    + "My vertexId is " + getVertexId() + "\r\n"
-                    + "My vertexValue is " + getVertexValue() + "\r\n\n");
-        }
-    	MessageWritable incomingMsg;
-    	while(msgIterator.hasNext()){
-    	    incomingMsg = msgIterator.next();
-            EDGETYPE meToTipEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdgeList(meToTipEdgetype).remove(incomingMsg.getSourceVertexId());
-            
-            if(verbose){
-                LOG.fine("Receive message from tip!" + incomingMsg.getSourceVertexId() + "\r\n"
-                        + "The tipToMeEdgetype in message is: " + meToTipEdgetype + "\r\n\n");
-            }
-        }
-        if(verbose){
-            LOG.fine("After update " + "\r\n"
-                    + "My vertexId is " + getVertexId() + "\r\n"
-                    + "My vertexValue is " + getVertexValue() + "\r\n\n");
-        }
+        responseToDeadNode(msgIterator);
     }
     
     @Override

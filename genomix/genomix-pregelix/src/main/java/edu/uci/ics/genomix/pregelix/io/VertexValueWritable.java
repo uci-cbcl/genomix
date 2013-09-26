@@ -29,6 +29,7 @@ public class VertexValueWritable
         public static final byte TO_UPDATE = 0b01 << 5;
         public static final byte TO_OTHER = 0b10 << 5;
         public static final byte TO_NEIGHBOR = 0b11 << 5;
+        
         public static final byte MSG_MASK = 0b11 << 5; 
         public static final byte MSG_CLEAR = (byte)0011111;
         

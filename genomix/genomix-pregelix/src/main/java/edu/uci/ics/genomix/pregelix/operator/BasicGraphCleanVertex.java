@@ -36,7 +36,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         Vertex<VKmerBytesWritable, V, NullWritable, M> {
 	
 	//logger
-    public Logger logger = Logger.getLogger(BasicGraphCleanVertex.class.getName());
+    public Logger LOG = Logger.getLogger(BasicGraphCleanVertex.class.getName());
     
     public static int kmerSize = -1;
     public static int maxIteration = -1;
@@ -165,7 +165,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public boolean isReceiveKillMsg(M incomingMsg){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-        return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
+        return killFlag == MessageFlag.KILL2 & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
     }
     
     public boolean isReceiveUpdateMsg(M incomingMsg){
@@ -177,7 +177,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public boolean isResponseKillMsg(M incomingMsg){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-        return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
+        return killFlag == MessageFlag.KILL2 & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
     }
     
     public boolean isPathNode(){
@@ -303,7 +303,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void broadcaseKillself(){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL;
+        outFlag |= MessageFlag.KILL2;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
         
         sendSettledMsgToAllNeighborNodes(getVertexValue());
@@ -512,10 +512,37 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 outgoingMsg.setSourceVertexId(getVertexId());
                 sendMsg(dest, outgoingMsg);
                 if(verbose){
-                	logger.fine("Iteration " + getSuperstep() + "\r\n"
+                	LOG.fine("Iteration " + getSuperstep() + "\r\n"
                 			+ "");
                 }
             }
+        }
+    }
+    
+    /**
+     * response to dead node
+     */
+    public void responseToDeadNode(Iterator<M> msgIterator){
+        if(verbose){
+            LOG.fine("Before update " + "\r\n"
+                    + "My vertexId is " + getVertexId() + "\r\n"
+                    + "My vertexValue is " + getVertexValue() + "\r\n\n");
+        }
+        MessageWritable incomingMsg;
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            EDGETYPE meToTipEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
+            getVertexValue().getEdgeList(meToTipEdgetype).remove(incomingMsg.getSourceVertexId());
+            
+            if(verbose){
+                LOG.fine("Receive message from dead node!" + incomingMsg.getSourceVertexId() + "\r\n"
+                        + "The deadToMeEdgetype in message is: " + meToTipEdgetype + "\r\n\n");
+            }
+        }
+        if(verbose){
+            LOG.fine("After update " + "\r\n"
+                    + "My vertexId is " + getVertexId() + "\r\n"
+                    + "My vertexValue is " + getVertexValue() + "\r\n\n");
         }
     }
 }

@@ -213,7 +213,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      */
     public void loggingNode(byte loggingType) {
         String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
-        logger.fine(logMessage);
+        LOG.fine(logMessage);
     }
 
     /**
@@ -221,7 +221,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      */
     public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest) {
         String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
-        logger.fine(logMessage);
+        LOG.fine(logMessage);
     }
 // 2013.9.21 --------------------------------------------------------------------------------------------------//
     /**
