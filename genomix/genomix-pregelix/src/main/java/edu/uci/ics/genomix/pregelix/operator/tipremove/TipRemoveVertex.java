@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.pregelix.operator.tipremove;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
@@ -33,6 +34,8 @@ public class TipRemoveVertex extends
         super.initVertex();
         //TODO add brace to any control logic 
         //TODO incomingMsg shouldn't be a member variable
+        if(MIN_LENGTH_TO_KEEP == -1)
+            MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.TIP_REMOVE_MAX_LENGTH));
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
@@ -41,8 +44,7 @@ public class TipRemoveVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
-        if(getSuperstep() == 1) //TODO remove
-            StatisticsAggregator.preGlobalCounters.clear();
+        StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
@@ -118,10 +120,10 @@ public class TipRemoveVertex extends
     
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-    	//TODO move init to step == 1
-        initVertex(); 
-        if(getSuperstep() == 1)
+        if(getSuperstep() == 1){
+            initVertex(); 
             updateTipNeighbor();
+        }
         else if(getSuperstep() == 2)
             processUpdates(msgIterator);
         voteToHalt();

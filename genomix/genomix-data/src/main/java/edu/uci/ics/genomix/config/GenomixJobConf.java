@@ -397,7 +397,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
         
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
-            setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);
+            setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
         
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
