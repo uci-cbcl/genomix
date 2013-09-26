@@ -32,7 +32,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
 
     public DIR revert(DIR direction) {
-        return direction == DIR.PREVIOUS ? DIR.NEXT : DIR.PREVIOUS;
+        return direction == DIR.REVERSE ? DIR.FORWARD : DIR.REVERSE;
     }
 
     /**
@@ -46,8 +46,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         //            outgoingMsg.setFlip(ifFilpWithSuccessor(incomingMsg.getSourceVertexId()));
 
         DIR revertDirection = revert(direction);
-        EnumSet<EDGETYPE> mergeDirs = direction == DIR.PREVIOUS ? EDGETYPE.OUTGOING : EDGETYPE.INCOMING;
-        EnumSet<EDGETYPE> updateDirs = direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
+        EnumSet<EDGETYPE> mergeDirs = direction == DIR.REVERSE ? EDGETYPE.OUTGOING : EDGETYPE.INCOMING;
+        EnumSet<EDGETYPE> updateDirs = direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
 
         //set deleteKmer
         outgoingMsg.setSourceVertexId(getVertexId());
@@ -93,9 +93,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         DIR direction = null;
         byte mergeDir = (byte) (getVertexValue().getState() & State.CAN_MERGE_MASK);
         if (mergeDir == State.CAN_MERGEWITHPREV)
-            direction = DIR.PREVIOUS;
+            direction = DIR.REVERSE;
         else if (mergeDir == State.CAN_MERGEWITHNEXT)
-            direction = DIR.NEXT;
+            direction = DIR.FORWARD;
         if (direction != null) {
             setNeighborToMeDir(direction);
             outgoingMsg.setFlag(outFlag);
@@ -168,11 +168,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         switch (neighborToMeDir) {
             case FF:
             case FR:
-                sendUpdateMsg(isP2, DIR.PREVIOUS);
+                sendUpdateMsg(isP2, DIR.REVERSE);
                 break;
             case RF:
             case RR:
-                sendUpdateMsg(isP2, DIR.NEXT);
+                sendUpdateMsg(isP2, DIR.FORWARD);
                 break;
         }
     }
@@ -234,9 +234,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         boolean updated = false;
         if (isTandemRepeat(vertex)) {
             // tandem repeats are not allowed to merge at all
-            dirsToRestrict = EnumSet.of(DIR.NEXT, DIR.PREVIOUS);
-            state |= DIR.NEXT.get();
-            state |= DIR.PREVIOUS.get();
+            dirsToRestrict = EnumSet.of(DIR.FORWARD, DIR.REVERSE);
+            state |= DIR.FORWARD.get();
+            state |= DIR.REVERSE.get();
             updated = true;
         } else {
             // degree > 1 can't merge in that direction; == 0 means we are a tip 
@@ -278,7 +278,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
      * initiate head, rear and path node
      */
     public void recieveRestrictions(Iterator<M> msgIterator) {
-        short restrictedDirs = getVertexValue().getState(); // the directions (NEXT/PREVIOUS) that I'm not allowed to merge in
+        short restrictedDirs = getVertexValue().getState(); // the directions (FORWARD/REVERSE) that I'm not allowed to merge in
         boolean updated = false;
         while (msgIterator.hasNext()) {
             if (verbose)

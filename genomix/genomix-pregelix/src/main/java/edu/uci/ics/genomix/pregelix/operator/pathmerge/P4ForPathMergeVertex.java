@@ -102,22 +102,22 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     protected void checkNeighbors() {
         VertexValueWritable vertex = getVertexValue();
         EnumSet<DIR> restrictedDirs = DIR.enumSetFromByte(vertex.getState());
-        // NEXT restricted by neighbor or by my edges? 
-        if (restrictedDirs.contains(DIR.NEXT) || vertex.outDegree() != 1) { // TODO should I restrict based on degree in the first iteration?
+        // FORWARD restricted by neighbor or by my edges? 
+        if (restrictedDirs.contains(DIR.FORWARD) || vertex.outDegree() != 1) { // TODO should I restrict based on degree in the first iteration?
             hasNext = false;
         } else {
             hasNext = true;
-            nextEdgetype = vertex.getNeighborEdgeType(DIR.NEXT); //getEdgeList(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
+            nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdgeList(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
             nextKmer = vertex.getEdgeList(nextEdgetype).get(0).getKey();
             nextHead = isNodeRandomHead(nextKmer);
         }
 
-        // PREVIOUS restricted by neighbor or by my edges? 
-        if (restrictedDirs.contains(DIR.PREVIOUS) || vertex.inDegree() != 1) {
+        // REVERSE restricted by neighbor or by my edges? 
+        if (restrictedDirs.contains(DIR.REVERSE) || vertex.inDegree() != 1) {
             hasPrev = false;
         } else {
             hasPrev = true;
-            prevEdgetype = vertex.getNeighborEdgeType(DIR.PREVIOUS); //vertex.getEdgeList(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
+            prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdgeList(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
             prevKmer = vertex.getEdgeList(prevEdgetype).get(0).getKey();
             prevHead = isNodeRandomHead(prevKmer);
         }
@@ -212,8 +212,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
         if (isTandemRepeat(getVertexValue())) {
             // tandem repeats can't merge anymore; restrict all future merges
-            state |= DIR.NEXT.get();
-            state |= DIR.PREVIOUS.get();
+            state |= DIR.FORWARD.get();
+            state |= DIR.REVERSE.get();
             updated = true;
             if (verbose)
                 LOG.fine("recieveMerges is a tandem repeat: " + getVertexId() + " " + getVertexValue());

@@ -34,9 +34,8 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	
 	public enum DIR {
 		
-		//TODO rename to forward/reverse
-	    PREVIOUS((byte) (0b01 << 2)),
-		NEXT((byte) (0b10 << 2));
+	    REVERSE((byte) (0b01 << 2)),
+		FORWARD((byte) (0b10 << 2));
 		
 		public static final byte MASK = (byte)(0b11 << 2); 
 		
@@ -49,10 +48,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		}
 		public static DIR mirror(DIR direction) {
 		    switch (direction) {
-		        case PREVIOUS:
-		            return NEXT;
-		        case NEXT:
-		            return PREVIOUS;
+		        case REVERSE:
+		            return FORWARD;
+		        case FORWARD:
+		            return REVERSE;
 		        default:
 		            throw new IllegalArgumentException("Invalid direction given: " + direction);
 		    }
@@ -64,19 +63,19 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		public static DIR fromByte(short b) { // TODO remove this function 
 			//TODO change shorts to byte? (anbangx) 
 		    b &= MASK;
-		    if (b == PREVIOUS.val)
-		        return PREVIOUS;
-		    if (b == NEXT.val)
-		        return NEXT;
+		    if (b == REVERSE.val)
+		        return REVERSE;
+		    if (b == FORWARD.val)
+		        return FORWARD;
 		    return null;  
 		}
 		
 		public static byte fromSet(EnumSet<DIR> set) {
             byte b = 0;
-            if (set.contains(PREVIOUS))
-                b |= PREVIOUS.val;
-            if (set.contains(NEXT))
-                b |= NEXT.val;
+            if (set.contains(REVERSE))
+                b |= REVERSE.val;
+            if (set.contains(FORWARD))
+                b |= FORWARD.val;
             return b;  
         }
 		public final EnumSet<EDGETYPE> edgeType(){
@@ -84,15 +83,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		}
 		
 	    public static final EnumSet<EDGETYPE> edgeTypesInDir(DIR direction) {
-	        return direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
+	        return direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
 	    }
 	    
 		public static EnumSet<DIR> enumSetFromByte(short s) {
 		    EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
-		    if ((s & PREVIOUS.get()) != 0)
-		        retSet.add(DIR.PREVIOUS);
-		    if ((s & NEXT.get()) != 0)
-                retSet.add(DIR.NEXT);
+		    if ((s & REVERSE.get()) != 0)
+		        retSet.add(DIR.REVERSE);
+		    if ((s & FORWARD.get()) != 0)
+                retSet.add(DIR.FORWARD);
 		    return retSet;
 		}
 		
@@ -101,10 +100,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		 */
 		public static EnumSet<DIR> flipSetFromByte(short s) {
             EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
-            if ((s & PREVIOUS.get()) != 0)
-                retSet.add(DIR.NEXT);
-            if ((s & NEXT.get()) != 0)
-                retSet.add(DIR.PREVIOUS);
+            if ((s & REVERSE.get()) != 0)
+                retSet.add(DIR.FORWARD);
+            if ((s & FORWARD.get()) != 0)
+                retSet.add(DIR.REVERSE);
             return retSet;
         }
 	}
@@ -174,10 +173,10 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
                 switch(edgeType){
                     case FF:
                     case FR:
-                        return DIR.NEXT;
+                        return DIR.FORWARD;
                     case RF:
                     case RR:
-                        return DIR.PREVIOUS;
+                        return DIR.REVERSE;
                     default:
                         throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
                 }
@@ -806,7 +805,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     public int getDegree(DIR direction){
-        return direction == DIR.PREVIOUS ? inDegree() : outDegree();
+        return direction == DIR.REVERSE ? inDegree() : outDegree();
     }
     /*
      * Return if this node is a "path" compressible node, that is, it has an

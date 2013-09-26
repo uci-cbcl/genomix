@@ -209,10 +209,10 @@ public class P2ForPathMergeVertex extends
         outgoingMsg.setUpdateMsg(false);
         switch(getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK){
             case MessageFlag.HEAD_CAN_MERGEWITHPREV:
-                sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
+                sendSettledMsgs(DIR.REVERSE, getVertexValue());
                 break;
             case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
-                sendSettledMsgs(DIR.NEXT, getVertexValue());
+                sendSettledMsgs(DIR.FORWARD, getVertexValue());
                 break;
         }
     }
@@ -246,7 +246,7 @@ public class P2ForPathMergeVertex extends
      * configure MERGE msg For P2
      */
     public void configureP2MergeMsgForPredecessor(VKmerBytesWritable mergeDest){
-        setNeighborToMeDir(DIR.PREVIOUS);
+        setNeighborToMeDir(DIR.REVERSE);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFilpWithSuccessor());
@@ -255,7 +255,7 @@ public class P2ForPathMergeVertex extends
     }
     
     public void configureP2MergeMsgForSuccessor(VKmerBytesWritable mergeDest){
-        setNeighborToMeDir(DIR.NEXT);
+        setNeighborToMeDir(DIR.FORWARD);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFlipWithPredecessor());

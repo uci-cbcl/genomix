@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -46,7 +45,7 @@ public class SimpleBubbleMergeVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(DISSIMILAR_THRESHOLD < 0) //TODO Float should use < 0
+        if(DISSIMILAR_THRESHOLD < 0)
             DISSIMILAR_THRESHOLD = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if(outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessageWritable();
@@ -69,10 +68,10 @@ public class SimpleBubbleMergeVertex extends
     	//TODO change INCOMING and PREVIOUS to REVERSE. also FORWARD 
     	//TODO change member variable to local variable
     	//TODO make function that returns a single neighbor as <EDGETYPE, EDGE> (jake)
-    	EDGETYPE reverseEdgeType = vertex.getNeighborEdgeType(DIR.PREVIOUS);
+    	EDGETYPE reverseEdgeType = vertex.getNeighborEdgeType(DIR.REVERSE);
     	EdgeWritable reverseEdge = vertex.getEdgeList(reverseEdgeType).get(0);
     	
-    	EDGETYPE forwardEdgeType = vertex.getNeighborEdgeType(DIR.NEXT);
+    	EDGETYPE forwardEdgeType = vertex.getNeighborEdgeType(DIR.FORWARD);
     	EdgeWritable forwardEdge = vertex.getEdgeList(forwardEdgeType).get(0);
             // get majorVertex and minorVertex and meToMajorDir and meToMinorDir
             VKmerBytesWritable reverseKmer = reverseEdge.getKey();
@@ -200,7 +199,7 @@ public class SimpleBubbleMergeVertex extends
      */
     public void detectBubble(){
         VertexValueWritable vertex = getVertexValue();
-        if(vertex.getDegree(DIR.PREVIOUS) == 1 && vertex.getDegree(DIR.NEXT) == 1){
+        if(vertex.getDegree(DIR.REVERSE) == 1 && vertex.getDegree(DIR.FORWARD) == 1){
             // send bubble and major vertex msg to minor vertex 
             sendBubbleAndMajorVertexMsgToMinorVertex();
         }

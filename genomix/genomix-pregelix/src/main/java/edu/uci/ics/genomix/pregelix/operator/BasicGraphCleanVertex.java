@@ -228,7 +228,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         //TODO THE less context you send, the better  (send simple messages)
-        EnumSet<EDGETYPE> edgeTypes = (direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
+        EnumSet<EDGETYPE> edgeTypes = (direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
         Iterator<VKmerBytesWritable> kmerIterator;
         for(EDGETYPE e : edgeTypes){
             kmerIterator = value.getEdgeList(e).getKeyIterator();
@@ -244,15 +244,15 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public void sendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
-        sendSettledMsgs(DIR.PREVIOUS, value);
-        sendSettledMsgs(DIR.NEXT, value);
+        sendSettledMsgs(DIR.REVERSE, value);
+        sendSettledMsgs(DIR.FORWARD, value);
     }
     
     /**
      * check if A need to be filpped with neighbor
      */
     public boolean ifFlipWithNeighbor(DIR direction){
-        if(direction == DIR.PREVIOUS){
+        if(direction == DIR.REVERSE){
             if(getVertexValue().getRRList().isEmpty())
                 return true;
             else
@@ -291,7 +291,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void setNeighborToMeDir(DIR direction){
         if(getVertexValue().getDegree(direction) != 1)
             throw new IllegalArgumentException("In merge dir, the degree is not 1");
-        EnumSet<EDGETYPE> edgeTypes = direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
+        EnumSet<EDGETYPE> edgeTypes = direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
         outFlag &= MessageFlag.DIR_CLEAR;
         
         for (EDGETYPE et : edgeTypes)

@@ -57,9 +57,9 @@ public class P1ForPathMergeVertex extends
         
         //choose merge dir -- principle: only merge with nextDir
         if(restrictedDirs.size() == 1){
-        	if((restrictedDirs.contains(DIR.PREVIOUS) && vertex.getDegree(DIR.NEXT) == 1) 
-        			|| (restrictedDirs.contains(DIR.NEXT) && vertex.getDegree(DIR.PREVIOUS) == 1)){
-	            EDGETYPE edgeType = restrictedDirs.contains(DIR.PREVIOUS) ? vertex.getNeighborEdgeType(DIR.NEXT) : vertex.getNeighborEdgeType(DIR.PREVIOUS);
+        	if((restrictedDirs.contains(DIR.REVERSE) && vertex.getDegree(DIR.FORWARD) == 1) 
+        			|| (restrictedDirs.contains(DIR.FORWARD) && vertex.getDegree(DIR.REVERSE) == 1)){
+	            EDGETYPE edgeType = restrictedDirs.contains(DIR.REVERSE) ? vertex.getNeighborEdgeType(DIR.FORWARD) : vertex.getNeighborEdgeType(DIR.REVERSE);
 	            state |= P4State.MERGE | edgeType.get();
 	            updated = true;
         	}
@@ -166,8 +166,8 @@ public class P1ForPathMergeVertex extends
         
         if(isTandemRepeat(getVertexValue())) {
             // tandem repeats can't merge anymore; restrict all future merges
-            state |= DIR.NEXT.get();
-            state |= DIR.PREVIOUS.get();
+            state |= DIR.FORWARD.get();
+            state |= DIR.REVERSE.get();
             updated = true;
 //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
