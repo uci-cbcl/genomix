@@ -71,8 +71,6 @@ public class SplitRepeatVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-//        if(incomingMsg == null)
-//            incomingMsg = new SplitRepeatMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
         else

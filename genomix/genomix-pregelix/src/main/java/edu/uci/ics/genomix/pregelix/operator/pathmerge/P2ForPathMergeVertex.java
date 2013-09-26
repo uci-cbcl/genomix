@@ -49,8 +49,6 @@ public class P2ForPathMergeVertex extends
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         outFlag = 0;
-//        if(incomingMsg == null)
-//            incomingMsg = new P2PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new P2PathMergeMessageWritable();
         else

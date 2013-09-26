@@ -32,8 +32,6 @@ public class P1ForPathMergeVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-//        if(incomingMsg == null)
-//            incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new PathMergeMessageWritable();
         else

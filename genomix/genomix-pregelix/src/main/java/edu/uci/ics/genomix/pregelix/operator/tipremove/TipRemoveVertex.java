@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 
 /**
- * Remove tip or single node when l > constant
+ * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
  * @author anbangx
  *
  */
@@ -33,11 +33,8 @@ public class TipRemoveVertex extends
     public void initVertex() {
         super.initVertex();
         //TODO add brace to any control logic 
-        //TODO incomingMsg shouldn't be a member variable
         if(MIN_LENGTH_TO_KEEP == -1)
             MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.TIP_REMOVE_MAX_LENGTH));
-//        if(incomingMsg == null)
-//            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else

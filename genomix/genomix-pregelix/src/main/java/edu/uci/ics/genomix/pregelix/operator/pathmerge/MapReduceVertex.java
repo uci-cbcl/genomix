@@ -29,8 +29,6 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     @Override
     public void initVertex() {
         super.initVertex();
-//        if(incomingMsg == null)
-//            incomingMsg = (M) new PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = (M) new PathMergeMessageWritable();
         else

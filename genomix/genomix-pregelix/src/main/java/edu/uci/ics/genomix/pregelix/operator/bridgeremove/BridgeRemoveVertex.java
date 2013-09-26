@@ -33,8 +33,6 @@ public class BridgeRemoveVertex extends
         super.initVertex();
         if(length == -1)
             length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
-//        if(incomingMsg == null)
-//            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else

@@ -60,8 +60,6 @@ public class BubbleMergeVertex extends
         super.initVertex();
         if(dissimilarThreshold == -1)
             dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
-//        if(incomingMsg == null)
-//            incomingMsg = new BubbleMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessageWritable();
         else

@@ -30,8 +30,6 @@ public class UnrollTandemRepeat extends
     @Override
     public void initVertex() {
         super.initVertex();
-//        if(incomingMsg == null)
-//            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else

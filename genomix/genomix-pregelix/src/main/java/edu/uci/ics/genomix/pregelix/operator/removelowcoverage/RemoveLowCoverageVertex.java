@@ -34,8 +34,6 @@ public class RemoveLowCoverageVertex extends
         super.initVertex(); 
         if (minAverageCoverage < 0)
             minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
-//        if(incomingMsg == null)
-//            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else

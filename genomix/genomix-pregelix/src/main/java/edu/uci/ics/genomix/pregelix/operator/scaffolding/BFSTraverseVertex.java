@@ -29,8 +29,6 @@ public class BFSTraverseVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-//        if(incomingMsg == null)
-//            incomingMsg = new BFSTraverseMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new BFSTraverseMessageWritable();
         else

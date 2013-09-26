@@ -13,7 +13,10 @@ import org.apache.hadoop.mapred.Reporter;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-
+/**
+ * GenomixReducer the 2nd step of graph building
+ * @author anbangx
+ */
 @SuppressWarnings("deprecation")
 public class GenomixReducer extends MapReduceBase implements
 	Reducer<VKmerBytesWritable, NodeWritable, VKmerBytesWritable, NodeWritable>{

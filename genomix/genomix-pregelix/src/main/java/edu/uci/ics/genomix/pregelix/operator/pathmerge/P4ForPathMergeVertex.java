@@ -47,8 +47,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void initVertex() {
         super.initVertex();
-//        if (incomingMsg == null)
-//            incomingMsg = new PathMergeMessageWritable();
         if (outgoingMsg == null)
             outgoingMsg = new PathMergeMessageWritable();
         else
