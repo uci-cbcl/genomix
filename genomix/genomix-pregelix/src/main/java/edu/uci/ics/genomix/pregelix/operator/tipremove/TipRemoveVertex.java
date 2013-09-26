@@ -23,7 +23,8 @@ public class TipRemoveVertex extends
         BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
     
     private static final Logger LOG = Logger.getLogger(TipRemoveVertex.class.getName());
-    private int length = -1;
+    
+    private int MIN_LENGTH_TO_KEEP = -1;
     
     /**
      * initiate kmerSize, length
@@ -31,6 +32,8 @@ public class TipRemoveVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
+        //TODO add brace to any control logic 
+        //TODO incomingMsg shouldn't be a member variable
         if(incomingMsg == null)
             incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
@@ -39,7 +42,7 @@ public class TipRemoveVertex extends
             outgoingMsg.reset();
         if(destVertexId == null)
             destVertexId = new VKmerBytesWritable();
-        if(getSuperstep() == 1)
+        if(getSuperstep() == 1) //TODO remove
             StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
@@ -50,27 +53,34 @@ public class TipRemoveVertex extends
     /**
      * detect the tip and figure out what edgeType neighborToTip is
      */
-    public EDGETYPE getTipEdgetype(){
+    public EDGETYPE getTipToNeighbor(){
         VertexValueWritable vertex = getVertexValue();
-        if(vertex.getDegree(DIR.PREVIOUS) == 0 && vertex.getDegree(DIR.NEXT) == 1){ //INCOMING TIP
-            return vertex.getEdgetypeFromDir(DIR.NEXT);
-        } else if(vertex.getDegree(DIR.PREVIOUS) == 1 && vertex.getDegree(DIR.NEXT) == 0){ //OUTGOING TIP
-            return vertex.getEdgetypeFromDir(DIR.PREVIOUS);
-        } else
-            return null;
+        for (DIR d : DIR.values()) {
+        	if (vertex.getDegree(d) == 1 && vertex.getDegree(d.mirror()) == 0) {
+        		return vertex.getNeighborEdgeType(d);
+        	}
+        }
+        return null;
+        
+//        if(vertex.getDegree(DIR.PREVIOUS) == 0 && vertex.getDegree(DIR.NEXT) == 1){ //INCOMING TIP
+//            return vertex.getEdgetypeFromDir(DIR.NEXT);
+//        } else if(vertex.getDegree(DIR.PREVIOUS) == 1 && vertex.getDegree(DIR.NEXT) == 0){ //OUTGOING TIP
+//            return vertex.getEdgetypeFromDir(DIR.PREVIOUS);
+//        } else
+//            return null;
     }
     
     /**
      * step1
      */
-    public void detectTip(){
-        EDGETYPE neighborToTipEdgetype = getTipEdgetype();
+    public void updateTipNeighbor(){
+        EDGETYPE tipToNeighborEdgetype = getTipToNeighbor();
         //I'm tip and my length is less than the minimum
-        if(neighborToTipEdgetype != null && getVertexValue().getKmerLength() <= length){ 
-            EDGETYPE tipToNeighborEdgetype = neighborToTipEdgetype.mirror();
-            outgoingMsg.setFlag(tipToNeighborEdgetype.get());
+        if(tipToNeighborEdgetype != null && getVertexValue().getKmerLength() <= MIN_LENGTH_TO_KEEP){
+        	outgoingMsg.reset();
+            outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId = getDestVertexId(neighborToTipEdgetype.dir());
+            destVertexId = getVertexValue().getEdgeList(tipToNeighborEdgetype).get(0).getKey(); //getDestVertexId(tipToNeighborEdgetype.dir());
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
             
@@ -81,29 +91,30 @@ public class TipRemoveVertex extends
                         + "Kill self and broadcast kill self to " + destVertexId + "\r\n"
                         + "The message is: " + outgoingMsg + "\r\n\n");
             }
-            //set statistics counter: Num_RemovedTips
+            //set statistics counter: Num_RemovedTips  TODO rename to incrementCounter(.., amount)
             updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-            getVertexValue().setCounters(counters);
-        }
+//            getVertexValue().setCounters(counters);  // TODO take a long hard look at how we run the logic of counters...
+        } 
     }
     
     /**
      * step2
      */
-    public void responseToDeadTip(Iterator<MessageWritable> msgIterator){
+    public void processUpdates(Iterator<MessageWritable> msgIterator){
         if(verbose){
             LOG.fine("Before update " + "\r\n"
                     + "My vertexId is " + getVertexId() + "\r\n"
                     + "My vertexValue is " + getVertexValue() + "\r\n\n");
         }
-        while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
-            EDGETYPE tipToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdgeList(tipToMeEdgetype).remove(incomingMsg.getSourceVertexId());
+    	MessageWritable msg;
+    	while(msgIterator.hasNext()){
+            msg = msgIterator.next();
+            EDGETYPE meToTipEdgetype = EDGETYPE.fromByte(msg.getFlag());
+            getVertexValue().getEdgeList(meToTipEdgetype).remove(msg.getSourceVertexId());
             
             if(verbose){
                 LOG.fine("Receive message from tip!" + incomingMsg.getSourceVertexId() + "\r\n"
-                        + "The tipToMeEdgetype in message is: " + tipToMeEdgetype + "\r\n\n");
+                        + "The tipToMeEdgetype in message is: " + meToTipEdgetype + "\r\n\n");
             }
         }
         if(verbose){
@@ -115,11 +126,12 @@ public class TipRemoveVertex extends
     
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
+    	//TODO move init to step == 1
         initVertex(); 
         if(getSuperstep() == 1)
-            detectTip();
+            updateTipNeighbor();
         else if(getSuperstep() == 2)
-            responseToDeadTip(msgIterator);
+            processUpdates(msgIterator);
         voteToHalt();
     }
 

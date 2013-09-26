@@ -129,9 +129,9 @@ public class VertexUtil {
      * get nodeId from Ad
      */
     public static EdgeWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
-        if(adj.getForwardList().getCountOfPosition() > 0)
+        if(adj.getForwardList().size() > 0)
             return adj.getForwardList().get(0);
-        else if(adj.getReverseList().getCountOfPosition() > 0)
+        else if(adj.getReverseList().size() > 0)
             return adj.getReverseList().get(0);
         else
             return null;

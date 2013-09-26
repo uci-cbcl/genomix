@@ -38,7 +38,7 @@ public class AdjacencyListWritable implements WritableComparable<AdjacencyListWr
     }
     
     public int getCountOfPosition(){
-    	return forwardList.getCountOfPosition() + reverseList.getCountOfPosition();
+    	return forwardList.size() + reverseList.size();
     }
 
     public EdgeListWritable getForwardList() {

@@ -171,7 +171,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public void setReplaceDir(EnumSet<EDGETYPE> mergeDirs) {
         EDGETYPE replaceDir = null;
         for (EDGETYPE dir : mergeDirs) {
-            int num = getVertexValue().getEdgeList(dir).getCountOfPosition();
+            int num = getVertexValue().getEdgeList(dir).size();
             if (num > 0) {
                 if (num != 1)
                     throw new IllegalStateException("Only can sendUpdateMsg to degree = 1 direction!");
