@@ -93,57 +93,7 @@ public class DriverUtils {
         }
     }
     
-    public static void drawStatistics(JobConf conf, String inputStats, String outputChart) throws IOException {
-        LOG.info("Getting coverage statistics...");
-        GenomixJobConf.tick("drawStatistics");
-        FileSystem dfs = FileSystem.get(conf);
-
-        // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
-        SequenceFile.Reader reader = null;
-        VKmerBytesWritable key = null;
-        NodeWritable value = null;
-        TreeMap<Integer, Long> coverageCounts = new TreeMap<Integer, Long>();
-        FileStatus[] files = dfs.globStatus(new Path(inputStats + File.separator + "*"));
-        for (FileStatus f : files) {
-            if (f.getLen() != 0) {
-                try {
-                    reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
-                    key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-                    value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-                    while (reader.next(key, value)) {
-                        if (key == null || value == null)
-                            break;
-                        Integer cov = java.lang.Math.round(value.getAverageCoverage());
-                        Long count = coverageCounts.get(cov);
-                        if (count == null)
-                            coverageCounts.put(cov, new Long(1));
-                        else
-                            coverageCounts.put(cov, count + 1);
-                    }
-                } catch (Exception e) {
-                    System.out.println("Encountered an error getting stats for " + f + ":\n" + e);
-                } finally {
-                    if (reader != null)
-                        reader.close();
-                }
-            }
-        }
-
-        XYSeries series = new XYSeries("Kmer Coverage");
-        for (Entry<Integer, Long> pair : coverageCounts.entrySet()) {
-            series.add(pair.getKey().floatValue(), pair.getValue().longValue());
-        }
-        XYDataset xyDataset = new XYSeriesCollection(series);
-        JFreeChart chart = ChartFactory.createXYLineChart("Coverage per kmer in " + new File(inputStats).getName(),
-                "Coverage", "Count", xyDataset, PlotOrientation.VERTICAL, true, true, false);
-
-        // Write the data to the output stream:
-        FileOutputStream chartOut = new FileOutputStream(new File(outputChart));
-        ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
-        chartOut.flush();
-        chartOut.close();
-        LOG.info("Coverage took " + GenomixJobConf.tock("drawStatistics") + "ms");
-    }
+    
 
     public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
             throws IOException {

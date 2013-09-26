@@ -1,17 +1,23 @@
 package edu.uci.ics.genomix.hadoop.graph;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 import java.util.TreeMap;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.server.namenode.dfshealth_jsp;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
@@ -28,8 +34,18 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
@@ -46,6 +62,8 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class GraphStatistics extends MapReduceBase implements
         Mapper<VKmerBytesWritable, NodeWritable, Text, LongWritable> {
 
+	public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
+    
     @Override
     public void map(VKmerBytesWritable key, NodeWritable value, OutputCollector<Text, LongWritable> output,
             Reporter reporter) throws IOException {
@@ -113,7 +131,8 @@ public class GraphStatistics extends MapReduceBase implements
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(outputPath), true);
         RunningJob job = JobClient.runJob(conf);
-        dfs.delete(new Path(outputPath), true);  // we have NO output (just counters) 
+        dfs.delete(new Path(outputPath), true);  // we have NO output (just counters)
+
         return job.getCounters();
     }
     
@@ -124,12 +143,13 @@ public class GraphStatistics extends MapReduceBase implements
      */
     public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         // get relevant counters
+    	
         TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>();
         for (Group g : jobCounters) {
-            if (!g.getName().endsWith("-bins")) {  // skip "*-bins" (there are tons of these; they are for for graphing)
-                for (Counter c : g) {
-                    sortedCounters.put(g.getName() + "." + c.getName(), c.getCounter());
-                }
+        	if (!g.getName().endsWith("-bins")) {
+        		for (Counter c : g) {
+            		sortedCounters.put(g.getName() + "." + c.getName(), c.getCounter());
+            	}
             }
         }
         
@@ -138,8 +158,54 @@ public class GraphStatistics extends MapReduceBase implements
         FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "stats.txt"), true);
         PrintWriter writer = new PrintWriter(outstream);
         for (Entry<String, Long> e : sortedCounters.entrySet()) {
-            writer.println(e.getKey() + " = " + e.getValue());
+    		writer.println(e.getKey() + " = " + e.getValue());
         }
         writer.close();
+    }
+    
+    /**
+     * generate a histogram from the *-bins values
+     * for example, the coverage counters have the group "coverage-bins", the counter name "5" and the count 10
+     * meaning the coverage chart has a bar at X=5 with height Y=10
+     */
+    public static void drawStatistics(String outputDir, Counters jobCounters) throws IOException {
+    	HashMap<String, TreeMap<Integer,Long>> allHists = new HashMap<String, TreeMap<Integer,Long>>();
+        TreeMap<Integer, Long> curCounts;
+        
+        // build up allHists to be {coverage : {1: 50, 2: 20, 3:5}, kmerLength : {55: 100}, ...}
+        for (Group g : jobCounters) {
+        	if (g.getName().endsWith("-bins")) {
+        		String baseName = g.getName().replace("-bins", "");
+        		if (allHists.containsKey(baseName)) {
+        			curCounts = allHists.get(baseName);
+        		} else {
+        			curCounts = new TreeMap<Integer, Long>();
+        			allHists.put(baseName, curCounts);
+        		}
+        		for (Counter c : g) {  // counter name is the X value of the histogram; its count is the Y value
+        			Integer X = Integer.parseInt(c.getName());
+        			if (curCounts.get(X) != null) {
+        				curCounts.put(X, curCounts.get(X) + c.getCounter());
+        			} else {
+        				curCounts.put(X, c.getCounter());
+        			}
+            	}
+            }
+        }
+        
+        for (String graphType : allHists.keySet()) {
+        	curCounts = allHists.get(graphType);
+        	XYSeries series = new XYSeries(graphType);
+        	for (Entry<Integer, Long> pair : curCounts.entrySet()) {
+        		series.add(pair.getKey().floatValue(), pair.getValue().longValue());
+        	}
+        	XYSeriesCollection xyDataset = new XYSeriesCollection(series);
+        	JFreeChart chart = ChartFactory.createXYBarChart(graphType,
+        			graphType, false, "Count", xyDataset, PlotOrientation.VERTICAL, true, true, false);
+        	// Write the data to the output stream:
+        	FileOutputStream chartOut = new FileOutputStream(new File(outputDir + File.separator + graphType + "-hist.png"));
+        	ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
+        	chartOut.close();
+        }
     }
 }

@@ -139,8 +139,9 @@ public class GenomixDriver {
                 break;
             case STATS:
                 flushPendingJobs(conf);
-                Counters stats = GraphStatistics.run(prevOutput, curOutput, conf); 
-                GraphStatistics.saveGraphStats(curOutput, stats, conf);
+                Counters counters = GraphStatistics.run(prevOutput, curOutput, conf); 
+                GraphStatistics.saveGraphStats(curOutput, counters, conf);
+                GraphStatistics.drawStatistics(curOutput, counters);
                 curOutput = prevOutput;  // use previous job's output
         }
     }
@@ -160,8 +161,6 @@ public class GenomixDriver {
         followingBuild = true;
         manager.stopCluster(ClusterType.HYRACKS);
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
-        if (Boolean.parseBoolean(conf.get(GenomixJobConf.DRAW_STATISTICS)))
-            DriverUtils.drawStatistics(conf, curOutput, new Path(curOutput).getName() + ".coverage.png");
     }
 
     private void buildGraphWithHadoop(GenomixJobConf conf) throws Exception {
@@ -178,8 +177,6 @@ public class GenomixDriver {
         
         manager.stopCluster(ClusterType.HADOOP);
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop") + "ms");
-        if (Boolean.parseBoolean(conf.get(GenomixJobConf.DRAW_STATISTICS)))
-            DriverUtils.drawStatistics(conf, curOutput, new Path(curOutput).getName() + ".coverage.png");
     }
 
     private void queuePregelixJob(PregelixJob job) {
