@@ -54,7 +54,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             {EDGETYPE.RR, EDGETYPE.FR}
     };
     
-    protected M incomingMsg = null; 
+    protected M incomingMsg = null; // TODO doesn't need to be a member variable
     protected M outgoingMsg = null; 
     protected M aggregatingMsg = null;
     protected VKmerBytesWritable destVertexId = null;
@@ -89,6 +89,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         
+        //TODO fix globalAggregator
+        //TODO move to one function
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmerBytesWritable>();
             if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
@@ -686,7 +688,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         if(degree == 1){
             EnumSet<EDGETYPE> edgeTypes = direction.edgeType();
             for(EDGETYPE et : edgeTypes){
-                if(getVertexValue().getEdgeList(et).getCountOfPosition() > 0)
+                if(getVertexValue().getEdgeList(et).size() > 0)
                     return getVertexValue().getEdgeList(et).get(0).getKey();
             }
         }
@@ -726,6 +728,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 outgoingMsg.setSourceVertexId(getVertexId());
                 destVertexId = kmer;
                 sendMsg(destVertexId, outgoingMsg);
+                if(verbose){
+                	logger.fine("Iteration " + getSuperstep() + "\r\n"
+                			+ );
+                }
             }
         }
     }

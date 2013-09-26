@@ -34,6 +34,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	
 	public enum DIR {
 		
+		//TODO rename to forward/reverse
 	    PREVIOUS((byte) (0b01 << 2)),
 		NEXT((byte) (0b10 << 2));
 		
@@ -373,15 +374,15 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
     
     //This function works on only this case: in this DIR, vertex has and only has one EDGETYPE
-    public EDGETYPE getEdgetypeFromDir(DIR direction){
+    public EDGETYPE getNeighborEdgeType(DIR direction){
         if(getDegree(direction) != 1)
             throw new IllegalArgumentException("getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
         EnumSet<EDGETYPE> ets = direction.edgeType(); 
         for(EDGETYPE et : ets){
-            if(getEdgeList(et).getCountOfPosition() > 0)
+            if(getEdgeList(et).size() > 0)
                 return et;
         }
-        return null;
+        throw new IllegalStateException("Programmer error: we shouldn't get here... Degree is 1 in " + direction + " but didn't find a an edge list > 1");
     }
     
     public EdgeListWritable getEdgeList(EDGETYPE edgeType) {
@@ -797,11 +798,11 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
     }
 
     public int inDegree() {
-        return edges[EDGETYPE.RR.get()].getCountOfPosition() + edges[EDGETYPE.RF.get()].getCountOfPosition();
+        return edges[EDGETYPE.RR.get()].size() + edges[EDGETYPE.RF.get()].size();
     }
 
     public int outDegree() {
-        return edges[EDGETYPE.FF.get()].getCountOfPosition() + edges[EDGETYPE.FR.get()].getCountOfPosition();
+        return edges[EDGETYPE.FF.get()].size() + edges[EDGETYPE.FR.get()].size();
     }
     
     public int getDegree(DIR direction){

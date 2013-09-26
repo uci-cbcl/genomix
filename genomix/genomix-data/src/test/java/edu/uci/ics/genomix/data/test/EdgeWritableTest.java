@@ -18,7 +18,7 @@ public class EdgeWritableTest {
     @Test
     public void TestInitial() {
         EdgeListWritable elist = new EdgeListWritable();
-        Assert.assertEquals(0, elist.getCountOfPosition());
+        Assert.assertEquals(0, elist.size());
         Assert.assertEquals(4, elist.getLength());
         
         VKmerBytesWritable kmer1 = new VKmerBytesWritable("ACCGCTTAGATACC");

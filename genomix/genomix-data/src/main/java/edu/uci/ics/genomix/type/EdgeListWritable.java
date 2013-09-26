@@ -90,10 +90,10 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
     }
 
     public boolean isEmpty(){
-        return getCountOfPosition() == 0;
+        return size() == 0;
     }
 
-    public int getCountOfPosition() {
+    public int size() {
         return edges.size();
     }
 

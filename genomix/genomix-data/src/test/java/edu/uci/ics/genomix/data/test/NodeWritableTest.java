@@ -162,7 +162,7 @@ public class NodeWritableTest {
         // the union-update may change the ordering of the original list (what a pain!)
         Iterator<EdgeWritable> rf_edges = n1.getEdgeList(EDGETYPE.RF).iterator();
         int k2_index = 0, k3_index = 0;
-        for (int i=0; i < n1.getEdgeList(EDGETYPE.RF).getCountOfPosition(); i++) {
+        for (int i=0; i < n1.getEdgeList(EDGETYPE.RF).size(); i++) {
             VKmerBytesWritable curKmer = rf_edges.next().getKey();
             if (curKmer.equals(k2))
                 k2_index = i;
@@ -170,7 +170,7 @@ public class NodeWritableTest {
                 k3_index = i;
         }
         
-        Assert.assertEquals(2, n1.getEdgeList(EDGETYPE.RF).getCountOfPosition()); // only k2 and k3 in list
+        Assert.assertEquals(2, n1.getEdgeList(EDGETYPE.RF).size()); // only k2 and k3 in list
         Assert.assertEquals(k2, n1.getEdgeList(EDGETYPE.RF).get(k2_index).getKey());
         Assert.assertEquals(k3, n1.getEdgeList(EDGETYPE.RF).get(k3_index).getKey());
         Assert.assertEquals(3, n1.getEdgeList(EDGETYPE.RF).get(k2_index).getReadIDs().getCountOfPosition()); // k2 has r1,r2,r3
