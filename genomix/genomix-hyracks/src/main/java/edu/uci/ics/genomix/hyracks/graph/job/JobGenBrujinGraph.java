@@ -197,16 +197,7 @@ public class JobGenBrujinGraph extends JobGen {
     public AbstractOperatorDescriptor generateNodeWriterOpertator(JobSpecification jobSpec,
             AbstractOperatorDescriptor mapEachReadToNode) throws HyracksException {
         ITupleWriterFactory nodeWriter = null;
-        switch (outputFormat) {
-            case TEXT:
-                nodeWriter = new NodeTextWriterFactory(kmerSize);
-                break;
-            case BINARY:
-                nodeWriter = new NodeSequenceWriterFactory(hadoopJobConfFactory.getConf());
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid outputFormat: " + outputFormat);
-        }
+        nodeWriter = new NodeSequenceWriterFactory(hadoopJobConfFactory.getConf());
         logDebug("WriteOperator");
         // Output Node
         HDFSWriteOperatorDescriptor writeNodeOperator = new HDFSWriteOperatorDescriptor(jobSpec,
@@ -245,21 +236,10 @@ public class JobGenBrujinGraph extends JobGen {
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
         System.out.println(DEFAULT_FRAME_SIZE);
         System.out.println(frameSize);
-        String type = conf.get(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         groupbyType = GroupbyType.PRECLUSTER;
-
-        String output = conf.get(GenomixJobConf.OUTPUT_FORMAT);
-
-        if (output.equalsIgnoreCase(GenomixJobConf.OUTPUT_FORMAT_TEXT)) {
-            outputFormat = OutputFormat.TEXT;
-        } else if(output.equalsIgnoreCase(GenomixJobConf.OUTPUT_FORMAT_BINARY)){
-            outputFormat = OutputFormat.BINARY;
-        } else {
-            throw new IllegalArgumentException("Unrecognized outputFormat: " + output);
-        }
+        outputFormat = OutputFormat.BINARY;
         
         try {
-            
             JobConf jobconf = new JobConf(conf);
             hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
             
@@ -273,8 +253,6 @@ public class JobGenBrujinGraph extends JobGen {
 
         LOG.info("Genomix Graph Build Configuration");
         LOG.info("Kmer:" + kmerSize);
-        LOG.info("Groupby type:" + type);
-        LOG.info("Output format:" + output);
         LOG.info("Frame limit" + frameLimits);
         LOG.info("Frame kmerByteSize" + frameSize);
     }

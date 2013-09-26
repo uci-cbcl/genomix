@@ -151,9 +151,6 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
         private boolean runLocal = false;
         
-        @Option(name = "-hyracksBuildOutputText", usage = "text output for hyracks build (debug option)", required=false)
-        private boolean hyracksBuildOutputText = false;
-        
         @Option(name = "-debugKmers", usage = "Log all interactions with the given comma-separated list of kmers at the FINE log level (check conf/logging.properties to specify an output location)", required=false)
         private String debugKmers = null;
         
@@ -262,20 +259,10 @@ public class GenomixJobConf extends JobConf {
 //    public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_SIZE = "pregelix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
-    public static final String GROUPBY_TYPE = "genomix.graph.groupby.type"; // TODO strip this out
-    public static final String OUTPUT_FORMAT = "genomix.graph.output";
 
-    public static final String GROUPBY_TYPE_PRECLUSTER = "precluster"; // TODO remove
-    
-    public static final String JOB_PLAN_GRAPHBUILD = "graphbuild"; // TODO remove
-    public static final String JOB_PLAN_GRAPHSTAT = "graphstat"; // TODO remove
-
-    public static final String OUTPUT_FORMAT_BINARY = "genomix.outputformat.binary";
-    public static final String OUTPUT_FORMAT_TEXT = "genomix.outputformat.text";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
     public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
-    public static final String HYRACKS_BUILD_OUTPUT_TEXT = "genomix.hyracks.build.outout.text";
     
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = {
                     Patterns.BUILD, Patterns.MERGE, 
@@ -441,7 +428,6 @@ public class GenomixJobConf extends JobConf {
         setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
             
         setBoolean(RUN_LOCAL, opts.runLocal);
-        setBoolean(HYRACKS_BUILD_OUTPUT_TEXT, opts.hyracksBuildOutputText);
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
         setBoolean(LOG_READIDS, opts.logReadIds);

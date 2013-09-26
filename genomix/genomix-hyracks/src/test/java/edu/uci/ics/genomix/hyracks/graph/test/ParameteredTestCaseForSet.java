@@ -156,8 +156,6 @@ public class ParameteredTestCaseForSet {
         conf.setInt(GenomixJobConf.KMER_LENGTH, this.KmerSize);
         FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH + File.separator + src.getName());
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH + File.separator + src.getName()));
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
-        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         conf.setInt(GenomixJobConf.FRAME_LIMIT, JobGenBrujinGraph.DEFAULT_FRAME_LIMIT);
         conf.setInt(GenomixJobConf.FRAME_SIZE, JobGenBrujinGraph.DEFAULT_FRAME_SIZE);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUIJN_GRAPH, true);

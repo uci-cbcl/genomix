@@ -15,16 +15,11 @@
 
 package edu.uci.ics.genomix.driver;
 
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
@@ -150,9 +145,6 @@ public class GenomixDriver {
         LOG.info("Building Graph using Hyracks...");
         manager.startCluster(ClusterType.HYRACKS);
         GenomixJobConf.tick("buildGraphWithHyracks");
-        // TODO move this to parser
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, Boolean.parseBoolean(conf.get(GenomixJobConf.HYRACKS_BUILD_OUTPUT_TEXT)) ? GenomixJobConf.OUTPUT_FORMAT_TEXT : GenomixJobConf.OUTPUT_FORMAT_BINARY);
-        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         
         String hyracksIP = runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS);
         int hyracksPort = runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT));

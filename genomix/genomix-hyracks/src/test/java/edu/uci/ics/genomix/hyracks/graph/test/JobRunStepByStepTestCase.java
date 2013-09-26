@@ -34,6 +34,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 
 @SuppressWarnings("deprecation")
 /**
@@ -68,27 +69,21 @@ public class JobRunStepByStepTestCase {
     
     
     public void TestReader() throws Exception {
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         driver.runJob(conf, Plan.BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER, true);
-        dumpResult();
+        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, DUMPED_RESULT);
     }
     
     public void TestGroupby() throws Exception {
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_TEXT);
         cleanUpReEntry();
-        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(conf, Plan.BUILD_OLD_DEBRUJIN_GRAPH_STEP1, true);
-        dumpResult();
+        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, DUMPED_RESULT);
     }
     
     public void TestGroupbyUnMerged() throws Exception {
-        conf.set(GenomixJobConf.OUTPUT_FORMAT, GenomixJobConf.OUTPUT_FORMAT_BINARY);
         cleanUpReEntry();
-        conf.set(GenomixJobConf.GROUPBY_TYPE, GenomixJobConf.GROUPBY_TYPE_PRECLUSTER);
         driver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, true);
-        dumpResult();
+        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, DUMPED_RESULT);
     }
     
     @Before
@@ -146,14 +141,6 @@ public class JobRunStepByStepTestCase {
         if (dfs.exists(new Path(HDFS_OUTPUT_PATH))) {
             dfs.delete(new Path(HDFS_OUTPUT_PATH), true);
         }
-    }
-    
-    private void dumpResult() throws Exception {
-        String format = conf.get(GenomixJobConf.OUTPUT_FORMAT);
-        if (GenomixJobConf.OUTPUT_FORMAT_TEXT.equalsIgnoreCase(format)) {
-            FileUtil.copyMerge(FileSystem.get(conf), new Path(HDFS_OUTPUT_PATH),
-                    FileSystem.getLocal(new Configuration()), new Path(DUMPED_RESULT), false, conf, null);
-        } 
     }
     
     @After
