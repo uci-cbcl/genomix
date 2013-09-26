@@ -65,62 +65,36 @@ public class SimpleBubbleMergeVertex extends
     
     public void sendBubbleAndMajorVertexMsgToMinorVertex(){
     	VertexValueWritable vertex = getVertexValue();
-    	//TODO change INCOMING and PREVIOUS to REVERSE. also FORWARD 
-    	//TODO change member variable to local variable
     	//TODO make function that returns a single neighbor as <EDGETYPE, EDGE> (jake)
     	EDGETYPE reverseEdgeType = vertex.getNeighborEdgeType(DIR.REVERSE);
     	EdgeWritable reverseEdge = vertex.getEdgeList(reverseEdgeType).get(0);
     	
     	EDGETYPE forwardEdgeType = vertex.getNeighborEdgeType(DIR.FORWARD);
     	EdgeWritable forwardEdge = vertex.getEdgeList(forwardEdgeType).get(0);
-            // get majorVertex and minorVertex and meToMajorDir and meToMinorDir
-            VKmerBytesWritable reverseKmer = reverseEdge.getKey();
-            VKmerBytesWritable forwardKmer = forwardEdge.getKey();
-            VKmerBytesWritable majorVertexId = null;
-            EDGETYPE meToMajorEdgetype = null; 
-            EDGETYPE meToMinorEdgetype = null; 
-            VKmerBytesWritable minorVertexId = null;
-            if(reverseKmer.compareTo(forwardKmer) >= 0){
-                majorVertexId = reverseKmer;
-                meToMajorEdgetype = reverseEdgeType;
-                minorVertexId = forwardKmer;
-                meToMinorEdgetype = forwardEdgeType;
-            } else{
-                majorVertexId = forwardKmer;
-                meToMajorEdgetype = forwardEdgeType;
-                minorVertexId = reverseKmer;
-                meToMinorEdgetype = reverseEdgeType;
-            }
-            if(majorVertexId == minorVertexId)
-                throw new IllegalArgumentException("majorVertexId is equal to minorVertexId, this is not allowd!");
-            EDGETYPE majorToMeEdgetype = meToMajorEdgetype.mirror();
-            EDGETYPE minorToMeEdgetype = meToMinorEdgetype.mirror();
-
-            // setup outgoingMsg
-            outgoingMsg.setMajorVertexId(majorVertexId);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(getVertexValue().getNode());
-            //TODO combine into only one byte, change internally/under the hood
-            outgoingMsg.setMeToMajorEdgetype(majorToMeEdgetype.get());
-            outgoingMsg.setMeToMinorEdgetype(minorToMeEdgetype.get());
-            sendMsg(minorVertexId, outgoingMsg);
+    	
+        VKmerBytesWritable reverseKmer = reverseEdge.getKey();
+        VKmerBytesWritable forwardKmer = forwardEdge.getKey();
             
-            //instead try
-            /*
-            boolean reverseIsMajor = reverseKmer.compareTo(forwardKmer) >= 0;
-            if (reverseIsMajor) {
-            	outgoingMsg.setMajorVertexId(reverseEdge.getKey())
-            	outgoingMsg.setMajorToBubbleEdgetype(reverseEdgeType.mirror());
-                outgoingMsg.setMinorToBubbleEdgetype(forwardEdgeType.mirror());
-            } else {
-            	outgoingMsg.setMajorVertexId(forwardEdge.getKey())
-            	outgoingMsg.setMajorToBubbleEdgetype(forwardEdgeType.mirror());
-                outgoingMsg.setMinorToBubbleEdgetype(reverseEdgeType.mirror());
-            }
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(getVertexValue().getNode());
-            sendMsg(minorVertexId, outgoingMsg);
-            */
+        //TODO combine into only one byte, change internally/under the hood
+        // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
+        if(forwardKmer == reverseKmer)
+            throw new IllegalArgumentException("majorVertexId is equal to minorVertexId, this is not allowd!");
+        boolean forwardIsMajor = forwardKmer.compareTo(reverseKmer) >= 0;
+        VKmerBytesWritable minorVertexId = null;
+        if (forwardIsMajor) {
+            outgoingMsg.setMajorVertexId(forwardEdge.getKey());
+            outgoingMsg.setMajorToBubbleEdgetype(forwardEdgeType.mirror());
+            outgoingMsg.setMinorToBubbleEdgetype(reverseEdgeType.mirror());
+            minorVertexId = reverseKmer;
+        } else {
+            outgoingMsg.setMajorVertexId(reverseEdge.getKey());
+            outgoingMsg.setMajorToBubbleEdgetype(reverseEdgeType.mirror());
+            outgoingMsg.setMinorToBubbleEdgetype(forwardEdgeType.mirror());
+            minorVertexId = forwardKmer;
+        }
+        outgoingMsg.setSourceVertexId(getVertexId());
+        outgoingMsg.setNode(getVertexValue().getNode());
+        sendMsg(minorVertexId, outgoingMsg);
     }
     
     @SuppressWarnings({ "unchecked" })

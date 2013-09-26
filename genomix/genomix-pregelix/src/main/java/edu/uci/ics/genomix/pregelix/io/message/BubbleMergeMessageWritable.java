@@ -19,8 +19,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     private VKmerBytesWritable majorVertexId; //use for MergeBubble
     private VKmerBytesWritable minorVertexId;
     private NodeWritable node; //except kmer, other field should be updated when MergeBubble
-    private byte meToMajorEdgetype;
-    private byte meToMinorEdgetype;
+    private byte majorToBubbleEdgetype;
+    private byte minorToBubbleEdgetype;
     private VKmerBytesWritable topCoverageVertexId;
     private boolean isFlip;
     
@@ -29,8 +29,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId = new VKmerBytesWritable();
         minorVertexId = new VKmerBytesWritable();
         node = new NodeWritable();
-        meToMajorEdgetype = 0;
-        meToMinorEdgetype = 0;
+        majorToBubbleEdgetype = 0;
+        minorToBubbleEdgetype = 0;
         topCoverageVertexId = new VKmerBytesWritable();
         isFlip = false;
     }
@@ -45,8 +45,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         this.setMajorVertexId(msg.getMajorVertexId());
         this.setMinorVertexId(msg.getMinorVertexId());
         this.setNode(msg.node);
-        this.setMajorToMeEdgetype(msg.meToMajorEdgetype);
-        this.setMinorToMeEdgetype(msg.meToMinorEdgetype);
+        this.setMajorToBubbleEdgetype(msg.majorToBubbleEdgetype);
+        this.setMinorToBubbleEdgetype(msg.minorToBubbleEdgetype);
         this.setTopCoverageVertexId(msg.topCoverageVertexId);
         this.setFlip(msg.isFlip());
     }
@@ -56,14 +56,14 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId.reset(0);
         minorVertexId.reset(0);
         node.reset();
-        meToMajorEdgetype = 0;
-        meToMinorEdgetype = 0;
+        majorToBubbleEdgetype = 0;
+        minorToBubbleEdgetype = 0;
         topCoverageVertexId.reset(0);
         isFlip = false;
     }
     
     public byte getRelativeDirToMajor(){
-        EDGETYPE et = EDGETYPE.fromByte(meToMajorEdgetype);
+        EDGETYPE et = EDGETYPE.fromByte(majorToBubbleEdgetype);
         switch(et){
             case FF:
             case RR:
@@ -116,21 +116,20 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         this.node.setAsCopy(node);
     }
     
-    public byte getMajorToMeEdgetype() {
-        return meToMajorEdgetype;
+    public byte getMajorToBubbleEdgetype() {
+        return majorToBubbleEdgetype;
     }
 
-    public void setMajorToMeEdgetype(byte meToMajorEdgetype) {
-    	//TODO combine into only one byte, change internally/under the hood, accept EDGETYPE rather than byte
-        this.meToMajorEdgetype = meToMajorEdgetype;
+    public void setMajorToBubbleEdgetype(EDGETYPE majorToBubbleEdgetype) {
+        this.majorToBubbleEdgetype = majorToBubbleEdgetype.get();
     }
 
-    public byte getMinorToMeEdgetype() {
-        return meToMinorEdgetype;
+    public byte getMinorToBubbleEdgetype() {
+        return minorToBubbleEdgetype;
     }
 
-    public void setMinorToMeEdgetype(byte meToMinorEdgetype) {
-        this.meToMinorEdgetype = meToMinorEdgetype;
+    public void setMinorToBubbleEdgetype(EDGETYPE minorToBubbleEdgetype) {
+        this.minorToBubbleEdgetype = minorToBubbleEdgetype.get();
     }
 
     public boolean isFlip() {
@@ -148,8 +147,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId.readFields(in);
         minorVertexId.readFields(in);
         node.readFields(in);
-        meToMajorEdgetype = in.readByte();
-        meToMinorEdgetype = in.readByte();
+        majorToBubbleEdgetype = in.readByte();
+        minorToBubbleEdgetype = in.readByte();
         topCoverageVertexId.readFields(in);
         isFlip = in.readBoolean();
     }
@@ -160,8 +159,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         majorVertexId.write(out);
         minorVertexId.write(out);
         node.write(out);
-        out.writeByte(meToMajorEdgetype);
-        out.write(meToMinorEdgetype);
+        out.writeByte(majorToBubbleEdgetype);
+        out.write(minorToBubbleEdgetype);
         topCoverageVertexId.write(out);
         out.writeBoolean(isFlip);
     }
