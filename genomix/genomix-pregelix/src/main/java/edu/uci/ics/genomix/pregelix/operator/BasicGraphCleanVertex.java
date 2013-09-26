@@ -56,7 +56,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected VertexValueWritable tmpValue = new VertexValueWritable(); 
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
     protected EDGETYPE repeatEdgetype; //for detect tandemRepeat
-//    protected VKmerBytesWritable tmpKmer = null;
     protected short outFlag;
     protected short inFlag;
     protected short selfFlag;
