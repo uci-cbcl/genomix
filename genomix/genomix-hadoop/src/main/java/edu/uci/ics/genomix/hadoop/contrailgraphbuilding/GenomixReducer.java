@@ -18,14 +18,12 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class GenomixReducer extends MapReduceBase implements
 	Reducer<VKmerBytesWritable, NodeWritable, VKmerBytesWritable, NodeWritable>{
     
-    public static int KMER_SIZE;
     private NodeWritable outputNode;
     private NodeWritable tmpNode;
     private float averageCoverage;
     
     @Override
     public void configure(JobConf job) {
-        KMER_SIZE = GenomixMapper.KMER_SIZE;
         outputNode = new NodeWritable();
         tmpNode = new NodeWritable();
     }

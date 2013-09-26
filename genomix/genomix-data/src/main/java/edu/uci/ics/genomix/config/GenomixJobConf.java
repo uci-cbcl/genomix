@@ -485,7 +485,7 @@ public class GenomixJobConf extends JobConf {
             return System.currentTimeMillis() - time;
     }
 
-    public static void setGlobalStaticConstants(Configuration conf) { // TODO make sure everyone uses this version
+    public static void setGlobalStaticConstants(Configuration conf) {
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
 //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
         

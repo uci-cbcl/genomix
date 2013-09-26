@@ -71,7 +71,7 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
 
                     @Override
                     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
-                        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+                        KmerBytesWritable.setGlobalKmerLength(kmerSize); // TODO is this the right place for this?
                         return new ITupleWriter() {
 
                             private NodeWritable outputNode = new NodeWritable();
