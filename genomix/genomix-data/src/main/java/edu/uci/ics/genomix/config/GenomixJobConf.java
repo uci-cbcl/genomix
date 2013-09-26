@@ -243,7 +243,7 @@ public class GenomixJobConf extends JobConf {
     public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
     public static final String DRAW_STATISTICS = "genomix.draw.statistics";
     
-    // Graph cleaning
+    // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphCleanMaxIterations";

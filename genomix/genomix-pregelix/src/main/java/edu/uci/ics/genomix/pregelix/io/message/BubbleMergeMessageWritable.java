@@ -45,8 +45,8 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         this.setMajorVertexId(msg.getMajorVertexId());
         this.setMinorVertexId(msg.getMinorVertexId());
         this.setNode(msg.node);
-        this.setMeToMajorEdgetype(msg.meToMajorEdgetype);
-        this.setMeToMinorEdgetype(msg.meToMinorEdgetype);
+        this.setMajorToMeEdgetype(msg.meToMajorEdgetype);
+        this.setMinorToMeEdgetype(msg.meToMinorEdgetype);
         this.setTopCoverageVertexId(msg.topCoverageVertexId);
         this.setFlip(msg.isFlip());
     }
@@ -116,19 +116,20 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         this.node.setAsCopy(node);
     }
     
-    public byte getMeToMajorEdgetype() {
+    public byte getMajorToMeEdgetype() {
         return meToMajorEdgetype;
     }
 
-    public void setMeToMajorEdgetype(byte meToMajorEdgetype) {
+    public void setMajorToMeEdgetype(byte meToMajorEdgetype) {
+    	//TODO combine into only one byte, change internally/under the hood, accept EDGETYPE rather than byte
         this.meToMajorEdgetype = meToMajorEdgetype;
     }
 
-    public byte getMeToMinorEdgetype() {
+    public byte getMinorToMeEdgetype() {
         return meToMinorEdgetype;
     }
 
-    public void setMeToMinorEdgetype(byte meToMinorEdgetype) {
+    public void setMinorToMeEdgetype(byte meToMinorEdgetype) {
         this.meToMinorEdgetype = meToMinorEdgetype;
     }
 
