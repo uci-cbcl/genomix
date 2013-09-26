@@ -86,7 +86,18 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         boolean isHead = randGenerator.nextFloat() < probBeingRandomHead;
         return isHead;
     }
-
+    
+    /**
+     * set state as no_merge
+     */
+    public void setMerge(byte mergeState){
+        short state = getVertexValue().getState();
+        state &= P4State.MERGE_CLEAR;
+        state |= (mergeState & P4State.MERGE_MASK);
+        getVertexValue().setState(state);
+        activate();
+    }
+    
     /**
      * checks if there is a valid, mergeable neighbor in the given direction. sets hasNext/Prev, next/prevEdgetype, Kmer and Head
      */
@@ -224,7 +235,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws HyracksDataException {
         initVertex();
-
+        
         if (getSuperstep() == 1) {
             restrictNeighbors();
         } else if (getSuperstep() % 2 == 0) {

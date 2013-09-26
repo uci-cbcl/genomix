@@ -19,7 +19,6 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
@@ -54,9 +53,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             {EDGETYPE.RR, EDGETYPE.FR}
     };
     
-//    protected M incomingMsg = null; // TODO doesn't need to be a member variable
     protected M outgoingMsg = null; 
-    protected M aggregatingMsg = null;
     protected VKmerBytesWritable destVertexId = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable(); 
     protected Iterator<VKmerBytesWritable> kmerIterator;
@@ -228,37 +225,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         
     }
 
-    /**
-     * tip send message with sourceId and dir to previous node 
-     * tip only has one incoming
-     */
-    public void sendSettledMsgToPrevNode(){
-        if(getVertexValue().hasPrevDest()){
-            if(!getVertexValue().getRFList().isEmpty())
-                outgoingMsg.setFlag(MessageFlag.DIR_RF);
-            else if(!getVertexValue().getRRList().isEmpty())
-                outgoingMsg.setFlag(MessageFlag.DIR_RR);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.setAsCopy(getDestVertexId(DIR.PREVIOUS));
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
-    
-    /**
-     * tip send message with sourceId and dir to next node 
-     * tip only has one outgoing
-     */
-    public void sendSettledMsgToNextNode(){
-        if(getVertexValue().hasNextDest()){
-            if(!getVertexValue().getFFList().isEmpty())
-                outgoingMsg.setFlag(MessageFlag.DIR_FF);
-            else if(!getVertexValue().getFRList().isEmpty())
-                outgoingMsg.setFlag(MessageFlag.DIR_FR);
-            outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId.setAsCopy(getDestVertexId(DIR.NEXT));
-            sendMsg(destVertexId, outgoingMsg);
-        }
-    }
     
     /**
      * send message to all neighbor nodes
@@ -283,68 +249,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         sendSettledMsgs(DIR.PREVIOUS, value);
         sendSettledMsgs(DIR.NEXT, value);
     }
-    
-    /**
-     * head send message to all neighbor nodes
-     */
-    public void headSendSettledMsgs(DIR direction, VertexValueWritable value){
-        //TODO THE less context you send, the better  (send simple messages)
-        EnumSet<EDGETYPE> edgeTypes = (direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
-        for(EDGETYPE e : edgeTypes){
-            kmerIterator = value.getEdgeList(e).getKeyIterator();
-            while(kmerIterator.hasNext()){
-                outFlag &= MessageFlag.HEAD_CAN_MERGE_CLEAR;
-                EDGETYPE meToNeighborEdgeType = e.mirror();
-                switch(meToNeighborEdgeType){
-                    case FF:
-                    case FR:
-                        outFlag |= MessageFlag.HEAD_CAN_MERGEWITHPREV;
-                        break;
-                    case RF:
-                    case RR:
-                        outFlag |= MessageFlag.HEAD_CAN_MERGEWITHNEXT;
-                        break;  
-                }
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setSourceVertexId(getVertexId());
-                destVertexId.setAsCopy(kmerIterator.next());
-                sendMsg(destVertexId, outgoingMsg);
-            }
-        }
-    }
-    
-    public void headSendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
-        headSendSettledMsgs(DIR.PREVIOUS, value);
-        headSendSettledMsgs(DIR.NEXT, value);
-    }
-    
-    /**
-     * get a copy of the original Kmer without TandemRepeat
-     * @param destVertex 
-     */
-    public void copyWithoutTandemRepeats(V srcVertex, VertexValueWritable destVertex){
-        destVertex.setAsCopy(srcVertex);
-        destVertex.getEdgeList(repeatEdgetype).remove(repeatKmer);
-        while(isTandemRepeat(destVertex))
-            destVertex.getEdgeList(repeatEdgetype).remove(repeatKmer);
-    }
-    
-//    /**
-//     * check if it is valid path
-//     */
-//    public boolean isValidPath(){
-//        byte meToNeighborDir = (byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK);
-//        byte neighborToMeDir = mirrorDirection(meToNeighborDir);
-//        switch(neighborToMeDir){
-//            case MessageFlag.DIR_FF:
-//            case MessageFlag.DIR_FR:
-//                return getVertexValue().inDegree() == 1;
-//            case MessageFlag.DIR_RF:
-//            case MessageFlag.DIR_RR:
-//                return getVertexValue().outDegree() == 1;
-//        }
-//        return true;
-//    }
     
     /**
      * check if A need to be filpped with neighbor
@@ -373,25 +277,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             return false;
     }
     
-    public boolean ifFlipWithPredecessor(VKmerBytesWritable toFind){
-        if(getVertexValue().getRFList().contains(toFind))
-            return true;
-        else
-            return false;
-    }
-    
     /**
      * check if A need to be flipped with successor
      */
     public boolean ifFilpWithSuccessor(){
         if(!getVertexValue().getFRList().isEmpty())
-            return true;
-        else
-            return false;
-    }
-    
-    public boolean ifFilpWithSuccessor(VKmerBytesWritable toFind){
-        if(getVertexValue().getFRList().contains(toFind))
             return true;
         else
             return false;
@@ -411,67 +301,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * set state as no_merge
-     */
-    public void setStateAsNoMerge(){
-        short state = getVertexValue().getState();
-    	state &= State.CAN_MERGE_CLEAR;
-        state |= State.NO_MERGE;
-        getVertexValue().setState(state);
-        activate();  //TODO could we be more careful about activate?
-    }
-    
-    /**
-     * set state as no_merge
-     */
-    public void setMerge(byte mergeState){
-        short state = getVertexValue().getState();
-        state &= P4State.MERGE_CLEAR;
-        state |= (mergeState & P4State.MERGE_MASK);
-        getVertexValue().setState(state);
-        activate();
-    }
-    
-    /**
-     * Returns the edge dir for B->A when the A->B edge is type @dir
-     */
-    public byte meToNeighborDir(byte dir) {
-        switch (dir) {
-            case MessageFlag.DIR_FF:
-                return MessageFlag.DIR_RR;
-            case MessageFlag.DIR_FR:
-                return MessageFlag.DIR_FR;
-            case MessageFlag.DIR_RF:
-                return MessageFlag.DIR_RF;
-            case MessageFlag.DIR_RR:
-                return MessageFlag.DIR_FF;
-            default:
-                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
-        }
-    }
-    
-    /**
-     * check if need filp
-     */
-    public byte flipDirection(byte neighborDir, boolean flip){ // TODO use NodeWritable
-        if(flip){
-            switch (neighborDir) {
-                case MessageFlag.DIR_FF:
-                    return MessageFlag.DIR_FR;
-                case MessageFlag.DIR_FR:
-                    return MessageFlag.DIR_FF;
-                case MessageFlag.DIR_RF:
-                    return MessageFlag.DIR_RR;
-                case MessageFlag.DIR_RR:
-                    return MessageFlag.DIR_RF;
-                default:
-                    throw new RuntimeException("Unrecognized direction for neighborDir: " + neighborDir);
-            }
-        } else 
-            return neighborDir;
-    }
-    
-    /**
      * broadcast kill self to all neighbers ***
      */
     public void broadcaseKillself(){
@@ -482,17 +311,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         sendSettledMsgToAllNeighborNodes(getVertexValue());
         
         deleteVertex(getVertexId());
-    }
-    
-    /**
-     * broadcast kill self to all neighbers ***
-     */
-    public void broadcaseReallyKillself(){
-        outFlag = 0;
-        outFlag |= MessageFlag.KILL;
-        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
-        
-        sendSettledMsgToAllNeighborNodes(getVertexValue());
     }
     
     /**
@@ -548,20 +366,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * Look inside of vertex for the given edge, returning the direction we found it in (or null) 
-     */
-    public static EDGETYPE findEdge(VKmerBytesWritable id, VertexValueWritable vertex){
-        // TODO move into Node?
-        for(EDGETYPE e : EnumSet.allOf(EDGETYPE.class)){
-            for (VKmerBytesWritable curKey : vertex.getEdgeList(e).getKeys()) {
-                if(curKey.equals(id)) // points to self
-                    return e;
-            }
-        }
-        return null;
-    }
-    
-    /**
      * set statistics counter
      */
     public void incrementCounter(byte counterName){
@@ -585,23 +389,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-    }
-    
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
-        // the following class weirdness is because java won't let me get the runtime class in a static context :(
-        PregelixJob job;
-        if (conf == null)
-            job = new PregelixJob(vertexClass.getSimpleName());
-        else
-            job = new PregelixJob(conf, vertexClass.getSimpleName());
-        job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexClass(vertexClass);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.setDynamicVertexValueSize(true);
-        return job;
     }
     
     /**
@@ -647,20 +434,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * non-head && non-path 
-     */
-    public boolean isInactiveNode(){
-        return !VertexUtil.isCanMergeVertex(getVertexValue()) || isTandemRepeat(getVertexValue());
-    }
-    
-    /**
-     * head and path 
-     */
-    public boolean isActiveNode(){
-        return !isInactiveNode();
-    }
-    
-    /**
      * use for SplitRepeatVertex and BubbleMerge
      * @param i
      */
@@ -673,6 +446,23 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
 //2013.9.21 ------------------------------------------------------------------//
+    public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
+        // the following class weirdness is because java won't let me get the runtime class in a static context :(
+        PregelixJob job;
+        if (conf == null)
+            job = new PregelixJob(vertexClass.getSimpleName());
+        else
+            job = new PregelixJob(conf, vertexClass.getSimpleName());
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
+        job.setVertexClass(vertexClass);
+        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputValueClass(VertexValueWritable.class);
+        job.setDynamicVertexValueSize(true);
+        return job;
+    }
+    
     /**
      * get destination vertex ex. RemoveTip
      */

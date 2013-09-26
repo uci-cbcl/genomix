@@ -71,7 +71,7 @@ public class TipRemoveVertex extends
         	outgoingMsg.reset();
             outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId = getVertexValue().getEdgeList(tipToNeighborEdgetype).get(0).getKey(); //getDestVertexId(tipToNeighborEdgetype.dir());
+            destVertexId = getVertexValue().getEdgeList(tipToNeighborEdgetype).get(0).getKey();
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
             

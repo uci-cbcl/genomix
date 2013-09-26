@@ -25,21 +25,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 
     private static final Logger LOG = Logger.getLogger(BasicPathMergeVertex.class.getName());
 
-    protected static final boolean isP1 = true;
     protected static final boolean isP2 = false;
-    protected static final boolean isP4 = true;
 
     public byte getHeadMergeDir() {
         return (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
-    }
-
-    public byte getAggregatingMsgMergeDir() {
-        return (byte) (aggregatingMsg.getFlag() & MessageFlag.HEAD_CAN_MERGE_MASK);
-    }
-
-    public boolean isHeadUnableToMerge() {
-        byte state = (byte) (getVertexValue().getState() & State.HEAD_CAN_MERGE_MASK);
-        return state == State.HEAD_CANNOT_MERGE;
     }
 
     public DIR revert(DIR direction) {
