@@ -119,7 +119,7 @@ public class UnrollTandemRepeat extends
             if(isTandemRepeat(getVertexValue()) && repeatCanBeMerged()){
                 mergeTandemRepeat();
                 //set statistics counter: Num_TandemRepeats
-                updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats);
+                incrementCounter(StatisticsCounter.Num_TandemRepeats);
                 getVertexValue().setCounters(counters);
             }
             voteToHalt();

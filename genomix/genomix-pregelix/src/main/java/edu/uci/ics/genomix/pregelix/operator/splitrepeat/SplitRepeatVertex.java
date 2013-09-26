@@ -239,7 +239,7 @@ public class SplitRepeatVertex extends
                                 // create new/created vertex 
                                 createNewVertex(i, tmpIncomingEdge, tmpOutgoingEdge);
                                 //set statistics counter: Num_SplitRepeats
-                                updateStatisticsCounter(StatisticsCounter.Num_SplitRepeats);
+                                incrementCounter(StatisticsCounter.Num_SplitRepeats);
                                 getVertexValue().setCounters(counters);
                                 
                                 // send msg to neighbors to update their edges to new vertex 

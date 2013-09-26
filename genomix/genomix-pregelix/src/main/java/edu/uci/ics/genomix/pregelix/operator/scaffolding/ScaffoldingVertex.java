@@ -139,7 +139,7 @@ public class ScaffoldingVertex extends
                             // send message to all the path nodes to add this common readId
                             sendMsgToPathNodeToAddCommondReadId();
                             //set statistics counter: Num_RemovedLowCoverageNodes
-                            updateStatisticsCounter(StatisticsCounter.Num_Scaffodings);
+                            incrementCounter(StatisticsCounter.Num_Scaffodings);
                             getVertexValue().setCounters(counters);
                         }
                         else{

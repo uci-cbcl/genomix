@@ -72,7 +72,7 @@ public class BridgeRemoveVertex extends
                     && getVertexValue().getDegree() == 2){
                 broadcaseKillself();
                 //set statistics counter: Num_RemovedBridges
-                updateStatisticsCounter(StatisticsCounter.Num_RemovedBridges);
+                incrementCounter(StatisticsCounter.Num_RemovedBridges);
                 getVertexValue().setCounters(counters);
             }
         }

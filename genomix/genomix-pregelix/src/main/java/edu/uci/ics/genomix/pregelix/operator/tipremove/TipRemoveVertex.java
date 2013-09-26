@@ -85,9 +85,9 @@ public class TipRemoveVertex extends
                         + "Kill self and broadcast kill self to " + destVertexId + "\r\n"
                         + "The message is: " + outgoingMsg + "\r\n\n");
             }
-            //set statistics counter: Num_RemovedTips  TODO rename to incrementCounter(.., amount)
-            updateStatisticsCounter(StatisticsCounter.Num_RemovedTips);
-//            getVertexValue().setCounters(counters);  // TODO take a long hard look at how we run the logic of counters...
+            //set statistics counter: Num_RemovedTips 
+            incrementCounter(StatisticsCounter.Num_RemovedTips);
+            getVertexValue().setCounters(counters);  // TODO take a long hard look at how we run the logic of counters...
         } 
     }
     

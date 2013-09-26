@@ -568,7 +568,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * set statistics counter
      */
-    public void updateStatisticsCounter(byte counterName){
+    public void incrementCounter(byte counterName){
         ByteWritable counterNameWritable = new ByteWritable(counterName);
         if(counters.containsKey(counterNameWritable))
             counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);

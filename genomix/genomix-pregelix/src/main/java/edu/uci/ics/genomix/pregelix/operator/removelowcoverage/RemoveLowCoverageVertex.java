@@ -61,7 +61,7 @@ public class RemoveLowCoverageVertex extends
     public void cleanupDeadVertex(){
         deleteVertex(getVertexId());
         //set statistics counter: Num_RemovedLowCoverageNodes
-        updateStatisticsCounter(StatisticsCounter.Num_RemovedLowCoverageNodes);
+        incrementCounter(StatisticsCounter.Num_RemovedLowCoverageNodes);
         getVertexValue().setCounters(counters);
     }
     
