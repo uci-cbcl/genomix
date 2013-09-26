@@ -32,13 +32,15 @@ public class TipRemoveVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        //TODO add brace to any control logic 
-        if(MIN_LENGTH_TO_KEEP == -1)
+        if(MIN_LENGTH_TO_KEEP == -1){
             MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.TIP_REMOVE_MAX_LENGTH));
-        if(outgoingMsg == null)
+        }
+        if(outgoingMsg == null){
             outgoingMsg = new MessageWritable();
-        else
+        }
+        else{
             outgoingMsg.reset();
+        }
         StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
@@ -119,8 +121,9 @@ public class TipRemoveVertex extends
             initVertex(); 
             updateTipNeighbor();
         }
-        else if(getSuperstep() == 2)
+        else if(getSuperstep() == 2){
             processUpdates(msgIterator);
+        }
         voteToHalt();
     }
 
