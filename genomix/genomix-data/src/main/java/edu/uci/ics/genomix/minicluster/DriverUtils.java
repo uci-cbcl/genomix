@@ -25,11 +25,10 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -51,7 +50,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class DriverUtils {
 
-    public static final Log LOG = LogFactory.getLog(DriverUtils.class);
+	public static final Logger LOG = Logger.getLogger(DriverUtils.class.getName());
 
     /*
      * Get the IP address of the master node using the bin/getip.sh script
