@@ -36,8 +36,6 @@ public class P1ForPathMergeVertex extends
             outgoingMsg = new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         if(getSuperstep() == 1)
@@ -140,15 +138,14 @@ public class P1ForPathMergeVertex extends
                     outFlag = 0;
                     outFlag |= MessageFlag.TO_NEIGHBOR;
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        for(VKmerBytesWritable kmer : vertex.getEdgeList(et).getKeys()){
+                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flip() : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
                             outFlag &= MessageFlag.MERGE_DIR_CLEAR;
                             outFlag |= meToNeighbor.get() | otherToNeighbor.get() << 9;
                             outgoingMsg.setFlag(outFlag);
-                            destVertexId = kmer;
-                            sendMsg(destVertexId, outgoingMsg);
+                            sendMsg(dest, outgoingMsg);
                         }
                     }
                     

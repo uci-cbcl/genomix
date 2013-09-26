@@ -12,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Graph clean pattern: Remove Bridge
@@ -37,8 +36,6 @@ public class BridgeRemoveVertex extends
             outgoingMsg = new MessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         receivedMsgList.clear();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();

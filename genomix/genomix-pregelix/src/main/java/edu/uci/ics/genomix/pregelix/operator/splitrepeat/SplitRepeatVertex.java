@@ -75,10 +75,6 @@ public class SplitRepeatVertex extends
             outgoingMsg = new SplitRepeatMessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
         if(incomingEdgeList == null)
             incomingEdgeList = new EdgeListWritable();
         if(outgoingEdgeList == null)
@@ -173,11 +169,12 @@ public class SplitRepeatVertex extends
         outgoingMsg.setDeletedEdge(deletedEdge);
         
         outgoingMsg.setFlag(incomingEdgeType.get());
-        destVertexId.setAsCopy(incomingEdge.getKey());
+        VKmerBytesWritable destVertexId = null;
+        destVertexId = incomingEdge.getKey();
         sendMsg(destVertexId, outgoingMsg);
         
         outgoingMsg.setFlag(outgoingEdgeType.get());
-        destVertexId.setAsCopy(outgoingEdge.getKey());
+        destVertexId = outgoingEdge.getKey();
         sendMsg(destVertexId, outgoingMsg);
     }
     

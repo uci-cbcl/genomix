@@ -19,6 +19,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         public static final byte REVERSE = 1 << 1;
     }
     
+    protected VKmerBytesWritable forwardKmer;
     protected VKmerBytesWritable reverseKmer;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
 
@@ -35,19 +36,13 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             outgoingMsg.reset();
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
-        if(kmerList == null)
-            kmerList = new VKmerListWritable();
-        else
-            kmerList.reset();
         if(fakeVertex == null){
             fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
+        if(forwardKmer == null)
+            forwardKmer = new VKmerBytesWritable();
     }
     
     /**
@@ -76,14 +71,14 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         while(msgIterator.hasNext()){
             M incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
-            tmpKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
+            forwardKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
             reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
 
             VKmerBytesWritable kmer = new VKmerBytesWritable();
-            kmerList = new VKmerListWritable();
-            if(reverseKmer.compareTo(tmpKmer) > 0){
+            VKmerListWritable kmerList = new VKmerListWritable();
+            if(reverseKmer.compareTo(forwardKmer) > 0){
 //                kmerDir.add(KmerDir.FORWARD);
-                kmer.setAsCopy(tmpKmer);
+                kmer.setAsCopy(forwardKmer);
             }
             else{
 //                kmerDir.add(KmerDir.REVERSE);
@@ -103,11 +98,11 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     
     public void reduceKeyByInternalKmer(){
         for(VKmerBytesWritable key : kmerMapper.keySet()){
-            kmerList = kmerMapper.get(key);
+            VKmerListWritable kmerList = kmerMapper.get(key);
             for(int i = 1; i < kmerList.getCountOfPosition(); i++){
                 //send kill message
                 outgoingMsg.setFlag(MessageFlag.KILL);
-                destVertexId.setAsCopy(kmerList.getPosition(i));
+                VKmerBytesWritable destVertexId = kmerList.getPosition(i);
                 sendMsg(destVertexId, outgoingMsg);
             }
         }

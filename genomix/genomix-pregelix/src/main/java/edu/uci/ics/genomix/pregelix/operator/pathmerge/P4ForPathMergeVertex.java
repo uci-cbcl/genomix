@@ -51,8 +51,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             outgoingMsg = new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
-        if (destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if (randGenerator == null)
             randGenerator = new Random(randSeed);

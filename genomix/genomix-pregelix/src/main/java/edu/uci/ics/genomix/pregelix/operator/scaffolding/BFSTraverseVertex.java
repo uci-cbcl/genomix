@@ -22,6 +22,7 @@ public class BFSTraverseVertex extends
     
     private EdgeDirs edgeDirs =  new EdgeDirs();
     private ArrayListWritable<EdgeDirs> edgeDirsList = new ArrayListWritable<EdgeDirs>();
+    protected VKmerListWritable kmerList = new VKmerListWritable();
     
     /**
      * initiate kmerSize, maxIteration
@@ -42,10 +43,6 @@ public class BFSTraverseVertex extends
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable(kmerSize);
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
     }
     
     public void initiateSrcAndDestNode(VKmerListWritable pairKmerList, long readId, boolean srcFlip, 
@@ -153,7 +150,7 @@ public class BFSTraverseVertex extends
                 outgoingMsg.getPathList().append(kmerList.getPosition(i - 1));
                 outgoingMsg.getPathList().append(kmerList.getPosition(i + 1));  
             }
-            destVertexId.setAsCopy(kmerList.getPosition(i));
+            VKmerBytesWritable destVertexId = kmerList.getPosition(i);
             sendMsg(destVertexId, outgoingMsg);
         }
     }
@@ -172,12 +169,13 @@ public class BFSTraverseVertex extends
         long readId = incomingMsg.getReadId();
         //add readId to prev edge 
         byte prevToMeDir = incomingMsg.getEdgeDirsList().get(0).getPrevToMeDir();
-        tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(0));
+        VKmerBytesWritable tmpKmer;
+        tmpKmer = incomingMsg.getPathList().getPosition(0);
         if(tmpKmer.getKmerLetterLength() != 0)
             getVertexValue().getEdgeList(EDGETYPE.fromByte(prevToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
         //set readId to next edge
         byte nextToMeDir = incomingMsg.getEdgeDirsList().get(0).getNextToMeDir();
-        tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(1));
+        tmpKmer = incomingMsg.getPathList().getPosition(1);
         if(tmpKmer.getKmerLetterLength() != 0)
             getVertexValue().getEdgeList(EDGETYPE.fromByte(nextToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
     }

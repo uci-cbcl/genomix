@@ -31,7 +31,6 @@ import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmerBytesWritable, V, NullWritable, M> {
@@ -54,13 +53,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     };
     
     protected M outgoingMsg = null; 
-    protected VKmerBytesWritable destVertexId = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable(); 
-    protected Iterator<VKmerBytesWritable> kmerIterator;
-    protected VKmerListWritable kmerList = null;
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
     protected EDGETYPE repeatEdgetype; //for detect tandemRepeat
-    protected VKmerBytesWritable tmpKmer = null;
+//    protected VKmerBytesWritable tmpKmer = null;
     protected short outFlag;
     protected short inFlag;
     protected short selfFlag;
@@ -193,6 +189,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * get destination vertex
      */
     public VKmerBytesWritable getPrevDestVertexIdAndSetFlag() {
+        Iterator<VKmerBytesWritable> kmerIterator;
         if (!getVertexValue().getRFList().isEmpty()){ // #RFList() > 0
             kmerIterator = getVertexValue().getRFList().getKeyIterator();
             outFlag &= MessageFlag.DIR_CLEAR;
@@ -209,6 +206,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public VKmerBytesWritable getNextDestVertexIdAndSetFlag() {
+        Iterator<VKmerBytesWritable> kmerIterator;
         if (!getVertexValue().getFFList().isEmpty()){ // #FFList() > 0
             kmerIterator = getVertexValue().getFFList().getKeyIterator();
             outFlag &= MessageFlag.DIR_CLEAR;
@@ -232,6 +230,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         //TODO THE less context you send, the better  (send simple messages)
         EnumSet<EDGETYPE> edgeTypes = (direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
+        Iterator<VKmerBytesWritable> kmerIterator;
         for(EDGETYPE e : edgeTypes){
             kmerIterator = value.getEdgeList(e).getKeyIterator();
             while(kmerIterator.hasNext()){
@@ -239,7 +238,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 outFlag |= e.get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
-                destVertexId.setAsCopy(kmerIterator.next());
+                VKmerBytesWritable destVertexId = kmerIterator.next();
                 sendMsg(destVertexId, outgoingMsg);
             }
         }
@@ -507,13 +506,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void broadcastKillself(){
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-            for(VKmerBytesWritable kmer : vertex.getEdgeList(et).getKeys()){
+            for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
-                destVertexId = kmer;
-                sendMsg(destVertexId, outgoingMsg);
+                sendMsg(dest, outgoingMsg);
                 if(verbose){
                 	logger.fine("Iteration " + getSuperstep() + "\r\n"
                 			+ "");

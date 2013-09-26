@@ -39,8 +39,6 @@ public class TipRemoveVertex extends
             outgoingMsg = new MessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
@@ -71,7 +69,7 @@ public class TipRemoveVertex extends
         	outgoingMsg.reset();
             outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            destVertexId = getVertexValue().getEdgeList(tipToNeighborEdgetype).get(0).getKey();
+            VKmerBytesWritable destVertexId = getVertexValue().getEdgeList(tipToNeighborEdgetype).get(0).getKey();
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
             

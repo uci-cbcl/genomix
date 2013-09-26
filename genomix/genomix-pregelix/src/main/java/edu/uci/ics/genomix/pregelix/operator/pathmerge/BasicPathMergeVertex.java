@@ -56,14 +56,14 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         setReplaceDir(mergeDirs);
 
         for (EDGETYPE dir : updateDirs) {
-            kmerIterator = getVertexValue().getEdgeList(dir).getKeyIterator();
+            Iterator<VKmerBytesWritable> kmerIterator = getVertexValue().getEdgeList(dir).getKeyIterator();
             while (kmerIterator.hasNext()) {
                 //set deleteDir
                 EDGETYPE deleteDir = setDeleteDir(dir);
                 //set mergeDir, so it won't need flip
                 setMergeDir(deleteDir, revertDirection);
                 outgoingMsg.setFlag(outFlag);
-                destVertexId = kmerIterator.next(); //TODO does destVertexId need deep copy?
+                VKmerBytesWritable destVertexId = kmerIterator.next(); //TODO does destVertexId need deep copy?
                 sendMsg(destVertexId, outgoingMsg);
             }
         }
@@ -101,7 +101,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setNode(getVertexValue().getNode()); //half of edges are enough
-            destVertexId = getDestVertexId(direction);
+            VKmerBytesWritable destVertexId = getDestVertexId(direction);
             sendMsg(destVertexId, outgoingMsg);
 
             if (isP4)

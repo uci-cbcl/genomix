@@ -7,7 +7,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 public class SymmetryCheckerVertex extends
@@ -22,8 +21,6 @@ public class SymmetryCheckerVertex extends
             outgoingMsg = new MessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
 //        else

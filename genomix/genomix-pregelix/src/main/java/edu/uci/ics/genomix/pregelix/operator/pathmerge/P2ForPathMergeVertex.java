@@ -56,10 +56,6 @@ public class P2ForPathMergeVertex extends
         receivedMsgList.clear();
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
-        if(kmerList == null)
-            kmerList = new VKmerListWritable();
-        else
-            kmerList.reset();
         synchronized(lock){
             if(fakeVertex == null){
                 fakeVertex = new VKmerBytesWritable();
@@ -67,10 +63,6 @@ public class P2ForPathMergeVertex extends
                 fakeVertex.setByRead(kmerSize + 1, fake.getBytes(), 0); 
             }
         }
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
@@ -133,9 +125,9 @@ public class P2ForPathMergeVertex extends
      */
     public void pathNodeSendOutMsg() {
         //send wantToMerge to next
-        tmpKmer = getNextDestVertexIdAndSetFlag();
+        VKmerBytesWritable tmpKmer = getNextDestVertexIdAndSetFlag();
         if(tmpKmer != null){
-            destVertexId.setAsCopy(tmpKmer);
+            VKmerBytesWritable destVertexId = tmpKmer;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
@@ -144,7 +136,7 @@ public class P2ForPathMergeVertex extends
         //send wantToMerge to prev
         tmpKmer = getPrevDestVertexIdAndSetFlag();
         if(tmpKmer != null){
-            destVertexId.setAsCopy(tmpKmer);
+            VKmerBytesWritable destVertexId = tmpKmer;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);

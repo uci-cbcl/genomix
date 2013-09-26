@@ -64,8 +64,6 @@ public class BubbleMergeVertex extends
             outgoingMsg = new BubbleMergeMessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         if(incomingEdgeList == null)
             incomingEdgeList = new EdgeListWritable();
         if(outgoingEdgeList == null)
