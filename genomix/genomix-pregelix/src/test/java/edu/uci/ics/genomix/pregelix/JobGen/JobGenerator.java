@@ -13,8 +13,6 @@ import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.P2InitialGraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.P2PathMergeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
@@ -22,7 +20,6 @@ import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
@@ -88,21 +85,21 @@ public class JobGenerator {
                 + "P1ForMergeGraph.xml");
     }
 
-    private static void generateP2ForMergeGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-        job.setVertexClass(P2ForPathMergeVertex.class);
-        job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genP2ForMergeGraph() throws IOException {
-        generateP2ForMergeGraphJob("P2ForMergeGraph", outputBase + "P2ForMergeGraph.xml");
-    }
+//    private static void generateP2ForMergeGraphJob(String jobName, String outputPath) throws IOException {
+//        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
+//        job.setVertexClass(P2ForPathMergeVertex.class);
+//        job.setGlobalAggregatorClass(StatisticsAggregator.class);
+//        job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
+//        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
+//        job.setDynamicVertexValueSize(true);
+//        job.setOutputKeyClass(VKmerBytesWritable.class);
+//        job.setOutputValueClass(VertexValueWritable.class);
+//        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+//    }
+//
+//    private static void genP2ForMergeGraph() throws IOException {
+//        generateP2ForMergeGraphJob("P2ForMergeGraph", outputBase + "P2ForMergeGraph.xml");
+//    }
 //    
 //    private static void generateP3ForMergeGraphJob(String jobName, String outputPath) throws IOException {
 //        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
@@ -330,7 +327,6 @@ public class JobGenerator {
         genUnrollTandemRepeatGraph();
         genMapReduceGraph();
         genP1ForMergeGraph();
-        genP2ForMergeGraph();
         genP4ForMergeGraph();
         genRemoveLowCoverageGraph();
         genTipAddGraph();

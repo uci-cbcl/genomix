@@ -42,7 +42,6 @@ import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
@@ -97,7 +96,7 @@ public class GenomixDriver {
                 queuePregelixJob(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
                 break;
             case MERGE_P2:
-                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
+//                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
                 break;
             case MERGE:
             case MERGE_P4:
@@ -177,11 +176,11 @@ public class GenomixDriver {
 
     private void queuePregelixJob(PregelixJob job) {
         if (followingBuild) {
-            if (P2ForPathMergeVertex.class.equals(BspUtils.getVertexClass(job.getConfiguration()))) {
-                job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
-            } else {
+//            if (P2ForPathMergeVertex.class.equals(BspUtils.getVertexClass(job.getConfiguration()))) {
+//                job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
+//            } else {
                 job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-            }
+//            }
         }
         if (job.getClass().equals(SymmetryCheckerVertex.class)) {
             job.setVertexOutputFormatClass(CheckerOutputFormat.class);
