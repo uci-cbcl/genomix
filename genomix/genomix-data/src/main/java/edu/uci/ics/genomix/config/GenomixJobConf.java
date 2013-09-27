@@ -168,6 +168,7 @@ public class GenomixJobConf extends JobConf {
         UNROLL_TANDEM,
         BRIDGE,
         BUBBLE,
+        BUBBLE_COMPLEX,
         LOW_COVERAGE,
         TIP_REMOVE,
         SCAFFOLD,
