@@ -116,8 +116,8 @@ public class BubbleMergeVertex extends
                     outgoingMsg.setMajorVertexId(majorVertexId);
                     outgoingMsg.setSourceVertexId(getVertexId());
                     outgoingMsg.setNode(getVertexValue().getNode());
-                    outgoingMsg.setMeToMajorEdgetype(meToMajorEdgetype.get());
-                    outgoingMsg.setMeToMinorEdgetype(meToMinorEdgetype.get());
+                    outgoingMsg.setMajorToBubbleEdgetype(meToMajorEdgetype);
+                    outgoingMsg.setMinorToBubbleEdgetype(meToMinorEdgetype);
                     sendMsg(minorVertexId, outgoingMsg);
                 }
             }
@@ -143,11 +143,11 @@ public class BubbleMergeVertex extends
     }
     
     public boolean isValidMajorAndMinor(){
-        EDGETYPE topBubbleToMajorEdgetype = EDGETYPE.fromByte(topMsg.getMeToMajorEdgetype());
-        EDGETYPE curBubbleToMajorEdgetype = EDGETYPE.fromByte(curMsg.getMeToMajorEdgetype());
-        EDGETYPE topBubbleToMinorEdgetype = EDGETYPE.fromByte(topMsg.getMeToMinorEdgetype());
-        EDGETYPE curBubbleToMinorEdgetype = EDGETYPE.fromByte(curMsg.getMeToMinorEdgetype());
-        return (topBubbleToMajorEdgetype.dir() == curBubbleToMajorEdgetype.dir()) && topBubbleToMinorEdgetype.dir() == curBubbleToMinorEdgetype.dir();
+        EDGETYPE topMajorToBubbleEdgetype = topMsg.getMajorToBubbleEdgetype();
+        EDGETYPE curMajorToBubbleEdgetype = curMsg.getMajorToBubbleEdgetype();
+        EDGETYPE topMinorToBubbleEdgetype = topMsg.getMinorToBubbleEdgetype();
+        EDGETYPE curMinorToBubbleEdgetype = curMsg.getMinorToBubbleEdgetype();
+        return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir()) && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
     
     public boolean isFlipRelativeToMajor(BubbleMergeMessageWritable msg1, BubbleMergeMessageWritable msg2){
@@ -175,8 +175,8 @@ public class BubbleMergeVertex extends
                 
                 if(fracDissimilar < dissimilarThreshold){ //if similar with top node, delete this node and put it in deletedSet
                     // 1. update my own(minor's) edges
-                    EDGETYPE bubbleToMinor = EDGETYPE.fromByte(curMsg.getMeToMinorEdgetype());
-                    getVertexValue().getEdgeList(bubbleToMinor).remove(curMsg.getSourceVertexId());
+                    EDGETYPE MinorToBubble = curMsg.getMinorToBubbleEdgetype();
+                    getVertexValue().getEdgeList(MinorToBubble).remove(curMsg.getSourceVertexId());
                     activate();
                     
                     // 2. add coverage to top node -- for unchangedSet
@@ -184,11 +184,11 @@ public class BubbleMergeVertex extends
                             curMsg.getNode()); 
                     
                     // 3. treat msg as a bubble vertex, broadcast kill self message to major vertex to update their edges
-                    EDGETYPE bubbleToMajor = EDGETYPE.fromByte(curMsg.getMeToMajorEdgetype());
-                    EDGETYPE majorToBubble = bubbleToMajor.mirror();
+                    EDGETYPE majorToBubble = curMsg.getMajorToBubbleEdgetype();
+                    EDGETYPE bubbleToMajor = majorToBubble.mirror();
                     outgoingMsg.reset();
                     outFlag = 0;
-                    outFlag |= majorToBubble.get() | MessageFlag.UPDATE;
+                    outFlag |= bubbleToMajor.get() | MessageFlag.UPDATE;
                     outgoingMsg.setFlag(outFlag);
                     sendMsg(curMsg.getMajorVertexId(), outgoingMsg);
 //                    boolean flip = curMsg.isFlip(topCoverageVertexMsg);
@@ -245,14 +245,14 @@ public class BubbleMergeVertex extends
 //        }
 //    }
     
-    public void removeEdgesToMajorAndMinor(BubbleMergeMessageWritable incomingMsg){
-        EDGETYPE meToMajorDir = EDGETYPE.fromByte(incomingMsg.getMeToMajorEdgetype());
-        EDGETYPE majorToMeDir = meToMajorDir.mirror();
-        EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorEdgetype());
-        EDGETYPE minorToMeDir = meToMinorDir.mirror();
-        getVertexValue().getEdgeList(majorToMeDir).remove(incomingMsg.getMajorVertexId());
-        getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
-    }
+//    public void removeEdgesToMajorAndMinor(BubbleMergeMessageWritable incomingMsg){
+//        EDGETYPE meToMajorDir = EDGETYPE.fromByte(incomingMsg.getMeToMajorEdgetype());
+//        EDGETYPE majorToMeDir = meToMajorDir.mirror();
+//        EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorEdgetype());
+//        EDGETYPE minorToMeDir = meToMinorDir.mirror();
+//        getVertexValue().getEdgeList(majorToMeDir).remove(incomingMsg.getMajorVertexId());
+//        getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
+//    }
     
     public void broadcaseUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;

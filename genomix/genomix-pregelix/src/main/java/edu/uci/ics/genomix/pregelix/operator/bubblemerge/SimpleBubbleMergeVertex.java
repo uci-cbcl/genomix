@@ -97,7 +97,6 @@ public class SimpleBubbleMergeVertex extends
         sendMsg(minorVertexId, outgoingMsg);
     }
     
-    @SuppressWarnings({ "unchecked" })
     public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessageWritable> msgIterator){
     	receivedMsgMap.clear();
     	BubbleMergeMessageWritable incomingMsg;
@@ -116,11 +115,11 @@ public class SimpleBubbleMergeVertex extends
     }
     
     public boolean isValidMajorAndMinor(){
-        EDGETYPE topBubbleToMajorEdgetype = EDGETYPE.fromByte(topMsg.getMeToMajorEdgetype());
-        EDGETYPE curBubbleToMajorEdgetype = EDGETYPE.fromByte(curMsg.getMeToMajorEdgetype());
-        EDGETYPE topBubbleToMinorEdgetype = EDGETYPE.fromByte(topMsg.getMeToMinorEdgetype());
-        EDGETYPE curBubbleToMinorEdgetype = EDGETYPE.fromByte(curMsg.getMeToMinorEdgetype());
-        return (topBubbleToMajorEdgetype.dir() == curBubbleToMajorEdgetype.dir()) && topBubbleToMinorEdgetype.dir() == curBubbleToMinorEdgetype.dir();
+        EDGETYPE topMajorToBubbleEdgetype = topMsg.getMajorToBubbleEdgetype();
+        EDGETYPE curMajorToBubbleEdgetype = curMsg.getMajorToBubbleEdgetype();
+        EDGETYPE topMinorToBubbleEdgetype = topMsg.getMinorToBubbleEdgetype();
+        EDGETYPE curMinorToBubbleEdgetype = curMsg.getMinorToBubbleEdgetype();
+        return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir()) && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
     
     public boolean isFlipRelativeToMajor(BubbleMergeMessageWritable msg1, BubbleMergeMessageWritable msg2){
