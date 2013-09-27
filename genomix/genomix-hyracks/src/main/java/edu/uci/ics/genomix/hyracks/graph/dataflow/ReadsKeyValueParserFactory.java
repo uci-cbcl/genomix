@@ -182,8 +182,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 tempEdge.reset();
                 curNode.setAvgCoverage(1);
                 nextNode.setAvgCoverage(1);
-                curForwardKmer.setByRead(array, 0);
-                curReverseKmer.setByReadReverse(array, 0);
+                curForwardKmer.setFromStringBytes(array, 0);
+                curReverseKmer.setReversedFromStringBytes(array, 0);
                 curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
@@ -231,7 +231,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             public KmerDir setNextKmer(KmerBytesWritable forwardKmer, KmerBytesWritable ReverseKmer,
                     byte nextChar) {
                 forwardKmer.shiftKmerWithNextChar(nextChar);
-                ReverseKmer.setByReadReverse(forwardKmer.toString().getBytes(), forwardKmer.getOffset());
+                ReverseKmer.setReversedFromStringBytes(forwardKmer.toString().getBytes(), forwardKmer.getOffset());
                 return forwardKmer.compareTo(ReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             }
 

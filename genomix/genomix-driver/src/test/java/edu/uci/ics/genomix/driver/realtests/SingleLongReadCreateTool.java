@@ -63,8 +63,8 @@ public class SingleLongReadCreateTool {
             buf[idx] = symbols[random.nextInt(4)];
             if (idx >= k - 1) {
                 tmp = new String(buf, idx - k + 1, k);
-                tempKmer.setByRead(tmp.getBytes(), 0);
-                tempReverseKmer.setByReadReverse(tmp.getBytes(), 0);
+                tempKmer.setFromStringBytes(tmp.getBytes(), 0);
+                tempReverseKmer.setReversedFromStringBytes(tmp.getBytes(), 0);
                 curKmerDir = tempKmer.compareTo(tempReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
                 switch (curKmerDir.toString()){
                     case "FORWARD":

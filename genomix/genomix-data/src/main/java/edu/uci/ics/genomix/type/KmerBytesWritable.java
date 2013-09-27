@@ -65,7 +65,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      */
     public KmerBytesWritable(String kmer) {
         this();
-        setByRead(kmer.getBytes(), 0);
+        setFromStringBytes(kmer.getBytes(), 0);
     }
 
     /**
@@ -220,7 +220,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param start
      */
     @SuppressWarnings("static-access")
-    public void setByRead(byte[] stringBytes, int start) {  // TODO "setFromStringBytes"
+    public void setFromStringBytes(byte[] stringBytes, int start) {
         byte l = 0;
         int bytecount = 0;
         int bcount = this.getBytesUsed() - 1;
@@ -248,7 +248,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param start
      *            position
      */
-    public void setByReadReverse(byte[] array, int start) { // TODO "setReversedFromStringBytes"
+    public void setReversedFromStringBytes(byte[] array, int start) {
         byte l = 0;
         int bytecount = 0;
         int bcount = getBytesUsed() - 1;

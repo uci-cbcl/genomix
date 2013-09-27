@@ -30,10 +30,10 @@ public class KmerBytesWritableTest {
     public void TestCompressKmer() {
         KmerBytesWritable.setGlobalKmerLength(k);
         KmerBytesWritable kmer = new KmerBytesWritable();
-        kmer.setByRead(array, 0);
+        kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
-        kmer.setByRead(array, 1);
+        kmer.setFromStringBytes(array, 1);
         Assert.assertEquals(kmer.toString(), "ATAGAAG");
     }
 
@@ -41,7 +41,7 @@ public class KmerBytesWritableTest {
     public void TestMoveKmer() {
         KmerBytesWritable.setGlobalKmerLength(k);
         KmerBytesWritable kmer = new KmerBytesWritable();
-        kmer.setByRead(array, 0);
+        kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
         for (int i = k; i < array.length - 1; i++) {
@@ -58,10 +58,10 @@ public class KmerBytesWritableTest {
     public void TestCompressKmerReverse() {
         KmerBytesWritable.setGlobalKmerLength(k);
         KmerBytesWritable kmer = new KmerBytesWritable();
-        kmer.setByRead(array, 0);
+        kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
-        kmer.setByReadReverse(array, 1);
+        kmer.setReversedFromStringBytes(array, 1);
         Assert.assertEquals(kmer.toString(), "CTTCTAT");
     }
 
@@ -69,7 +69,7 @@ public class KmerBytesWritableTest {
     public void TestMoveKmerReverse() {
         KmerBytesWritable.setGlobalKmerLength(k);
         KmerBytesWritable kmer = new KmerBytesWritable();
-        kmer.setByRead(array, 0);
+        kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
         for (int i = k; i < array.length - 1; i++) {
@@ -88,7 +88,7 @@ public class KmerBytesWritableTest {
         KmerBytesWritable kmer = new KmerBytesWritable();
         String text = "AGCTGACCG";
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G' };
-        kmer.setByRead(array, 0);
+        kmer.setFromStringBytes(array, 0);
 
         for (int i = 0; i < 9; i++) {
             Assert.assertEquals(text.charAt(i), (char) (GeneCode.getSymbolFromCode(kmer.getGeneCodeAtPosition(i))));
@@ -103,7 +103,7 @@ public class KmerBytesWritableTest {
             KmerBytesWritable.setGlobalKmerLength(k);
             KmerBytesWritable kmer = new KmerBytesWritable();
             KmerBytesWritable kmerAppend = new KmerBytesWritable();
-            kmer.setByRead(array, 0);
+            kmer.setFromStringBytes(array, 0);
             Assert.assertEquals(string.substring(0, k), kmer.toString());
             for (int b = 0; b < k; b++) {
                 byte byteActual = KmerBytesWritable.getOneByteFromKmerAtPosition(b, kmer.getBytes(), kmer.getOffset(),
