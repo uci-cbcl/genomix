@@ -248,7 +248,6 @@ public class GenomixJobConf extends JobConf {
     public static final String DEBUG_KMERS = "genomix.debugKmers";
     public static final String LOG_READIDS = "genomix.logReadIds";
 
-    // TODO should these also be command line options?
 //    public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_SIZE = "pregelix.framesize";
     public static final String FRAME_LIMIT = "genomix.framelimit";
