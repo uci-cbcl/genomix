@@ -130,7 +130,7 @@ public class SimpleBubbleMergeVertex extends
             while(it.hasNext()){
                 curMsg = it.next();
                 //check if the vertex is valid minor and if it comes from valid major TODO pass the check variable and make static
-                if(!isValidMajorAndMinor())
+                if(!isValidMajorAndMinor(topMsg, curMsg))
                     continue;
                 
                 //compute the dissimilarity
