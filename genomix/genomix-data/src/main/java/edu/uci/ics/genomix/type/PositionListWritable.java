@@ -352,28 +352,6 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         return result;
     }
     
-    public class readIDIterator implements Iterator<Long> {
-
-        @Override
-        public boolean hasNext() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-
-        @Override
-        public Long next() {
-            // TODO Auto-generated method stub
-            return null;
-        }
-
-        @Override
-        public void remove() {
-            // TODO Auto-generated method stub
-            
-        }
-        
-    }
-
     @Override
     public int hashCode() {
         return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
