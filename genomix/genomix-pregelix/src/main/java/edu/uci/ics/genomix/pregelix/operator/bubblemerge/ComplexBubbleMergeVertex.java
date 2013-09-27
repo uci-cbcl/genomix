@@ -27,7 +27,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  * @author anbangx
  *
  */
-public class BubbleMergeVertex extends
+public class ComplexBubbleMergeVertex extends
     BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessageWritable> {
     private float dissimilarThreshold = -1;
     
@@ -394,6 +394,6 @@ public class BubbleMergeVertex extends
     }
     
     public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, BubbleMergeVertex.class));
+        Client.run(args, getConfiguredJob(null, ComplexBubbleMergeVertex.class));
     }
 }

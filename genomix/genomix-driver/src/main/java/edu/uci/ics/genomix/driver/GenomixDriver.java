@@ -44,7 +44,7 @@ import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.P2InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
-import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
@@ -114,7 +114,7 @@ public class GenomixDriver {
                 queuePregelixJob(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
                 break;
             case BUBBLE:
-                queuePregelixJob(BubbleMergeVertex.getConfiguredJob(conf, BubbleMergeVertex.class));
+                queuePregelixJob(ComplexBubbleMergeVertex.getConfiguredJob(conf, ComplexBubbleMergeVertex.class));
                 break;
             case LOW_COVERAGE:
                 queuePregelixJob(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));

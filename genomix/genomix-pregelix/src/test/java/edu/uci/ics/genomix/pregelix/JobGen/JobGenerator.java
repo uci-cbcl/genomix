@@ -20,7 +20,7 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
-import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
@@ -244,7 +244,7 @@ public class JobGenerator {
     
     private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-        job.setVertexClass(BubbleMergeVertex.class);
+        job.setVertexClass(ComplexBubbleMergeVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
