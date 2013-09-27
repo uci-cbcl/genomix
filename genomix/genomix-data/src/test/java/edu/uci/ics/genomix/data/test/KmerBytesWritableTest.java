@@ -66,23 +66,6 @@ public class KmerBytesWritableTest {
     }
 
     @Test
-    public void TestMoveKmerReverse() {
-        KmerBytesWritable.setGlobalKmerLength(k);
-        KmerBytesWritable kmer = new KmerBytesWritable();
-        kmer.setFromStringBytes(array, 0);
-        Assert.assertEquals(kmer.toString(), "AATAGAA");
-
-        for (int i = k; i < array.length - 1; i++) {
-            kmer.shiftKmerWithPreChar(array[i]);
-            Assert.assertTrue(false);
-        }
-
-        byte out = kmer.shiftKmerWithPreChar(array[array.length - 1]);
-        Assert.assertEquals(out, GeneCode.getCodeFromSymbol((byte) 'A'));
-        Assert.assertEquals(kmer.toString(), "GAATAGA");
-    }
-
-    @Test
     public void TestGetGene() {
         KmerBytesWritable.setGlobalKmerLength(9);
         KmerBytesWritable kmer = new KmerBytesWritable();

@@ -300,36 +300,6 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         return output;
     }
 
-    /**
-     * Shift Kmer to accept new input char
-     * 
-     * @param c
-     *            Input new gene character
-     * @return the shiftout gene, in gene code format
-     */
-    public byte shiftKmerWithPreChar(byte c) { // TODO remove
-        return shiftKmerWithPreCode(GeneCode.getCodeFromSymbol(c));
-    }
-
-    /**
-     * Shift Kmer to accept new gene code
-     * 
-     * @param c
-     *            Input new gene code
-     * @return the shiftout gene, in gene code format
-     */
-    public byte shiftKmerWithPreCode(byte c) { // TODO remove
-        int pos = ((lettersInKmer - 1) % 4) << 1;
-        byte output = (byte) ((bytes[offset] >> pos) & 0x03);
-        for (int i = 0; i < getBytesUsed() - 1; i++) {
-            byte in = (byte) ((bytes[offset + i + 1] >> 6) & 0x03);
-            bytes[offset + i] = (byte) ((bytes[offset + i] << 2) | in);
-        }
-        bytes[offset + getBytesUsed() - 1] = (byte) ((bytes[offset + getBytesUsed() - 1] << 2) | c);
-        clearLeadBit();
-        return output;
-    }
-
     public static void appendOneByteAtPosition(int k, byte onebyte, byte[] buffer, int start, int length) {
         int position = start + length - 1 - k / 4;
         if (position < start) {
