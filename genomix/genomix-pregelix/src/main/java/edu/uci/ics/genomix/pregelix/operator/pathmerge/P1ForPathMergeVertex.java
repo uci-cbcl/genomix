@@ -249,6 +249,10 @@ public class P1ForPathMergeVertex extends
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws Exception {
         initVertex();
+        if (getSuperstep() > maxIteration) {
+        	voteToHalt();
+        	return;
+        }
         
         if (getSuperstep() == 1) {
             restrictNeighbors();

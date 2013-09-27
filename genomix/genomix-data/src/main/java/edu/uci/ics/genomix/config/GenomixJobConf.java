@@ -120,7 +120,7 @@ public class GenomixJobConf extends JobConf {
         private float bubbleMerge_maxDissimilarity = -1;
 
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
-        private int graphCleanMaxIterations = -1; // TODO respect this value in pregelix
+        private int graphCleanMaxIterations = -1;
         
         @Option(name = "-pathMergeRandom_randSeed", usage = "The seed used in the random path-merge algorithm", required = false)
         private long pathMergeRandom_randSeed = -1;

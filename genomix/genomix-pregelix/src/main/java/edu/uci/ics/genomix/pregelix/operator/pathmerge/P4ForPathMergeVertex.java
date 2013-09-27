@@ -226,6 +226,10 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws HyracksDataException {
         initVertex();
+        if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
+        	voteToHalt();
+        	return;
+        }
 
         if (getSuperstep() == 1) {
             restrictNeighbors();

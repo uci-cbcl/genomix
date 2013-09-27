@@ -42,11 +42,7 @@ public class P2ForPathMergeVertex extends
      */
     @Override
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+    	super.initVertex();
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         outFlag = 0;
         if(incomingMsg == null)
@@ -471,6 +467,14 @@ public class P2ForPathMergeVertex extends
     @Override
     public void compute(Iterator<P2PathMergeMessageWritable> msgIterator) {
         initVertex();
+        
+        // holy smokes this is a complicated compute function!!!
+        // TODO clean it up!!
+        if (getSuperstep() > maxIteration) {
+        	voteToHalt();
+        	return;
+        }
+        
         if (getSuperstep() == 1){
             addFakeVertex();
             // initiate prependMergeNode and appendMergeNode
