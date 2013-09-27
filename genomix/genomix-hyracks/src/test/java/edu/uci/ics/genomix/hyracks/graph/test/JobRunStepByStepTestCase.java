@@ -90,6 +90,8 @@ public class JobRunStepByStepTestCase {
     public void setUp() throws Exception {
         cleanupStores();
         conf.setBoolean(GenomixJobConf.RUN_LOCAL, true);
+        conf.setInt(GenomixJobConf.FRAME_SIZE, 65535);
+        conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
         edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.init();
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
