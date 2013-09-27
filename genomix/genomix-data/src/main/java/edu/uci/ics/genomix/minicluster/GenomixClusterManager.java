@@ -85,7 +85,8 @@ public class GenomixClusterManager {
     }
 
     /**
-     * Start a cluster of the given type. If runLocal is specified, we will create an in-memory version of the cluster.
+     * Start a cluster of the given type. If runLocal is specified, we will
+     * create an in-memory version of the cluster.
      */
     public void startCluster(ClusterType clusterType) throws Exception {
         addClusterShutdownHook(clusterType);
@@ -185,8 +186,9 @@ public class GenomixClusterManager {
 
     private void startLocalNC(ClusterType clusterType) throws Exception {
         LOG.info("Starting local NC...");
-        //        ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home") + "/conf/cluster.properties");
-        //        ClusterConfig.setStorePath(...);
+        // ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home")
+        // + "/conf/cluster.properties");
+        // ClusterConfig.setStorePath(...);
         NCConfig ncConfig = new NCConfig();
         ncConfig.ccHost = LOCAL_HOSTNAME;
         ncConfig.clusterNetIPAddress = LOCAL_HOSTNAME;
@@ -216,7 +218,8 @@ public class GenomixClusterManager {
     }
 
     /**
-     * Walk the current CLASSPATH to get all jar's in use and copy them up to all HDFS nodes
+     * Walk the current CLASSPATH to get all jar's in use and copy them up to
+     * all HDFS nodes
      * 
      * @throws IOException
      */
@@ -229,33 +232,38 @@ public class GenomixClusterManager {
                 if (cp == null)
                     continue;
                 for (String item : cp.split(":")) {
-                    //                    LOG.info("Checking " + item);
+                    // LOG.info("Checking " + item);
                     if (item.endsWith(".jar")) {
-                        //                        LOG.info("Deploying " + item);
+                        // LOG.info("Deploying " + item);
                         Path localJar = new Path(item);
                         Path jarDestDir = new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH) + "/jar-dependencies");
-                        // dist cache requires absolute paths. we have to use the working directory if HDFS_WORK_PATH is relative
+                        // dist cache requires absolute paths. we have to use
+                        // the working directory if HDFS_WORK_PATH is relative
                         if (!jarDestDir.isAbsolute()) {
-                        	// TODO move this to a single function
-                            // working dir is the correct base, but we must use the path version (not a URI). Get URI and strip out leading identifiers
-                            String hostNameRE = "([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*";
-                            String[] workDirs = dfs.getWorkingDirectory().toString()
-                                    .split("(hdfs://" + hostNameRE + ":\\d+|file:)", 2);
-                            if (workDirs.length <= 1) {
-                                LOG.info("Weird.... didn't find a URI header matching hdfs://host:port or file:  Just using the original instead.");
-                                jarDestDir = new Path(dfs.getWorkingDirectory() + File.separator + jarDestDir);
-                            } else {
-                                jarDestDir = new Path(workDirs[1] + File.separator + jarDestDir);
-                            }
+                            jarDestDir = new Path(getAbsolutePathFromURI(dfs.getWorkingDirectory().toString())
+                                    + File.separator + jarDestDir);
                         }
                         dfs.mkdirs(jarDestDir);
                         Path destJar = new Path(jarDestDir + File.separator + localJar.getName());
                         dfs.copyFromLocalFile(localJar, destJar);
-                        //                        LOG.info("Jar in distributed cache: " + destJar);
+                        // LOG.info("Jar in distributed cache: " + destJar);
                         DistributedCache.addFileToClassPath(destJar, conf);
                     }
                 }
             }
+        }
+    }
+
+    private static String getAbsolutePathFromURI(String URI) {
+        // working dir is the correct base, but we must use the path version
+        // (not a URI). Get URI and strip out leading identifiers
+        String hostNameRE = "([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*";
+        String[] workDirs = URI.split("(hdfs://" + hostNameRE + ":\\d+|file:)", 2);
+        if (workDirs.length <= 1) {
+            LOG.info("Weird.... didn't find a URI header matching hdfs://host:port or file:  Just using the original instead.");
+            return URI;
+        } else {
+            return workDirs[1];
         }
     }
 
@@ -264,10 +272,10 @@ public class GenomixClusterManager {
         String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "startAllNCs.sh " + type;
         Process p = Runtime.getRuntime().exec(startNCCmd);
-        p.waitFor(); // wait for ssh 
+        p.waitFor(); // wait for ssh
         Thread.sleep(sleepms); // wait for NC -> CC registration
         System.out.println("\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-                    + IOUtils.toString(p.getErrorStream()));
+                + IOUtils.toString(p.getErrorStream()));
         if (p.exitValue() != 0)
             throw new RuntimeException("Failed to start the" + type + " NC's! Script returned exit code: "
                     + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
@@ -300,7 +308,7 @@ public class GenomixClusterManager {
                 + "stopAllNCs.sh";
         Process p = Runtime.getRuntime().exec(stopNCCmd);
         LOG.info("Waiting for completion");
-        p.waitFor(); // wait for ssh 
+        p.waitFor(); // wait for ssh
         LOG.info("done waiting");
     }
 
@@ -326,7 +334,9 @@ public class GenomixClusterManager {
 
     private void removeClusterShutdownHook(final ClusterType clusterType) {
         if (!shutdownHooks.containsKey(clusterType))
-            //            throw new IllegalArgumentException("There is no shutdown hook for " + clusterType + "!");
+            // throw new
+            // IllegalArgumentException("There is no shutdown hook for " +
+            // clusterType + "!");
             return; // ignore-- we are cleaning up after a previous run
         try {
             Runtime.getRuntime().removeShutdownHook(shutdownHooks.get(clusterType));
