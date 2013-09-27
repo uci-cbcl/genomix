@@ -146,8 +146,8 @@ public class GenomixDriver {
         manager.startCluster(ClusterType.HYRACKS);
         GenomixJobConf.tick("buildGraphWithHyracks");
         
-        String hyracksIP = runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS);
-        int hyracksPort = runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT));
+        String hyracksIP = conf.get(GenomixJobConf.IP_ADDRESS);
+        int hyracksPort = Integer.parseInt(conf.get(GenomixJobConf.PORT));
         hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(hyracksIP, hyracksPort, numCoresPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
@@ -195,8 +195,8 @@ public class GenomixDriver {
         if (pregelixJobs.size() > 0) {
             manager.startCluster(ClusterType.PREGELIX);
             pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
-            String pregelixIP = runLocal ? GenomixClusterManager.LOCAL_IP : conf.get(GenomixJobConf.IP_ADDRESS);
-            int pregelixPort = runLocal ? GenomixClusterManager.LOCAL_PREGELIX_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PORT));
+            String pregelixIP = conf.get(GenomixJobConf.IP_ADDRESS);
+            int pregelixPort = Integer.parseInt(conf.get(GenomixJobConf.PORT));
             
             // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
             // this would let them resume at arbitrary points of the pipeline

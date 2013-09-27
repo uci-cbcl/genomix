@@ -138,17 +138,10 @@ public class GenomixJobConf extends JobConf {
         private int maxReadIDsPerEdge = -1;
         
         // Hyracks/Pregelix Setup
-        // TODO remove ip and port?  (refactor Nan's driver)
-        @Option(name = "-ip", usage = "IP address of the cluster controller", required = false)
-        private String ipAddress;
-        
-        @Option(name = "-port", usage = "Port of the cluster controller", required = false)
-        private int port = -1;
-        
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
         private boolean profile = false;
         
-        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster. NOTE: overrides settings for -ip and -port and those in conf/*.properties", required=false)
+        @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster.", required=false)
         private boolean runLocal = false;
         
         @Option(name = "-debugKmers", usage = "Log all interactions with the given comma-separated list of kmers at the FINE log level (check conf/logging.properties to specify an output location)", required=false)
@@ -423,9 +416,6 @@ public class GenomixJobConf extends JobConf {
         setBoolean(LOG_READIDS, opts.logReadIds);
         
         // Hyracks/Pregelix Setup
-        if (opts.ipAddress != null)
-            set(IP_ADDRESS, opts.ipAddress);
-        setInt(PORT, opts.port);
         setBoolean(PROFILE, opts.profile);
         
         // Graph cleaning

@@ -74,11 +74,22 @@ public class DriverUtils {
         Properties CCProperties = new Properties();
         CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
                 + File.separator + "cluster.properties"));
-        if (conf.get(GenomixJobConf.IP_ADDRESS) == null)
-            conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost")); // TODO runLocal shouldn't require calling the outside script
-        if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
-            conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
+        	if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
+        		conf.set(GenomixJobConf.IP_ADDRESS, GenomixClusterManager.LOCAL_IP);
+        	}
+        	if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
+                conf.setInt(GenomixJobConf.PORT, GenomixClusterManager.LOCAL_HYRACKS_CC_PORT);
+            }
+        } else {
+        	if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
+        		conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
+        	}
+    		if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
+                conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
+            }
         }
+        
         if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
             conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE"));
         if (conf.get(GenomixJobConf.FRAME_LIMIT) == null)
