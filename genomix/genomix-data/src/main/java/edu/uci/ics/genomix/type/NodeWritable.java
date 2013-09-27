@@ -27,7 +27,6 @@ import java.util.EnumSet;
 import java.util.Map;
 
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
@@ -251,14 +250,11 @@ public class NodeWritable implements Writable, Serializable {
                 }
             }
             
-            /**
-             * check if need filp
-             */
             public EDGETYPE flipNeighbor(){
                 return flipNeighbor(this);
             }
             
-            public static EDGETYPE flipNeighbor(EDGETYPE neighborToMe){ // TODO use NodeWritable
+            public static EDGETYPE flipNeighbor(EDGETYPE neighborToMe){
                 switch (neighborToMe) {
                     case FF:
                         return FR;
@@ -273,6 +269,18 @@ public class NodeWritable implements Writable, Serializable {
                 }
             }
         }
+    
+    public static class NeighborInfo {
+        public final EDGETYPE et;
+        public final EdgeWritable edge;
+        public final VKmerBytesWritable kmer;
+        
+        public NeighborInfo(EDGETYPE edgeType, EdgeWritable edgeWritable) {
+            et = edgeType;
+            edge = edgeWritable;
+            kmer = edge.getKey();
+        }
+    }
         
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
@@ -373,6 +381,21 @@ public class NodeWritable implements Writable, Serializable {
                 return et;
         }
         throw new IllegalStateException("Programmer error: we shouldn't get here... Degree is 1 in " + direction + " but didn't find a an edge list > 1");
+    }
+    
+    /**
+     * Get this node's single neighbor in the given direction. Return null if there are multiple or no neighbors. 
+     */
+    public NeighborInfo getSingleNeighbor(DIR direction){
+        if(getDegree(direction) != 1) {
+            return null;
+        }
+        for(EDGETYPE et : direction.edgeType()) {
+            if(getEdgeList(et).size() > 0) {
+                return new NeighborInfo(et, getEdgeList(et).get(0));
+            }
+        }
+        return null;
     }
     
     public EdgeListWritable getEdgeList(EDGETYPE edgeType) {

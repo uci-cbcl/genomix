@@ -11,6 +11,7 @@ import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.NodeWritable.NeighborInfo;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -65,32 +66,26 @@ public class SimpleBubbleMergeVertex extends
     
     public void sendBubbleAndMajorVertexMsgToMinorVertex(){
     	VertexValueWritable vertex = getVertexValue();
-    	//TODO make function that returns a single neighbor as <EDGETYPE, EDGE> (jake)
-    	EDGETYPE reverseEdgeType = vertex.getNeighborEdgeType(DIR.REVERSE);
-    	EdgeWritable reverseEdge = vertex.getEdgeList(reverseEdgeType).get(0);
-    	
-    	EDGETYPE forwardEdgeType = vertex.getNeighborEdgeType(DIR.FORWARD);
-    	EdgeWritable forwardEdge = vertex.getEdgeList(forwardEdgeType).get(0);
-    	
-        VKmerBytesWritable reverseKmer = reverseEdge.getKey();
-        VKmerBytesWritable forwardKmer = forwardEdge.getKey();
-            
+    	NeighborInfo reverseNeighbor = vertex.getSingleNeighbor(DIR.REVERSE);
+    	NeighborInfo forwardNeighbor = vertex.getSingleNeighbor(DIR.REVERSE);
+
         //TODO combine into only one byte, change internally/under the hood
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
-        if(forwardKmer == reverseKmer)
-            throw new IllegalArgumentException("majorVertexId is equal to minorVertexId, this is not allowd!");
-        boolean forwardIsMajor = forwardKmer.compareTo(reverseKmer) >= 0;
-        VKmerBytesWritable minorVertexId = null;
+        if(forwardNeighbor.kmer == reverseNeighbor.kmer) // FIXME should this *really* be == or .equals?
+            throw new IllegalArgumentException("majorVertexId is equal to minorVertexId, this is not allowed!");
+        
+        VKmerBytesWritable minorVertexId;
+        boolean forwardIsMajor = forwardNeighbor.kmer.compareTo(reverseNeighbor.kmer) >= 0;
         if (forwardIsMajor) {
-            outgoingMsg.setMajorVertexId(forwardEdge.getKey());
-            outgoingMsg.setMajorToBubbleEdgetype(forwardEdgeType.mirror());
-            outgoingMsg.setMinorToBubbleEdgetype(reverseEdgeType.mirror());
-            minorVertexId = reverseKmer;
+            outgoingMsg.setMajorVertexId(forwardNeighbor.kmer);
+            outgoingMsg.setMajorToBubbleEdgetype(forwardNeighbor.et.mirror());
+            outgoingMsg.setMinorToBubbleEdgetype(reverseNeighbor.et.mirror());
+            minorVertexId = reverseNeighbor.kmer;
         } else {
-            outgoingMsg.setMajorVertexId(reverseEdge.getKey());
-            outgoingMsg.setMajorToBubbleEdgetype(reverseEdgeType.mirror());
-            outgoingMsg.setMinorToBubbleEdgetype(forwardEdgeType.mirror());
-            minorVertexId = forwardKmer;
+            outgoingMsg.setMajorVertexId(reverseNeighbor.kmer);
+            outgoingMsg.setMajorToBubbleEdgetype(reverseNeighbor.et.mirror());
+            outgoingMsg.setMinorToBubbleEdgetype(forwardNeighbor.et.mirror());
+            minorVertexId = forwardNeighbor.kmer;
         }
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setNode(getVertexValue().getNode());
