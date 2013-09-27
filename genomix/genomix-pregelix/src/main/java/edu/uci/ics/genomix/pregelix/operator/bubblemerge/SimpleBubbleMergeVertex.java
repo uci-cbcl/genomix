@@ -13,7 +13,6 @@ import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
@@ -51,10 +50,6 @@ public class SimpleBubbleMergeVertex extends
             outgoingMsg = new BubbleMergeMessageWritable();
         else
             outgoingMsg.reset();
-        if(incomingEdgeList == null)
-            incomingEdgeList = new EdgeListWritable();
-        if(outgoingEdgeList == null)
-            outgoingEdgeList = new EdgeListWritable();
         outFlag = 0;
         StatisticsAggregator.preGlobalCounters.clear();
 //        else

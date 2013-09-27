@@ -8,7 +8,6 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 
 public class VertexValueWritable 
@@ -16,16 +15,7 @@ public class VertexValueWritable
 
     private static final long serialVersionUID = 1L;
     
-    public static class HeadMergeDir{
-        public static final byte PATH_NON_HEAD = 0b00 << 2;
-        public static final byte HEAD_CANNOT_MERGE = 0b01 << 2;
-        public static final byte HEAD_CAN_MERGEWITHPREV = 0b10 << 2; //use for initiating head
-        public static final byte HEAD_CAN_MERGEWITHNEXT = 0b11 << 2;
-        public static final byte HEAD_CAN_MERGE_MASK = 0b11 << 2;
-        public static final byte HEAD_CAN_MERGE_CLEAR = (byte)11110011;
-    }
-    
-    public static class VertexStateFlag extends HeadMergeDir{
+    public static class VertexStateFlag {
         public static final byte TO_UPDATE = 0b01 << 5;
         public static final byte TO_OTHER = 0b10 << 5;
         public static final byte TO_NEIGHBOR = 0b11 << 5;

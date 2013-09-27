@@ -59,10 +59,10 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected short inFlag;
     protected short selfFlag;
     
-    protected EdgeListWritable incomingEdgeList = null; //SplitRepeat and BubbleMerge
-    protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat and BubbleMerge
-    protected EDGETYPE incomingEdgeType; //SplitRepeat and BubbleMerge
-    protected EDGETYPE outgoingEdgeType; //SplitRepeat and BubbleMerge
+//    protected EdgeListWritable incomingEdgeList = null; //SplitRepeat and BubbleMerge
+//    protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat and BubbleMerge
+//    protected EDGETYPE incomingEdgeType; //SplitRepeat and BubbleMerge
+//    protected EDGETYPE outgoingEdgeType; //SplitRepeat and BubbleMerge
     
     protected static List<VKmerBytesWritable> problemKmers = null;
     protected boolean debug = false;
@@ -249,17 +249,17 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         }
     }
     
-    /**
-     * use for SplitRepeatVertex and BubbleMerge
-     * @param i
-     */
-    public void setEdgeListAndEdgeType(int i){
-        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
-        incomingEdgeType = connectedTable[i][0];
-        
-        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
-        outgoingEdgeType = connectedTable[i][1];
-    }
+//    /**
+//     * use for SplitRepeatVertex and BubbleMerge
+//     * @param i
+//     */
+//    public void setEdgeListAndEdgeType(int i){
+//        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
+//        incomingEdgeType = connectedTable[i][0];
+//        
+//        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
+//        outgoingEdgeType = connectedTable[i][1];
+//    }
     
 //2013.9.21 ------------------------------------------------------------------//
     public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {

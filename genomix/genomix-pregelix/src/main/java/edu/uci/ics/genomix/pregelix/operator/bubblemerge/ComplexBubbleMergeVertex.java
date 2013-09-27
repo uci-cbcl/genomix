@@ -47,11 +47,22 @@ public class ComplexBubbleMergeVertex extends
 //    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
     private static Set<VKmerBytesWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());
     
+    private EdgeListWritable incomingEdgeList = null; 
+    private EdgeListWritable outgoingEdgeList = null;
+    private EDGETYPE incomingEdgeType;
+    private EDGETYPE outgoingEdgeType; 
 //    private VKmerBytesWritable incomingKmer = new VKmerBytesWritable();
 //    private VKmerBytesWritable outgoingKmer = new VKmerBytesWritable();
 //    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
 //    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
     
+    public void setEdgeListAndEdgeType(int i){
+        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
+        incomingEdgeType = connectedTable[i][0];
+  
+        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
+        outgoingEdgeType = connectedTable[i][1];
+    }
     /**
      * initiate kmerSize, maxIteration
      */

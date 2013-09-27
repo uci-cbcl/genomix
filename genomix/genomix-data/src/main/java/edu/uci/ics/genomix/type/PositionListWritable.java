@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.hadoop.io.Writable;
 
@@ -350,6 +351,14 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
             result[i] = getPosition(i).getReadId();
         }
         return result;
+    }
+    
+    public Set<Long> getSetOfReadIds(){
+        Set<Long> readIds = new HashSet<Long>();
+        for(long readId : toReadIDArray()){
+            readIds.add(readId);
+        }
+        return readIds;
     }
     
     @Override

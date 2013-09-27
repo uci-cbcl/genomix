@@ -113,6 +113,10 @@ public class EdgeWritable implements Writable, Serializable{
     public PositionListWritable getReadIDs() {
         return readIDs;
     }
+    
+    public Set<Long> getSetOfReadIds(){
+        return readIDs.getSetOfReadIds();
+    }
         
     /**
      * clear the given PositionWritable of its position & mate info, then append it
