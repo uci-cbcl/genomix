@@ -267,7 +267,6 @@ public class VertexValueWritable
      * Process any changes to value.  This is for merging.  nodeToAdd should be only edge
      */
     public void processMerges(EDGETYPE mergeDir, NodeWritable node, int kmerSize){
-        KmerBytesWritable.setGlobalKmerLength(kmerSize); // TODO Do this once at the init of your function, then you don't need it as a parameter here
         super.getNode().mergeWithNode(mergeDir, node);
     }
     
