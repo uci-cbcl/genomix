@@ -115,6 +115,7 @@ public class VertexValueWritable
     }
     
     public void setNode(NodeWritable node){
+    	// TODO invertigate... does this need to be a copy?
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(),
                 node.getInternalKmer(), node.getAverageCoverage());
     }

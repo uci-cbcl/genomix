@@ -331,7 +331,7 @@ public class EdgeListWritable implements Writable, Serializable, Iterable<EdgeWr
             VKmerBytesWritable key = e.getKey();
             if (unionEdges.containsKey(key)) {
 //                unionEdges.get(key).unionUpdateCappedCount(e.getReadIDs());
-                unionEdges.get(key).unionUpdate(e.getReadIDs());
+                unionEdges.get(key).unionUpdate(e.getReadIDs()); // TODO remove the union update here in favor of just adding to the list
             }
             else {
                 unionEdges.put(key, new PositionListWritable(e.getReadIDs())); // make a new copy of their list

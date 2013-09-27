@@ -179,7 +179,7 @@ public class NodeWritable implements Writable, Serializable {
              *  
              *  If the relationship isn't a valid path (e.g., e1,e2 are both FF), an exception is raised.
              */
-            public static EDGETYPE resolveLinkThroughMiddleNode(EDGETYPE BtoA, EDGETYPE BtoC) {
+            public static EDGETYPE resolveEdgeThroughPath(EDGETYPE BtoA, EDGETYPE BtoC) {
                 EDGETYPE AtoB = mirror(BtoA);
                 // a valid path must exist from A to C
                 // specifically, two rules apply for AtoB and BtoC
@@ -645,7 +645,7 @@ public class NodeWritable implements Writable, Serializable {
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
         float lengthFactor = (float) thisLength / (float) otherLength;
-        if (flip) {
+        if (!flip) {
             // stream theirs in, adjusting to the new total length
             for (PositionWritable p : other.startReads) {
                 startReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
@@ -716,7 +716,7 @@ public class NodeWritable implements Writable, Serializable {
 
     private void addEdges(boolean flip, NodeWritable other) {
         if (!flip) {
-            for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            for (EDGETYPE e : EDGETYPE.values()) {
                 edges[e.get()].unionUpdate(other.edges[e.get()]);
             }
         } else {

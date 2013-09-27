@@ -727,6 +727,8 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * return the fractional difference between the given kmers.  This is the edit distance divided by the smaller length.
      * 
      * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)
+     * 
+     * For example, two kmers AAAAA and AAAT have an edit distance of 2; the fracDissimilar will be 2/4 = .5
      */
     public static float fracDissimilar(VKmerBytesWritable kmer1, VKmerBytesWritable kmer2) {
         return editDistance(kmer1, kmer2) / (float) min(kmer1.getKmerLetterLength(), kmer2.getKmerLetterLength());

@@ -108,7 +108,7 @@ public class SimpleBubbleMergeVertex extends
         }
     }
     
-    public boolean isValidMajorAndMinor(){
+    public static boolean isValidMajorAndMinor(BubbleMergeMessageWritable topMsg, BubbleMergeMessageWritable curMsg){
         EDGETYPE topMajorToBubbleEdgetype = topMsg.getMajorToBubbleEdgetype();
         EDGETYPE curMajorToBubbleEdgetype = curMsg.getMajorToBubbleEdgetype();
         EDGETYPE topMinorToBubbleEdgetype = topMsg.getMinorToBubbleEdgetype();
@@ -126,16 +126,18 @@ public class SimpleBubbleMergeVertex extends
             topMsg = it.next();
             it.remove(); //delete topCoverage node
             NodeWritable topNode = topMsg.getNode();
+            boolean topChanged = false;
             while(it.hasNext()){
                 curMsg = it.next();
-                //check if the vertex is valid minor and if it comes from valid major
+                //check if the vertex is valid minor and if it comes from valid major TODO pass the check variable and make static
                 if(!isValidMajorAndMinor())
                     continue;
                 
-                //compute the similarity
-                float fractionDissimilar = topMsg.computeDissimilar(curMsg);
+                //compute the dissimilarity
+                float fractionDissimilar = topMsg.computeDissimilar(curMsg); // TODO change to simmilarity everywhere
                 
-                if(fractionDissimilar < DISSIMILAR_THRESHOLD){ //if similar with top node, delete this node and put it in deletedSet
+                if(fractionDissimilar <= DISSIMILAR_THRESHOLD){ //if similar with top node, delete this node and put it in deletedSet
+                	topChanged = true;
                     // 1. add coverage to top node -- for unchangedSet
                     topNode.addFromNode(isFlipRelativeToMajor(topMsg, curMsg), 
                             curMsg.getNode()); 
@@ -149,14 +151,16 @@ public class SimpleBubbleMergeVertex extends
                     it.remove();
                 }
             }
-            // process unchangedSet -- send message to topVertex to update their coverage
+            // process topNode -- send message to topVertex to update their coverage
             //TODO if only one field needs to set in flag, directly set
-            outgoingMsg.reset();
-            outFlag = 0;
-            outFlag |= MessageFlag.REPLACE_NODE;
-            outgoingMsg.setNode(topNode);
-            outgoingMsg.setFlag(outFlag);
-            sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
+            if (topChanged) {
+	            outgoingMsg.reset();
+	            outFlag = 0;
+	            outFlag |= MessageFlag.REPLACE_NODE;
+	            outgoingMsg.setNode(topNode);
+	            outgoingMsg.setFlag(outFlag);
+	            sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
+            }
         }
     }
     
@@ -196,7 +200,7 @@ public class SimpleBubbleMergeVertex extends
     public void receiveUpdates(Iterator<BubbleMergeMessageWritable> msgIterator){
         while(msgIterator.hasNext()){
             BubbleMergeMessageWritable incomingMsg = msgIterator.next();
-            short msgType = (short) (incomingMsg.getFlag() & MessageFlag.MSG_TYPE_MASK);
+            short msgType = (short) (incomingMsg.getFlag() & MessageFlag.MSG_TYPE_MASK); //TODO change msg type to enum
             switch(msgType){
                 case MessageFlag.REPLACE_NODE:
                     // update Node including average coverage 
@@ -220,7 +224,7 @@ public class SimpleBubbleMergeVertex extends
             processBubblesInMinorVertex(msgIterator);
         } else if (getSuperstep() == 3){
             receiveUpdates(msgIterator);
-        } else if (getSuperstep() == 5){
+        } else if (getSuperstep() == 4){
             responseToDeadNode(msgIterator);
         }
     }

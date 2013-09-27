@@ -504,7 +504,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void broadcastKillself(){
         VertexValueWritable vertex = getVertexValue();
-        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
+        for(EDGETYPE et : EDGETYPE.values()){
             for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
@@ -513,14 +513,14 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 sendMsg(dest, outgoingMsg);
                 if(verbose){
                 	LOG.fine("Iteration " + getSuperstep() + "\r\n"
-                			+ "");
+                			+ ""); // TODO killSelf in log
                 }
             }
         }
     }
     
     /**
-     * response to dead node
+     * response to dead node  //TODO use general remove and process update function
      */
     public void responseToDeadNode(Iterator<M> msgIterator){
         if(verbose){
@@ -531,12 +531,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         MessageWritable incomingMsg;
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
-            EDGETYPE meToTipEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdgeList(meToTipEdgetype).remove(incomingMsg.getSourceVertexId());
+            EDGETYPE meToNeighborEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
+            getVertexValue().getEdgeList(meToNeighborEdgetype).remove(incomingMsg.getSourceVertexId());
             
             if(verbose){
                 LOG.fine("Receive message from dead node!" + incomingMsg.getSourceVertexId() + "\r\n"
-                        + "The deadToMeEdgetype in message is: " + meToTipEdgetype + "\r\n\n");
+                        + "The deadToMeEdgetype in message is: " + meToNeighborEdgetype + "\r\n\n");
             }
         }
         if(verbose){
