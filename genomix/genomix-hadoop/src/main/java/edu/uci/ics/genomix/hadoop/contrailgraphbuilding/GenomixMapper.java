@@ -28,7 +28,7 @@ import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 public class GenomixMapper extends MapReduceBase implements
     Mapper<LongWritable, Text, VKmerBytesWritable, NodeWritable>{
     
-    public static enum KmerDir{
+    public enum KmerDir{
         FORWARD,
         REVERSE,
     }

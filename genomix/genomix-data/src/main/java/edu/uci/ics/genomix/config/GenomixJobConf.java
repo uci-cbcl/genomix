@@ -157,7 +157,7 @@ public class GenomixJobConf extends JobConf {
     /**
      * the set of patterns that can be applied to the graph 
      */
-    public static enum Patterns {  // TODO static needed for other place we use enum?
+    public enum Patterns {
         BUILD,
         BUILD_HYRACKS,
         BUILD_HADOOP,

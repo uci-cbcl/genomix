@@ -33,7 +33,7 @@ public class TestSet {
     public final String[] SRSET = { "HighSplitRepeat", "MidSplitRepeat", "LowSplitRepeat" };
     public final String[] TIPSET = { "Tips1", "Tips2", "Tips3", "Tips4" };
 
-    public static enum DirType {
+    public enum DirType {
         PATHMERGE,
         TIP,
         BUBBLE,

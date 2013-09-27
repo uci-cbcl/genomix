@@ -47,7 +47,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 @SuppressWarnings("deprecation")
 public class Driver {
-    public static enum Plan {
+    public enum Plan {
         BUILD_OLD_DEBRUJIN_GRAPH_STEP1,
         BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER,
         BUILD_DEBRUIJN_GRAPH,
