@@ -12,7 +12,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.hadoop.graph.GenerateGraphViz;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 
 @SuppressWarnings({ "deprecation", "unused" })

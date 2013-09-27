@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.graph.test;
+package edu.uci.ics.genomix.minicluster;
 
 // GraphViz.java - a simple API to call dot from Java programs
 
@@ -32,6 +32,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+
+import edu.uci.ics.genomix.config.OSValidator;
 
 /**
  * <dl>
@@ -76,7 +78,7 @@ public class GraphViz {
     /**
      * Where is your dot program located? It will be called externally.
      */
-    private static String DOT = "/usr/bin/dot"; // Linux
+//    private static String DOT = "dot"; // Linux
     //   private static String DOT = "c:/Program Files/Graphviz2.26.3/bin/dot.exe";	// Windows
 
     /**
@@ -201,6 +203,7 @@ public class GraphViz {
             Runtime rt = Runtime.getRuntime();
 
             // patch by Mike Chenault
+            String DOT= OSValidator.getDotPath();
             String[] args = { DOT, "-T" + type, dot.getAbsolutePath(), "-o", img.getAbsolutePath() };
             Process p = rt.exec(args);
 

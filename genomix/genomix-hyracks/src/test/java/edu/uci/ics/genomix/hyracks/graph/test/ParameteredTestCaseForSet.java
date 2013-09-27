@@ -45,7 +45,7 @@ import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenBrujinGraph;
 import edu.uci.ics.genomix.hyracks.graph.test.TestSet.DirType;
-import edu.uci.ics.genomix.hyracks.graph.util.GenerateGraphViz;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 
 @SuppressWarnings("deprecation")
 @RunWith(value = Parameterized.class)
