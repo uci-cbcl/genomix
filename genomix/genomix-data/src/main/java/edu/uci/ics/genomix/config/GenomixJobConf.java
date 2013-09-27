@@ -273,8 +273,6 @@ public class GenomixJobConf extends JobConf {
                     Patterns.SCAFFOLD, Patterns.MERGE
             };
     
-    private String[] extraArguments = {};  // TODO remove extraArguments
-    
     private static Map<String, Long> tickTimes = new HashMap<String, Long>(); 
     
     public GenomixJobConf(int kmerLength) {
@@ -301,20 +299,12 @@ public class GenomixJobConf extends JobConf {
         CmdLineParser parser = new CmdLineParser(opts);
         parser.parseArgument(args);
         GenomixJobConf conf = new GenomixJobConf(opts.kmerLength);
-        conf.extraArguments = opts.arguments.toArray(new String[opts.arguments.size()]);
         conf.setFromOpts(opts);
         conf.fillMissingDefaults();
         validateConf(conf);
         return conf;
     }
     
-    /**
-     * retrieve any unparsed arguments from parseArguments. Returns an empty array if we weren't initialized use fromArguments()
-     */
-    public String[] getExtraArguments() { // TODO remove
-        return extraArguments;
-    }
-       
     public static void validateConf(GenomixJobConf conf) throws IllegalArgumentException {
         // Global config
         int kmerLength = Integer.parseInt(conf.get(KMER_LENGTH));
