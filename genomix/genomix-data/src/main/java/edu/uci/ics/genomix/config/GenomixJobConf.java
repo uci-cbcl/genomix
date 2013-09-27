@@ -229,7 +229,7 @@ public class GenomixJobConf extends JobConf {
     public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
     public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
     
-    // Graph cleaning
+    // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphCleanMaxIterations";
@@ -362,7 +362,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
         
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
-            setInt(TIP_REMOVE_MAX_LENGTH, kmerLength + 1);
+            setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
         
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);

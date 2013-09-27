@@ -19,6 +19,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         public static final byte REVERSE = 1 << 1;
     }
     
+    protected VKmerBytesWritable forwardKmer;
     protected VKmerBytesWritable reverseKmer;
     protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
 
@@ -29,27 +30,19 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = (M) new PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = (M) new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
-        if(kmerList == null)
-            kmerList = new VKmerListWritable();
-        else
-            kmerList.reset();
         if(fakeVertex == null){
             fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
+        if(forwardKmer == null)
+            forwardKmer = new VKmerBytesWritable();
     }
     
     /**
@@ -76,16 +69,16 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     public void mapKeyByInternalKmer(Iterator<M> msgIterator){
 //        ArrayList<Byte> kmerDir = new ArrayList<Byte>();
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            M incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
-            tmpKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
+            forwardKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
             reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
 
             VKmerBytesWritable kmer = new VKmerBytesWritable();
-            kmerList = new VKmerListWritable();
-            if(reverseKmer.compareTo(tmpKmer) > 0){
+            VKmerListWritable kmerList = new VKmerListWritable();
+            if(reverseKmer.compareTo(forwardKmer) > 0){
 //                kmerDir.add(KmerDir.FORWARD);
-                kmer.setAsCopy(tmpKmer);
+                kmer.setAsCopy(forwardKmer);
             }
             else{
 //                kmerDir.add(KmerDir.REVERSE);
@@ -105,11 +98,11 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     
     public void reduceKeyByInternalKmer(){
         for(VKmerBytesWritable key : kmerMapper.keySet()){
-            kmerList = kmerMapper.get(key);
+            VKmerListWritable kmerList = kmerMapper.get(key);
             for(int i = 1; i < kmerList.getCountOfPosition(); i++){
                 //send kill message
-                outgoingMsg.setFlag(MessageFlag.KILL);
-                destVertexId.setAsCopy(kmerList.getPosition(i));
+                outgoingMsg.setFlag(MessageFlag.KILL2);
+                VKmerBytesWritable destVertexId = kmerList.getPosition(i);
                 sendMsg(destVertexId, outgoingMsg);
             }
         }
@@ -117,9 +110,9 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     
     public void finalVertexResponseToFakeVertex(Iterator<M> msgIterator){
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            M incomingMsg = msgIterator.next();
             inFlag = incomingMsg.getFlag();
-            if(inFlag == MessageFlag.KILL){
+            if(inFlag == MessageFlag.KILL2){
                 broadcaseKillself();
             }
         }
@@ -149,9 +142,9 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             finalVertexResponseToFakeVertex(msgIterator);
         } else if(getSuperstep() == 5){
             while (msgIterator.hasNext()) {
-                incomingMsg = msgIterator.next();
-                if(isResponseKillMsg())
-                    responseToDeadVertex();
+                M incomingMsg = msgIterator.next();
+                if(isResponseKillMsg(incomingMsg))
+                    responseToDeadVertex(incomingMsg);
             }
             voteToHalt();
         }

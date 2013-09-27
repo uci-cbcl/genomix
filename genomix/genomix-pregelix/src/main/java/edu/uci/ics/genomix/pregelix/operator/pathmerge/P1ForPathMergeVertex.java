@@ -32,14 +32,10 @@ public class P1ForPathMergeVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = new PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new PathMergeMessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         if(getSuperstep() == 1)
@@ -61,9 +57,9 @@ public class P1ForPathMergeVertex extends
         
         //choose merge dir -- principle: only merge with nextDir
         if(restrictedDirs.size() == 1){
-        	if((restrictedDirs.contains(DIR.PREVIOUS) && vertex.getDegree(DIR.NEXT) == 1) 
-        			|| (restrictedDirs.contains(DIR.NEXT) && vertex.getDegree(DIR.PREVIOUS) == 1)){
-	            EDGETYPE edgeType = restrictedDirs.contains(DIR.PREVIOUS) ? vertex.getNeighborEdgeType(DIR.NEXT) : vertex.getNeighborEdgeType(DIR.PREVIOUS);
+        	if((restrictedDirs.contains(DIR.REVERSE) && vertex.getDegree(DIR.FORWARD) == 1) 
+        			|| (restrictedDirs.contains(DIR.FORWARD) && vertex.getDegree(DIR.REVERSE) == 1)){
+	            EDGETYPE edgeType = restrictedDirs.contains(DIR.REVERSE) ? vertex.getNeighborEdgeType(DIR.FORWARD) : vertex.getNeighborEdgeType(DIR.REVERSE);
 	            state |= P4State.MERGE | edgeType.get();
 	            updated = true;
         	}
@@ -142,15 +138,14 @@ public class P1ForPathMergeVertex extends
                     outFlag = 0;
                     outFlag |= MessageFlag.TO_NEIGHBOR;
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        for(VKmerBytesWritable kmer : vertex.getEdgeList(et).getKeys()){
+                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flip() : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
                             outFlag &= MessageFlag.MERGE_DIR_CLEAR;
                             outFlag |= meToNeighbor.get() | otherToNeighbor.get() << 9;
                             outgoingMsg.setFlag(outFlag);
-                            destVertexId = kmer;
-                            sendMsg(destVertexId, outgoingMsg);
+                            sendMsg(dest, outgoingMsg);
                         }
                     }
                     
@@ -171,8 +166,8 @@ public class P1ForPathMergeVertex extends
         
         if(isTandemRepeat(getVertexValue())) {
             // tandem repeats can't merge anymore; restrict all future merges
-            state |= DIR.NEXT.get();
-            state |= DIR.PREVIOUS.get();
+            state |= DIR.FORWARD.get();
+            state |= DIR.REVERSE.get();
             updated = true;
 //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
@@ -192,7 +187,7 @@ public class P1ForPathMergeVertex extends
         otherMsgs.clear();
         neighborMsgs.clear();
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            PathMergeMessageWritable incomingMsg = msgIterator.next();
             byte msgType = (byte) (incomingMsg.getFlag() & MessageFlag.MSG_MASK);
             switch(msgType){
                 case MessageFlag.TO_UPDATE:
@@ -213,7 +208,7 @@ public class P1ForPathMergeVertex extends
             LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                     + "before update from dead vertex: " + value);
         while(msgIterator.hasNext()){
-            incomingMsg = msgIterator.next();
+            PathMergeMessageWritable incomingMsg = msgIterator.next();
             EDGETYPE deleteToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
             EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
             

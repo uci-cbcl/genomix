@@ -45,8 +45,6 @@ public class P2ForPathMergeVertex extends
     	super.initVertex();
         selfFlag = (byte)(getVertexValue().getState() & State.VERTEX_MASK);
         outFlag = 0;
-        if(incomingMsg == null)
-            incomingMsg = new P2PathMergeMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new P2PathMergeMessageWritable();
         else
@@ -54,10 +52,6 @@ public class P2ForPathMergeVertex extends
         receivedMsgList.clear();
         if(reverseKmer == null)
             reverseKmer = new VKmerBytesWritable();
-        if(kmerList == null)
-            kmerList = new VKmerListWritable();
-        else
-            kmerList.reset();
         synchronized(lock){
             if(fakeVertex == null){
                 fakeVertex = new VKmerBytesWritable();
@@ -65,10 +59,6 @@ public class P2ForPathMergeVertex extends
                 fakeVertex.setByRead(kmerSize + 1, fake.getBytes(), 0); 
             }
         }
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
         if(repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
         tmpValue.reset();
@@ -131,9 +121,9 @@ public class P2ForPathMergeVertex extends
      */
     public void pathNodeSendOutMsg() {
         //send wantToMerge to next
-        tmpKmer = getNextDestVertexIdAndSetFlag();
+        VKmerBytesWritable tmpKmer = getNextDestVertexIdAndSetFlag();
         if(tmpKmer != null){
-            destVertexId.setAsCopy(tmpKmer);
+            VKmerBytesWritable destVertexId = tmpKmer;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
@@ -142,7 +132,7 @@ public class P2ForPathMergeVertex extends
         //send wantToMerge to prev
         tmpKmer = getPrevDestVertexIdAndSetFlag();
         if(tmpKmer != null){
-            destVertexId.setAsCopy(tmpKmer);
+            VKmerBytesWritable destVertexId = tmpKmer;
             outgoingMsg.setFlag(outFlag);
             outgoingMsg.setSourceVertexId(getVertexId());
             sendMsg(destVertexId, outgoingMsg);
@@ -207,7 +197,7 @@ public class P2ForPathMergeVertex extends
             outFlag |= MessageFlag.IS_OLDHEAD;
             voteToHalt();
         }
-        sendP2MergeMsgByIncomingMsgDir();
+//        sendP2MergeMsgByIncomingMsgDir();
     }
     
     public void headSendMergeMsg(){
@@ -215,15 +205,15 @@ public class P2ForPathMergeVertex extends
         outgoingMsg.setUpdateMsg(false);
         switch(getVertexValue().getState() & MessageFlag.HEAD_CAN_MERGE_MASK){
             case MessageFlag.HEAD_CAN_MERGEWITHPREV:
-                sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
+                sendSettledMsgs(DIR.REVERSE, getVertexValue());
                 break;
             case MessageFlag.HEAD_CAN_MERGEWITHNEXT:
-                sendSettledMsgs(DIR.NEXT, getVertexValue());
+                sendSettledMsgs(DIR.FORWARD, getVertexValue());
                 break;
         }
     }
     
-    public void sendP2MergeMsgByIncomingMsgDir(){
+    public void sendP2MergeMsgByIncomingMsgDir(P2PathMergeMessageWritable incomingMsg){
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         switch(meToNeighborDir){
             case FF:
@@ -252,7 +242,7 @@ public class P2ForPathMergeVertex extends
      * configure MERGE msg For P2
      */
     public void configureP2MergeMsgForPredecessor(VKmerBytesWritable mergeDest){
-        setNeighborToMeDir(DIR.PREVIOUS);
+        setNeighborToMeDir(DIR.REVERSE);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFilpWithSuccessor());
@@ -261,7 +251,7 @@ public class P2ForPathMergeVertex extends
     }
     
     public void configureP2MergeMsgForSuccessor(VKmerBytesWritable mergeDest){
-        setNeighborToMeDir(DIR.NEXT);
+        setNeighborToMeDir(DIR.FORWARD);
         outgoingMsg.setFlag(outFlag);
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setFlip(ifFlipWithPredecessor());
@@ -284,7 +274,7 @@ public class P2ForPathMergeVertex extends
     /**
      * send final merge message to neighber for P2 TODO: optimize Node msg
      */
-    public void sendFinalMergeMsg(){
+    public void sendFinalMergeMsg(P2PathMergeMessageWritable incomingMsg){
         outFlag |= MessageFlag.IS_FINAL;
         outgoingMsg.setUpdateMsg(false);
         outgoingMsg.setApexMap(getVertexValue().getApexMap());
@@ -391,17 +381,19 @@ public class P2ForPathMergeVertex extends
      * check if it is final msg
      */
     public boolean isFinalMergeMsg(){
-        return (byte)(getMsgFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_FINAL && !incomingMsg.isUpdateMsg();
+        return false;
+//        return (byte)(getMsgFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_FINAL && !incomingMsg.isUpdateMsg();
     }
     
     public boolean isFinalUpdateMsg(){
-        return (byte)(getMsgFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_FINAL && incomingMsg.isUpdateMsg();
+        return false;
+//        return (byte)(getMsgFlag() & MessageFlag.VERTEX_MASK) == MessageFlag.IS_FINAL && incomingMsg.isUpdateMsg();
     }
     
     /**
      * check if it is a valid update node
      */
-    public boolean isValidUpateNode(){
+    public boolean isValidUpateNode(P2PathMergeMessageWritable incomingMsg){
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         boolean flag = false;
@@ -423,12 +415,12 @@ public class P2ForPathMergeVertex extends
      */
     public void initStateForP2(Iterator<P2PathMergeMessageWritable> msgIterator) {
         while (msgIterator.hasNext()) {
-            incomingMsg = msgIterator.next();
+            P2PathMergeMessageWritable incomingMsg = msgIterator.next();
             if(isHaltNode())
                 voteToHalt();
             else if(isHeadNode() && !isTandemRepeat(getVertexValue())){
                 if(true){ //isValidPath()
-                    setHeadMergeDir();
+                    setHeadMergeDir(incomingMsg);
                     //set deleteKmer and deleteDir
                     KmerAndDirWritable kmerAndDir = new KmerAndDirWritable();
                     kmerAndDir.setDeleteDir((byte) (incomingMsg.getFlag() & MessageFlag.DIR_MASK));
@@ -454,12 +446,12 @@ public class P2ForPathMergeVertex extends
     /**
      * update apex's edges
      */
-    public void updateApexEdges(){
+    public void updateApexEdges(P2PathMergeMessageWritable incomingMsg){
         KmerAndDirWritable deleteEdge = incomingMsg.getApexMap().get(getVertexId());
         EDGETYPE deleteEdgeType = EDGETYPE.fromByte(deleteEdge.getDeleteDir());
         if(deleteEdge != null && getVertexValue().getEdgeList(deleteEdgeType).contains(deleteEdge.getDeleteKmer())) //avoid to delete twice
             getVertexValue().getEdgeList(deleteEdgeType).remove(deleteEdge.getDeleteKmer());
-        processFinalUpdate2();
+        processFinalUpdate2(incomingMsg);
         getVertexValue().setState(MessageFlag.IS_HALT);
         voteToHalt();
     }
@@ -496,10 +488,10 @@ public class P2ForPathMergeVertex extends
                 } else{
                     // for processing final merge (1)
                     while(msgIterator.hasNext()){
-                        incomingMsg = msgIterator.next();
+                        P2PathMergeMessageWritable incomingMsg = msgIterator.next();
                         if(incomingMsg.isUpdateApexEdges()){
                             //update edges in apex
-                            updateApexEdges();
+                            updateApexEdges(incomingMsg);
                         } else{
                             if(isFinalMergeMsg()){ // ex. 4, 5
                                 processP2Merge(incomingMsg);
@@ -510,8 +502,8 @@ public class P2ForPathMergeVertex extends
                                 // NON-FAKE and Final vertice send msg to FAKE vertex 
                                 sendMsgToFakeVertex();
                                 voteToHalt();
-                            } else if(isResponseKillMsg()){
-                                responseToDeadVertex();
+                            } else if(isResponseKillMsg(incomingMsg)){
+                                responseToDeadVertex(incomingMsg);
                                 voteToHalt();
                             }
                         }
@@ -532,19 +524,19 @@ public class P2ForPathMergeVertex extends
                     voteToHalt();
                 } else{
                     while (msgIterator.hasNext()) {
-                        incomingMsg = msgIterator.next();
+                        P2PathMergeMessageWritable incomingMsg = msgIterator.next();
                         if(incomingMsg.isUpdateApexEdges()){
                             //update edges in apex
-                            updateApexEdges();
+                            updateApexEdges(incomingMsg);
                         } else{
                             // final Vertex Responses To FakeVertex
-                            if(isReceiveKillMsg()){
+                            if(isReceiveKillMsg(incomingMsg)){
                                 broadcaseKillself();
-                            }else if(isResponseKillMsg()){
-                                responseToDeadVertex();
+                            }else if(isResponseKillMsg(incomingMsg)){
+                                responseToDeadVertex(incomingMsg);
                                 voteToHalt();
                             } else{
-                                sendUpdateMsg();
+                                sendUpdateMsg(incomingMsg);
                                 outFlag = 0;
                                 sendMergeMsg();
                                 voteToHalt();
@@ -561,19 +553,19 @@ public class P2ForPathMergeVertex extends
         } else if (getSuperstep() % 3 == 2 && getSuperstep() <= maxIteration){
             if(!isFakeVertex()){
                 while (msgIterator.hasNext()) {
-                    incomingMsg = msgIterator.next();
+                    P2PathMergeMessageWritable incomingMsg = msgIterator.next();
                     // final Vertex Responses To FakeVertex 
-                    if(isReceiveKillMsg()){
+                    if(isReceiveKillMsg(incomingMsg)){
                         broadcaseKillself();
-                    } else if(isResponseKillMsg()){
-                        responseToDeadVertex();
+                    } else if(isResponseKillMsg(incomingMsg)){
+                        responseToDeadVertex(incomingMsg);
                         voteToHalt();
-                    } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isValidUpateNode())){// only old head update edges
+                    } else if(incomingMsg.isUpdateMsg() && (selfFlag == State.IS_OLDHEAD || isValidUpateNode(incomingMsg))){// only old head update edges
                         if(!isHaltNode())
                             processUpdate(incomingMsg);
                         voteToHalt();
                     } else if(isFinalMergeMsg()){// for final processing, receive msg from head, which means final merge (2) ex. 2, 8
-                        sendFinalMergeMsg();
+                        sendFinalMergeMsg(incomingMsg);
                         voteToHalt();
                         break;
                     } else if(!incomingMsg.isUpdateMsg()){

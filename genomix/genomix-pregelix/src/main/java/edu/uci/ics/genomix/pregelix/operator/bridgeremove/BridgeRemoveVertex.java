@@ -12,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Graph clean pattern: Remove Bridge
@@ -33,14 +32,10 @@ public class BridgeRemoveVertex extends
         super.initVertex();
         if(length == -1)
             length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
-        if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         receivedMsgList.clear();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
@@ -72,7 +67,7 @@ public class BridgeRemoveVertex extends
                     && getVertexValue().getDegree() == 2){
                 broadcaseKillself();
                 //set statistics counter: Num_RemovedBridges
-                updateStatisticsCounter(StatisticsCounter.Num_RemovedBridges);
+                incrementCounter(StatisticsCounter.Num_RemovedBridges);
                 getVertexValue().setCounters(counters);
             }
         }
@@ -84,10 +79,10 @@ public class BridgeRemoveVertex extends
         if (getSuperstep() == 1) {
             //filter bridge vertex
             if(VertexUtil.isUpBridgeVertex(getVertexValue())){
-                sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
+                sendSettledMsgs(DIR.REVERSE, getVertexValue());
             }
             else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
-                sendSettledMsgs(DIR.NEXT, getVertexValue());
+                sendSettledMsgs(DIR.FORWARD, getVertexValue());
             }
         }
         else if (getSuperstep() == 2){
@@ -97,9 +92,10 @@ public class BridgeRemoveVertex extends
             removeBridge();
         }
         else if(getSuperstep() == 3){
+            //TODO fix
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
-                responseToDeadVertex();
+                MessageWritable incomingMsg = msgIterator.next();
+                responseToDeadVertex(incomingMsg);
             }
         }
         voteToHalt();

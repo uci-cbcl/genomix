@@ -34,14 +34,10 @@ public class RemoveLowCoverageVertex extends
         super.initVertex(); 
         if (minAverageCoverage < 0)
             minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
-        if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
 //        else
@@ -61,11 +57,12 @@ public class RemoveLowCoverageVertex extends
     public void cleanupDeadVertex(){
         deleteVertex(getVertexId());
         //set statistics counter: Num_RemovedLowCoverageNodes
-        updateStatisticsCounter(StatisticsCounter.Num_RemovedLowCoverageNodes);
+        incrementCounter(StatisticsCounter.Num_RemovedLowCoverageNodes);
         getVertexValue().setCounters(counters);
     }
     
     public void responseToDeadVertex(Iterator<MessageWritable> msgIterator){
+        MessageWritable incomingMsg;
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             //response to dead node

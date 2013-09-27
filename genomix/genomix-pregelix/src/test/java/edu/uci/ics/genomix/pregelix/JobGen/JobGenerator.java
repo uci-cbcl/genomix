@@ -21,7 +21,6 @@ import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeVertex;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P0ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P2ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.MapReduceVertex;
@@ -70,23 +69,6 @@ public class JobGenerator {
 
     private static void genMapReduceGraph() throws IOException {
         generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
-    }
-    
-    private static void generateP0ForMergeGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-        job.setVertexClass(P0ForPathMergeVertex.class);
-        job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
-        job.setOutputValueClass(VertexValueWritable.class);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genP0ForMergeGraph() throws IOException {
-        generateP0ForMergeGraphJob("P0ForMergeGraph", outputBase
-                + "P0ForMergeGraph.xml");
     }
     
     private static void generateP1ForMergeGraphJob(String jobName, String outputPath) throws IOException {
@@ -347,7 +329,6 @@ public class JobGenerator {
         FileUtils.forceMkdir(new File(outputBase));
         genUnrollTandemRepeatGraph();
         genMapReduceGraph();
-        genP0ForMergeGraph();
         genP1ForMergeGraph();
         genP2ForMergeGraph();
         genP4ForMergeGraph();

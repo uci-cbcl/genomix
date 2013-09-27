@@ -30,8 +30,6 @@ public class UnrollTandemRepeat extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
@@ -103,7 +101,7 @@ public class UnrollTandemRepeat extends
     /**
      * update edges
      */
-    public void updateEdges(){
+    public void updateEdges(MessageWritable incomingMsg){
         EDGETYPE flipDir = EDGETYPE.fromByte(incomingMsg.getFlag()); 
         EDGETYPE prevNeighborToMe = flipDir.mirror();
         EDGETYPE curNeighborToMe = flipDir.mirror(); //mirrorDirection((byte)(incomingMsg.getFlag() & MessageFlag.DEAD_MASK));
@@ -119,15 +117,15 @@ public class UnrollTandemRepeat extends
             if(isTandemRepeat(getVertexValue()) && repeatCanBeMerged()){
                 mergeTandemRepeat();
                 //set statistics counter: Num_TandemRepeats
-                updateStatisticsCounter(StatisticsCounter.Num_TandemRepeats);
+                incrementCounter(StatisticsCounter.Num_TandemRepeats);
                 getVertexValue().setCounters(counters);
             }
             voteToHalt();
         } else if(getSuperstep() == 2){
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                MessageWritable incomingMsg = msgIterator.next();
                 /** update edge **/
-                updateEdges();
+                updateEdges(incomingMsg);
             }
             voteToHalt();
         }

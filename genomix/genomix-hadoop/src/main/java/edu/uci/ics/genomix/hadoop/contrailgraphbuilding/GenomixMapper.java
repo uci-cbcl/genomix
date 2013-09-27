@@ -23,7 +23,10 @@ import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-
+/**
+ * GenomixMapper the 1st step of graph building
+ * @author anbangx
+ */
 @SuppressWarnings("deprecation")
 public class GenomixMapper extends MapReduceBase implements
     Mapper<LongWritable, Text, VKmerBytesWritable, NodeWritable>{

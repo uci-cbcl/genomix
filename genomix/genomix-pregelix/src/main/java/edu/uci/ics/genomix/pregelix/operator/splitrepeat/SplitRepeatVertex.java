@@ -71,16 +71,10 @@ public class SplitRepeatVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = new SplitRepeatMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
         if(incomingEdgeList == null)
             incomingEdgeList = new EdgeListWritable();
         if(outgoingEdgeList == null)
@@ -175,11 +169,12 @@ public class SplitRepeatVertex extends
         outgoingMsg.setDeletedEdge(deletedEdge);
         
         outgoingMsg.setFlag(incomingEdgeType.get());
-        destVertexId.setAsCopy(incomingEdge.getKey());
+        VKmerBytesWritable destVertexId = null;
+        destVertexId = incomingEdge.getKey();
         sendMsg(destVertexId, outgoingMsg);
         
         outgoingMsg.setFlag(outgoingEdgeType.get());
-        destVertexId.setAsCopy(outgoingEdge.getKey());
+        destVertexId = outgoingEdge.getKey();
         sendMsg(destVertexId, outgoingMsg);
     }
     
@@ -202,7 +197,7 @@ public class SplitRepeatVertex extends
         getVertexValue().getEdgeList(deleteEdge.edgeType).removeSubEdge(deleteEdge.getEdge());
     }
     
-    public void updateEdgeListPointToNewVertex(){
+    public void updateEdgeListPointToNewVertex(SplitRepeatMessageWritable incomingMsg){
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());//(byte) (incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
@@ -239,7 +234,7 @@ public class SplitRepeatVertex extends
                                 // create new/created vertex 
                                 createNewVertex(i, tmpIncomingEdge, tmpOutgoingEdge);
                                 //set statistics counter: Num_SplitRepeats
-                                updateStatisticsCounter(StatisticsCounter.Num_SplitRepeats);
+                                incrementCounter(StatisticsCounter.Num_SplitRepeats);
                                 getVertexValue().setCounters(counters);
                                 
                                 // send msg to neighbors to update their edges to new vertex 
@@ -264,9 +259,9 @@ public class SplitRepeatVertex extends
             }
         } else if(getSuperstep() == 2){
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                SplitRepeatMessageWritable incomingMsg = msgIterator.next();
                 // update edgelist to new/created vertex
-                updateEdgeListPointToNewVertex();
+                updateEdgeListPointToNewVertex(incomingMsg);
             }
             voteToHalt();
         }

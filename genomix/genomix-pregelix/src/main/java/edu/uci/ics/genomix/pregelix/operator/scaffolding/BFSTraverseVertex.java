@@ -22,6 +22,7 @@ public class BFSTraverseVertex extends
     
     private EdgeDirs edgeDirs =  new EdgeDirs();
     private ArrayListWritable<EdgeDirs> edgeDirsList = new ArrayListWritable<EdgeDirs>();
+    protected VKmerListWritable kmerList = new VKmerListWritable();
     
     /**
      * initiate kmerSize, maxIteration
@@ -29,8 +30,6 @@ public class BFSTraverseVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = new BFSTraverseMessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new BFSTraverseMessageWritable();
         else
@@ -44,10 +43,6 @@ public class BFSTraverseVertex extends
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable(kmerSize);
-        if(tmpKmer == null)
-            tmpKmer = new VKmerBytesWritable();
     }
     
     public void initiateSrcAndDestNode(VKmerListWritable pairKmerList, long readId, boolean srcFlip, 
@@ -60,7 +55,7 @@ public class BFSTraverseVertex extends
         outgoingMsg.setDestFlip(destFlip);
     }
     
-    public void initialBroadcaseBFSTraverse(){
+    public void initialBroadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
         outgoingMsg.reset();
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setSeekedVertexId(incomingMsg.getSeekedVertexId());
@@ -71,12 +66,12 @@ public class BFSTraverseVertex extends
         outgoingMsg.setPathList(kmerList);
         outgoingMsg.setReadId(incomingMsg.getReadId()); //only one readId
         if(incomingMsg.isSrcFlip())
-            sendSettledMsgs(DIR.PREVIOUS, getVertexValue());
+            sendSettledMsgs(DIR.REVERSE, getVertexValue());
         else
-            sendSettledMsgs(DIR.NEXT, getVertexValue());
+            sendSettledMsgs(DIR.FORWARD, getVertexValue());
     }
     
-    public void broadcaseBFSTraverse(){
+    public void broadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
         outgoingMsg.reset();
         outgoingMsg.setSourceVertexId(incomingMsg.getSourceVertexId());
         outgoingMsg.setSeekedVertexId(incomingMsg.getSeekedVertexId());
@@ -89,20 +84,20 @@ public class BFSTraverseVertex extends
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
         /** set edgeDirs **/
-        setEdgeDirs(meToNeighborDir, neighborToMeDir);
+        setEdgeDirs(incomingMsg, meToNeighborDir, neighborToMeDir);
         switch(neighborToMeDir){
             case FF:
             case FR:
-                sendSettledMsgs(DIR.PREVIOUS ,getVertexValue());
+                sendSettledMsgs(DIR.REVERSE ,getVertexValue());
                 break;
             case RF:
             case RR:
-                sendSettledMsgs(DIR.NEXT, getVertexValue());
+                sendSettledMsgs(DIR.FORWARD, getVertexValue());
                 break;
         }
     }
     
-    public void setEdgeDirs(EDGETYPE meToNeighborDir, EDGETYPE neighborToMeDir){
+    public void setEdgeDirs(BFSTraverseMessageWritable incomingMsg, EDGETYPE meToNeighborDir, EDGETYPE neighborToMeDir){
         edgeDirsList.clear();
         edgeDirsList.addAll(incomingMsg.getEdgeDirsList());
         if(edgeDirsList.isEmpty()){ //first time from srcNode
@@ -127,7 +122,7 @@ public class BFSTraverseVertex extends
         outgoingMsg.setEdgeDirsList(edgeDirsList);
     }
     
-    public boolean isValidDestination(){
+    public boolean isValidDestination(BFSTraverseMessageWritable incomingMsg){
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
         if(incomingMsg.isDestFlip())
@@ -136,7 +131,7 @@ public class BFSTraverseVertex extends
             return neighborToMeDir == EDGETYPE.FF || neighborToMeDir == EDGETYPE.FR;
     }
     
-    public void sendMsgToPathNodeToAddCommondReadId(){
+    public void sendMsgToPathNodeToAddCommondReadId(BFSTraverseMessageWritable incomingMsg){
         outgoingMsg.reset();
         outgoingMsg.setTraverseMsg(false);
         outgoingMsg.setReadId(incomingMsg.getReadId());
@@ -155,31 +150,32 @@ public class BFSTraverseVertex extends
                 outgoingMsg.getPathList().append(kmerList.getPosition(i - 1));
                 outgoingMsg.getPathList().append(kmerList.getPosition(i + 1));  
             }
-            destVertexId.setAsCopy(kmerList.getPosition(i));
+            VKmerBytesWritable destVertexId = kmerList.getPosition(i);
             sendMsg(destVertexId, outgoingMsg);
         }
     }
     
-    public void finalProcessBFS(){
+    public void finalProcessBFS(BFSTraverseMessageWritable incomingMsg){
         kmerList.setCopy(incomingMsg.getPathList());
         kmerList.append(getVertexId());
         incomingMsg.setPathList(kmerList);
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
-        setEdgeDirs(meToNeighborDir, neighborToMeDir);
+        setEdgeDirs(incomingMsg, meToNeighborDir, neighborToMeDir);
         incomingMsg.setEdgeDirsList(outgoingMsg.getEdgeDirsList());
     }
     
-    public void appendCommonReadId(){
+    public void appendCommonReadId(BFSTraverseMessageWritable incomingMsg){
         long readId = incomingMsg.getReadId();
         //add readId to prev edge 
         byte prevToMeDir = incomingMsg.getEdgeDirsList().get(0).getPrevToMeDir();
-        tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(0));
+        VKmerBytesWritable tmpKmer;
+        tmpKmer = incomingMsg.getPathList().getPosition(0);
         if(tmpKmer.getKmerLetterLength() != 0)
             getVertexValue().getEdgeList(EDGETYPE.fromByte(prevToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
         //set readId to next edge
         byte nextToMeDir = incomingMsg.getEdgeDirsList().get(0).getNextToMeDir();
-        tmpKmer.setAsCopy(incomingMsg.getPathList().getPosition(1));
+        tmpKmer = incomingMsg.getPathList().getPosition(1);
         if(tmpKmer.getKmerLetterLength() != 0)
             getVertexValue().getEdgeList(EDGETYPE.fromByte(nextToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
     }
@@ -202,34 +198,34 @@ public class BFSTraverseVertex extends
             deleteVertex(getVertexId());
         } else if(getSuperstep() == 3){
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
                 /** begin to BFS **/
-                initialBroadcaseBFSTraverse();
+                initialBroadcaseBFSTraverse(incomingMsg);
             }
             voteToHalt();
         } else if(getSuperstep() > 3){
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
                 if(incomingMsg.isTraverseMsg()){
                     /** check if find destination **/
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
-                        if(isValidDestination()){
+                        if(isValidDestination(incomingMsg)){
                             /** final step to process BFS -- pathList and dirList **/
-                            finalProcessBFS();
+                            finalProcessBFS(incomingMsg);
                             /** send message to all the path nodes to add this common readId **/
-                            sendMsgToPathNodeToAddCommondReadId();
+                            sendMsgToPathNodeToAddCommondReadId(incomingMsg);
                         }
                         else{
                             //continue to BFS
-                            broadcaseBFSTraverse();
+                            broadcaseBFSTraverse(incomingMsg);
                         }
                     } else {
                         //continue to BFS
-                        broadcaseBFSTraverse();
+                        broadcaseBFSTraverse(incomingMsg);
                     }
                 } else{
                     /** append common readId to the corresponding edge **/
-                    appendCommonReadId();
+                    appendCommonReadId(incomingMsg);
                 }
             }
             voteToHalt();

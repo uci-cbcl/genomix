@@ -7,7 +7,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 public class SymmetryCheckerVertex extends
@@ -16,14 +15,12 @@ public class SymmetryCheckerVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(incomingMsg == null)
-            incomingMsg = new MessageWritable();
+//        if(incomingMsg == null)
+//            incomingMsg = new MessageWritable();
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
             outgoingMsg.reset();
-        if(destVertexId == null)
-            destVertexId = new VKmerBytesWritable();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
 //        else
@@ -42,7 +39,7 @@ public class SymmetryCheckerVertex extends
         } else if(getSuperstep() == 2){
             //check if the corresponding edge exists
             while(msgIterator.hasNext()){
-                incomingMsg = msgIterator.next();
+                MessageWritable incomingMsg = msgIterator.next();
                 EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
                 EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
                 boolean exist = getVertexValue().getEdgeList(neighborToMeDir).contains(incomingMsg.getSourceVertexId());
