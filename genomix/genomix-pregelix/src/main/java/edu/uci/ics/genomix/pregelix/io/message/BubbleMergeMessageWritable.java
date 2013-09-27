@@ -62,19 +62,6 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         isFlip = false;
     }
     
-    public byte getRelativeDirToMajor(){ // TODO REMOVE
-        EDGETYPE et = EDGETYPE.fromByte(majorToBubbleEdgetype);
-        switch(et){
-            case FF:
-            case RR:
-                return DirToMajor.FORWARD;
-            case FR:
-            case RF:
-                return DirToMajor.REVERSE;
-        }
-        return 0;
-    }
-    
     public VKmerBytesWritable getMajorVertexId() {
         return majorVertexId;
     }
@@ -172,18 +159,12 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         }
     }
     
-    public static boolean sameOrientation(EDGETYPE et1, EDGETYPE et2){
-    	return et1.causesFlip() != et2.causesFlip();
+    public boolean sameOrientation(BubbleMergeMessageWritable other){
+        return EDGETYPE.sameOrientation(this.majorToBubbleEdgetype, other.majorToBubbleEdgetype);
     }
     
     public float computeDissimilar(BubbleMergeMessageWritable other) {
-    	// TODO move all reverse logic into the fracDissimilar funciton, then pass a boolean: sameOrientation
-        if(sameOrientation(EDGETYPE.fromByte(this.majorToBubbleEdgetype), EDGETYPE.fromByte(other.majorToBubbleEdgetype))){
-            String reverse = other.getNode().getInternalKmer().toString(); // TODO don't use toString here (something more efficient?)
-            VKmerBytesWritable reverseKmer = new VKmerBytesWritable();
-            reverseKmer.setByReadReverse(reverse.length(), reverse.getBytes(), 0);
-            return this.getNode().getInternalKmer().fracDissimilar(reverseKmer);
-        } else
-            return this.getNode().getInternalKmer().fracDissimilar(other.getNode().getInternalKmer());
+        boolean sameOrientation = sameOrientation(other);
+        return this.getNode().getInternalKmer().fracDissimilar(sameOrientation, other.getNode().getInternalKmer());
     }
 }

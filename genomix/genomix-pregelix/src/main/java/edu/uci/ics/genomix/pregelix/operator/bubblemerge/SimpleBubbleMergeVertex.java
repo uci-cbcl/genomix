@@ -116,10 +116,6 @@ public class SimpleBubbleMergeVertex extends
         return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir()) && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
     
-    public boolean isFlipRelativeToMajor(BubbleMergeMessageWritable msg1, BubbleMergeMessageWritable msg2){
-        return msg1.getRelativeDirToMajor() != msg2.getRelativeDirToMajor();
-    }
-    
     public void processSimilarSet(){
         while(!receivedMsgList.isEmpty()){
             Iterator<BubbleMergeMessageWritable> it = receivedMsgList.iterator();
@@ -136,11 +132,11 @@ public class SimpleBubbleMergeVertex extends
                 //compute the dissimilarity
                 float fractionDissimilar = topMsg.computeDissimilar(curMsg); // TODO change to simmilarity everywhere
                 
-                if(fractionDissimilar <= DISSIMILAR_THRESHOLD){ //if similar with top node, delete this node and put it in deletedSet
+                if(fractionDissimilar <= DISSIMILAR_THRESHOLD){ //if similar with top node, delete this node
                 	topChanged = true;
                     // 1. add coverage to top node -- for unchangedSet
-                    topNode.addFromNode(isFlipRelativeToMajor(topMsg, curMsg), 
-                            curMsg.getNode()); 
+                	boolean sameOrientation = topMsg.sameOrientation(curMsg);
+                    topNode.addFromNode(sameOrientation, curMsg.getNode()); 
                     
                     // 2. send message to delete vertices -- for deletedSet
                     outgoingMsg.reset();

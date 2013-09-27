@@ -268,6 +268,16 @@ public class NodeWritable implements Writable, Serializable {
                         throw new RuntimeException("Unrecognized direction for neighborDir: " + neighborToMe);
                 }
             }
+            
+            public static boolean sameOrientation(EDGETYPE et1, EDGETYPE et2){
+                return et1.causesFlip() != et2.causesFlip();
+            }
+            
+            public static boolean sameOrientation(byte b1, byte b2){
+                EDGETYPE et1 = EDGETYPE.fromByte(b1);
+                EDGETYPE et2 = EDGETYPE.fromByte(b2);
+                return sameOrientation(et1, et2);
+            }
         }
     
     public static class NeighborInfo {

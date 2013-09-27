@@ -734,8 +734,15 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         return editDistance(kmer1, kmer2) / (float) min(kmer1.getKmerLetterLength(), kmer2.getKmerLetterLength());
     }
     
-    public float fracDissimilar(VKmerBytesWritable other) {
-        return fracDissimilar(this, other);
+    public float fracDissimilar(boolean sameOrientation, VKmerBytesWritable other) {
+        if(sameOrientation)
+            return fracDissimilar(this, other);
+        else{
+            String reverse = other.toString(); // TODO don't use toString here (something more efficient?)
+            VKmerBytesWritable reverseKmer = new VKmerBytesWritable();
+            reverseKmer.setByReadReverse(reverse.length(), reverse.getBytes(), 0);
+            return fracDissimilar(this, reverseKmer);
+        }
     }
     
     @Override
