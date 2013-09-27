@@ -61,16 +61,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 		    return mirror(this);
 		}
 		
-		public static DIR fromByte(short b) { // TODO remove this function 
-			//TODO change shorts to byte? (anbangx) 
-		    b &= MASK;
-		    if (b == PREVIOUS.val)
-		        return PREVIOUS;
-		    if (b == NEXT.val)
-		        return NEXT;
-		    return null;  
-		}
-		
 		public static byte fromSet(EnumSet<DIR> set) {
             byte b = 0;
             if (set.contains(PREVIOUS))
@@ -87,7 +77,7 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
 	        return direction == DIR.PREVIOUS ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
 	    }
 	    
-		public static EnumSet<DIR> enumSetFromByte(short s) {
+		public static EnumSet<DIR> enumSetFromByte(short s) {  //TODO change shorts to byte? (anbangx) 
 		    EnumSet<DIR> retSet = EnumSet.noneOf(DIR.class);
 		    if ((s & PREVIOUS.get()) != 0)
 		        retSet.add(DIR.PREVIOUS);

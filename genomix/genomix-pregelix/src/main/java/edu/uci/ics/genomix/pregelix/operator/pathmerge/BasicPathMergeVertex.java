@@ -477,11 +477,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         while (msgIterator.hasNext()) {
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                        + "before restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
+                        + "before restriction " + getVertexId() + ": " + DIR.enumSetFromByte(restrictedDirs));
             incomingMsg = msgIterator.next();
             restrictedDirs |= incomingMsg.getFlag();
             if (verbose)
-                LOG.fine("after restriction " + getVertexId() + ": " + DIR.fromByte(restrictedDirs));
+                LOG.fine("after restriction " + getVertexId() + ": " + DIR.enumSetFromByte(restrictedDirs));
             updated = true;
         }
         if (updated) {
