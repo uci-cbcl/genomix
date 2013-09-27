@@ -15,9 +15,9 @@ public class MessageFlag extends VertexStateFlag {
     
     public static final byte[] values = { DIR_FF, DIR_FR, DIR_RF, DIR_RR };
     
-    public static final short UNCHANGE = 0b01 << 7;
+    public static final short REPLACE_NODE = 0b01 << 7;
     public static final short UPDATE = 0b010 << 7; //reuse 0b0 << 6, becasue UNCHANGE and UPDATE use for different patterns
-    public static final short KILL = 0b011 << 7;
+    public static final short KILL_SELF = 0b011 << 7;
     public static final short MSG_TYPE_MASK = 0b11 << 7;
     public static final short MSG_TYPE_CLEAR = 0b111111110111111;
     

@@ -6,13 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable.NeighborInfo;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -20,6 +13,12 @@ import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.type.EdgeListWritable;
+import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.NodeWritable.NeighborInfo;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Graph clean pattern: Simple Bubble Merge
@@ -144,7 +143,7 @@ public class SimpleBubbleMergeVertex extends
                     // 2. send message to delete vertices -- for deletedSet
                     outgoingMsg.reset();
                     outFlag = 0;
-                    outFlag |= MessageFlag.KILL; //TODO killself  make msg type flag to enum
+                    outFlag |= MessageFlag.KILL_SELF; //TODO make msg type flag to enum
                     outgoingMsg.setFlag(outFlag);
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);
                     it.remove();
@@ -154,8 +153,7 @@ public class SimpleBubbleMergeVertex extends
             //TODO if only one field needs to set in flag, directly set
             outgoingMsg.reset();
             outFlag = 0;
-            //TODO replace node -- flag name
-            outFlag |= MessageFlag.UNCHANGE;
+            outFlag |= MessageFlag.REPLACE_NODE;
             outgoingMsg.setNode(topNode);
             outgoingMsg.setFlag(outFlag);
             sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
@@ -200,12 +198,12 @@ public class SimpleBubbleMergeVertex extends
             BubbleMergeMessageWritable incomingMsg = msgIterator.next();
             short msgType = (short) (incomingMsg.getFlag() & MessageFlag.MSG_TYPE_MASK);
             switch(msgType){
-                case MessageFlag.UNCHANGE:
+                case MessageFlag.REPLACE_NODE:
                     // update Node including average coverage 
                     getVertexValue().setNode(incomingMsg.getNode());
                     activate();
                     break;
-                case MessageFlag.KILL:
+                case MessageFlag.KILL_SELF:
                     broadcastKillself();
                     deleteVertex(getVertexId());
                     break;

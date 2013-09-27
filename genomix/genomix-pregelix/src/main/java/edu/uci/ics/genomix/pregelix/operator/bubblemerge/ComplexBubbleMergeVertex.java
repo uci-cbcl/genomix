@@ -206,7 +206,7 @@ public class ComplexBubbleMergeVertex extends
             //process unchangedSet -- send message to topVertex to update their coverage
             outgoingMsg.reset();
             outFlag = 0;
-            outFlag |= MessageFlag.UNCHANGE;
+            outFlag |= MessageFlag.REPLACE_NODE;
             outgoingMsg.setNode(topNode);
             outgoingMsg.setFlag(outFlag);
             sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
@@ -340,7 +340,7 @@ public class ComplexBubbleMergeVertex extends
                     switch(msgType){
                         case MessageFlag.UPDATE:
                             break;
-                        case MessageFlag.UNCHANGE:
+                        case MessageFlag.REPLACE_NODE:
                             break;
                     }
                 }
