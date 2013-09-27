@@ -138,7 +138,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     }
 
     public void setMergeDir(EDGETYPE deleteDir, DIR revertDirection) {
-        EDGETYPE mergeDir = ifFlipWithNeighbor(revertDirection) ? deleteDir.flip() : deleteDir;
+        EDGETYPE mergeDir = ifFlipWithNeighbor(revertDirection) ? deleteDir.flipNeighbor() : deleteDir;
         outFlag &= MessageFlag.MERGE_DIR_CLEAR;
         outFlag |= mergeDir.get();
     }

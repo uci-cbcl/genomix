@@ -254,11 +254,11 @@ public class NodeWritable implements Writable, Serializable {
             /**
              * check if need filp
              */
-            public EDGETYPE flip(){
-                return flip(this);
+            public EDGETYPE flipNeighbor(){
+                return flipNeighbor(this);
             }
             
-            public static EDGETYPE flip(EDGETYPE neighborToMe){ // TODO use NodeWritable
+            public static EDGETYPE flipNeighbor(EDGETYPE neighborToMe){ // TODO use NodeWritable
                 switch (neighborToMe) {
                     case FF:
                         return FR;

@@ -292,7 +292,7 @@ public class ComplexBubbleMergeVertex extends
             getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
         }
         tmpEdge.setKey(incomingMsg.getTopCoverageVertexId());
-        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flip() : neighborToMeDir;
+        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
         getVertexValue().getEdgeList(updateDir).unionAdd(tmpEdge);
     }
     

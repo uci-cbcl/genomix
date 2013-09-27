@@ -54,7 +54,7 @@ public class UnrollTandemRepeat extends
         // pick one edge and flip 
         for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
             for(EdgeWritable edge : tmpValue.getEdgeList(et)){
-                EDGETYPE flipDir = et.flip();
+                EDGETYPE flipDir = et.flipNeighbor();
                 tmpValue.getEdgeList(flipDir).add(edge);
                 tmpValue.getEdgeList(et).remove(edge);
                 // setup hasFlip to go out of the loop 
@@ -82,7 +82,7 @@ public class UnrollTandemRepeat extends
         /** pick one edge and flip **/
         for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
             for(EdgeWritable edge : getVertexValue().getEdgeList(et)){
-                EDGETYPE flipDir = et.flip();
+                EDGETYPE flipDir = et.flipNeighbor();
                 getVertexValue().getEdgeList(flipDir).add(edge);
                 getVertexValue().getEdgeList(et).remove(edge);
                 /** send flip message to node for updating edgeDir **/

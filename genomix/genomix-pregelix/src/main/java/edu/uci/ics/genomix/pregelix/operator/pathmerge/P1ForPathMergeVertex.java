@@ -140,7 +140,7 @@ public class P1ForPathMergeVertex extends
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
                         for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
                             EDGETYPE meToNeighbor = et.mirror();
-                            EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flip() : meToNeighbor;
+                            EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor() : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
                             outFlag &= MessageFlag.MERGE_DIR_CLEAR;
                             outFlag |= meToNeighbor.get() | otherToNeighbor.get() << 9;
