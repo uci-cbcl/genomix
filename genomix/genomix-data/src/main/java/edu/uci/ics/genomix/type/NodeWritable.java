@@ -26,11 +26,12 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Map;
 
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class NodeWritable implements WritableComparable<NodeWritable>, Serializable { // TODO is it more efficient to just use binaryComparable with Comparator?
+public class NodeWritable implements Writable, Serializable {
 	
 	public enum DIR {
 		
@@ -523,11 +524,6 @@ public class NodeWritable implements WritableComparable<NodeWritable>, Serializa
         endReads.readFields(in);
         this.internalKmer.readFields(in);
         averageCoverage = in.readFloat();
-    }
-
-    @Override
-    public int compareTo(NodeWritable other) {
-        return this.internalKmer.compareTo(other.internalKmer);
     }
 
     public class SortByCoverage implements Comparator<NodeWritable> {

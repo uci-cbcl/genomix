@@ -406,7 +406,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
         KmerBytesWritable.bytesUsed = bytesUsed;
     }
 
-    public static class Comparator extends WritableComparator { // TODO do we need this?
+    public static class Comparator extends WritableComparator {
         public Comparator() {
             super(KmerBytesWritable.class);
         }

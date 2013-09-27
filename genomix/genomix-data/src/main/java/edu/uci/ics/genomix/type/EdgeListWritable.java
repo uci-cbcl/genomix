@@ -27,12 +27,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
 
-public class EdgeListWritable implements WritableComparable<EdgeListWritable>, Serializable, Iterable<EdgeWritable>{
+public class EdgeListWritable implements Writable, Serializable, Iterable<EdgeWritable>{
 
     private static final long serialVersionUID = 1L;
     private static final int SIZE_INT = 4;
@@ -166,24 +166,6 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         }
     }
 
-    /**
-     * initial comparison is based on the edgelist length, then equivalence of the edges' kmers
-     */
-    @Override
-    public int compareTo(EdgeListWritable other) {
-        int result = Integer.compare(edges.size(), other.edges.size());
-        if (result != 0) {
-            return result;
-        }
-        for (int i=0; i < edges.size(); i++) {
-            result = edges.get(i).compareTo(other.edges.get(i));
-            if (result != 0) {
-                return result;
-            }
-        }
-        return 0;
-    }
-
     @Override
     public int hashCode() {
         return edges.hashCode();
@@ -194,8 +176,8 @@ public class EdgeListWritable implements WritableComparable<EdgeListWritable>, S
         if (! (o instanceof EdgeListWritable))
             return false;
 
-        EdgeListWritable ew = (EdgeListWritable) o;
-        return compareTo(ew) == 0;
+        EdgeListWritable other = (EdgeListWritable) o;
+        return edges.equals(other.edges);
     }
 
     /**

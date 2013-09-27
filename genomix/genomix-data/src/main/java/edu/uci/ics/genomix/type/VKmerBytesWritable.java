@@ -35,7 +35,7 @@ import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
  * Note: `offset` as used in this class is the offset at which the *kmer*
  * begins. There is a {@value HEADER_SIZE}-byte header preceding the kmer
  */
-public class VKmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { // TODO should be Writable<VKmer> 
+public class VKmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { 
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 }; // int indicating 0 length
     protected static final int HEADER_SIZE = 4; // number of bytes for header info

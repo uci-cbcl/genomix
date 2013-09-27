@@ -5,12 +5,13 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.PositionWritable;
 
-public class PositionWritable implements WritableComparable<PositionWritable>, Serializable{
+public class PositionWritable implements Writable, Serializable{
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
@@ -115,11 +116,6 @@ public class PositionWritable implements WritableComparable<PositionWritable>, S
             return false;
         PositionWritable other = (PositionWritable) o;
         return this.getUUID() == other.getUUID();
-    }
-    
-    @Override
-    public int compareTo(PositionWritable other) {
-        return (this.getUUID() < other.getUUID()) ? -1 : ((this.getUUID() == other.getUUID()) ? 0 : 1);
     }
     
     /*

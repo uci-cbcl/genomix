@@ -25,10 +25,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 
-public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializable{
+public class EdgeWritable implements Writable, Serializable{
 
     private static final long serialVersionUID = 1L;
     
@@ -207,11 +208,6 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
         reset();
         key.readFields(in);
         readIDs.readFields(in);
-    }
-
-    @Override
-    public int compareTo(EdgeWritable other) {
-        return this.key.compareTo(other.key);
     }
         
     @Override

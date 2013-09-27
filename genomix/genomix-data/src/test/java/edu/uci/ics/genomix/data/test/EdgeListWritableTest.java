@@ -207,37 +207,6 @@ public class EdgeListWritableTest {
     }
     
     @Test
-    public void TestCompareTo() throws IOException {
-        String oldkmerSample = "ATGCATGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATCGAT";
-        VKmerBytesWritable oldKSample = new VKmerBytesWritable(oldkmerSample);
-        EdgeWritable sample = new EdgeWritable();
-        PositionListWritable positionsSample = new PositionListWritable();
-        long numelements = 898852;
-        for (long i = 0; i < numelements; i++) {
-            positionsSample.appendReadId(i);
-        }
-        sample.setAsCopy(oldKSample, positionsSample);
-        ArrayList<EdgeWritable> sampleList = new ArrayList<EdgeWritable>();
-        sampleList.add(sample);
-        EdgeListWritable toTest = new EdgeListWritable(sampleList);
-        //begin test
-        
-        String newkmerSample = "TTTTTTGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATCGAT";
-        VKmerBytesWritable newKSample = new VKmerBytesWritable(newkmerSample);
-        EdgeWritable sample2 = new EdgeWritable();
-        PositionListWritable newpositionsSample = new PositionListWritable();
-        long numnewelements = 999;
-        for (long i = 0; i < numnewelements; i++) {
-            newpositionsSample.appendReadId(i);
-        }
-        sample2.setAsCopy(newKSample, newpositionsSample);
-        ArrayList<EdgeWritable> sampleList2 = new ArrayList<EdgeWritable>();
-        sampleList2.add(sample2);
-        EdgeListWritable toTest2 = new EdgeListWritable(sampleList2);
-        Assert.assertEquals(new String("should true"), false, toTest.compareTo(toTest2) < 0 ? false : true);
-    }
-    
-    @Test
     public void TestRemoveSubEdge() throws IOException {
         String oldkmerSample = "ATGCATGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATCGAT";
         VKmerBytesWritable oldKSample = new VKmerBytesWritable(oldkmerSample);
