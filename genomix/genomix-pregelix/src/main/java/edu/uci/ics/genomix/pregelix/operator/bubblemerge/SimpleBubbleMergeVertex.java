@@ -66,7 +66,7 @@ public class SimpleBubbleMergeVertex extends
     public void sendBubbleAndMajorVertexMsgToMinorVertex(){
     	VertexValueWritable vertex = getVertexValue();
     	NeighborInfo reverseNeighbor = vertex.getSingleNeighbor(DIR.REVERSE);
-    	NeighborInfo forwardNeighbor = vertex.getSingleNeighbor(DIR.REVERSE);
+    	NeighborInfo forwardNeighbor = vertex.getSingleNeighbor(DIR.FORWARD);
 
         //TODO combine into only one byte, change internally/under the hood
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
@@ -125,7 +125,7 @@ public class SimpleBubbleMergeVertex extends
             boolean topChanged = false;
             while(it.hasNext()){
                 curMsg = it.next();
-                //check if the vertex is valid minor and if it comes from valid major TODO pass the check variable and make static
+                //check if the vertex is valid minor and if it comes from valid major
                 if(!isValidMajorAndMinor(topMsg, curMsg))
                     continue;
                 

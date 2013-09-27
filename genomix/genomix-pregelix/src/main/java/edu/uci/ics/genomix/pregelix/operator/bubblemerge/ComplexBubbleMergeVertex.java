@@ -150,13 +150,7 @@ public class ComplexBubbleMergeVertex extends
         return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir()) && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
     
-    public boolean isFlipRelativeToMajor(BubbleMergeMessageWritable msg1, BubbleMergeMessageWritable msg2){
-        return msg1.getRelativeDirToMajor() != msg2.getRelativeDirToMajor();
-    }
-    
     public void processSimilarSetToUnchangeSetAndDeletedSet(){
-//        unchangedSet.clear();
-//        deletedSet.clear();
         topMsg.reset();
         curMsg.reset();
         while(!receivedMsgList.isEmpty()){
@@ -180,8 +174,8 @@ public class ComplexBubbleMergeVertex extends
                     activate();
                     
                     // 2. add coverage to top node -- for unchangedSet
-                    topNode.addFromNode(isFlipRelativeToMajor(topMsg, curMsg), 
-                            curMsg.getNode()); 
+                    boolean sameOrientation = topMsg.sameOrientation(curMsg);
+                    topNode.addFromNode(sameOrientation, curMsg.getNode()); 
                     
                     // 3. treat msg as a bubble vertex, broadcast kill self message to major vertex to update their edges
                     EDGETYPE majorToBubble = curMsg.getMajorToBubbleEdgetype();
