@@ -16,7 +16,6 @@ import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable.NeighborInfo;
-import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -86,18 +85,7 @@ public class SplitRepeatVertex extends
         return createdVertexId;
     }
    
-    // TODO move to EdgeWritable
-    //TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
-    public Set<Long> getEdgeIntersection(EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
-    	Set<Long> edgeIntersection = new HashSet<Long>();
-    	for (PositionWritable p : incomingEdge.getReadIDs()) {
-    			edgeIntersection.add(p.getReadId());
-    	}
-        Set<Long> outgoingReadIds = outgoingEdge.getSetOfReadIds();
-        edgeIntersection.retainAll(outgoingReadIds);
-        return edgeIntersection;
-    }
-    
+    // TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void createNewVertex(VKmerBytesWritable createdVertexId, NeighborInfo reverseNeighborInfo,
     		NeighborInfo forwardNeighborInfo){
@@ -170,7 +158,7 @@ public class SplitRepeatVertex extends
                 for(EdgeWritable reverseEdge : reverseEdgeList){
                     for(EdgeWritable forwardEdge : forwardEdgeList){
                         // set neighborEdge readId intersection
-                        Set<Long> edgeIntersection = getEdgeIntersection(reverseEdge, forwardEdge);
+                        Set<Long> edgeIntersection = EdgeWritable.getEdgeIntersection(reverseEdge, forwardEdge);
                         
                         if(!edgeIntersection.isEmpty()){
                             // random generate vertexId of new vertex

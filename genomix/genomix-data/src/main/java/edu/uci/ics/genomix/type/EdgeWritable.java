@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -265,5 +266,15 @@ public class EdgeWritable implements Writable, Serializable{
         sbuilder.append("}");
         
         return sbuilder.toString();
+    }
+    
+    public static Set<Long> getEdgeIntersection(EdgeWritable reverseEdge, EdgeWritable forwardEdge){
+        Set<Long> edgeIntersection = new HashSet<Long>();
+        for (PositionWritable p : reverseEdge.getReadIDs()) {
+                edgeIntersection.add(p.getReadId());
+        }
+        Set<Long> outgoingReadIds = forwardEdge.getSetOfReadIds();
+        edgeIntersection.retainAll(outgoingReadIds);
+        return edgeIntersection;
     }
 }
