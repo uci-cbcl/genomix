@@ -12,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable;
@@ -135,7 +136,7 @@ public class P1ForPathMergeVertex extends
                     outgoingMsg.setSourceVertexId(me);
                     outgoingMsg.getNode().setInternalKmer(other);
                     outFlag = 0;
-                    outFlag |= MessageFlag.TO_NEIGHBOR;
+                    outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
                         for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
                             EDGETYPE meToNeighbor = et.mirror();
@@ -186,12 +187,12 @@ public class P1ForPathMergeVertex extends
         neighborMsgs.clear();
         while(msgIterator.hasNext()){
             PathMergeMessageWritable incomingMsg = msgIterator.next();
-            byte msgType = (byte) (incomingMsg.getFlag() & MessageFlag.MSG_MASK);
+            MESSAGETYPE msgType = MESSAGETYPE.fromByte(incomingMsg.getFlag());
             switch(msgType){
-                case MessageFlag.TO_UPDATE:
+                case UPDATE:
                     updateMsgs.add(new PathMergeMessageWritable(incomingMsg));
                     break;
-                case MessageFlag.TO_NEIGHBOR:
+                case TO_NEIGHBOR:
                     neighborMsgs.add(new PathMergeMessageWritable(incomingMsg));
                     break;
                 default:

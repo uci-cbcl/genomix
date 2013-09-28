@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
@@ -136,7 +136,7 @@ public class SimpleBubbleMergeVertex extends
                     // 2. send message to delete vertices -- for deletedSet
                     outgoingMsg.reset();
                     outFlag = 0;
-                    outFlag |= MessageFlag.KILL_SELF; //TODO make msg type flag to enum
+                    outFlag |= MESSAGETYPE.KILL_SELF.get(); //TODO make msg type flag to enum
                     outgoingMsg.setFlag(outFlag);
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);
                     it.remove();
@@ -147,7 +147,7 @@ public class SimpleBubbleMergeVertex extends
             if (topChanged) {
 	            outgoingMsg.reset();
 	            outFlag = 0;
-	            outFlag |= MessageFlag.REPLACE_NODE;
+	            outFlag |= MESSAGETYPE.KILL_SELF.get();
 	            outgoingMsg.setNode(topNode);
 	            outgoingMsg.setFlag(outFlag);
 	            sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
@@ -191,14 +191,14 @@ public class SimpleBubbleMergeVertex extends
     public void receiveUpdates(Iterator<BubbleMergeMessageWritable> msgIterator){
         while(msgIterator.hasNext()){
             BubbleMergeMessageWritable incomingMsg = msgIterator.next();
-            short msgType = (short) (incomingMsg.getFlag() & MessageFlag.MSG_TYPE_MASK); //TODO change msg type to enum
-            switch(msgType){
-                case MessageFlag.REPLACE_NODE:
+            MESSAGETYPE mt = MESSAGETYPE.fromByte(incomingMsg.getFlag());
+            switch(mt){
+                case REPLACE_NODE:
                     // update Node including average coverage 
                     getVertexValue().setNode(incomingMsg.getNode());
                     activate();
                     break;
-                case MessageFlag.KILL_SELF:
+                case KILL_SELF:
                     broadcastKillself();
                     deleteVertex(getVertexId());
                     break;

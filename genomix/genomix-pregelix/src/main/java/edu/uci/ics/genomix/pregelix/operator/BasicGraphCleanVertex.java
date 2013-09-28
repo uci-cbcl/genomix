@@ -25,7 +25,7 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -93,20 +93,20 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             verbose |= debug && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
     }
     
-    /**
-     * check the message type
-     */
-    public boolean isReceiveKillMsg(M incomingMsg){
-        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
-        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-        return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
-    }
-    
-    public boolean isResponseKillMsg(M incomingMsg){
-        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
-        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-        return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
-    }
+//    /**
+//     * check the message type
+//     */
+//    public boolean isReceiveKillMsg(M incomingMsg){
+//        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
+//        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
+//        return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
+//    }
+//    
+//    public boolean isResponseKillMsg(M incomingMsg){
+//        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
+//        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
+//        return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
+//    }
     
     /**
      * send message to all neighbor nodes
@@ -138,8 +138,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void broadcaseKillself(){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL;
-        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
+        outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
         
         sendSettledMsgToAllNeighborNodes(getVertexValue());
         

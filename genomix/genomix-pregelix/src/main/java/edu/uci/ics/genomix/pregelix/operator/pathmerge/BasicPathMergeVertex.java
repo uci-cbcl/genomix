@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
@@ -141,7 +141,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.reset();
             outgoingMsg.setSourceVertexId(getVertexId());
             outFlag = 0;
-            outFlag |= MessageFlag.TO_UPDATE | updateEdge.mirror().get(); // neighbor's edge to me (so he can remove me)
+            outFlag |= MESSAGETYPE.UPDATE.get() | updateEdge.mirror().get(); // neighbor's edge to me (so he can remove me)
             outgoingMsg.setFlag(outFlag);
             for (EDGETYPE mergeEdge : mergeEdges) {
                 EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);

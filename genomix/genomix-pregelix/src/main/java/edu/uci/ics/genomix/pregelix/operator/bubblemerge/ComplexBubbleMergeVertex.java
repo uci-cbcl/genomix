@@ -19,7 +19,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
+import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /**
@@ -193,7 +193,7 @@ public class ComplexBubbleMergeVertex extends
                     EDGETYPE bubbleToMajor = majorToBubble.mirror();
                     outgoingMsg.reset();
                     outFlag = 0;
-                    outFlag |= bubbleToMajor.get() | MessageFlag.TO_UPDATE;
+                    outFlag |= bubbleToMajor.get() | MESSAGETYPE.UPDATE.get();
                     outgoingMsg.setFlag(outFlag);
                     sendMsg(curMsg.getMajorVertexId(), outgoingMsg);
 //                    boolean flip = curMsg.isFlip(topCoverageVertexMsg);
@@ -211,7 +211,7 @@ public class ComplexBubbleMergeVertex extends
             //process unchangedSet -- send message to topVertex to update their coverage
             outgoingMsg.reset();
             outFlag = 0;
-            outFlag |= MessageFlag.REPLACE_NODE;
+            outFlag |= MESSAGETYPE.REPLACE_NODE.get();
             outgoingMsg.setNode(topNode);
             outgoingMsg.setFlag(outFlag);
             sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
@@ -261,8 +261,7 @@ public class ComplexBubbleMergeVertex extends
     
     public void broadcaseUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL;
-        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
+        outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
         outgoingMsg.setFlip(incomingMsg.isFlip());
@@ -274,8 +273,7 @@ public class ComplexBubbleMergeVertex extends
      */
     public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL;
-        outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
+        outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
         outgoingMsg.setFlip(incomingMsg.isFlip());
@@ -341,11 +339,11 @@ public class ComplexBubbleMergeVertex extends
             else{
                 while(msgIterator.hasNext()){
                     BubbleMergeMessageWritable incomingMsg = msgIterator.next();
-                    short msgType = (short) (incomingMsg.getFlag() & MessageFlag.MSG_TYPE_MASK);
+                    MESSAGETYPE msgType = MESSAGETYPE.fromByte(incomingMsg.getFlag());
                     switch(msgType){
-                        case MessageFlag.TO_UPDATE:
+                        case UPDATE:
                             break;
-                        case MessageFlag.REPLACE_NODE:
+                        case REPLACE_NODE:
                             break;
                     }
                 }
