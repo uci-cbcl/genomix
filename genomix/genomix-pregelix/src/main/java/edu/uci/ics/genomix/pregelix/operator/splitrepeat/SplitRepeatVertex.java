@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessageWritable;
@@ -29,6 +30,8 @@ public class SplitRepeatVertex extends
     BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessageWritable>{
     
     public static final int NUM_LETTERS_TO_APPEND = 3;
+    private static long randSeed = 1; //static for save memory
+    private Random randGenerator = null;
     
     private EdgeWritable newReverseEdge = new EdgeWritable();
     private EdgeWritable newForwardEdge = new EdgeWritable();
@@ -44,6 +47,9 @@ public class SplitRepeatVertex extends
         //TODO initialize (using new) when you declare these variables that don't depend on the conf
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
+        randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
+        if (randGenerator == null)
+            randGenerator = new Random(randSeed);
         StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
@@ -57,11 +63,10 @@ public class SplitRepeatVertex extends
     public String generaterRandomString(int n){
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
-        Random random = new Random(); // TODO use the seed given from cmd line... but only set this once at the beginning of the algorithm (don't reset the seed here)
         synchronized(existKmerString){ // make local(not static) and remove synchronized
             while(true){ // TODO what if the len(existing) > num_letters added ? (infinite loop) 
                 for (int i = 0; i < n; i++) {
-                    char c = chars[random.nextInt(chars.length)];
+                    char c = chars[randGenerator.nextInt(chars.length)];
                     sb.append(c);
                 }
                 if(!existKmerString.contains(sb.toString()))
@@ -121,18 +126,8 @@ public class SplitRepeatVertex extends
             getVertexValue().getEdgeList(neighborInfo.et).removeSubEdge(neighborInfo.edge);
     }
     
-    public void updateEdgeListPointToNewVertex(SplitRepeatMessageWritable incomingMsg){
-        EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
-        EdgeWritable createdEdge = incomingMsg.getCreatedEdge();
-        EdgeWritable deletedEdge = createdEdge;
-        deletedEdge.setKey(incomingMsg.getSourceVertexId());
-        
-        getVertexValue().getEdgeList(meToNeighbor).add(new EdgeWritable(createdEdge));
-        getVertexValue().getEdgeList(meToNeighbor).removeSubEdge(deletedEdge);
-    }
-    
     public void detectRepeatAndSplit(){
-        if(getVertexValue().getDegree() > 2){
+        if(getVertexValue().getDegree() > 2){ // if I may be a repeat which can be split
             Set<NeighborInfo> deletedNeighborsInfo = new HashSet<NeighborInfo>();
             VertexValueWritable vertex = getVertexValue();
             // process connectedTable
@@ -196,8 +191,15 @@ public class SplitRepeatVertex extends
     public void responseToRepeat(Iterator<SplitRepeatMessageWritable> msgIterator){
         while(msgIterator.hasNext()){
             SplitRepeatMessageWritable incomingMsg = msgIterator.next();
+            
             // update edgelist to new/created vertex
-            updateEdgeListPointToNewVertex(incomingMsg);
+            EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
+            EdgeWritable createdEdge = incomingMsg.getCreatedEdge();
+            EdgeWritable deletedEdge = createdEdge;
+            deletedEdge.setKey(incomingMsg.getSourceVertexId());
+            
+            getVertexValue().getEdgeList(meToNeighbor).add(new EdgeWritable(createdEdge));
+            getVertexValue().getEdgeList(meToNeighbor).removeSubEdge(deletedEdge);
         }
     }
     

@@ -33,11 +33,11 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     private VKmerBytesWritable curKmer = new VKmerBytesWritable();
     private VKmerBytesWritable nextKmer = new VKmerBytesWritable();
     private VKmerBytesWritable prevKmer = new VKmerBytesWritable();
-    private boolean hasNext;
-    private boolean hasPrev;
-    private boolean curHead;
-    private boolean nextHead;
-    private boolean prevHead;
+    private boolean hasNext = false;
+    private boolean hasPrev = false;
+    private boolean curHead = false;
+    private boolean nextHead = false;
+    private boolean prevHead = false;
     private EDGETYPE nextEdgetype;
     private EDGETYPE prevEdgetype;
 
@@ -57,13 +57,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         if (probBeingRandomHead < 0)
             probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(
                     GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
-        hasNext = false;
-        hasPrev = false;
-        curHead = false;
-        nextHead = false;
-        prevHead = false;
-        outFlag = (byte) 0;
-        inFlag = (byte) 0;
         // Node may be marked as head b/c it's a real head or a real tail
         if (repeatKmer == null)
             repeatKmer = new VKmerBytesWritable();
