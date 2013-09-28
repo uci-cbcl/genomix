@@ -291,6 +291,12 @@ public class NodeWritable implements Writable, Serializable {
             edge = edgeWritable;
             kmer = edge.getKey();
         }
+        
+        public void set(EDGETYPE edgeType, EdgeWritable edgeWritable){
+        	et = edgeType;
+            edge = edgeWritable;
+            kmer = edge.getKey();
+        }
     }
     
     public static class NeighborsInfo implements Iterable<NeighborInfo>{
