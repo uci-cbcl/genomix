@@ -18,7 +18,6 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 
 /**
  * Testing tool: Add Bubble
@@ -50,24 +49,6 @@ public class BubbleAddVertex extends
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
    
-    /**
-     * Returns the edge dir for B->A when the A->B edge is type @dir
-     */
-    public byte mirrorDirection(byte dir) {
-        switch (dir) {
-            case MessageFlag.DIR_FF:
-                return MessageFlag.DIR_RR;
-            case MessageFlag.DIR_FR:
-                return MessageFlag.DIR_FR;
-            case MessageFlag.DIR_RF:
-                return MessageFlag.DIR_RF;
-            case MessageFlag.DIR_RR:
-                return MessageFlag.DIR_FF;
-            default:
-                throw new RuntimeException("Unrecognized direction in flipDirection: " + dir);
-        }
-    }
-    
     /**
      * add a bubble
      */

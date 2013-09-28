@@ -39,6 +39,7 @@ public class NodeWritable implements Writable, Serializable {
 		FORWARD((byte) (0b10 << 2));
 		
 		public static final byte MASK = (byte)(0b11 << 2); 
+		public static final byte CLEAR = (byte)(0b1110011); 
 		
 		private final byte val;
 		private DIR(byte val) {

@@ -101,7 +101,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             VKmerListWritable kmerList = kmerMapper.get(key);
             for(int i = 1; i < kmerList.getCountOfPosition(); i++){
                 //send kill message
-                outgoingMsg.setFlag(MessageFlag.KILL2);
+                outgoingMsg.setFlag(MessageFlag.KILL);
                 VKmerBytesWritable destVertexId = kmerList.getPosition(i);
                 sendMsg(destVertexId, outgoingMsg);
             }
@@ -112,7 +112,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         while(msgIterator.hasNext()){
             M incomingMsg = msgIterator.next();
             inFlag = incomingMsg.getFlag();
-            if(inFlag == MessageFlag.KILL2){
+            if(inFlag == MessageFlag.KILL){
                 broadcaseKillself();
             }
         }

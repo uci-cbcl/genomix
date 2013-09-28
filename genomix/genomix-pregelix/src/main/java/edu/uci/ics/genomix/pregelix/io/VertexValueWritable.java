@@ -15,55 +15,30 @@ public class VertexValueWritable
     private static final long serialVersionUID = 1L;
     
     public static class VertexStateFlag {
-        public static final byte TO_UPDATE = 0b01 << 5;
-        public static final byte TO_OTHER = 0b10 << 5;
-        public static final byte TO_NEIGHBOR = 0b11 << 5;
         
-        public static final byte MSG_MASK = 0b11 << 5; 
-        public static final byte MSG_CLEAR = (byte)0011111;
+        public static final byte IS_NON = 0b1 << 6;
+        public static final byte IS_ERROR = 0b1 << 6;
         
-        //TODO clean up code
-        public static final byte IS_NON = 0b000 << 4;
-        public static final byte IS_HEAD = 0b001 << 4;
-        public static final byte IS_FINAL = 0b010 << 4;
-        
-        public static final byte IS_OLDHEAD = 0b011 << 4;
-        
-        public static final byte IS_HALT = 0b100 << 4;
-        public static final byte IS_DEAD = 0b101 << 4;
-        public static final byte IS_ERROR = 0b110 << 4;
-        
-        public static final byte VERTEX_MASK = 0b111 << 4; 
-        public static final byte VERTEX_CLEAR = (byte)0001111;
+        public static final byte VERTEX_MASK = 0b1 << 6; 
+        public static final byte VERTEX_CLEAR = (byte)0111111;
         
         public static String getContent(short stateFlag){
             switch(stateFlag & VERTEX_MASK){
-                case IS_NON:
-                    return "IS_NON";
-                case IS_HEAD:
-                    return "IS_HEAD";
-                case IS_FINAL:
-                    return "IS_FINAL";
-                case IS_OLDHEAD:
-                    return "IS_OLDHEAD";
-                case IS_HALT:
-                    return "IS_HALT";
-                case IS_DEAD:
-                    return "IS_DEAD";
                 case IS_ERROR:
                     return "IS_ERROR";
-                    
             }
             return null;
         }
     }
     
-    public static class State extends VertexStateFlag{   
-        public static final byte NO_MERGE = 0b00 << 0;
-        public static final byte CAN_MERGEWITHNEXT = 0b01 << 0;
-        public static final byte CAN_MERGEWITHPREV = 0b10 << 0;
-        public static final byte CAN_MERGE_MASK = 0b11 << 0;
-        public static final byte CAN_MERGE_CLEAR = 0b1111100;
+    public static class State extends VertexStateFlag{
+        // 2 bits(0-1) for EDGETYPE, then 2 bits(2-3) for set of DIR's
+        // each merge has an edge-type direction (e.g., FF)
+        // 1 bit(4) to tell the decision to merge
+        public static final byte NO_MERGE = 0b0 << 4;
+        public static final byte MERGE = 0b1 << 4;
+        public static final byte MERGE_CLEAR = 0b1101100; // clear the MERGE/NO_MERGE and the MERGE_DIRECTION
+        public static final byte MERGE_MASK = 0b0010011;
         
         public static final short IS_NONFAKE = 0 << 7;
         public static final short IS_FAKE = 1 << 7;
@@ -72,7 +47,7 @@ public class VertexValueWritable
     }
     
     public static class P4State {
-        // 2 bits for DirectionFlag, then 2 bits for set of DIR's
+        // 2 bits(0-1) for EDGETYPE, then 2 bits(2-3) for set of DIR's
         // each merge has an edge-type direction (e.g., FF)
         public static final byte NO_MERGE = 0b0 << 4;
         public static final byte MERGE = 0b1 << 4;

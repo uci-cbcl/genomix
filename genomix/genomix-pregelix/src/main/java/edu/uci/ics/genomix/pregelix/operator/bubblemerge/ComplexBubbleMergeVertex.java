@@ -193,7 +193,7 @@ public class ComplexBubbleMergeVertex extends
                     EDGETYPE bubbleToMajor = majorToBubble.mirror();
                     outgoingMsg.reset();
                     outFlag = 0;
-                    outFlag |= bubbleToMajor.get() | MessageFlag.UPDATE;
+                    outFlag |= bubbleToMajor.get() | MessageFlag.TO_UPDATE;
                     outgoingMsg.setFlag(outFlag);
                     sendMsg(curMsg.getMajorVertexId(), outgoingMsg);
 //                    boolean flip = curMsg.isFlip(topCoverageVertexMsg);
@@ -261,7 +261,7 @@ public class ComplexBubbleMergeVertex extends
     
     public void broadcaseUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL2;
+        outFlag |= MessageFlag.KILL;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
@@ -274,7 +274,7 @@ public class ComplexBubbleMergeVertex extends
      */
     public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL2;
+        outFlag |= MessageFlag.KILL;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
@@ -343,7 +343,7 @@ public class ComplexBubbleMergeVertex extends
                     BubbleMergeMessageWritable incomingMsg = msgIterator.next();
                     short msgType = (short) (incomingMsg.getFlag() & MessageFlag.MSG_TYPE_MASK);
                     switch(msgType){
-                        case MessageFlag.UPDATE:
+                        case MessageFlag.TO_UPDATE:
                             break;
                         case MessageFlag.REPLACE_NODE:
                             break;

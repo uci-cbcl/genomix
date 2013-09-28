@@ -58,11 +58,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected short inFlag;
     protected short selfFlag;
     
-//    protected EdgeListWritable incomingEdgeList = null; //SplitRepeat and BubbleMerge
-//    protected EdgeListWritable outgoingEdgeList = null; //SplitRepeat and BubbleMerge
-//    protected EDGETYPE incomingEdgeType; //SplitRepeat and BubbleMerge
-//    protected EDGETYPE outgoingEdgeType; //SplitRepeat and BubbleMerge
-    
     protected static List<VKmerBytesWritable> problemKmers = null;
     protected boolean debug = false;
     protected boolean verbose = false;
@@ -104,19 +99,13 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public boolean isReceiveKillMsg(M incomingMsg){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-        return killFlag == MessageFlag.KILL2 & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
-    }
-    
-    public boolean isReceiveUpdateMsg(M incomingMsg){
-        byte updateFlag = (byte) (incomingMsg.getFlag() & MessageFlag.UPDATE_MASK);
-        return updateFlag == MessageFlag.UPDATE;
-        
+        return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
     }
     
     public boolean isResponseKillMsg(M incomingMsg){
         byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
         byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-        return killFlag == MessageFlag.KILL2 & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
+        return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
     }
     
     /**
@@ -129,7 +118,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         for(EDGETYPE e : edgeTypes){
             kmerIterator = value.getEdgeList(e).getKeyIterator();
             while(kmerIterator.hasNext()){
-                outFlag &= MessageFlag.DIR_CLEAR;
+                outFlag &= DIR.CLEAR;
                 outFlag |= e.get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
@@ -145,24 +134,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * set neighborToMe Dir
-     */
-    public void setNeighborToMeDir(DIR direction){
-        if(getVertexValue().getDegree(direction) != 1)
-            throw new IllegalArgumentException("In merge dir, the degree is not 1");
-        EnumSet<EDGETYPE> edgeTypes = direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
-        outFlag &= MessageFlag.DIR_CLEAR;
-        
-        for (EDGETYPE et : edgeTypes)
-            outFlag |= et.get();
-    }
-    
-    /**
      * broadcast kill self to all neighbers ***
      */
     public void broadcaseKillself(){
         outFlag = 0;
-        outFlag |= MessageFlag.KILL2;
+        outFlag |= MessageFlag.KILL;
         outFlag |= MessageFlag.DIR_FROM_DEADVERTEX;
         
         sendSettledMsgToAllNeighborNodes(getVertexValue());
