@@ -46,8 +46,6 @@ public class SplitRepeatVertex extends
         //TODO initialize (using new) when you declare these variables that don't depend on the conf
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
-        else
-            outgoingMsg.reset();         //TODO don't reset here; rather reset right before you use the outgoingMsg
         StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
