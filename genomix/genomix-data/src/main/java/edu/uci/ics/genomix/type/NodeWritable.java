@@ -638,7 +638,7 @@ public class NodeWritable implements Writable, Serializable {
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+        for (EDGETYPE e : EDGETYPE.values()) {
             sbuilder.append(edges[e.get()].toString()).append('\t');
         }
         sbuilder.append("{5':" + startReads.toString() + ", ~5':" + endReads.toString() + "}").append('\t');
