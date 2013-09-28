@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
 
-import edu.uci.ics.genomix.pregelix.io.common.AdjacencyListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
@@ -142,30 +141,6 @@ public class VertexValueWritable
         setEdgeList(EDGETYPE.RR, reverseReverseList);
     }
     
-    public AdjacencyListWritable getIncomingList() {
-        AdjacencyListWritable incomingList = new AdjacencyListWritable();
-        incomingList.setForwardList(getRFList());
-        incomingList.setReverseList(getRRList());
-        return incomingList;
-    }
-
-    public void setIncomingList(AdjacencyListWritable incomingList) {
-        this.setRFList(incomingList.getForwardList());
-        this.setRRList(incomingList.getReverseList());
-    }
-
-    public AdjacencyListWritable getOutgoingList() {
-        AdjacencyListWritable outgoingList = new AdjacencyListWritable();
-        outgoingList.setForwardList(getFFList());
-        outgoingList.setReverseList(getFRList());
-        return outgoingList;
-    }
-
-    public void setOutgoingList(AdjacencyListWritable outgoingList) {
-        this.setFFList(outgoingList.getForwardList());
-        this.setFRList(outgoingList.getReverseList());
-    }
-
     public short getState() {
         return state;
     }

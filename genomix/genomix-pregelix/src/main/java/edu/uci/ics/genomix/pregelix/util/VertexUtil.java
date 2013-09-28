@@ -1,8 +1,6 @@
 package edu.uci.ics.genomix.pregelix.util;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.common.AdjacencyListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class VertexUtil {
@@ -123,18 +121,6 @@ public class VertexUtil {
      */
     public static boolean isDownBridgeVertex(VertexValueWritable value){
         return value.inDegree() > 1 && value.outDegree() == 1;
-    }
-    
-    /**
-     * get nodeId from Ad
-     */
-    public static EdgeWritable getNodeIdFromAdjacencyList(AdjacencyListWritable adj){
-        if(adj.getForwardList().size() > 0)
-            return adj.getForwardList().get(0);
-        else if(adj.getReverseList().size() > 0)
-            return adj.getReverseList().get(0);
-        else
-            return null;
     }
     
     /**
