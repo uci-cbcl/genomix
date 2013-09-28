@@ -1,5 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +17,7 @@ import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -29,6 +32,8 @@ public class SplitRepeatVertex extends
     
     public static final int NUM_LETTERS_TO_APPEND = 3;
     
+    private EdgeWritable newReverseEdge = new EdgeWritable();
+    private EdgeWritable newForwardEdge = new EdgeWritable();
     
     private static Set<String> existKmerString = Collections.synchronizedSet(new HashSet<String>());
     private VKmerBytesWritable createdVertexId = null;  
@@ -41,10 +46,12 @@ public class SplitRepeatVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
+        //TODO initialize (using new) when you declare these variables that don't depend on the conf
+
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
         else
-            outgoingMsg.reset();
+            outgoingMsg.reset();         //TODO don't reset here; rather reset right before you use the outgoingMsg
         if(createdVertexId == null)
             createdVertexId = new VKmerBytesWritable();
         StatisticsAggregator.preGlobalCounters.clear();
@@ -60,9 +67,9 @@ public class SplitRepeatVertex extends
     public String generaterRandomString(int n){
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
-        Random random = new Random();
-        synchronized(existKmerString){
-            while(true){
+        Random random = new Random(); // TODO use the seed given from cmd line... but only set this once at the beginning of the algorithm (don't reset the seed here)
+        synchronized(existKmerString){ // make local(not static) and remove synchronized
+            while(true){ // TODO what if the len(existing) > num_letters added ? (infinite loop) 
                 for (int i = 0; i < n; i++) {
                     char c = chars[random.nextInt(chars.length)];
                     sb.append(c);
@@ -80,21 +87,24 @@ public class SplitRepeatVertex extends
         createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
     }
    
+    // TODO move to EdgeWritable
+    // TODO forward/reverse not incoming/outgoing //TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
     public Set<Long> getEdgeIntersection(EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
-        Set<Long> incomingReadIds = incomingEdge.getSetOfReadIds();
+    	Set<Long> edgeIntersection = new HashSet<Long>();
+    	for (PositionWritable p : incomingEdge.getReadIDs()) {
+    			edgeIntersection.add(p.getReadId());
+    	}
         Set<Long> outgoingReadIds = outgoingEdge.getSetOfReadIds();
-        Set<Long> edgeIntersection = new HashSet<Long>();
-        edgeIntersection.addAll(incomingReadIds);
         edgeIntersection.retainAll(outgoingReadIds);
-        
         return edgeIntersection;
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void createNewVertex(int i, EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
-        Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-        vertex.getMsgList().clear();
-        vertex.getEdges().clear();
+    	// TODO refactor with NeighborInfo passed in
+        Vertex newVertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+        newVertex.getMsgList().clear();
+        newVertex.getEdges().clear();
         VKmerBytesWritable vertexId = new VKmerBytesWritable();
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
@@ -105,15 +115,16 @@ public class SplitRepeatVertex extends
         vertexValue.setInternalKmer(getVertexId());
         
         vertexId.setAsCopy(createdVertexId);
-        vertex.setVertexId(vertexId);
-        vertex.setVertexValue(vertexValue);
+        newVertex.setVertexId(vertexId);
+        newVertex.setVertexValue(vertexValue);
         
-        addVertex(vertexId, vertex);
+        addVertex(vertexId, newVertex);
     }
     
-    public void sendMsgToUpdateEdge(EdgeWritable incomingEdge, EDGETYPE incomingEdgeType, 
+    public void updateNeighbors(EdgeWritable incomingEdge, EDGETYPE incomingEdgeType, 
             EdgeWritable outgoingEdge, EDGETYPE outgoingEdgeType, 
             Set<Long> edgeIntersection){
+    	// TODO simplify this to use generic update.  operation is "SPLIT_EDGE?" and should use the Node inside the message directly
         EdgeWritable createdEdge = new EdgeWritable();
         createdEdge.setKey(createdVertexId);
         for(Long readId: edgeIntersection)
@@ -126,17 +137,15 @@ public class SplitRepeatVertex extends
         outgoingMsg.setDeletedEdge(deletedEdge);
         
         outgoingMsg.setFlag(incomingEdgeType.get());
-        VKmerBytesWritable destVertexId = null;
-        destVertexId = incomingEdge.getKey();
-        sendMsg(destVertexId, outgoingMsg);
+        sendMsg(incomingEdge.getKey(), outgoingMsg);
         
         outgoingMsg.setFlag(outgoingEdgeType.get());
-        destVertexId = outgoingEdge.getKey();
-        sendMsg(destVertexId, outgoingMsg);
+        sendMsg(outgoingEdge.getKey(), outgoingMsg);
     }
     
     public void deleteEdgeFromOldVertex(int i, EdgeWritable incomingEdge, EDGETYPE incomingEdgeType,
             EdgeWritable outgoingEdge, EDGETYPE outgoingEdgeType){
+    	// TODO use NeighborInfo
         getVertexValue().getEdgeList(incomingEdgeType).removeSubEdge(incomingEdge);
         getVertexValue().getEdgeList(outgoingEdgeType).removeSubEdge(outgoingEdge);
     }
@@ -153,45 +162,47 @@ public class SplitRepeatVertex extends
         if(getVertexValue().getDegree() > 2){
             VertexValueWritable vertex = getVertexValue();
             // process connectedTable
-            for(int i = 0; i < 4; i++){
+            for(int i = 0; i < connectedTable.length; i++){
                 // set edgeType and the corresponding edgeList based on connectedTable
-                EDGETYPE incomingEdgeType = connectedTable[i][0];
-                EDGETYPE outgoingEdgeType = connectedTable[i][1];
-                EdgeListWritable incomingEdgeList = vertex.getEdgeList(incomingEdgeType);
-                EdgeListWritable outgoingEdgeList = vertex.getEdgeList(outgoingEdgeType);
+                EDGETYPE reverseEdgeType = connectedTable[i][0];
+                EDGETYPE forwardEdgeType = connectedTable[i][1];
+                EdgeListWritable reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
+                EdgeListWritable forwardEdgeList = vertex.getEdgeList(forwardEdgeType);
                 
-                for(EdgeWritable incomingEdge : incomingEdgeList){
-                    for(EdgeWritable outgoingEdge : outgoingEdgeList){
+                for(EdgeWritable reverseEdge : reverseEdgeList){
+                    for(EdgeWritable forwardEdge : forwardEdgeList){
                         // set neighborEdge readId intersection
-                        Set<Long> edgeIntersection = getEdgeIntersection(incomingEdge, outgoingEdge);
+                        Set<Long> edgeIntersection = getEdgeIntersection(reverseEdge, forwardEdge);
                         
                         if(!edgeIntersection.isEmpty()){
                             // random generate vertexId of new vertex
-                            randomGenerateVertexId(NUM_LETTERS_TO_APPEND);
+                        	// TODO return new vertexId 
+                            randomGenerateVertexId(NUM_LETTERS_TO_APPEND); // TODO create new vertex when add letters, the #letter depends on the time, which can't cause collision
                             
                             // change new incomingEdge/outgoingEdge's edgeList to commondReadIdSet
-                            EdgeWritable newIncomingEdge = new EdgeWritable();
-                            EdgeWritable newOutgoingEdge = new EdgeWritable();
-                            newIncomingEdge.setKey(incomingEdge.getKey());
-                            newIncomingEdge.setReadIDs(edgeIntersection);
-                            newOutgoingEdge.setKey(outgoingEdge.getKey());
-                            newOutgoingEdge.setReadIDs(edgeIntersection);
+                            newReverseEdge.reset();
+                            newReverseEdge.setKey(reverseEdge.getKey());
+                            newReverseEdge.setReadIDs(edgeIntersection);
+                            newForwardEdge.reset();
+                            newForwardEdge.setKey(forwardEdge.getKey());
+                            newForwardEdge.setReadIDs(edgeIntersection);
                             
                             // create new/created vertex which has new incomingEdge/outgoingEdge
-                            createNewVertex(i, newIncomingEdge, newOutgoingEdge);
+                            createNewVertex(i, newReverseEdge, newForwardEdge);
                             
                             //set statistics counter: Num_SplitRepeats
                             incrementCounter(StatisticsCounter.Num_SplitRepeats);
                             getVertexValue().setCounters(counters);
                             
                             // send msg to neighbors to update their edges to new vertex 
-                            sendMsgToUpdateEdge(newIncomingEdge, incomingEdgeType, 
-                                    newOutgoingEdge, outgoingEdgeType, 
+                            updateNeighbors(newReverseEdge, reverseEdgeType, 
+                                    newForwardEdge, forwardEdgeType, 
                                     edgeIntersection);
                             
+                            // store deleteSet, move this out of loop
                             // delete extra edges from old vertex
-                            deleteEdgeFromOldVertex(i, newIncomingEdge, incomingEdgeType,
-                                    newOutgoingEdge, outgoingEdgeType);
+                            deleteEdgeFromOldVertex(i, newReverseEdge, reverseEdgeType,
+                                    newForwardEdge, forwardEdgeType);
                         }
                     }
                 }                

@@ -302,6 +302,7 @@ public class EdgeListWritable implements Writable, Serializable, Iterable<EdgeWr
     }
 
     public void removeSubEdge(EdgeWritable toRemove){
+    	// TODO use set under the hood then simplify (jake)
         Iterator<Long> it = toRemove.readIDIter();
         while(it.hasNext()){
             long readId = it.next();
