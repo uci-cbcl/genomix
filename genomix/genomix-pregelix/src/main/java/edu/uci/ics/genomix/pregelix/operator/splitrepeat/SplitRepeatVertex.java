@@ -87,7 +87,7 @@ public class SplitRepeatVertex extends
     }
    
     // TODO move to EdgeWritable
-    // TODO forward/reverse not incoming/outgoing //TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
+    //TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
     public Set<Long> getEdgeIntersection(EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
     	Set<Long> edgeIntersection = new HashSet<Long>();
     	for (PositionWritable p : incomingEdge.getReadIDs()) {
@@ -142,8 +142,7 @@ public class SplitRepeatVertex extends
         sendMsg(newForwardNeighborInfo.edge.getKey(), outgoingMsg);
     }
     
-    public void deleteEdgeFromOldVertex(NeighborInfo newReverseNeighborInfo, 
-    		NeighborInfo newForwardNeighborInfo){
+    public void deleteEdgeFromOldVertex(NeighborInfo newReverseNeighborInfo, NeighborInfo newForwardNeighborInfo){
     	// TODO use NeighborInfo
         getVertexValue().getEdgeList(newReverseNeighborInfo.et).removeSubEdge(newReverseNeighborInfo.edge);
         getVertexValue().getEdgeList(newReverseNeighborInfo.et).removeSubEdge(newReverseNeighborInfo.edge);
@@ -163,8 +162,6 @@ public class SplitRepeatVertex extends
             // process connectedTable
             for(int i = 0; i < connectedTable.length; i++){
                 // set edgeType and the corresponding edgeList based on connectedTable
-//                NeighborsInfo reverseNeighborsInfo = vertex.getNeighborsInfo(connectedTable[i][0]);
-//                NeighborsInfo forwardNeighborsInfo = vertex.getNeighborsInfo(connectedTable[i][1]);
                 EDGETYPE reverseEdgeType = connectedTable[i][0];
                 EDGETYPE forwardEdgeType = connectedTable[i][1];
                 EdgeListWritable reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
