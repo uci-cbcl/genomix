@@ -282,9 +282,9 @@ public class NodeWritable implements Writable, Serializable {
         }
     
     public static class NeighborInfo {
-        public final EDGETYPE et;
-        public final EdgeWritable edge;
-        public final VKmerBytesWritable kmer;
+        public EDGETYPE et;
+        public EdgeWritable edge;
+        public VKmerBytesWritable kmer;
         
         public NeighborInfo(EDGETYPE edgeType, EdgeWritable edgeWritable) {
             et = edgeType;
