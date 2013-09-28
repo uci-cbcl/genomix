@@ -30,8 +30,6 @@ public class SplitRepeatVertex extends
     
     public static final int NUM_LETTERS_TO_APPEND = 3;
     
-//    private NeighborInfo newReverseNeighborInfo;
-//    private NeighborInfo newForwardNeighborInfo;
     private EdgeWritable newReverseEdge = new EdgeWritable();
     private EdgeWritable newForwardEdge = new EdgeWritable();
     
@@ -80,7 +78,7 @@ public class SplitRepeatVertex extends
         createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
         return createdVertexId;
     }
-   
+    
     // TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void createNewVertex(VKmerBytesWritable createdVertexId, NeighborInfo reverseNeighborInfo,
@@ -103,7 +101,6 @@ public class SplitRepeatVertex extends
     
     public void updateNeighbors(VKmerBytesWritable createdVertexId, Set<Long> edgeIntersection,
             NeighborInfo newReverseNeighborInfo, NeighborInfo newForwardNeighborInfo){
-    	// TODO simplify this to use generic update.  operation is "SPLIT_EDGE?" and should use the Node inside the message directly
         outgoingMsg.reset();
         outgoingMsg.setSourceVertexId(getVertexId());
         EdgeWritable createdEdge = outgoingMsg.getCreatedEdge();
@@ -119,9 +116,9 @@ public class SplitRepeatVertex extends
         sendMsg(newForwardNeighborInfo.edge.getKey(), outgoingMsg);
     }        
     
-    public void deleteEdgeFromOldVertex(NeighborInfo newReverseNeighborInfo, NeighborInfo newForwardNeighborInfo){
-        getVertexValue().getEdgeList(newReverseNeighborInfo.et).removeSubEdge(newReverseNeighborInfo.edge);
-        getVertexValue().getEdgeList(newReverseNeighborInfo.et).removeSubEdge(newReverseNeighborInfo.edge);
+    public void deleteEdgeFromOldVertex(Set<NeighborInfo> neighborsInfo){
+        for(NeighborInfo neighborInfo : neighborsInfo)
+            getVertexValue().getEdgeList(neighborInfo.et).removeSubEdge(neighborInfo.edge);
     }
     
     public void updateEdgeListPointToNewVertex(SplitRepeatMessageWritable incomingMsg){
@@ -136,6 +133,7 @@ public class SplitRepeatVertex extends
     
     public void detectRepeatAndSplit(){
         if(getVertexValue().getDegree() > 2){
+            Set<NeighborInfo> deletedNeighborsInfo = new HashSet<NeighborInfo>();
             VertexValueWritable vertex = getVertexValue();
             // process connectedTable
             for(int i = 0; i < connectedTable.length; i++){
@@ -176,13 +174,16 @@ public class SplitRepeatVertex extends
                             updateNeighbors(createdVertexId, edgeIntersection, 
                                     newReverseNeighborInfo, newForwardNeighborInfo);
                             
-                            // store deleteSet, move this out of loop
-                            // delete extra edges from old vertex
-                            deleteEdgeFromOldVertex(newReverseNeighborInfo, newForwardNeighborInfo);
+                            // store deleteSet
+                            deletedNeighborsInfo.add(newReverseNeighborInfo);
+                            deletedNeighborsInfo.add(newForwardNeighborInfo);
                         }
                     }
                 }                
             }
+            
+            // process deletedNeighborInfo -- delete extra edges from old vertex
+            deleteEdgeFromOldVertex(deletedNeighborsInfo);
             
             // Old vertex delete or voteToHalt 
             if(getVertexValue().getDegree() == 0)//if no any edge, delete
