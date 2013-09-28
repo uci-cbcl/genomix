@@ -80,7 +80,7 @@ public class SplitRepeatVertex extends
     
     public VKmerBytesWritable randomGenerateVertexId(int numOfSuffix){
         String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);
-        VKmerBytesWritable createdVertexId = new VKmerBytesWritable();
+        VKmerBytesWritable createdVertexId = new VKmerBytesWritable(); 
         createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
         return createdVertexId;
     }
@@ -89,10 +89,7 @@ public class SplitRepeatVertex extends
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void createNewVertex(VKmerBytesWritable createdVertexId, NeighborInfo reverseNeighborInfo,
     		NeighborInfo forwardNeighborInfo){
-    	// TODO refactor with NeighborInfo passed in
         Vertex newVertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-        newVertex.getMsgList().clear();
-        newVertex.getEdges().clear();
         VKmerBytesWritable vertexId = new VKmerBytesWritable();
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
@@ -131,13 +128,12 @@ public class SplitRepeatVertex extends
     }
     
     public void deleteEdgeFromOldVertex(NeighborInfo newReverseNeighborInfo, NeighborInfo newForwardNeighborInfo){
-    	// TODO use NeighborInfo
         getVertexValue().getEdgeList(newReverseNeighborInfo.et).removeSubEdge(newReverseNeighborInfo.edge);
         getVertexValue().getEdgeList(newReverseNeighborInfo.et).removeSubEdge(newReverseNeighborInfo.edge);
     }
     
     public void updateEdgeListPointToNewVertex(SplitRepeatMessageWritable incomingMsg){
-        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());//(byte) (incomingMsg.getFlag() & MessageFlag.VERTEX_MASK);
+        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
         getVertexValue().getEdgeList(neighborToMeDir).removeSubEdge(incomingMsg.getDeletedEdge());
@@ -162,7 +158,6 @@ public class SplitRepeatVertex extends
                         
                         if(!edgeIntersection.isEmpty()){
                             // random generate vertexId of new vertex
-                        	// TODO return new vertexId 
                             VKmerBytesWritable createdVertexId = randomGenerateVertexId(NUM_LETTERS_TO_APPEND); // TODO create new vertex when add letters, the #letter depends on the time, which can't cause collision
                             
                             // change new incomingEdge/outgoingEdge's edgeList to commondReadIdSet
