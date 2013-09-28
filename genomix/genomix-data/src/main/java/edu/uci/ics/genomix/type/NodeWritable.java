@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.hadoop.io.Writable;
@@ -291,6 +292,37 @@ public class NodeWritable implements Writable, Serializable {
             kmer = edge.getKey();
         }
     }
+    
+    public static class NeighborsInfo implements Iterable<NeighborInfo>{
+        public final EDGETYPE et;
+        public final EdgeListWritable edges;
+        
+        public NeighborsInfo(EDGETYPE edgeType, EdgeListWritable edgeListWritable){
+            et = edgeType;
+            edges = edgeListWritable;
+        }
+
+        @Override
+        public Iterator<NeighborInfo> iterator() {
+            return new Iterator<NeighborInfo>() {
+                private int currentIndex = 0;
+                
+                @Override
+                public boolean hasNext() {
+                    return currentIndex < edges.size();
+                }
+
+                @Override
+                public NeighborInfo next() {
+                    return new NeighborInfo(et, edges.get(currentIndex));
+                }
+
+                @Override
+                public void remove() {
+                }
+            };
+        }
+    }
         
     private static final long serialVersionUID = 1L;
     public static final NodeWritable EMPTY_NODE = new NodeWritable();
@@ -406,6 +438,15 @@ public class NodeWritable implements Writable, Serializable {
             }
         }
         return null;
+    }
+    
+    /**
+     * Get this node's edgeType and edgeList in this given edgeType. Return null if there is no neighbor
+     */
+    public NeighborsInfo getNeighborsInfo(EDGETYPE et){
+        if(getEdgeList(et).size() == 0)
+            return null;
+        return new NeighborsInfo(et, getEdgeList(et));
     }
     
     public EdgeListWritable getEdgeList(EDGETYPE edgeType) {

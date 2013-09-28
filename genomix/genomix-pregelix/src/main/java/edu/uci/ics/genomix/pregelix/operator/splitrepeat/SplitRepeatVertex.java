@@ -1,7 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,11 +30,12 @@ public class SplitRepeatVertex extends
     
     public static final int NUM_LETTERS_TO_APPEND = 3;
     
+//    private NeighborInfo newReverseNeighborInfo = new NeighborInfo();
+//    private NeighborInfo newForwardNeighborInfo = new NeighborInfo();
     private EdgeWritable newReverseEdge = new EdgeWritable();
     private EdgeWritable newForwardEdge = new EdgeWritable();
     
     private static Set<String> existKmerString = Collections.synchronizedSet(new HashSet<String>());
-    private VKmerBytesWritable createdVertexId = null;  
 
     private EdgeWritable deletedEdge = new EdgeWritable();
     
@@ -47,13 +46,10 @@ public class SplitRepeatVertex extends
     public void initVertex() {
         super.initVertex();
         //TODO initialize (using new) when you declare these variables that don't depend on the conf
-
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
         else
             outgoingMsg.reset();         //TODO don't reset here; rather reset right before you use the outgoingMsg
-        if(createdVertexId == null)
-            createdVertexId = new VKmerBytesWritable();
         StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
@@ -82,9 +78,11 @@ public class SplitRepeatVertex extends
         return sb.toString();
     }
     
-    public void randomGenerateVertexId(int numOfSuffix){
-        String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);;
+    public VKmerBytesWritable randomGenerateVertexId(int numOfSuffix){
+        String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);
+        VKmerBytesWritable createdVertexId = new VKmerBytesWritable();
         createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
+        return createdVertexId;
     }
    
     // TODO move to EdgeWritable
@@ -100,7 +98,8 @@ public class SplitRepeatVertex extends
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void createNewVertex(int i, EdgeWritable incomingEdge, EdgeWritable outgoingEdge){
+    public void createNewVertex(int i, VKmerBytesWritable createdVertexId, EdgeWritable reverseEdge,
+            EdgeWritable forwardEdge){
     	// TODO refactor with NeighborInfo passed in
         Vertex newVertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         newVertex.getMsgList().clear();
@@ -108,9 +107,9 @@ public class SplitRepeatVertex extends
         VKmerBytesWritable vertexId = new VKmerBytesWritable();
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
-        vertexValue.getEdgeList(connectedTable[i][0]).add(new EdgeWritable(incomingEdge));
+        vertexValue.getEdgeList(connectedTable[i][0]).add(new EdgeWritable(reverseEdge));
         
-        vertexValue.getEdgeList(connectedTable[i][1]).add(new EdgeWritable(outgoingEdge));
+        vertexValue.getEdgeList(connectedTable[i][1]).add(new EdgeWritable(forwardEdge));
         
         vertexValue.setInternalKmer(getVertexId());
         
@@ -121,7 +120,7 @@ public class SplitRepeatVertex extends
         addVertex(vertexId, newVertex);
     }
     
-    public void updateNeighbors(EdgeWritable incomingEdge, EDGETYPE incomingEdgeType, 
+    public void updateNeighbors(VKmerBytesWritable createdVertexId, EdgeWritable incomingEdge, EDGETYPE incomingEdgeType, 
             EdgeWritable outgoingEdge, EDGETYPE outgoingEdgeType, 
             Set<Long> edgeIntersection){
     	// TODO simplify this to use generic update.  operation is "SPLIT_EDGE?" and should use the Node inside the message directly
@@ -164,6 +163,8 @@ public class SplitRepeatVertex extends
             // process connectedTable
             for(int i = 0; i < connectedTable.length; i++){
                 // set edgeType and the corresponding edgeList based on connectedTable
+//                NeighborsInfo reverseNeighborsInfo = vertex.getNeighborsInfo(connectedTable[i][0]);
+//                NeighborsInfo forwardNeighborsInfo = vertex.getNeighborsInfo(connectedTable[i][1]);
                 EDGETYPE reverseEdgeType = connectedTable[i][0];
                 EDGETYPE forwardEdgeType = connectedTable[i][1];
                 EdgeListWritable reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
@@ -177,7 +178,7 @@ public class SplitRepeatVertex extends
                         if(!edgeIntersection.isEmpty()){
                             // random generate vertexId of new vertex
                         	// TODO return new vertexId 
-                            randomGenerateVertexId(NUM_LETTERS_TO_APPEND); // TODO create new vertex when add letters, the #letter depends on the time, which can't cause collision
+                            VKmerBytesWritable createdVertexId = randomGenerateVertexId(NUM_LETTERS_TO_APPEND); // TODO create new vertex when add letters, the #letter depends on the time, which can't cause collision
                             
                             // change new incomingEdge/outgoingEdge's edgeList to commondReadIdSet
                             newReverseEdge.reset();
@@ -188,14 +189,14 @@ public class SplitRepeatVertex extends
                             newForwardEdge.setReadIDs(edgeIntersection);
                             
                             // create new/created vertex which has new incomingEdge/outgoingEdge
-                            createNewVertex(i, newReverseEdge, newForwardEdge);
+                            createNewVertex(i, createdVertexId, newReverseEdge, newForwardEdge);
                             
                             //set statistics counter: Num_SplitRepeats
                             incrementCounter(StatisticsCounter.Num_SplitRepeats);
                             getVertexValue().setCounters(counters);
                             
                             // send msg to neighbors to update their edges to new vertex 
-                            updateNeighbors(newReverseEdge, reverseEdgeType, 
+                            updateNeighbors(createdVertexId, newReverseEdge, reverseEdgeType, 
                                     newForwardEdge, forwardEdgeType, 
                                     edgeIntersection);
                             
