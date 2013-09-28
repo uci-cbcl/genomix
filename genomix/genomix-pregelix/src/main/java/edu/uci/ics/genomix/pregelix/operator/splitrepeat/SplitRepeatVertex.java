@@ -44,7 +44,6 @@ public class SplitRepeatVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        //TODO initialize (using new) when you declare these variables that don't depend on the conf
         if(outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessageWritable();
         randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
