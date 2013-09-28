@@ -18,6 +18,12 @@ import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
+/**
+ * The super class of different path merge algorithms
+ * This maximally compresses linear subgraphs (A->B->C->...->Z) into into individual nodes (ABC...Z). 
+ * @author anbangx
+ *
+ */
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
         BasicGraphCleanVertex<V, M> {
 

@@ -17,6 +17,11 @@ import edu.uci.ics.genomix.type.NodeWritable.DIR;
 
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
+ * 
+ * Details: Sequencing errors at the ends of the reads form "tips": short, low coverage nodes 
+ * with in-degree + out-degree = 1 (they either have a single edge in or a single edge out). 
+ * The algorithm identifies these nodes and prunes them from the graph. This is then followed 
+ * by recompressing the graph.
  * @author anbangx
  *
  */
