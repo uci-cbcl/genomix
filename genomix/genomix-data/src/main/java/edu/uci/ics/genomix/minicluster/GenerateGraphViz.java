@@ -9,6 +9,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
@@ -83,11 +85,10 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            VKmerBytesWritable key = new VKmerBytesWritable();
-            NodeWritable value = new NodeWritable();
+            VKmerBytesWritable key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+            NodeWritable value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
             
             gv.addln("rankdir=LR\n");
-            
             while (reader.next(key, value)) {
                 outputNode = "";
                 outputEdge = "";
