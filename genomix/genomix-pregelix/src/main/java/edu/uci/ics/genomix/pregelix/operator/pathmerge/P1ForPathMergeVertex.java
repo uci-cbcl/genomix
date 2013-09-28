@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
@@ -52,15 +52,15 @@ public class P1ForPathMergeVertex extends
         EnumSet<DIR> restrictedDirs = DIR.enumSetFromByte(state);
         boolean updated = false;
         //initiate merge dir
-        state &= P4State.MERGE_CLEAR;
-        state |= P4State.NO_MERGE;   //setMerge(P4State.NO_MERGE);
+        state &= State.MERGE_CLEAR;
+        state |= State.NO_MERGE;   //setMerge(P4State.NO_MERGE);
         
         //choose merge dir -- principle: only merge with nextDir
         if(restrictedDirs.size() == 1){
         	if((restrictedDirs.contains(DIR.REVERSE) && vertex.getDegree(DIR.FORWARD) == 1) 
         			|| (restrictedDirs.contains(DIR.FORWARD) && vertex.getDegree(DIR.REVERSE) == 1)){
 	            EDGETYPE edgeType = restrictedDirs.contains(DIR.REVERSE) ? vertex.getNeighborEdgeType(DIR.FORWARD) : vertex.getNeighborEdgeType(DIR.REVERSE);
-	            state |= P4State.MERGE | edgeType.get();
+	            state |= State.MERGE | edgeType.get();
 	            updated = true;
         	}
         }
@@ -149,7 +149,7 @@ public class P1ForPathMergeVertex extends
                         }
                     }
                     
-                    state |= P4State.NO_MERGE;
+                    state |= State.NO_MERGE;
                     vertex.setState(state);
                     voteToHalt();
                 }
@@ -232,9 +232,9 @@ public class P1ForPathMergeVertex extends
     public void sendMergeMsg() {
         super.sendMergeMsg();
         short state = getVertexValue().getState();
-        if ((getVertexValue().getState() & P4State.MERGE) != 0) {
+        if ((getVertexValue().getState() & State.MERGE) != 0) {
             // set flag to NO_MERGE instead of deleteVertex
-            state |= P4State.NO_MERGE;
+            state |= State.NO_MERGE;
             getVertexValue().setState(state);
             voteToHalt();
         }

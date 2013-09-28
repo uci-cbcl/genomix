@@ -20,15 +20,6 @@ public class VertexValueWritable
         public static final byte IS_ERROR = 0b1 << 6;
         
         public static final byte VERTEX_MASK = 0b1 << 6; 
-        public static final byte VERTEX_CLEAR = (byte)0111111;
-        
-        public static String getContent(short stateFlag){
-            switch(stateFlag & VERTEX_MASK){
-                case IS_ERROR:
-                    return "IS_ERROR";
-            }
-            return null;
-        }
     }
     
     public static class State extends VertexStateFlag{
@@ -44,15 +35,6 @@ public class VertexValueWritable
         public static final short IS_FAKE = 1 << 7;
         
         public static final short FAKEFLAG_MASK = 1 << 7;
-    }
-    
-    public static class P4State {
-        // 2 bits(0-1) for EDGETYPE, then 2 bits(2-3) for set of DIR's
-        // each merge has an edge-type direction (e.g., FF)
-        public static final byte NO_MERGE = 0b0 << 4;
-        public static final byte MERGE = 0b1 << 4;
-        public static final byte MERGE_CLEAR = 0b1101100; // clear the MERGE/NO_MERGE and the MERGE_DIRECTION
-        public static final byte MERGE_MASK = 0b0010011;
     }
     
     private short state;
@@ -213,6 +195,6 @@ public class VertexValueWritable
     
     @Override
     public String toString() {
-        return super.toString() + "\t" + State.getContent(state);
+        return super.toString();
     }
 }

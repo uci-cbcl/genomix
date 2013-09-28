@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
 
 
 public class EdgeWritable implements Writable, Serializable{

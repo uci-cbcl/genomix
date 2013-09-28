@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
@@ -125,7 +125,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         VertexValueWritable vertex = getVertexValue();
         short state = vertex.getState();
         EDGETYPE edgeType = EDGETYPE.fromByte(state);
-        if ((state & P4State.MERGE) == 0) {
+        if ((state & State.MERGE) == 0) {
             return; // no merge requested; don't have to update neighbors
         }
 
@@ -193,7 +193,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     public void sendMergeMsg() {
         VertexValueWritable vertex = getVertexValue();
         short state = vertex.getState();
-        if ((state & P4State.MERGE) != 0) {
+        if ((state & State.MERGE) != 0) {
             outgoingMsg.reset();
             // tell neighbor where this is coming from (so they can merge kmers and delete)
             EDGETYPE mergeEdgetype = EDGETYPE.fromByte(vertex.getState());

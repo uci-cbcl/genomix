@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.P4State;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
@@ -83,8 +83,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      */
     public void setMerge(byte mergeState){
         short state = getVertexValue().getState();
-        state &= P4State.MERGE_CLEAR;
-        state |= (mergeState & P4State.MERGE_MASK);
+        state &= State.MERGE_CLEAR;
+        state |= (mergeState & State.MERGE_MASK);
         getVertexValue().setState(state);
         activate();
     }
@@ -118,7 +118,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
 
     public void chooseMergeDir() {
         //initiate merge_dir
-        setMerge(P4State.NO_MERGE);
+        setMerge(State.NO_MERGE);
 
         curKmer = getVertexId();
         curHead = isNodeRandomHead(curKmer);
@@ -130,10 +130,10 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             if (curHead) {
                 if (hasNext && !nextHead) {
                     // compress this head to the forward tail
-                    setMerge((byte) (nextEdgetype.get() | P4State.MERGE));
+                    setMerge((byte) (nextEdgetype.get() | State.MERGE));
                 } else if (hasPrev && !prevHead) {
                     // compress this head to the reverse tail
-                    setMerge((byte) (prevEdgetype.get() | P4State.MERGE));
+                    setMerge((byte) (prevEdgetype.get() | State.MERGE));
                 }
             } else {
                 // I'm a tail
@@ -142,19 +142,19 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                             && (curKmer.compareTo(nextKmer) < 0 && curKmer.compareTo(prevKmer) < 0)) {
                         // tails on both sides, and I'm the "local minimum"
                         // compress me towards the tail in forward dir
-                        setMerge((byte) (nextEdgetype.get() | P4State.MERGE));
+                        setMerge((byte) (nextEdgetype.get() | State.MERGE));
                     }
                 } else if (!hasPrev) {
                     // no previous node
                     if (!nextHead && curKmer.compareTo(nextKmer) < 0) {
                         // merge towards tail in forward dir
-                        setMerge((byte) (nextEdgetype.get() | P4State.MERGE));
+                        setMerge((byte) (nextEdgetype.get() | State.MERGE));
                     }
                 } else if (!hasNext) {
                     // no next node
                     if (!prevHead && curKmer.compareTo(prevKmer) < 0) {
                         // merge towards tail in reverse dir
-                        setMerge((byte) (prevEdgetype.get() | P4State.MERGE));
+                        setMerge((byte) (prevEdgetype.get() | State.MERGE));
                     }
                 }
             }
@@ -172,7 +172,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void sendMergeMsg(){
         super.sendMergeMsg();
-        if ((getVertexValue().getState() & P4State.MERGE) != 0) {
+        if ((getVertexValue().getState() & State.MERGE) != 0) {
             deleteVertex(getVertexId());
             if (verbose) 
                 LOG.fine("killing self: " + getVertexId());
