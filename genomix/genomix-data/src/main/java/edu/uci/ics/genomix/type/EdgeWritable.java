@@ -29,7 +29,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 
-public class EdgeWritable implements Writable, Serializable{
+public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializable{
 
     private static final long serialVersionUID = 1L;
     
@@ -265,5 +265,10 @@ public class EdgeWritable implements Writable, Serializable{
         sbuilder.append("}");
         
         return sbuilder.toString();
+    }
+    
+    @Override
+    public int compareTo(EdgeWritable other) {
+        return this.key.compareTo(other.key);
     }
 }
