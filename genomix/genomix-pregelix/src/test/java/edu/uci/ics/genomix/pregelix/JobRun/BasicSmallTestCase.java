@@ -95,7 +95,7 @@ public class BasicSmallTestCase extends TestCase {
         //covert bin to graphviz
         GenerateGraphViz.convertGraphCleanOutputToGraphViz(resultFileDir, graphvizFileDir);
         //generate statistic counters
-        generateStatisticsResult(statisticsFileDir);
+//        generateStatisticsResult(statisticsFileDir);
     }
     
     public void generateStatisticsResult(String outPutDir) throws IOException{
