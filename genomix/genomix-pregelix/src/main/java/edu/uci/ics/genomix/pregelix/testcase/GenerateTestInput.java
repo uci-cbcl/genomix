@@ -129,22 +129,22 @@ public class GenerateTestInput {
     
     public static void main(String[] args) {
         int kmerSize = 5; 
-//        /** SimplePath **/
-//        int readLength = 9;
-//        int numLines = 3;
-//        generateSimplePath("graph/SimplePath", kmerSize, readLength, numLines);
-//        /** BridgePath **/
-//        int headLength = 2;
-//        int bridgeLength = 4; 
-//        generateBridgePath("graph/BridgePath", kmerSize, headLength, bridgeLength, readLength);
-//        /** TreePath **/
-//        int x = 5;
-//        int y = 5;
-//        int z = 5;
-//        generateTreePath("graph/TreePath", kmerSize, x, y, z);
-//        /** CyclePath **/
-//        int cycleLength = 8;
-//        generateCyclePath("graph/CyclePath", kmerSize, cycleLength);
+        /** SimplePath **/
+        int readLength = 9;
+        int numLines = 3;
+        generateSimplePath("graph/SimplePath", kmerSize, readLength, numLines);
+        /** BridgePath **/
+        int headLength = 2;
+        int bridgeLength = 4; 
+        generateBridgePath("graph/BridgePath", kmerSize, headLength, bridgeLength, readLength);
+        /** TreePath **/
+        int x = 5;
+        int y = 5;
+        int z = 5;
+        generateTreePath("graph/TreePath", kmerSize, x, y, z);
+        /** CyclePath **/
+        int cycleLength = 8;
+        generateCyclePath("graph/CyclePath", kmerSize, cycleLength);
         /** GridPath **/
         generateGridPath("graph/GridPath", kmerSize);
     }

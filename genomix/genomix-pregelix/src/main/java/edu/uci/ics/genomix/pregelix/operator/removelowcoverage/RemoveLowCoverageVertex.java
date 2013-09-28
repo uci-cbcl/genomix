@@ -36,8 +36,6 @@ public class RemoveLowCoverageVertex extends
             minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
-        else
-            outgoingMsg.reset();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
 //        else
@@ -73,14 +71,16 @@ public class RemoveLowCoverageVertex extends
     
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        initVertex(); 
-        if(getSuperstep() == 1)
+        if(getSuperstep() == 1){
+            initVertex(); 
             detectLowCoverageVertex();
+        }
         else if(getSuperstep() == 2){
-            if(deadNodeSet.contains(getVertexId()))
+            if(deadNodeSet.contains(getVertexId())){
                 cleanupDeadVertex();
-            else
+            } else {
                 responseToDeadVertex(msgIterator);
+            }
         } 
         voteToHalt();
     }

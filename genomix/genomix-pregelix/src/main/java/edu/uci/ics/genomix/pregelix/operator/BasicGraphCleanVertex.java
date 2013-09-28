@@ -323,6 +323,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : EDGETYPE.values()){
             for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+                outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
@@ -330,7 +331,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 sendMsg(dest, outgoingMsg);
                 if(verbose){
                 	LOG.fine("Iteration " + getSuperstep() + "\r\n"
-                			+ ""); // TODO killSelf in log
+                			+ "Vertex Id: " + getVertexId() + "\r\n"
+                			+ "Vertex Value: " + getVertexValue() + "\r\n\n"); // TODO killSelf in log
                 }
             }
         }

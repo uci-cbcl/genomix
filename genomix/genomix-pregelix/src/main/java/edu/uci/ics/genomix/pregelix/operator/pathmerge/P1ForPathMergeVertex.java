@@ -24,7 +24,6 @@ public class P1ForPathMergeVertex extends
     private static final Logger LOG = Logger.getLogger(P1ForPathMergeVertex.class.getName());
     
     private HashSet<PathMergeMessageWritable> updateMsgs = new HashSet<PathMergeMessageWritable>();
-    private HashSet<PathMergeMessageWritable> otherMsgs = new HashSet<PathMergeMessageWritable>();
     private HashSet<PathMergeMessageWritable> neighborMsgs = new HashSet<PathMergeMessageWritable>();
     /**
      * initiate kmerSize, maxIteration
@@ -79,7 +78,7 @@ public class P1ForPathMergeVertex extends
     }
     
     /**
-     * step4: receive and process Merges  for P0
+     * step4: receive and process Merges  for P1
      */
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
@@ -184,7 +183,6 @@ public class P1ForPathMergeVertex extends
     
     public void catagorizeMsg(Iterator<PathMergeMessageWritable> msgIterator){
         updateMsgs.clear();
-        otherMsgs.clear();
         neighborMsgs.clear();
         while(msgIterator.hasNext()){
             PathMergeMessageWritable incomingMsg = msgIterator.next();
@@ -197,7 +195,7 @@ public class P1ForPathMergeVertex extends
                     neighborMsgs.add(new PathMergeMessageWritable(incomingMsg));
                     break;
                 default:
-                    throw new IllegalStateException("Message types are allowd for only TO_UPDATE, TO_OTHER and TO_NEIGHBOR!");
+                    throw new IllegalStateException("Message types are allowd for only TO_UPDATE and TO_NEIGHBOR!");
             }
         }
     }
