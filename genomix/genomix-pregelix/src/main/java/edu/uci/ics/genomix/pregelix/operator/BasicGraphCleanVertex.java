@@ -28,7 +28,6 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
