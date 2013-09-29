@@ -12,9 +12,8 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
 	BasicPathMergeVertex<V, M>{
     
-    protected VKmerBytesWritable forwardKmer;
-    protected VKmerBytesWritable reverseKmer;
-    protected Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
+    protected VKmerBytesWritable forwardKmer = new VKmerBytesWritable();
+    protected VKmerBytesWritable reverseKmer = new VKmerBytesWritable();
 
     /**
      * initiate kmerSize, maxIteration
@@ -23,73 +22,70 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     @Override
     public void initVertex() {
         super.initVertex();
-        if(outgoingMsg == null)
+        if(outgoingMsg == null) {
             outgoingMsg = (M) new PathMergeMessageWritable();
-        if(fakeVertex == null)
-            fakeVertex = new VKmerBytesWritable();
-        if(forwardKmer == null)
-            forwardKmer = new VKmerBytesWritable();
-        if(reverseKmer == null)
-            reverseKmer = new VKmerBytesWritable();
+        }
     }
     
+    public Map<VKmerBytesWritable, VKmerListWritable> mapKeyByInternalKmer(Iterator<M> msgIterator){
+        Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
+        VKmerListWritable kmerList;
+        M incomingMsg;
+        while(msgIterator.hasNext()){
+            incomingMsg = msgIterator.next();
+            String kmerString = incomingMsg.getInternalKmer().toString();
+            forwardKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
+            reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
+
+            VKmerBytesWritable kmer = reverseKmer.compareTo(forwardKmer) > 0 ? forwardKmer : reverseKmer;
+            if(!kmerMapper.containsKey(kmer)){
+                kmerList = new VKmerListWritable();
+                kmerMapper.put(new VKmerBytesWritable(kmer), kmerList);
+            } else{
+                kmerList = kmerMapper.get(kmer);
+                kmerMapper.put(kmer, kmerList);
+            }
+            kmerList.append(incomingMsg.getSourceVertexId());
+        }
+        
+        return kmerMapper;
+    }
+    
+    public void reduceKeyByInternalKmer(Map<VKmerBytesWritable, VKmerListWritable> kmerMapper){
+        for(VKmerBytesWritable key : kmerMapper.keySet()){
+            VKmerListWritable kmerList = kmerMapper.get(key);
+            for(VKmerBytesWritable dest : kmerList){
+                sendMsg(dest, outgoingMsg);
+            }
+        }
+    }
+    
+    /**
+     *  step 2: NON-FAKE send msg to FAKE vertex
+     */
     public void sendMsgToFakeVertex(){
         if(!getVertexValue().isFakeVertex()){
             outgoingMsg.reset();
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
             sendMsg(fakeVertex, outgoingMsg);
-            voteToHalt();
         }
+        voteToHalt();
     }
     
-    public void mapKeyByInternalKmer(Iterator<M> msgIterator){
-        while(msgIterator.hasNext()){
-            M incomingMsg = msgIterator.next();
-            String kmerString = incomingMsg.getInternalKmer().toString();
-            forwardKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
-            reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
-
-            VKmerBytesWritable kmer = new VKmerBytesWritable();
-            VKmerListWritable kmerList = new VKmerListWritable();
-            
-            if(reverseKmer.compareTo(forwardKmer) > 0){
-                kmer.setAsCopy(forwardKmer);
-            }
-            else{
-                kmer.setAsCopy(reverseKmer);
-            }
-            if(!kmerMapper.containsKey(kmer)){
-                kmerList.append(incomingMsg.getSourceVertexId());
-                kmerMapper.put(kmer, kmerList);
-            } else{
-                kmerList.setCopy(kmerMapper.get(kmer));
-                kmerList.append(incomingMsg.getSourceVertexId());
-                kmerMapper.put(kmer, kmerList);
-            }
-        }
-    }
-    
-    public void reduceKeyByInternalKmer(){
-        for(VKmerBytesWritable key : kmerMapper.keySet()){
-            VKmerListWritable kmerList = kmerMapper.get(key);
-            for(int i = 1; i < kmerList.getCountOfPosition(); i++){
-                //send kill message
-//                outgoingMsg.setFlag(MessageFlag.KILL);
-                VKmerBytesWritable destVertexId = kmerList.getPosition(i);
-                sendMsg(destVertexId, outgoingMsg);
-            }
-        }
-    }
-    
-    public void finalVertexResponseToFakeVertex(Iterator<M> msgIterator){
-        while(msgIterator.hasNext()){
-            M incomingMsg = msgIterator.next();
-            short inFlag = incomingMsg.getFlag();
-//            if(inFlag == MessageFlag.KILL){
-//                broadcaseKillself();
-//            }
-        }
+    /**
+     * step 3:
+     */
+    public void mapReduceInFakeVertex(Iterator<M> msgIterator){
+        // Mapper
+        Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = mapKeyByInternalKmer(msgIterator);
+        
+        // Reducer
+        reduceKeyByInternalKmer(kmerMapper);
+        
+        //delele self(fake vertex)
+        fakeVertexExist = false;
+        deleteVertex(fakeVertex);
     }
     
     @Override
@@ -97,29 +93,14 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         initVertex();
         if(getSuperstep() == 1){
             addFakeVertex("A");
-        }
-        else if(getSuperstep() == 2){
-            // NON-FAKE send msg to FAKE vertex
+        } else if(getSuperstep() == 2){
             sendMsgToFakeVertex();
         } else if(getSuperstep() == 3){
-            kmerMapper.clear();
-            // Mapper
-            mapKeyByInternalKmer(msgIterator);
-            // Reducer
-            reduceKeyByInternalKmer();
+            mapReduceInFakeVertex(msgIterator);
         } else if(getSuperstep() == 4){
-            // only for test single MapReduce job
-            if(!msgIterator.hasNext() && getVertexValue().isFakeVertex()){
-                fakeVertexExist = false;
-                deleteVertex(fakeVertex);
-            }
-            finalVertexResponseToFakeVertex(msgIterator);
+            broadcastKillself();
         } else if(getSuperstep() == 5){
-            while (msgIterator.hasNext()) {
-                M incomingMsg = msgIterator.next();
-//                if(isResponseKillMsg(incomingMsg))
-//                    responseToDeadVertex(incomingMsg);
-            }
+            responseToDeadNode(msgIterator);
             voteToHalt();
         }
     }
