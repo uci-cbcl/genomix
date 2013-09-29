@@ -68,7 +68,7 @@ public class TipRemoveVertex extends
     }
     
     /**
-     * step1
+     * step 1
      */
     public void updateTipNeighbor(){
         EDGETYPE tipToNeighborEdgetype = getTipToNeighbor();
@@ -98,7 +98,7 @@ public class TipRemoveVertex extends
     }
     
     /**
-     * step2
+     * step 2
      */
     public void processUpdates(Iterator<MessageWritable> msgIterator){
         responseToDeadNode(msgIterator);

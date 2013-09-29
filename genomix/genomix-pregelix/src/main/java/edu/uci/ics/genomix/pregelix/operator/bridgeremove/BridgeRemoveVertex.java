@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -10,8 +9,9 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Graph clean pattern: Remove Bridge
@@ -20,83 +20,81 @@ import edu.uci.ics.genomix.type.NodeWritable.DIR;
  */
 public class BridgeRemoveVertex extends
     BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
-    private int length = -1;
+    
+    private int MIN_LENGTH_TO_KEEP = -1;
 
-    private ArrayList<MessageWritable> receivedMsgList = new ArrayList<MessageWritable>();
-   
     /**
      * initiate kmerSize, maxIteration
      */
     @Override
     public void initVertex() {
         super.initVertex();
-        if(length == -1)
-            length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
+        if(MIN_LENGTH_TO_KEEP == -1)
+            MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
         if(outgoingMsg == null)
             outgoingMsg = new MessageWritable();
-        else
-            outgoingMsg.reset();
-        receivedMsgList.clear();
-        if(getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
+        StatisticsAggregator.preGlobalCounters.clear();
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-
+    
     /**
-     * aggregate received messages
+     * step 1: detect neighbor of bridge vertex
      */
-    public void aggregateReceivedMsgs(Iterator<MessageWritable> msgIterator){
-        int i = 0;
-        while (msgIterator.hasNext()) {
-            if(i == 3)
-                break;
-            receivedMsgList.add(msgIterator.next());
-            i++;
+    public void detectBridgeNeighbor(){
+      //detect neighbor of bridge vertex
+        VertexValueWritable vertex = getVertexValue();
+        if(vertex.getDegree() == 3){
+            for(DIR d : DIR.values()){
+                //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
+                if(vertex.getDegree(d) == 2){
+                    for(EDGETYPE et : d.edgeType()){
+                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+                            sendMsg(dest, outgoingMsg);
+                        }
+                    }
+                }
+            }
         }
     }
     
     /**
-     * remove bridge pattern
+     * step2: remove bridge pattern
      */
-    public void removeBridge(){
-        if(receivedMsgList.size() == 2){
-            if(getVertexValue().getKmerLength() <= length 
-                    && getVertexValue().getDegree() == 2){
-                broadcaseKillself();
-                //set statistics counter: Num_RemovedBridges
-                incrementCounter(StatisticsCounter.Num_RemovedBridges);
-                getVertexValue().setCounters(counters);
+    public void removeBridge(Iterator<MessageWritable> msgIterator){
+        VertexValueWritable vertex = getVertexValue();
+        //only the vertex which has and only has 2 degree can be bridge vertex
+        if(vertex.getDegree() == 2){
+            //count #receivedMsg
+            int count = 0;
+            while (msgIterator.hasNext()) {
+                if(count == 3)
+                    break;
+                count++;
+            }
+            //remove bridge
+            if(count == 2){ //I'm bridge vertex
+                if(vertex.getKmerLength() < MIN_LENGTH_TO_KEEP){
+                    broadcastKillself();
+                    //set statistics counter: Num_RemovedBridges
+                    incrementCounter(StatisticsCounter.Num_RemovedBridges);
+                    getVertexValue().setCounters(counters);
+                }
             }
         }
     }
     
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        initVertex();
-        if (getSuperstep() == 1) {
-            //filter bridge vertex
-            if(VertexUtil.isUpBridgeVertex(getVertexValue())){
-                sendSettledMsgs(DIR.REVERSE, getVertexValue());
-            }
-            else if(VertexUtil.isDownBridgeVertex(getVertexValue())){
-                sendSettledMsgs(DIR.FORWARD, getVertexValue());
-            }
-        }
-        else if (getSuperstep() == 2){
-            //aggregate received messages
-            aggregateReceivedMsgs(msgIterator);
-            //detect bridge pattern and remove it
-            removeBridge();
-        }
-        else if(getSuperstep() == 3){
-            //TODO fix
-            while(msgIterator.hasNext()){
-                MessageWritable incomingMsg = msgIterator.next();
-                responseToDeadVertex(incomingMsg);
-            }
+        if(getSuperstep() == 1){
+            initVertex();
+            detectBridgeNeighbor();
+        } else if(getSuperstep() == 2){
+            removeBridge(msgIterator);
+        } else if(getSuperstep() == 3){
+            responseToDeadNode(msgIterator);
         }
         voteToHalt();
     }
