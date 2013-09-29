@@ -34,7 +34,7 @@ public class SymmetryCheckerVertex extends
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
         if(getSuperstep() == 1){
-            sendSettledMsgToAllNeighborNodes(getVertexValue());
+//            sendSettledMsgToAllNeighborNodes(getVertexValue());
             voteToHalt();
         } else if(getSuperstep() == 2){
             //check if the corresponding edge exists

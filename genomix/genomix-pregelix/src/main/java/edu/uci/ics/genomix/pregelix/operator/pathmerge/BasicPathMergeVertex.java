@@ -30,23 +30,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     private static final Logger LOG = Logger.getLogger(BasicPathMergeVertex.class.getName());
 
     /**
-     * Logging the vertexId and vertexValue
-     */
-    public void loggingNode(byte loggingType) {
-        String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
-        LOG.fine(logMessage);
-    }
-
-    /**
-     * Logging message
-     */
-    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest) {
-        String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
-        LOG.fine(logMessage);
-    }
-    
-// 2013.9.21 --------------------------------------------------------------------------------------------------//
-    /**
      * Send merge restrictions to my neighbor nodes
      */
     public void restrictNeighbors() {
@@ -218,4 +201,21 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
     }
 
+//-----LOG----------------------------------------------------------------------------------------------------//
+    /**
+     * Logging the vertexId and vertexValue
+     */
+    public void loggingNode(byte loggingType) {
+        String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
+        LOG.fine(logMessage);
+    }
+
+    /**
+     * Logging message
+     */
+    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest) {
+        String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
+        LOG.fine(logMessage);
+    }
+    
 }

@@ -91,31 +91,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * send message to all neighbor nodes
-     */
-    public void sendSettledMsgs(DIR direction, VertexValueWritable value){
-        //TODO THE less context you send, the better  (send simple messages)
-        EnumSet<EDGETYPE> edgeTypes = (direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING);
-        Iterator<VKmerBytesWritable> kmerIterator;
-        for(EDGETYPE e : edgeTypes){
-            kmerIterator = value.getEdgeList(e).getKeyIterator();
-            while(kmerIterator.hasNext()){
-                outFlag &= DIR.CLEAR;
-                outFlag |= e.get();
-                outgoingMsg.setFlag(outFlag);
-                outgoingMsg.setSourceVertexId(getVertexId());
-                VKmerBytesWritable destVertexId = kmerIterator.next();
-                sendMsg(destVertexId, outgoingMsg);
-            }
-        }
-    }
-    
-    public void sendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
-        sendSettledMsgs(DIR.REVERSE, value);
-        sendSettledMsgs(DIR.FORWARD, value);
-    }
-    
-    /**
      * Generate random string from [ACGT]
      */
     public String generaterRandomString(int n){
@@ -134,7 +109,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void addFakeVertex(String fakeKmer){
         synchronized(lock){
-            fakeVertex.setByRead(1, "A".getBytes(), 0); 
+            fakeVertex.setByRead(1, fakeKmer.getBytes(), 0); 
             if(!fakeVertexExist){
                 //add a fake vertex
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -278,5 +253,27 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                     + "My vertexId is " + getVertexId() + "\r\n"
                     + "My vertexValue is " + getVertexValue() + "\r\n\n");
         }
+    }
+    
+    /**
+     * send message to all neighbor nodes
+     */
+    public void sendSettledMsgs(DIR direction, VertexValueWritable value){
+        VertexValueWritable vertex = getVertexValue();
+        for(EDGETYPE et : direction.edgeType()){
+            for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+                outgoingMsg.reset();
+                outFlag &= EDGETYPE.CLEAR;
+                outFlag |= et.mirror().get();
+                outgoingMsg.setFlag(outFlag);
+                outgoingMsg.setSourceVertexId(getVertexId());
+                sendMsg(dest, outgoingMsg);
+            }
+        }
+    }
+    
+    public void sendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
+        sendSettledMsgs(DIR.REVERSE, value);
+        sendSettledMsgs(DIR.FORWARD, value);
     }
 }

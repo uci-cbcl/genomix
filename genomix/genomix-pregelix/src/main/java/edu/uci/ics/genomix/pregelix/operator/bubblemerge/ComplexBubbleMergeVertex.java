@@ -265,7 +265,7 @@ public class ComplexBubbleMergeVertex extends
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
         outgoingMsg.setFlip(incomingMsg.isFlip());
-        sendSettledMsgToAllNeighborNodes(getVertexValue());
+//        sendSettledMsgToAllNeighborNodes(getVertexValue());
     }
     
     /**
@@ -277,7 +277,7 @@ public class ComplexBubbleMergeVertex extends
         
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
         outgoingMsg.setFlip(incomingMsg.isFlip());
-        sendSettledMsgToAllNeighborNodes(getVertexValue());
+//        sendSettledMsgToAllNeighborNodes(getVertexValue());
         
         deleteVertex(getVertexId());
     }

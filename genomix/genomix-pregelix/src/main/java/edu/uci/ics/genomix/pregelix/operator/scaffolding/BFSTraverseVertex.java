@@ -10,7 +10,6 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.EdgeDirs;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
 public class BFSTraverseVertex extends
@@ -65,10 +64,10 @@ public class BFSTraverseVertex extends
         kmerList.append(getVertexId());
         outgoingMsg.setPathList(kmerList);
         outgoingMsg.setReadId(incomingMsg.getReadId()); //only one readId
-        if(incomingMsg.isSrcFlip())
-            sendSettledMsgs(DIR.REVERSE, getVertexValue());
-        else
-            sendSettledMsgs(DIR.FORWARD, getVertexValue());
+//        if(incomingMsg.isSrcFlip())
+//            sendSettledMsgs(DIR.REVERSE, getVertexValue());
+//        else
+//            sendSettledMsgs(DIR.FORWARD, getVertexValue());
     }
     
     public void broadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
@@ -88,11 +87,11 @@ public class BFSTraverseVertex extends
         switch(neighborToMeDir){
             case FF:
             case FR:
-                sendSettledMsgs(DIR.REVERSE ,getVertexValue());
+//                sendSettledMsgs(DIR.REVERSE ,getVertexValue());
                 break;
             case RF:
             case RR:
-                sendSettledMsgs(DIR.FORWARD, getVertexValue());
+//                sendSettledMsgs(DIR.FORWARD, getVertexValue());
                 break;
         }
     }
