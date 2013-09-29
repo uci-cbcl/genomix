@@ -30,11 +30,6 @@ public class VertexValueWritable
         public static final byte MERGE = 0b1 << 4;
         public static final byte MERGE_CLEAR = 0b1101100; // clear the MERGE/NO_MERGE and the MERGE_DIRECTION
         public static final byte MERGE_MASK = 0b0010011;
-        
-        public static final short IS_NONFAKE = 0 << 7;
-        public static final short IS_FAKE = 1 << 7;
-        
-        public static final short FAKEFLAG_MASK = 1 << 7;
     }
     
     private short state;

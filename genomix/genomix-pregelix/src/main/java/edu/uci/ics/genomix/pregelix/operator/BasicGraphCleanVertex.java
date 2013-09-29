@@ -19,7 +19,6 @@ import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
@@ -54,7 +53,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
     protected EDGETYPE repeatEdgetype; //for detect tandemRepeat
     protected short outFlag;
-    protected short inFlag;
     protected short selfFlag;
     
     protected static List<VKmerBytesWritable> problemKmers = null;
@@ -134,16 +132,14 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * add fake vertex
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void addFakeVertex(){
+    public void addFakeVertex(String fakeKmer){
         synchronized(lock){
+            fakeVertex.setByRead(1, "A".getBytes(), 0); 
             if(!fakeVertexExist){
                 //add a fake vertex
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-                vertex.getMsgList().clear();
-                vertex.getEdges().clear();
                 
-                VertexValueWritable vertexValue = new VertexValueWritable();//kmerSize + 1
-                vertexValue.setState(State.IS_FAKE);
+                VertexValueWritable vertexValue = new VertexValueWritable();
                 vertexValue.setFakeVertex(true);
                 
                 vertex.setVertexId(fakeVertex);
@@ -153,10 +149,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 fakeVertexExist = true;
             }
         }
-    }
-    
-    public boolean isFakeVertex(){
-        return ((byte)getVertexValue().getState() & State.FAKEFLAG_MASK) > 0;
     }
     
     /**

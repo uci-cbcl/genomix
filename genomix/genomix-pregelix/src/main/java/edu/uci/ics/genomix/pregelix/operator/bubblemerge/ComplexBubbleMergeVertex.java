@@ -312,7 +312,7 @@ public class ComplexBubbleMergeVertex extends
                 sendBubbleAndMajorVertexMsgToMinorVertex();
             }
         } else if (getSuperstep() == 2){
-            if(!isFakeVertex()){
+            if(!getVertexValue().isFakeVertex()){
                 // aggregate bubble nodes and grouped by major vertex
                 aggregateBubbleNodesByMajorNode(msgIterator);
                 

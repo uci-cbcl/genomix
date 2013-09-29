@@ -101,7 +101,7 @@ public class ScaffoldingVertex extends
         initVertex();
         if(getSuperstep() == 1){
             // add a fake vertex 
-            addFakeVertex();
+            addFakeVertex("A");
             // grouped by 5'/~5' readId in aggregator
             addStartReadsToScaffoldingMap();
             addEndReadsToScaffoldingMap();

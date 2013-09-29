@@ -40,8 +40,8 @@ public class BFSTraverseVertex extends
             kmerList.reset();
         if(fakeVertex == null){
             fakeVertex = new VKmerBytesWritable();
-            String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
+//            String random = generaterRandomString(kmerSize + 1);
+//            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
     }
     
@@ -184,7 +184,7 @@ public class BFSTraverseVertex extends
     public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
-            addFakeVertex();
+            addFakeVertex("A");
             voteToHalt();
         }
         else if(getSuperstep() == 2){

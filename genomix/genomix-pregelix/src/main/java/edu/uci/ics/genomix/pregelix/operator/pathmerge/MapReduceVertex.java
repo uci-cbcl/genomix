@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -26,33 +25,17 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         super.initVertex();
         if(outgoingMsg == null)
             outgoingMsg = (M) new PathMergeMessageWritable();
-        else
-            outgoingMsg.reset();
-        if(reverseKmer == null)
-            reverseKmer = new VKmerBytesWritable();
-        if(fakeVertex == null){
+        if(fakeVertex == null)
             fakeVertex = new VKmerBytesWritable();
-            String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
-        }
         if(forwardKmer == null)
             forwardKmer = new VKmerBytesWritable();
-    }
-    
-    /**
-     * 
-     */
-    public String generateString(int length){
-        StringBuffer outputBuffer = new StringBuffer(length);
-        for (int i = 0; i < length; i++){
-           outputBuffer.append("A");
-        }
-        return outputBuffer.toString();
+        if(reverseKmer == null)
+            reverseKmer = new VKmerBytesWritable();
     }
     
     public void sendMsgToFakeVertex(){
-        outgoingMsg.reset();
         if(!getVertexValue().isFakeVertex()){
+            outgoingMsg.reset();
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setInternalKmer(getVertexValue().getInternalKmer());
             sendMsg(fakeVertex, outgoingMsg);
@@ -105,7 +88,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     public void finalVertexResponseToFakeVertex(Iterator<M> msgIterator){
         while(msgIterator.hasNext()){
             M incomingMsg = msgIterator.next();
-            inFlag = incomingMsg.getFlag();
+            short inFlag = incomingMsg.getFlag();
 //            if(inFlag == MessageFlag.KILL){
 //                broadcaseKillself();
 //            }
@@ -116,20 +99,20 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     public void compute(Iterator<M> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
-            addFakeVertex();
+            addFakeVertex("A");
         }
         else if(getSuperstep() == 2){
-            //NON-FAKE and Final vertice send msg to FAKE vertex
+            // NON-FAKE send msg to FAKE vertex
             sendMsgToFakeVertex();
         } else if(getSuperstep() == 3){
             kmerMapper.clear();
-            //Mappe
+            // Mapper
             mapKeyByInternalKmer(msgIterator);
-            //Reducer
+            // Reducer
             reduceKeyByInternalKmer();
         } else if(getSuperstep() == 4){
             // only for test single MapReduce job
-            if(!msgIterator.hasNext() && getVertexValue().getState() == State.IS_FAKE){
+            if(!msgIterator.hasNext() && getVertexValue().isFakeVertex()){
                 fakeVertexExist = false;
                 deleteVertex(fakeVertex);
             }
