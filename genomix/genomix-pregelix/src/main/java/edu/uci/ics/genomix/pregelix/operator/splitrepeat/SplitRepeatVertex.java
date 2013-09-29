@@ -23,6 +23,9 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 
 /**
  * Graph clean pattern: Split Repeat
+ * Details: This component identifies small repeats that are spanned by sets of 
+ *          reads. The algorithms are similar to scaffolding, but uses individual 
+ *          reads. It is very experimental, with marginal improvements to the graph
  * @author anbangx
  *
  */

@@ -25,7 +25,6 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -93,21 +92,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             verbose |= debug && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
     }
     
-//    /**
-//     * check the message type
-//     */
-//    public boolean isReceiveKillMsg(M incomingMsg){
-//        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
-//        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-//        return killFlag == MessageFlag.KILL & deadFlag != MessageFlag.DIR_FROM_DEADVERTEX;
-//    }
-//    
-//    public boolean isResponseKillMsg(M incomingMsg){
-//        byte killFlag = (byte) (incomingMsg.getFlag() & MessageFlag.KILL_MASK);
-//        byte deadFlag = (byte) (incomingMsg.getFlag() & MessageFlag.DEAD_MASK);
-//        return killFlag == MessageFlag.KILL & deadFlag == MessageFlag.DIR_FROM_DEADVERTEX; 
-//    }
-    
     /**
      * send message to all neighbor nodes
      */
@@ -131,28 +115,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void sendSettledMsgToAllNeighborNodes(VertexValueWritable value) {
         sendSettledMsgs(DIR.REVERSE, value);
         sendSettledMsgs(DIR.FORWARD, value);
-    }
-    
-    /**
-     * broadcast kill self to all neighbers ***
-     */
-    public void broadcaseKillself(){
-        outFlag = 0;
-        outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
-        
-        sendSettledMsgToAllNeighborNodes(getVertexValue());
-        
-        deleteVertex(getVertexId());
-    }
-    
-    /**
-     * do some remove operations on adjMap after receiving the info about dead Vertex
-     */
-    public void responseToDeadVertex(M incomingMsg){
-        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
-        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
-        
-        getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
     }
     
     /**
@@ -198,7 +160,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * set statistics counter
+     * increment statistics counter
      */
     public void incrementCounter(byte counterName){
         ByteWritable counterNameWritable = new ByteWritable(counterName);
@@ -210,8 +172,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     /**
      * read statistics counters
-     * @param conf
-     * @return
      */
     public static HashMapWritable<ByteWritable, VLongWritable> readStatisticsCounterResult(Configuration conf) {
         try {
@@ -222,18 +182,6 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             throw new IllegalStateException(e);
         }
     }
-    
-//    /**
-//     * use for SplitRepeatVertex and BubbleMerge
-//     * @param i
-//     */
-//    public void setEdgeListAndEdgeType(int i){
-//        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
-//        incomingEdgeType = connectedTable[i][0];
-//        
-//        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
-//        outgoingEdgeType = connectedTable[i][1];
-//    }
     
 //2013.9.21 ------------------------------------------------------------------//
     public static PregelixJob getConfiguredJob(GenomixJobConf conf, Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass) throws IOException {
@@ -292,7 +240,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     /**
-     * broadcastKillself ex. RemoveLow
+     * broadcastKillself ex. RemoveLow, RemoveTip, RemoveBridge
      */
     public void broadcastKillself(){
         VertexValueWritable vertex = getVertexValue();

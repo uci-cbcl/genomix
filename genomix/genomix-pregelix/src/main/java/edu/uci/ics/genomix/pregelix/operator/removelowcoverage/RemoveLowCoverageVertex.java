@@ -17,6 +17,9 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
  * Graph clean pattern: Remove Lowcoverage
+ * Detais: Chimeric reads and other sequencing artifacts create edges that are 
+ *         only supported by a small number of reads. These edges are identified 
+ *         and removed. This is then followed by recompressing the graph. 
  * @author anbangx
  *
  */
