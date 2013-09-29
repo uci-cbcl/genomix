@@ -7,17 +7,11 @@ import java.util.Map;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
 	BasicPathMergeVertex<V, M>{
-    
-    public static class KmerDir{
-        public static final byte FORWARD = 1 << 0;
-        public static final byte REVERSE = 1 << 1;
-    }
     
     protected VKmerBytesWritable forwardKmer;
     protected VKmerBytesWritable reverseKmer;
@@ -125,16 +119,16 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             addFakeVertex();
         }
         else if(getSuperstep() == 2){
-            /** NON-FAKE and Final vertice send msg to FAKE vertex **/
+            //NON-FAKE and Final vertice send msg to FAKE vertex
             sendMsgToFakeVertex();
         } else if(getSuperstep() == 3){
             kmerMapper.clear();
-            /** Mapper **/
+            //Mappe
             mapKeyByInternalKmer(msgIterator);
-            /** Reducer **/
+            //Reducer
             reduceKeyByInternalKmer();
         } else if(getSuperstep() == 4){
-            /** only for test single MapReduce job**/
+            // only for test single MapReduce job
             if(!msgIterator.hasNext() && getVertexValue().getState() == State.IS_FAKE){
                 fakeVertexExist = false;
                 deleteVertex(fakeVertex);
