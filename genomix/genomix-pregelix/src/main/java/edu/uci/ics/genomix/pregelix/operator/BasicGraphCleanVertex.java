@@ -24,6 +24,7 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -82,6 +83,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
                 debug = true;
                 for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
                     problemKmers.add(new VKmerBytesWritable(kmer));
+                NodeWritable.problemKmers = problemKmers;
             }
         }
                 
