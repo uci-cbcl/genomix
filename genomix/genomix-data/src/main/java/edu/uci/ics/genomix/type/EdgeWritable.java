@@ -96,7 +96,13 @@ public class EdgeWritable implements WritableComparable<EdgeWritable>, Serializa
             appendReadID(p);
         }
     }
-
+    
+    public void set(VKmerBytesWritable otherKmer, Set<Long> otherReadIds){
+        reset();
+        setKey(otherKmer);
+        setReadIDs(otherReadIds);
+    }
+    
     public void reset() {
         key.reset(0);
         readIDs.reset();

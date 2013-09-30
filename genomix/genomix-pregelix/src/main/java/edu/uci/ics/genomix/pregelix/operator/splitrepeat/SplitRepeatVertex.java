@@ -150,12 +150,8 @@ public class SplitRepeatVertex extends
                             VKmerBytesWritable createdVertexId = randomGenerateVertexId(NUM_LETTERS_TO_APPEND);
                             
                             // change new incomingEdge/outgoingEdge's edgeList to commondReadIdSet
-                            newReverseEdge.reset();
-                            newReverseEdge.setKey(reverseEdge.getKey());
-                            newReverseEdge.setReadIDs(edgeIntersection);
-                            newForwardEdge.reset();
-                            newForwardEdge.setKey(forwardEdge.getKey());
-                            newForwardEdge.setReadIDs(edgeIntersection);
+                            newReverseEdge.set(reverseEdge.getKey(), edgeIntersection);
+                            newForwardEdge.set(forwardEdge.getKey(), edgeIntersection);
                             
                             NeighborInfo newReverseNeighborInfo = new NeighborInfo(reverseEdgeType, newReverseEdge); 
                             NeighborInfo newForwardNeighborInfo = new NeighborInfo(forwardEdgeType, newForwardEdge);
