@@ -56,7 +56,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected short outFlag;
     protected short selfFlag;
     
-    protected static List<VKmerBytesWritable> problemKmers = null;
+    protected List<VKmerBytesWritable> problemKmers = null;
     protected boolean debug = false;
     protected boolean verbose = false;
     protected boolean logReadIds = false;
@@ -72,11 +72,11 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         
-        configureDebugOption();
+        checkDebug();
         //TODO fix globalAggregator
     }
     
-    public void configureDebugOption(){
+    public void checkDebug(){
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmerBytesWritable>();
             if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
