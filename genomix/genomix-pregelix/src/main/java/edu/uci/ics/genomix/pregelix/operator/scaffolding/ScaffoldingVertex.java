@@ -6,11 +6,9 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.io.KmerListAndFlagListWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
@@ -135,6 +133,7 @@ public class ScaffoldingVertex extends
     public boolean isInRange(int traversalLength){
         return traversalLength < MAX_TRAVERSAL_LENGTH && traversalLength > MIN_TRAVERSAL_LENGTH;
     }
+    
     @Override
     public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
         initVertex();

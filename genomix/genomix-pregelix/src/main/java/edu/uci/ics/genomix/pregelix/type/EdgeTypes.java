@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
+import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+
 public class EdgeTypes implements Writable{
 
     private byte meToPrevEdgeType;
@@ -16,20 +18,20 @@ public class EdgeTypes implements Writable{
         meToNextEdgeType = 0;
     }
 
-    public byte getMeToPrevEdgeType() {
-		return meToPrevEdgeType;
+    public EDGETYPE getMeToPrevEdgeType() {
+		return EDGETYPE.fromByte(meToPrevEdgeType);
 	}
 
-	public void setMeToPrevEdgeType(byte meToPrevEdgeType) {
-		this.meToPrevEdgeType = meToPrevEdgeType;
+	public void setMeToPrevEdgeType(EDGETYPE meToPrevEdgeType) {
+		this.meToPrevEdgeType = meToPrevEdgeType.get();
 	}
 
-	public byte getMeToNextEdgeType() {
-		return meToNextEdgeType;
+	public EDGETYPE getMeToNextEdgeType() {
+		return EDGETYPE.fromByte(meToNextEdgeType);
 	}
 
-	public void setMeToNextEdgeType(byte meToNextEdgeType) {
-		this.meToNextEdgeType = meToNextEdgeType;
+	public void setMeToNextEdgeType(EDGETYPE meToNextEdgeType) {
+		this.meToNextEdgeType = meToNextEdgeType.get();
 	}
 
 	@Override

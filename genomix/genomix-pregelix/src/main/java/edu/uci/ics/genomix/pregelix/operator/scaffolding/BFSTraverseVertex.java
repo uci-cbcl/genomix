@@ -79,14 +79,52 @@ public class BFSTraverseVertex extends
         if(getSuperstep() > 3){
             EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
             DIR validDir = meToNeighbor.dir().mirror();
-            // set EdgeTypes
-            ArrayListWritable<EdgeTypes> edgeTypesList = incomingMsg.getEdgeTypesList();
-            if
+            // update EdgeTypesList
+            updateEdgeTypesList(incomingMsg.getEdgeTypesList(), meToNeighbor);
             // send msg to valid destination
             sendSettledMsgs(validDir, getVertexValue());
         }
     }
     
+    public void updateEdgeTypesList(ArrayListWritable<EdgeTypes> edgeTypesList, EDGETYPE meToNeighbor){
+        EdgeTypes edgeTypes; 
+        if(edgeTypesList.size() == 0){//first time from srcNode
+            // set srcNode's next edgeType
+        	edgeTypes = new EdgeTypes();
+        	edgeTypesList.add(edgeTypes);
+        } else{
+        	// set preNode's next edgeType
+        	edgeTypes = edgeTypesList.get(edgeTypesList.size() - 1);
+        }
+        edgeTypes.setMeToNextEdgeType(meToNeighbor.mirror());
+        // set curNode's prev edgeType
+        edgeTypes.setMeToPrevEdgeType(meToNeighbor);
+    }
+    
+//    public void setEdgeDirs(BFSTraverseMessageWritable incomingMsg, EDGETYPE meToNeighborDir, EDGETYPE neighborToMeDir){
+//        edgeDirsList.clear();
+//        edgeDirsList.addAll(incomingMsg.getEdgeTypesList());
+//        if(edgeDirsList.isEmpty()){ //first time from srcNode
+//            /** set srcNode's next dir **/
+//            edgeDirs.reset();
+//            edgeDirs.setNextToMeDir(meToNeighborDir.get());
+//            edgeDirsList.add(new EdgeDirs(edgeDirs)); 
+//            /** set curNode's prev dir **/
+//            edgeDirs.reset();
+//            edgeDirs.setPrevToMeDir(neighborToMeDir.get());
+//            edgeDirsList.add(new EdgeDirs(edgeDirs));
+//        } else {
+//            /** set preNode's next dir **/
+//            edgeDirs.set(edgeDirsList.get(edgeDirsList.size() - 1));
+//            edgeDirs.setNextToMeDir(meToNeighborDir.get());
+//            edgeDirsList.set(edgeDirsList.size() - 1, new EdgeDirs(edgeDirs));
+//            /** set curNode's prev dir **/
+//            edgeDirs.reset();
+//            edgeDirs.setPrevToMeDir(neighborToMeDir.get());
+//            edgeDirsList.add(new EdgeDirs(edgeDirs));
+//        }
+//        outgoingMsg.setEdgeTypesList(edgeDirsList);
+//    }
 //    public void broadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
 //        outgoingMsg.reset();
 //        outgoingMsg.setSourceVertexId(incomingMsg.getSourceVertexId());
