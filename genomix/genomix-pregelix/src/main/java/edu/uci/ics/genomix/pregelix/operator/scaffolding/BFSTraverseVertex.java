@@ -81,6 +81,7 @@ public class BFSTraverseVertex extends
             DIR validDir = meToNeighbor.dir().mirror();
             // set EdgeTypes
             ArrayListWritable<EdgeTypes> edgeTypesList = incomingMsg.getEdgeTypesList();
+            if
             // send msg to valid destination
             sendSettledMsgs(validDir, getVertexValue());
         }
