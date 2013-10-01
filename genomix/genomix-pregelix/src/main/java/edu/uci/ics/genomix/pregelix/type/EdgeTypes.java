@@ -6,44 +6,42 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-
 public class EdgeTypes implements Writable{
 
-    private byte prevToMeEdgeType;
-    private byte nextToMeEdgeType;
+    private byte meToPrevEdgeType;
+    private byte meToNextEdgeType;
     
     public EdgeTypes(){
-        prevToMeEdgeType = 0;
-        nextToMeEdgeType = 0;
-    }
-    
-    public EDGETYPE getPrevToMeEdgeType() {
-        return EDGETYPE.fromByte(prevToMeEdgeType);
+        meToPrevEdgeType = 0;
+        meToNextEdgeType = 0;
     }
 
-    public void setPrevToMeEdgeType(EDGETYPE prevToMeEdgeType) {
-        this.prevToMeEdgeType = prevToMeEdgeType.get();
-    }
+    public byte getMeToPrevEdgeType() {
+		return meToPrevEdgeType;
+	}
 
-    public EDGETYPE getNextToMeEdgeType() {
-        return EDGETYPE.fromByte(nextToMeEdgeType);
-    }
+	public void setMeToPrevEdgeType(byte meToPrevEdgeType) {
+		this.meToPrevEdgeType = meToPrevEdgeType;
+	}
 
-    public void setNextToMeEdgeType(EDGETYPE nextToMeEdgeType) {
-        this.nextToMeEdgeType = nextToMeEdgeType.get();
-    }
+	public byte getMeToNextEdgeType() {
+		return meToNextEdgeType;
+	}
 
-    @Override
+	public void setMeToNextEdgeType(byte meToNextEdgeType) {
+		this.meToNextEdgeType = meToNextEdgeType;
+	}
+
+	@Override
     public void write(DataOutput out) throws IOException {
-        out.writeByte(prevToMeEdgeType);
-        out.writeByte(nextToMeEdgeType);
+        out.writeByte(meToPrevEdgeType);
+        out.writeByte(meToNextEdgeType);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        prevToMeEdgeType = in.readByte();
-        nextToMeEdgeType = in.readByte();
+        meToPrevEdgeType = in.readByte();
+        meToNextEdgeType = in.readByte();
     }
 
 }

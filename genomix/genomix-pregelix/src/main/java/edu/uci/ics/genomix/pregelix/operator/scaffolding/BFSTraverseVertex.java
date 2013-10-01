@@ -113,31 +113,6 @@ public class BFSTraverseVertex extends
 //        }
 //    }
     
-    public void setEdgeDirs(BFSTraverseMessageWritable incomingMsg, EDGETYPE meToNeighborDir, EDGETYPE neighborToMeDir){
-        edgeDirsList.clear();
-        edgeDirsList.addAll(incomingMsg.getEdgeTypesList());
-        if(edgeDirsList.isEmpty()){ //first time from srcNode
-            /** set srcNode's next dir **/
-            edgeDirs.reset();
-            edgeDirs.setNextToMeDir(meToNeighborDir.get());
-            edgeDirsList.add(new EdgeDirs(edgeDirs)); 
-            /** set curNode's prev dir **/
-            edgeDirs.reset();
-            edgeDirs.setPrevToMeDir(neighborToMeDir.get());
-            edgeDirsList.add(new EdgeDirs(edgeDirs));
-        } else {
-            /** set preNode's next dir **/
-            edgeDirs.set(edgeDirsList.get(edgeDirsList.size() - 1));
-            edgeDirs.setNextToMeDir(meToNeighborDir.get());
-            edgeDirsList.set(edgeDirsList.size() - 1, new EdgeDirs(edgeDirs));
-            /** set curNode's prev dir **/
-            edgeDirs.reset();
-            edgeDirs.setPrevToMeDir(neighborToMeDir.get());
-            edgeDirsList.add(new EdgeDirs(edgeDirs));
-        }
-        outgoingMsg.setEdgeTypesList(edgeDirsList);
-    }
-    
     public boolean isValidDestination(BFSTraverseMessageWritable incomingMsg){
         EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
         if(incomingMsg.isDestFlip())
