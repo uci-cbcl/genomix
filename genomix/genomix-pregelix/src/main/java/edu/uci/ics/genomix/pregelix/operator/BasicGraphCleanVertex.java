@@ -262,7 +262,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : direction.edgeType()){
             for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
-                outgoingMsg.reset();
+//                outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);

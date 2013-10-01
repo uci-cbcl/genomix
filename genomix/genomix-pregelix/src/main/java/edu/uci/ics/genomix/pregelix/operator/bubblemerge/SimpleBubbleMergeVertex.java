@@ -66,7 +66,7 @@ public class SimpleBubbleMergeVertex extends
         //TODO combine into only one byte, change internally/under the hood
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
         if(forwardNeighbor.kmer == reverseNeighbor.kmer) // FIXME should this *really* be == or .equals?
-            throw new IllegalArgumentException("majorVertexId is equal to minorVertexId, this is not allowed!");
+            throw new IllegalStateException("majorVertexId is equal to minorVertexId, this is not allowed!");
         
         VKmerBytesWritable minorVertexId;
         boolean forwardIsMajor = forwardNeighbor.kmer.compareTo(reverseNeighbor.kmer) >= 0;
@@ -202,6 +202,9 @@ public class SimpleBubbleMergeVertex extends
                     broadcastKillself();
                     deleteVertex(getVertexId());
                     break;
+                default:
+                	throw new IllegalStateException("The received message types should have only two kinds: " +
+                			MESSAGETYPE.REPLACE_NODE + " and " + MESSAGETYPE.KILL_SELF);
             }
         } 
     }

@@ -447,6 +447,8 @@ public class NodeWritable implements Writable, Serializable {
         return null;
     }
     
+    
+    // TODO change readIds to long instead of PositionWritable
     /**
      * Get this node's edgeType and edgeList in this given edgeType. Return null if there is no neighbor
      */
@@ -511,6 +513,7 @@ public class NodeWritable implements Writable, Serializable {
     public float getAvgCoverage() {
         return averageCoverage;
     }
+    
 
     public PositionListWritable getStartReads() {
         return startReads;
