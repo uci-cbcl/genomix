@@ -314,7 +314,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     /**
      * Return the number of bytes used by both header and kmer chain
      */
-//    @Override
+    @Override
     public int getLength() {
         return bytesUsed + HEADER_SIZE;
     }

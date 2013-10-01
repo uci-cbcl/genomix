@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.io.Writable;
@@ -37,6 +38,8 @@ import edu.uci.ics.genomix.data.Marshal;
 public class NodeWritable implements Writable, Serializable {
 
     public Logger LOG = Logger.getLogger(NodeWritable.class.getName());
+    private boolean DEBUG = true;
+    public static List<VKmerBytesWritable> problemKmers = new ArrayList<VKmerBytesWritable>();
 
     public enum DIR {
 
@@ -80,7 +83,7 @@ public class NodeWritable implements Writable, Serializable {
             return b;
         }
 
-        public final EnumSet<EDGETYPE> edgeType() {
+        public final EnumSet<EDGETYPE> edgeTypes() {
             return edgeTypesInDir(this);
         }
 
@@ -299,19 +302,22 @@ public class NodeWritable implements Writable, Serializable {
 
     public static class NeighborInfo {
         public EDGETYPE et;
-        public EdgeWritable edge;
+        public PositionListWritable readIds;
         public VKmerBytesWritable kmer;
 
-        public NeighborInfo(EDGETYPE edgeType, EdgeWritable edgeWritable) {
-            et = edgeType;
-            edge = edgeWritable;
-            kmer = edge.getKey();
+        public NeighborInfo(EDGETYPE edgeType, VKmerBytesWritable kmer, PositionListWritable readIds) {
+            set(edgeType, kmer, readIds);
         }
-
-        public void set(EDGETYPE edgeType, EdgeWritable edgeWritable) {
-            et = edgeType;
-            edge = edgeWritable;
-            kmer = edge.getKey();
+        public NeighborInfo(EDGETYPE edgeType, Entry<VKmerBytesWritable, PositionListWritable> edge) {
+            set(edgeType, edge.getKey(), edge.getValue());
+        }
+        public void set(EDGETYPE edgeType, Entry<VKmerBytesWritable, PositionListWritable> edge) {
+            set(edgeType, edge.getKey(), edge.getValue());
+        }
+        public void set(EDGETYPE edgeType, VKmerBytesWritable kmer, PositionListWritable readIds) {
+            this.et = edgeType;
+            this.kmer = kmer;
+            this.readIds = readIds;
         }
     }
 
@@ -319,28 +325,32 @@ public class NodeWritable implements Writable, Serializable {
         public final EDGETYPE et;
         public final EdgeListWritable edges;
 
-        public NeighborsInfo(EDGETYPE edgeType, EdgeListWritable edgeListWritable) {
+        public NeighborsInfo(EDGETYPE edgeType, EdgeListWritable edgeList) {
             et = edgeType;
-            edges = edgeListWritable;
+            edges = edgeList;
         }
 
         @Override
         public Iterator<NeighborInfo> iterator() {
             return new Iterator<NeighborInfo>() {
-                private int currentIndex = 0;
-
+                
+                private Iterator<Entry<VKmerBytesWritable, PositionListWritable>> it = edges.entrySet().iterator();
+                private NeighborInfo info = new NeighborInfo(null, null);
+                
                 @Override
                 public boolean hasNext() {
-                    return currentIndex < edges.size();
+                    return it.hasNext();
                 }
 
                 @Override
                 public NeighborInfo next() {
-                    return new NeighborInfo(et, edges.get(currentIndex));
+                    info.set(et, it.next());
+                    return info;
                 }
 
                 @Override
                 public void remove() {
+                    it.remove();
                 }
             };
         }
@@ -360,8 +370,6 @@ public class NodeWritable implements Writable, Serializable {
     private VKmerBytesWritable internalKmer;
 
     private float averageCoverage;
-    private boolean DEBUG = true;
-    public static List<VKmerBytesWritable> problemKmers = new ArrayList<VKmerBytesWritable>();
 
     //    public boolean foundMe;
     //    public String previous;
@@ -370,7 +378,7 @@ public class NodeWritable implements Writable, Serializable {
 
     public NodeWritable() {
 
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+        for (EDGETYPE e : EDGETYPE.values()) {
             edges[e.get()] = new EdgeListWritable();
         }
         startReads = new PositionListWritable();
@@ -395,7 +403,7 @@ public class NodeWritable implements Writable, Serializable {
         setAsReference(data, offset);
     }
 
-    public NodeWritable getNode() {
+    public NodeWritable getNode() { // TODO what is this used for???
         return this;
     }
 
@@ -404,19 +412,19 @@ public class NodeWritable implements Writable, Serializable {
     }
 
     public void setAsCopy(EdgeListWritable[] edges, PositionListWritable startReads, PositionListWritable endReads,
-            VKmerBytesWritable kmer2, float coverage) {
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+            VKmerBytesWritable kmer, float coverage) {
+        for (EDGETYPE e : EDGETYPE.values()) {
             this.edges[e.get()].setAsCopy(edges[e.get()]);
         }
         this.startReads.set(startReads);
         this.endReads.set(endReads);
-        this.internalKmer.setAsCopy(kmer2);
+        this.internalKmer.setAsCopy(kmer);
         this.averageCoverage = coverage;
     }
 
     public void reset() {
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-            edges[e.get()].reset();
+        for (EDGETYPE e : EDGETYPE.values()) {
+            edges[e.get()].clear();
         }
         startReads.reset();
         endReads.reset();
@@ -438,10 +446,10 @@ public class NodeWritable implements Writable, Serializable {
 
     //This function works on only this case: in this DIR, vertex has and only has one EDGETYPE
     public EDGETYPE getNeighborEdgeType(DIR direction) {
-        if (getDegree(direction) != 1)
+        if (degree(direction) != 1)
             throw new IllegalArgumentException(
                     "getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
-        EnumSet<EDGETYPE> ets = direction.edgeType();
+        EnumSet<EDGETYPE> ets = direction.edgeTypes();
         for (EDGETYPE et : ets) {
             if (getEdgeList(et).size() > 0)
                 return et;
@@ -454,12 +462,12 @@ public class NodeWritable implements Writable, Serializable {
      * Get this node's single neighbor in the given direction. Return null if there are multiple or no neighbors.
      */
     public NeighborInfo getSingleNeighbor(DIR direction) {
-        if (getDegree(direction) != 1) {
+        if (degree(direction) != 1) {
             return null;
         }
-        for (EDGETYPE et : direction.edgeType()) {
+        for (EDGETYPE et : direction.edgeTypes()) {
             if (getEdgeList(et).size() > 0) {
-                return new NeighborInfo(et, getEdgeList(et).get(0));
+                return new NeighborInfo(et, getEdgeList(et).firstEntry());
             }
         }
         return null;
@@ -553,10 +561,10 @@ public class NodeWritable implements Writable, Serializable {
     public int getSerializedLength() {
         int length = 0;
         for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-            length += edges[e.get()].getLength();
+            length += edges[e.get()].getLengthInBytes();
         }
-        length += startReads.getLength();
-        length += endReads.getLength();
+        length += startReads.getLengthInBytes();
+        length += endReads.getLengthInBytes();
         length += internalKmer.getLength();
         length += SIZE_FLOAT; // avgCoverage
         return length;
@@ -576,12 +584,12 @@ public class NodeWritable implements Writable, Serializable {
         int curOffset = offset;
         for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
             edges[e.get()].setAsCopy(data, curOffset);
-            curOffset += edges[e.get()].getLength();
+            curOffset += edges[e.get()].getLengthInBytes();
         }
-        startReads.set(data, curOffset);
-        curOffset += startReads.getLength();
-        endReads.set(data, curOffset);
-        curOffset += endReads.getLength();
+        startReads.setAsCopy(data, curOffset);
+        curOffset += startReads.getLengthInBytes();
+        endReads.setAsCopy(data, curOffset);
+        curOffset += endReads.getLengthInBytes();
         internalKmer.setAsCopy(data, curOffset);
         curOffset += internalKmer.getLength();
         averageCoverage = Marshal.getFloat(data, curOffset);
@@ -591,12 +599,12 @@ public class NodeWritable implements Writable, Serializable {
         int curOffset = offset;
         for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
             edges[e.get()].setAsReference(data, curOffset);
-            curOffset += edges[e.get()].getLength();
+            curOffset += edges[e.get()].getLengthInBytes();
         }
-        startReads.setNewReference(data, curOffset);
-        curOffset += startReads.getLength();
-        endReads.setNewReference(data, curOffset);
-        curOffset += endReads.getLength();
+        startReads.setAsReference(data, curOffset);
+        curOffset += startReads.getLengthInBytes();
+        endReads.setAsReference(data, curOffset);
+        curOffset += endReads.getLengthInBytes();
 
         internalKmer.setAsReference(data, curOffset);
         curOffset += internalKmer.getLength();
@@ -897,29 +905,35 @@ public class NodeWritable implements Writable, Serializable {
     }
 
     /**
-     * Debug helper function to find the edge associated with the given kmer.
-     * Note: may be very slow-- does a linear scan of all edges!
+     * Debug helper function to find the edge associated with the given kmer, checking all directions. If the edge doesn't exist in any direction, returns null
      */
-    public Map.Entry<EDGETYPE, EdgeWritable> findEdge(final VKmerBytesWritable kmer) {
-        for (EDGETYPE dir : EDGETYPE.values()) {
-            for (EdgeWritable e : edges[dir.get()]) {
-                if (e.getKey().equals(kmer))
-                    return new AbstractMap.SimpleEntry<EDGETYPE, EdgeWritable>(dir, e);
+    public NeighborInfo findEdge(final VKmerBytesWritable kmer) {
+        for (EDGETYPE et : EDGETYPE.values()) {
+            if (edges[et.get()].containsKey(kmer)) {
+                return new NeighborInfo(et, kmer, edges[et.get()].get(kmer));
             }
         }
         return null;
     }
 
+    public int degree(DIR direction) {
+        int totalDegree = 0;
+        for (EDGETYPE et : DIR.edgeTypesInDir(direction)) {
+            totalDegree += edges[et.get()].size();
+        }
+        return totalDegree;
+    }
+    
     public int inDegree() {
-        return edges[EDGETYPE.RR.get()].size() + edges[EDGETYPE.RF.get()].size();
+        return degree(DIR.REVERSE);
     }
 
     public int outDegree() {
-        return edges[EDGETYPE.FF.get()].size() + edges[EDGETYPE.FR.get()].size();
+        return degree(DIR.FORWARD);
     }
-
-    public int getDegree(DIR direction) {
-        return direction == DIR.REVERSE ? inDegree() : outDegree();
+    
+    public int totalDegree() {
+        return degree(DIR.FORWARD) + degree(DIR.REVERSE);
     }
 
     /*

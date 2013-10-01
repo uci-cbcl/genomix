@@ -107,7 +107,7 @@ public class GraphStatistics extends MapReduceBase implements
             reporter.getCounter("totals", "pathNode").increment(1);
 
         for (DIR d : DIR.values())
-            if (value.getDegree(d) == 0)
+            if (value.degree(d) == 0)
                 reporter.getCounter("totals", "tips-" + d).increment(1);
 
         if (value.inDegree() == 0 && value.outDegree() == 0)

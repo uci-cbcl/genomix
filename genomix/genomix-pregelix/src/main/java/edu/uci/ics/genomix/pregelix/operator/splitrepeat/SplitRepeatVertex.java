@@ -125,7 +125,7 @@ public class SplitRepeatVertex extends
     
     public void deleteEdgeFromOldVertex(Set<NeighborInfo> neighborsInfo){
         for(NeighborInfo neighborInfo : neighborsInfo)
-            getVertexValue().getEdgeList(neighborInfo.et).removeSubEdge(neighborInfo.edge);
+            getVertexValue().getEdgeList(neighborInfo.et).removeReadIdSubset(neighborInfo.edge);
     }
     
     public void detectRepeatAndSplit(){
@@ -197,7 +197,7 @@ public class SplitRepeatVertex extends
             deletedEdge.setKey(incomingMsg.getSourceVertexId());
             
             getVertexValue().getEdgeList(meToNeighbor).add(new EdgeWritable(createdEdge));
-            getVertexValue().getEdgeList(meToNeighbor).removeSubEdge(deletedEdge);
+            getVertexValue().getEdgeList(meToNeighbor).removeReadIdSubset(deletedEdge);
         }
     }
     

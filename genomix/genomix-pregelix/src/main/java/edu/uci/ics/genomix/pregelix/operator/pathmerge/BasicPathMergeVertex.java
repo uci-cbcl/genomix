@@ -47,7 +47,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // degree > 1 can't merge in that direction; == 0 means we are a tip 
             dirsToRestrict = EnumSet.noneOf(DIR.class);
             for (DIR dir : DIR.values()) {
-                if (vertex.getDegree(dir) > 1 || vertex.getDegree(dir) == 0) {
+                if (vertex.degree(dir) > 1 || vertex.degree(dir) == 0) {
                     dirsToRestrict.add(dir);
                     state |= dir.get();
                     updated = true;
@@ -64,7 +64,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 
         // send a message to each neighbor indicating they can't merge towards me
         for (DIR dir : dirsToRestrict) {
-            for (EDGETYPE et : dir.edgeType()) {
+            for (EDGETYPE et : dir.edgeTypes()) {
                 for (VKmerBytesWritable destId : vertex.getEdgeList(et).getKeys()) {
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(et.mirror().dir().get());
@@ -113,10 +113,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
 
         DIR mergeDir = edgeType.dir();
-        EnumSet<EDGETYPE> mergeEdges = mergeDir.edgeType();
+        EnumSet<EDGETYPE> mergeEdges = mergeDir.edgeTypes();
 
         DIR updateDir = mergeDir.mirror();
-        EnumSet<EDGETYPE> updateEdges = updateDir.edgeType();
+        EnumSet<EDGETYPE> updateEdges = updateDir.edgeTypes();
 
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
@@ -186,7 +186,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
             outgoingMsg.setSourceVertexId(getVertexId());
             outgoingMsg.setNode(vertex.getNode());
-            if (vertex.getDegree(mergeEdgetype.dir()) != 1)
+            if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);
             VKmerBytesWritable dest = vertex.getEdgeList(mergeEdgetype).get(0).getKey();

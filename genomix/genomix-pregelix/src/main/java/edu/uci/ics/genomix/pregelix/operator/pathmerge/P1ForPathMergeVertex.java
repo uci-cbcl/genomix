@@ -57,8 +57,8 @@ public class P1ForPathMergeVertex extends
         
         //choose merge dir -- principle: only merge with nextDir
         if(restrictedDirs.size() == 1){
-        	if((restrictedDirs.contains(DIR.REVERSE) && vertex.getDegree(DIR.FORWARD) == 1) 
-        			|| (restrictedDirs.contains(DIR.FORWARD) && vertex.getDegree(DIR.REVERSE) == 1)){
+        	if((restrictedDirs.contains(DIR.REVERSE) && vertex.degree(DIR.FORWARD) == 1) 
+        			|| (restrictedDirs.contains(DIR.FORWARD) && vertex.degree(DIR.REVERSE) == 1)){
 	            EDGETYPE edgeType = restrictedDirs.contains(DIR.REVERSE) ? vertex.getNeighborEdgeType(DIR.FORWARD) : vertex.getNeighborEdgeType(DIR.REVERSE);
 	            state |= State.MERGE | edgeType.get();
 	            updated = true;

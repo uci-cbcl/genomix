@@ -174,12 +174,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * get destination vertex ex. RemoveTip
      */
     public VKmerBytesWritable getDestVertexId(DIR direction){
-        int degree = getVertexValue().getDegree(direction);
+        int degree = getVertexValue().degree(direction);
         if(degree > 1)
             throw new IllegalArgumentException("degree > 1, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
         
         if(degree == 1){
-            EnumSet<EDGETYPE> edgeTypes = direction.edgeType();
+            EnumSet<EDGETYPE> edgeTypes = direction.edgeTypes();
             for(EDGETYPE et : edgeTypes){
                 if(getVertexValue().getEdgeList(et).size() > 0)
                     return getVertexValue().getEdgeList(et).get(0).getKey();
@@ -262,7 +262,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         VertexValueWritable vertex = getVertexValue();
-        for(EDGETYPE et : direction.edgeType()){
+        for(EDGETYPE et : direction.edgeTypes()){
             for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;

@@ -60,7 +60,7 @@ public class TipRemoveVertex extends
     public EDGETYPE getTipToNeighbor(){
         VertexValueWritable vertex = getVertexValue();
         for (DIR d : DIR.values()) {
-        	if (vertex.getDegree(d) == 1 && vertex.getDegree(d.mirror()) == 0) {
+        	if (vertex.degree(d) == 1 && vertex.degree(d.mirror()) == 0) {
         		return vertex.getNeighborEdgeType(d);
         	}
         }

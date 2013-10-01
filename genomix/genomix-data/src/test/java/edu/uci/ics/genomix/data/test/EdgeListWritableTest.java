@@ -159,7 +159,7 @@ public class EdgeListWritableTest {
         VKmerBytesWritable newSample = new VKmerBytesWritable(newkmerSample);
         sample.setKey(newSample);
         //begin test
-        toTest.set(0, sample);
+        toTest.setAsCopy(0, sample);
         Assert.assertEquals(newkmerSample, toTest.get(0).getKey().toString());
     }
     
@@ -195,7 +195,7 @@ public class EdgeListWritableTest {
         sampleList.add(sample);
         EdgeListWritable toTest = new EdgeListWritable(sampleList);
         //begin test
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(toTest.getLength());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(toTest.getLengthInBytes());
         DataOutputStream out = new DataOutputStream(baos);
         toTest.write(out);
         InputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
@@ -227,7 +227,7 @@ public class EdgeListWritableTest {
             positionsSample2.appendReadId(i * i * 2);
         }
         sample.setAsCopy(oldKSample, positionsSample2);
-        toTest.removeSubEdge(sample);
+        toTest.removeReadIdSubset(sample);
         boolean flag = false;
         
         for(long i = 0 ; i < removeElements; i++) {
