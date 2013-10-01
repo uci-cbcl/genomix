@@ -7,7 +7,10 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex.SearchInfo;
 import edu.uci.ics.genomix.pregelix.type.EdgeDirs;
+import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.VKmerListWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
@@ -15,13 +18,13 @@ import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 public class BFSTraverseVertex extends
     BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessageWritable> {
     
-    protected VKmerBytesWritable srcNode = new VKmerBytesWritable("AAT");
-    protected VKmerBytesWritable destNode = new VKmerBytesWritable("AGA");
+//    protected VKmerBytesWritable srcNode = new VKmerBytesWritable("AAT");
+//    protected VKmerBytesWritable destNode = new VKmerBytesWritable("AGA");
     protected long commonReadId = 2; 
     
-    private EdgeDirs edgeDirs =  new EdgeDirs();
-    private ArrayListWritable<EdgeDirs> edgeDirsList = new ArrayListWritable<EdgeDirs>();
-    protected VKmerListWritable kmerList = new VKmerListWritable();
+//    private EdgeDirs edgeDirs =  new EdgeDirs();
+//    private ArrayListWritable<EdgeDirs> edgeDirsList = new ArrayListWritable<EdgeDirs>();
+//    protected VKmerListWritable kmerList = new VKmerListWritable();
     
     /**
      * initiate kmerSize, maxIteration
@@ -33,10 +36,6 @@ public class BFSTraverseVertex extends
             outgoingMsg = new BFSTraverseMessageWritable();
         else
             outgoingMsg.reset();
-        if(kmerList == null)
-            kmerList = new VKmerListWritable();
-        else
-            kmerList.reset();
         if(fakeVertex == null){
             fakeVertex = new VKmerBytesWritable();
 //            String random = generaterRandomString(kmerSize + 1);
@@ -44,61 +43,78 @@ public class BFSTraverseVertex extends
         }
     }
     
-    public void initiateSrcAndDestNode(VKmerListWritable pairKmerList, long readId, boolean srcFlip, 
-            boolean destFlip){
-        srcNode.setAsCopy(pairKmerList.getPosition(0));
-        destNode.setAsCopy(pairKmerList.getPosition(1));
-        outgoingMsg.setReadId(readId);
+    public VKmerBytesWritable initiateSrcAndDestNode(long readId, ArrayListWritable<SearchInfo> searchInfoList){
+        VKmerBytesWritable srcNode = searchInfoList.get(0).getKmer();
+        outgoingMsg.setSrcFlip(searchInfoList.get(0).isFlip());
+        VKmerBytesWritable destNode = searchInfoList.get(1).getKmer();
+        outgoingMsg.setDestFlip(searchInfoList.get(1).isFlip());
+        outgoingMsg.setReadId(readId); // commonReadId
         outgoingMsg.setSeekedVertexId(destNode);
-        outgoingMsg.setSrcFlip(srcFlip);
-        outgoingMsg.setDestFlip(destFlip);
+        
+        return srcNode;
     }
     
-    public void initialBroadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
+//    public void initiateSrcAndDestNode(VKmerListWritable pairKmerList, long readId, boolean srcFlip, 
+//            boolean destFlip){
+//        srcNode.setAsCopy(pairKmerList.getPosition(0));
+//        destNode.setAsCopy(pairKmerList.getPosition(1));
+//        outgoingMsg.setSrcFlip(srcFlip);
+//        outgoingMsg.setDestFlip(destFlip);
+//        outgoingMsg.setReadId(readId);
+//        outgoingMsg.setSeekedVertexId(destNode);
+//    }
+    
+    public void broadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
         outgoingMsg.reset();
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setSeekedVertexId(incomingMsg.getSeekedVertexId());
         outgoingMsg.setSrcFlip(incomingMsg.isSrcFlip());
         outgoingMsg.setDestFlip(incomingMsg.isDestFlip());
-        kmerList.reset();
+        
+        VKmerListWritable kmerList = outgoingMsg.getPathList();
         kmerList.append(getVertexId());
-        outgoingMsg.setPathList(kmerList);
         outgoingMsg.setReadId(incomingMsg.getReadId()); //only one readId
-//        if(incomingMsg.isSrcFlip())
-//            sendSettledMsgs(DIR.REVERSE, getVertexValue());
-//        else
-//            sendSettledMsgs(DIR.FORWARD, getVertexValue());
-    }
-    
-    public void broadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
-        outgoingMsg.reset();
-        outgoingMsg.setSourceVertexId(incomingMsg.getSourceVertexId());
-        outgoingMsg.setSeekedVertexId(incomingMsg.getSeekedVertexId());
-        outgoingMsg.setSrcFlip(incomingMsg.isSrcFlip());
-        outgoingMsg.setDestFlip(incomingMsg.isDestFlip());
-        kmerList.setCopy(incomingMsg.getPathList());
-        kmerList.append(getVertexId());
-        outgoingMsg.setPathList(kmerList);
-        outgoingMsg.setReadId(incomingMsg.getReadId()); //only one readId
-        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
-        EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
-        /** set edgeDirs **/
-        setEdgeDirs(incomingMsg, meToNeighborDir, neighborToMeDir);
-        switch(neighborToMeDir){
-            case FF:
-            case FR:
-//                sendSettledMsgs(DIR.REVERSE ,getVertexValue());
-                break;
-            case RF:
-            case RR:
-//                sendSettledMsgs(DIR.FORWARD, getVertexValue());
-                break;
+        
+        // A -> B -> C, neighor: A, me: B, validDir: B -> C 
+        if(getSuperstep() > 3){
+            EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
+            DIR validDir = meToNeighbor.dir().mirror();
+            // set EdgeTypes
+            ArrayListWritable<EdgeTypes> edgeTypesList = incomingMsg.getEdgeTypesList();
+            // send msg to valid destination
+            sendSettledMsgs(validDir, getVertexValue());
         }
     }
     
+//    public void broadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
+//        outgoingMsg.reset();
+//        outgoingMsg.setSourceVertexId(incomingMsg.getSourceVertexId());
+//        outgoingMsg.setSeekedVertexId(incomingMsg.getSeekedVertexId());
+//        outgoingMsg.setSrcFlip(incomingMsg.isSrcFlip());
+//        outgoingMsg.setDestFlip(incomingMsg.isDestFlip());
+//        kmerList.setCopy(incomingMsg.getPathList());
+//        kmerList.append(getVertexId());
+//        outgoingMsg.setPathList(kmerList);
+//        outgoingMsg.setReadId(incomingMsg.getReadId()); //only one readId
+//        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
+//        EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
+//        /** set edgeDirs **/
+//        setEdgeDirs(incomingMsg, meToNeighborDir, neighborToMeDir);
+//        switch(neighborToMeDir){
+//            case FF:
+//            case FR:
+////                sendSettledMsgs(DIR.REVERSE ,getVertexValue());
+//                break;
+//            case RF:
+//            case RR:
+////                sendSettledMsgs(DIR.FORWARD, getVertexValue());
+//                break;
+//        }
+//    }
+    
     public void setEdgeDirs(BFSTraverseMessageWritable incomingMsg, EDGETYPE meToNeighborDir, EDGETYPE neighborToMeDir){
         edgeDirsList.clear();
-        edgeDirsList.addAll(incomingMsg.getEdgeDirsList());
+        edgeDirsList.addAll(incomingMsg.getEdgeTypesList());
         if(edgeDirsList.isEmpty()){ //first time from srcNode
             /** set srcNode's next dir **/
             edgeDirs.reset();
@@ -118,16 +134,15 @@ public class BFSTraverseVertex extends
             edgeDirs.setPrevToMeDir(neighborToMeDir.get());
             edgeDirsList.add(new EdgeDirs(edgeDirs));
         }
-        outgoingMsg.setEdgeDirsList(edgeDirsList);
+        outgoingMsg.setEdgeTypesList(edgeDirsList);
     }
     
     public boolean isValidDestination(BFSTraverseMessageWritable incomingMsg){
-        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
-        EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
+        EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
         if(incomingMsg.isDestFlip())
-            return neighborToMeDir == EDGETYPE.RF || neighborToMeDir == EDGETYPE.RR;
+            return meToNeighbor.dir() == DIR.REVERSE;
         else
-            return neighborToMeDir == EDGETYPE.FF || neighborToMeDir == EDGETYPE.FR;
+            return meToNeighbor.dir() == DIR.FORWARD;
     }
     
     public void sendMsgToPathNodeToAddCommondReadId(BFSTraverseMessageWritable incomingMsg){
@@ -136,8 +151,8 @@ public class BFSTraverseVertex extends
         outgoingMsg.setReadId(incomingMsg.getReadId());
         int count = kmerList.getCountOfPosition();
         for(int i = 0; i < count; i++){
-            outgoingMsg.getEdgeDirsList().clear();
-            outgoingMsg.getEdgeDirsList().add(incomingMsg.getEdgeDirsList().get(i));
+            outgoingMsg.getEdgeTypesList().clear();
+            outgoingMsg.getEdgeTypesList().add(incomingMsg.getEdgeTypesList().get(i));
             outgoingMsg.getPathList().reset();
             if(i == 0){
                 outgoingMsg.getPathList().append(new VKmerBytesWritable());
@@ -155,25 +170,23 @@ public class BFSTraverseVertex extends
     }
     
     public void finalProcessBFS(BFSTraverseMessageWritable incomingMsg){
-        kmerList.setCopy(incomingMsg.getPathList());
+        VKmerListWritable kmerList = incomingMsg.getPathList();
         kmerList.append(getVertexId());
-        incomingMsg.setPathList(kmerList);
-        EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
-        EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
+        EDGETYPE neighborToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
         setEdgeDirs(incomingMsg, meToNeighborDir, neighborToMeDir);
-        incomingMsg.setEdgeDirsList(outgoingMsg.getEdgeDirsList());
+        incomingMsg.setEdgeTypesList(outgoingMsg.getEdgeTypesList());
     }
     
     public void appendCommonReadId(BFSTraverseMessageWritable incomingMsg){
         long readId = incomingMsg.getReadId();
         //add readId to prev edge 
-        byte prevToMeDir = incomingMsg.getEdgeDirsList().get(0).getPrevToMeDir();
+        byte prevToMeDir = incomingMsg.getEdgeTypesList().get(0).getPrevToMeDir();
         VKmerBytesWritable tmpKmer;
         tmpKmer = incomingMsg.getPathList().getPosition(0);
         if(tmpKmer.getKmerLetterLength() != 0)
             getVertexValue().getEdgeList(EDGETYPE.fromByte(prevToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
         //set readId to next edge
-        byte nextToMeDir = incomingMsg.getEdgeDirsList().get(0).getNextToMeDir();
+        byte nextToMeDir = incomingMsg.getEdgeTypesList().get(0).getNextToMeDir();
         tmpKmer = incomingMsg.getPathList().getPosition(1);
         if(tmpKmer.getKmerLetterLength() != 0)
             getVertexValue().getEdgeList(EDGETYPE.fromByte(nextToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);

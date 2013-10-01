@@ -1,10 +1,13 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BooleanWritable;
+import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.KmerListAndFlagListWritable;
@@ -32,19 +35,51 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 public class ScaffoldingVertex extends 
     BFSTraverseVertex{
 
-    public static class SearchInfo{
+    public static class SearchInfo implements Writable{
         private VKmerBytesWritable kmer;
         private boolean flip;
         
-        public SearchInfo(){
-            kmer = new VKmerBytesWritable();
-            
+        public SearchInfo(VKmerBytesWritable otherKmer, boolean flip){
+            this.kmer.setAsCopy(otherKmer);
+            this.flip = flip;
+        }
+        
+        public VKmerBytesWritable getKmer() {
+            return kmer;
+        }
+
+        public void setKmer(VKmerBytesWritable kmer) {
+            this.kmer = kmer;
+        }
+
+        public boolean isFlip() {
+            return flip;
+        }
+
+        public void setFlip(boolean flip) {
+            this.flip = flip;
+        }
+
+        @Override
+        public void write(DataOutput out) throws IOException {
+            kmer.write(out);
+            out.writeBoolean(flip);
+        }
+
+        @Override
+        public void readFields(DataInput in) throws IOException {
+            kmer.readFields(in);
+            flip = in.readBoolean();
         }
     }
     
-    private ArrayListWritable<BooleanWritable> flagList = new ArrayListWritable<BooleanWritable>();
-    private KmerListAndFlagListWritable kmerListAndflagList = new KmerListAndFlagListWritable();
-    private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
+    public static int MIN_TRAVERSAL_LENGTH = 20;
+    public static int MAX_TRAVERSAL_LENGTH = 100;
+//    private ArrayListWritable<BooleanWritable> flagList = new ArrayListWritable<BooleanWritable>();
+//    private KmerListAndFlagListWritable kmerListAndflagList = new KmerListAndFlagListWritable();
+//    private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();
+//    private ArrayListWritable<SearchInfo> searchInfoList = new ArrayListWritable<SearchInfo>();
+    private HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>>();
     
     @Override
     public void initVertex() {
@@ -64,49 +99,42 @@ public class ScaffoldingVertex extends
     }
     
     public void addStartReadsToScaffoldingMap(){
+        SearchInfo searchInfo;
+        ArrayListWritable<SearchInfo> searchInfoList;
         boolean isflip = false;
         for(PositionWritable pos : getVertexValue().getStartReads()){
             long readId = pos.getReadId();
             if(scaffoldingMap.containsKey(readId)){
-                kmerList.setCopy(scaffoldingMap.get(readId).getKmerList());
-                kmerList.append(getVertexId());
-                flagList.clear();
-                flagList.addAll(scaffoldingMap.get(readId).getFlagList());
-                flagList.add(new BooleanWritable(isflip));
+                searchInfoList = scaffoldingMap.get(readId);
             } else{
-                kmerList.reset();
-                kmerList.append(getVertexId());
-                flagList.clear();
-                flagList.add(new BooleanWritable(isflip));
+                searchInfoList = new ArrayListWritable<SearchInfo>();
             }
-            kmerListAndflagList.setKmerList(kmerList);
-            kmerListAndflagList.setFlagList(flagList);
-            scaffoldingMap.put(new VLongWritable(readId), kmerListAndflagList);
+            searchInfo = new SearchInfo(getVertexId(), isflip);
+            searchInfoList.add(searchInfo);
+            scaffoldingMap.put(new VLongWritable(readId), searchInfoList);
         }
     }
     
     public void addEndReadsToScaffoldingMap(){
+        SearchInfo searchInfo;
+        ArrayListWritable<SearchInfo> searchInfoList;
         boolean isflip = true;
         for(PositionWritable pos : getVertexValue().getEndReads()){
             long readId = pos.getReadId();
             if(scaffoldingMap.containsKey(readId)){
-                kmerList.setCopy(scaffoldingMap.get(readId).getKmerList());
-                kmerList.append(getVertexId());
-                flagList.clear();
-                flagList.addAll(scaffoldingMap.get(readId).getFlagList());
-                flagList.add(new BooleanWritable(isflip));
+                searchInfoList = scaffoldingMap.get(readId);
             } else{
-                kmerList.reset();
-                kmerList.append(getVertexId());
-                flagList.clear();
-                flagList.add(new BooleanWritable(isflip));
+                searchInfoList = new ArrayListWritable<SearchInfo>();
             }
-            kmerListAndflagList.setKmerList(kmerList);
-            kmerListAndflagList.setFlagList(flagList);
-            scaffoldingMap.put(new VLongWritable(readId), kmerListAndflagList);
+            searchInfo = new SearchInfo(getVertexId(), isflip);
+            searchInfoList.add(searchInfo);
+            scaffoldingMap.put(new VLongWritable(readId), searchInfoList);
         }
     }
     
+    public boolean isInRange(int traversalLength){
+        return traversalLength < MAX_TRAVERSAL_LENGTH && traversalLength > MIN_TRAVERSAL_LENGTH;
+    }
     @Override
     public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
         initVertex();
@@ -120,31 +148,30 @@ public class ScaffoldingVertex extends
             
             voteToHalt();
         } else if(getSuperstep() == 2){
-            // process scaffoldingMap 
+            // fake vertex process scaffoldingMap 
+            ArrayListWritable<SearchInfo> searchInfoList;
             for(VLongWritable readId : ScaffoldingAggregator.preScaffoldingMap.keySet()){
-                kmerListAndflagList.set(ScaffoldingAggregator.preScaffoldingMap.get(readId));
-                if(kmerListAndflagList.size() == 2){
-                    initiateSrcAndDestNode(kmerListAndflagList.getKmerList(), commonReadId, kmerListAndflagList.getFlagList().get(0).get(),
-                            kmerListAndflagList.getFlagList().get(1).get());
+                searchInfoList = ScaffoldingAggregator.preScaffoldingMap.get(readId);
+                if(searchInfoList.size() != 2)
+                    throw new IllegalStateException("The size of SearchInfoList should be 2, but here its size " +
+                    		"is " + searchInfoList.size() + "!");
+                if(searchInfoList.size() == 2){
+                    outgoingMsg.reset();
+                    VKmerBytesWritable srcNode = initiateSrcAndDestNode(readId.get(), searchInfoList);
                     sendMsg(srcNode, outgoingMsg);
                 }
             }
             
             deleteVertex(getVertexId());
-        } else if(getSuperstep() == 3){
-            if(msgIterator.hasNext()){
-                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
-                // begin to BFS
-                initialBroadcaseBFSTraverse(incomingMsg);
-            }
-            voteToHalt();
-        } else if(getSuperstep() > 3){
+        } else if(getSuperstep() >= 3){
+            BFSTraverseMessageWritable incomingMsg;
             while(msgIterator.hasNext()){
-                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
+                incomingMsg = msgIterator.next();
                 if(incomingMsg.isTraverseMsg()){
                     // check if find destination 
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
-                        if(isValidDestination(incomingMsg)){
+                        int traversalLength = incomingMsg.getPathList().getCountOfPosition();
+                        if(isValidDestination(incomingMsg) && isInRange(traversalLength)){
                             // final step to process BFS -- pathList and dirList
                             finalProcessBFS(incomingMsg);
                             // send message to all the path nodes to add this common readId
@@ -158,7 +185,7 @@ public class ScaffoldingVertex extends
                             broadcaseBFSTraverse(incomingMsg);
                         }
                     } else {
-                        //continue to BFS
+                        //begin(step == 3) or continue(step > 3) to BFS
                         broadcaseBFSTraverse(incomingMsg);
                     }
                 } else{
@@ -170,7 +197,7 @@ public class ScaffoldingVertex extends
         }
     }
     
-    public static HashMapWritable<VLongWritable, KmerListAndFlagListWritable> readScaffoldingMapResult(Configuration conf) {
+    public static HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>> readScaffoldingMapResult(Configuration conf) {
         try {
             VertexValueWritable value = (VertexValueWritable) IterationUtils
                     .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
