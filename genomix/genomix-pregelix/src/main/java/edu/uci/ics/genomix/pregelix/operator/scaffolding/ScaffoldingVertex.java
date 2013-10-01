@@ -19,6 +19,7 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
@@ -31,6 +32,16 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 public class ScaffoldingVertex extends 
     BFSTraverseVertex{
 
+    public static class SearchInfo{
+        private VKmerBytesWritable kmer;
+        private boolean flip;
+        
+        public SearchInfo(){
+            kmer = new VKmerBytesWritable();
+            
+        }
+    }
+    
     private ArrayListWritable<BooleanWritable> flagList = new ArrayListWritable<BooleanWritable>();
     private KmerListAndFlagListWritable kmerListAndflagList = new KmerListAndFlagListWritable();
     private HashMapWritable<VLongWritable, KmerListAndFlagListWritable> scaffoldingMap = new HashMapWritable<VLongWritable, KmerListAndFlagListWritable>();

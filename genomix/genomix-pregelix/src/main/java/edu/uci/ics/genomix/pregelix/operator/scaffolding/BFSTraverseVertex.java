@@ -187,10 +187,10 @@ public class BFSTraverseVertex extends
             voteToHalt();
         }
         else if(getSuperstep() == 2){
-            /** for test, assign two kmer to srcNode and destNode **/
+            // for test, assign two kmer to srcNode and destNode
             kmerList.append(srcNode);
             kmerList.append(destNode);
-            /** initiate two nodes -- srcNode and destNode **/
+            // initiate two nodes -- srcNode and destNode
             initiateSrcAndDestNode(kmerList, commonReadId, false, true);
             sendMsg(srcNode, outgoingMsg);
             
@@ -198,7 +198,7 @@ public class BFSTraverseVertex extends
         } else if(getSuperstep() == 3){
             while(msgIterator.hasNext()){
                 BFSTraverseMessageWritable incomingMsg = msgIterator.next();
-                /** begin to BFS **/
+                // begin to BFS
                 initialBroadcaseBFSTraverse(incomingMsg);
             }
             voteToHalt();
@@ -206,24 +206,21 @@ public class BFSTraverseVertex extends
             while(msgIterator.hasNext()){
                 BFSTraverseMessageWritable incomingMsg = msgIterator.next();
                 if(incomingMsg.isTraverseMsg()){
-                    /** check if find destination **/
+                    // check if find destination
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                         if(isValidDestination(incomingMsg)){
-                            /** final step to process BFS -- pathList and dirList **/
+                            // final step to process BFS -- pathList and dirList
                             finalProcessBFS(incomingMsg);
-                            /** send message to all the path nodes to add this common readId **/
+                            // send message to all the path nodes to add this common readId 
                             sendMsgToPathNodeToAddCommondReadId(incomingMsg);
                         }
-                        else{
-                            //continue to BFS
+                        else{//continue to BFS
                             broadcaseBFSTraverse(incomingMsg);
                         }
-                    } else {
-                        //continue to BFS
+                    } else {//continue to BFS
                         broadcaseBFSTraverse(incomingMsg);
                     }
-                } else{
-                    /** append common readId to the corresponding edge **/
+                } else{// append common readId to the corresponding edge
                     appendCommonReadId(incomingMsg);
                 }
             }
