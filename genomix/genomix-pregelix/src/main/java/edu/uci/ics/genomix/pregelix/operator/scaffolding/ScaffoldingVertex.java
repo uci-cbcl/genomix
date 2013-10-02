@@ -35,6 +35,14 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
  */
 public class ScaffoldingVertex extends 
     BFSTraverseVertex{
+    
+    public enum READHEADTYPE{
+        UNFLIPPED,
+        FLIPPED;
+        
+        
+    }
+    
 	// TODO BFS can seperate into simple BFS to filter and real BFS
     public static class SearchInfo implements Writable{
         private VKmerBytesWritable kmer;
@@ -43,6 +51,11 @@ public class ScaffoldingVertex extends
         public SearchInfo(VKmerBytesWritable otherKmer, boolean flip){
             this.kmer.setAsCopy(otherKmer);
             this.flip = flip;
+        }
+        
+        public SearchInfo(VKmerBytesWritable otherKmer, READHEADTYPE flip){
+            this.kmer.setAsCopy(otherKmer);
+            this.flip = flip == READHEADTYPE.FLIPPED ? true : false;
         }
         
         public VKmerBytesWritable getKmer() {
@@ -102,7 +115,7 @@ public class ScaffoldingVertex extends
     }
     
     // send map to readId.hashValue() bin
-    public void addReadsToScaffoldingMap(PositionListWritable readIds, boolean isFlip){ // TODO ENUM for flip
+    public void addReadsToScaffoldingMap(PositionListWritable readIds, READHEADTYPE isFlip){ // TODO ENUM for flip
     	// searchInfo can be a struct
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
@@ -135,8 +148,8 @@ public class ScaffoldingVertex extends
         VertexValueWritable vertex = getVertexValue();
         if(vertex.getAverageCoverage() >= SCAFFOLDING_MIN_COVERAGE 
                 && vertex.getInternalKmer().getLength() < SCAFFOLDING_MIN_LENGTH){ 
-        	addReadsToScaffoldingMap(vertex.getStartReads(), false);
-        	addReadsToScaffoldingMap(vertex.getEndReads(), true);
+        	addReadsToScaffoldingMap(vertex.getStartReads(), READHEADTYPE.UNFLIPPED);
+        	addReadsToScaffoldingMap(vertex.getEndReads(), READHEADTYPE.FLIPPED);
 //			addStartReadsToScaffoldingMap();
 //			addEndReadsToScaffoldingMap();
         	vertex.setScaffoldingMap(scaffoldingMap);
@@ -150,7 +163,7 @@ public class ScaffoldingVertex extends
     public void processScaffoldingMap(){
     	// fake vertex process scaffoldingMap 
         ArrayListWritable<SearchInfo> searchInfoList;
-        for(Entry<VLongWritable, ArrayListWritable<SearchInfo>> entry : ScaffoldingAggregator.preScaffoldingMap.entrySet()){
+        for(Entry<LongWritable, ArrayListWritable<SearchInfo>> entry : ScaffoldingAggregator.preScaffoldingMap.entrySet()){
         	searchInfoList = entry.getValue();
             if(searchInfoList.size() > 2)
                 throw new IllegalStateException("The size of SearchInfoList should be not bigger than 2, but here its size " +
