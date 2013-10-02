@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -74,12 +75,13 @@ public class ScaffoldingVertex extends
     }
     
     // add to driver
-    public static int MIN_TRAVERSAL_LENGTH = 20;
-    public static int MAX_TRAVERSAL_LENGTH = 100;
-    public static int MIN_COVERAGE = 20;
+    public static int SCAFFOLDING_MIN_TRAVERSAL_LENGTH = 20;
+    public static int SCAFFOLDING_MAX_TRAVERSAL_LENGTH = 100;
+    public static int SCAFFOLDING_MIN_COVERAGE = 20;
+    public static int SCAFFOLDING_MIN_LENGTH = 20;
     
     // TODO VLong to Long
-    private HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>>();
+    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
     
     @Override
     public void initVertex() {
@@ -112,7 +114,7 @@ public class ScaffoldingVertex extends
                 searchInfoList = scaffoldingMap.get(readId);
             } else{
                 searchInfoList = new ArrayListWritable<SearchInfo>();
-                scaffoldingMap.put(new VLongWritable(readId), searchInfoList);
+                scaffoldingMap.put(new LongWritable(readId), searchInfoList);
             }
             searchInfo = new SearchInfo(getVertexId(), isFlip);
             searchInfoList.add(searchInfo);
@@ -120,7 +122,7 @@ public class ScaffoldingVertex extends
     }
     
     public boolean isInRange(int traversalLength){
-        return traversalLength < MAX_TRAVERSAL_LENGTH && traversalLength > MIN_TRAVERSAL_LENGTH;
+        return traversalLength < SCAFFOLDING_MAX_TRAVERSAL_LENGTH && traversalLength > SCAFFOLDING_MIN_TRAVERSAL_LENGTH;
     }
     
     /**
@@ -130,13 +132,14 @@ public class ScaffoldingVertex extends
     	// add a fake vertex 
         addFakeVertex("A");
         // grouped by 5'/~5' readId in aggregator
-        VertexValueWritable vertx = getVertexValue();
-        if(vertx.getAverageCoverage() >= MIN_COVERAGE){ // TODO add MIN_LENGTH
-        	addReadsToScaffoldingMap(vertx.getStartReads(), false);
-        	addReadsToScaffoldingMap(vertx.getEndReads(), true);
+        VertexValueWritable vertex = getVertexValue();
+        if(vertex.getAverageCoverage() >= SCAFFOLDING_MIN_COVERAGE 
+                && vertex.getInternalKmer().getLength() < SCAFFOLDING_MIN_LENGTH){ 
+        	addReadsToScaffoldingMap(vertex.getStartReads(), false);
+        	addReadsToScaffoldingMap(vertex.getEndReads(), true);
 //			addStartReadsToScaffoldingMap();
 //			addEndReadsToScaffoldingMap();
-        	vertx.setScaffoldingMap(scaffoldingMap);
+        	vertex.setScaffoldingMap(scaffoldingMap);
         }
         voteToHalt();
     }
@@ -218,7 +221,7 @@ public class ScaffoldingVertex extends
         }
     }
     
-    public static HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>> readScaffoldingMapResult(Configuration conf) {
+    public static HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> readScaffoldingMapResult(Configuration conf) {
         try {
             VertexValueWritable value = (VertexValueWritable) IterationUtils
                     .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));

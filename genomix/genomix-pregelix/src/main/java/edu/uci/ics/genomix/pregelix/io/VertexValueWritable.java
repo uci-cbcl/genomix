@@ -2,6 +2,8 @@ package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
 
+import org.apache.hadoop.io.LongWritable;
+
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
@@ -38,14 +40,14 @@ public class VertexValueWritable
     private short state;
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
-    private HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap; //use for scaffolding, think optimaztion way
+    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap; //use for scaffolding, think optimaztion way
     
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
         counters = new HashMapWritable<ByteWritable, VLongWritable>();
-        scaffoldingMap = new HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>>();
+        scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
     }
 
     public void setAsCopy(VertexValueWritable other){
@@ -121,11 +123,11 @@ public class VertexValueWritable
         this.counters.putAll(counters);
     }
     
-    public HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>> getScaffoldingMap() {
+    public HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> getScaffoldingMap() {
         return scaffoldingMap;
     }
 
-    public void setScaffoldingMap(HashMapWritable<VLongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap) {
+    public void setScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap) {
         this.scaffoldingMap.clear();
         this.scaffoldingMap.putAll(scaffoldingMap);
     }
