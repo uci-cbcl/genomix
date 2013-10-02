@@ -140,7 +140,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * set from String kmer
      */
     public void setAsCopy(String kmer) {
-        setByRead(kmer.length(), kmer.getBytes(), 0);
+        setFromStringBytes(kmer.length(), kmer.getBytes(), 0);
     }
 
     /**
@@ -436,9 +436,9 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         this.bytesUsed = size;
     }
 
-    public void setByRead(int k, byte[] stringBytes, int start) {
+    public void setFromStringBytes(int k, byte[] stringBytes, int start) {
         reset(k);
-        setByRead(stringBytes, start);
+        setFromStringBytes(stringBytes, start);
     }
 
     /**
@@ -448,7 +448,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * @param stringBytes
      * @param start
      */
-    private void setByRead(byte[] stringBytes, int start) {
+    public void setFromStringBytes(byte[] stringBytes, int start) {
         byte l = 0;
         int bytecount = 0;
         int bcount = this.bytesUsed - 1;
@@ -467,9 +467,9 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         }
     }
 
-    public void setByReadReverse(int k, byte[] stringBytes, int start) {
+    public void setReversedFromStringBytes(int k, byte[] stringBytes, int start) {
         reset(k);
-        setByReadReverse(stringBytes, start);
+        setReversedFromStringBytes(stringBytes, start);
     }
 
     /**
@@ -481,7 +481,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
      * @param start
      *            position
      */
-    private void setByReadReverse(byte[] array, int start) {
+    public void setReversedFromStringBytes(byte[] array, int start) {
         byte l = 0;
         int bytecount = 0;
         int bcount = bytesUsed - 1;
@@ -599,7 +599,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
     public void mergeWithRFKmer(int initialKmerSize, VKmerBytesWritable preKmer) {
         // TODO make this more efficient
         VKmerBytesWritable reversed = new VKmerBytesWritable(preKmer.lettersInKmer);
-        reversed.setByReadReverse(preKmer.toString().getBytes(), 0);
+        reversed.setReversedFromStringBytes(preKmer.toString().getBytes(), 0);
         mergeWithRRKmer(initialKmerSize, reversed);
     }
     
@@ -740,7 +740,7 @@ public class VKmerBytesWritable extends BinaryComparable implements Serializable
         else{
             String reverse = other.toString(); // TODO don't use toString here (something more efficient?)
             VKmerBytesWritable reverseKmer = new VKmerBytesWritable();
-            reverseKmer.setByReadReverse(reverse.length(), reverse.getBytes(), 0);
+            reverseKmer.setReversedFromStringBytes(reverse.length(), reverse.getBytes(), 0);
             return fracDissimilar(this, reverseKmer);
         }
     }

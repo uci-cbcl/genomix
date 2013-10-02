@@ -4,12 +4,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.PositionListWritable;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class PathMergeMessageWritable extends MessageWritable{
@@ -56,10 +57,11 @@ public class PathMergeMessageWritable extends MessageWritable{
         return node.getEdgeList(edgeType);
     }
     
-    public EdgeWritable getNeighborEdge(){
-        for(EDGETYPE e : EnumSet.allOf(EDGETYPE.class)){
-            if(!getEdgeList(e).isEmpty())
-                return getEdgeList(e).get(0);
+    public Entry<VKmerBytesWritable, ReadIdListWritable> getNeighborEdge(){
+        for(EDGETYPE e : EDGETYPE.values()){
+            if(!getEdgeList(e).isEmpty()) {
+                return getEdgeList(e).firstEntry();
+            }
         }
         return null;
     }

@@ -42,7 +42,7 @@ public class SymmetryCheckerVertex extends
                 MessageWritable incomingMsg = msgIterator.next();
                 EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
                 EDGETYPE neighborToMeDir = meToNeighborDir.mirror(); 
-                boolean exist = getVertexValue().getEdgeList(neighborToMeDir).contains(incomingMsg.getSourceVertexId());
+                boolean exist = getVertexValue().getEdgeList(neighborToMeDir).containsKey(incomingMsg.getSourceVertexId());
                 if(!exist){
                     getVertexValue().setState(State.IS_ERROR);
                 }

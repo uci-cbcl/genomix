@@ -83,7 +83,7 @@ public class ComplexBubbleMergeVertex extends
         if(fakeVertex == null){
             fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
+            fakeVertex.setFromStringBytes(kmerSize + 1, random.getBytes(), 0); 
         }
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();

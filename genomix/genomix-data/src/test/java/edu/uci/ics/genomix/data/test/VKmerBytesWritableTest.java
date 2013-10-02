@@ -37,10 +37,10 @@ public class VKmerBytesWritableTest {
     @Test
     public void TestCompressKmer() {
         VKmerBytesWritable kmer = new VKmerBytesWritable(k);
-        kmer.setByRead(k, array, 0);
+        kmer.setFromStringBytes(k, array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
-        kmer.setByRead(k, array, 1);
+        kmer.setFromStringBytes(k, array, 1);
         Assert.assertEquals(kmer.toString(), "ATAGAAG");
     }
     
@@ -55,7 +55,7 @@ public class VKmerBytesWritableTest {
     @Test
     public void TestMoveKmer() {
         VKmerBytesWritable kmer = new VKmerBytesWritable(k);
-        kmer.setByRead(k, array, 0);
+        kmer.setFromStringBytes(k, array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
         for (int i = k; i < array.length - 1; i++) {
@@ -71,17 +71,17 @@ public class VKmerBytesWritableTest {
     @Test
     public void TestCompressKmerReverse() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(k, array, 0);
+        kmer.setFromStringBytes(k, array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
-        kmer.setByReadReverse(k, array, 1);
+        kmer.setReversedFromStringBytes(k, array, 1);
         Assert.assertEquals(kmer.toString(), "CTTCTAT");
     }
 
     @Test
     public void TestMoveKmerReverse() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(k, array, 0);
+        kmer.setFromStringBytes(k, array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
         for (int i = k; i < array.length - 1; i++) {
@@ -99,7 +99,7 @@ public class VKmerBytesWritableTest {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
         String text = "AGCTGACCG";
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G' };
-        kmer.setByRead(9, array, 0);
+        kmer.setFromStringBytes(9, array, 0);
 
         for (int i = 0; i < 9; i++) {
             Assert.assertEquals(text.charAt(i), (char) (GeneCode.getSymbolFromCode(kmer.getGeneCodeAtPosition(i))));
@@ -113,7 +113,7 @@ public class VKmerBytesWritableTest {
         for (int k = 3; k <= 10; k++) {
             VKmerBytesWritable kmer = new VKmerBytesWritable();
             VKmerBytesWritable kmerAppend = new VKmerBytesWritable(k);
-            kmer.setByRead(k, array, 0);
+            kmer.setFromStringBytes(k, array, 0);
             Assert.assertEquals(string.substring(0, k), kmer.toString());
             for (int b = 0; b < k; b++) {
                 byte byteActual = KmerBytesWritable.getOneByteFromKmerAtPosition(b, kmer.getBlockBytes(),
@@ -135,12 +135,12 @@ public class VKmerBytesWritableTest {
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
         String text = "AGCTGACCGT";
         VKmerBytesWritable kmer1 = new VKmerBytesWritable();
-        kmer1.setByRead(8, array, 0);
+        kmer1.setFromStringBytes(8, array, 0);
         String text1 = "AGCTGACC";
         Assert.assertEquals(text1, kmer1.toString());
 
         VKmerBytesWritable kmer2 = new VKmerBytesWritable();
-        kmer2.setByRead(8, array, 1);
+        kmer2.setFromStringBytes(8, array, 1);
         String text2 = "GCTGACCG";
         Assert.assertEquals(text2, kmer2.toString());
 
@@ -159,8 +159,8 @@ public class VKmerBytesWritableTest {
             for (int jk = 1; jk <= 10; jk++) {
                 kmer1 = new VKmerBytesWritable(ik);
                 kmer2 = new VKmerBytesWritable(jk);
-                kmer1.setByRead(ik, array, 0);
-                kmer2.setByRead(jk, array, 0);
+                kmer1.setFromStringBytes(ik, array, 0);
+                kmer2.setFromStringBytes(jk, array, 0);
                 text1 = text.substring(0, ik);
                 text2 = text.substring(0, jk);
                 Assert.assertEquals(text1, kmer1.toString());
@@ -182,13 +182,13 @@ public class VKmerBytesWritableTest {
 
         String text1 = "AAGCTAA";
         VKmerBytesWritable kmer1 = new VKmerBytesWritable();
-        kmer1.setByRead(text1.length(), resultArray, 0);
+        kmer1.setFromStringBytes(text1.length(), resultArray, 0);
         Assert.assertEquals(text1, kmer1.toString());
 
         // kmer2 is the rc of the end of the read
         String text2 = "GGTTGTT";
         VKmerBytesWritable kmer2 = new VKmerBytesWritable();
-        kmer2.setByReadReverse(text2.length(), resultArray, result.length() - text2.length());
+        kmer2.setReversedFromStringBytes(text2.length(), resultArray, result.length() - text2.length());
         Assert.assertEquals(text2, kmer2.toString());
 
         VKmerBytesWritable merge = new VKmerBytesWritable();
@@ -220,13 +220,13 @@ public class VKmerBytesWritableTest {
 
         String text1 = "AACAACCC";
         VKmerBytesWritable kmer1 = new VKmerBytesWritable();
-        kmer1.setByRead(text1.length(), resultArray, 5);
+        kmer1.setFromStringBytes(text1.length(), resultArray, 5);
         Assert.assertEquals(text1, kmer1.toString());
 
         // kmer2 is the rc of the end of the read
         String text2 = "TTGTGCC";
         VKmerBytesWritable kmer2 = new VKmerBytesWritable();
-        kmer2.setByReadReverse(text2.length(), resultArray, 0);
+        kmer2.setReversedFromStringBytes(text2.length(), resultArray, 0);
         Assert.assertEquals(text2, kmer2.toString());
 
         VKmerBytesWritable merge = new VKmerBytesWritable();
@@ -263,8 +263,8 @@ public class VKmerBytesWritableTest {
         String test4 = "AGA"; // rc = TCT
         VKmerBytesWritable k3 = new VKmerBytesWritable();
         VKmerBytesWritable k4 = new VKmerBytesWritable();
-        k3.setByRead(3, test3.getBytes(), 0);
-        k4.setByRead(3, test4.getBytes(), 0);
+        k3.setFromStringBytes(3, test3.getBytes(), 0);
+        k4.setFromStringBytes(3, test4.getBytes(), 0);
         k3.mergeWithRFKmer(3, k4);
         Assert.assertEquals("TCTA", k3.toString());
         // Assert.assertEquals("CTAT", k3); // this is an incorrect test case--
@@ -276,8 +276,8 @@ public class VKmerBytesWritableTest {
         test2 = "AGA";
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
-        k1.setByRead(3, test1.getBytes(), 0);
-        k2.setByRead(3, test2.getBytes(), 0);
+        k1.setFromStringBytes(3, test1.getBytes(), 0);
+        k2.setFromStringBytes(3, test2.getBytes(), 0);
         k1.mergeWithRFKmer(3, k2);
         Assert.assertEquals("TCTA", k1.toString());
         
@@ -287,8 +287,8 @@ public class VKmerBytesWritableTest {
         test2 = "ATA"; //TAT
         k1 = new VKmerBytesWritable();
         k2 = new VKmerBytesWritable();
-        k1.setByRead(3, test1.getBytes(), 0);
-        k2.setByRead(3, test2.getBytes(), 0);
+        k1.setFromStringBytes(3, test1.getBytes(), 0);
+        k2.setFromStringBytes(3, test2.getBytes(), 0);
         k1.mergeWithFRKmer(3, k2);
         Assert.assertEquals("CTAT", k1.toString());
         
@@ -296,8 +296,8 @@ public class VKmerBytesWritableTest {
         test2 = "CTA"; //TAT
         k1 = new VKmerBytesWritable();
         k2 = new VKmerBytesWritable();
-        k1.setByRead(3, test1.getBytes(), 0);
-        k2.setByRead(3, test2.getBytes(), 0);
+        k1.setFromStringBytes(3, test1.getBytes(), 0);
+        k2.setFromStringBytes(3, test2.getBytes(), 0);
         k1.mergeWithFRKmer(3, k2);
         Assert.assertEquals("ATAG", k1.toString());
         
@@ -305,8 +305,8 @@ public class VKmerBytesWritableTest {
         test2 = "GAAC";
         k1 = new VKmerBytesWritable();
         k2 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(4, test2.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(4, test2.getBytes(), 0);
         k1.mergeWithRFKmer(3, k2);
         Assert.assertEquals("GTTCTAT", k1.toString());
     }
@@ -316,10 +316,10 @@ public class VKmerBytesWritableTest {
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
         String text = "AGCTGACCGT";
         VKmerBytesWritable kmer1 = new VKmerBytesWritable();
-        kmer1.setByRead(8, array, 0);
+        kmer1.setFromStringBytes(8, array, 0);
         String text1 = "AGCTGACC";
         VKmerBytesWritable kmer2 = new VKmerBytesWritable();
-        kmer2.setByRead(8, array, 1);
+        kmer2.setFromStringBytes(8, array, 1);
         String text2 = "GCTGACCG";
         Assert.assertEquals(text2, kmer2.toString());
         VKmerBytesWritable merge = new VKmerBytesWritable(kmer2);
@@ -337,8 +337,8 @@ public class VKmerBytesWritableTest {
             for (int jk = 1; jk <= 10; jk++) {
                 kmer1 = new VKmerBytesWritable();
                 kmer2 = new VKmerBytesWritable();
-                kmer1.setByRead(ik, array, 0);
-                kmer2.setByRead(jk, array, 0);
+                kmer1.setFromStringBytes(ik, array, 0);
+                kmer2.setFromStringBytes(jk, array, 0);
                 text1 = text.substring(0, ik);
                 text2 = text.substring(0, jk);
                 Assert.assertEquals(text1, kmer1.toString());
@@ -360,9 +360,9 @@ public class VKmerBytesWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         k1.mergeWithRFKmer(5, k2);
         Assert.assertEquals("CTAGAT", k1.toString());
         k1.mergeWithRRKmer(5, k3);
@@ -377,9 +377,9 @@ public class VKmerBytesWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         k1.mergeWithRFKmer(5, k2);
         Assert.assertEquals("CTAGAT", k1.toString());
         k1.mergeWithRFKmer(5, k3);
@@ -394,9 +394,9 @@ public class VKmerBytesWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         k2.mergeWithRFKmer(5, k1);
         Assert.assertEquals("ATCTAG", k2.toString());
         k2.mergeWithFRKmer(5, k3);
@@ -411,9 +411,9 @@ public class VKmerBytesWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         k2.mergeWithRFKmer(5, k1);
         Assert.assertEquals("ATCTAG", k2.toString());
         k2.mergeWithFFKmer(5, k3);
@@ -428,9 +428,9 @@ public class VKmerBytesWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         k2.mergeWithRFKmer(5, k1);
         Assert.assertEquals("ATCTAG", k2.toString());
         k2.mergeWithFFKmer(5, k3);
@@ -445,9 +445,9 @@ public class VKmerBytesWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         k1.mergeWithRFKmer(5, k2);
         Assert.assertEquals("CTAGAT", k1.toString());
         k1.mergeWithRFKmer(5, k3);
@@ -475,7 +475,7 @@ public class VKmerBytesWritableTest {
         index = msgString.indexOf(match);
         // does this test belong in VKmer so it can have variable-length kmers?
 //        kmer.reset(msgString.length() - index);
-        kmer.setByRead(kmerSize, msgString.substring(index).getBytes(), 0);
+        kmer.setFromStringBytes(kmerSize, msgString.substring(index).getBytes(), 0);
         System.out.println(kmer.toString());
         
         //FR test
@@ -484,7 +484,7 @@ public class VKmerBytesWritableTest {
         msgString = GeneCode.reverseComplement(R2);
         index = msgString.indexOf(match);
         kmer.reset(msgString.length() - index);
-        kmer.setByRead(kmerSize, msgString.substring(index).getBytes(), 0);
+        kmer.setFromStringBytes(kmerSize, msgString.substring(index).getBytes(), 0);
         System.out.println(kmer.toString());
         
         //RF test
@@ -493,7 +493,7 @@ public class VKmerBytesWritableTest {
         msgString = GeneCode.reverseComplement(F2);
         index = msgString.lastIndexOf(match) + kmerSize - 2;
         kmer.reset(index + 1);
-        kmer.setByReadReverse(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
+        kmer.setReversedFromStringBytes(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
         System.out.println(kmer.toString());
         
         //RR test
@@ -502,7 +502,7 @@ public class VKmerBytesWritableTest {
         msgString = R2;
         index = msgString.lastIndexOf(match) + kmerSize - 2;
         kmer.reset(index + 1);
-        kmer.setByRead(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
+        kmer.setFromStringBytes(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
         System.out.println(kmer.toString());
         
         String[][] connectedTable = new String[][]{
@@ -531,21 +531,21 @@ public class VKmerBytesWritableTest {
         Map<VKmerBytesWritable, Set<Long>> map = new HashMap<VKmerBytesWritable, Set<Long>>();
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         Set<Long> set1 = new HashSet<Long>();
-        k1.setByRead(3, ("CTA").getBytes(), 0);
+        k1.setFromStringBytes(3, ("CTA").getBytes(), 0);
         set1.add((long)1);
         map.put(k1, set1);
         VKmerBytesWritable k2 = new VKmerBytesWritable();
-        k2.setByRead(3, ("GTA").getBytes(), 0);
+        k2.setFromStringBytes(3, ("GTA").getBytes(), 0);
         Set<Long> set2 = new HashSet<Long>();
         set2.add((long) 2);
         map.put(k2, set2);
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k3.setByRead(3, ("ATG").getBytes(), 0);
+        k3.setFromStringBytes(3, ("ATG").getBytes(), 0);
         Set<Long> set3 = new HashSet<Long>();
         set3.add((long) 2);
         map.put(k3, set3);
         VKmerBytesWritable k4 = new VKmerBytesWritable();
-        k4.setByRead(3, ("AAT").getBytes(), 0);
+        k4.setFromStringBytes(3, ("AAT").getBytes(), 0);
         Set<Long> set4 = new HashSet<Long>();
         set4.add((long) 1);
         map.put(k4, set4);

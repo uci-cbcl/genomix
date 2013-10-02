@@ -6,8 +6,9 @@ import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class VertexValueWritable 
     extends NodeWritable{
@@ -172,8 +173,11 @@ public class VertexValueWritable
     /**
      * Delete the corresponding edge
      */
-    public void processDelete(EDGETYPE neighborToDeleteEdgetype, EdgeWritable nodeToDelete){
-        this.getEdgeList(neighborToDeleteEdgetype).remove(nodeToDelete);
+    public void processDelete(EDGETYPE neighborToDeleteEdgetype, VKmerBytesWritable keyToDelete){
+        ReadIdListWritable prevList = this.getEdgeList(neighborToDeleteEdgetype).remove(keyToDelete);
+        if (prevList == null) {
+            throw new IllegalArgumentException("processDelete tried to remove an edge that didn't exist: " + keyToDelete + " but I am " + this);
+        }
     }
     
     public void processFinalUpdates(EDGETYPE deleteDir, EDGETYPE updateDir, NodeWritable other){

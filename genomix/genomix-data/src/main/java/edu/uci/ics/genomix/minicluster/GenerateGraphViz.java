@@ -2,19 +2,18 @@ package edu.uci.ics.genomix.minicluster;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class GenerateGraphViz {
@@ -131,30 +130,10 @@ public class GenerateGraphViz {
      */
     public static String convertEdgeToGraph(String outputNode, NodeWritable value){
         String outputEdge = "";
-        Iterator<EdgeWritable> edgeIterator;
-        edgeIterator = value.getEdgeList(EDGETYPE.FF).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next(); 
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"black\" label =\"FF: " +
-                    edge.printReadIdSet() + "\"]\n";
-        }
-        edgeIterator = value.getEdgeList(EDGETYPE.FR).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"blue\" label =\"FR: " +
-                    edge.printReadIdSet() + "\"]\n";
-        }
-        edgeIterator = value.getEdgeList(EDGETYPE.RF).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"green\" label =\"RF: " +
-                    edge.printReadIdSet() + "\"]\n";
-        }
-        edgeIterator = value.getEdgeList(EDGETYPE.RR).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"red\" label =\"RR: " +
-                    edge.printReadIdSet() + "\"]\n";
+        for (EDGETYPE et : EDGETYPE.values()) {
+            for (Entry<VKmerBytesWritable, ReadIdListWritable> e : value.getEdgeList(et).entrySet()) {
+                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"black\" label =\"" + et + ": " + e.getValue() + "\"]\n";
+            }
         }
         //TODO should output actualKmer instead of kmer
         if(outputEdge == "")

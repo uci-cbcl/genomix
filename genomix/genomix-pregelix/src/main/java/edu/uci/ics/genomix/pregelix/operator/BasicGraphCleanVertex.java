@@ -111,7 +111,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void addFakeVertex(String fakeKmer){
         synchronized(lock){
-            fakeVertex.setByRead(1, fakeKmer.getBytes(), 0); 
+            fakeVertex.setFromStringBytes(1, fakeKmer.getBytes(), 0); 
             if(!fakeVertexExist){
                 //add a fake vertex
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());

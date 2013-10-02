@@ -302,19 +302,19 @@ public class NodeWritable implements Writable, Serializable {
 
     public static class NeighborInfo {
         public EDGETYPE et;
-        public PositionListWritable readIds;
+        public ReadIdListWritable readIds;
         public VKmerBytesWritable kmer;
 
-        public NeighborInfo(EDGETYPE edgeType, VKmerBytesWritable kmer, PositionListWritable readIds) {
+        public NeighborInfo(EDGETYPE edgeType, VKmerBytesWritable kmer, ReadIdListWritable readIds) {
             set(edgeType, kmer, readIds);
         }
-        public NeighborInfo(EDGETYPE edgeType, Entry<VKmerBytesWritable, PositionListWritable> edge) {
+        public NeighborInfo(EDGETYPE edgeType, Entry<VKmerBytesWritable, ReadIdListWritable> edge) {
             set(edgeType, edge.getKey(), edge.getValue());
         }
-        public void set(EDGETYPE edgeType, Entry<VKmerBytesWritable, PositionListWritable> edge) {
+        public void set(EDGETYPE edgeType, Entry<VKmerBytesWritable, ReadIdListWritable> edge) {
             set(edgeType, edge.getKey(), edge.getValue());
         }
-        public void set(EDGETYPE edgeType, VKmerBytesWritable kmer, PositionListWritable readIds) {
+        public void set(EDGETYPE edgeType, VKmerBytesWritable kmer, ReadIdListWritable readIds) {
             this.et = edgeType;
             this.kmer = kmer;
             this.readIds = readIds;
@@ -334,7 +334,7 @@ public class NodeWritable implements Writable, Serializable {
         public Iterator<NeighborInfo> iterator() {
             return new Iterator<NeighborInfo>() {
                 
-                private Iterator<Entry<VKmerBytesWritable, PositionListWritable>> it = edges.entrySet().iterator();
+                private Iterator<Entry<VKmerBytesWritable, ReadIdListWritable>> it = edges.entrySet().iterator();
                 private NeighborInfo info = new NeighborInfo(null, null);
                 
                 @Override
@@ -483,11 +483,11 @@ public class NodeWritable implements Writable, Serializable {
     }
 
     public EdgeListWritable getEdgeList(EDGETYPE edgeType) {
-        return edges[edgeType.get() & EDGETYPE.MASK];
+        return edges[edgeType.get()];
     }
 
     public void setEdgeList(EDGETYPE edgeType, EdgeListWritable edgeList) {
-        this.edges[edgeType.get() & EDGETYPE.MASK].setAsCopy(edgeList);
+        this.edges[edgeType.get()].setAsCopy(edgeList);
     }
 
     public EdgeListWritable[] getEdges() {

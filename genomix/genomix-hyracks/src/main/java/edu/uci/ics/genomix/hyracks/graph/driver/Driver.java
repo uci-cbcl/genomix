@@ -147,6 +147,7 @@ public class Driver {
             if (url.toString().endsWith(".jar")) {
                 jars.add(new File(url.getPath()).toString());
             }
+        LOG.info("Finished jar deployment");
         DeploymentId deploymentId = hcc.deployBinary(jars);
         return deploymentId;
     }

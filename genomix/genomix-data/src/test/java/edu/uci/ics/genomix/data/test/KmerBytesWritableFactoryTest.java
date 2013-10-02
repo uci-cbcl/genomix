@@ -30,7 +30,7 @@ public class KmerBytesWritableFactoryTest {
     @Test
     public void TestGetLastKmer() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(9, array, 0);
+        kmer.setFromStringBytes(9, array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
         VKmerBytesWritable lastKmer;
         for (int i = 8; i > 0; i--) {
@@ -51,7 +51,7 @@ public class KmerBytesWritableFactoryTest {
     @Test
     public void TestGetFirstKmer() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(9, array, 0);
+        kmer.setFromStringBytes(9, array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
         VKmerBytesWritable firstKmer;
         for (int i = 8; i > 0; i--) {
@@ -72,7 +72,7 @@ public class KmerBytesWritableFactoryTest {
     @Test
     public void TestGetSubKmer() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(9, array, 0);
+        kmer.setFromStringBytes(9, array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
         VKmerBytesWritable subKmer;
         for (int istart = 0; istart < kmer.getKmerLetterLength() - 1; istart++) {
@@ -86,7 +86,7 @@ public class KmerBytesWritableFactoryTest {
     @Test
     public void TestMergeNext() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(9, array, 0);
+        kmer.setFromStringBytes(9, array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
 
         String text = "AGCTGACCG";
@@ -107,7 +107,7 @@ public class KmerBytesWritableFactoryTest {
     @Test
     public void TestMergePre() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(9, array, 0);
+        kmer.setFromStringBytes(9, array, 0);
         Assert.assertEquals("AGCTGACCG", kmer.toString());
         String text = "AGCTGACCG";
         for (byte x = GeneCode.A; x <= GeneCode.T; x++) {
@@ -127,10 +127,10 @@ public class KmerBytesWritableFactoryTest {
     @Test
     public void TestMergeTwoKmer() {
         VKmerBytesWritable kmer1 = new VKmerBytesWritable();
-        kmer1.setByRead(9, array, 0);
+        kmer1.setFromStringBytes(9, array, 0);
         String text1 = "AGCTGACCG";
         VKmerBytesWritable kmer2 = new VKmerBytesWritable();
-        kmer2.setByRead(9, array, 1);
+        kmer2.setFromStringBytes(9, array, 1);
         String text2 = "GCTGACCGT";
         Assert.assertEquals(text1, kmer1.toString());
         Assert.assertEquals(text2, kmer2.toString());
@@ -139,7 +139,7 @@ public class KmerBytesWritableFactoryTest {
         Assert.assertEquals(text1 + text2, merged.toString());
 
         VKmerBytesWritable kmer3 = new VKmerBytesWritable();
-        kmer3.setByRead(3, array, 1);
+        kmer3.setFromStringBytes(3, array, 1);
         String text3 = "GCT";
         Assert.assertEquals(text3, kmer3.toString());
 
@@ -149,27 +149,27 @@ public class KmerBytesWritableFactoryTest {
         Assert.assertEquals(text3 + text1, merged.toString());
 
         VKmerBytesWritable kmer4 = new VKmerBytesWritable();
-        kmer4.setByRead(8, array, 0);
+        kmer4.setFromStringBytes(8, array, 0);
         String text4 = "AGCTGACC";
         Assert.assertEquals(text4, kmer4.toString());
         merged = kmerFactory.mergeTwoKmer(kmer4, kmer3);
         Assert.assertEquals(text4 + text3, merged.toString());
 
         VKmerBytesWritable kmer5 = new VKmerBytesWritable();
-        kmer5.setByRead(7, array, 0);
+        kmer5.setFromStringBytes(7, array, 0);
         String text5 = "AGCTGAC";
         VKmerBytesWritable kmer6 = new VKmerBytesWritable();
-        kmer6.setByRead(9, array, 1);
+        kmer6.setFromStringBytes(9, array, 1);
         String text6 = "GCTGACCGT";
         merged = kmerFactory.mergeTwoKmer(kmer5, kmer6);
         Assert.assertEquals(text5 + text6, merged.toString());
 
-        kmer6.setByRead(6, array, 1);
+        kmer6.setFromStringBytes(6, array, 1);
         String text7 = "GCTGAC";
         merged = kmerFactory.mergeTwoKmer(kmer5, kmer6);
         Assert.assertEquals(text5 + text7, merged.toString());
 
-        kmer6.setByRead(4, array, 1);
+        kmer6.setFromStringBytes(4, array, 1);
         String text8 = "GCTG";
         merged = kmerFactory.mergeTwoKmer(kmer5, kmer6);
         Assert.assertEquals(text5 + text8, merged.toString());
@@ -193,12 +193,12 @@ public class KmerBytesWritableFactoryTest {
     @Test
     public void TestReverseKmer() {
         VKmerBytesWritable kmer = new VKmerBytesWritable();
-        kmer.setByRead(7, array, 0);
+        kmer.setFromStringBytes(7, array, 0);
         Assert.assertEquals(kmer.toString(), "AGCTGAC");
         VKmerBytesWritable reversed = kmerFactory.reverse(kmer);
         Assert.assertEquals(reversed.toString(), "CAGTCGA");
         
-        kmer.setByRead(8, ("AATAGAAC").getBytes(), 0);
+        kmer.setFromStringBytes(8, ("AATAGAAC").getBytes(), 0);
         Assert.assertEquals(kmer.toString(), "AATAGAAC");
         reversed.reset(8);
         reversed = kmerFactory.reverse(kmer);

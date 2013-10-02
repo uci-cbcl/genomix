@@ -82,7 +82,7 @@ public class SplitRepeatVertex extends
     public VKmerBytesWritable randomGenerateVertexId(int numOfSuffix){
         String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);
         VKmerBytesWritable createdVertexId = new VKmerBytesWritable(); 
-        createdVertexId.setByRead(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
+        createdVertexId.setFromStringBytes(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
         return createdVertexId;
     }
     

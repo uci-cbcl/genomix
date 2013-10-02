@@ -10,17 +10,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 
@@ -34,35 +36,31 @@ public class EdgeListWritableTest {
 
         VKmerBytesWritable k1 = new VKmerBytesWritable(kmer1);
         VKmerBytesWritable k2 = new VKmerBytesWritable(kmer2);
-        PositionListWritable plist1 = new PositionListWritable();
-        PositionListWritable plist2 = new PositionListWritable();
-        PositionListWritable plist3 = new PositionListWritable();
+        ReadIdListWritable plist1 = new ReadIdListWritable();
+        ReadIdListWritable plist2 = new ReadIdListWritable();
+        ReadIdListWritable plist3 = new ReadIdListWritable();
         NodeWritable n1 = new NodeWritable();
         n1.setInternalKmer(k1);
         n1.setAvgCoverage(10);
         long numelements = 100000;
         long numoverlap = numelements / 10;
         for (long i = 0; i < numelements / 3; i++) {
-            plist1.appendReadId(i);
+            plist1.add(i);
         }
         for (long i = numelements / 3 - numoverlap; i < numelements * 2 / 3 + numoverlap; i++) {
-            plist2.appendReadId(i);
+            plist2.add(i);
         }
         for (long i = numelements * 2 / 3; i < numelements; i++) {
-            plist3.appendReadId(i);
+            plist3.add(i);
         }
-        n1.getEdgeList(EDGETYPE.FF).add(new EdgeWritable(k2, plist1));
-        Assert.assertEquals(numelements / 3, n1.getEdgeList(EDGETYPE.RF).get(0).getReadIDs()
-                .getCountOfPosition());
-        n1.getEdgeList(EDGETYPE.RF).unionUpdate(
-                new EdgeListWritable(Arrays.asList(new EdgeWritable(k2, plist2))));
-        Assert.assertEquals(numelements * 2 / 3 + numoverlap, n1.getEdgeList(EDGETYPE.RF).get(0).getReadIDs()
-                .getCountOfPosition());
-        n1.getEdgeList(EDGETYPE.RF).unionUpdate(
-                new EdgeListWritable(Arrays.asList(new EdgeWritable(k2, plist3))));
-        Assert.assertEquals(numelements, n1.getEdgeList(EDGETYPE.RF).get(0).getReadIDs().getCountOfPosition());
+        n1.getEdgeList(EDGETYPE.FF).put(k2, plist1);
+        Assert.assertEquals(numelements / 3, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
+        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeListWritable(Arrays.asList(new SimpleEntry<VKmerBytesWritable, ReadIdListWritable>(k2, plist2))));
+        Assert.assertEquals(numelements * 2 / 3 + numoverlap, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
+        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeListWritable(Arrays.asList(new SimpleEntry<VKmerBytesWritable, ReadIdListWritable>(k2, plist3))));
+        Assert.assertEquals(numelements, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
 
-        long[] allReadIDs = n1.getEdgeList(EDGETYPE.RF).get(0).readIDArray();
+        Long[] allReadIDs = n1.getEdgeList(EDGETYPE.RF).get(k2).toArray(new Long[0]);
         // make sure all readids are accounted for...
         for (long i = 0; i < numelements; i++) {
             boolean found = false;
