@@ -173,12 +173,12 @@ public class ScaffoldingVertex extends
                 // check if find destination
             	// TODO explicitly set message type
             	// TODO Switch is better than if else
+                int traversalLength = incomingMsg.getPathList().getCountOfPosition();
                 if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                 	//TODO change this length to internalKmerLength
                 	//TODO keep track of the total kmerLength you've come (account for partial overlaps)
                 	// final step to process BFS -- pathList and edgeTypesList
                     finalProcessBFS(incomingMsg); //TODO add 
-                    int traversalLength = incomingMsg.getPathList().getCountOfPosition();
                     if(isValidDestination(incomingMsg) && isInRange(traversalLength)){
                         // TODO store BFS paths until all finish, if more than 1, it's ambiguous
                         // send message to all the path nodes to add this common readId
@@ -194,10 +194,10 @@ public class ScaffoldingVertex extends
                     //continue to BFS
                     broadcaseBFSTraverse(incomingMsg);
             	}
-                } else {
-                    //begin(step == 3) or continue(step > 3) to BFS
-                    broadcaseBFSTraverse(incomingMsg);
-                }
+//                } else {
+//                    //begin(step == 3) or continue(step > 3) to BFS
+//                    broadcaseBFSTraverse(incomingMsg);
+//                }
             } else{
                 // append common readId to the corresponding edge
                 appendCommonReadId(incomingMsg);
