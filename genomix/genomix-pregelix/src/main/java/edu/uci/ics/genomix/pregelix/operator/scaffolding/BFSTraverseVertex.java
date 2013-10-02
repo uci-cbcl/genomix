@@ -38,7 +38,8 @@ public class BFSTraverseVertex extends
         }
     }
     
-    public VKmerBytesWritable initiateSrcAndDestNode(long readId, ArrayListWritable<SearchInfo> searchInfoList){
+    public VKmerBytesWritable setOutgoingSrcAndDest(long readId, ArrayListWritable<SearchInfo> searchInfoList){
+    	//TODO src is smaller; dest is greater
         VKmerBytesWritable srcNode = searchInfoList.get(0).getKmer();
         outgoingMsg.setSrcFlip(searchInfoList.get(0).isFlip());
         VKmerBytesWritable destNode = searchInfoList.get(1).getKmer();
@@ -53,7 +54,7 @@ public class BFSTraverseVertex extends
     	// keep same seekedVertexId, srcFlip, destFlip, commonReadId, pathList and edgeTypesList
         outgoingMsg.reset();
         outgoingMsg.setAsCopy(incomingMsg); 
-        outgoingMsg.setSourceVertexId(getVertexId()); // update srcVertexId
+        outgoingMsg.setSourceVertexId(getVertexId()); // update srcVertexId //TODO remove?
         outgoingMsg.getPathList().append(getVertexId()); // update pathList
         
         // A -> B -> C, neighor: A, me: B, validDir: B -> C 

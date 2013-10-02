@@ -216,4 +216,6 @@ public class SplitRepeatVertex extends
         Client.run(args, getConfiguredJob(null, SplitRepeatVertex.class));
     }
     
+    
+    //TODO split repeat should move start/end readids that are present in the intersection readids to the new node
 }

@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
@@ -85,6 +86,7 @@ public class ScaffoldingVertex extends
         super.initVertex();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
+        // TODO move readGlobalAggregator into 2nd iteration
 //        else
 //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         if(getSuperstep() == 1)
@@ -98,14 +100,14 @@ public class ScaffoldingVertex extends
     }
     
     // send map to readId.hashValue() bin
-    public void addReadsToScaffoldingMap(PositionListWritable readIds, boolean isFlip){
+    public void addReadsToScaffoldingMap(PositionListWritable readIds, boolean isFlip){ // TODO ENUM for flip
     	// searchInfo can be a struct
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
         
-        //TODO rename PositionWritable ReadIdInfo? 
-        for(PositionWritable pos : readIds){ // TODO add parameter
-            long readId = pos.getReadId();
+        //TODO rename PositionWritable ReadIdInfo?
+        for(PositionWritable pos : readIds){ 
+        	long readId = pos.getReadId();
             if(scaffoldingMap.containsKey(readId)){
                 searchInfoList = scaffoldingMap.get(readId);
             } else{
@@ -129,7 +131,7 @@ public class ScaffoldingVertex extends
         addFakeVertex("A");
         // grouped by 5'/~5' readId in aggregator
         VertexValueWritable vertx = getVertexValue();
-        if(vertx.getAverageCoverage() >= MIN_COVERAGE){
+        if(vertx.getAverageCoverage() >= MIN_COVERAGE){ // TODO add MIN_LENGTH
         	addReadsToScaffoldingMap(vertx.getStartReads(), false);
         	addReadsToScaffoldingMap(vertx.getEndReads(), true);
 //			addStartReadsToScaffoldingMap();
@@ -145,14 +147,14 @@ public class ScaffoldingVertex extends
     public void processScaffoldingMap(){
     	// fake vertex process scaffoldingMap 
         ArrayListWritable<SearchInfo> searchInfoList;
-        for(VLongWritable readId : ScaffoldingAggregator.preScaffoldingMap.keySet()){
-            searchInfoList = ScaffoldingAggregator.preScaffoldingMap.get(readId);
-            if(searchInfoList.size() != 2)
-                throw new IllegalStateException("The size of SearchInfoList should be 2, but here its size " +
+        for(Entry<VLongWritable, ArrayListWritable<SearchInfo>> entry : ScaffoldingAggregator.preScaffoldingMap.entrySet()){
+        	searchInfoList = entry.getValue();
+            if(searchInfoList.size() > 2)
+                throw new IllegalStateException("The size of SearchInfoList should be not bigger than 2, but here its size " +
                 		"is " + searchInfoList.size() + "!");
             if(searchInfoList.size() == 2){
                 outgoingMsg.reset();
-                VKmerBytesWritable srcNode = initiateSrcAndDestNode(readId.get(), searchInfoList);
+                VKmerBytesWritable srcNode = setOutgoingSrcAndDest(entry.getKey().get(), searchInfoList);
                 sendMsg(srcNode, outgoingMsg);
             }
         }
@@ -168,23 +170,30 @@ public class ScaffoldingVertex extends
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             if(incomingMsg.isTraverseMsg()){
-                // check if find destination 
+                // check if find destination
+            	// TODO explicitly set message type
+            	// TODO Switch is better than if else
                 if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
+                	//TODO change this length to internalKmerLength
+                	//TODO keep track of the total kmerLength you've come (account for partial overlaps)
+                	// final step to process BFS -- pathList and edgeTypesList
+                    finalProcessBFS(incomingMsg); //TODO add 
                     int traversalLength = incomingMsg.getPathList().getCountOfPosition();
                     if(isValidDestination(incomingMsg) && isInRange(traversalLength)){
-                        // final step to process BFS -- pathList and dirList
-                        finalProcessBFS(incomingMsg);
+                        // TODO store BFS paths until all finish, if more than 1, it's ambiguous
                         // send message to all the path nodes to add this common readId
                         sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
                         		incomingMsg.getEdgeTypesList());
                         //set statistics counter: Num_RemovedLowCoverageNodes
                         incrementCounter(StatisticsCounter.Num_Scaffodings);
                         getVertexValue().setCounters(counters);
+                        
                     }
-                    else{
-                        //continue to BFS
-                        broadcaseBFSTraverse(incomingMsg);
-                    }
+                }
+                if(isInRange(traversalLength)){
+                    //continue to BFS
+                    broadcaseBFSTraverse(incomingMsg);
+            	}
                 } else {
                     //begin(step == 3) or continue(step > 3) to BFS
                     broadcaseBFSTraverse(incomingMsg);
