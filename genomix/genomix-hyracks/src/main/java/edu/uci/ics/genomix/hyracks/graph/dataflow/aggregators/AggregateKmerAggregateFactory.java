@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -49,10 +49,10 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(kmerSize);
         return new IAggregatorDescriptor() {
             
-            private NodeWritable readNode = new NodeWritable();
+            private Node readNode = new Node();
 //            private KmerBytesWritable readKmer = new KmerBytesWritable();
             
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
@@ -73,13 +73,13 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
             @Override
             public AggregateState createAggregateStates() {
-                return new AggregateState(new NodeWritable());
+                return new AggregateState(new Node());
             }
 
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
                 localUniNode.reset();
 //                localUniNode.foundMe = false;
 //                localUniNode.previous = "";
@@ -112,7 +112,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
                 
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
 
 //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
@@ -164,7 +164,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
 //                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
 //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
 //                        System.out.println("local final output***********************************************************");

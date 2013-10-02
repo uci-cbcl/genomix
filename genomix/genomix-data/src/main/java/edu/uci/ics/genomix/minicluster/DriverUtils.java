@@ -44,8 +44,8 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class DriverUtils {
@@ -113,16 +113,16 @@ public class DriverUtils {
 
         // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
         SequenceFile.Reader reader = null;
-        VKmerBytesWritable key = null;
-        NodeWritable value = null;
+        VKmer key = null;
+        Node value = null;
         BufferedWriter bw = null;
         FileStatus[] files = dfs.globStatus(new Path(inputGraph + File.separator + "*"));
         for (FileStatus f : files) {
             if (f.getLen() != 0) {
                 try {
                     reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
-                    key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-                    value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+                    key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+                    value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
                     if (bw == null)
                         bw = new BufferedWriter(new FileWriter(outputFasta));
                     while (reader.next(key, value)) {

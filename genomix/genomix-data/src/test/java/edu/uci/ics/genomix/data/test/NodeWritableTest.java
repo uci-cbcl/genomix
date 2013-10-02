@@ -9,24 +9,24 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.ReadHeadSet;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 public class NodeWritableTest {
 
     @Test
     public void TestMergeRF_FF() throws IOException {
-        KmerBytesWritable.setGlobalKmerLength(5);
+        Kmer.setGlobalKmerLength(5);
         String test1 = "TAGAT"; // rc = ATCTA
         String test2 = "TCTAG"; // rc = CTAGA
         String test3 = "CTAGC"; // rc = GCTAG
-        VKmerBytesWritable k1 = new VKmerBytesWritable();
-        VKmerBytesWritable k2 = new VKmerBytesWritable();
-        VKmerBytesWritable k3 = new VKmerBytesWritable();
+        VKmer k1 = new VKmer();
+        VKmer k2 = new VKmer();
+        VKmer k3 = new VKmer();
         k1.setFromStringBytes(5, test1.getBytes(), 0);
         k2.setFromStringBytes(5, test2.getBytes(), 0);
         k3.setFromStringBytes(5, test3.getBytes(), 0);
@@ -35,16 +35,16 @@ public class NodeWritableTest {
         //        k2.mergeWithFFKmer(5, k3);
         //        Assert.assertEquals("ATCTAGC", k2.toString());
 
-        PositionWritable read1 = new PositionWritable((byte) 1, 50, 0);
-        PositionWritable read2 = new PositionWritable((byte) 1, 75, 0);
-        PositionWritable read3 = new PositionWritable((byte) 0, 100, 0);
-        PositionListWritable plist1 = new PositionListWritable(Arrays.asList(read1));
-        PositionListWritable plist2 = new PositionListWritable();
-        PositionListWritable plist3 = new PositionListWritable(Arrays.asList(read3));
+        ReadHeadInfo read1 = new ReadHeadInfo((byte) 1, 50, 0);
+        ReadHeadInfo read2 = new ReadHeadInfo((byte) 1, 75, 0);
+        ReadHeadInfo read3 = new ReadHeadInfo((byte) 0, 100, 0);
+        ReadHeadSet plist1 = new ReadHeadSet(Arrays.asList(read1));
+        ReadHeadSet plist2 = new ReadHeadSet();
+        ReadHeadSet plist3 = new ReadHeadSet(Arrays.asList(read3));
 
         // k1 {r50} --RF-> k2 {r75} --FF-> k3 {~r100}
 
-        NodeWritable n1 = new NodeWritable();
+        Node n1 = new Node();
         n1.setInternalKmer(k1);
         n1.setAvgCoverage(10);
         n1.getStartReads().append(read1);
@@ -53,7 +53,7 @@ public class NodeWritableTest {
                 .toString());
         Assert.assertEquals(10f, n1.getAvgCoverage());
 
-        NodeWritable n2 = new NodeWritable();
+        Node n2 = new Node();
         n2.setInternalKmer(k2);
         n2.setAvgCoverage(20);
         n2.getStartReads().append(read2);
@@ -62,7 +62,7 @@ public class NodeWritableTest {
         n2.getEdgeList(EDGETYPE.FF).add(new EdgeWritable(k3, plist3));
         Assert.assertEquals(20f, n2.getAvgCoverage());
 
-        NodeWritable n3 = new NodeWritable();
+        Node n3 = new Node();
         n3.setInternalKmer(k3);
         n3.setAvgCoverage(30);
         n3.getEndReads().append(read3);
@@ -75,17 +75,17 @@ public class NodeWritableTest {
         byte[] block = new byte[2000];
         int offset = 50;
         System.arraycopy(n1.marshalToByteArray(), 0, block, offset, n1.getSerializedLength());
-        NodeWritable copy = new NodeWritable(block, offset);
+        Node copy = new Node(block, offset);
         Assert.assertEquals(n1, copy);
         offset += copy.getSerializedLength();
 
         System.arraycopy(n2.marshalToByteArray(), 0, block, offset, n2.getSerializedLength());
-        copy = new NodeWritable(block, offset);
+        copy = new Node(block, offset);
         Assert.assertEquals(n2, copy);
         offset += copy.getSerializedLength();
 
         System.arraycopy(n3.marshalToByteArray(), 0, block, offset, n3.getSerializedLength());
-        copy = new NodeWritable(block, offset);
+        copy = new Node(block, offset);
         Assert.assertEquals(n3, copy);
         offset += copy.getSerializedLength();
 
@@ -119,13 +119,13 @@ public class NodeWritableTest {
 
     @Test
     public void TestGraphBuildNodes() throws IOException {
-        KmerBytesWritable.setGlobalKmerLength(5);
+        Kmer.setGlobalKmerLength(5);
         String test1 = "TAGAT"; // rc = ATCTA
         String test2 = "TCTAG"; // rc = CTAGA
         String test3 = "CTAGC"; // rc = GCTAG
-        VKmerBytesWritable k1 = new VKmerBytesWritable();
-        VKmerBytesWritable k2 = new VKmerBytesWritable();
-        VKmerBytesWritable k3 = new VKmerBytesWritable();
+        VKmer k1 = new VKmer();
+        VKmer k2 = new VKmer();
+        VKmer k3 = new VKmer();
         k1.setFromStringBytes(5, test1.getBytes(), 0);
         k2.setFromStringBytes(5, test2.getBytes(), 0);
         k3.setFromStringBytes(5, test3.getBytes(), 0);
@@ -134,22 +134,22 @@ public class NodeWritableTest {
         //            k2.mergeWithFFKmer(5, k3);
         //            Assert.assertEquals("ATCTAGC", k2.toString());
 
-        PositionWritable read1 = new PositionWritable((byte) 1, 50, 0);
-        PositionWritable read2 = new PositionWritable((byte) 1, 75, 0);
-        PositionWritable read3 = new PositionWritable((byte) 0, 100, 0);
-        PositionListWritable plist1 = new PositionListWritable(Arrays.asList(read1, read2));
-        PositionListWritable plist2 = new PositionListWritable(Arrays.asList(read2, read3));
-        PositionListWritable plist3 = new PositionListWritable(Arrays.asList(read3));
+        ReadHeadInfo read1 = new ReadHeadInfo((byte) 1, 50, 0);
+        ReadHeadInfo read2 = new ReadHeadInfo((byte) 1, 75, 0);
+        ReadHeadInfo read3 = new ReadHeadInfo((byte) 0, 100, 0);
+        ReadHeadSet plist1 = new ReadHeadSet(Arrays.asList(read1, read2));
+        ReadHeadSet plist2 = new ReadHeadSet(Arrays.asList(read2, read3));
+        ReadHeadSet plist3 = new ReadHeadSet(Arrays.asList(read3));
 
         // k1 {r50} --RF-> k2 {r75} --FF-> k3 {~r100}
 
         // graphbuilding-like merge of n1 and n2
-        NodeWritable n1 = new NodeWritable();
+        Node n1 = new Node();
         n1.setInternalKmer(k1);
         n1.setAvgCoverage(10);
         n1.getStartReads().append(read1);
         n1.getEdgeList(EDGETYPE.RF).add(new EdgeWritable(k2, plist1));
-        NodeWritable n1_2 = new NodeWritable();  // duplicate node which should end up union'ed in
+        Node n1_2 = new Node();  // duplicate node which should end up union'ed in
         n1_2.setInternalKmer(k1);
         n1_2.setAvgCoverage(10);
         n1_2.getStartReads().append(read1);
@@ -163,7 +163,7 @@ public class NodeWritableTest {
         Iterator<EdgeWritable> rf_edges = n1.getEdgeList(EDGETYPE.RF).iterator();
         int k2_index = 0, k3_index = 0;
         for (int i=0; i < n1.getEdgeList(EDGETYPE.RF).size(); i++) {
-            VKmerBytesWritable curKmer = rf_edges.next().getKey();
+            VKmer curKmer = rf_edges.next().getKey();
             if (curKmer.equals(k2))
                 k2_index = i;
             if (curKmer.equals(k3))

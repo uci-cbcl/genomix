@@ -6,14 +6,14 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.ReadHeadSet;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
 
 public class PositionListWritableTest {
 
     @Test
     public void TestInitial() {
-        PositionListWritable plist = new PositionListWritable();
+        ReadHeadSet plist = new ReadHeadSet();
         Assert.assertEquals(plist.getCountOfPosition(), 0);
         
         byte mateId;
@@ -31,7 +31,7 @@ public class PositionListWritableTest {
         }
         
         int i = 0;
-        for (PositionWritable pos : plist) {
+        for (ReadHeadInfo pos : plist) {
             Assert.assertEquals((byte)1, pos.getMateId());
             Assert.assertEquals((long) i, pos.getReadId());
             Assert.assertEquals(i, pos.getPosId());
@@ -41,7 +41,7 @@ public class PositionListWritableTest {
         byte [] another = new byte [plist.getLengthInBytes()*2];
         int start = 20;
         System.arraycopy(plist.getByteArray(), 0, another, start, plist.getLengthInBytes());
-        PositionListWritable plist2 = new PositionListWritable(another,start);
+        ReadHeadSet plist2 = new ReadHeadSet(another,start);
         for( i = 0; i < plist2.getCountOfPosition(); i++){
             Assert.assertEquals(plist.getPosition(i), plist2.getPosition(i));
         }
@@ -49,7 +49,7 @@ public class PositionListWritableTest {
     
     @Test
     public void TestRemove() {
-        PositionListWritable plist = new PositionListWritable();
+        ReadHeadSet plist = new ReadHeadSet();
         Assert.assertEquals(plist.getCountOfPosition(), 0);
         
         byte mateId;
@@ -67,7 +67,7 @@ public class PositionListWritableTest {
         }
         
         int i = 0;
-        for (PositionWritable pos : plist) {
+        for (ReadHeadInfo pos : plist) {
             Assert.assertEquals((byte)1, pos.getMateId());
             Assert.assertEquals((long) i, pos.getReadId());
             Assert.assertEquals(i, pos.getPosId());
@@ -76,13 +76,13 @@ public class PositionListWritableTest {
         
         //delete one element each time
         i = 0;
-        PositionListWritable copyList = new PositionListWritable();
+        ReadHeadSet copyList = new ReadHeadSet();
         copyList.set(plist);
-        PositionWritable pos = new PositionWritable();
-        Iterator<PositionWritable> iterator;
+        ReadHeadInfo pos = new ReadHeadInfo();
+        Iterator<ReadHeadInfo> iterator;
         for(int j = 0; j < 5; j++){
             iterator = copyList.iterator();
-            PositionWritable deletePos = new PositionWritable();
+            ReadHeadInfo deletePos = new ReadHeadInfo();
             deletePos.set((byte)1, (long)j, j);
             boolean removed = false;
             while(iterator.hasNext()){

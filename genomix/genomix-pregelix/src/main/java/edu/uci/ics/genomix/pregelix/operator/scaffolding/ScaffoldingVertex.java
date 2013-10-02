@@ -21,9 +21,9 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.ReadHeadSet;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
@@ -45,24 +45,24 @@ public class ScaffoldingVertex extends
     
 	// TODO BFS can seperate into simple BFS to filter and real BFS
     public static class SearchInfo implements Writable{
-        private VKmerBytesWritable kmer;
+        private VKmer kmer;
         private boolean flip;
         
-        public SearchInfo(VKmerBytesWritable otherKmer, boolean flip){
+        public SearchInfo(VKmer otherKmer, boolean flip){
             this.kmer.setAsCopy(otherKmer);
             this.flip = flip;
         }
         
-        public SearchInfo(VKmerBytesWritable otherKmer, READHEADTYPE flip){
+        public SearchInfo(VKmer otherKmer, READHEADTYPE flip){
             this.kmer.setAsCopy(otherKmer);
             this.flip = flip == READHEADTYPE.FLIPPED ? true : false;
         }
         
-        public VKmerBytesWritable getKmer() {
+        public VKmer getKmer() {
             return kmer;
         }
 
-        public void setKmer(VKmerBytesWritable kmer) {
+        public void setKmer(VKmer kmer) {
             this.kmer = kmer;
         }
 
@@ -115,13 +115,13 @@ public class ScaffoldingVertex extends
     }
     
     // send map to readId.hashValue() bin
-    public void addReadsToScaffoldingMap(PositionListWritable readIds, READHEADTYPE isFlip){ // TODO ENUM for flip
+    public void addReadsToScaffoldingMap(ReadHeadSet readIds, READHEADTYPE isFlip){ // TODO ENUM for flip
     	// searchInfo can be a struct
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
         
         //TODO rename PositionWritable ReadIdInfo?
-        for(PositionWritable pos : readIds){ 
+        for(ReadHeadInfo pos : readIds){ 
         	long readId = pos.getReadId();
             if(scaffoldingMap.containsKey(readId)){
                 searchInfoList = scaffoldingMap.get(readId);
@@ -170,7 +170,7 @@ public class ScaffoldingVertex extends
                 		"is " + searchInfoList.size() + "!");
             if(searchInfoList.size() == 2){
                 outgoingMsg.reset();
-                VKmerBytesWritable srcNode = setOutgoingSrcAndDest(entry.getKey().get(), searchInfoList);
+                VKmer srcNode = setOutgoingSrcAndDest(entry.getKey().get(), searchInfoList);
                 sendMsg(srcNode, outgoingMsg);
             }
         }

@@ -14,16 +14,16 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexInputFormat.BinaryDataCleanVertexReader;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class GraphCleanInputFormat extends
-    GraphCleanVertexInputFormat<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+    GraphCleanVertexInputFormat<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<VKmer, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new BinaryDataCleanLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
@@ -31,12 +31,12 @@ public class GraphCleanInputFormat extends
 
 @SuppressWarnings("rawtypes")
 class BinaryDataCleanLoadGraphReader extends
-    BinaryDataCleanVertexReader<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+    BinaryDataCleanVertexReader<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     private Vertex vertex;
-    private VKmerBytesWritable vertexId = new VKmerBytesWritable();
+    private VKmer vertexId = new VKmer();
     private VertexValueWritable vertexValue = new VertexValueWritable();
 
-    public BinaryDataCleanLoadGraphReader(RecordReader<VKmerBytesWritable, VertexValueWritable> recordReader) {
+    public BinaryDataCleanLoadGraphReader(RecordReader<VKmer, VertexValueWritable> recordReader) {
         super(recordReader);
     }
 
@@ -47,7 +47,7 @@ class BinaryDataCleanLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
+    public Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
             throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());

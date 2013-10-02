@@ -1,7 +1,7 @@
 package edu.uci.ics.genomix.pregelix.util;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class VertexUtil {
     /**
@@ -82,7 +82,7 @@ public class VertexUtil {
     /**
      * check if mergeChain is cycle
      */
-    public static boolean isCycle(VKmerBytesWritable kmer, VKmerBytesWritable mergeChain, int kmerSize) {
+    public static boolean isCycle(VKmer kmer, VKmer mergeChain, int kmerSize) {
         String chain = mergeChain.toString().substring(1);
         return chain.contains(kmer.toString());
     }

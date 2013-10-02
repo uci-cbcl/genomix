@@ -9,10 +9,10 @@ import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex.SearchInfo;
 import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 public class BFSTraverseVertex extends
     BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessageWritable> {
@@ -32,17 +32,17 @@ public class BFSTraverseVertex extends
         else
             outgoingMsg.reset();
         if(fakeVertex == null){
-            fakeVertex = new VKmerBytesWritable();
+            fakeVertex = new VKmer();
 //            String random = generaterRandomString(kmerSize + 1);
 //            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
     }
     
-    public VKmerBytesWritable setOutgoingSrcAndDest(long readId, ArrayListWritable<SearchInfo> searchInfoList){
+    public VKmer setOutgoingSrcAndDest(long readId, ArrayListWritable<SearchInfo> searchInfoList){
     	//TODO src is smaller; dest is greater
-        VKmerBytesWritable srcNode = searchInfoList.get(0).getKmer();
+        VKmer srcNode = searchInfoList.get(0).getKmer();
         outgoingMsg.setSrcFlip(searchInfoList.get(0).isFlip());
-        VKmerBytesWritable destNode = searchInfoList.get(1).getKmer();
+        VKmer destNode = searchInfoList.get(1).getKmer();
         outgoingMsg.setDestFlip(searchInfoList.get(1).isFlip());
         outgoingMsg.setReadId(readId); // commonReadId
         outgoingMsg.setSeekedVertexId(destNode);
@@ -96,42 +96,42 @@ public class BFSTraverseVertex extends
     }
     
     public void finalProcessBFS(BFSTraverseMessageWritable incomingMsg){
-        VKmerListWritable pathList = incomingMsg.getPathList();
+        VKmerList pathList = incomingMsg.getPathList();
         pathList.append(getVertexId());
         EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
         updateEdgeTypesList(incomingMsg.getEdgeTypesList(), meToNeighbor);
     }
     
-    public void sendMsgToPathNodeToAddCommondReadId(long readId, VKmerListWritable pathList,
+    public void sendMsgToPathNodeToAddCommondReadId(long readId, VKmerList pathList,
     		ArrayListWritable<EdgeTypes> edgeTypesList){
         outgoingMsg.reset();
         outgoingMsg.setTraverseMsg(false);
         outgoingMsg.setReadId(readId);
         int size = pathList.getCountOfPosition();
-        VKmerListWritable outPathList = outgoingMsg.getPathList();
+        VKmerList outPathList = outgoingMsg.getPathList();
         ArrayListWritable<EdgeTypes> outEdgeTypesList = outgoingMsg.getEdgeTypesList();
         for(int i = 0; i < size; i++){
         	outEdgeTypesList.clear();
         	outEdgeTypesList.add(edgeTypesList.get(i));
             outPathList.reset();
             if(i == 0){ // the first kmer in pathList
-            	outPathList.append(new VKmerBytesWritable());
+            	outPathList.append(new VKmer());
             	outPathList.append(pathList.getPosition(i + 1));
             } else if(i == size - 1){ // the last kmer in pathList
             	outPathList.append(pathList.getPosition(i - 1));
-            	outPathList.append(new VKmerBytesWritable());
+            	outPathList.append(new VKmer());
             } else{ // the middle kmer in pathList
             	outPathList.append(pathList.getPosition(i - 1));
             	outPathList.append(pathList.getPosition(i + 1));  
             }
-            VKmerBytesWritable destVertexId = pathList.getPosition(i);
+            VKmer destVertexId = pathList.getPosition(i);
             sendMsg(destVertexId, outgoingMsg);
         }
     }
     
     public void appendCommonReadId(BFSTraverseMessageWritable incomingMsg){
         long readId = incomingMsg.getReadId();
-        VKmerBytesWritable tmpKmer;
+        VKmer tmpKmer;
         //add readId to prev edge 
         EDGETYPE meToPrev = incomingMsg.getEdgeTypesList().get(0).getMeToPrevEdgeType();
         tmpKmer = incomingMsg.getPathList().getPosition(0);

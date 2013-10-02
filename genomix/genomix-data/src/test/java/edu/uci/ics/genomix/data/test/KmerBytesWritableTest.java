@@ -20,7 +20,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.Kmer;
 
 public class KmerBytesWritableTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
@@ -28,8 +28,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestCompressKmer() {
-        KmerBytesWritable.setGlobalKmerLength(k);
-        KmerBytesWritable kmer = new KmerBytesWritable();
+        Kmer.setGlobalKmerLength(k);
+        Kmer kmer = new Kmer();
         kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
@@ -39,8 +39,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestMoveKmer() {
-        KmerBytesWritable.setGlobalKmerLength(k);
-        KmerBytesWritable kmer = new KmerBytesWritable();
+        Kmer.setGlobalKmerLength(k);
+        Kmer kmer = new Kmer();
         kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
@@ -56,8 +56,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestCompressKmerReverse() {
-        KmerBytesWritable.setGlobalKmerLength(k);
-        KmerBytesWritable kmer = new KmerBytesWritable();
+        Kmer.setGlobalKmerLength(k);
+        Kmer kmer = new Kmer();
         kmer.setFromStringBytes(array, 0);
         Assert.assertEquals(kmer.toString(), "AATAGAA");
 
@@ -67,8 +67,8 @@ public class KmerBytesWritableTest {
 
     @Test
     public void TestGetGene() {
-        KmerBytesWritable.setGlobalKmerLength(9);
-        KmerBytesWritable kmer = new KmerBytesWritable();
+        Kmer.setGlobalKmerLength(9);
+        Kmer kmer = new Kmer();
         String text = "AGCTGACCG";
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G' };
         kmer.setFromStringBytes(array, 0);
@@ -83,20 +83,20 @@ public class KmerBytesWritableTest {
         byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
         String string = "AGCTGACCGT";
         for (int k = 3; k <= 10; k++) {
-            KmerBytesWritable.setGlobalKmerLength(k);
-            KmerBytesWritable kmer = new KmerBytesWritable();
-            KmerBytesWritable kmerAppend = new KmerBytesWritable();
+            Kmer.setGlobalKmerLength(k);
+            Kmer kmer = new Kmer();
+            Kmer kmerAppend = new Kmer();
             kmer.setFromStringBytes(array, 0);
             Assert.assertEquals(string.substring(0, k), kmer.toString());
             for (int b = 0; b < k; b++) {
-                byte byteActual = KmerBytesWritable.getOneByteFromKmerAtPosition(b, kmer.getBytes(), kmer.getOffset(),
+                byte byteActual = Kmer.getOneByteFromKmerAtPosition(b, kmer.getBytes(), kmer.getOffset(),
                         kmer.getLength());
                 byte byteExpect = GeneCode.getCodeFromSymbol(array[b]);
                 for (int i = 1; i < 4 && b + i < k; i++) {
                     byteExpect += GeneCode.getCodeFromSymbol(array[b + i]) << (i * 2);
                 }
                 Assert.assertEquals(byteActual, byteExpect);
-                KmerBytesWritable.appendOneByteAtPosition(b, byteActual, kmerAppend.getBytes(), kmerAppend.getOffset(),
+                Kmer.appendOneByteAtPosition(b, byteActual, kmerAppend.getBytes(), kmerAppend.getOffset(),
                         kmerAppend.getLength());
             }
             Assert.assertEquals(kmer.toString(), kmerAppend.toString());

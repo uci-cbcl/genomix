@@ -18,8 +18,8 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.IOperatorNodePushable;
@@ -41,7 +41,7 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
         super(spec, 1, 1);
         recordDescriptors[0] = outRecDesc;
         this.kmerSize = kmerSize;
-        KmerBytesWritable.setGlobalKmerLength(this.kmerSize);
+        Kmer.setGlobalKmerLength(this.kmerSize);
     }
 
     private static final long serialVersionUID = 1L;
@@ -64,8 +64,8 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
         private ArrayTupleBuilder builder;
         private FrameTupleAppender appender;
         
-        NodeWritable readNode;
-        KmerBytesWritable readKmer;
+        Node readNode;
+        Kmer readKmer;
 
         public MapReadToNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
                 RecordDescriptor outputRecDesc) {
@@ -73,8 +73,8 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
             this.inputRecDesc = inputRecDesc;
             this.outputRecDesc = outputRecDesc;
    
-            readNode = new NodeWritable();
-            readKmer = new KmerBytesWritable();            
+            readNode = new Node();
+            readKmer = new Kmer();            
         }
 
         @Override
@@ -106,18 +106,18 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
         }
 
 
-        private void setKmer(KmerBytesWritable kmer, int offset) {
+        private void setKmer(Kmer kmer, int offset) {
             ByteBuffer buffer = accessor.getBuffer();
             kmer.setAsCopy(buffer.array(), offset);
         }
 
-        private void setNode(NodeWritable node, int offset) {
+        private void setNode(Node node, int offset) {
             ByteBuffer buffer = accessor.getBuffer();
             node.setAsCopy(buffer.array(), offset);
         }
 
 
-        private void outputNode(NodeWritable node) throws HyracksDataException {
+        private void outputNode(Node node) throws HyracksDataException {
 
             try {
                 builder.reset();

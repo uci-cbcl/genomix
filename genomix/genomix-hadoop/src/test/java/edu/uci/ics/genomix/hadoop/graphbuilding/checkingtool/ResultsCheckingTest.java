@@ -35,8 +35,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * This test only applied on SequenceInputFormat

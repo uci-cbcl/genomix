@@ -6,22 +6,22 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Map.Entry;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadHeadSet;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class PathMergeMessageWritable extends MessageWritable{
     
-    private NodeWritable node;
+    private Node node;
     private boolean isFlip; // use for path merge
     private boolean updateMsg; // use for distinguish updateMsg or mergeMsg
 
     public PathMergeMessageWritable(){
         super();
-        node = new NodeWritable();
+        node = new Node();
         isFlip = false;
         updateMsg = false;
     }
@@ -45,19 +45,19 @@ public class PathMergeMessageWritable extends MessageWritable{
         updateMsg = false;
     }   
     
-    public VKmerBytesWritable getInternalKmer() {
+    public VKmer getInternalKmer() {
         return node.getInternalKmer();
     }
 
-    public void setInternalKmer(VKmerBytesWritable internalKmer) {
+    public void setInternalKmer(VKmer internalKmer) {
         this.node.setInternalKmer(internalKmer);
     }
     
-    public EdgeListWritable getEdgeList(EDGETYPE edgeType) {
+    public EdgeMap getEdgeList(EDGETYPE edgeType) {
         return node.getEdgeList(edgeType);
     }
     
-    public Entry<VKmerBytesWritable, ReadIdListWritable> getNeighborEdge(){
+    public Entry<VKmer, ReadIdSet> getNeighborEdge(){
         for(EDGETYPE e : EDGETYPE.values()){
             if(!getEdgeList(e).isEmpty()) {
                 return getEdgeList(e).firstEntry();
@@ -66,23 +66,23 @@ public class PathMergeMessageWritable extends MessageWritable{
         return null;
     }
 
-    public void setEdgeList(EDGETYPE edgeType, EdgeListWritable edgeList) {
+    public void setEdgeList(EDGETYPE edgeType, EdgeMap edgeList) {
         this.node.setEdgeList(edgeType, edgeList);
     }
     
-    public PositionListWritable getStartReads() {
+    public ReadHeadSet getStartReads() {
         return this.node.getStartReads();
     }
 
-    public void setStartReads(PositionListWritable startReads) {
+    public void setStartReads(ReadHeadSet startReads) {
         this.node.setStartReads(startReads);
     }
 
-    public PositionListWritable getEndReads() {
+    public ReadHeadSet getEndReads() {
         return this.node.getEndReads();
     }
 
-    public void setEndReads(PositionListWritable endReads) {
+    public void setEndReads(ReadHeadSet endReads) {
         this.node.setEndReads(endReads);
     }
     
@@ -110,11 +110,11 @@ public class PathMergeMessageWritable extends MessageWritable{
         this.updateMsg = updateMsg;
     }
     
-    public NodeWritable getNode() {
+    public Node getNode() {
         return node;
     }
 
-    public void setNode(NodeWritable node) {
+    public void setNode(Node node) {
         this.node.setAsCopy(node);
     }
 

@@ -7,7 +7,7 @@ import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -17,7 +17,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
  *
  */
 public class StatisticsAggregator extends
-    GlobalAggregator<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable, VertexValueWritable, VertexValueWritable>{
+    GlobalAggregator<VKmer, VertexValueWritable, NullWritable, MessageWritable, VertexValueWritable, VertexValueWritable>{
 
     public static HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
     protected VertexValueWritable value = new VertexValueWritable();
@@ -28,7 +28,7 @@ public class StatisticsAggregator extends
     }
 
     @Override
-    public void step(Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> v) throws HyracksDataException {
+    public void step(Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> v) throws HyracksDataException {
         HashMapWritable<ByteWritable, VLongWritable> counters = v.getVertexValue().getCounters();
         updateAggregateState(counters);
     }

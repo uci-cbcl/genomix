@@ -7,20 +7,20 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class KmerListWritableTest {
 
     @Test
     public void TestInitial() {
-        VKmerListWritable kmerList = new VKmerListWritable();
+        VKmerList kmerList = new VKmerList();
         Assert.assertEquals(kmerList.getCountOfPosition(), 0);
         
         //one kmer in list and reset each time
-        VKmerBytesWritable kmer;
+        VKmer kmer;
         for (int i = 1; i < 200; i++) {
-            kmer = new VKmerBytesWritable(i);
+            kmer = new VKmer(i);
             String randomString = generaterRandomString(i);
             byte[] array = randomString.getBytes();
             kmer.setFromStringBytes(i, array, 0);
@@ -33,7 +33,7 @@ public class KmerListWritableTest {
         kmerList.reset();
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
-            kmer = new VKmerBytesWritable(5);
+            kmer = new VKmer(5);
             String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
             kmer.setFromStringBytes(5, array, 0);
@@ -45,7 +45,7 @@ public class KmerListWritableTest {
         byte [] another = new byte [kmerList.getLength()*2];
         int start = 20;
         System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start, kmerList.getLength());
-        VKmerListWritable plist2 = new VKmerListWritable(another, start);
+        VKmerList plist2 = new VKmerList(another, start);
         for(int i = 0; i < plist2.getCountOfPosition(); i++){
             Assert.assertEquals(kmerList.getPosition(i).toString(), plist2.getPosition(i).toString());
         }
@@ -53,13 +53,13 @@ public class KmerListWritableTest {
     
     @Test
     public void TestRemove() {
-        VKmerListWritable kmerList = new VKmerListWritable();
+        VKmerList kmerList = new VKmerList();
         Assert.assertEquals(kmerList.getCountOfPosition(), 0);
         
         int i;
-        VKmerBytesWritable kmer;
+        VKmer kmer;
         for (i = 0; i < 200; i++) {
-            kmer = new VKmerBytesWritable(5);
+            kmer = new VKmer(5);
             String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
             kmer.setFromStringBytes(5, array, 0);
@@ -69,15 +69,15 @@ public class KmerListWritableTest {
         }
         
         //delete one element each time
-        VKmerBytesWritable tmpKmer = new VKmerBytesWritable(5);
+        VKmer tmpKmer = new VKmer(5);
         i = 0;
-        VKmerListWritable copyList = new VKmerListWritable();
+        VKmerList copyList = new VKmerList();
         copyList.setCopy(kmerList);
-        Iterator<VKmerBytesWritable> iterator;
+        Iterator<VKmer> iterator;
         for(int j = 0; j < 5; j++){
             iterator = copyList.iterator();
             byte[] array = kmerList.getPosition(j).toString().getBytes();
-            VKmerBytesWritable deletePos = new VKmerBytesWritable(5);
+            VKmer deletePos = new VKmer(5);
             deletePos.setFromStringBytes(5, array, 0);
             boolean removed = false;
             while(iterator.hasNext()){
@@ -107,13 +107,13 @@ public class KmerListWritableTest {
         
         Assert.assertEquals(0, kmerList.getCountOfPosition());
         
-        VKmerListWritable edgeList = new VKmerListWritable();
-        VKmerBytesWritable k = new VKmerBytesWritable(3);
+        VKmerList edgeList = new VKmerList();
+        VKmer k = new VKmer(3);
         k.setFromStringBytes(3, ("AAA").getBytes(), 0);
         edgeList.append(k);
         k.setFromStringBytes(3, ("CCC").getBytes(), 0);
         edgeList.append(k);
-        for(VKmerBytesWritable edge : edgeList){
+        for(VKmer edge : edgeList){
         	System.out.println(edge.toString());
         }
     }

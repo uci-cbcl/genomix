@@ -13,11 +13,11 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.DIR;
 
 public class P1ForPathMergeVertex extends
     BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
@@ -37,7 +37,7 @@ public class P1ForPathMergeVertex extends
         else
             outgoingMsg.reset();
         if(repeatKmer == null)
-            repeatKmer = new VKmerBytesWritable();
+            repeatKmer = new VKmer();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
 //        else
@@ -83,7 +83,7 @@ public class P1ForPathMergeVertex extends
      */
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        NodeWritable node = vertex.getNode();
+        Node node = vertex.getNode();
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
@@ -121,8 +121,8 @@ public class P1ForPathMergeVertex extends
             PathMergeMessageWritable msg = receivedMsgList.get(0);
             senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
             state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
-            VKmerBytesWritable me = getVertexId();
-            VKmerBytesWritable other = msg.getSourceVertexId();
+            VKmer me = getVertexId();
+            VKmer other = msg.getSourceVertexId();
             // determine if merge. if head msg meets head and #receiveMsg = 1
             if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class))){
                 if(me.compareTo(other) < 0){
@@ -138,7 +138,7 @@ public class P1ForPathMergeVertex extends
                     outFlag = 0;
                     outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
+                        for(VKmer dest : vertex.getEdgeList(et).keySet()){
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor() : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
@@ -211,9 +211,9 @@ public class P1ForPathMergeVertex extends
             EDGETYPE deleteToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
             EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
             
-            VKmerBytesWritable deletedKmer = incomingMsg.getSourceVertexId();
+            VKmer deletedKmer = incomingMsg.getSourceVertexId();
             if(value.getEdgeList(deleteToMe).containsKey(deletedKmer)){
-                ReadIdListWritable deletedReadIds = value.getEdgeList(deleteToMe).get(deletedKmer);
+                ReadIdSet deletedReadIds = value.getEdgeList(deleteToMe).get(deletedKmer);
                 value.getEdgeList(deleteToMe).remove(deletedKmer);
                 
                 value.getEdgeList(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);

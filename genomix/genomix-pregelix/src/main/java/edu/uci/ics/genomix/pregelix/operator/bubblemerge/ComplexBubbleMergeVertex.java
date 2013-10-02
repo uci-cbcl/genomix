@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -37,7 +37,7 @@ public class ComplexBubbleMergeVertex extends
         public static final byte OUTGOINGEDGE = 0b1 << 1;
     }
     
-    private Map<VKmerBytesWritable, ArrayList<BubbleMergeMessageWritable>> receivedMsgMap = new HashMap<VKmerBytesWritable, ArrayList<BubbleMergeMessageWritable>>();
+    private Map<VKmer, ArrayList<BubbleMergeMessageWritable>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessageWritable>>();
     private ArrayList<BubbleMergeMessageWritable> receivedMsgList = new ArrayList<BubbleMergeMessageWritable>();
     private BubbleMergeMessageWritable topMsg = new BubbleMergeMessageWritable();
     private BubbleMergeMessageWritable curMsg = new BubbleMergeMessageWritable();
@@ -45,10 +45,10 @@ public class ComplexBubbleMergeVertex extends
 //    private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
     
 //    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
-    private static Set<VKmerBytesWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());
+    private static Set<VKmer> allDeletedSet = Collections.synchronizedSet(new HashSet<VKmer>());
     
-    private EdgeListWritable incomingEdgeList = null; 
-    private EdgeListWritable outgoingEdgeList = null;
+    private EdgeMap incomingEdgeList = null; 
+    private EdgeMap outgoingEdgeList = null;
     private EDGETYPE incomingEdgeType;
     private EDGETYPE outgoingEdgeType; 
 //    private VKmerBytesWritable incomingKmer = new VKmerBytesWritable();
@@ -76,12 +76,12 @@ public class ComplexBubbleMergeVertex extends
         else
             outgoingMsg.reset();
         if(incomingEdgeList == null)
-            incomingEdgeList = new EdgeListWritable();
+            incomingEdgeList = new EdgeMap();
         if(outgoingEdgeList == null)
-            outgoingEdgeList = new EdgeListWritable();
+            outgoingEdgeList = new EdgeMap();
         outFlag = 0;
         if(fakeVertex == null){
-            fakeVertex = new VKmerBytesWritable();
+            fakeVertex = new VKmer();
             String random = generaterRandomString(kmerSize + 1);
             fakeVertex.setFromStringBytes(kmerSize + 1, random.getBytes(), 0); 
         }
@@ -98,15 +98,15 @@ public class ComplexBubbleMergeVertex extends
             // set edgeList and edgeDir based on connectedTable 
             setEdgeListAndEdgeType(i);
             
-            for(Entry<VKmerBytesWritable, ReadIdListWritable> incomingEdge : incomingEdgeList.entrySet()){
-                for(Entry<VKmerBytesWritable, ReadIdListWritable> outgoingEdge : outgoingEdgeList.entrySet()){
+            for(Entry<VKmer, ReadIdSet> incomingEdge : incomingEdgeList.entrySet()){
+                for(Entry<VKmer, ReadIdSet> outgoingEdge : outgoingEdgeList.entrySet()){
                     // get majorVertex and minorVertex and meToMajorDir and meToMinorDir
-                    VKmerBytesWritable incomingKmer = incomingEdge.getKey();
-                    VKmerBytesWritable outgoingKmer = outgoingEdge.getKey();
-                    VKmerBytesWritable majorVertexId = null;
+                    VKmer incomingKmer = incomingEdge.getKey();
+                    VKmer outgoingKmer = outgoingEdge.getKey();
+                    VKmer majorVertexId = null;
                     EDGETYPE majorToMeEdgetype = null; 
                     EDGETYPE minorToMeEdgetype = null; 
-                    VKmerBytesWritable minorVertexId = null;
+                    VKmer minorVertexId = null;
                     if(incomingKmer.compareTo(outgoingKmer) >= 0){
                         majorVertexId = incomingKmer;
                         majorToMeEdgetype = incomingEdgeType;
@@ -168,7 +168,7 @@ public class ComplexBubbleMergeVertex extends
             Iterator<BubbleMergeMessageWritable> it = receivedMsgList.iterator();
             topMsg.set(it.next());
             it.remove(); //delete topCoverage node
-            NodeWritable topNode = topMsg.getNode();
+            Node topNode = topMsg.getNode();
             while(it.hasNext()){
                 curMsg.set(it.next());
                 //check if the vertex is valid minor and if it comes from valid major
@@ -203,7 +203,7 @@ public class ComplexBubbleMergeVertex extends
 //                    deletedSet.add(new BubbleMergeMessageWritable(curMsg));
                     
                     // 4. store deleted vertices -- for deletedSet
-                    allDeletedSet.add(new VKmerBytesWritable(curMsg.getSourceVertexId()));
+                    allDeletedSet.add(new VKmer(curMsg.getSourceVertexId()));
                     it.remove();
                 }
             }
@@ -287,7 +287,7 @@ public class ComplexBubbleMergeVertex extends
      */
     public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessageWritable incomingMsg){
         VertexValueWritable vertex = getVertexValue(); 
-        ReadIdListWritable readIds;
+        ReadIdSet readIds;
 
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
@@ -296,7 +296,7 @@ public class ComplexBubbleMergeVertex extends
             readIds = vertex.getEdgeList(neighborToMeDir).get(incomingMsg.getSourceVertexId());
             vertex.getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
         } else {
-            readIds = new ReadIdListWritable();
+            readIds = new ReadIdSet();
         }
         EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
         getVertexValue().getEdgeList(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
@@ -319,7 +319,7 @@ public class ComplexBubbleMergeVertex extends
                 // aggregate bubble nodes and grouped by major vertex
                 aggregateBubbleNodesByMajorNode(msgIterator);
                 
-                for(VKmerBytesWritable majorVertexId : receivedMsgMap.keySet()){
+                for(VKmer majorVertexId : receivedMsgMap.keySet()){
                     receivedMsgList.clear();
                     receivedMsgList = receivedMsgMap.get(majorVertexId);
 //                    receivedMsgList.addAll(receivedMsgMap.get(majorVertexId));

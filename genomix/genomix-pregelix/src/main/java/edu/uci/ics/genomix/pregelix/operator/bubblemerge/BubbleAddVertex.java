@@ -6,10 +6,10 @@ import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -27,19 +27,19 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
  *
  */
 public class BubbleAddVertex extends
-        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;
    
-    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable("ACA"); //forward
-    private VKmerBytesWritable middleVertexId = new VKmerBytesWritable("ATG"); //reverse
-    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable("TCA"); //forward
-    private VKmerBytesWritable insertedBubble = new VKmerBytesWritable("ATA"); //reverse
-    private VKmerBytesWritable internalKmerInNewBubble = new VKmerBytesWritable("ATG");
+    private VKmer majorVertexId = new VKmer("ACA"); //forward
+    private VKmer middleVertexId = new VKmer("ATG"); //reverse
+    private VKmer minorVertexId = new VKmer("TCA"); //forward
+    private VKmer insertedBubble = new VKmer("ATA"); //reverse
+    private VKmer internalKmerInNewBubble = new VKmer("ATG");
     private float coverageOfInsertedBubble = 1;
     private EDGETYPE majorToNewBubbleDir = EDGETYPE.FR;
     private EDGETYPE minorToNewBubbleDir = EDGETYPE.FR;
     
-    private EdgeListWritable[] edges = new EdgeListWritable[4];
+    private EdgeMap[] edges = new EdgeMap[4];
     
     /**
      * initiate kmerSize, length
@@ -54,7 +54,7 @@ public class BubbleAddVertex extends
      * add a bubble
      */
     @SuppressWarnings("unchecked")
-    public void insertBubble(EdgeListWritable[] edges, VKmerBytesWritable insertedBubble, VKmerBytesWritable internalKmer){
+    public void insertBubble(EdgeMap[] edges, VKmer insertedBubble, VKmer internalKmer){
         //add bubble vertex
         @SuppressWarnings("rawtypes")
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -78,17 +78,17 @@ public class BubbleAddVertex extends
         addVertex(insertedBubble, vertex);
     }
     
-    public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmerBytesWritable insertedBubble){
+    public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmer insertedBubble){
         EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror(); 
-        getVertexValue().getEdgeList(newBubbleToMeDir).put(insertedBubble, new ReadIdListWritable(Arrays.asList(new Long(0))));
+        getVertexValue().getEdgeList(newBubbleToMeDir).put(insertedBubble, new ReadIdSet(Arrays.asList(new Long(0))));
     }
     
     public void setupEdgeForInsertedBubble(){
         for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
-            edges[et.get()] = new EdgeListWritable();
+            edges[et.get()] = new EdgeMap();
         }
-        edges[majorToNewBubbleDir.get()].put(majorVertexId, new ReadIdListWritable(Arrays.asList(new Long(0))));
-        edges[minorToNewBubbleDir.get()].put(minorVertexId, new ReadIdListWritable(Arrays.asList(new Long(0))));
+        edges[majorToNewBubbleDir.get()].put(majorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
+        edges[minorToNewBubbleDir.get()].put(minorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
     }
     
     @Override
@@ -123,7 +123,7 @@ public class BubbleAddVertex extends
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

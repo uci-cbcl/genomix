@@ -12,8 +12,8 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Remove Lowcoverage
@@ -27,7 +27,7 @@ public class RemoveLowCoverageVertex extends
     BasicGraphCleanVertex<VertexValueWritable,MessageWritable> {
     private static float minAverageCoverage = -1;
     
-    private static Set<VKmerBytesWritable> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());
+    private static Set<VKmer> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmer>());
     
     /**
      * initiate kmerSize, length
@@ -51,7 +51,7 @@ public class RemoveLowCoverageVertex extends
         if(getVertexValue().getAvgCoverage() <= minAverageCoverage){
             //broadcase kill self
             broadcastKillself();
-            deadNodeSet.add(new VKmerBytesWritable(getVertexId()));
+            deadNodeSet.add(new VKmer(getVertexId()));
         }
     }
     

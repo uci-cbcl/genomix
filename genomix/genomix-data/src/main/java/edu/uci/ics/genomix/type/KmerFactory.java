@@ -15,11 +15,11 @@
 
 package edu.uci.ics.genomix.type;
 
-public class KmerBytesWritableFactory {
-    private VKmerBytesWritable kmer;
+public class KmerFactory {
+    private VKmer kmer;
 
-    public KmerBytesWritableFactory(int k) {
-        kmer = new VKmerBytesWritable(k);
+    public KmerFactory(int k) {
+        kmer = new VKmer(k);
     }
 
     /**
@@ -30,7 +30,7 @@ public class KmerBytesWritableFactory {
      * @param array
      * @param start
      */
-    public VKmerBytesWritable getKmerByRead(int k, byte[] array, int start) {
+    public VKmer getKmerByRead(int k, byte[] array, int start) {
         kmer.setFromStringBytes(k, array, start);
         return kmer;
     }
@@ -42,7 +42,7 @@ public class KmerBytesWritableFactory {
      * @param array
      * @param start
      */
-    public VKmerBytesWritable getKmerByReadReverse(int k, byte[] array, int start) {
+    public VKmer getKmerByReadReverse(int k, byte[] array, int start) {
         kmer.setReversedFromStringBytes(k, array, start);
         return kmer;
     }
@@ -57,7 +57,7 @@ public class KmerBytesWritableFactory {
      * @param kmerChain
      * @return LastKmer bytes array
      */
-    public VKmerBytesWritable getLastKmerFromChain(int lastK, final VKmerBytesWritable kmerChain) {
+    public VKmer getLastKmerFromChain(int lastK, final VKmer kmerChain) {
         if (lastK > kmerChain.getKmerLetterLength()) {
             return null;
         }
@@ -93,7 +93,7 @@ public class KmerBytesWritableFactory {
      * @param kmerChain
      * @return FirstKmer bytes array
      */
-    public VKmerBytesWritable getFirstKmerFromChain(int firstK, final VKmerBytesWritable kmerChain) {
+    public VKmer getFirstKmerFromChain(int firstK, final VKmer kmerChain) {
         if (firstK > kmerChain.getKmerLetterLength()) {
             return null;
         }
@@ -117,7 +117,7 @@ public class KmerBytesWritableFactory {
         return kmer;
     }
 
-    public VKmerBytesWritable getSubKmerFromChain(int startK, int kSize, final VKmerBytesWritable kmerChain) {
+    public VKmer getSubKmerFromChain(int startK, int kSize, final VKmer kmerChain) {
         if (startK + kSize > kmerChain.getKmerLetterLength()) {
             return null;
         }
@@ -157,7 +157,7 @@ public class KmerBytesWritableFactory {
      *            : next neighbor in gene-code format
      * @return the merged Kmer, this K of this Kmer is k+1
      */
-    public VKmerBytesWritable mergeKmerWithNextCode(final VKmerBytesWritable kmer, byte nextCode) {
+    public VKmer mergeKmerWithNextCode(final VKmer kmer, byte nextCode) {
         this.kmer.reset(kmer.getKmerLetterLength() + 1);
         for (int i = 1; i <= kmer.getKmerByteLength(); i++) {
             this.kmer.getBlockBytes()[this.kmer.getKmerOffset() + this.kmer.getKmerByteLength() - i] = kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i];
@@ -184,7 +184,7 @@ public class KmerBytesWritableFactory {
      *            : next neighbor in gene-code format
      * @return the merged Kmer,this K of this Kmer is k+1
      */
-    public VKmerBytesWritable mergeKmerWithPreCode(final VKmerBytesWritable kmer, byte preCode) {
+    public VKmer mergeKmerWithPreCode(final VKmer kmer, byte preCode) {
         this.kmer.reset(kmer.getKmerLetterLength() + 1);
         int byteInMergedKmer = 0;
         if (kmer.getKmerLetterLength() % 4 == 0) {
@@ -213,7 +213,7 @@ public class KmerBytesWritableFactory {
      *            : bytes array of next kmer
      * @return merged kmer, the new k is @preK + @nextK
      */
-    public VKmerBytesWritable mergeTwoKmer(final VKmerBytesWritable preKmer, final VKmerBytesWritable nextKmer) {
+    public VKmer mergeTwoKmer(final VKmer preKmer, final VKmer nextKmer) {
         kmer.reset(preKmer.getKmerLetterLength() + nextKmer.getKmerLetterLength());
         int i = 1;
         for (; i <= preKmer.getKmerByteLength(); i++) {
@@ -253,7 +253,7 @@ public class KmerBytesWritableFactory {
      *            : input genecode
      * @return new created kmer that shifted by afterCode, the K will not change
      */
-    public VKmerBytesWritable shiftKmerWithNextCode(final VKmerBytesWritable kmer, byte afterCode) {
+    public VKmer shiftKmerWithNextCode(final VKmer kmer, byte afterCode) {
         this.kmer.setAsCopy(kmer);
         this.kmer.shiftKmerWithNextCode(afterCode);
         return this.kmer;
@@ -271,7 +271,7 @@ public class KmerBytesWritableFactory {
      *            : input genecode
      * @return new created kmer that shifted by preCode, the K will not change
      */
-    public VKmerBytesWritable shiftKmerWithPreCode(final VKmerBytesWritable kmer, byte preCode) {
+    public VKmer shiftKmerWithPreCode(final VKmer kmer, byte preCode) {
         this.kmer.setAsCopy(kmer);
         this.kmer.shiftKmerWithPreCode(preCode);
         return this.kmer;
@@ -282,7 +282,7 @@ public class KmerBytesWritableFactory {
      * 
      * @param kmer
      */
-    public VKmerBytesWritable reverse(final VKmerBytesWritable kmer) {
+    public VKmer reverse(final VKmer kmer) {
         this.kmer.reset(kmer.getKmerLetterLength());
 
         int curPosAtKmer = ((kmer.getKmerLetterLength() - 1) % 4) << 1;

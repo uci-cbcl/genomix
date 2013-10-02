@@ -5,10 +5,10 @@ import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -24,11 +24,11 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
  * Add tip 
  */
 public class TipAddVertex extends
-        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+        Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;
    
-    private VKmerBytesWritable splitNode = new VKmerBytesWritable("CTA");
-    private VKmerBytesWritable insertedTip = new VKmerBytesWritable("AGC");
+    private VKmer splitNode = new VKmer("CTA");
+    private VKmer insertedTip = new VKmer("AGC");
     private EDGETYPE tipToSplitDir = EDGETYPE.FR;
     /**
      * initiate kmerSize, length
@@ -40,7 +40,7 @@ public class TipAddVertex extends
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertTip(EDGETYPE dir, EdgeListWritable edgeList, VKmerBytesWritable insertedTip){
+    public void insertTip(EDGETYPE dir, EdgeMap edgeList, VKmer insertedTip){
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
@@ -59,14 +59,14 @@ public class TipAddVertex extends
         addVertex(insertedTip, vertex);
     }
     
-    public EdgeListWritable getEdgeListFromKmer(VKmerBytesWritable kmer){
-        EdgeListWritable edgeList = new EdgeListWritable();
-        edgeList.put(kmer, new ReadIdListWritable(Arrays.asList(new Long(0))));
+    public EdgeMap getEdgeListFromKmer(VKmer kmer){
+        EdgeMap edgeList = new EdgeMap();
+        edgeList.put(kmer, new ReadIdSet(Arrays.asList(new Long(0))));
         return edgeList;
     }
     
-    public void addEdgeToInsertedTip(EDGETYPE dir, VKmerBytesWritable insertedTip){
-        getVertexValue().getEdgeList(dir).put(insertedTip, new ReadIdListWritable(Arrays.asList(new Long(0))));
+    public void addEdgeToInsertedTip(EDGETYPE dir, VKmer insertedTip){
+        getVertexValue().getEdgeList(dir).put(insertedTip, new ReadIdSet(Arrays.asList(new Long(0))));
     }
     
     /**
@@ -96,7 +96,7 @@ public class TipAddVertex extends
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

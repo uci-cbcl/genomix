@@ -13,11 +13,11 @@ import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable.NeighborInfo;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.Node.NeighborInfo;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Simple Bubble Merge
@@ -33,7 +33,7 @@ public class SimpleBubbleMergeVertex extends
         public static final byte OUTGOINGEDGE = 0b1 << 1;
     }
     
-    private Map<VKmerBytesWritable, ArrayList<BubbleMergeMessageWritable>> receivedMsgMap = new HashMap<VKmerBytesWritable, ArrayList<BubbleMergeMessageWritable>>();
+    private Map<VKmer, ArrayList<BubbleMergeMessageWritable>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessageWritable>>();
     private ArrayList<BubbleMergeMessageWritable> receivedMsgList = new ArrayList<BubbleMergeMessageWritable>();
     private BubbleMergeMessageWritable topMsg = new BubbleMergeMessageWritable();
     private BubbleMergeMessageWritable curMsg = new BubbleMergeMessageWritable();
@@ -68,7 +68,7 @@ public class SimpleBubbleMergeVertex extends
         if(forwardNeighbor.kmer == reverseNeighbor.kmer) // FIXME should this *really* be == or .equals?
             throw new IllegalStateException("majorVertexId is equal to minorVertexId, this is not allowed!");
         
-        VKmerBytesWritable minorVertexId;
+        VKmer minorVertexId;
         boolean forwardIsMajor = forwardNeighbor.kmer.compareTo(reverseNeighbor.kmer) >= 0;
         if (forwardIsMajor) {
             outgoingMsg.setMajorVertexId(forwardNeighbor.kmer);
@@ -116,7 +116,7 @@ public class SimpleBubbleMergeVertex extends
             Iterator<BubbleMergeMessageWritable> it = receivedMsgList.iterator();
             topMsg = it.next();
             it.remove(); //delete topCoverage node
-            NodeWritable topNode = topMsg.getNode();
+            Node topNode = topMsg.getNode();
             boolean topChanged = false;
             while(it.hasNext()){
                 curMsg = it.next();
@@ -173,7 +173,7 @@ public class SimpleBubbleMergeVertex extends
     	// aggregate bubble nodes and grouped by major vertex
         aggregateBubbleNodesByMajorNode(msgIterator);
         
-        for(VKmerBytesWritable majorVertexId : receivedMsgMap.keySet()){
+        for(VKmer majorVertexId : receivedMsgMap.keySet()){
             receivedMsgList = receivedMsgMap.get(majorVertexId);
             if(receivedMsgList.size() > 1){ // filter simple paths
                 // for each majorVertex, sort the node by decreasing order of coverage

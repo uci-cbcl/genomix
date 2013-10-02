@@ -30,7 +30,7 @@ import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class JobGenerator {
@@ -44,7 +44,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -59,7 +59,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -75,7 +75,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class); //GraphCleanInputFormat
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -126,7 +126,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().setLong(GenomixJobConf.P4_RANDOM_SEED, new Random().nextLong());
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -144,7 +144,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -161,7 +161,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -178,7 +178,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -195,7 +195,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -212,7 +212,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -229,7 +229,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -246,7 +246,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -263,7 +263,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -278,7 +278,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -295,7 +295,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
@@ -312,7 +312,7 @@ public class JobGenerator {
         job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(CheckerOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }

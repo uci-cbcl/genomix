@@ -32,7 +32,7 @@ import edu.uci.ics.genomix.data.Marshal;
  * NodeWritable. Kmer length should be set once during configuration and should
  * never change.
  */
-public class KmerBytesWritable extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { // TODO make consistent with NodeWritable
+public class Kmer extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { // TODO make consistent with NodeWritable
 
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = {};
@@ -55,7 +55,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     /**
      * Initialize as empty kmer
      */
-    public KmerBytesWritable() {
+    public Kmer() {
         bytes = new byte[getBytesUsed()];
         offset = 0;
     }
@@ -63,7 +63,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     /**
      * Copy contents of kmer string
      */
-    public KmerBytesWritable(String kmer) {
+    public Kmer(String kmer) {
         this();
         setFromStringBytes(kmer.getBytes(), 0);
     }
@@ -71,7 +71,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     /**
      * Set as reference to existing data
      */
-    public KmerBytesWritable(byte[] newStorage, int newOffset) {
+    public Kmer(byte[] newStorage, int newOffset) {
         setAsReference(newStorage, newOffset);
     }
 
@@ -80,7 +80,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * 
      * @param other
      */
-    public KmerBytesWritable(KmerBytesWritable other) {
+    public Kmer(Kmer other) {
         this();
         setAsCopy(other);
     }
@@ -90,7 +90,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * 
      * @param other
      */
-    public KmerBytesWritable(VKmerBytesWritable other) {
+    public Kmer(VKmer other) {
         this();
         setAsCopy(other);
     }
@@ -100,7 +100,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * 
      * @param other
      */
-    public void setAsCopy(KmerBytesWritable other) {
+    public void setAsCopy(Kmer other) {
         if (lettersInKmer > 0) {
             System.arraycopy(other.bytes, other.offset, bytes, offset, getBytesUsed());
         }
@@ -111,7 +111,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * 
      * @param other
      */
-    public void setAsCopy(VKmerBytesWritable other) {
+    public void setAsCopy(VKmer other) {
         if (other.lettersInKmer != lettersInKmer) {
             throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was " + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
         }
@@ -158,7 +158,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
      * @param newData
      * @param offset
      */
-    public void setAsReference(VKmerBytesWritable other) {
+    public void setAsReference(VKmer other) {
         if (other.lettersInKmer != lettersInKmer) {
             throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was " + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
         }
@@ -350,9 +350,9 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
 
     @Override
     public boolean equals(Object right_obj) {
-        if (right_obj instanceof KmerBytesWritable) {
+        if (right_obj instanceof Kmer) {
             // since these may be backed by storage of different sizes, we have to manually check each byte
-            KmerBytesWritable right = (KmerBytesWritable) right_obj;
+            Kmer right = (Kmer) right_obj;
             for (int i=0; i < getBytesUsed(); i++) {
                 if (bytes[offset + i] != right.bytes[right.offset + i]) {
                     return false;
@@ -373,12 +373,12 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     }
 
     public static void setBytesUsed(int bytesUsed) {
-        KmerBytesWritable.bytesUsed = bytesUsed;
+        Kmer.bytesUsed = bytesUsed;
     }
 
     public static class Comparator extends WritableComparator {
         public Comparator() {
-            super(KmerBytesWritable.class);
+            super(Kmer.class);
         }
 
         public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
@@ -387,7 +387,7 @@ public class KmerBytesWritable extends BinaryComparable implements Serializable,
     }
 
     static { // register this comparator
-        WritableComparator.define(KmerBytesWritable.class, new Comparator());
+        WritableComparator.define(Kmer.class, new Comparator());
     }
 
 }

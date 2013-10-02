@@ -5,9 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Comparator;
 
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 public class BubbleMergeMessageWritable extends MessageWritable{
 
@@ -16,22 +16,22 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         public static final byte REVERSE = 1;
     }
     
-    private VKmerBytesWritable majorVertexId; //use for MergeBubble
-    private VKmerBytesWritable minorVertexId;
-    private NodeWritable node; //except kmer, other field should be updated when MergeBubble
+    private VKmer majorVertexId; //use for MergeBubble
+    private VKmer minorVertexId;
+    private Node node; //except kmer, other field should be updated when MergeBubble
     private byte majorToBubbleEdgetype;
     private byte minorToBubbleEdgetype;
-    private VKmerBytesWritable topCoverageVertexId;
+    private VKmer topCoverageVertexId;
     private boolean isFlip;
     
     public BubbleMergeMessageWritable(){
         super();
-        majorVertexId = new VKmerBytesWritable();
-        minorVertexId = new VKmerBytesWritable();
-        node = new NodeWritable();
+        majorVertexId = new VKmer();
+        minorVertexId = new VKmer();
+        node = new Node();
         majorToBubbleEdgetype = 0;
         minorToBubbleEdgetype = 0;
-        topCoverageVertexId = new VKmerBytesWritable();
+        topCoverageVertexId = new VKmer();
         isFlip = false;
     }
     
@@ -62,44 +62,44 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         isFlip = false;
     }
     
-    public VKmerBytesWritable getMajorVertexId() {
+    public VKmer getMajorVertexId() {
         return majorVertexId;
     }
 
-    public void setMajorVertexId(VKmerBytesWritable majorVertexId) {
+    public void setMajorVertexId(VKmer majorVertexId) {
         if(this.majorVertexId == null)
-            this.majorVertexId = new VKmerBytesWritable();
+            this.majorVertexId = new VKmer();
         this.majorVertexId.setAsCopy(majorVertexId);
     }
     
     
-    public VKmerBytesWritable getMinorVertexId() {
+    public VKmer getMinorVertexId() {
         return minorVertexId;
     }
 
-    public void setMinorVertexId(VKmerBytesWritable minorVertexId) {
+    public void setMinorVertexId(VKmer minorVertexId) {
         if(this.minorVertexId == null)
-            this.minorVertexId = new VKmerBytesWritable();
+            this.minorVertexId = new VKmer();
         this.minorVertexId.setAsCopy(minorVertexId);
     }
 
-    public VKmerBytesWritable getTopCoverageVertexId() {
+    public VKmer getTopCoverageVertexId() {
         return topCoverageVertexId;
     }
 
-    public void setTopCoverageVertexId(VKmerBytesWritable topCoverageVertexId) {
+    public void setTopCoverageVertexId(VKmer topCoverageVertexId) {
         if(this.topCoverageVertexId == null)
-            this.topCoverageVertexId = new VKmerBytesWritable();
+            this.topCoverageVertexId = new VKmer();
         this.topCoverageVertexId.setAsCopy(topCoverageVertexId);
     }
     
-    public NodeWritable getNode() {
+    public Node getNode() {
         return node;
     }
 
-    public void setNode(NodeWritable node) {
+    public void setNode(Node node) {
         if(this.node == null)
-            this.node = new NodeWritable();
+            this.node = new Node();
         this.node.setAsCopy(node);
     }
     

@@ -6,14 +6,14 @@ import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class BFSTraverseMessageWritable extends MessageWritable{
     
-    private VKmerListWritable pathList; //use for BFSTravese
+    private VKmerList pathList; //use for BFSTravese
     private ArrayListWritable<EdgeTypes> edgeTypesList;
-    private VKmerBytesWritable seekedVertexId; //use for BFSTravese
+    private VKmer seekedVertexId; //use for BFSTravese
     private long readId; //use for BFSTravese
     private boolean srcFlip; //use for BFSTravese
     private boolean destFlip; //use for BFSTravese
@@ -21,9 +21,9 @@ public class BFSTraverseMessageWritable extends MessageWritable{
     
     public BFSTraverseMessageWritable(){
         super();
-        pathList = new VKmerListWritable();
+        pathList = new VKmerList();
         edgeTypesList = new ArrayListWritable<EdgeTypes>();
-        seekedVertexId = new VKmerBytesWritable();
+        seekedVertexId = new VKmer();
         readId = 0;
         srcFlip = false;
         destFlip = false;
@@ -41,11 +41,11 @@ public class BFSTraverseMessageWritable extends MessageWritable{
         isTraverseMsg = true;
     }
     
-    public VKmerListWritable getPathList() {
+    public VKmerList getPathList() {
         return pathList;
     }
 
-    public void setPathList(VKmerListWritable pathList) {
+    public void setPathList(VKmerList pathList) {
         this.pathList = pathList;
     }
     
@@ -58,11 +58,11 @@ public class BFSTraverseMessageWritable extends MessageWritable{
         this.edgeTypesList.addAll(edgeDirsList);
     }
 
-    public VKmerBytesWritable getSeekedVertexId() {
+    public VKmer getSeekedVertexId() {
         return seekedVertexId;
     }
 
-    public void setSeekedVertexId(VKmerBytesWritable seekedVertexId) {
+    public void setSeekedVertexId(VKmer seekedVertexId) {
         this.seekedVertexId.setAsCopy(seekedVertexId);
     }
     

@@ -10,10 +10,10 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.DIR;
 
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
@@ -77,10 +77,10 @@ public class TipRemoveVertex extends
         	outgoingMsg.reset();
             outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            EdgeListWritable edgeList = getVertexValue().getEdgeList(tipToNeighborEdgetype);
+            EdgeMap edgeList = getVertexValue().getEdgeList(tipToNeighborEdgetype);
             if(edgeList.size() != 1)
                 throw new IllegalArgumentException("In this edgeType, the size of edges has to be 1!");
-            VKmerBytesWritable destVertexId = edgeList.firstKey();
+            VKmer destVertexId = edgeList.firstKey();
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
             

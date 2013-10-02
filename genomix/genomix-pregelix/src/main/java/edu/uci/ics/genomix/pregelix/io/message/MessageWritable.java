@@ -6,16 +6,16 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {
     
-    private VKmerBytesWritable sourceVertexId; // stores srcNode id
+    private VKmer sourceVertexId; // stores srcNode id
     private short flag; // stores message type
     
     public MessageWritable(){
-        sourceVertexId = new VKmerBytesWritable();
+        sourceVertexId = new VKmer();
         flag = 0;
     }
     
@@ -38,11 +38,11 @@ public class MessageWritable implements Writable, WritableSizable {
         return sbuilder.toString();
     }
     
-    public VKmerBytesWritable getSourceVertexId() {
+    public VKmer getSourceVertexId() {
         return sourceVertexId;
     }
 
-    public void setSourceVertexId(VKmerBytesWritable sourceVertexId) {
+    public void setSourceVertexId(VKmer sourceVertexId) {
         this.sourceVertexId.setAsCopy(sourceVertexId);
     }
 

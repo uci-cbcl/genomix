@@ -34,11 +34,11 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Generate graph statistics, storing them in the reporter's counters
@@ -47,12 +47,12 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 @SuppressWarnings("deprecation")
 public class GraphStatistics extends MapReduceBase implements
-        Mapper<VKmerBytesWritable, NodeWritable, Text, LongWritable> {
+        Mapper<VKmer, Node, Text, LongWritable> {
 
     public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
 
     @Override
-    public void map(VKmerBytesWritable key, NodeWritable value, OutputCollector<Text, LongWritable> output,
+    public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output,
             Reporter reporter) throws IOException {
 
         reporter.getCounter("totals", "nodes").increment(1);
@@ -78,7 +78,7 @@ public class GraphStatistics extends MapReduceBase implements
         long totalEdgeReads = 0;
         long totalSelf = 0;
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (Entry<VKmerBytesWritable, ReadIdListWritable> e : value.getEdgeList(et).entrySet()) {
+            for (Entry<VKmer, ReadIdSet> e : value.getEdgeList(et).entrySet()) {
                 totalEdgeReads += e.getValue().size();
                 if (e.getKey().equals(key)) {
                     reporter.getCounter("totals", "selfEdge-" + et).increment(1);

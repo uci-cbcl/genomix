@@ -30,28 +30,28 @@ import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWritable> implements Writable, Serializable {
+public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final int SIZE_INT = 4;
     public static boolean logReadIds; // FIXME regression in usage of this (I broke it)
 
-    public EdgeListWritable() {
+    public EdgeMap() {
         super();
     }
 
     /**
      * Set the internal readIDs when the given positionList has readid, position, and mateid set
      */
-    public EdgeListWritable(EdgeListWritable other) {
+    public EdgeMap(EdgeMap other) {
         super();
         setAsCopy(other);
     }
 
     //    public EdgeListWritable(List<Entry<VKmerBytesWritable, ReadIdListWritable>> list) {
-    public EdgeListWritable(List<SimpleEntry<VKmerBytesWritable, ReadIdListWritable>> list) {
+    public EdgeMap(List<SimpleEntry<VKmer, ReadIdSet>> list) {
         super();
-        for (Entry<VKmerBytesWritable, ReadIdListWritable> e : list) {
+        for (Entry<VKmer, ReadIdSet> e : list) {
             put(e.getKey(), e.getValue());
         }
     }
@@ -60,16 +60,16 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
     //        // TODO Auto-generated constructor stub
     //    }
 
-    public void setAsCopy(EdgeListWritable other) {
+    public void setAsCopy(EdgeMap other) {
         clear();
-        for (Entry<VKmerBytesWritable, ReadIdListWritable> e : other.entrySet()) {
-            put(e.getKey(), new ReadIdListWritable(e.getValue()));
+        for (Entry<VKmer, ReadIdSet> e : other.entrySet()) {
+            put(e.getKey(), new ReadIdSet(e.getValue()));
         }
     }
 
     public int getLengthInBytes() {
         int total = SIZE_INT;
-        for (Entry<VKmerBytesWritable, ReadIdListWritable> e : entrySet()) {
+        for (Entry<VKmer, ReadIdSet> e : entrySet()) {
             total += e.getKey().getLength() + e.getValue().getLengthInBytes();
         }
         return total;
@@ -91,11 +91,11 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         curOffset += SIZE_INT;
         clear();
         for (int i = 0; i < count; i++) {
-            VKmerBytesWritable kmer = new VKmerBytesWritable();
+            VKmer kmer = new VKmer();
             kmer.setAsCopy(data, curOffset);
             curOffset += kmer.getLength();
 
-            ReadIdListWritable ids = new ReadIdListWritable();
+            ReadIdSet ids = new ReadIdSet();
             ids.setAsCopy(data, curOffset);
             curOffset += ids.getLengthInBytes();
 
@@ -109,11 +109,11 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         curOffset += SIZE_INT;
         clear();
         for (int i = 0; i < count; i++) {
-            VKmerBytesWritable kmer = new VKmerBytesWritable();
+            VKmer kmer = new VKmer();
             kmer.setAsReference(data, curOffset);
             curOffset += kmer.getLength();
 
-            ReadIdListWritable ids = new ReadIdListWritable();
+            ReadIdSet ids = new ReadIdSet();
             ids.setAsCopy(data, curOffset);
             curOffset += ids.getLengthInBytes();
 
@@ -124,7 +124,7 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(size());
-        for (Entry<VKmerBytesWritable, ReadIdListWritable> e : entrySet()) {
+        for (Entry<VKmer, ReadIdSet> e : entrySet()) {
             e.getKey().write(out);
             e.getValue().write(out);
         }
@@ -135,15 +135,15 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         clear();
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
-            VKmerBytesWritable kmer = new VKmerBytesWritable();
+            VKmer kmer = new VKmer();
             kmer.readFields(in);
-            ReadIdListWritable ids = new ReadIdListWritable();
+            ReadIdSet ids = new ReadIdSet();
             ids.readFields(in);
         }
     }
 
-    public void removeReadIdSubset(VKmerBytesWritable kmer, ReadIdListWritable readIdsToRemove) {
-        ReadIdListWritable curReadIds = get(kmer);
+    public void removeReadIdSubset(VKmer kmer, ReadIdSet readIdsToRemove) {
+        ReadIdSet curReadIds = get(kmer);
         if (curReadIds == null) {
             throw new IllegalArgumentException(
                     "Tried to remove a readId subset for a Kmer that's not in this list!\nTried to remove: " + kmer
@@ -158,8 +158,8 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
     /**
      * Adds all edges in edgeList to me. If I have the same edge as `other`, that entry will be the union of both sets of readIDs.
      */
-    public void unionUpdate(EdgeListWritable other) {
-        for (Entry<VKmerBytesWritable, ReadIdListWritable> e : other.entrySet()) {
+    public void unionUpdate(EdgeMap other) {
+        for (Entry<VKmer, ReadIdSet> e : other.entrySet()) {
             unionAdd(e.getKey(), e.getValue());
         }
     }
@@ -167,11 +167,11 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
     /**
      * Adds the given edge in to my list. If I have the same key as `other`, that entry will be the union of both sets of readIDs.
      */
-    public void unionAdd(VKmerBytesWritable kmer, ReadIdListWritable readIds) {
+    public void unionAdd(VKmer kmer, ReadIdSet readIds) {
         if (containsKey(kmer)) {
             get(kmer).addAll(readIds);
         } else {
-            put(kmer, new ReadIdListWritable(readIds));
+            put(kmer, new ReadIdSet(readIds));
         }
     }
 }

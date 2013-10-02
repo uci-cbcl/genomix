@@ -15,16 +15,16 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexInputFormat.BinaryDataCleanVertexReader;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class P2GraphCleanInputFormat extends
-    GraphCleanVertexInputFormat<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> {
+    GraphCleanVertexInputFormat<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new P2BinaryDataCleanLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
@@ -32,12 +32,12 @@ public class P2GraphCleanInputFormat extends
 
 @SuppressWarnings("rawtypes")
 class P2BinaryDataCleanLoadGraphReader extends
-    BinaryDataCleanVertexReader<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> {
+    BinaryDataCleanVertexReader<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> {
     private Vertex vertex;
-    private VKmerBytesWritable vertexId = new VKmerBytesWritable();
+    private VKmer vertexId = new VKmer();
     private P2VertexValueWritable vertexValue = new P2VertexValueWritable();
 
-    public P2BinaryDataCleanLoadGraphReader(RecordReader<VKmerBytesWritable, VertexValueWritable> recordReader) {
+    public P2BinaryDataCleanLoadGraphReader(RecordReader<VKmer, VertexValueWritable> recordReader) {
         super(recordReader);
     }
 
@@ -48,7 +48,7 @@ class P2BinaryDataCleanLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
+    public Vertex<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
             throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());

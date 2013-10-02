@@ -2,11 +2,11 @@ package edu.uci.ics.genomix.pregelix.log;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class LogUtil {
     
-    public static String getVertexLog(byte loggingType, long step, VKmerBytesWritable vertexId, VertexValueWritable vertexValue){
+    public static String getVertexLog(byte loggingType, long step, VKmer vertexId, VertexValueWritable vertexValue){
         StringBuilder builder = new StringBuilder();
         builder.append("Step: " + step + "\r\n");
         builder.append(LoggingType.getContent(loggingType) + "\r\n");
@@ -16,7 +16,7 @@ public class LogUtil {
         return builder.toString();
     }
     
-    public static String getMessageLog(byte loggingType, long step, VKmerBytesWritable vertexId, PathMergeMessageWritable msg, VKmerBytesWritable destinationId){
+    public static String getMessageLog(byte loggingType, long step, VKmer vertexId, PathMergeMessageWritable msg, VKmer destinationId){
         StringBuilder builder = new StringBuilder();
         builder.append("Step: " + step + "\r\n");
         builder.append("VertexId: " + vertexId.toString() + "\r\n");

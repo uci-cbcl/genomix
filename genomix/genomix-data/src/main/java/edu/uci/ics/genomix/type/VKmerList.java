@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.data.Marshal;
 /**
  * A list of fixed-length kmers. The length of this list is stored internally.
  */
-public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>, Serializable {
+public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 };
     protected static final int HEADER_SIZE = 4;
@@ -26,22 +26,22 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
     protected int valueCount;
     protected int storageMaxSize; // since we may be a reference inside a larger datablock, we must track our maximum size
 
-    private VKmerBytesWritable posIter = new VKmerBytesWritable();
+    private VKmer posIter = new VKmer();
 
-    public VKmerListWritable() {
+    public VKmerList() {
         storage = EMPTY_BYTES;
         valueCount = 0;
         offset = 0;
         storageMaxSize = storage.length;
     }
 
-    public VKmerListWritable(byte[] data, int offset) {
+    public VKmerList(byte[] data, int offset) {
         setNewReference(data, offset);
     }
 
-    public VKmerListWritable(List<VKmerBytesWritable> kmers) {
+    public VKmerList(List<VKmer> kmers) {
         this();
-        for (VKmerBytesWritable kmer : kmers) {
+        for (VKmer kmer : kmers) {
             append(kmer);
         }
     }
@@ -53,15 +53,15 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         this.storageMaxSize = getLength();
     }
 
-    public void append(VKmerBytesWritable kmer) {
+    public void append(VKmer kmer) {
         setSize(getLength() + kmer.getLength());
-        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmerBytesWritable.HEADER_SIZE, storage, offset
+        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmer.HEADER_SIZE, storage, offset
                 + getLength(), kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
 
-    public void append(int k, KmerBytesWritable kmer) {
+    public void append(int k, Kmer kmer) {
         setSize(getLength() + HEADER_SIZE + kmer.getLength());
         Marshal.putInt(k, storage, offset + getLength());
         System.arraycopy(kmer.getBytes(), kmer.getOffset(), storage, offset + getLength() + HEADER_SIZE,
@@ -70,12 +70,12 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         Marshal.putInt(valueCount, storage, offset);
     }
     
-    public void append(KmerBytesWritable kmer) { // TODO optimize this into two separate containers...
-        setSize(getLength() + kmer.getLength() + VKmerBytesWritable.HEADER_SIZE);
+    public void append(Kmer kmer) { // TODO optimize this into two separate containers...
+        setSize(getLength() + kmer.getLength() + VKmer.HEADER_SIZE);
         int myLength = getLength();
-        Marshal.putInt(KmerBytesWritable.getKmerLength(), storage, offset + myLength); // write a new VKmer header
+        Marshal.putInt(Kmer.getKmerLength(), storage, offset + myLength); // write a new VKmer header
         System.arraycopy(kmer.getBytes(), kmer.offset,
-                storage, offset + myLength + VKmerBytesWritable.HEADER_SIZE,
+                storage, offset + myLength + VKmer.HEADER_SIZE,
                 kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
@@ -84,7 +84,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
     /*
      * Append the otherList to the end of myList
      */
-    public void appendList(VKmerListWritable otherList) {
+    public void appendList(VKmerList otherList) {
         if (otherList.valueCount > 0) {
             setSize(getLength() + otherList.getLength() - HEADER_SIZE); // one of the headers is redundant
 
@@ -101,19 +101,19 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
      * Save the union of my list and otherList. Uses a temporary HashSet for
      * uniquefication
      */
-    public void unionUpdate(VKmerListWritable otherList) {
+    public void unionUpdate(VKmerList otherList) {
         int newSize = valueCount + otherList.valueCount;
-        HashSet<VKmerBytesWritable> uniqueElements = new HashSet<VKmerBytesWritable>(newSize);
-        for (VKmerBytesWritable kmer : this) {
+        HashSet<VKmer> uniqueElements = new HashSet<VKmer>(newSize);
+        for (VKmer kmer : this) {
             // have to make copies of my own kmers since I may overwrite them
-            uniqueElements.add(new VKmerBytesWritable(kmer));
+            uniqueElements.add(new VKmer(kmer));
         }
-        for (VKmerBytesWritable kmer : otherList) {
+        for (VKmer kmer : otherList) {
             uniqueElements.add(kmer); // references okay
         }
         setSize(getLength() + otherList.getLength()); // upper bound on memory usage
         valueCount = 0;
-        for (VKmerBytesWritable kmer : uniqueElements) {
+        for (VKmer kmer : uniqueElements) {
             append(kmer);
         }
         Marshal.putInt(valueCount, storage, offset);
@@ -146,7 +146,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         Marshal.putInt(valueCount, storage, offset);
     }
 
-    public VKmerBytesWritable getPosition(int i) {
+    public VKmer getPosition(int i) {
         posIter.setAsReference(storage, getOffsetOfKmer(i));
         return posIter;
     }
@@ -161,12 +161,12 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         // seek to the given position
         int posOffset = offset + HEADER_SIZE;
         for (int curIndex = 0; curIndex < i; curIndex++) {
-            posOffset += KmerUtil.getByteNumFromK(Marshal.getInt(storage, posOffset)) + VKmerBytesWritable.HEADER_SIZE;
+            posOffset += KmerUtil.getByteNumFromK(Marshal.getInt(storage, posOffset)) + VKmer.HEADER_SIZE;
         }
         return posOffset;
     }
 
-    public void setCopy(VKmerListWritable otherList) {
+    public void setCopy(VKmerList otherList) {
         setCopy(otherList.storage, otherList.offset);
     }
 
@@ -186,8 +186,8 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
     }
 
     @Override
-    public Iterator<VKmerBytesWritable> iterator() {
-        Iterator<VKmerBytesWritable> it = new Iterator<VKmerBytesWritable>() {
+    public Iterator<VKmer> iterator() {
+        Iterator<VKmer> it = new Iterator<VKmer>() {
 
             private int currentIndex = 0;
             private int currentOffset = offset + HEADER_SIZE; // init as offset of first kmer
@@ -198,10 +198,10 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
             }
 
             @Override
-            public VKmerBytesWritable next() {
+            public VKmer next() {
                 posIter.setAsReference(storage, currentOffset);
                 currentOffset += KmerUtil.getByteNumFromK(Marshal.getInt(storage, currentOffset))
-                        + VKmerBytesWritable.HEADER_SIZE;
+                        + VKmer.HEADER_SIZE;
                 currentIndex++;
                 return posIter;
             }
@@ -230,8 +230,8 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         return it;
     }
 
-    public boolean contains(VKmerListWritable kmer){
-        Iterator<VKmerBytesWritable> posIterator = this.iterator();
+    public boolean contains(VKmerList kmer){
+        Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
             if (kmer.equals(posIterator.next())) 
                 return true;
@@ -243,8 +243,8 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.
      */
-    public void remove(VKmerBytesWritable toRemove, boolean ignoreMissing) {
-        Iterator<VKmerBytesWritable> posIterator = this.iterator();
+    public void remove(VKmer toRemove, boolean ignoreMissing) {
+        Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
             if (toRemove.equals(posIterator.next())) {
                 posIterator.remove();
@@ -258,7 +258,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         }
     }
 
-    public void remove(VKmerBytesWritable toRemove) {
+    public void remove(VKmer toRemove) {
         remove(toRemove, false);
     }
 
@@ -272,11 +272,11 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         int curLength = getLength();
         for (int i = 0; i < newValueCount; i++) {
             elemLetters = in.readInt();
-            elemBytes = KmerUtil.getByteNumFromK(elemLetters) + VKmerBytesWritable.HEADER_SIZE;
+            elemBytes = KmerUtil.getByteNumFromK(elemLetters) + VKmer.HEADER_SIZE;
             setSize(curLength + elemBytes); // make sure we have room for the new element
             Marshal.putInt(elemLetters, storage, curOffset); // write header
-            in.readFully(storage, curOffset + VKmerBytesWritable.HEADER_SIZE, elemBytes
-                    - VKmerBytesWritable.HEADER_SIZE); // write kmer
+            in.readFully(storage, curOffset + VKmer.HEADER_SIZE, elemBytes
+                    - VKmer.HEADER_SIZE); // write kmer
             curOffset += elemBytes;
             curLength += elemBytes;
             valueCount++;
@@ -306,7 +306,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         int totalSize = HEADER_SIZE;
         for (int curCount = 0; curCount < valueCount; curCount++) {
             totalSize += KmerUtil.getByteNumFromK(Marshal.getInt(storage, offset + totalSize))
-                    + VKmerBytesWritable.HEADER_SIZE;
+                    + VKmer.HEADER_SIZE;
         }
         return totalSize;
     }
@@ -316,7 +316,7 @@ public class VKmerListWritable implements Writable, Iterable<VKmerBytesWritable>
         int listValueCount = Marshal.getInt(listStorage, listOffset);
         for (int curCount = 0; curCount < listValueCount; curCount++) {
             totalSize += KmerUtil.getByteNumFromK(Marshal.getInt(listStorage, listOffset + totalSize))
-                    + VKmerBytesWritable.HEADER_SIZE;
+                    + VKmer.HEADER_SIZE;
         }
         return totalSize;
     }

@@ -22,10 +22,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -50,10 +50,10 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
         final int frameSize = ctx.getFrameSize();
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(kmerSize);
         return new IAggregatorDescriptor() {
 
-            private NodeWritable readNode = new NodeWritable();
+            private Node readNode = new Node();
 //            private KmerBytesWritable readKmer = new KmerBytesWritable();
 
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
@@ -65,13 +65,13 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
             @Override
             public AggregateState createAggregateStates() {
-                return new AggregateState(new NodeWritable());
+                return new AggregateState(new Node());
             }
 
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
                 localUniNode.reset();
 
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
@@ -111,7 +111,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
 //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 
@@ -152,7 +152,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
                 try {
                     if (localUniNode.getSerializedLength() > frameSize / 2) {
                         LOG.warning("MergeKmer: output data kmerByteSize is too big: " + localUniNode.getSerializedLength());

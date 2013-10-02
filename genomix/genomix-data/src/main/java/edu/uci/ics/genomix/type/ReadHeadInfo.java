@@ -9,9 +9,9 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.data.Marshal;
-import edu.uci.ics.genomix.type.PositionWritable;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
 
-public class PositionWritable implements Writable, Serializable{
+public class ReadHeadInfo implements Writable, Serializable{
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
@@ -23,21 +23,21 @@ public class PositionWritable implements Writable, Serializable{
     private static final int readIdShift = bitsForPosition + bitsForMate;
     private static final int positionIdShift = bitsForMate;
     
-    public PositionWritable() {
+    public ReadHeadInfo() {
         storage = new byte[LENGTH];
         offset = 0;
     }
     
-    public PositionWritable(byte mateId, long readId, int posId){
+    public ReadHeadInfo(byte mateId, long readId, int posId){
         this();
         set(mateId, readId, posId);
     }
     
-    public PositionWritable(PositionWritable other) {
+    public ReadHeadInfo(ReadHeadInfo other) {
         this();
         set(other);
     }
-    public PositionWritable(byte[] storage, int offset) {
+    public ReadHeadInfo(byte[] storage, int offset) {
         setNewReference(storage, offset);
     }
     
@@ -53,7 +53,7 @@ public class PositionWritable implements Writable, Serializable{
         Marshal.putLong(makeUUID(mateId, readId, posId), storage, offset);
     }
     
-    public void set(PositionWritable pos) {
+    public void set(ReadHeadInfo pos) {
         set(pos.getMateId(),pos.getReadId(),pos.getPosId());
     }
     
@@ -112,9 +112,9 @@ public class PositionWritable implements Writable, Serializable{
     
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof PositionWritable))
+        if (!(o instanceof ReadHeadInfo))
             return false;
-        PositionWritable other = (PositionWritable) o;
+        ReadHeadInfo other = (ReadHeadInfo) o;
         return this.getUUID() == other.getUUID();
     }
     

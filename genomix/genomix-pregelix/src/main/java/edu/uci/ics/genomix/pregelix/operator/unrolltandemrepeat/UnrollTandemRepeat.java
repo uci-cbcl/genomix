@@ -11,9 +11,9 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Unroll TandemRepeat
@@ -34,7 +34,7 @@ public class UnrollTandemRepeat extends
         else
             outgoingMsg.reset();
         if(repeatKmer == null)
-            repeatKmer = new VKmerBytesWritable();
+            repeatKmer = new VKmer();
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
 //        else
@@ -52,7 +52,7 @@ public class UnrollTandemRepeat extends
         boolean hasFlip = false;
         // pick one edge and flip 
         for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-            for(Entry<VKmerBytesWritable, ReadIdListWritable> edge : tmpValue.getEdgeList(et).entrySet()){
+            for(Entry<VKmer, ReadIdSet> edge : tmpValue.getEdgeList(et).entrySet()){
                 EDGETYPE flipDir = et.flipNeighbor();
                 tmpValue.getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
                 tmpValue.getEdgeList(et).remove(edge);
@@ -80,7 +80,7 @@ public class UnrollTandemRepeat extends
         boolean hasFlip = false;
         /** pick one edge and flip **/
         for(EDGETYPE et : EDGETYPE.values()){
-            for(Entry<VKmerBytesWritable, ReadIdListWritable> edge : getVertexValue().getEdgeList(et).entrySet()){
+            for(Entry<VKmer, ReadIdSet> edge : getVertexValue().getEdgeList(et).entrySet()){
                 EDGETYPE flipDir = et.flipNeighbor();
                 getVertexValue().getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
                 getVertexValue().getEdgeList(et).remove(edge);

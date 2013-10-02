@@ -11,10 +11,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class GenerateGraphViz {
 
@@ -34,8 +34,8 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            VKmerBytesWritable key = new VKmerBytesWritable();
-            NodeWritable value = new NodeWritable();
+            VKmer key = new VKmer();
+            Node value = new Node();
             
             gv.addln("rankdir=LR\n");
             
@@ -84,8 +84,8 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            VKmerBytesWritable key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-            NodeWritable value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+            VKmer key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+            Node value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
             
             gv.addln("rankdir=LR\n");
             while (reader.next(key, value)) {
@@ -128,10 +128,10 @@ public class GenerateGraphViz {
      * @param value
      * @return
      */
-    public static String convertEdgeToGraph(String outputNode, NodeWritable value){
+    public static String convertEdgeToGraph(String outputNode, Node value){
         String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (Entry<VKmerBytesWritable, ReadIdListWritable> e : value.getEdgeList(et).entrySet()) {
+            for (Entry<VKmer, ReadIdSet> e : value.getEdgeList(et).entrySet()) {
                 outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"black\" label =\"" + et + ": " + e.getValue() + "\"]\n";
             }
         }

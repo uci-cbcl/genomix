@@ -13,10 +13,10 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * The super class of different path merge algorithms
@@ -65,7 +65,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         // send a message to each neighbor indicating they can't merge towards me
         for (DIR dir : dirsToRestrict) {
             for (EDGETYPE et : dir.edgeTypes()) {
-                for (VKmerBytesWritable destId : vertex.getEdgeList(et).keySet()) {
+                for (VKmer destId : vertex.getEdgeList(et).keySet()) {
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(et.mirror().dir().get());
                     if (verbose)
@@ -132,7 +132,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             }
 
             // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
-            for (VKmerBytesWritable dest : vertex.getEdgeList(updateEdge).keySet()) {
+            for (VKmer dest : vertex.getEdgeList(updateEdge).keySet()) {
                 if (verbose)
                     LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                             + "send update message from " + getVertexId() + " to " + dest + ": " + outgoingMsg);
@@ -143,7 +143,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 
     public void receiveUpdates(Iterator<M> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        NodeWritable node = vertex.getNode();
+        Node node = vertex.getNode();
         boolean updated = false;
         ArrayList<PathMergeMessageWritable> allSeenMsgs = new ArrayList<PathMergeMessageWritable>();
         while (msgIterator.hasNext()) {
@@ -189,7 +189,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);
-            VKmerBytesWritable dest = vertex.getEdgeList(mergeEdgetype).firstKey();
+            VKmer dest = vertex.getEdgeList(mergeEdgetype).firstKey();
             sendMsg(dest, outgoingMsg);
 
             if (verbose) {
@@ -213,7 +213,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * Logging message
      */
-    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmerBytesWritable dest) {
+    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmer dest) {
         String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
         LOG.fine(logMessage);
     }

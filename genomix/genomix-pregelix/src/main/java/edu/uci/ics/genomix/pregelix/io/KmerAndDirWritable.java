@@ -6,15 +6,15 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class KmerAndDirWritable implements Writable{
 
-    public VKmerBytesWritable getDeleteKmer() {
+    public VKmer getDeleteKmer() {
 		return deleteKmer;
 	}
 
-	public void setDeleteKmer(VKmerBytesWritable deleteKmer) {
+	public void setDeleteKmer(VKmer deleteKmer) {
 		this.deleteKmer = deleteKmer;
 	}
 
@@ -26,11 +26,11 @@ public class KmerAndDirWritable implements Writable{
 		this.deleteDir = deleteDir;
 	}
 
-	private VKmerBytesWritable deleteKmer;
+	private VKmer deleteKmer;
     private byte deleteDir;
     
     public KmerAndDirWritable(){
-    	deleteKmer = new VKmerBytesWritable();
+    	deleteKmer = new VKmer();
     	deleteDir = 0;
     }
 

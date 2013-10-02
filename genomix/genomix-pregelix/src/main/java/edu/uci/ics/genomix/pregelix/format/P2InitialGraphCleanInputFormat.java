@@ -10,8 +10,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
@@ -19,13 +19,13 @@ import edu.uci.ics.genomix.pregelix.api.io.binary.InitialGraphCleanVertexInputFo
 import edu.uci.ics.genomix.pregelix.api.io.binary.InitialGraphCleanVertexInputFormat.BinaryVertexReader;
 
 public class P2InitialGraphCleanInputFormat extends
-        InitialGraphCleanVertexInputFormat<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> {
+        InitialGraphCleanVertexInputFormat<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new P2BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
@@ -33,14 +33,14 @@ public class P2InitialGraphCleanInputFormat extends
 
 @SuppressWarnings("rawtypes")
 class P2BinaryLoadGraphReader extends
-        BinaryVertexReader<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> {
+        BinaryVertexReader<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> {
     
     private Vertex vertex;
-    private VKmerBytesWritable vertexId = new VKmerBytesWritable();
-    private NodeWritable node = new NodeWritable();
+    private VKmer vertexId = new VKmer();
+    private Node node = new Node();
     private P2VertexValueWritable vertexValue = new P2VertexValueWritable();
 
-    public P2BinaryLoadGraphReader(RecordReader<VKmerBytesWritable, NodeWritable> recordReader) {
+    public P2BinaryLoadGraphReader(RecordReader<VKmer, Node> recordReader) {
         super(recordReader);
     }
 
@@ -51,7 +51,7 @@ class P2BinaryLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<VKmerBytesWritable, P2VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
+    public Vertex<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
             throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());

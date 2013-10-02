@@ -28,13 +28,13 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadHeadSet;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -76,20 +76,20 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         final ByteBuffer outputBuffer = ctx.allocateFrame();
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());
         outputAppender.reset(outputBuffer, true);
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(kmerSize);
         
         return new IKeyValueParser<LongWritable, Text>() {
 
-            private PositionWritable positionId = new PositionWritable();
-            private ReadIdListWritable readIdList = new ReadIdListWritable();
-            private NodeWritable curNode = new NodeWritable();
-            private NodeWritable nextNode = new NodeWritable();
+            private ReadHeadInfo positionId = new ReadHeadInfo();
+            private ReadIdSet readIdList = new ReadIdSet();
+            private Node curNode = new Node();
+            private Node nextNode = new Node();
 
-            private KmerBytesWritable curForwardKmer = new KmerBytesWritable();
-            private KmerBytesWritable curReverseKmer = new KmerBytesWritable();
-            private KmerBytesWritable nextForwardKmer = new KmerBytesWritable();
-            private KmerBytesWritable nextReverseKmer = new KmerBytesWritable();
-            private VKmerBytesWritable edgeVKmer = new VKmerBytesWritable();
+            private Kmer curForwardKmer = new Kmer();
+            private Kmer curReverseKmer = new Kmer();
+            private Kmer nextForwardKmer = new Kmer();
+            private Kmer nextReverseKmer = new Kmer();
+            private VKmer edgeVKmer = new VKmer();
             private KmerDir curKmerDir = KmerDir.FORWARD;
             private KmerDir nextKmerDir = KmerDir.FORWARD;
 
@@ -228,15 +228,15 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 positionId.set(mateId, readId, posId);
             }
 
-            public KmerDir setNextKmer(KmerBytesWritable forwardKmer, KmerBytesWritable ReverseKmer,
+            public KmerDir setNextKmer(Kmer forwardKmer, Kmer ReverseKmer,
                     byte nextChar) {
                 forwardKmer.shiftKmerWithNextChar(nextChar);
                 ReverseKmer.setReversedFromStringBytes(forwardKmer.toString().getBytes(), forwardKmer.getOffset());
                 return forwardKmer.compareTo(ReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             }
 
-            public void writeToFrame(KmerBytesWritable forwardKmer, KmerBytesWritable reverseKmer, KmerDir curKmerDir,
-                    NodeWritable node, IFrameWriter writer) {
+            public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, KmerDir curKmerDir,
+                    Node node, IFrameWriter writer) {
                 switch (curKmerDir) {
                     case FORWARD:
                         InsertToFrame(forwardKmer, node, writer);
@@ -247,27 +247,27 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
             }
 
-            public void setEdgeAndThreadListForCurAndNextKmer(KmerDir curKmerDir, NodeWritable curNode, KmerDir nextKmerDir,
-                    NodeWritable nextNode, ReadIdListWritable readIdList) {
+            public void setEdgeAndThreadListForCurAndNextKmer(KmerDir curKmerDir, Node curNode, KmerDir nextKmerDir,
+                    Node nextNode, ReadIdSet readIdList) {
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.FORWARD) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmerBytesWritable(nextForwardKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmerBytesWritable(curForwardKmer), readIdList);
+                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
+                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
                 }
                 if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmerBytesWritable(nextReverseKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmerBytesWritable(curForwardKmer), readIdList);
+                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextReverseKmer), readIdList);
+                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.FORWARD) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmerBytesWritable(nextForwardKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmerBytesWritable(curReverseKmer), readIdList);
+                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
+                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curReverseKmer), readIdList);
                 }
                 if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmerBytesWritable(nextReverseKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmerBytesWritable(curReverseKmer), readIdList);
+                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextReverseKmer), readIdList);
+                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curReverseKmer), readIdList);
                 }
             }
 
-            private void InsertToFrame(KmerBytesWritable kmer, NodeWritable node, IFrameWriter writer) {
+            private void InsertToFrame(Kmer kmer, Node node, IFrameWriter writer) {
                 try {
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());

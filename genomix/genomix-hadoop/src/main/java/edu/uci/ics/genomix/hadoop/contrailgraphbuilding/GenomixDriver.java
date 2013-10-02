@@ -15,8 +15,8 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
 public class GenomixDriver {
@@ -54,8 +54,8 @@ public class GenomixDriver {
         conf.setMapperClass(GenomixMapper.class);
         conf.setReducerClass(GenomixReducer.class);
 
-        conf.setMapOutputKeyClass(VKmerBytesWritable.class);
-        conf.setMapOutputValueClass(NodeWritable.class);
+        conf.setMapOutputKeyClass(VKmer.class);
+        conf.setMapOutputValueClass(Node.class);
 
         //InputFormat and OutputFormat for Reducer
         //        conf.setInputFormat(NLineInputFormat.class);
@@ -68,8 +68,8 @@ public class GenomixDriver {
             conf.setOutputFormat(TextOutputFormat.class);
 
         //Output Key/Value Class
-        conf.setOutputKeyClass(VKmerBytesWritable.class);
-        conf.setOutputValueClass(NodeWritable.class);
+        conf.setOutputKeyClass(VKmer.class);
+        conf.setOutputValueClass(Node.class);
 
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));

@@ -17,29 +17,29 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.ReadHeadSet;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 public class EdgeListWritableTest {
 
     @Test
     public void TestGraphBuildNodes() throws IOException {
-        KmerBytesWritable.setGlobalKmerLength(55);
+        Kmer.setGlobalKmerLength(55);
         String kmer1 = "ATGCATGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATCGAT";
         String kmer2 = "ATGCATGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATCGAT";
 
-        VKmerBytesWritable k1 = new VKmerBytesWritable(kmer1);
-        VKmerBytesWritable k2 = new VKmerBytesWritable(kmer2);
-        ReadIdListWritable plist1 = new ReadIdListWritable();
-        ReadIdListWritable plist2 = new ReadIdListWritable();
-        ReadIdListWritable plist3 = new ReadIdListWritable();
-        NodeWritable n1 = new NodeWritable();
+        VKmer k1 = new VKmer(kmer1);
+        VKmer k2 = new VKmer(kmer2);
+        ReadIdSet plist1 = new ReadIdSet();
+        ReadIdSet plist2 = new ReadIdSet();
+        ReadIdSet plist3 = new ReadIdSet();
+        Node n1 = new Node();
         n1.setInternalKmer(k1);
         n1.setAvgCoverage(10);
         long numelements = 100000;
@@ -55,9 +55,9 @@ public class EdgeListWritableTest {
         }
         n1.getEdgeList(EDGETYPE.RF).put(k2, plist1);
         Assert.assertEquals(numelements / 3, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
-        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeListWritable(Arrays.asList(new SimpleEntry<VKmerBytesWritable, ReadIdListWritable>(k2, plist2))));
+        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeMap(Arrays.asList(new SimpleEntry<VKmer, ReadIdSet>(k2, plist2))));
         Assert.assertEquals(numelements * 2 / 3 + numoverlap, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
-        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeListWritable(Arrays.asList(new SimpleEntry<VKmerBytesWritable, ReadIdListWritable>(k2, plist3))));
+        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeMap(Arrays.asList(new SimpleEntry<VKmer, ReadIdSet>(k2, plist3))));
         Assert.assertEquals(numelements, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
 
         Long[] allReadIDs = n1.getEdgeList(EDGETYPE.RF).get(k2).toArray(new Long[0]);

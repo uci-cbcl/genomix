@@ -24,13 +24,13 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmer;
 
 public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
-        Vertex<VKmerBytesWritable, V, NullWritable, M> {
+        Vertex<VKmer, V, NullWritable, M> {
 	
 	//logger
     public Logger LOG = Logger.getLogger(BasicGraphCleanVertex.class.getName());
@@ -40,7 +40,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     public static Object lock = new Object();
     public static boolean fakeVertexExist = false;
-    public static VKmerBytesWritable fakeVertex = new VKmerBytesWritable();
+    public static VKmer fakeVertex = new VKmer();
     
     public EDGETYPE[][] connectedTable = new EDGETYPE[][]{
             {EDGETYPE.RF, EDGETYPE.FF},
@@ -51,12 +51,12 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     protected M outgoingMsg = null; 
     protected VertexValueWritable tmpValue = new VertexValueWritable(); 
-    protected VKmerBytesWritable repeatKmer = null; //for detect tandemRepeat
+    protected VKmer repeatKmer = null; //for detect tandemRepeat
     protected EDGETYPE repeatEdgetype; //for detect tandemRepeat
     protected short outFlag;
     protected short selfFlag;
     
-    protected List<VKmerBytesWritable> problemKmers = null;
+    protected List<VKmer> problemKmers = null;
     protected boolean debug = false;
     protected boolean verbose = false;
     protected boolean logReadIds = false;
@@ -78,17 +78,17 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     
     public void checkDebug(){
         if (problemKmers == null) {
-            problemKmers = new ArrayList<VKmerBytesWritable>();
+            problemKmers = new ArrayList<VKmer>();
             if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
                 debug = true;
                 for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
-                    problemKmers.add(new VKmerBytesWritable(kmer));
-                NodeWritable.problemKmers = problemKmers;
+                    problemKmers.add(new VKmer(kmer));
+                Node.problemKmers = problemKmers;
             }
         }
                 
         verbose = false;
-        for (VKmerBytesWritable problemKmer : problemKmers)
+        for (VKmer problemKmer : problemKmers)
             verbose |= debug && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
     }
     
@@ -164,7 +164,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
         job.setVertexClass(vertexClass);
         job.setVertexInputFormatClass(GraphCleanInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-        job.setOutputKeyClass(VKmerBytesWritable.class);
+        job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         job.setDynamicVertexValueSize(true);
         return job;
@@ -173,7 +173,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     /**
      * get destination vertex ex. RemoveTip
      */
-    public VKmerBytesWritable getDestVertexId(DIR direction){
+    public VKmer getDestVertexId(DIR direction){
         int degree = getVertexValue().degree(direction);
         if(degree > 1)
             throw new IllegalArgumentException("degree > 1, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
@@ -194,7 +194,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public boolean isTandemRepeat(VertexValueWritable value){
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (VKmerBytesWritable kmerToCheck : value.getEdgeList(et).keySet()) {
+            for (VKmer kmerToCheck : value.getEdgeList(et).keySet()) {
                 if(kmerToCheck.equals(getVertexId())) {
                     repeatEdgetype = et;
                     repeatKmer.setAsCopy(kmerToCheck);
@@ -211,7 +211,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void broadcastKillself(){
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : EDGETYPE.values()){
-            for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
+            for(VKmer dest : vertex.getEdgeList(et).keySet()){
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
@@ -260,7 +260,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : direction.edgeTypes()){
-            for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
+            for(VKmer dest : vertex.getEdgeList(et).keySet()){
 //                outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();

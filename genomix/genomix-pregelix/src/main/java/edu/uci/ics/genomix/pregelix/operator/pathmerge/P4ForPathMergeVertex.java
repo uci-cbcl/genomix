@@ -11,10 +11,10 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -30,9 +30,9 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     private float probBeingRandomHead = -1;
     private Random randGenerator = null;
 
-    private VKmerBytesWritable curKmer = new VKmerBytesWritable();
-    private VKmerBytesWritable nextKmer = new VKmerBytesWritable();
-    private VKmerBytesWritable prevKmer = new VKmerBytesWritable();
+    private VKmer curKmer = new VKmer();
+    private VKmer nextKmer = new VKmer();
+    private VKmer prevKmer = new VKmer();
     private boolean hasNext = false;
     private boolean hasPrev = false;
     private boolean curHead = false;
@@ -59,7 +59,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                     GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
         // Node may be marked as head b/c it's a real head or a real tail
         if (repeatKmer == null)
-            repeatKmer = new VKmerBytesWritable();
+            repeatKmer = new VKmer();
         tmpValue.reset();
         if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
@@ -69,7 +69,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         getVertexValue().getCounters().clear();
     }
 
-    protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
+    protected boolean isNodeRandomHead(VKmer nodeKmer) {
         // "deterministically random", based on node id
         randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 10000 * getSuperstep());//randSeed + nodeID.hashCode()
         for (int i = 0; i < 500; i++)  // destroy initial correlation between similar seeds 
@@ -184,7 +184,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      */
     public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        NodeWritable node = vertex.getNode();
+        Node node = vertex.getNode();
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;

@@ -25,9 +25,9 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -58,15 +58,15 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
 
         ConfFactory cf;
         Writer writer = null;
-        private NodeWritable outputNode = new NodeWritable();
-        private KmerBytesWritable tempKmer = new KmerBytesWritable();
-        private VKmerBytesWritable outputKey = new VKmerBytesWritable();
+        private Node outputNode = new Node();
+        private Kmer tempKmer = new Kmer();
+        private VKmer outputKey = new VKmer();
 
         @Override
         public void open(DataOutput output) throws HyracksDataException {
             try {
-                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, VKmerBytesWritable.class,
-                        NodeWritable.class, CompressionType.NONE, null);
+                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, VKmer.class,
+                        Node.class, CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -98,7 +98,7 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
     @Override
     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
             throws HyracksDataException {
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(kmerSize);
         return new TupleWriter(confFactory);
     }
 

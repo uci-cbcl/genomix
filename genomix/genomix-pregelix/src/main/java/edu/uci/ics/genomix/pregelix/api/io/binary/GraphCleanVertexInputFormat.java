@@ -15,7 +15,7 @@ import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class GraphCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
         extends VertexInputFormat<I, V, E, M> {
@@ -39,7 +39,7 @@ public class GraphCleanVertexInputFormat<I extends WritableComparable<?>, V exte
     public static abstract class BinaryDataCleanVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<VKmerBytesWritable, VertexValueWritable> lineRecordReader;
+        private final RecordReader<VKmer, VertexValueWritable> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -49,7 +49,7 @@ public class GraphCleanVertexInputFormat<I extends WritableComparable<?>, V exte
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryDataCleanVertexReader(RecordReader<VKmerBytesWritable, VertexValueWritable> recordReader) {
+        public BinaryDataCleanVertexReader(RecordReader<VKmer, VertexValueWritable> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -75,7 +75,7 @@ public class GraphCleanVertexInputFormat<I extends WritableComparable<?>, V exte
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<VKmerBytesWritable, VertexValueWritable> getRecordReader() {
+        protected RecordReader<VKmer, VertexValueWritable> getRecordReader() {
             return lineRecordReader;
         }
 

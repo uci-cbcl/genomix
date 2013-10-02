@@ -20,8 +20,8 @@ import java.util.Map;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -71,11 +71,11 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
 
                     @Override
                     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
-                        KmerBytesWritable.setGlobalKmerLength(kmerSize); // TODO is this the right place for this?
+                        Kmer.setGlobalKmerLength(kmerSize); // TODO is this the right place for this?
                         return new ITupleWriter() {
 
-                            private NodeWritable outputNode = new NodeWritable();
-                            private KmerBytesWritable outputKmer = new KmerBytesWritable();
+                            private Node outputNode = new Node();
+                            private Kmer outputKmer = new Kmer();
 
                             @Override
                             public void open(DataOutput output) throws HyracksDataException {

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.KmerAndDirWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
     
@@ -17,13 +17,13 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
     
     private byte messageType; // otherwise, isFromSuccessor.
     
-    private HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
+    private HashMapWritable<VKmer, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
     private boolean isUpdateApexEdges;
     
     public P2PathMergeMessageWritable(){
         super();
         messageType = 0;
-        apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>();
+        apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>();
         isUpdateApexEdges = false;
     }
     
@@ -53,12 +53,12 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         this.messageType = messageType;
     }
 
-    public HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> getApexMap() {
+    public HashMapWritable<VKmer, KmerAndDirWritable> getApexMap() {
         return apexMap;
     }
 
-    public void setApexMap(HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap) {
-        this.apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>(apexMap);
+    public void setApexMap(HashMapWritable<VKmer, KmerAndDirWritable> apexMap) {
+        this.apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>(apexMap);
     }
     
     public boolean isUpdateApexEdges() {

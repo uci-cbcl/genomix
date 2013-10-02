@@ -6,32 +6,32 @@ import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.AbstractMap.SimpleEntry;
 
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class SplitRepeatMessageWritable extends MessageWritable {
     
-    private Entry<VKmerBytesWritable, ReadIdListWritable> createdEdge;
-    private Entry<VKmerBytesWritable, ReadIdListWritable> deletedEdge;
+    private Entry<VKmer, ReadIdSet> createdEdge;
+    private Entry<VKmer, ReadIdSet> deletedEdge;
     
     public SplitRepeatMessageWritable(){
         super();
     }
     
-    public Entry<VKmerBytesWritable, ReadIdListWritable> getCreatedEdge() {
+    public Entry<VKmer, ReadIdSet> getCreatedEdge() {
         return createdEdge;
     }
 
-    public void setCreatedEdge(VKmerBytesWritable createdKmer, ReadIdListWritable createdReadIds) {
-        this.createdEdge = new SimpleEntry<VKmerBytesWritable, ReadIdListWritable>(createdKmer, createdReadIds);
+    public void setCreatedEdge(VKmer createdKmer, ReadIdSet createdReadIds) {
+        this.createdEdge = new SimpleEntry<VKmer, ReadIdSet>(createdKmer, createdReadIds);
     }
 
-    public Entry<VKmerBytesWritable, ReadIdListWritable> getDeletedEdge() {
+    public Entry<VKmer, ReadIdSet> getDeletedEdge() {
         return deletedEdge;
     }
 
-    public void setDeletedEdge(VKmerBytesWritable deletedKmer, ReadIdListWritable deletedReadIds) {
-        this.deletedEdge = new SimpleEntry<VKmerBytesWritable, ReadIdListWritable>(deletedKmer, deletedReadIds);
+    public void setDeletedEdge(VKmer deletedKmer, ReadIdSet deletedReadIds) {
+        this.deletedEdge = new SimpleEntry<VKmer, ReadIdSet>(deletedKmer, deletedReadIds);
     }
 
     @Override
@@ -39,15 +39,15 @@ public class SplitRepeatMessageWritable extends MessageWritable {
         reset();
         super.readFields(in);
         
-        VKmerBytesWritable createdKmer = new VKmerBytesWritable();
+        VKmer createdKmer = new VKmer();
         createdKmer.readFields(in);
-        ReadIdListWritable createdReadIds = new ReadIdListWritable();
+        ReadIdSet createdReadIds = new ReadIdSet();
         createdReadIds.readFields(in);
         setCreatedEdge(createdKmer, createdReadIds);
         
-        VKmerBytesWritable deletedKmer = new VKmerBytesWritable();
+        VKmer deletedKmer = new VKmer();
         deletedKmer.readFields(in);
-        ReadIdListWritable deletedReadIds = new ReadIdListWritable();
+        ReadIdSet deletedReadIds = new ReadIdSet();
         deletedReadIds.readFields(in);
         setDeletedEdge(deletedKmer, deletedReadIds);
     }

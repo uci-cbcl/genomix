@@ -6,14 +6,14 @@ import java.util.Map;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
-import edu.uci.ics.genomix.type.VKmerListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
 	BasicPathMergeVertex<V, M>{
     
-    protected VKmerBytesWritable forwardKmer = new VKmerBytesWritable();
-    protected VKmerBytesWritable reverseKmer = new VKmerBytesWritable();
+    protected VKmer forwardKmer = new VKmer();
+    protected VKmer reverseKmer = new VKmer();
 
     /**
      * initiate kmerSize, maxIteration
@@ -27,9 +27,9 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         }
     }
     
-    public Map<VKmerBytesWritable, VKmerListWritable> mapKeyByInternalKmer(Iterator<M> msgIterator){
-        Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = new HashMap<VKmerBytesWritable, VKmerListWritable>();
-        VKmerListWritable kmerList;
+    public Map<VKmer, VKmerList> mapKeyByInternalKmer(Iterator<M> msgIterator){
+        Map<VKmer, VKmerList> kmerMapper = new HashMap<VKmer, VKmerList>();
+        VKmerList kmerList;
         M incomingMsg;
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
@@ -37,10 +37,10 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
             forwardKmer.setFromStringBytes(kmerString.length(), kmerString.getBytes(), 0);
             reverseKmer.setReversedFromStringBytes(kmerString.length(), kmerString.getBytes(), 0);
 
-            VKmerBytesWritable kmer = reverseKmer.compareTo(forwardKmer) > 0 ? forwardKmer : reverseKmer;
+            VKmer kmer = reverseKmer.compareTo(forwardKmer) > 0 ? forwardKmer : reverseKmer;
             if(!kmerMapper.containsKey(kmer)){
-                kmerList = new VKmerListWritable();
-                kmerMapper.put(new VKmerBytesWritable(kmer), kmerList);
+                kmerList = new VKmerList();
+                kmerMapper.put(new VKmer(kmer), kmerList);
             } else{
                 kmerList = kmerMapper.get(kmer);
                 kmerMapper.put(kmer, kmerList);
@@ -51,10 +51,10 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         return kmerMapper;
     }
     
-    public void reduceKeyByInternalKmer(Map<VKmerBytesWritable, VKmerListWritable> kmerMapper){
-        for(VKmerBytesWritable key : kmerMapper.keySet()){
-            VKmerListWritable kmerList = kmerMapper.get(key);
-            for(VKmerBytesWritable dest : kmerList){
+    public void reduceKeyByInternalKmer(Map<VKmer, VKmerList> kmerMapper){
+        for(VKmer key : kmerMapper.keySet()){
+            VKmerList kmerList = kmerMapper.get(key);
+            for(VKmer dest : kmerList){
                 sendMsg(dest, outgoingMsg);
             }
         }
@@ -78,7 +78,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
      */
     public void mapReduceInFakeVertex(Iterator<M> msgIterator){
         // Mapper
-        Map<VKmerBytesWritable, VKmerListWritable> kmerMapper = mapKeyByInternalKmer(msgIterator);
+        Map<VKmer, VKmerList> kmerMapper = mapKeyByInternalKmer(msgIterator);
         
         // Reducer
         reduceKeyByInternalKmer(kmerMapper);

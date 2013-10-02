@@ -18,9 +18,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -41,11 +41,11 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
 
     @Override
     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(kmerSize);
         return new ITupleWriter() {
-            private NodeWritable outputNode = new NodeWritable();
-            private KmerBytesWritable tempKmer = new KmerBytesWritable();
-            private VKmerBytesWritable outputKey = new VKmerBytesWritable();
+            private Node outputNode = new Node();
+            private Kmer tempKmer = new Kmer();
+            private VKmer outputKey = new VKmer();
 
             @Override
             public void open(DataOutput output) throws HyracksDataException {

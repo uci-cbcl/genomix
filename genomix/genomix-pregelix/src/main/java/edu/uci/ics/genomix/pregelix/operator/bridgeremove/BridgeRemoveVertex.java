@@ -9,9 +9,9 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Remove Bridge
@@ -51,7 +51,7 @@ public class BridgeRemoveVertex extends
                 //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
                 if(vertex.degree(d) == 2){
                     for(EDGETYPE et : d.edgeTypes()){
-                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
+                        for(VKmer dest : vertex.getEdgeList(et).keySet()){
                             sendMsg(dest, outgoingMsg);
                         }
                     }

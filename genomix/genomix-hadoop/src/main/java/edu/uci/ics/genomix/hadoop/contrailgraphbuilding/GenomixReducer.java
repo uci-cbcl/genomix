@@ -10,30 +10,30 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmer;
 /**
  * GenomixReducer the 2nd step of graph building
  * @author anbangx
  */
 @SuppressWarnings("deprecation")
 public class GenomixReducer extends MapReduceBase implements
-	Reducer<VKmerBytesWritable, NodeWritable, VKmerBytesWritable, NodeWritable>{
+	Reducer<VKmer, Node, VKmer, Node>{
     
-    private NodeWritable outputNode;
-    private NodeWritable tmpNode;
+    private Node outputNode;
+    private Node tmpNode;
     private float averageCoverage;
     
     @Override
     public void configure(JobConf job) {
-        outputNode = new NodeWritable();
-        tmpNode = new NodeWritable();
+        outputNode = new Node();
+        tmpNode = new Node();
     }
     
 	@Override
-	public void reduce(VKmerBytesWritable key, Iterator<NodeWritable> values,
-			OutputCollector<VKmerBytesWritable, NodeWritable> output,
+	public void reduce(VKmer key, Iterator<Node> values,
+			OutputCollector<VKmer, Node> output,
 			Reporter reporter) throws IOException {
 		outputNode.reset();
 		averageCoverage = 0;

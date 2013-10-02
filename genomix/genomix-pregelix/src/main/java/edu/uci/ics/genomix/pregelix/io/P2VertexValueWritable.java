@@ -6,23 +6,23 @@ import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class P2VertexValueWritable extends VertexValueWritable{
     
     private static final long serialVersionUID = -6600330062969997327L;
     
-    private NodeWritable prependMergeNode;
-    private NodeWritable appendMergeNode;
+    private Node prependMergeNode;
+    private Node appendMergeNode;
     
-    private HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
+    private HashMapWritable<VKmer, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
     
     public P2VertexValueWritable(){
         super();
-        prependMergeNode = new NodeWritable();
-        appendMergeNode = new NodeWritable();
-        apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>();
+        prependMergeNode = new Node();
+        appendMergeNode = new Node();
+        apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>();
     }
     
     public VertexValueWritable get(){
@@ -43,7 +43,7 @@ public class P2VertexValueWritable extends VertexValueWritable{
 //        apexMap.clear();
     }
     
-    public NodeWritable getMergeNode(byte mergeMsgType){
+    public Node getMergeNode(byte mergeMsgType){
         switch(mergeMsgType){
             case P2MessageType.FROM_PREDECESSOR:
                 return getPrependMergeNode();
@@ -67,28 +67,28 @@ public class P2VertexValueWritable extends VertexValueWritable{
         getNode().getInternalKmer().setFromStringBytes(merge.length(), merge.getBytes(), 0);
     }
     
-    public NodeWritable getPrependMergeNode() {
+    public Node getPrependMergeNode() {
         return prependMergeNode;
     }
 
-    public void setPrependMergeNode(NodeWritable prependMergeNode) {
+    public void setPrependMergeNode(Node prependMergeNode) {
         this.prependMergeNode.setAsCopy(prependMergeNode);
     }
 
-    public NodeWritable getAppendMergeNode() {
+    public Node getAppendMergeNode() {
         return appendMergeNode;
     }
 
-    public void setAppendMergeNode(NodeWritable appendMergeNode) {
+    public void setAppendMergeNode(Node appendMergeNode) {
         this.appendMergeNode.setAsCopy(appendMergeNode);
     }
     
-    public HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> getApexMap() {
+    public HashMapWritable<VKmer, KmerAndDirWritable> getApexMap() {
         return apexMap;
     }
 
-    public void setApexMap(HashMapWritable<VKmerBytesWritable, KmerAndDirWritable> apexMap) {
-        this.apexMap = new HashMapWritable<VKmerBytesWritable, KmerAndDirWritable>(apexMap);
+    public void setApexMap(HashMapWritable<VKmer, KmerAndDirWritable> apexMap) {
+        this.apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>(apexMap);
     }
 
     @Override

@@ -35,11 +35,11 @@ import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-public class NodeWritable implements Writable, Serializable {
+public class Node implements Writable, Serializable {
 
-    public Logger LOG = Logger.getLogger(NodeWritable.class.getName());
+    public Logger LOG = Logger.getLogger(Node.class.getName());
     private boolean DEBUG = true;
-    public static List<VKmerBytesWritable> problemKmers = new ArrayList<VKmerBytesWritable>();
+    public static List<VKmer> problemKmers = new ArrayList<VKmer>();
 
     public enum DIR {
 
@@ -302,19 +302,19 @@ public class NodeWritable implements Writable, Serializable {
 
     public static class NeighborInfo {
         public EDGETYPE et;
-        public ReadIdListWritable readIds;
-        public VKmerBytesWritable kmer;
+        public ReadIdSet readIds;
+        public VKmer kmer;
 
-        public NeighborInfo(EDGETYPE edgeType, VKmerBytesWritable kmer, ReadIdListWritable readIds) {
+        public NeighborInfo(EDGETYPE edgeType, VKmer kmer, ReadIdSet readIds) {
             set(edgeType, kmer, readIds);
         }
-        public NeighborInfo(EDGETYPE edgeType, Entry<VKmerBytesWritable, ReadIdListWritable> edge) {
+        public NeighborInfo(EDGETYPE edgeType, Entry<VKmer, ReadIdSet> edge) {
             set(edgeType, edge.getKey(), edge.getValue());
         }
-        public void set(EDGETYPE edgeType, Entry<VKmerBytesWritable, ReadIdListWritable> edge) {
+        public void set(EDGETYPE edgeType, Entry<VKmer, ReadIdSet> edge) {
             set(edgeType, edge.getKey(), edge.getValue());
         }
-        public void set(EDGETYPE edgeType, VKmerBytesWritable kmer, ReadIdListWritable readIds) {
+        public void set(EDGETYPE edgeType, VKmer kmer, ReadIdSet readIds) {
             this.et = edgeType;
             this.kmer = kmer;
             this.readIds = readIds;
@@ -323,9 +323,9 @@ public class NodeWritable implements Writable, Serializable {
 
     public static class NeighborsInfo implements Iterable<NeighborInfo> {
         public final EDGETYPE et;
-        public final EdgeListWritable edges;
+        public final EdgeMap edges;
 
-        public NeighborsInfo(EDGETYPE edgeType, EdgeListWritable edgeList) {
+        public NeighborsInfo(EDGETYPE edgeType, EdgeMap edgeList) {
             et = edgeType;
             edges = edgeList;
         }
@@ -334,7 +334,7 @@ public class NodeWritable implements Writable, Serializable {
         public Iterator<NeighborInfo> iterator() {
             return new Iterator<NeighborInfo>() {
                 
-                private Iterator<Entry<VKmerBytesWritable, ReadIdListWritable>> it = edges.entrySet().iterator();
+                private Iterator<Entry<VKmer, ReadIdSet>> it = edges.entrySet().iterator();
                 private NeighborInfo info = new NeighborInfo(null, null);
                 
                 @Override
@@ -357,17 +357,17 @@ public class NodeWritable implements Writable, Serializable {
     }
 
     private static final long serialVersionUID = 1L;
-    public static final NodeWritable EMPTY_NODE = new NodeWritable();
+    public static final Node EMPTY_NODE = new Node();
 
     private static final int SIZE_FLOAT = 4;
 
-    private EdgeListWritable[] edges = { null, null, null, null };
+    private EdgeMap[] edges = { null, null, null, null };
 
-    private PositionListWritable startReads; // first internalKmer in read
-    private PositionListWritable endReads; // first internalKmer in read (but
+    private ReadHeadSet startReads; // first internalKmer in read
+    private ReadHeadSet endReads; // first internalKmer in read (but
                                            // internalKmer was flipped)
 
-    private VKmerBytesWritable internalKmer;
+    private VKmer internalKmer;
 
     private float averageCoverage;
 
@@ -376,14 +376,14 @@ public class NodeWritable implements Writable, Serializable {
     //    public int stepCount;
     // merge/update directions
 
-    public NodeWritable() {
+    public Node() {
 
         for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()] = new EdgeListWritable();
+            edges[e.get()] = new EdgeMap();
         }
-        startReads = new PositionListWritable();
-        endReads = new PositionListWritable();
-        internalKmer = new VKmerBytesWritable(); // in graph construction - not
+        startReads = new ReadHeadSet();
+        endReads = new ReadHeadSet();
+        internalKmer = new VKmer(); // in graph construction - not
                                                  // set kmerlength
                                                  // Optimization: VKmer
         averageCoverage = 0;
@@ -392,27 +392,27 @@ public class NodeWritable implements Writable, Serializable {
         //        this.stepCount = 0;
     }
 
-    public NodeWritable(EdgeListWritable[] edges, PositionListWritable startReads, PositionListWritable endReads,
-            VKmerBytesWritable kmer, float coverage) {
+    public Node(EdgeMap[] edges, ReadHeadSet startReads, ReadHeadSet endReads,
+            VKmer kmer, float coverage) {
         this();
         setAsCopy(edges, startReads, endReads, kmer, coverage);
     }
 
-    public NodeWritable(byte[] data, int offset) {
+    public Node(byte[] data, int offset) {
         this();
         setAsReference(data, offset);
     }
 
-    public NodeWritable getNode() { // TODO what is this used for???
+    public Node getNode() { // TODO what is this used for???
         return this;
     }
 
-    public void setAsCopy(NodeWritable node) {
+    public void setAsCopy(Node node) {
         setAsCopy(node.edges, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
     }
 
-    public void setAsCopy(EdgeListWritable[] edges, PositionListWritable startReads, PositionListWritable endReads,
-            VKmerBytesWritable kmer, float coverage) {
+    public void setAsCopy(EdgeMap[] edges, ReadHeadSet startReads, ReadHeadSet endReads,
+            VKmer kmer, float coverage) {
         for (EDGETYPE e : EDGETYPE.values()) {
             this.edges[e.get()].setAsCopy(edges[e.get()]);
         }
@@ -432,11 +432,11 @@ public class NodeWritable implements Writable, Serializable {
         averageCoverage = 0;
     }
 
-    public VKmerBytesWritable getInternalKmer() {
+    public VKmer getInternalKmer() {
         return internalKmer;
     }
 
-    public void setInternalKmer(VKmerBytesWritable internalKmer) {
+    public void setInternalKmer(VKmer internalKmer) {
         this.internalKmer.setAsCopy(internalKmer);
     }
 
@@ -482,19 +482,19 @@ public class NodeWritable implements Writable, Serializable {
         return new NeighborsInfo(et, getEdgeList(et));
     }
 
-    public EdgeListWritable getEdgeList(EDGETYPE edgeType) {
+    public EdgeMap getEdgeList(EDGETYPE edgeType) {
         return edges[edgeType.get()];
     }
 
-    public void setEdgeList(EDGETYPE edgeType, EdgeListWritable edgeList) {
+    public void setEdgeList(EDGETYPE edgeType, EdgeMap edgeList) {
         this.edges[edgeType.get()].setAsCopy(edgeList);
     }
 
-    public EdgeListWritable[] getEdges() {
+    public EdgeMap[] getEdges() {
         return edges;
     }
 
-    public void setEdges(EdgeListWritable[] edges) {
+    public void setEdges(EdgeMap[] edges) {
         this.edges = edges;
     }
 
@@ -510,14 +510,14 @@ public class NodeWritable implements Writable, Serializable {
      * Update my coverage to be the average of this and other. Used when merging
      * paths.
      */
-    public void mergeCoverage(NodeWritable other) {
+    public void mergeCoverage(Node other) {
         // sequence considered in the average doesn't include anything
         // overlapping with other kmers
         float adjustedLength = internalKmer.getKmerLetterLength() + other.internalKmer.getKmerLetterLength()
-                - (KmerBytesWritable.getKmerLength() - 1) * 2;
+                - (Kmer.getKmerLength() - 1) * 2;
 
-        float myCount = (internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() + 1) * averageCoverage;
-        float otherCount = (other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() + 1)
+        float myCount = (internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1) * averageCoverage;
+        float otherCount = (other.internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1)
                 * other.averageCoverage;
         averageCoverage = (myCount + otherCount) / adjustedLength;
     }
@@ -525,9 +525,9 @@ public class NodeWritable implements Writable, Serializable {
     /**
      * Update my coverage as if all the reads in other became my own
      */
-    public void addCoverage(NodeWritable other) {
-        float myAdjustedLength = internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
-        float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - KmerBytesWritable.getKmerLength() - 1;
+    public void addCoverage(Node other) {
+        float myAdjustedLength = internalKmer.getKmerLetterLength() - Kmer.getKmerLength() - 1;
+        float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - Kmer.getKmerLength() - 1;
         averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
     }
 
@@ -540,19 +540,19 @@ public class NodeWritable implements Writable, Serializable {
     }
     
 
-    public PositionListWritable getStartReads() {
+    public ReadHeadSet getStartReads() {
         return startReads;
     }
 
-    public void setStartReads(PositionListWritable startReads) {
+    public void setStartReads(ReadHeadSet startReads) {
         this.startReads.set(startReads);
     }
 
-    public PositionListWritable getEndReads() {
+    public ReadHeadSet getEndReads() {
         return endReads;
     }
 
-    public void setEndReads(PositionListWritable endReads) {
+    public void setEndReads(ReadHeadSet endReads) {
         this.endReads.set(endReads);
     }
 
@@ -624,7 +624,7 @@ public class NodeWritable implements Writable, Serializable {
         
         if (DEBUG) {
             boolean verbose = false;
-            for (VKmerBytesWritable problemKmer : problemKmers) {
+            for (VKmer problemKmer : problemKmers) {
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
@@ -646,7 +646,7 @@ public class NodeWritable implements Writable, Serializable {
         
         if (DEBUG) {
             boolean verbose = false;
-            for (VKmerBytesWritable problemKmer : problemKmers) {
+            for (VKmer problemKmer : problemKmers) {
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
@@ -655,9 +655,9 @@ public class NodeWritable implements Writable, Serializable {
         }
     }
 
-    public class SortByCoverage implements Comparator<NodeWritable> {
+    public class SortByCoverage implements Comparator<Node> {
         @Override
-        public int compare(NodeWritable left, NodeWritable right) {
+        public int compare(Node left, Node right) {
             return Float.compare(left.averageCoverage, right.averageCoverage);
         }
     }
@@ -669,10 +669,10 @@ public class NodeWritable implements Writable, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof NodeWritable))
+        if (!(o instanceof Node))
             return false;
 
-        NodeWritable nw = (NodeWritable) o;
+        Node nw = (Node) o;
         for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
             if (!edges[e.get()].equals(nw.edges[e.get()]))
                 return false;
@@ -711,20 +711,20 @@ public class NodeWritable implements Writable, Serializable {
      * @param other
      *            : the node to merge with. I should have a `dir` edge towards `other`
      */
-    public void mergeWithNode(EDGETYPE edgeType, final NodeWritable other) {
+    public void mergeWithNode(EDGETYPE edgeType, final Node other) {
         mergeEdges(edgeType, other);
         mergeStartAndEndReadIDs(edgeType, other);
         mergeCoverage(other);
-        internalKmer.mergeWithKmerInDir(edgeType, KmerBytesWritable.lettersInKmer, other.internalKmer);
+        internalKmer.mergeWithKmerInDir(edgeType, Kmer.lettersInKmer, other.internalKmer);
     }
 
-    public void mergeWithNodeWithoutKmer(EDGETYPE edgeType, final NodeWritable other) {
+    public void mergeWithNodeWithoutKmer(EDGETYPE edgeType, final Node other) {
         mergeEdges(edgeType, other);
         mergeStartAndEndReadIDs(edgeType, other);
         mergeCoverage(other);
     }
 
-    public void mergeWithNodeWithoutKmer(final NodeWritable other) {
+    public void mergeWithNodeWithoutKmer(final Node other) {
         EDGETYPE edgeType = EDGETYPE.FF;
         mergeEdges(edgeType, other);
         mergeStartAndEndReadIDs(edgeType, other);
@@ -735,7 +735,7 @@ public class NodeWritable implements Writable, Serializable {
      * merge all metadata from `other` into this, as if `other` were the same node as this.
      * We don't touch the internal kmer but we do add edges, coverage, and start/end readids.
      */
-    public void addFromNode(boolean flip, final NodeWritable other) {
+    public void addFromNode(boolean flip, final Node other) {
         addEdges(flip, other);
         addCoverage(other);
         addStartAndEndReadIDs(flip, other);
@@ -746,25 +746,25 @@ public class NodeWritable implements Writable, Serializable {
      * differences in length will lead to relative offsets, where the incoming readids will be found in the
      * new sequence at the same relative position (e.g., 10% of the total length from 5' start).
      */
-    private void addStartAndEndReadIDs(boolean flip, final NodeWritable other) {
+    private void addStartAndEndReadIDs(boolean flip, final Node other) {
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
         float lengthFactor = (float) thisLength / (float) otherLength;
         if (!flip) {
             // stream theirs in, adjusting to the new total length
-            for (PositionWritable p : other.startReads) {
+            for (ReadHeadInfo p : other.startReads) {
                 startReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
             }
-            for (PositionWritable p : other.endReads) {
+            for (ReadHeadInfo p : other.endReads) {
                 endReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
             }
         } else {
             int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
             // stream theirs in, offset and flipped
-            for (PositionWritable p : other.startReads) {
+            for (ReadHeadInfo p : other.startReads) {
                 endReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
             }
-            for (PositionWritable p : other.endReads) {
+            for (ReadHeadInfo p : other.endReads) {
                 startReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
             }
         }
@@ -774,8 +774,8 @@ public class NodeWritable implements Writable, Serializable {
     /**
      * update my edge list
      */
-    public void updateEdges(EDGETYPE deleteDir, VKmerBytesWritable toDelete, EDGETYPE updateDir, EDGETYPE replaceDir,
-            NodeWritable other, boolean applyDelete) {
+    public void updateEdges(EDGETYPE deleteDir, VKmer toDelete, EDGETYPE updateDir, EDGETYPE replaceDir,
+            Node other, boolean applyDelete) {
         if (applyDelete)
             edges[deleteDir.get()].remove(toDelete);
         edges[updateDir.get()].unionUpdate(other.edges[replaceDir.get()]);
@@ -784,7 +784,7 @@ public class NodeWritable implements Writable, Serializable {
     /**
      * merge my edge list (both kmers and readIDs) with those of `other`. Assumes that `other` is doing the flipping, if any.
      */
-    public void mergeEdges(EDGETYPE edgeType, NodeWritable other) {
+    public void mergeEdges(EDGETYPE edgeType, Node other) {
         switch (edgeType) {
             case FF:
                 if (outDegree() > 1)
@@ -829,7 +829,7 @@ public class NodeWritable implements Writable, Serializable {
         }
     }
 
-    private void addEdges(boolean flip, NodeWritable other) {
+    private void addEdges(boolean flip, Node other) {
         if (!flip) {
             for (EDGETYPE e : EDGETYPE.values()) {
                 edges[e.get()].unionUpdate(other.edges[e.get()]);
@@ -842,8 +842,8 @@ public class NodeWritable implements Writable, Serializable {
         }
     }
 
-    private void mergeStartAndEndReadIDs(EDGETYPE edgeType, NodeWritable other) {
-        int K = KmerBytesWritable.lettersInKmer;
+    private void mergeStartAndEndReadIDs(EDGETYPE edgeType, Node other) {
+        int K = Kmer.lettersInKmer;
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
         int newOtherOffset, newThisOffset;
@@ -851,20 +851,20 @@ public class NodeWritable implements Writable, Serializable {
             case FF:
                 newOtherOffset = thisLength - K + 1;
                 // stream theirs in with my offset
-                for (PositionWritable p : other.startReads) {
+                for (ReadHeadInfo p : other.startReads) {
                     startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
-                for (PositionWritable p : other.endReads) {
+                for (ReadHeadInfo p : other.endReads) {
                     endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
                 break;
             case FR:
                 newOtherOffset = thisLength - K + 1 + otherLength - K;
                 // stream theirs in, offset and flipped
-                for (PositionWritable p : other.startReads) {
+                for (ReadHeadInfo p : other.startReads) {
                     endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
-                for (PositionWritable p : other.endReads) {
+                for (ReadHeadInfo p : other.endReads) {
                     startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
                 break;
@@ -872,33 +872,33 @@ public class NodeWritable implements Writable, Serializable {
                 newThisOffset = otherLength - K + 1;
                 newOtherOffset = otherLength - K;
                 // shift my offsets (other is prepended)
-                for (PositionWritable p : startReads) {
+                for (ReadHeadInfo p : startReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
-                for (PositionWritable p : endReads) {
+                for (ReadHeadInfo p : endReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
                 //stream theirs in, not offset (they are first now) but flipped
-                for (PositionWritable p : other.startReads) {
+                for (ReadHeadInfo p : other.startReads) {
                     endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
-                for (PositionWritable p : other.endReads) {
+                for (ReadHeadInfo p : other.endReads) {
                     startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
                 }
                 break;
             case RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
-                for (PositionWritable p : startReads) {
+                for (ReadHeadInfo p : startReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
-                for (PositionWritable p : endReads) {
+                for (ReadHeadInfo p : endReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
                 }
-                for (PositionWritable p : other.startReads) {
+                for (ReadHeadInfo p : other.startReads) {
                     startReads.append(p);
                 }
-                for (PositionWritable p : other.endReads) {
+                for (ReadHeadInfo p : other.endReads) {
                     endReads.append(p);
                 }
                 break;
@@ -908,7 +908,7 @@ public class NodeWritable implements Writable, Serializable {
     /**
      * Debug helper function to find the edge associated with the given kmer, checking all directions. If the edge doesn't exist in any direction, returns null
      */
-    public NeighborInfo findEdge(final VKmerBytesWritable kmer) {
+    public NeighborInfo findEdge(final VKmer kmer) {
         for (EDGETYPE et : EDGETYPE.values()) {
             if (edges[et.get()].containsKey(kmer)) {
                 return new NeighborInfo(et, kmer, edges[et.get()].get(kmer));

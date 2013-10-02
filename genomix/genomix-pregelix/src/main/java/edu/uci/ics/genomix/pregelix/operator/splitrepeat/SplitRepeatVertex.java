@@ -15,11 +15,11 @@ import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable.NeighborInfo;
-import edu.uci.ics.genomix.type.ReadIdListWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.Node.NeighborInfo;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
@@ -78,23 +78,23 @@ public class SplitRepeatVertex extends
         return sb.toString();
     }
     
-    public VKmerBytesWritable randomGenerateVertexId(int numOfSuffix){
+    public VKmer randomGenerateVertexId(int numOfSuffix){
         String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);
-        VKmerBytesWritable createdVertexId = new VKmerBytesWritable(); 
+        VKmer createdVertexId = new VKmer(); 
         createdVertexId.setFromStringBytes(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
         return createdVertexId;
     }
     
     // TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void createNewVertex(VKmerBytesWritable createdVertexId, NeighborInfo reverseNeighborInfo,
+    public void createNewVertex(VKmer createdVertexId, NeighborInfo reverseNeighborInfo,
     		NeighborInfo forwardNeighborInfo){
         Vertex newVertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-        VKmerBytesWritable vertexId = new VKmerBytesWritable();
+        VKmer vertexId = new VKmer();
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
-        vertexValue.getEdgeList(reverseNeighborInfo.et).put(reverseNeighborInfo.kmer, new ReadIdListWritable(reverseNeighborInfo.readIds));
-        vertexValue.getEdgeList(forwardNeighborInfo.et).put(forwardNeighborInfo.kmer, new ReadIdListWritable(forwardNeighborInfo.readIds));
+        vertexValue.getEdgeList(reverseNeighborInfo.et).put(reverseNeighborInfo.kmer, new ReadIdSet(reverseNeighborInfo.readIds));
+        vertexValue.getEdgeList(forwardNeighborInfo.et).put(forwardNeighborInfo.kmer, new ReadIdSet(forwardNeighborInfo.readIds));
         
         vertexValue.setInternalKmer(getVertexId());
         
@@ -105,7 +105,7 @@ public class SplitRepeatVertex extends
         addVertex(vertexId, newVertex);
     }
     
-    public void updateNeighbors(VKmerBytesWritable createdVertexId, ReadIdListWritable edgeIntersection,
+    public void updateNeighbors(VKmer createdVertexId, ReadIdSet edgeIntersection,
             NeighborInfo newReverseNeighborInfo, NeighborInfo newForwardNeighborInfo){
         outgoingMsg.reset();
         outgoingMsg.setSourceVertexId(getVertexId());
@@ -134,17 +134,17 @@ public class SplitRepeatVertex extends
                 // set edgeType and the corresponding edgeList based on connectedTable
                 EDGETYPE reverseEdgeType = connectedTable[i][0];
                 EDGETYPE forwardEdgeType = connectedTable[i][1];
-                EdgeListWritable reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
-                EdgeListWritable forwardEdgeList = vertex.getEdgeList(forwardEdgeType);
+                EdgeMap reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
+                EdgeMap forwardEdgeList = vertex.getEdgeList(forwardEdgeType);
                 
-                for(Entry<VKmerBytesWritable, ReadIdListWritable> reverseEdge : reverseEdgeList.entrySet()){
-                    for(Entry<VKmerBytesWritable, ReadIdListWritable> forwardEdge : forwardEdgeList.entrySet()){
+                for(Entry<VKmer, ReadIdSet> reverseEdge : reverseEdgeList.entrySet()){
+                    for(Entry<VKmer, ReadIdSet> forwardEdge : forwardEdgeList.entrySet()){
                         // set neighborEdge readId intersection
-                        ReadIdListWritable edgeIntersection = reverseEdge.getValue().getIntersection(forwardEdge.getValue());
+                        ReadIdSet edgeIntersection = reverseEdge.getValue().getIntersection(forwardEdge.getValue());
                         
                         if(!edgeIntersection.isEmpty()){
                             // random generate vertexId of new vertex // TODO create new vertex when add letters, the #letter depends on the time, which can't cause collision
-                            VKmerBytesWritable createdVertexId = randomGenerateVertexId(NUM_LETTERS_TO_APPEND);
+                            VKmer createdVertexId = randomGenerateVertexId(NUM_LETTERS_TO_APPEND);
                             
                             // change new incomingEdge/outgoingEdge's edgeList to commondReadIdSet
                             NeighborInfo newReverseNeighborInfo = new NeighborInfo(reverseEdgeType, reverseEdge.getKey(), edgeIntersection); 
@@ -186,10 +186,10 @@ public class SplitRepeatVertex extends
             
             // update edgelist to new/created vertex
             EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
-            Entry<VKmerBytesWritable, ReadIdListWritable> createdEdge = incomingMsg.getCreatedEdge();
-            Entry<VKmerBytesWritable, ReadIdListWritable> deletedEdge = new SimpleEntry<VKmerBytesWritable, ReadIdListWritable>(incomingMsg.getSourceVertexId(), createdEdge.getValue());
+            Entry<VKmer, ReadIdSet> createdEdge = incomingMsg.getCreatedEdge();
+            Entry<VKmer, ReadIdSet> deletedEdge = new SimpleEntry<VKmer, ReadIdSet>(incomingMsg.getSourceVertexId(), createdEdge.getValue());
             
-            getVertexValue().getEdgeList(meToNeighbor).put(createdEdge.getKey(), new ReadIdListWritable(createdEdge.getValue()));
+            getVertexValue().getEdgeList(meToNeighbor).put(createdEdge.getKey(), new ReadIdSet(createdEdge.getValue()));
             getVertexValue().getEdgeList(meToNeighbor).removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
         }
     }

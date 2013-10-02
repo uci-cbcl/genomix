@@ -7,21 +7,21 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.PositionListWritable;
-import edu.uci.ics.genomix.type.PositionWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.ReadHeadSet;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class EdgeWritableTest {
 
     @Test
     public void TestInitial() {
-        EdgeListWritable elist = new EdgeListWritable();
+        EdgeMap elist = new EdgeMap();
         Assert.assertEquals(0, elist.size());
         Assert.assertEquals(4, elist.getLengthInBytes());
         
-        VKmerBytesWritable kmer1 = new VKmerBytesWritable("ACCGCTTAGATACC");
-        PositionListWritable plist1 = new PositionListWritable();
+        VKmer kmer1 = new VKmer("ACCGCTTAGATACC");
+        ReadHeadSet plist1 = new ReadHeadSet();
         plist1.append((byte)1, (long)50, 20);
         plist1.append((byte)0, (long)500, 200);
         plist1.append((byte)1, (long)20, 10);
@@ -46,10 +46,10 @@ public class EdgeWritableTest {
         byte mateId;
         long readId;
         int posId;
-        VKmerBytesWritable kmer1 = new VKmerBytesWritable("ACCGCTTAGATACC");
-        VKmerBytesWritable kmer2 = new VKmerBytesWritable("TACGTACGTAGCTG");
-        PositionListWritable plist1 = new PositionListWritable();
-        PositionListWritable plist2 = new PositionListWritable();
+        VKmer kmer1 = new VKmer("ACCGCTTAGATACC");
+        VKmer kmer2 = new VKmer("TACGTACGTAGCTG");
+        ReadHeadSet plist1 = new ReadHeadSet();
+        ReadHeadSet plist2 = new ReadHeadSet();
         EdgeWritable e1 = new EdgeWritable(kmer1, plist1);
         EdgeWritable e2 = new EdgeWritable(kmer2, plist2);
         
@@ -62,7 +62,7 @@ public class EdgeWritableTest {
             Assert.assertEquals(readId, e1.getReadIDs().getPosition(i).getReadId());
             Assert.assertEquals(0, e1.getReadIDs().getPosition(i).getPosId());
             if (i % 2 == 0) {
-                e2.appendReadID(new PositionWritable(mateId, readId, posId));
+                e2.appendReadID(new ReadHeadInfo(mateId, readId, posId));
                 Assert.assertEquals(0, e2.getReadIDs().getPosition(i / 2).getMateId());
                 Assert.assertEquals(readId, e2.getReadIDs().getPosition(i / 2).getReadId());
                 Assert.assertEquals(0, e2.getReadIDs().getPosition(i / 2).getPosId());
@@ -74,7 +74,7 @@ public class EdgeWritableTest {
         Assert.assertEquals("TACGTACGTAGCTG", e2.getKey().toString());
         
         int i = 0;
-        for (PositionWritable p : e1.getReadIDs()) {
+        for (ReadHeadInfo p : e1.getReadIDs()) {
             Assert.assertEquals((byte)0, p.getMateId());
             Assert.assertEquals((long) i + 5, p.getReadId());
             Assert.assertEquals(0, p.getPosId());
@@ -102,18 +102,18 @@ public class EdgeWritableTest {
     
     @Test
     public void TestIterator() {
-        EdgeListWritable elist = new EdgeListWritable();
-        VKmerBytesWritable kmer1 = new VKmerBytesWritable("ACCGCTTAGATACC");
-        PositionListWritable plist1 = new PositionListWritable();
+        EdgeMap elist = new EdgeMap();
+        VKmer kmer1 = new VKmer("ACCGCTTAGATACC");
+        ReadHeadSet plist1 = new ReadHeadSet();
         plist1.append((byte)1, (long)50, 20);
         plist1.append((byte)0, (long)500, 200);
         plist1.append((byte)1, (long)20, 10);
         EdgeWritable e1 = new EdgeWritable(kmer1, plist1);
         elist.add(e1);
-        VKmerBytesWritable kmer2 = new VKmerBytesWritable("ATAGCTGAC");
+        VKmer kmer2 = new VKmer("ATAGCTGAC");
         elist.add(new EdgeWritable(kmer2, plist1));
         
-        Iterator<VKmerBytesWritable> keyIter = elist.getKeyIterator();
+        Iterator<VKmer> keyIter = elist.getKeyIterator();
         Assert.assertTrue(keyIter.hasNext());
         Assert.assertEquals(kmer1, keyIter.next());
         Assert.assertEquals(kmer2, keyIter.next());
