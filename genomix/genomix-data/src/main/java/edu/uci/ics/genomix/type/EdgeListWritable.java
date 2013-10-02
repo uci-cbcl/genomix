@@ -30,7 +30,6 @@ import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 
-
 public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWritable> implements Writable, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -40,7 +39,7 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
     public EdgeListWritable() {
         super();
     }
-    
+
     /**
      * Set the internal readIDs when the given positionList has readid, position, and mateid set
      */
@@ -48,8 +47,8 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         super();
         setAsCopy(other);
     }
-    
-//    public EdgeListWritable(List<Entry<VKmerBytesWritable, ReadIdListWritable>> list) {
+
+    //    public EdgeListWritable(List<Entry<VKmerBytesWritable, ReadIdListWritable>> list) {
     public EdgeListWritable(List<SimpleEntry<VKmerBytesWritable, ReadIdListWritable>> list) {
         super();
         for (Entry<VKmerBytesWritable, ReadIdListWritable> e : list) {
@@ -57,11 +56,11 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         }
     }
 
-//    public EdgeListWritable(List<SimpleEntry<VKmerBytesWritable, ReadIdListWritable>> asList) {
-//        // TODO Auto-generated constructor stub
-//    }
+    //    public EdgeListWritable(List<SimpleEntry<VKmerBytesWritable, ReadIdListWritable>> asList) {
+    //        // TODO Auto-generated constructor stub
+    //    }
 
-    public void setAsCopy(EdgeListWritable other){
+    public void setAsCopy(EdgeListWritable other) {
         clear();
         for (Entry<VKmerBytesWritable, ReadIdListWritable> e : other.entrySet()) {
             put(e.getKey(), new ReadIdListWritable(e.getValue()));
@@ -71,12 +70,12 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
     public int getLengthInBytes() {
         int total = SIZE_INT;
         for (Entry<VKmerBytesWritable, ReadIdListWritable> e : entrySet()) {
-            total += e.getKey().getLength() + e.getValue().getLengthInBytes(); 
+            total += e.getKey().getLength() + e.getValue().getLengthInBytes();
         }
         return total;
     }
 
-	/**
+    /**
      * Return this Edge's representation as a new byte array
      */
     public byte[] marshalToByteArray() throws IOException {
@@ -91,15 +90,15 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         int count = Marshal.getInt(data, offset);
         curOffset += SIZE_INT;
         clear();
-        for (int i=0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             VKmerBytesWritable kmer = new VKmerBytesWritable();
             kmer.setAsCopy(data, curOffset);
             curOffset += kmer.getLength();
-            
+
             ReadIdListWritable ids = new ReadIdListWritable();
             ids.setAsCopy(data, curOffset);
             curOffset += ids.getLengthInBytes();
-            
+
             put(kmer, ids);
         }
     }
@@ -109,15 +108,15 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         int count = Marshal.getInt(data, offset);
         curOffset += SIZE_INT;
         clear();
-        for (int i=0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             VKmerBytesWritable kmer = new VKmerBytesWritable();
             kmer.setAsReference(data, curOffset);
             curOffset += kmer.getLength();
-            
+
             ReadIdListWritable ids = new ReadIdListWritable();
             ids.setAsCopy(data, curOffset);
             curOffset += ids.getLengthInBytes();
-            
+
             put(kmer, ids);
         }
     }
@@ -143,37 +142,36 @@ public class EdgeListWritable extends TreeMap<VKmerBytesWritable, ReadIdListWrit
         }
     }
 
-
-    public void removeReadIdSubset(Entry<VKmerBytesWritable, ReadIdListWritable> toRemove){
-    	ReadIdListWritable readIds = get(toRemove.getKey());
-        if (readIds == null) {
-            throw new IllegalArgumentException("Tried to remove a readId subset for a Kmer that's not in this list!\nTried to remove: " + toRemove + "\n My edges are: " + this);
+    public void removeReadIdSubset(VKmerBytesWritable kmer, ReadIdListWritable readIdsToRemove) {
+        ReadIdListWritable curReadIds = get(kmer);
+        if (curReadIds == null) {
+            throw new IllegalArgumentException(
+                    "Tried to remove a readId subset for a Kmer that's not in this list!\nTried to remove: " + kmer
+                            + "(" + readIdsToRemove + ")" + "\n My edges are: " + this);
         }
-        readIds.removeAll(toRemove.getValue());
-        if(readIds.isEmpty()) {
-            remove(toRemove.getKey());
+        curReadIds.removeAll(readIdsToRemove);
+        if (curReadIds.isEmpty()) {
+            remove(kmer);
         }
     }
 
     /**
-     * Adds all edges in edgeList to me.  If I have the same edge as `other`, that entry will be the union of both sets of readIDs.
+     * Adds all edges in edgeList to me. If I have the same edge as `other`, that entry will be the union of both sets of readIDs.
      */
     public void unionUpdate(EdgeListWritable other) {
-        // TODO test this function properly
         for (Entry<VKmerBytesWritable, ReadIdListWritable> e : other.entrySet()) {
-            unionAdd(e);
+            unionAdd(e.getKey(), e.getValue());
         }
     }
 
     /**
      * Adds the given edge in to my list. If I have the same key as `other`, that entry will be the union of both sets of readIDs.
      */
-    public void unionAdd(Entry<VKmerBytesWritable, ReadIdListWritable> otherEdge) {
-        VKmerBytesWritable kmer = otherEdge.getKey();
+    public void unionAdd(VKmerBytesWritable kmer, ReadIdListWritable readIds) {
         if (containsKey(kmer)) {
-            get(kmer).addAll(otherEdge.getValue());
+            get(kmer).addAll(readIds);
         } else {
-            put(kmer, new ReadIdListWritable(otherEdge.getValue()));
+            put(kmer, new ReadIdListWritable(readIds));
         }
     }
 }

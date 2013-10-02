@@ -45,7 +45,7 @@ public class ReadIdListWritable extends TreeSet<Long> implements Writable, Seria
     }
     
     /**
-     * return the intersection of this list and another list
+     * return the intersection of this list and another list (return a copy)
      */
     public static ReadIdListWritable getIntersection(ReadIdListWritable list1, ReadIdListWritable list2){
         ReadIdListWritable intersection = new ReadIdListWritable(list1);

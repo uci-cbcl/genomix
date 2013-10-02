@@ -1,12 +1,13 @@
 package edu.uci.ics.genomix.pregelix.operator.tipremove;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -60,18 +61,12 @@ public class TipAddVertex extends
     
     public EdgeListWritable getEdgeListFromKmer(VKmerBytesWritable kmer){
         EdgeListWritable edgeList = new EdgeListWritable();
-        EdgeWritable newEdge = new EdgeWritable();
-        newEdge.setKey(kmer);
-        newEdge.appendReadID(0);
-        edgeList.add(newEdge);
+        edgeList.put(kmer, new ReadIdListWritable(Arrays.asList(new Long(0))));
         return edgeList;
     }
     
     public void addEdgeToInsertedTip(EDGETYPE dir, VKmerBytesWritable insertedTip){
-        EdgeWritable newEdge = new EdgeWritable();
-        newEdge.setKey(insertedTip);
-        newEdge.appendReadID(0);
-        getVertexValue().getEdgeList(dir).add(newEdge);
+        getVertexValue().getEdgeList(dir).put(insertedTip, new ReadIdListWritable(Arrays.asList(new Long(0))));
     }
     
     /**

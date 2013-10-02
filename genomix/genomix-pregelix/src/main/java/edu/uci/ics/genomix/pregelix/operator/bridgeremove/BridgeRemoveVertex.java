@@ -51,7 +51,7 @@ public class BridgeRemoveVertex extends
                 //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
                 if(vertex.degree(d) == 2){
                     for(EDGETYPE et : d.edgeTypes()){
-                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
                             sendMsg(dest, outgoingMsg);
                         }
                     }

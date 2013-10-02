@@ -171,12 +171,12 @@ public class BFSTraverseVertex extends
         VKmerBytesWritable tmpKmer;
         tmpKmer = incomingMsg.getPathList().getPosition(0);
         if(tmpKmer.getKmerLetterLength() != 0)
-            getVertexValue().getEdgeList(EDGETYPE.fromByte(prevToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
+            getVertexValue().getEdgeList(EDGETYPE.fromByte(prevToMeDir)).get(tmpKmer).add(readId);
         //set readId to next edge
         byte nextToMeDir = incomingMsg.getEdgeDirsList().get(0).getNextToMeDir();
         tmpKmer = incomingMsg.getPathList().getPosition(1);
         if(tmpKmer.getKmerLetterLength() != 0)
-            getVertexValue().getEdgeList(EDGETYPE.fromByte(nextToMeDir)).getReadIDs(tmpKmer).appendReadId(readId);
+            getVertexValue().getEdgeList(EDGETYPE.fromByte(nextToMeDir)).get(tmpKmer).add(readId);
     }
     
     @Override

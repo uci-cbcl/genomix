@@ -142,8 +142,8 @@ public class VertexValueWritable
         super.readFields(in);
         this.state = in.readShort();
         this.isFakeVertex = in.readBoolean();
-        this.counters.readFields(in);
-        scaffoldingMap.readFields(in);
+//        this.counters.readFields(in);
+//        scaffoldingMap.readFields(in);
     }
 
     @Override
@@ -151,8 +151,8 @@ public class VertexValueWritable
         super.write(out);
         out.writeShort(this.state);
         out.writeBoolean(this.isFakeVertex);
-        this.counters.write(out);
-        scaffoldingMap.write(out);
+//        this.counters.write(out);
+//        scaffoldingMap.write(out);
     }
     
     public int getDegree(){

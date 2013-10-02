@@ -80,7 +80,7 @@ public class TipRemoveVertex extends
             EdgeListWritable edgeList = getVertexValue().getEdgeList(tipToNeighborEdgetype);
             if(edgeList.size() != 1)
                 throw new IllegalArgumentException("In this edgeType, the size of edges has to be 1!");
-            VKmerBytesWritable destVertexId = edgeList.get(0).getKey();
+            VKmerBytesWritable destVertexId = edgeList.firstKey();
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
             

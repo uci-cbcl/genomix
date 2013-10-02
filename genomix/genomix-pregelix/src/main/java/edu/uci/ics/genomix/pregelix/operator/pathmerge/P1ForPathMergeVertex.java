@@ -13,9 +13,9 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 
@@ -138,7 +138,7 @@ public class P1ForPathMergeVertex extends
                     outFlag = 0;
                     outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
                     for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor() : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
@@ -212,12 +212,11 @@ public class P1ForPathMergeVertex extends
             EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
             
             VKmerBytesWritable deletedKmer = incomingMsg.getSourceVertexId();
-            if(value.getEdgeList(deleteToMe).contains(deletedKmer)){
-                EdgeWritable deletedEdge = value.getEdgeList(deleteToMe).getEdge(deletedKmer);
+            if(value.getEdgeList(deleteToMe).containsKey(deletedKmer)){
+                ReadIdListWritable deletedReadIds = value.getEdgeList(deleteToMe).get(deletedKmer);
                 value.getEdgeList(deleteToMe).remove(deletedKmer);
                 
-                deletedEdge.setKey(incomingMsg.getInternalKmer());
-                value.getEdgeList(aliveToMe).unionAdd(deletedEdge);
+                value.getEdgeList(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);
             }
             voteToHalt();
         }

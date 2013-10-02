@@ -49,8 +49,8 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
 public class GraphStatistics extends MapReduceBase implements
         Mapper<VKmerBytesWritable, NodeWritable, Text, LongWritable> {
 
-	public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
-    
+    public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
+
     @Override
     public void map(VKmerBytesWritable key, NodeWritable value, OutputCollector<Text, LongWritable> output,
             Reporter reporter) throws IOException {
@@ -60,7 +60,7 @@ public class GraphStatistics extends MapReduceBase implements
         reporter.getCounter("degree-bins", Integer.toString(value.inDegree() + value.outDegree())).increment(1);
         reporter.getCounter("totals", "degree").increment(value.inDegree() + value.outDegree());
 
-        int kmerLength = value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength(); 
+        int kmerLength = value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength();
         reporter.getCounter("kmerLength-bins", Integer.toString(kmerLength)).increment(1);
         reporter.getCounter("totals", "kmerLength").increment(kmerLength);
 
@@ -118,81 +118,80 @@ public class GraphStatistics extends MapReduceBase implements
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(outputPath), true);
         RunningJob job = JobClient.runJob(conf);
-        dfs.delete(new Path(outputPath), true);  // we have NO output (just counters)
+        dfs.delete(new Path(outputPath), true); // we have NO output (just counters)
 
         return job.getCounters();
     }
-    
-    
 
     /**
      * run a map-reduce job on the given input graph and save a simple text file of the relevant counters
      */
     public static void saveGraphStats(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         // get relevant counters
-    	
+
         TreeMap<String, Long> sortedCounters = new TreeMap<String, Long>();
         for (Group g : jobCounters) {
-        	if (!g.getName().endsWith("-bins")) {
-        		for (Counter c : g) {
-            		sortedCounters.put(g.getName() + "." + c.getName(), c.getCounter());
-            	}
+            if (!g.getName().endsWith("-bins")) {
+                for (Counter c : g) {
+                    sortedCounters.put(g.getName() + "." + c.getName(), c.getCounter());
+                }
             }
         }
-        
+
         FileSystem dfs = FileSystem.get(conf);
         dfs.mkdirs(new Path(outputDir));
         FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "stats.txt"), true);
         PrintWriter writer = new PrintWriter(outstream);
         for (Entry<String, Long> e : sortedCounters.entrySet()) {
-    		writer.println(e.getKey() + " = " + e.getValue());
+            writer.println(e.getKey() + " = " + e.getValue());
         }
         writer.close();
     }
-    
+
     /**
      * generate a histogram from the *-bins values
      * for example, the coverage counters have the group "coverage-bins", the counter name "5" and the count 10
      * meaning the coverage chart has a bar at X=5 with height Y=10
      */
     public static void drawStatistics(String outputDir, Counters jobCounters) throws IOException {
-    	HashMap<String, TreeMap<Integer,Long>> allHists = new HashMap<String, TreeMap<Integer,Long>>();
+        HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
         TreeMap<Integer, Long> curCounts;
-        
+
         // build up allHists to be {coverage : {1: 50, 2: 20, 3:5}, kmerLength : {55: 100}, ...}
         for (Group g : jobCounters) {
-        	if (g.getName().endsWith("-bins")) {
-        		String baseName = g.getName().replace("-bins", "");
-        		if (allHists.containsKey(baseName)) {
-        			curCounts = allHists.get(baseName);
-        		} else {
-        			curCounts = new TreeMap<Integer, Long>();
-        			allHists.put(baseName, curCounts);
-        		}
-        		for (Counter c : g) {  // counter name is the X value of the histogram; its count is the Y value
-        			Integer X = Integer.parseInt(c.getName());
-        			if (curCounts.get(X) != null) {
-        				curCounts.put(X, curCounts.get(X) + c.getCounter());
-        			} else {
-        				curCounts.put(X, c.getCounter());
-        			}
-            	}
+            if (g.getName().endsWith("-bins")) {
+                String baseName = g.getName().replace("-bins", "");
+                if (allHists.containsKey(baseName)) {
+                    curCounts = allHists.get(baseName);
+                } else {
+                    curCounts = new TreeMap<Integer, Long>();
+                    allHists.put(baseName, curCounts);
+                }
+                for (Counter c : g) { // counter name is the X value of the histogram; its count is the Y value
+                    Integer X = Integer.parseInt(c.getName());
+                    if (curCounts.get(X) != null) {
+                        curCounts.put(X, curCounts.get(X) + c.getCounter());
+                    } else {
+                        curCounts.put(X, c.getCounter());
+                    }
+                }
             }
         }
-        
+
         for (String graphType : allHists.keySet()) {
-        	curCounts = allHists.get(graphType);
-        	XYSeries series = new XYSeries(graphType);
-        	for (Entry<Integer, Long> pair : curCounts.entrySet()) {
-        		series.add(pair.getKey().floatValue(), pair.getValue().longValue());
-        	}
-        	XYSeriesCollection xyDataset = new XYSeriesCollection(series);
-        	JFreeChart chart = ChartFactory.createXYBarChart(graphType,
-        			graphType, false, "Count", xyDataset, PlotOrientation.VERTICAL, true, true, false);
-        	// Write the data to the output stream:
-        	FileOutputStream chartOut = new FileOutputStream(new File(outputDir + File.separator + graphType + "-hist.png"));
-        	ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
-        	chartOut.close();
+            curCounts = allHists.get(graphType);
+            XYSeries series = new XYSeries(graphType);
+            for (Entry<Integer, Long> pair : curCounts.entrySet()) {
+                series.add(pair.getKey().floatValue(), pair.getValue().longValue());
+            }
+            XYSeriesCollection xyDataset = new XYSeriesCollection(series);
+            JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
+                    PlotOrientation.VERTICAL, true, true, false);
+            // Write the data to the output stream:
+            FileOutputStream chartOut = new FileOutputStream(new File(outputDir + File.separator + graphType
+                    + "-hist.png"));
+            ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
+            chartOut.close();
         }
     }
 }

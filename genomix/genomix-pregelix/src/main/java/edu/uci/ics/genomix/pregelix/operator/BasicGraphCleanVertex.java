@@ -182,7 +182,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             EnumSet<EDGETYPE> edgeTypes = direction.edgeTypes();
             for(EDGETYPE et : edgeTypes){
                 if(getVertexValue().getEdgeList(et).size() > 0)
-                    return getVertexValue().getEdgeList(et).get(0).getKey();
+                    return getVertexValue().getEdgeList(et).firstKey();
             }
         }
         //degree in this direction == 0
@@ -193,12 +193,9 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * check if I am a tandemRepeat 
      */
     public boolean isTandemRepeat(VertexValueWritable value){
-        VKmerBytesWritable kmerToCheck;
-        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-            Iterator<VKmerBytesWritable> it = value.getEdgeList(et).getKeyIterator();
-            while(it.hasNext()){
-                kmerToCheck = it.next();
-                if(kmerToCheck.equals(getVertexId())){
+        for (EDGETYPE et : EDGETYPE.values()) {
+            for (VKmerBytesWritable kmerToCheck : value.getEdgeList(et).keySet()) {
+                if(kmerToCheck.equals(getVertexId())) {
                     repeatEdgetype = et;
                     repeatKmer.setAsCopy(kmerToCheck);
                     return true;
@@ -214,7 +211,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void broadcastKillself(){
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : EDGETYPE.values()){
-            for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+            for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
@@ -263,7 +260,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : direction.edgeTypes()){
-            for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+            for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();

@@ -2,6 +2,7 @@ package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -10,8 +11,8 @@ import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 /**
@@ -21,8 +22,6 @@ import edu.uci.ics.genomix.type.VKmerBytesWritable;
  */
 public class UnrollTandemRepeat extends
     BasicGraphCleanVertex<VertexValueWritable, MessageWritable>{
-    
-    private EdgeWritable tmpEdge = new EdgeWritable();
     
     /**
      * initiate kmerSize, length
@@ -53,9 +52,9 @@ public class UnrollTandemRepeat extends
         boolean hasFlip = false;
         // pick one edge and flip 
         for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-            for(EdgeWritable edge : tmpValue.getEdgeList(et)){
+            for(Entry<VKmerBytesWritable, ReadIdListWritable> edge : tmpValue.getEdgeList(et).entrySet()){
                 EDGETYPE flipDir = et.flipNeighbor();
-                tmpValue.getEdgeList(flipDir).add(edge);
+                tmpValue.getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
                 tmpValue.getEdgeList(et).remove(edge);
                 // setup hasFlip to go out of the loop 
                 hasFlip = true;
@@ -80,10 +79,10 @@ public class UnrollTandemRepeat extends
         getVertexValue().getEdgeList(repeatEdgetype).remove(getVertexId());
         boolean hasFlip = false;
         /** pick one edge and flip **/
-        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-            for(EdgeWritable edge : getVertexValue().getEdgeList(et)){
+        for(EDGETYPE et : EDGETYPE.values()){
+            for(Entry<VKmerBytesWritable, ReadIdListWritable> edge : getVertexValue().getEdgeList(et).entrySet()){
                 EDGETYPE flipDir = et.flipNeighbor();
-                getVertexValue().getEdgeList(flipDir).add(edge);
+                getVertexValue().getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
                 getVertexValue().getEdgeList(et).remove(edge);
                 /** send flip message to node for updating edgeDir **/
                 outgoingMsg.setFlag(flipDir.get());
@@ -102,12 +101,12 @@ public class UnrollTandemRepeat extends
      * update edges
      */
     public void updateEdges(MessageWritable incomingMsg){
+        VertexValueWritable vertex = getVertexValue();
         EDGETYPE flipDir = EDGETYPE.fromByte(incomingMsg.getFlag()); 
         EDGETYPE prevNeighborToMe = flipDir.mirror();
         EDGETYPE curNeighborToMe = flipDir.mirror(); //mirrorDirection((byte)(incomingMsg.getFlag() & MessageFlag.DEAD_MASK));
-        tmpEdge.setAsCopy(getVertexValue().getEdgeList(prevNeighborToMe).getEdge(incomingMsg.getSourceVertexId()));
-        getVertexValue().getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
-        getVertexValue().getEdgeList(curNeighborToMe).add(tmpEdge);
+        vertex.getEdgeList(curNeighborToMe).put(incomingMsg.getSourceVertexId(), vertex.getEdgeList(prevNeighborToMe).get(incomingMsg.getSourceVertexId()));
+        vertex.getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
     }
     
     @Override
