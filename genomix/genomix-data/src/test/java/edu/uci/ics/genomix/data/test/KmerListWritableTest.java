@@ -23,7 +23,7 @@ public class KmerListWritableTest {
             kmer = new VKmerBytesWritable(i);
             String randomString = generaterRandomString(i);
             byte[] array = randomString.getBytes();
-            kmer.setByRead(i, array, 0);
+            kmer.setFromStringBytes(i, array, 0);
             kmerList.reset();
             kmerList.append(kmer);
             Assert.assertEquals(randomString, kmerList.getPosition(0).toString());
@@ -36,7 +36,7 @@ public class KmerListWritableTest {
             kmer = new VKmerBytesWritable(5);
             String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
-            kmer.setByRead(5, array, 0);
+            kmer.setFromStringBytes(5, array, 0);
             kmerList.append(kmer);
             Assert.assertEquals(kmerList.getPosition(i).toString(), randomString);
             Assert.assertEquals(i + 1, kmerList.getCountOfPosition());
@@ -62,7 +62,7 @@ public class KmerListWritableTest {
             kmer = new VKmerBytesWritable(5);
             String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
-            kmer.setByRead(5, array, 0);
+            kmer.setFromStringBytes(5, array, 0);
             kmerList.append(kmer);
             Assert.assertEquals(randomString, kmerList.getPosition(i).toString());
             Assert.assertEquals(i + 1, kmerList.getCountOfPosition());
@@ -78,7 +78,7 @@ public class KmerListWritableTest {
             iterator = copyList.iterator();
             byte[] array = kmerList.getPosition(j).toString().getBytes();
             VKmerBytesWritable deletePos = new VKmerBytesWritable(5);
-            deletePos.setByRead(5, array, 0);
+            deletePos.setFromStringBytes(5, array, 0);
             boolean removed = false;
             while(iterator.hasNext()){
                 tmpKmer = iterator.next();
@@ -109,9 +109,9 @@ public class KmerListWritableTest {
         
         VKmerListWritable edgeList = new VKmerListWritable();
         VKmerBytesWritable k = new VKmerBytesWritable(3);
-        k.setByRead(3, ("AAA").getBytes(), 0);
+        k.setFromStringBytes(3, ("AAA").getBytes(), 0);
         edgeList.append(k);
-        k.setByRead(3, ("CCC").getBytes(), 0);
+        k.setFromStringBytes(3, ("CCC").getBytes(), 0);
         edgeList.append(k);
         for(VKmerBytesWritable edge : edgeList){
         	System.out.println(edge.toString());

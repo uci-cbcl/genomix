@@ -60,7 +60,7 @@ public class TipRemoveVertex extends
     public EDGETYPE getTipToNeighbor(){
         VertexValueWritable vertex = getVertexValue();
         for (DIR d : DIR.values()) {
-        	if (vertex.getDegree(d) == 1 && vertex.getDegree(d.mirror()) == 0) {
+        	if (vertex.degree(d) == 1 && vertex.degree(d.mirror()) == 0) {
         		return vertex.getNeighborEdgeType(d);
         	}
         }
@@ -80,7 +80,7 @@ public class TipRemoveVertex extends
             EdgeListWritable edgeList = getVertexValue().getEdgeList(tipToNeighborEdgetype);
             if(edgeList.size() != 1)
                 throw new IllegalArgumentException("In this edgeType, the size of edges has to be 1!");
-            VKmerBytesWritable destVertexId = edgeList.get(0).getKey();
+            VKmerBytesWritable destVertexId = edgeList.firstKey();
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
             

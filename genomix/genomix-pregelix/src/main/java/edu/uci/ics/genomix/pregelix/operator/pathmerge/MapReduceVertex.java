@@ -34,8 +34,8 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             String kmerString = incomingMsg.getInternalKmer().toString();
-            forwardKmer.setByRead(kmerString.length(), kmerString.getBytes(), 0);
-            reverseKmer.setByReadReverse(kmerString.length(), kmerString.getBytes(), 0);
+            forwardKmer.setFromStringBytes(kmerString.length(), kmerString.getBytes(), 0);
+            reverseKmer.setReversedFromStringBytes(kmerString.length(), kmerString.getBytes(), 0);
 
             VKmerBytesWritable kmer = reverseKmer.compareTo(forwardKmer) > 0 ? forwardKmer : reverseKmer;
             if(!kmerMapper.containsKey(kmer)){

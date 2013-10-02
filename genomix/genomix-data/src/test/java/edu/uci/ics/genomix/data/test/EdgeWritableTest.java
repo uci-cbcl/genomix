@@ -8,7 +8,6 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.PositionListWritable;
 import edu.uci.ics.genomix.type.PositionWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -19,7 +18,7 @@ public class EdgeWritableTest {
     public void TestInitial() {
         EdgeListWritable elist = new EdgeListWritable();
         Assert.assertEquals(0, elist.size());
-        Assert.assertEquals(4, elist.getLength());
+        Assert.assertEquals(4, elist.getLengthInBytes());
         
         VKmerBytesWritable kmer1 = new VKmerBytesWritable("ACCGCTTAGATACC");
         PositionListWritable plist1 = new PositionListWritable();

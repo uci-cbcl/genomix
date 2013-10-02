@@ -24,6 +24,7 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.DIR;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
@@ -55,7 +56,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected short outFlag;
     protected short selfFlag;
     
-    protected static List<VKmerBytesWritable> problemKmers = null;
+    protected List<VKmerBytesWritable> problemKmers = null;
     protected boolean debug = false;
     protected boolean verbose = false;
     protected boolean logReadIds = false;
@@ -71,17 +72,18 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         
-        configureDebugOption();
+        checkDebug();
         //TODO fix globalAggregator
     }
     
-    public void configureDebugOption(){
+    public void checkDebug(){
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmerBytesWritable>();
             if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
                 debug = true;
                 for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
                     problemKmers.add(new VKmerBytesWritable(kmer));
+                NodeWritable.problemKmers = problemKmers;
             }
         }
                 
@@ -109,7 +111,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void addFakeVertex(String fakeKmer){
         synchronized(lock){
-            fakeVertex.setByRead(1, fakeKmer.getBytes(), 0); 
+            fakeVertex.setFromStringBytes(1, fakeKmer.getBytes(), 0); 
             if(!fakeVertexExist){
                 //add a fake vertex
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -172,15 +174,15 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * get destination vertex ex. RemoveTip
      */
     public VKmerBytesWritable getDestVertexId(DIR direction){
-        int degree = getVertexValue().getDegree(direction);
+        int degree = getVertexValue().degree(direction);
         if(degree > 1)
             throw new IllegalArgumentException("degree > 1, getDestVertexId(DIR direction) only can use for degree == 1 + \n" + getVertexValue().toString());
         
         if(degree == 1){
-            EnumSet<EDGETYPE> edgeTypes = direction.edgeType();
+            EnumSet<EDGETYPE> edgeTypes = direction.edgeTypes();
             for(EDGETYPE et : edgeTypes){
                 if(getVertexValue().getEdgeList(et).size() > 0)
-                    return getVertexValue().getEdgeList(et).get(0).getKey();
+                    return getVertexValue().getEdgeList(et).firstKey();
             }
         }
         //degree in this direction == 0
@@ -191,12 +193,9 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      * check if I am a tandemRepeat 
      */
     public boolean isTandemRepeat(VertexValueWritable value){
-        VKmerBytesWritable kmerToCheck;
-        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-            Iterator<VKmerBytesWritable> it = value.getEdgeList(et).getKeyIterator();
-            while(it.hasNext()){
-                kmerToCheck = it.next();
-                if(kmerToCheck.equals(getVertexId())){
+        for (EDGETYPE et : EDGETYPE.values()) {
+            for (VKmerBytesWritable kmerToCheck : value.getEdgeList(et).keySet()) {
+                if(kmerToCheck.equals(getVertexId())) {
                     repeatEdgetype = et;
                     repeatKmer.setAsCopy(kmerToCheck);
                     return true;
@@ -212,7 +211,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     public void broadcastKillself(){
         VertexValueWritable vertex = getVertexValue();
         for(EDGETYPE et : EDGETYPE.values()){
-            for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+            for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
@@ -260,8 +259,8 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
      */
     public void sendSettledMsgs(DIR direction, VertexValueWritable value){
         VertexValueWritable vertex = getVertexValue();
-        for(EDGETYPE et : direction.edgeType()){
-            for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+        for(EDGETYPE et : direction.edgeTypes()){
+            for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
 //                outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();

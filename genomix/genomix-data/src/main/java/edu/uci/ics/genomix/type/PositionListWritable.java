@@ -9,13 +9,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.PositionWritable;
 
-public class PositionListWritable implements Writable, Iterable<PositionWritable>, Serializable {
+public class PositionListWritable extends TreeSet<PositionWritable> implements Writable, Serializable {
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = {0,0,0,0};
     protected static final int HEADER_SIZE = 4;
@@ -36,7 +37,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
 
     public PositionListWritable(byte[] data, int offset) {
-        setNewReference(data, offset);
+        setAsReference(data, offset);
     }
 
     public PositionListWritable(List<PositionWritable> posns) {
@@ -52,7 +53,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         set(other);
     }
 
-    public void setNewReference(byte[] data, int offset) {
+    public void setAsReference(byte[] data, int offset) {
         this.valueCount = Marshal.getInt(data, offset);
         this.storage = data;
         this.offset = offset;
@@ -144,10 +145,10 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     }
 
     public void set(PositionListWritable otherList) {
-        set(otherList.storage, otherList.offset);
+        setAsCopy(otherList.storage, otherList.offset);
     }
 
-    public void set(byte[] newData, int newOffset) {
+    public void setAsCopy(byte[] newData, int newOffset) {
         int newValueCount = Marshal.getInt(newData, newOffset);
         setSize(newValueCount * PositionWritable.LENGTH + HEADER_SIZE);
         if (newValueCount > 0) {
@@ -243,7 +244,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
         return offset;
     }
 
-    public int getLength() {
+    public int getLengthInBytes() {
         return valueCount * PositionWritable.LENGTH + HEADER_SIZE;
     }
 
@@ -363,7 +364,7 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     
     @Override
     public int hashCode() {
-        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
+        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLengthInBytes());
     }
 
     @Override
@@ -382,5 +383,11 @@ public class PositionListWritable implements Writable, Iterable<PositionWritable
     
     public boolean isEmpty(){
         return this.getCountOfPosition() == 0;
+    }
+    
+    public static PositionListWritable getIntersection(PositionListWritable list1, PositionListWritable list2){
+        PositionListWritable intersection = new PositionListWritable(list1);
+        intersection.retainAll(list2);
+        return intersection;
     }
 }

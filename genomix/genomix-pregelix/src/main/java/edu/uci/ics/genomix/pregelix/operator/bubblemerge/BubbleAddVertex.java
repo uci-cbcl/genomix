@@ -1,12 +1,13 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -78,19 +79,16 @@ public class BubbleAddVertex extends
     }
     
     public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmerBytesWritable insertedBubble){
-        EdgeWritable newEdge = new EdgeWritable();
-        newEdge.setKey(insertedBubble);
-        newEdge.appendReadID(0);
         EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror(); 
-        getVertexValue().getEdgeList(newBubbleToMeDir).add(newEdge);
+        getVertexValue().getEdgeList(newBubbleToMeDir).put(insertedBubble, new ReadIdListWritable(Arrays.asList(new Long(0))));
     }
     
     public void setupEdgeForInsertedBubble(){
         for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
             edges[et.get()] = new EdgeListWritable();
         }
-        edges[majorToNewBubbleDir.get()].add(majorVertexId);
-        edges[minorToNewBubbleDir.get()].add(minorVertexId);
+        edges[majorToNewBubbleDir.get()].put(majorVertexId, new ReadIdListWritable(Arrays.asList(new Long(0))));
+        edges[minorToNewBubbleDir.get()].put(minorVertexId, new ReadIdListWritable(Arrays.asList(new Long(0))));
     }
     
     @Override

@@ -38,9 +38,9 @@ public class PositionListWritableTest {
             i++;
         }
         
-        byte [] another = new byte [plist.getLength()*2];
+        byte [] another = new byte [plist.getLengthInBytes()*2];
         int start = 20;
-        System.arraycopy(plist.getByteArray(), 0, another, start, plist.getLength());
+        System.arraycopy(plist.getByteArray(), 0, another, start, plist.getLengthInBytes());
         PositionListWritable plist2 = new PositionListWritable(another,start);
         for( i = 0; i < plist2.getCountOfPosition(); i++){
             Assert.assertEquals(plist.getPosition(i), plist2.getPosition(i));

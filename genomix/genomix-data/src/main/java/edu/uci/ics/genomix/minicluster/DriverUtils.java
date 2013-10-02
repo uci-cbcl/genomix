@@ -85,7 +85,7 @@ public class DriverUtils {
         	if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
         		conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
         	}
-    		if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
+    		if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
                 conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
             }
         }

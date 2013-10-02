@@ -22,24 +22,18 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.logging.LogManager;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.JobConf;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
@@ -455,6 +449,6 @@ public class GenomixJobConf extends JobConf {
         KmerBytesWritable.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
 //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
         
-        EdgeWritable.logReadIds = Boolean.parseBoolean(conf.get(GenomixJobConf.LOG_READIDS));
+        EdgeListWritable.logReadIds = Boolean.parseBoolean(conf.get(GenomixJobConf.LOG_READIDS));
     }
 }

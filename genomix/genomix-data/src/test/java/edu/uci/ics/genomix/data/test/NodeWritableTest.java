@@ -27,9 +27,9 @@ public class NodeWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         //        k2.mergeWithRFKmer(5, k1);
         //        Assert.assertEquals("ATCTAG", k2.toString());
         //        k2.mergeWithFFKmer(5, k3);
@@ -126,9 +126,9 @@ public class NodeWritableTest {
         VKmerBytesWritable k1 = new VKmerBytesWritable();
         VKmerBytesWritable k2 = new VKmerBytesWritable();
         VKmerBytesWritable k3 = new VKmerBytesWritable();
-        k1.setByRead(5, test1.getBytes(), 0);
-        k2.setByRead(5, test2.getBytes(), 0);
-        k3.setByRead(5, test3.getBytes(), 0);
+        k1.setFromStringBytes(5, test1.getBytes(), 0);
+        k2.setFromStringBytes(5, test2.getBytes(), 0);
+        k3.setFromStringBytes(5, test3.getBytes(), 0);
         //            k2.mergeWithRFKmer(5, k1);
         //            Assert.assertEquals("ATCTAG", k2.toString());
         //            k2.mergeWithFFKmer(5, k3);

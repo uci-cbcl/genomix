@@ -49,9 +49,9 @@ public class BridgeRemoveVertex extends
         if(vertex.getDegree() == 3){
             for(DIR d : DIR.values()){
                 //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
-                if(vertex.getDegree(d) == 2){
-                    for(EDGETYPE et : d.edgeType()){
-                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+                if(vertex.degree(d) == 2){
+                    for(EDGETYPE et : d.edgeTypes()){
+                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).keySet()){
                             sendMsg(dest, outgoingMsg);
                         }
                     }

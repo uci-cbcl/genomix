@@ -8,8 +8,9 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex.SearchInfo;
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
 
 public class VertexValueWritable 
     extends NodeWritable{
@@ -143,8 +144,8 @@ public class VertexValueWritable
         super.readFields(in);
         this.state = in.readShort();
         this.isFakeVertex = in.readBoolean();
-        this.counters.readFields(in);
-        scaffoldingMap.readFields(in);
+//        this.counters.readFields(in);
+//        scaffoldingMap.readFields(in);
     }
 
     @Override
@@ -152,8 +153,8 @@ public class VertexValueWritable
         super.write(out);
         out.writeShort(this.state);
         out.writeBoolean(this.isFakeVertex);
-        this.counters.write(out);
-        scaffoldingMap.write(out);
+//        this.counters.write(out);
+//        scaffoldingMap.write(out);
     }
     
     public int getDegree(){
@@ -174,8 +175,11 @@ public class VertexValueWritable
     /**
      * Delete the corresponding edge
      */
-    public void processDelete(EDGETYPE neighborToDeleteEdgetype, EdgeWritable nodeToDelete){
-        this.getEdgeList(neighborToDeleteEdgetype).remove(nodeToDelete);
+    public void processDelete(EDGETYPE neighborToDeleteEdgetype, VKmerBytesWritable keyToDelete){
+        ReadIdListWritable prevList = this.getEdgeList(neighborToDeleteEdgetype).remove(keyToDelete);
+        if (prevList == null) {
+            throw new IllegalArgumentException("processDelete tried to remove an edge that didn't exist: " + keyToDelete + " but I am " + this);
+        }
     }
     
     public void processFinalUpdates(EDGETYPE deleteDir, EDGETYPE updateDir, NodeWritable other){

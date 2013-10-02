@@ -135,13 +135,15 @@ public class BFSTraverseVertex extends
         //add readId to prev edge 
         EDGETYPE meToPrev = incomingMsg.getEdgeTypesList().get(0).getMeToPrevEdgeType();
         tmpKmer = incomingMsg.getPathList().getPosition(0);
-        if(tmpKmer.getKmerLetterLength() != 0)
-            getVertexValue().getEdgeList(meToPrev).getReadIDs(tmpKmer).appendReadId(readId);
+        if(tmpKmer.getKmerLetterLength() != 0) {
+            getVertexValue().getEdgeList(meToPrev).get(tmpKmer).add(readId);
+        }
         //add readId to next edge
         EDGETYPE meToNext = incomingMsg.getEdgeTypesList().get(0).getMeToNextEdgeType();
         tmpKmer = incomingMsg.getPathList().getPosition(1);
-        if(tmpKmer.getKmerLetterLength() != 0)
-            getVertexValue().getEdgeList(meToNext).getReadIDs(tmpKmer).appendReadId(readId);
+        if(tmpKmer.getKmerLetterLength() != 0) {
+            getVertexValue().getEdgeList(meToNext).get(tmpKmer).add(readId);
+        }
     }
     
     @Override

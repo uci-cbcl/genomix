@@ -160,7 +160,7 @@ public class SimpleBubbleMergeVertex extends
      */
     public void detectBubble(){
         VertexValueWritable vertex = getVertexValue();
-        if(vertex.getDegree(DIR.REVERSE) == 1 && vertex.getDegree(DIR.FORWARD) == 1){
+        if(vertex.degree(DIR.REVERSE) == 1 && vertex.degree(DIR.FORWARD) == 1){
             // send bubble and major vertex msg to minor vertex 
             sendBubbleAndMajorVertexMsgToMinorVertex();
         }

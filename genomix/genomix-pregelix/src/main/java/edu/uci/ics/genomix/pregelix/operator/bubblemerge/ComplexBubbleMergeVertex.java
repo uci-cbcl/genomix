@@ -6,12 +6,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
 import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdListWritable;
 import edu.uci.ics.genomix.type.VKmerBytesWritable;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -42,7 +43,6 @@ public class ComplexBubbleMergeVertex extends
     private BubbleMergeMessageWritable curMsg = new BubbleMergeMessageWritable();
 //    private Set<BubbleMergeMessageWritable> unchangedSet = new HashSet<BubbleMergeMessageWritable>();
 //    private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
-    private EdgeWritable tmpEdge = new EdgeWritable();
     
 //    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
     private static Set<VKmerBytesWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());
@@ -83,7 +83,7 @@ public class ComplexBubbleMergeVertex extends
         if(fakeVertex == null){
             fakeVertex = new VKmerBytesWritable();
             String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
+            fakeVertex.setFromStringBytes(kmerSize + 1, random.getBytes(), 0); 
         }
         if(getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
@@ -98,8 +98,8 @@ public class ComplexBubbleMergeVertex extends
             // set edgeList and edgeDir based on connectedTable 
             setEdgeListAndEdgeType(i);
             
-            for(EdgeWritable incomingEdge : incomingEdgeList){
-                for(EdgeWritable outgoingEdge : outgoingEdgeList){
+            for(Entry<VKmerBytesWritable, ReadIdListWritable> incomingEdge : incomingEdgeList.entrySet()){
+                for(Entry<VKmerBytesWritable, ReadIdListWritable> outgoingEdge : outgoingEdgeList.entrySet()){
                     // get majorVertex and minorVertex and meToMajorDir and meToMinorDir
                     VKmerBytesWritable incomingKmer = incomingEdge.getKey();
                     VKmerBytesWritable outgoingKmer = outgoingEdge.getKey();
@@ -286,17 +286,20 @@ public class ComplexBubbleMergeVertex extends
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
     public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessageWritable incomingMsg){
+        VertexValueWritable vertex = getVertexValue(); 
+        ReadIdListWritable readIds;
+
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
         
-        if(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()) != null){
-            tmpEdge.setAsCopy(getVertexValue().getEdgeList(neighborToMeDir).getEdge(incomingMsg.getSourceVertexId()));
-            
-            getVertexValue().getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
+        if (vertex.getEdgeList(neighborToMeDir).containsKey(incomingMsg.getSourceVertexId())) {
+            readIds = vertex.getEdgeList(neighborToMeDir).get(incomingMsg.getSourceVertexId());
+            vertex.getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
+        } else {
+            readIds = new ReadIdListWritable();
         }
-        tmpEdge.setKey(incomingMsg.getTopCoverageVertexId());
         EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
-        getVertexValue().getEdgeList(updateDir).unionAdd(tmpEdge);
+        getVertexValue().getEdgeList(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
     }
     
     @Override
