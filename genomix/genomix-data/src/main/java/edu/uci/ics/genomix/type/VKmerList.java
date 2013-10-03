@@ -293,6 +293,10 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         out.write(storage, offset, getLength());
     }
 
+    public int size(){
+        return getCountOfPosition();
+    }
+    
     public int getCountOfPosition() {
         return valueCount;
     }

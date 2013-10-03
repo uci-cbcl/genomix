@@ -131,22 +131,22 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
 //        }
     }
 
-    public void appendCommonReadId(BFSTraverseMessage incomingMsg) {
-        long readId = incomingMsg.getReadId();
-        VKmer tmpKmer;
-        //add readId to prev edge 
-//        EDGETYPE meToPrev = incomingMsg.getEdgeTypesList().get(0).getMeToPrevEdgeType();
-        tmpKmer = incomingMsg.getPathList().getPosition(0);
-        if (tmpKmer.getKmerLetterLength() != 0) {
-//            getVertexValue().getEdgeList(meToPrev).get(tmpKmer).add(readId);
-        }
-        //add readId to next edge
-//        EDGETYPE meToNext = incomingMsg.getEdgeTypesList().get(0).getMeToNextEdgeType();
-        tmpKmer = incomingMsg.getPathList().getPosition(1);
-        if (tmpKmer.getKmerLetterLength() != 0) {
-//            getVertexValue().getEdgeList(meToNext).get(tmpKmer).add(readId);
-        }
-    }
+//    public void appendCommonReadId(BFSTraverseMessage incomingMsg) {
+//        long readId = incomingMsg.getReadId();
+//        VKmer tmpKmer;
+//        //add readId to prev edge 
+////        EDGETYPE meToPrev = incomingMsg.getEdgeTypesList().get(0).getMeToPrevEdgeType();
+//        tmpKmer = incomingMsg.getPathList().getPosition(0);
+//        if (tmpKmer.getKmerLetterLength() != 0) {
+////            getVertexValue().getEdgeList(meToPrev).get(tmpKmer).add(readId);
+//        }
+//        //add readId to next edge
+////        EDGETYPE meToNext = incomingMsg.getEdgeTypesList().get(0).getMeToNextEdgeType();
+//        tmpKmer = incomingMsg.getPathList().getPosition(1);
+//        if (tmpKmer.getKmerLetterLength() != 0) {
+////            getVertexValue().getEdgeList(meToNext).get(tmpKmer).add(readId);
+//        }
+//    }
 
     @Override
     public void compute(Iterator<BFSTraverseMessage> msgIterator) {
@@ -189,7 +189,7 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
                         broadcaseBFSTraverse(incomingMsg);
                     }
                 } else {// append common readId to the corresponding edge
-                    appendCommonReadId(incomingMsg);
+//                    appendCommonReadId(incomingMsg);
                 }
             }
             voteToHalt();
