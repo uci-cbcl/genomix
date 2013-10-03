@@ -114,6 +114,15 @@ public class VertexValueWritable extends Node {
     public void setFakeVertex(boolean isFakeVertex) {
         this.isFakeVertex = isFakeVertex;
     }
+    
+    // reuse isFakeVertex to store isSaved()
+    public boolean isSaved() {
+        return isFakeVertex;
+    }
+
+    public void setSaved(boolean isSaved) {
+        this.isFakeVertex = isSaved;
+    }
 
     public void setState(short state) {
         this.state = state;

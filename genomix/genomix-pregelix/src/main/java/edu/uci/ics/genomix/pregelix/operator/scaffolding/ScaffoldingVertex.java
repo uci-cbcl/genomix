@@ -20,6 +20,7 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.EdgeType;
+import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.Node.DIR;
@@ -222,8 +223,10 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         VertexValueWritable vertex = getVertexValue();
         ReadHeadSet readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
         switch(type){
+            // remember to account for partial overlaps
             case OFFSET:
-                return incomingMsg.getTotalBFSLength() + readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
+                //FIXME is it offset or (length - offset)
+                return incomingMsg.getTotalBFSLength() + readHeadSet.getOffsetFromReadId(incomingMsg.getReadId()) - kmerSize + 1; 
             case WHOLE_LENGTH:
                 return incomingMsg.getTotalBFSLength() + vertex.getInternalKmer().getLength() - kmerSize + 1;
             default:
@@ -266,6 +269,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path
                         // put empty in value to mark it as ambiguous path
                         pathMap.get(commonReadId).reset();
+                        vertex.setSaved(false);
                         continue;
                     } else{ // if it's unambiguous path, save 
                         VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
@@ -273,6 +277,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                         // doesn't need to update edgeTypeList
                         PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList, incomingMsg.getEdgeTypeList());
                         pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
+                        vertex.setSaved(true);
                     }
                 }  
             }
@@ -305,6 +310,11 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, validOugoingDir);
                 }
             }
+        }
+        if(vertex.isSaved())
+            activate();
+        else
+            voteToHalt();
 //            if (incomingMsg.isTraverseMsg()) {
 //                // check if find destination
 //                // TODO explicitly set message type
@@ -338,10 +348,43 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
 //                // append common readId to the corresponding edge
 //                appendCommonReadId(incomingMsg);
 //            }
-        }
-        voteToHalt();
     }
 
+    public void sendMsgToPathNodeToAddCommondReadId(HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap) {
+        for(LongWritable commonReadId : pathMap.keySet()){
+            outgoingMsg.reset();
+            outgoingMsg.setReadId(commonReadId.get());
+            
+            PathAndEdgeTypeList pathAndEdgeTypeList =  pathMap.get(commonReadId);
+        }
+
+        
+        
+//        outgoingMsg.reset();
+//        outgoingMsg.setTraverseMsg(false);
+//        outgoingMsg.setReadId(readId);
+//        int size = pathList.getCountOfPosition();
+//        VKmerList outPathList = outgoingMsg.getPathList();
+//        ArrayListWritable<EdgeTypes> outEdgeTypesList = outgoingMsg.getEdgeTypesList();
+//        for (int i = 0; i < size; i++) {
+//            outEdgeTypesList.clear();
+//            outEdgeTypesList.add(edgeTypesList.get(i));
+//            outPathList.reset();
+//            if (i == 0) { // the first kmer in pathList
+//                outPathList.append(new VKmer());
+//                outPathList.append(pathList.getPosition(i + 1));
+//            } else if (i == size - 1) { // the last kmer in pathList
+//                outPathList.append(pathList.getPosition(i - 1));
+//                outPathList.append(new VKmer());
+//            } else { // the middle kmer in pathList
+//                outPathList.append(pathList.getPosition(i - 1));
+//                outPathList.append(pathList.getPosition(i + 1));
+//            }
+//            VKmer destVertexId = pathList.getPosition(i);
+//            sendMsg(destVertexId, outgoingMsg);
+//        }
+    }
+    
     @Override
     public void compute(Iterator<BFSTraverseMessage> msgIterator) {
         initVertex();
@@ -351,6 +394,13 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             processScaffoldingMap();
         } else if (getSuperstep() >= 3) {
             BFSearch(msgIterator);
+        } else if (getSuperstep() > SCAFFOLDING_MAX_TRAVERSAL_LENGTH - kmerSize + 3){
+            // send message to all the path nodes to add this common readId
+//            sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
+//                  incomingMsg.getEdgeTypesList());
+            //set statistics counter: Num_RemovedLowCoverageNodes
+            incrementCounter(StatisticsCounter.Num_Scaffodings);
+            getVertexValue().setCounters(counters);
         }
     }
 

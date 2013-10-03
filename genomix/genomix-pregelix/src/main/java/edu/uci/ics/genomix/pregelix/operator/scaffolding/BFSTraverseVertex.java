@@ -103,10 +103,14 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
     public void sendMsgToPathNodeToAddCommondReadId(long readId, VKmerList pathList,
             ArrayListWritable<EdgeTypes> edgeTypesList) {
         outgoingMsg.reset();
-        outgoingMsg.setTraverseMsg(false);
         outgoingMsg.setReadId(readId);
-        int size = pathList.getCountOfPosition();
-        VKmerList outPathList = outgoingMsg.getPathList();
+        
+        
+//        outgoingMsg.reset();
+//        outgoingMsg.setTraverseMsg(false);
+//        outgoingMsg.setReadId(readId);
+//        int size = pathList.getCountOfPosition();
+//        VKmerList outPathList = outgoingMsg.getPathList();
 //        ArrayListWritable<EdgeTypes> outEdgeTypesList = outgoingMsg.getEdgeTypesList();
 //        for (int i = 0; i < size; i++) {
 //            outEdgeTypesList.clear();
