@@ -22,6 +22,7 @@ import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.EdgeType;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
@@ -38,12 +39,12 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
  */
 public class ScaffoldingVertex extends BFSTraverseVertex {
 
-    public enum READHEADTYPE {
+    public enum READHEAD_TYPE {
         UNFLIPPED,
         FLIPPED;
     }
     
-    public enum UPDATELENGTHTYPE {
+    public enum UPDATELENGTH_TYPE {
         OFFSET,
         WHOLE_LENGTH;
     }
@@ -58,9 +59,9 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             this.flip = flip;
         }
 
-        public SearchInfo(VKmer otherKmer, READHEADTYPE flip) {
+        public SearchInfo(VKmer otherKmer, READHEAD_TYPE flip) {
             this.kmer.setAsCopy(otherKmer);
-            this.flip = flip == READHEADTYPE.FLIPPED ? true : false;
+            this.flip = flip == READHEAD_TYPE.FLIPPED ? true : false;
         }
 
         public VKmer getKmer() {
@@ -153,7 +154,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     }
 
     // send map to readId.hashValue() bin
-    public void addReadsToScaffoldingMap(ReadHeadSet readIds, READHEADTYPE isFlip) { // TODO ENUM for flip
+    public void addReadsToScaffoldingMap(ReadHeadSet readIds, READHEAD_TYPE isFlip) {
         // searchInfo can be a struct
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
@@ -187,10 +188,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         VertexValueWritable vertex = getVertexValue();
         if (vertex.getAverageCoverage() >= SCAFFOLDING_MIN_COVERAGE
                 && vertex.getInternalKmer().getLength() < SCAFFOLDING_MIN_LENGTH) {
-            addReadsToScaffoldingMap(vertex.getStartReads(), READHEADTYPE.UNFLIPPED);
-            addReadsToScaffoldingMap(vertex.getEndReads(), READHEADTYPE.FLIPPED);
-            //			addStartReadsToScaffoldingMap();
-            //			addEndReadsToScaffoldingMap();
+            addReadsToScaffoldingMap(vertex.getStartReads(), READHEAD_TYPE.UNFLIPPED);
+            addReadsToScaffoldingMap(vertex.getEndReads(), READHEAD_TYPE.FLIPPED);
             vertex.setScaffoldingMap(scaffoldingMap);
         }
         voteToHalt();
@@ -219,7 +218,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         deleteVertex(getVertexId());
     }
     
-    public int updateBFSLength(BFSTraverseMessage incomingMsg, UPDATELENGTHTYPE type){
+    public int updateBFSLength(BFSTraverseMessage incomingMsg, UPDATELENGTH_TYPE type){
         VertexValueWritable vertex = getVertexValue();
         ReadHeadSet readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
         switch(type){
@@ -232,6 +231,22 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         }
         
     }
+    
+    public void sendMsgAndUpdateEdgeTypeList(ArrayListWritable<EdgeType> edgeTypeList, DIR direction){
+        VertexValueWritable vertex = getVertexValue();
+        for (EDGETYPE et : direction.edgeTypes()) {
+            for (VKmer dest : vertex.getEdgeList(et).keySet()) {
+                outFlag &= EDGETYPE.CLEAR;
+                outFlag |= et.mirror().get();
+                outgoingMsg.setFlag(outFlag);
+                // update EdgeTypeList
+                edgeTypeList.add(new EdgeType(et));
+                outgoingMsg.setEdgeTypeList(edgeTypeList);
+                sendMsg(dest, outgoingMsg);
+            }
+        }
+    }
+    
     /**
      * step 3:
      */
@@ -243,9 +258,9 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             boolean exceedMaxLength = false;
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
             int totalBFSLength;
-            if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
+            if(incomingMsg.getSeekedVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)){
                 // update totalBFSLength 
-                totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTHTYPE.OFFSET);
+                totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.OFFSET);
                 long commonReadId = incomingMsg.getReadId();
                 if(isInRange(totalBFSLength)){ 
                     HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
@@ -256,18 +271,42 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     } else{ // if it's unambiguous path, save 
                         VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
                         updatedKmerList.append(getVertexId());
-                        // don't need to update edgeTypeList
+                        // doesn't need to update edgeTypeList
                         PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList, incomingMsg.getEdgeTypeList());
                         pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
                     }
                 }  
             }
             // For all nodes -- send messge to all neighbor if there exists valid path
-            totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTHTYPE.WHOLE_LENGTH);
+            totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.WHOLE_LENGTH);
             if(totalBFSLength > SCAFFOLDING_MAX_TRAVERSAL_LENGTH)
                 exceedMaxLength = true;
             if(!exceedMaxLength){
+                // setup ougoingMsg and prepare to sendMsg
+                outgoingMsg.reset();
                 
+                // update totalBFSLength 
+                outgoingMsg.setTotalBFSLength(totalBFSLength);
+                
+                // update PathList
+                VKmerList updatedKmerList = incomingMsg.getPathList();
+                updatedKmerList.append(getVertexId());
+                outgoingMsg.setPathList(updatedKmerList);
+                
+                // send message to valid neighbor
+                ArrayListWritable<EdgeType> oldEdgeTypeList = incomingMsg.getEdgeTypeList();
+                if(getSuperstep() == 3){ // the initial BFS
+                    // send message to all neighbors and update EdgeTypeList
+                    sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, DIR.REVERSE);
+                    sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, DIR.FORWARD);
+                } else{
+                    // A -> B -> C, neighor: A, me: B, validDir: B -> C 
+                    EDGETYPE meToIncoming = EDGETYPE.fromByte(incomingMsg.getFlag());
+                    DIR validOugoingDir = meToIncoming.dir().mirror();
+                    
+                    // send message to valid neighbors and update EdgeTypeList
+                    sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, validOugoingDir);
+                }
             }
 //            if (incomingMsg.isTraverseMsg()) {
 //                // check if find destination

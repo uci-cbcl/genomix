@@ -107,24 +107,24 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         outgoingMsg.setReadId(readId);
         int size = pathList.getCountOfPosition();
         VKmerList outPathList = outgoingMsg.getPathList();
-        ArrayListWritable<EdgeTypes> outEdgeTypesList = outgoingMsg.getEdgeTypesList();
-        for (int i = 0; i < size; i++) {
-            outEdgeTypesList.clear();
-            outEdgeTypesList.add(edgeTypesList.get(i));
-            outPathList.reset();
-            if (i == 0) { // the first kmer in pathList
-                outPathList.append(new VKmer());
-                outPathList.append(pathList.getPosition(i + 1));
-            } else if (i == size - 1) { // the last kmer in pathList
-                outPathList.append(pathList.getPosition(i - 1));
-                outPathList.append(new VKmer());
-            } else { // the middle kmer in pathList
-                outPathList.append(pathList.getPosition(i - 1));
-                outPathList.append(pathList.getPosition(i + 1));
-            }
-            VKmer destVertexId = pathList.getPosition(i);
-            sendMsg(destVertexId, outgoingMsg);
-        }
+//        ArrayListWritable<EdgeTypes> outEdgeTypesList = outgoingMsg.getEdgeTypesList();
+//        for (int i = 0; i < size; i++) {
+//            outEdgeTypesList.clear();
+//            outEdgeTypesList.add(edgeTypesList.get(i));
+//            outPathList.reset();
+//            if (i == 0) { // the first kmer in pathList
+//                outPathList.append(new VKmer());
+//                outPathList.append(pathList.getPosition(i + 1));
+//            } else if (i == size - 1) { // the last kmer in pathList
+//                outPathList.append(pathList.getPosition(i - 1));
+//                outPathList.append(new VKmer());
+//            } else { // the middle kmer in pathList
+//                outPathList.append(pathList.getPosition(i - 1));
+//                outPathList.append(pathList.getPosition(i + 1));
+//            }
+//            VKmer destVertexId = pathList.getPosition(i);
+//            sendMsg(destVertexId, outgoingMsg);
+//        }
     }
 
     public void appendCommonReadId(BFSTraverseMessage incomingMsg) {
@@ -134,13 +134,13 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
 //        EDGETYPE meToPrev = incomingMsg.getEdgeTypesList().get(0).getMeToPrevEdgeType();
         tmpKmer = incomingMsg.getPathList().getPosition(0);
         if (tmpKmer.getKmerLetterLength() != 0) {
-            getVertexValue().getEdgeList(meToPrev).get(tmpKmer).add(readId);
+//            getVertexValue().getEdgeList(meToPrev).get(tmpKmer).add(readId);
         }
         //add readId to next edge
 //        EDGETYPE meToNext = incomingMsg.getEdgeTypesList().get(0).getMeToNextEdgeType();
         tmpKmer = incomingMsg.getPathList().getPosition(1);
         if (tmpKmer.getKmerLetterLength() != 0) {
-            getVertexValue().getEdgeList(meToNext).get(tmpKmer).add(readId);
+//            getVertexValue().getEdgeList(meToNext).get(tmpKmer).add(readId);
         }
     }
 
