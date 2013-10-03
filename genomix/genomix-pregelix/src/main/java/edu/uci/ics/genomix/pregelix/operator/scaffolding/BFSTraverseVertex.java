@@ -61,7 +61,7 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
             EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
             DIR validDir = meToNeighbor.dir().mirror();
             // update EdgeTypesList
-            updateEdgeTypesList(incomingMsg.getEdgeTypesList(), meToNeighbor);
+//            updateEdgeTypesList(incomingMsg.getEdgeTypesList(), meToNeighbor);
             // send msg to valid destination
             sendSettledMsgs(validDir, getVertexValue());
         }
@@ -97,7 +97,7 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         VKmerList pathList = incomingMsg.getPathList();
         pathList.append(getVertexId());
         EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
-        updateEdgeTypesList(incomingMsg.getEdgeTypesList(), meToNeighbor);
+//        updateEdgeTypesList(incomingMsg.getEdgeTypesList(), meToNeighbor);
     }
 
     public void sendMsgToPathNodeToAddCommondReadId(long readId, VKmerList pathList,
@@ -131,13 +131,13 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         long readId = incomingMsg.getReadId();
         VKmer tmpKmer;
         //add readId to prev edge 
-        EDGETYPE meToPrev = incomingMsg.getEdgeTypesList().get(0).getMeToPrevEdgeType();
+//        EDGETYPE meToPrev = incomingMsg.getEdgeTypesList().get(0).getMeToPrevEdgeType();
         tmpKmer = incomingMsg.getPathList().getPosition(0);
         if (tmpKmer.getKmerLetterLength() != 0) {
             getVertexValue().getEdgeList(meToPrev).get(tmpKmer).add(readId);
         }
         //add readId to next edge
-        EDGETYPE meToNext = incomingMsg.getEdgeTypesList().get(0).getMeToNextEdgeType();
+//        EDGETYPE meToNext = incomingMsg.getEdgeTypesList().get(0).getMeToNextEdgeType();
         tmpKmer = incomingMsg.getPathList().getPosition(1);
         if (tmpKmer.getKmerLetterLength() != 0) {
             getVertexValue().getEdgeList(meToNext).get(tmpKmer).add(readId);
@@ -176,8 +176,8 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
                             // final step to process BFS -- pathList and dirList
                             finalProcessBFS(incomingMsg);
                             // send message to all the path nodes to add this common readId 
-                            sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
-                                    incomingMsg.getEdgeTypesList());
+//                            sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
+//                                    incomingMsg.getEdgeTypesList());
                         } else {//continue to BFS
                             broadcaseBFSTraverse(incomingMsg);
                         }

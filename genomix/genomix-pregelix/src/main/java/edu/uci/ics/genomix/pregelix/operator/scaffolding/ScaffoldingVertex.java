@@ -96,10 +96,16 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             kmerList = new VKmerList();
             edgeTypeList = new ArrayListWritable<EdgeType>();
         }
+        
         public PathAndEdgeTypeList(VKmerList kmerList, ArrayListWritable<EdgeType> edgeTypeList){
             this.kmerList.setCopy(kmerList);
             this.edgeTypeList.clear();
             this.edgeTypeList.addAll(edgeTypeList);
+        }
+        
+        public void reset(){
+            kmerList.reset();
+            edgeTypeList.clear();
         }
         
         @Override
@@ -222,27 +228,32 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         BFSTraverseMessage incomingMsg;
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
+            boolean exceedMaxLength = false;
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
             if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                 // update totalBFSLength 
                 int totalBFSLength = updateBFSLength(incomingMsg);
                 long commonReadId = incomingMsg.getReadId();
                 if(isInRange(totalBFSLength)){ 
-                    HashMapWritable<LongWritable, VKmerList> pathMap = vertex.getPathMap();
+                    HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
                     if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path
                         // put empty in value to mark it as ambiguous path
-                        pathMap.get(commonReadId).reset(); 
+                        pathMap.get(commonReadId).reset();
                         continue;
-                    } else{ // if valid, save 
+                    } else{ // if it's unambiguous path, save 
                         VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
                         updatedKmerList.append(getVertexId());
-//                        EdgeTypeList updatedEdgeTypeList = new 
-//                        pathMap.put(new LongWritable(commonReadId), updatedKmerList);
+                        // don't need to update edgeTypeList
+                        PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList, incomingMsg.getEdgeTypeList());
+                        pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
                     }
-                }
+                } else if(totalBFSLength > SCAFFOLDING_MAX_TRAVERSAL_LENGTH)
+                    exceedMaxLength = true;
             }
             // For all nodes -- send messge to all neighbor if there exists valid path
-            
+            if(!exceedMaxLength){
+                
+            }
 //            if (incomingMsg.isTraverseMsg()) {
 //                // check if find destination
 //                // TODO explicitly set message type

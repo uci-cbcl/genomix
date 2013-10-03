@@ -8,6 +8,7 @@ import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex.SearchInfo;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
@@ -41,7 +42,7 @@ public class VertexValueWritable extends Node {
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
     private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap; //use for scaffolding, think optimaztion way
-    private HashMapWritable<LongWritable, VKmerList> pathMap;
+    private HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap;
     
     public VertexValueWritable() {
         super();
@@ -49,7 +50,7 @@ public class VertexValueWritable extends Node {
         isFakeVertex = false;
         counters = new HashMapWritable<ByteWritable, VLongWritable>();
         scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
-        pathMap = new HashMapWritable<LongWritable, VKmerList>();
+        pathMap = new HashMapWritable<LongWritable, PathAndEdgeTypeList>();
     }
 
     public void setAsCopy(VertexValueWritable other) {
@@ -136,11 +137,11 @@ public class VertexValueWritable extends Node {
         this.scaffoldingMap.putAll(scaffoldingMap);
     }
     
-    public HashMapWritable<LongWritable, VKmerList> getPathMap() {
+    public HashMapWritable<LongWritable, PathAndEdgeTypeList> getPathMap() {
         return pathMap;
     }
 
-    public void setPathMap(HashMapWritable<LongWritable, VKmerList> pathMap) {
+    public void setPathMap(HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap) {
         this.pathMap.clear();
         this.pathMap.putAll(pathMap);
     }
