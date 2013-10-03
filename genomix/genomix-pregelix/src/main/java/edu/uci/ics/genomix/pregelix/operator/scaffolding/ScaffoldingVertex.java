@@ -135,8 +135,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         addFakeVertex("A");
         // grouped by 5'/~5' readId in aggregator
         VertexValueWritable vertex = getVertexValue();
-        if (vertex.getAverageCoverage() >= SCAFFOLDING_MIN_COVERAGE
-                && vertex.getInternalKmer().getLength() < SCAFFOLDING_MIN_LENGTH) {
+        if (vertex.isValidReadHead(SCAFFOLDING_MIN_COVERAGE, SCAFFOLDING_MIN_LENGTH)){
             addReadsToScaffoldingMap(vertex.getStartReads(), READHEAD_TYPE.UNFLIPPED);
             addReadsToScaffoldingMap(vertex.getEndReads(), READHEAD_TYPE.FLIPPED);
             vertex.setScaffoldingMap(scaffoldingMap);
@@ -167,6 +166,12 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         deleteVertex(getVertexId());
     }
     
+    public boolean isValidDestination(BFSTraverseMessage incomingMsg){
+        // update totalBFSLength
+        int totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.DEST_OFFSET);
+        return isValidOrientation(incomingMsg) && isInRange(totalBFSLength); 
+    }
+    
     /**
      * step 3:
      */
@@ -177,29 +182,23 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
-            
-            if(incomingMsg.getSeekedVertexId().equals(getVertexId()) && isValidOrientation(incomingMsg)){
-                // update totalBFSLength
-            	// TODO move length logic inside new function "isValidDestination"
-            	int totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.DEST_OFFSET); // TODO change name 
+            if(incomingMsg.getSeekedVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)){
             	long commonReadId = incomingMsg.getReadId();
-                if(isInRange(totalBFSLength)){ 
-                    HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
-                    if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path FIXME
-                        // put empty in value to mark it as ambiguous path
-                        pathMap.remove(commonReadId);
-                        unambiguousReadIds.put(commonReadId, false);
-                        continue; // stop BFS search here
-                    } else{ // if it's unambiguous path, save 
-                        VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
-                        updatedKmerList.append(getVertexId());
-                        // doesn't need to update edgeTypeList
-                        PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList, incomingMsg.getEdgeTypeList());
-                        pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
-                        unambiguousReadIds.put(commonReadId, true);
-                    }
-                }  
-            }
+                HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
+                if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path FIXME
+                    // put empty in value to mark it as ambiguous path
+                    pathMap.remove(commonReadId);
+                    unambiguousReadIds.put(commonReadId, false);
+                    continue; // stop BFS search here
+                } else{ // if it's unambiguous path, save 
+                    VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
+                    updatedKmerList.append(getVertexId());
+                    // doesn't need to update edgeTypeList
+                    PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList, incomingMsg.getEdgeTypeList());
+                    pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
+                    unambiguousReadIds.put(commonReadId, true);
+                }
+            }  
             // For all nodes -- send messge to all neighbor if there exists valid path
             // iteration 3 is the beginning of the search-- use the portion of the kmer remaining after accounting for the offset
             int totalBFSLength = updateBFSLength(incomingMsg, 

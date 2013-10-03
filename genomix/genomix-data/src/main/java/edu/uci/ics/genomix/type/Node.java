@@ -507,7 +507,7 @@ public class Node implements Writable, Serializable {
     public void setAverageCoverage(float averageCoverage) {
         this.averageCoverage = averageCoverage;
     }
-
+    
     /**
      * Update my coverage to be the average of this and other. Used when merging
      * paths.

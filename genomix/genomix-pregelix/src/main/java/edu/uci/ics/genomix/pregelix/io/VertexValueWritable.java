@@ -64,6 +64,10 @@ public class VertexValueWritable extends Node {
         pathMap.putAll(other.pathMap);
     }
 
+    public boolean isValidReadHead(int minCoverage, int minLength){
+        return getAverageCoverage() >= minCoverage && getInternalKmer().getLength() >= minLength;
+    }
+    
     public void setNode(Node node) {
         // TODO invertigate... does this need to be a copy?
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(), node.getInternalKmer(),
