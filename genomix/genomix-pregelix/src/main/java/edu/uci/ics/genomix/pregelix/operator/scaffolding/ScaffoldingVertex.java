@@ -14,13 +14,11 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.EdgeType;
-import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.Node.DIR;
@@ -114,6 +112,10 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             edgeTypeList.clear();
         }
         
+        public int size(){
+            return kmerList.getCountOfPosition();
+        }
+        
         @Override
         public void write(DataOutput out) throws IOException {
             kmerList.write(out);
@@ -126,6 +128,23 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             edgeTypeList.readFields(in);
         }
 
+        public VKmerList getKmerList() {
+            return kmerList;
+        }
+
+        public void setKmerList(VKmerList kmerList) {
+            this.kmerList.setCopy(kmerList);
+        }
+
+        public ArrayListWritable<EdgeType> getEdgeTypeList() {
+            return edgeTypeList;
+        }
+
+        public void setEdgeTypeList(ArrayListWritable<EdgeType> edgeTypeList) {
+            this.edgeTypeList.clear();
+            this.edgeTypeList.addAll(edgeTypeList);
+        }
+        
     }
 
     // add to driver
@@ -355,7 +374,15 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             outgoingMsg.reset();
             outgoingMsg.setReadId(commonReadId.get());
             
-            PathAndEdgeTypeList pathAndEdgeTypeList =  pathMap.get(commonReadId);
+            PathAndEdgeTypeList pathAndEdgeTypeList = pathMap.get(commonReadId);
+            for(int i = 0; i < pathAndEdgeTypeList.size(); i++){
+                if(i == 0){
+                    outFlag &= EDGETYPE.CLEAR;
+                    outFlag |= pathAndEdgeTypeList.edgeTypeList.get(0).getEdgeTypeByte();
+                    outgoingMsg.setFlag(outFlag);
+                    sendMsg(pathAndEdgeTypeList.kmerList.getPosition(0), outgoingMsg);
+                }
+            }
         }
 
         
@@ -398,7 +425,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             // send message to all the path nodes to add this common readId
 //            sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
 //                  incomingMsg.getEdgeTypesList());
-            //set statistics counter: Num_RemovedLowCoverageNodes
+            //set statistics counter: Num_Scaffodings
             incrementCounter(StatisticsCounter.Num_Scaffodings);
             getVertexValue().setCounters(counters);
         }

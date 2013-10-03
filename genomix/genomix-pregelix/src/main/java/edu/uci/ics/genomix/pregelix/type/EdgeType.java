@@ -26,6 +26,10 @@ public class EdgeType implements Writable{
         edgeType = EDGETYPE.fromByte(in.readByte());   
     }
 
+    public byte getEdgeTypeByte(){
+        return getEdgeType().get();
+    }
+    
     public EDGETYPE getEdgeType() {
         return edgeType;
     }
