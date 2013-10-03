@@ -78,7 +78,7 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         }
     }
     
-    public static class PathAndEdgeTypeList implements Writable { // TODO make into a generic PairWritable or perhaps a EntryWritable?
+    public static class PathAndEdgeTypeList implements Writable { 
         VKmerList kmerList;
         ArrayListWritable<EDGETYPE> edgeTypeList;
       
