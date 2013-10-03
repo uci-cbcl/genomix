@@ -17,7 +17,6 @@ import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.EdgeType;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.Node.DIR;
@@ -107,7 +106,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         
     }
     
-    public void sendMsgAndUpdateEdgeTypeList(ArrayListWritable<EdgeType> edgeTypeList, DIR direction){
+    public void sendMsgAndUpdateEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList, DIR direction){
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
             for (VKmer dest : vertex.getEdgeList(et).keySet()) {
@@ -115,7 +114,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
                 // update EdgeTypeList
-                edgeTypeList.add(new EdgeType(et)); // use Array<EDGETYPE>  // TODO change to use EDGETYPE
+                edgeTypeList.add(et); // use Array<EDGETYPE>  // TODO change to use EDGETYPE
                 outgoingMsg.setEdgeTypeList(edgeTypeList);
                 sendMsg(dest, outgoingMsg);
             }
@@ -216,7 +215,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 outgoingMsg.setPathList(updatedKmerList);
                 
                 // send message to valid neighbor
-                ArrayListWritable<EdgeType> oldEdgeTypeList = incomingMsg.getEdgeTypeList();
+                ArrayListWritable<EDGETYPE> oldEdgeTypeList = incomingMsg.getEdgeTypeList();
                 if(getSuperstep() == 3){ // the initial BFS TODO take boolean for initial BFS
                     // send message to the neighbors based on srcFlip and update EdgeTypeList
                 	if(incomingMsg.isSrcFlip())
@@ -257,26 +256,26 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             
             PathAndEdgeTypeList pathAndEdgeTypeList = pathMap.get(commonReadId);
             VKmerList kmerList = pathAndEdgeTypeList.getKmerList();
-            ArrayListWritable<EdgeType> edgeTypeList = pathAndEdgeTypeList.getEdgeTypeList();
+            ArrayListWritable<EDGETYPE> edgeTypeList = pathAndEdgeTypeList.getEdgeTypeList();
             VKmerList pathList = outgoingMsg.getPathList();
             // in outgoingMsg.flag (0-1)bit for nextEdgeType, (2-3)bit for prevEdgeType
             for(int i = 0; i < pathAndEdgeTypeList.size(); i++){
                 if(i == pathAndEdgeTypeList.size() - 1){ // only update self
-                    EDGETYPE prevToMe = edgeTypeList.get(i - 1).getEdgeType();
+                    EDGETYPE prevToMe = edgeTypeList.get(i - 1);
                     VKmer preKmer = kmerList.getPosition(i - 1);
                     vertex.getEdgeList(prevToMe.mirror()).get(preKmer).add(commonReadId.get());
                 } else{
                 	pathList.reset();
                     // next (0-1)bit
                     outFlag &= EDGETYPE.CLEAR;
-                    outFlag |= edgeTypeList.get(i).getEdgeTypeByte();
+                    outFlag |= edgeTypeList.get(i).get();
                     VKmer nextKmer = kmerList.getPosition(i + 1);
                     pathList.append(nextKmer); // msg.pathList[0] stores nextKmer
                     
                     if(i > 0){ // doesn't need to send prev edgeType to srcNode
                         // prev (2-3)bit
                         outFlag &= EDGETYPE.CLEAR << 2;
-                        outFlag |= edgeTypeList.get(i - 1).getMirrorEdgeTypeByte() << 2;
+                        outFlag |= edgeTypeList.get(i - 1).mirror().get() << 2;
                         VKmer preKmer = kmerList.getPosition(i - 1);
                         pathList.append(preKmer); // msg.pathList[1] stores preKmer 
                         

@@ -12,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.EdgeType;
 import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
@@ -76,14 +75,14 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
     
     public static class PathAndEdgeTypeList implements Writable { // TODO make into a generic PairWritable or perhaps a EntryWritable?
         VKmerList kmerList;
-        ArrayListWritable<EdgeType> edgeTypeList;
+        ArrayListWritable<EDGETYPE> edgeTypeList;
       
         public PathAndEdgeTypeList(){
             kmerList = new VKmerList();
-            edgeTypeList = new ArrayListWritable<EdgeType>();
+            edgeTypeList = new ArrayListWritable<EDGETYPE>();
         }
         
-        public PathAndEdgeTypeList(VKmerList kmerList, ArrayListWritable<EdgeType> edgeTypeList){
+        public PathAndEdgeTypeList(VKmerList kmerList, ArrayListWritable<EDGETYPE> edgeTypeList){
             this.kmerList.setCopy(kmerList);
             this.edgeTypeList.clear();
             this.edgeTypeList.addAll(edgeTypeList);
@@ -118,11 +117,11 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
             this.kmerList.setCopy(kmerList);
         }
 
-        public ArrayListWritable<EdgeType> getEdgeTypeList() {
+        public ArrayListWritable<EDGETYPE> getEdgeTypeList() {
             return edgeTypeList;
         }
 
-        public void setEdgeTypeList(ArrayListWritable<EdgeType> edgeTypeList) {
+        public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList) {
             this.edgeTypeList.clear();
             this.edgeTypeList.addAll(edgeTypeList);
         }

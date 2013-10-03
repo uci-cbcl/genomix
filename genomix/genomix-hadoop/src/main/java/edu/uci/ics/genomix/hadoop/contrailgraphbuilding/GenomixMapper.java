@@ -1,10 +1,6 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Arrays;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
