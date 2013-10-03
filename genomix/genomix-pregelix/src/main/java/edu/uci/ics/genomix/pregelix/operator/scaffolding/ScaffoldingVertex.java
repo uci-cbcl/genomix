@@ -255,7 +255,6 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         BFSTraverseMessage incomingMsg;
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            boolean exceedMaxLength = false;
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
             int totalBFSLength;
             if(incomingMsg.getSeekedVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)){
@@ -279,9 +278,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             }
             // For all nodes -- send messge to all neighbor if there exists valid path
             totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.WHOLE_LENGTH);
-            if(totalBFSLength > SCAFFOLDING_MAX_TRAVERSAL_LENGTH)
-                exceedMaxLength = true;
-            if(!exceedMaxLength){
+            if(totalBFSLength <= SCAFFOLDING_MAX_TRAVERSAL_LENGTH){
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
                 
