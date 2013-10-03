@@ -5,13 +5,18 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableComparator;
 
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.VKmer.Comparator;
+import edu.uci.ics.genomix.util.KmerUtil;
 import edu.uci.ics.genomix.util.Marshal;
 
-public class ReadHeadInfo implements Writable, Serializable {
+public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializable {
+
     private static final long serialVersionUID = 1L;
     protected byte[] storage;
     protected int offset;
@@ -125,5 +130,20 @@ public class ReadHeadInfo implements Writable, Serializable {
     @Override
     public String toString() {
         return "(" + this.getReadId() + "-" + this.getPosId() + "_" + (this.getMateId()) + ")";
+    }
+
+    public static int compareLong(long x, long y) {
+        return (x < y) ? -1 : ((x == y) ? 0 : 1);
+    }
+    
+    @Override
+    public int compareTo(ReadHeadInfo o) {
+        if (this.getReadId() == o.getReadId()) {
+            if(this.getMateId() == o.getMateId()){
+                return this.getPosId() - o.getPosId();
+            }
+            return this.getMateId() - o.getMateId();
+        }
+        return compareLong(this.getReadId(), o.getReadId());
     }
 }
