@@ -111,10 +111,9 @@ public class Node implements Writable, Serializable {
         }
     }
 
-    public enum EDGETYPE { 
+    public enum EDGETYPE implements Writable{ 
     	// TODO implements Writable
     	// TODO remove EdgeType class
- 
 
         FF((byte) (0b00 << 0)),
         FR((byte) (0b01 << 0)),
@@ -298,6 +297,16 @@ public class Node implements Writable, Serializable {
             EDGETYPE et1 = EDGETYPE.fromByte(b1);
             EDGETYPE et2 = EDGETYPE.fromByte(b2);
             return sameOrientation(et1, et2);
+        }
+
+        @Override
+        public void write(DataOutput out) throws IOException {
+            out.writeByte(this.get());
+        }
+
+        @Override
+        public void readFields(DataInput in) throws IOException {
+            fromByte(in.readByte());
         }
     }
 
