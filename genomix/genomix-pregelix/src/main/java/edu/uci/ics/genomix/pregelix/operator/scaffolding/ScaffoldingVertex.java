@@ -89,24 +89,31 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     }
     
     public static class PathAndEdgeTypeList implements Writable {
-
+        VKmerList kmerList;
+        ArrayListWritable<EdgeType> edgeTypeList;
+      
+        public PathAndEdgeTypeList(){
+            kmerList = new VKmerList();
+            edgeTypeList = new ArrayListWritable<EdgeType>();
+        }
+        public PathAndEdgeTypeList(VKmerList kmerList, ArrayListWritable<EdgeType> edgeTypeList){
+            this.kmerList.setCopy(kmerList);
+            this.edgeTypeList.clear();
+            this.edgeTypeList.addAll(edgeTypeList);
+        }
+        
         @Override
         public void write(DataOutput out) throws IOException {
-            // TODO Auto-generated method stub
-            
+            kmerList.write(out);
+            edgeTypeList.write(out);
         }
 
         @Override
         public void readFields(DataInput in) throws IOException {
-            // TODO Auto-generated method stub
-            
+            kmerList.readFields(in);
+            edgeTypeList.readFields(in);
         }
-//        VKmerList kmerList;
-//        ArrayListWritable<EdgeType> edgeTypeList;
-//        
-//        public PathAndEdgeTypeList(){
-//            
-//        }
+
     }
 
     // add to driver
@@ -229,7 +236,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     } else{ // if valid, save 
                         VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
                         updatedKmerList.append(getVertexId());
-                        pathMap.put(new LongWritable(commonReadId), updatedKmerList);
+//                        EdgeTypeList updatedEdgeTypeList = new 
+//                        pathMap.put(new LongWritable(commonReadId), updatedKmerList);
                     }
                 }
             }

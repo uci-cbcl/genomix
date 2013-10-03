@@ -5,16 +5,16 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
-import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
+import edu.uci.ics.genomix.pregelix.type.EdgeType;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
 public class BFSTraverseMessage extends MessageWritable {
 
-    private VKmerList pathList; //use for BFSTravese
-    private ArrayListWritable<EdgeTypes> edgeTypesList;
-    private VKmer seekedVertexId; //use for BFSTravese
     private long readId; //use for BFSTravese
+    private VKmerList pathList; //use for BFSTravese
+    private ArrayListWritable<EdgeType> edgeTypeList; //use for BFSTravese
+    private VKmer seekedVertexId; //use for BFSTravese
     private boolean srcFlip; //use for BFSTravese
     private boolean destFlip; //use for BFSTravese
     private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes
@@ -23,7 +23,7 @@ public class BFSTraverseMessage extends MessageWritable {
     public BFSTraverseMessage() {
         super();
         pathList = new VKmerList();
-        edgeTypesList = new ArrayListWritable<EdgeTypes>();
+        edgeTypeList = new ArrayListWritable<EdgeType>();
         seekedVertexId = new VKmer();
         readId = 0;
         srcFlip = false;
@@ -35,7 +35,7 @@ public class BFSTraverseMessage extends MessageWritable {
     public void reset() {
         super.reset();
         pathList.reset();
-        edgeTypesList.clear();
+        edgeTypeList.clear();
         seekedVertexId.reset(0);
         readId = 0;
         srcFlip = false;
@@ -52,13 +52,13 @@ public class BFSTraverseMessage extends MessageWritable {
         this.pathList = pathList;
     }
 
-    public ArrayListWritable<EdgeTypes> getEdgeTypesList() {
-        return edgeTypesList;
+    public ArrayListWritable<EdgeType> getEdgeTypeList() {
+        return edgeTypeList;
     }
 
-    public void setEdgeTypesList(ArrayListWritable<EdgeTypes> edgeDirsList) {
-        this.edgeTypesList.clear();
-        this.edgeTypesList.addAll(edgeDirsList);
+    public void setEdgeTypeList(ArrayListWritable<EdgeType> edgeDirsList) {
+        this.edgeTypeList.clear();
+        this.edgeTypeList.addAll(edgeDirsList);
     }
 
     public VKmer getSeekedVertexId() {
@@ -114,7 +114,7 @@ public class BFSTraverseMessage extends MessageWritable {
         reset();
         super.readFields(in);
         pathList.readFields(in);
-        edgeTypesList.readFields(in);
+        edgeTypeList.readFields(in);
         seekedVertexId.readFields(in);
         readId = in.readLong();
         srcFlip = in.readBoolean();
@@ -127,7 +127,7 @@ public class BFSTraverseMessage extends MessageWritable {
     public void write(DataOutput out) throws IOException {
         super.write(out);
         pathList.write(out);
-        edgeTypesList.write(out);
+        edgeTypeList.write(out);
         seekedVertexId.write(out);
         out.writeLong(readId);
         out.writeBoolean(srcFlip);
