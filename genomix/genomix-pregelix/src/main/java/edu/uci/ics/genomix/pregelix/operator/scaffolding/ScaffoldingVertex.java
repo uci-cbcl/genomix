@@ -106,7 +106,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         
     }
     
-    public void sendMsgAndUpdateEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList, DIR direction){
+    public void sendMsgToNeighbors(ArrayListWritable<EDGETYPE> edgeTypeList, DIR direction){
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
             for (VKmer dest : vertex.getEdgeList(et).keySet()) {
@@ -219,16 +219,16 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 if(getSuperstep() == 3){ // the initial BFS TODO take boolean for initial BFS
                     // send message to the neighbors based on srcFlip and update EdgeTypeList
                 	if(incomingMsg.isSrcFlip())
-                		sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, DIR.REVERSE); // TODO change names
+                		sendMsgToNeighbors(oldEdgeTypeList, DIR.REVERSE);
                 	else
-                		sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, DIR.FORWARD);
+                		sendMsgToNeighbors(oldEdgeTypeList, DIR.FORWARD);
                 } else{
                     // A -> B -> C, neighor: A, me: B, validDir: B -> C 
                     EDGETYPE meToPrev = EDGETYPE.fromByte(incomingMsg.getFlag());
                     DIR validMeToNextDir = meToPrev.dir().mirror();
                     
                     // send message to valid neighbors and update EdgeTypeList
-                    sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, validMeToNextDir);
+                    sendMsgToNeighbors(oldEdgeTypeList, validMeToNextDir);
                 }
             }
         }
