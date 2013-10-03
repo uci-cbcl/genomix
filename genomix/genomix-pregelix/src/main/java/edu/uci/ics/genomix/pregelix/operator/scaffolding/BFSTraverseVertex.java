@@ -149,19 +149,32 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
             outgoingMsg.reset();
         if (fakeVertex == null) {
             fakeVertex = new VKmer();
-            //            String random = generaterRandomString(kmerSize + 1);
-            //            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
+//            String random = generaterRandomString(kmerSize + 1);
+//            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
     }
 
     public VKmer setOutgoingSrcAndDest(long readId, ArrayListWritable<SearchInfo> searchInfoList) {
-        //TODO src is smaller; dest is greater
-        VKmer srcNode = searchInfoList.get(0).getKmer();
-        outgoingMsg.setSrcFlip(searchInfoList.get(0).isFlip());
-        VKmer destNode = searchInfoList.get(1).getKmer();
-        outgoingMsg.setDestFlip(searchInfoList.get(1).isFlip());
-        outgoingMsg.setReadId(readId); // commonReadId
-        outgoingMsg.setSeekedVertexId(destNode);
+        // src is greater; dest is smaller
+        boolean firstIsSrc = searchInfoList.get(0).kmer.compareTo(searchInfoList.get(1).kmer) >= 0;
+        VKmer firstKmer = searchInfoList.get(0).getKmer();
+        boolean firstFlip = searchInfoList.get(0).isFlip();
+        VKmer secondKmer = searchInfoList.get(1).getKmer();
+        boolean secondFlip = searchInfoList.get(1).isFlip();
+        VKmer srcNode;
+        if(firstIsSrc){
+            srcNode = firstKmer;
+            outgoingMsg.setSrcFlip(firstFlip);
+            outgoingMsg.setSeekedVertexId(secondKmer);
+            outgoingMsg.setDestFlip(secondFlip);
+        } else {
+            srcNode = secondKmer;
+            outgoingMsg.setSrcFlip(secondFlip);
+            outgoingMsg.setSeekedVertexId(firstKmer);
+            outgoingMsg.setDestFlip(firstFlip);
+        }
+        
+        outgoingMsg.setReadId(readId); // commonReadI
 
         return srcNode;
     }
@@ -181,12 +194,12 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
             addFakeVertex("A");
             voteToHalt();
         } else if (getSuperstep() == 2) {
-            //            // for test, assign two kmer to srcNode and destNode
-            //            kmerList.append(srcNode);
-            //            kmerList.append(destNode);
-            //            // initiate two nodes -- srcNode and destNode
-            //            initiateSrcAndDestNode(kmerList, commonReadId, false, true);
-            //            sendMsg(srcNode, outgoingMsg);
+//            // for test, assign two kmer to srcNode and destNode
+//            kmerList.append(srcNode);
+//            kmerList.append(destNode);
+//            // initiate two nodes -- srcNode and destNode
+//            initiateSrcAndDestNode(kmerList, commonReadId, false, true);
+//            sendMsg(srcNode, outgoingMsg);
 
             deleteVertex(getVertexId());
         } 
