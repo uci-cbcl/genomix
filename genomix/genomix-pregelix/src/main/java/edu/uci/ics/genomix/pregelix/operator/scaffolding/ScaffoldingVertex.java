@@ -38,6 +38,9 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
  */
 public class ScaffoldingVertex extends BFSTraverseVertex {
 
+    // TODO Optimization: send map to readId.hashValue() bin
+    // TODO BFS can seperate into simple BFS to filter and real BFS
+    
     public enum READHEAD_TYPE {
         UNFLIPPED,
         FLIPPED;
@@ -48,7 +51,6 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         WHOLE_LENGTH;
     }
     
-    // TODO BFS can seperate into simple BFS to filter and real BFS
     public static class SearchInfo implements Writable {
         private VKmer kmer;
         private boolean flip;
@@ -155,7 +157,6 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     
     public static int NUM_STEP_END_BFS = SCAFFOLDING_MAX_TRAVERSAL_LENGTH - kmerSize + 3;
 
-    // TODO VLong to Long
     private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
 
     @Override
@@ -175,13 +176,11 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         getVertexValue().getScaffoldingMap().clear();
     }
 
-    // send map to readId.hashValue() bin
     public void addReadsToScaffoldingMap(ReadHeadSet readIds, READHEAD_TYPE isFlip) {
-        // searchInfo can be a struct
+        // searchInfo can be a struct but not a class
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
 
-        //TODO rename PositionWritable ReadIdInfo?
         for (ReadHeadInfo pos : readIds) {
             long readId = pos.getReadId();
             if (scaffoldingMap.containsKey(readId)) {
@@ -336,43 +335,12 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             activate();
         else
             voteToHalt();
-//            if (incomingMsg.isTraverseMsg()) {
-//                // check if find destination
-//                // TODO explicitly set message type
-//                // TODO Switch is better than if else
-//                int traversalLength = incomingMsg.getPathList().getCountOfPosition();
-//                if (incomingMsg.getSeekedVertexId().equals(getVertexId())) {
-//                    //TODO change this length to internalKmerLength
-//                    //TODO keep track of the total kmerLength you've come (account for partial overlaps)
-//                    // final step to process BFS -- pathList and edgeTypesList
-//                    finalProcessBFS(incomingMsg); //TODO add 
-//                    if (isValidDestination(incomingMsg) && isInRange(traversalLength)) {
-//                        // TODO store BFS paths until all finish, if more than 1, it's ambiguous
-//                        // send message to all the path nodes to add this common readId
-//                        sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
-//                                incomingMsg.getEdgeTypesList());
-//                        //set statistics counter: Num_RemovedLowCoverageNodes
-//                        incrementCounter(StatisticsCounter.Num_Scaffodings);
-//                        getVertexValue().setCounters(counters);
-//
-//                    }
-//                }
-//                if (isInRange(traversalLength)) {
-//                    //continue to BFS
-//                    broadcaseBFSTraverse(incomingMsg);
-//                }
-//                //                } else {
-//                //                    //begin(step == 3) or continue(step > 3) to BFS
-//                //                    broadcaseBFSTraverse(incomingMsg);
-//                //                }
-//            } else {
-//                // append common readId to the corresponding edge
-//                appendCommonReadId(incomingMsg);
-//            }
     }
-
+    
+    /**
+     * send message to all the path nodes to add this common readId
+     */
     public void sendMsgToPathNodeToAddCommondReadId(HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap) {
-        // send message to all the path nodes to add this common readId
         VertexValueWritable vertex = getVertexValue();
         for(LongWritable commonReadId : pathMap.keySet()){
             outgoingMsg.reset();
@@ -422,6 +390,9 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         vertex.setCounters(counters);
     }
     
+    /**
+     * append common readId to the corresponding edge
+     */
     public void appendCommonReadId(Iterator<BFSTraverseMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
         while(msgIterator.hasNext()){
