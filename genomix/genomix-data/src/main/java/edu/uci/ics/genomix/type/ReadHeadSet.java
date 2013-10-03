@@ -34,11 +34,19 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         offset = 0;
         maxStorageSize = storage.length;
     }
-
+    
     public ReadHeadSet(byte[] data, int offset) {
         setAsReference(data, offset);
     }
-
+    
+    public ReadHeadInfo getReadHeadInfoFromReadId(long readId){
+        for(ReadHeadInfo readHeadInfo : this){
+            if(readHeadInfo.getReadId() == readId)
+                return readHeadInfo;
+        }
+        return null;
+    }
+    
     public ReadHeadSet(List<ReadHeadInfo> posns) {
         this();
         setSize(posns.size() * ReadHeadInfo.LENGTH + HEADER_SIZE); // reserve space for all elements

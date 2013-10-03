@@ -188,7 +188,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
             if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                 // update totalBFSLength 
-//                int totalBFSLength = incomingMsg.getTotalBFSLength() + vertex.getStartReads();
+                ReadHeadSet readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
+//                int totalBFSLength = incomingMsg.getTotalBFSLength() + readHeadSet.get
             }
             // For all nodes -- send messge to all neighbor if there exists valid path
             
