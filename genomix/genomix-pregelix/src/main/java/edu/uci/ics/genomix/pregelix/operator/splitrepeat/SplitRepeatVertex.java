@@ -29,7 +29,6 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * reads. The algorithms are similar to scaffolding, but uses individual
  * reads. It is very experimental, with marginal improvements to the graph
  * 
- * @author anbangx
  */
 public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessage> {
 
@@ -158,7 +157,7 @@ public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable
 
                             //set statistics counter: Num_SplitRepeats
                             incrementCounter(StatisticsCounter.Num_SplitRepeats);
-                            getVertexValue().setCounters(counters);
+                            vertex.setCounters(counters);
 
                             // send msg to neighbors to update their edges to new vertex 
                             updateNeighbors(createdVertexId, edgeIntersection, newReverseNeighborInfo,

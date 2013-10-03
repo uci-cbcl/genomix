@@ -20,7 +20,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge
  * 
- * @author anbangx
  */
 public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
 

@@ -22,7 +22,6 @@ import edu.uci.ics.genomix.type.VKmer;
 /**
  * Graph clean pattern: Simple Bubble Merge
  * 
- * @author anbangx
  */
 public class SimpleBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float DISSIMILAR_THRESHOLD = -1;

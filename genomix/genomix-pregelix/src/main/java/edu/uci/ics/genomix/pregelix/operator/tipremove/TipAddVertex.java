@@ -20,8 +20,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 
 /**
- * @author anbangx
- *         Add tip
+ *  Add tip
  */
 public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;

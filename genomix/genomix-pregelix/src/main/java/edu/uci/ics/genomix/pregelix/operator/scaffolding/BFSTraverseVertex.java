@@ -30,6 +30,11 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         WHOLE_LENGTH;
     }
     
+    public enum SEARCH_TYPE {
+        BEGIN_SEARCH,
+        CONTINUE_SEARCH;
+    }
+    
     public static class SearchInfo implements Writable {
         private VKmer kmer;
         private boolean flip;

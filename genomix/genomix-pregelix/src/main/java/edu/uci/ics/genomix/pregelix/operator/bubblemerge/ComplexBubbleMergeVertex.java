@@ -26,7 +26,6 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 /**
  * Graph clean pattern: Bubble Merge
  * 
- * @author anbangx
  */
 public class ComplexBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float dissimilarThreshold = -1;

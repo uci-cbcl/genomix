@@ -32,7 +32,6 @@ import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 /**
  * Graph clean pattern: Scaffolding
  * 
- * @author anbangx
  */
 public class ScaffoldingVertex extends BFSTraverseVertex {
 
@@ -114,7 +113,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
                 // update EdgeTypeList
-                edgeTypeList.add(et); // use Array<EDGETYPE>  // TODO change to use EDGETYPE
+                edgeTypeList.add(et); 
                 outgoingMsg.setEdgeTypeList(edgeTypeList);
                 sendMsg(dest, outgoingMsg);
             }
@@ -171,10 +170,21 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         return isValidOrientation(incomingMsg) && isInRange(totalBFSLength); 
     }
     
+    public boolean anyUnambiguous(Map<Long, Boolean> unambiguousReadIds){
+        boolean anyUnambiguous = false;
+        for(boolean b : unambiguousReadIds.values()){
+            if(b == true){
+                anyUnambiguous = true;
+                break;
+            }
+        }
+        return anyUnambiguous;
+    }
+    
     /**
      * step 3:
      */
-    public void BFSearch(Iterator<BFSTraverseMessage> msgIterator) {
+    public void BFSearch(Iterator<BFSTraverseMessage> msgIterator, SEARCH_TYPE searchType) {
         VertexValueWritable vertex = getVertexValue();
         BFSTraverseMessage incomingMsg;
         Map<Long, Boolean> unambiguousReadIds = new HashMap<Long, Boolean>(); // TODO move into the vertex and remember its value
@@ -201,7 +211,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             // For all nodes -- send messge to all neighbor if there exists valid path
             // iteration 3 is the beginning of the search-- use the portion of the kmer remaining after accounting for the offset
             int totalBFSLength = updateBFSLength(incomingMsg, 
-                    getSuperstep() == 3 ? UPDATELENGTH_TYPE.SRC_OFFSET : UPDATELENGTH_TYPE.WHOLE_LENGTH);
+                    searchType == SEARCH_TYPE.BEGIN_SEARCH ? UPDATELENGTH_TYPE.SRC_OFFSET : UPDATELENGTH_TYPE.WHOLE_LENGTH);
             if(totalBFSLength <= SCAFFOLDING_MAX_TRAVERSAL_LENGTH){
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
@@ -216,7 +226,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 
                 // send message to valid neighbor
                 ArrayListWritable<EDGETYPE> oldEdgeTypeList = incomingMsg.getEdgeTypeList();
-                if(getSuperstep() == 3){ // the initial BFS TODO take boolean for initial BFS
+                if(searchType == SEARCH_TYPE.BEGIN_SEARCH){ // the initial BFS 
                     // send message to the neighbors based on srcFlip and update EdgeTypeList
                 	if(incomingMsg.isSrcFlip())
                 		sendMsgToNeighbors(oldEdgeTypeList, DIR.REVERSE);
@@ -232,14 +242,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 }
             }
         }
-        boolean anyUnambiguous = false;
-        for(boolean b : unambiguousReadIds.values()){
-        	if(b == true){
-        		anyUnambiguous = true;
-        		break;
-        	}
-        }
-        if(anyUnambiguous)
+        // check if there is any unambiguous node
+        if(anyUnambiguous(unambiguousReadIds))
             activate();
         else
             voteToHalt();
@@ -331,7 +335,10 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         } else if (getSuperstep() == 2) {
             processScaffoldingMap();
         } else if (getSuperstep() >= 3) {
-            BFSearch(msgIterator);
+            if (getSuperstep() == 3)
+                BFSearch(msgIterator, SEARCH_TYPE.BEGIN_SEARCH);
+            else
+                BFSearch(msgIterator, SEARCH_TYPE.CONTINUE_SEARCH);
         } else if (getSuperstep() == NUM_STEP_END_BFS){
             sendMsgToPathNode();
             voteToHalt();

@@ -21,7 +21,6 @@ import edu.uci.ics.genomix.type.VKmer;
  * only supported by a small number of reads. These edges are identified
  * and removed. This is then followed by recompressing the graph.
  * 
- * @author anbangx
  */
 public class RemoveLowCoverageVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
     private static float minAverageCoverage = -1;

@@ -16,7 +16,6 @@ import edu.uci.ics.genomix.type.VKmer;
 /**
  * Graph clean pattern: Remove Bridge
  * 
- * @author anbangx
  */
 public class BridgeRemoveVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
 

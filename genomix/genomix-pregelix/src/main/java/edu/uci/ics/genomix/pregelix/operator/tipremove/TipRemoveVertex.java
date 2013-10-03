@@ -22,7 +22,6 @@ import edu.uci.ics.genomix.type.Node.DIR;
  * The algorithm identifies these nodes and prunes them from the graph. This is then followed
  * by recompressing the graph.
  * 
- * @author anbangx
  */
 public class TipRemoveVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
