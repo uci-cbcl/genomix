@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.io.message;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.type.EdgeMap;
