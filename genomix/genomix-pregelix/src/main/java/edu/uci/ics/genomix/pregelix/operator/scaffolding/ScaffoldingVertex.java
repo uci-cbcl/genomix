@@ -322,11 +322,11 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, DIR.FORWARD);
                 } else{
                     // A -> B -> C, neighor: A, me: B, validDir: B -> C 
-                    EDGETYPE meToIncoming = EDGETYPE.fromByte(incomingMsg.getFlag());
-                    DIR validOugoingDir = meToIncoming.dir().mirror();
+                    EDGETYPE meToPrev = EDGETYPE.fromByte(incomingMsg.getFlag());
+                    DIR validMeToNextDir = meToPrev.dir().mirror();
                     
                     // send message to valid neighbors and update EdgeTypeList
-                    sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, validOugoingDir);
+                    sendMsgAndUpdateEdgeTypeList(oldEdgeTypeList, validMeToNextDir);
                 }
             }
         }
@@ -370,17 +370,39 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     }
 
     public void sendMsgToPathNodeToAddCommondReadId(HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap) {
+        // send message to all the path nodes to add this common readId
+        VertexValueWritable vertex = getVertexValue();
         for(LongWritable commonReadId : pathMap.keySet()){
             outgoingMsg.reset();
             outgoingMsg.setReadId(commonReadId.get());
             
             PathAndEdgeTypeList pathAndEdgeTypeList = pathMap.get(commonReadId);
+            VKmerList kmerList = pathAndEdgeTypeList.getKmerList();
+            ArrayListWritable<EdgeType> edgeTypeList = pathAndEdgeTypeList.getEdgeTypeList();
+            // in outgoingMsg.flag (0-1)bit for nextEdgeType, (2-3)bit for prevEdgeType
             for(int i = 0; i < pathAndEdgeTypeList.size(); i++){
-                if(i == 0){
+                if(i == pathAndEdgeTypeList.size() - 1){ // only update self
+                    EDGETYPE prevToMe = edgeTypeList.get(i - 1).getEdgeType();
+                    VKmer preKmer = kmerList.getPosition(i - 1);
+                    vertex.getEdgeList(prevToMe.mirror()).get(preKmer).add(commonReadId.get());
+                } else{
+                    VKmerList pathList = outgoingMsg.getPathList();
+                    // next (0-1)bit
                     outFlag &= EDGETYPE.CLEAR;
-                    outFlag |= pathAndEdgeTypeList.edgeTypeList.get(0).getEdgeTypeByte();
-                    outgoingMsg.setFlag(outFlag);
-                    sendMsg(pathAndEdgeTypeList.kmerList.getPosition(0), outgoingMsg);
+                    outFlag |= edgeTypeList.get(i).getEdgeTypeByte();
+                    VKmer nextKmer = kmerList.getPosition(i + 1);
+                    pathList.append(nextKmer); // msg.pathList[0] stores nextKmer
+                    
+                    if(i > 0){
+                        // prev (2-3)bit
+                        outFlag &= EDGETYPE.CLEAR << 2;
+                        outFlag |= edgeTypeList.get(i - 1).getMirrorEdgeTypeByte() << 2;
+                        VKmer preKmer = kmerList.getPosition(i - 1);
+                        pathList.append(preKmer); // msg.pathList[1] stores preKmer
+                        
+                        outgoingMsg.setFlag(outFlag);
+                        sendMsg(kmerList.getPosition(i), outgoingMsg);
+                    }
                 }
             }
         }

@@ -30,6 +30,10 @@ public class EdgeType implements Writable{
         return getEdgeType().get();
     }
     
+    public byte getMirrorEdgeTypeByte(){
+        return getEdgeType().mirror().get();
+    }
+    
     public EDGETYPE getEdgeType() {
         return edgeType;
     }
