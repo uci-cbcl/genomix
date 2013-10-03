@@ -26,7 +26,8 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
     }
     
     public enum UPDATELENGTH_TYPE {
-        OFFSET,
+        SRC_OFFSET,
+        DEST_OFFSET,
         WHOLE_LENGTH;
     }
     

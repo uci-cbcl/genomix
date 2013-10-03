@@ -86,12 +86,17 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
 
     public int updateBFSLength(BFSTraverseMessage incomingMsg, UPDATELENGTH_TYPE type){
         VertexValueWritable vertex = getVertexValue();
-        ReadHeadSet readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
+        ReadHeadSet readHeadSet;
         switch(type){
             // remember to account for partial overlaps
-            case OFFSET:
+            case SRC_OFFSET:
+                readHeadSet = incomingMsg.isSrcFlip() ? vertex.getEndReads() : vertex.getStartReads();
+                return vertex.getInternalKmer().getLength() - readHeadSet.getOffsetFromReadId(incomingMsg.getReadId()) - kmerSize + 1; 
+            case DEST_OFFSET:
+                readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
                 //FIXME is it offset or (length - offset)
-                return incomingMsg.getTotalBFSLength() + readHeadSet.getOffsetFromReadId(incomingMsg.getReadId()) - kmerSize + 1; 
+                return incomingMsg.getTotalBFSLength() + vertex.getInternalKmer().getLength() - 
+                        readHeadSet.getOffsetFromReadId(incomingMsg.getReadId()) - kmerSize + 1; 
             case WHOLE_LENGTH:
                 return incomingMsg.getTotalBFSLength() + vertex.getInternalKmer().getLength() - kmerSize + 1;
             default:
@@ -172,7 +177,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             int totalBFSLength;
             if(incomingMsg.getSeekedVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)){
                 // update totalBFSLength 
-                totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.OFFSET);
+                totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.DEST_OFFSET);
                 long commonReadId = incomingMsg.getReadId();
                 if(isInRange(totalBFSLength)){ 
                     HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
@@ -192,7 +197,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 }  
             }
             // For all nodes -- send messge to all neighbor if there exists valid path
-            totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.WHOLE_LENGTH);
+            totalBFSLength = updateBFSLength(incomingMsg, 
+                    getSuperstep() == 3 ? UPDATELENGTH_TYPE.SRC_OFFSET : UPDATELENGTH_TYPE.WHOLE_LENGTH);
             if(totalBFSLength <= SCAFFOLDING_MAX_TRAVERSAL_LENGTH){
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
