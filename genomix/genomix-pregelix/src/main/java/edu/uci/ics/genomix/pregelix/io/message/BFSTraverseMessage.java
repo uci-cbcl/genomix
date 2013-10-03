@@ -9,8 +9,8 @@ import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
-public class BFSTraverseMessage extends MessageWritable{
-    
+public class BFSTraverseMessage extends MessageWritable {
+
     private VKmerList pathList; //use for BFSTravese
     private ArrayListWritable<EdgeTypes> edgeTypesList;
     private VKmer seekedVertexId; //use for BFSTravese
@@ -18,8 +18,8 @@ public class BFSTraverseMessage extends MessageWritable{
     private boolean srcFlip; //use for BFSTravese
     private boolean destFlip; //use for BFSTravese
     private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes 
-    
-    public BFSTraverseMessage(){
+
+    public BFSTraverseMessage() {
         super();
         pathList = new VKmerList();
         edgeTypesList = new ArrayListWritable<EdgeTypes>();
@@ -29,8 +29,8 @@ public class BFSTraverseMessage extends MessageWritable{
         destFlip = false;
         isTraverseMsg = true;
     }
-    
-    public void reset(){
+
+    public void reset() {
         super.reset();
         pathList.reset();
         edgeTypesList.clear();
@@ -40,7 +40,7 @@ public class BFSTraverseMessage extends MessageWritable{
         destFlip = false;
         isTraverseMsg = true;
     }
-    
+
     public VKmerList getPathList() {
         return pathList;
     }
@@ -48,7 +48,7 @@ public class BFSTraverseMessage extends MessageWritable{
     public void setPathList(VKmerList pathList) {
         this.pathList = pathList;
     }
-    
+
     public ArrayListWritable<EdgeTypes> getEdgeTypesList() {
         return edgeTypesList;
     }
@@ -65,7 +65,7 @@ public class BFSTraverseMessage extends MessageWritable{
     public void setSeekedVertexId(VKmer seekedVertexId) {
         this.seekedVertexId.setAsCopy(seekedVertexId);
     }
-    
+
     public long getReadId() {
         return readId;
     }
@@ -89,7 +89,7 @@ public class BFSTraverseMessage extends MessageWritable{
     public void setDestFlip(boolean destFlip) {
         this.destFlip = destFlip;
     }
-    
+
     public boolean isTraverseMsg() {
         return isTraverseMsg;
     }
@@ -97,7 +97,7 @@ public class BFSTraverseMessage extends MessageWritable{
     public void setTraverseMsg(boolean isTraverseMsg) {
         this.isTraverseMsg = isTraverseMsg;
     }
-    
+
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
@@ -110,7 +110,7 @@ public class BFSTraverseMessage extends MessageWritable{
         destFlip = in.readBoolean();
         isTraverseMsg = in.readBoolean();
     }
-    
+
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);

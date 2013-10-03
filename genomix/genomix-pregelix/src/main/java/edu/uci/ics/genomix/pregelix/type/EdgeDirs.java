@@ -6,38 +6,38 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-public class EdgeDirs implements Writable{
-    
+public class EdgeDirs implements Writable {
+
     private byte prevToMeDir;
     private byte nextToMeDir;
     private boolean hasPrevDir;
     private boolean hasNextDir;
-    
-    public EdgeDirs(){
+
+    public EdgeDirs() {
         prevToMeDir = 0;
         nextToMeDir = 0;
         hasPrevDir = false;
         hasNextDir = false;
     }
-    
-    public EdgeDirs(EdgeDirs other){
+
+    public EdgeDirs(EdgeDirs other) {
         set(other);
     }
-    
-    public void set(EdgeDirs edgeDirs){
+
+    public void set(EdgeDirs edgeDirs) {
         prevToMeDir = edgeDirs.prevToMeDir;
         nextToMeDir = edgeDirs.nextToMeDir;
         hasPrevDir = edgeDirs.hasPrevDir;
         hasNextDir = edgeDirs.hasNextDir;
     }
-    
-    public void reset(){
+
+    public void reset() {
         prevToMeDir = 0;
         nextToMeDir = 0;
         hasPrevDir = false;
         hasNextDir = false;
     }
-    
+
     public byte getPrevToMeDir() {
         return prevToMeDir;
     }
@@ -55,7 +55,7 @@ public class EdgeDirs implements Writable{
         this.hasNextDir = true;
         this.nextToMeDir = nextToMeDir;
     }
-    
+
     public boolean isHasPrevDir() {
         return hasPrevDir;
     }
@@ -87,5 +87,5 @@ public class EdgeDirs implements Writable{
         out.writeBoolean(this.hasPrevDir);
         out.writeBoolean(this.hasNextDir);
     }
-    
+
 }

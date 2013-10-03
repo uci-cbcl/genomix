@@ -17,42 +17,41 @@ import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Unroll TandemRepeat
+ * 
  * @author anbangx
- *
  */
-public class UnrollTandemRepeat extends
-    BasicGraphCleanVertex<VertexValueWritable, MessageWritable>{
-    
+public class UnrollTandemRepeat extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+
     /**
      * initiate kmerSize, length
      */
     @Override
     public void initVertex() {
         super.initVertex();
-        if(outgoingMsg == null)
+        if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
             outgoingMsg.reset();
-        if(repeatKmer == null)
+        if (repeatKmer == null)
             repeatKmer = new VKmer();
-        if(getSuperstep() == 1)
+        if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-//        else
-//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        //        else
+        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-    
+
     /**
      * check if this tandem repeat can be solved
      */
-    public boolean repeatCanBeMerged(){
+    public boolean repeatCanBeMerged() {
         tmpValue.setAsCopy(getVertexValue());
         tmpValue.getEdgeList(repeatEdgetype).remove(repeatKmer);
         boolean hasFlip = false;
         // pick one edge and flip 
-        for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-            for(Entry<VKmer, ReadIdSet> edge : tmpValue.getEdgeList(et).entrySet()){
+        for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
+            for (Entry<VKmer, ReadIdSet> edge : tmpValue.getEdgeList(et).entrySet()) {
                 EDGETYPE flipDir = et.flipNeighbor();
                 tmpValue.getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
                 tmpValue.getEdgeList(et).remove(edge);
@@ -60,27 +59,27 @@ public class UnrollTandemRepeat extends
                 hasFlip = true;
                 break;
             }
-            if(hasFlip)
+            if (hasFlip)
                 break;
         }
-        
-        if(VertexUtil.isPathVertex(tmpValue) || VertexUtil.isTipVertex(tmpValue)
+
+        if (VertexUtil.isPathVertex(tmpValue) || VertexUtil.isTipVertex(tmpValue)
                 || VertexUtil.isSingleVertex(tmpValue))
             return true;
         else
             return false;
     }
-    
+
     /**
      * merge tandem repeat
      */
-    public void mergeTandemRepeat(){
+    public void mergeTandemRepeat() {
         getVertexValue().getInternalKmer().mergeWithKmerInDir(repeatEdgetype, kmerSize, getVertexId());
         getVertexValue().getEdgeList(repeatEdgetype).remove(getVertexId());
         boolean hasFlip = false;
         /** pick one edge and flip **/
-        for(EDGETYPE et : EDGETYPE.values()){
-            for(Entry<VKmer, ReadIdSet> edge : getVertexValue().getEdgeList(et).entrySet()){
+        for (EDGETYPE et : EDGETYPE.values()) {
+            for (Entry<VKmer, ReadIdSet> edge : getVertexValue().getEdgeList(et).entrySet()) {
                 EDGETYPE flipDir = et.flipNeighbor();
                 getVertexValue().getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
                 getVertexValue().getEdgeList(et).remove(edge);
@@ -92,36 +91,37 @@ public class UnrollTandemRepeat extends
                 hasFlip = true;
                 break;
             }
-            if(hasFlip)
+            if (hasFlip)
                 break;
         }
     }
-    
+
     /**
      * update edges
      */
-    public void updateEdges(MessageWritable incomingMsg){
+    public void updateEdges(MessageWritable incomingMsg) {
         VertexValueWritable vertex = getVertexValue();
-        EDGETYPE flipDir = EDGETYPE.fromByte(incomingMsg.getFlag()); 
+        EDGETYPE flipDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE prevNeighborToMe = flipDir.mirror();
         EDGETYPE curNeighborToMe = flipDir.mirror(); //mirrorDirection((byte)(incomingMsg.getFlag() & MessageFlag.DEAD_MASK));
-        vertex.getEdgeList(curNeighborToMe).put(incomingMsg.getSourceVertexId(), vertex.getEdgeList(prevNeighborToMe).get(incomingMsg.getSourceVertexId()));
+        vertex.getEdgeList(curNeighborToMe).put(incomingMsg.getSourceVertexId(),
+                vertex.getEdgeList(prevNeighborToMe).get(incomingMsg.getSourceVertexId()));
         vertex.getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
     }
-    
+
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
-        if(getSuperstep() == 1){
-            if(isTandemRepeat(getVertexValue()) && repeatCanBeMerged()){
+        if (getSuperstep() == 1) {
+            if (isTandemRepeat(getVertexValue()) && repeatCanBeMerged()) {
                 mergeTandemRepeat();
                 //set statistics counter: Num_TandemRepeats
                 incrementCounter(StatisticsCounter.Num_TandemRepeats);
                 getVertexValue().setCounters(counters);
             }
             voteToHalt();
-        } else if(getSuperstep() == 2){
-            while(msgIterator.hasNext()){
+        } else if (getSuperstep() == 2) {
+            while (msgIterator.hasNext()) {
                 MessageWritable incomingMsg = msgIterator.next();
                 /** update edge **/
                 updateEdges(incomingMsg);
@@ -129,7 +129,7 @@ public class UnrollTandemRepeat extends
             voteToHalt();
         }
     }
-    
+
     public static void main(String[] args) throws Exception {
         Client.run(args, getConfiguredJob(null, UnrollTandemRepeat.class));
     }

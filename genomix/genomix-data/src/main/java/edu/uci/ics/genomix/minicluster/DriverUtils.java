@@ -50,7 +50,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 public class DriverUtils {
 
-	public static final Logger LOG = Logger.getLogger(DriverUtils.class.getName());
+    public static final Logger LOG = Logger.getLogger(DriverUtils.class.getName());
 
     /*
      * Get the IP address of the master node using the bin/getip.sh script
@@ -70,26 +70,27 @@ public class DriverUtils {
     /**
      * set the CC's IP address and port from the cluster.properties and `getip.sh` script
      */
-    public static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException, InterruptedException {
+    public static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException,
+            InterruptedException {
         Properties CCProperties = new Properties();
         CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
                 + File.separator + "cluster.properties"));
         if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
-        	if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
-        		conf.set(GenomixJobConf.IP_ADDRESS, GenomixClusterManager.LOCAL_IP);
-        	}
-        	if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
+            if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
+                conf.set(GenomixJobConf.IP_ADDRESS, GenomixClusterManager.LOCAL_IP);
+            }
+            if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
                 conf.setInt(GenomixJobConf.PORT, GenomixClusterManager.LOCAL_HYRACKS_CC_PORT);
             }
         } else {
-        	if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
-        		conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
-        	}
-    		if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
+            if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
+                conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
+            }
+            if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
                 conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
             }
         }
-        
+
         if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
             conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE"));
         if (conf.get(GenomixJobConf.FRAME_LIMIT) == null)
@@ -97,13 +98,11 @@ public class DriverUtils {
         if (conf.get(GenomixJobConf.HYRACKS_IO_DIRS) == null)
             conf.set(GenomixJobConf.HYRACKS_IO_DIRS, CCProperties.getProperty("IO_DIRS"));
         if (conf.get(GenomixJobConf.HYRACKS_SLAVES) == null) {
-            String slaves = FileUtils.readFileToString(new File(System.getProperty("app.home", ".") + File.separator + "conf"
-                    + File.separator + "slaves"));
+            String slaves = FileUtils.readFileToString(new File(System.getProperty("app.home", ".") + File.separator
+                    + "conf" + File.separator + "slaves"));
             conf.set(GenomixJobConf.HYRACKS_SLAVES, slaves);
         }
     }
-    
-    
 
     public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
             throws IOException {

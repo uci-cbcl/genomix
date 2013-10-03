@@ -55,8 +55,8 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
 
     public void append(VKmer kmer) {
         setSize(getLength() + kmer.getLength());
-        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmer.HEADER_SIZE, storage, offset
-                + getLength(), kmer.getLength());
+        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmer.HEADER_SIZE, storage, offset + getLength(),
+                kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
@@ -69,14 +69,12 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
-    
+
     public void append(Kmer kmer) { // TODO optimize this into two separate containers...
         setSize(getLength() + kmer.getLength() + VKmer.HEADER_SIZE);
         int myLength = getLength();
         Marshal.putInt(Kmer.getKmerLength(), storage, offset + myLength); // write a new VKmer header
-        System.arraycopy(kmer.getBytes(), kmer.offset,
-                storage, offset + myLength + VKmer.HEADER_SIZE,
-                kmer.getLength());
+        System.arraycopy(kmer.getBytes(), kmer.offset, storage, offset + myLength + VKmer.HEADER_SIZE, kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
@@ -96,7 +94,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
             Marshal.putInt(valueCount, storage, offset);
         }
     }
-    
+
     /**
      * Save the union of my list and otherList. Uses a temporary HashSet for
      * uniquefication
@@ -200,8 +198,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
             @Override
             public VKmer next() {
                 posIter.setAsReference(storage, currentOffset);
-                currentOffset += KmerUtil.getByteNumFromK(Marshal.getInt(storage, currentOffset))
-                        + VKmer.HEADER_SIZE;
+                currentOffset += KmerUtil.getByteNumFromK(Marshal.getInt(storage, currentOffset)) + VKmer.HEADER_SIZE;
                 currentIndex++;
                 return posIter;
             }
@@ -230,15 +227,15 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return it;
     }
 
-    public boolean contains(VKmerList kmer){
+    public boolean contains(VKmerList kmer) {
         Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
-            if (kmer.equals(posIterator.next())) 
+            if (kmer.equals(posIterator.next()))
                 return true;
         }
         return false;
     }
-    
+
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.
@@ -275,8 +272,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
             elemBytes = KmerUtil.getByteNumFromK(elemLetters) + VKmer.HEADER_SIZE;
             setSize(curLength + elemBytes); // make sure we have room for the new element
             Marshal.putInt(elemLetters, storage, curOffset); // write header
-            in.readFully(storage, curOffset + VKmer.HEADER_SIZE, elemBytes
-                    - VKmer.HEADER_SIZE); // write kmer
+            in.readFully(storage, curOffset + VKmer.HEADER_SIZE, elemBytes - VKmer.HEADER_SIZE); // write kmer
             curOffset += elemBytes;
             curLength += elemBytes;
             valueCount++;
@@ -305,8 +301,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     public int getLength() {
         int totalSize = HEADER_SIZE;
         for (int curCount = 0; curCount < valueCount; curCount++) {
-            totalSize += KmerUtil.getByteNumFromK(Marshal.getInt(storage, offset + totalSize))
-                    + VKmer.HEADER_SIZE;
+            totalSize += KmerUtil.getByteNumFromK(Marshal.getInt(storage, offset + totalSize)) + VKmer.HEADER_SIZE;
         }
         return totalSize;
     }

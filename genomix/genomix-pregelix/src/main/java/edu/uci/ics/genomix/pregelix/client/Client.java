@@ -15,7 +15,7 @@ import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 
 public class Client {
-	//test rebase
+    //test rebase
     private static class Options {
         @Option(name = "-inputpaths", usage = "comma seprated input paths", required = true)
         public String inputPaths;
@@ -40,12 +40,12 @@ public class Client {
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
-        
-//        @Option(name = "-pseudo-rate", usage = "the rate of pseduHead", required = false)
-//        public float pseudoRate = -1;
-//        
-//        @Option(name = "-max-patitionround", usage = "max rounds in partition phase", required = false)
-//        public int maxRound = -1;
+
+        //        @Option(name = "-pseudo-rate", usage = "the rate of pseduHead", required = false)
+        //        public float pseudoRate = -1;
+        //        
+        //        @Option(name = "-max-patitionround", usage = "max rounds in partition phase", required = false)
+        //        public int maxRound = -1;
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -68,12 +68,12 @@ public class Client {
         if (options.numIteration > 0) {
             job.getConfiguration().setInt(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS, options.numIteration);
         }
-        
-//        if (options.pseudoRate > 0 && options.pseudoRate <= 1)
-//           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
-//        if (options.maxRound > 0)
-//            job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
+
+        //        if (options.pseudoRate > 0 && options.pseudoRate <= 1)
+        //           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
+        //        if (options.maxRound > 0)
+        //            job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
         return options;
-        
+
     }
 }

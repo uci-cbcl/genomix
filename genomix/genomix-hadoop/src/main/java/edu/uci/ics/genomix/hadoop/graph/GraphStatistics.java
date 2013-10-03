@@ -46,14 +46,13 @@ import edu.uci.ics.genomix.type.VKmer;
  * @author wbiesing
  */
 @SuppressWarnings("deprecation")
-public class GraphStatistics extends MapReduceBase implements
-        Mapper<VKmer, Node, Text, LongWritable> {
+public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node, Text, LongWritable> {
 
     public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
 
     @Override
-    public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output,
-            Reporter reporter) throws IOException {
+    public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output, Reporter reporter)
+            throws IOException {
 
         reporter.getCounter("totals", "nodes").increment(1);
 

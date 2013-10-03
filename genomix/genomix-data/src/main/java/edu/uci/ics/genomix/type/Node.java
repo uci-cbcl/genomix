@@ -308,12 +308,15 @@ public class Node implements Writable, Serializable {
         public NeighborInfo(EDGETYPE edgeType, VKmer kmer, ReadIdSet readIds) {
             set(edgeType, kmer, readIds);
         }
+
         public NeighborInfo(EDGETYPE edgeType, Entry<VKmer, ReadIdSet> edge) {
             set(edgeType, edge.getKey(), edge.getValue());
         }
+
         public void set(EDGETYPE edgeType, Entry<VKmer, ReadIdSet> edge) {
             set(edgeType, edge.getKey(), edge.getValue());
         }
+
         public void set(EDGETYPE edgeType, VKmer kmer, ReadIdSet readIds) {
             this.et = edgeType;
             this.kmer = kmer;
@@ -333,10 +336,10 @@ public class Node implements Writable, Serializable {
         @Override
         public Iterator<NeighborInfo> iterator() {
             return new Iterator<NeighborInfo>() {
-                
+
                 private Iterator<Entry<VKmer, ReadIdSet>> it = edges.entrySet().iterator();
                 private NeighborInfo info = new NeighborInfo(null, null);
-                
+
                 @Override
                 public boolean hasNext() {
                     return it.hasNext();
@@ -365,7 +368,7 @@ public class Node implements Writable, Serializable {
 
     private ReadHeadSet startReads; // first internalKmer in read
     private ReadHeadSet endReads; // first internalKmer in read (but
-                                           // internalKmer was flipped)
+                                  // internalKmer was flipped)
 
     private VKmer internalKmer;
 
@@ -384,16 +387,15 @@ public class Node implements Writable, Serializable {
         startReads = new ReadHeadSet();
         endReads = new ReadHeadSet();
         internalKmer = new VKmer(); // in graph construction - not
-                                                 // set kmerlength
-                                                 // Optimization: VKmer
+                                    // set kmerlength
+                                    // Optimization: VKmer
         averageCoverage = 0;
         //        this.foundMe = false;
         //        this.previous = "";
         //        this.stepCount = 0;
     }
 
-    public Node(EdgeMap[] edges, ReadHeadSet startReads, ReadHeadSet endReads,
-            VKmer kmer, float coverage) {
+    public Node(EdgeMap[] edges, ReadHeadSet startReads, ReadHeadSet endReads, VKmer kmer, float coverage) {
         this();
         setAsCopy(edges, startReads, endReads, kmer, coverage);
     }
@@ -411,8 +413,7 @@ public class Node implements Writable, Serializable {
         setAsCopy(node.edges, node.startReads, node.endReads, node.internalKmer, node.averageCoverage);
     }
 
-    public void setAsCopy(EdgeMap[] edges, ReadHeadSet startReads, ReadHeadSet endReads,
-            VKmer kmer, float coverage) {
+    public void setAsCopy(EdgeMap[] edges, ReadHeadSet startReads, ReadHeadSet endReads, VKmer kmer, float coverage) {
         for (EDGETYPE e : EDGETYPE.values()) {
             this.edges[e.get()].setAsCopy(edges[e.get()]);
         }
@@ -538,7 +539,6 @@ public class Node implements Writable, Serializable {
     public float getAvgCoverage() {
         return averageCoverage;
     }
-    
 
     public ReadHeadSet getStartReads() {
         return startReads;
@@ -621,7 +621,7 @@ public class Node implements Writable, Serializable {
         endReads.write(out);
         this.internalKmer.write(out);
         out.writeFloat(averageCoverage);
-        
+
         if (DEBUG) {
             boolean verbose = false;
             for (VKmer problemKmer : problemKmers) {
@@ -643,7 +643,7 @@ public class Node implements Writable, Serializable {
         endReads.readFields(in);
         this.internalKmer.readFields(in);
         averageCoverage = in.readFloat();
-        
+
         if (DEBUG) {
             boolean verbose = false;
             for (VKmer problemKmer : problemKmers) {
@@ -774,8 +774,8 @@ public class Node implements Writable, Serializable {
     /**
      * update my edge list
      */
-    public void updateEdges(EDGETYPE deleteDir, VKmer toDelete, EDGETYPE updateDir, EDGETYPE replaceDir,
-            Node other, boolean applyDelete) {
+    public void updateEdges(EDGETYPE deleteDir, VKmer toDelete, EDGETYPE updateDir, EDGETYPE replaceDir, Node other,
+            boolean applyDelete) {
         if (applyDelete)
             edges[deleteDir.get()].remove(toDelete);
         edges[updateDir.get()].unionUpdate(other.edges[replaceDir.get()]);
@@ -924,7 +924,7 @@ public class Node implements Writable, Serializable {
         }
         return totalDegree;
     }
-    
+
     public int inDegree() {
         return degree(DIR.REVERSE);
     }
@@ -932,7 +932,7 @@ public class Node implements Writable, Serializable {
     public int outDegree() {
         return degree(DIR.FORWARD);
     }
-    
+
     public int totalDegree() {
         return degree(DIR.FORWARD) + degree(DIR.REVERSE);
     }

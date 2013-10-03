@@ -72,13 +72,16 @@ public class KmerFactory {
         int posInByteOfChain = ((kmerChain.getKmerLetterLength() - lastK) % 4) << 1; // *2
         int byteInKmer = kmer.getKmerByteLength() - 1;
         for (; byteInKmer >= 0 && byteInChain > 0; byteInKmer--, byteInChain--) {
-            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] = (byte) ((0xff & kmerChain.getBlockBytes()[byteInChain + kmerChain.getKmerOffset()]) >> posInByteOfChain);
-            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] |= ((kmerChain.getBlockBytes()[byteInChain  + kmerChain.getKmerOffset() - 1] << (8 - posInByteOfChain)));
+            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] = (byte) ((0xff & kmerChain.getBlockBytes()[byteInChain
+                    + kmerChain.getKmerOffset()]) >> posInByteOfChain);
+            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] |= ((kmerChain.getBlockBytes()[byteInChain
+                    + kmerChain.getKmerOffset() - 1] << (8 - posInByteOfChain)));
         }
 
         /** last kmer byte */
         if (byteInKmer == 0) {
-            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmerChain.getBlockBytes()[0 + kmerChain.getKmerOffset()] & 0xff) >> posInByteOfChain);
+            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmerChain.getBlockBytes()[0 + kmerChain
+                    .getKmerOffset()] & 0xff) >> posInByteOfChain);
         }
         kmer.clearLeadBit();
         return kmer;
@@ -105,13 +108,16 @@ public class KmerFactory {
 
         int i = 1;
         for (; i < kmer.getKmerByteLength(); i++) {
-            kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] = kmerChain.getBlockBytes()[kmerChain.getKmerOffset() + kmerChain.getKmerByteLength() - i];
+            kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] = kmerChain.getBlockBytes()[kmerChain
+                    .getKmerOffset() + kmerChain.getKmerByteLength() - i];
         }
         int posInByteOfChain = (firstK % 4) << 1; // *2
         if (posInByteOfChain == 0) {
-            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = kmerChain.getBlockBytes()[kmerChain.getKmerOffset() + kmerChain.getKmerByteLength() - i];
+            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = kmerChain.getBlockBytes()[kmerChain.getKmerOffset()
+                    + kmerChain.getKmerByteLength() - i];
         } else {
-            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) (kmerChain.getBlockBytes()[kmerChain.getKmerOffset() + kmerChain.getKmerByteLength() - i] & ((1 << posInByteOfChain) - 1));
+            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) (kmerChain.getBlockBytes()[kmerChain
+                    .getKmerOffset() + kmerChain.getKmerByteLength() - i] & ((1 << posInByteOfChain) - 1));
         }
         kmer.clearLeadBit();
         return kmer;
@@ -132,13 +138,16 @@ public class KmerFactory {
         int posInByteOfChain = startK % 4 << 1; // *2
         int byteInKmer = kmer.getKmerByteLength() - 1;
         for (; byteInKmer >= 0 && byteInChain > 0; byteInKmer--, byteInChain--) {
-            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] = (byte) ((0xff & kmerChain.getBlockBytes()[byteInChain + kmerChain.getKmerOffset()]) >> posInByteOfChain);
-            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] |= ((kmerChain.getBlockBytes()[byteInChain + kmerChain.getKmerOffset() - 1] << (8 - posInByteOfChain)));
+            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] = (byte) ((0xff & kmerChain.getBlockBytes()[byteInChain
+                    + kmerChain.getKmerOffset()]) >> posInByteOfChain);
+            kmer.getBlockBytes()[byteInKmer + kmer.getKmerOffset()] |= ((kmerChain.getBlockBytes()[byteInChain
+                    + kmerChain.getKmerOffset() - 1] << (8 - posInByteOfChain)));
         }
 
         /** last kmer byte */
         if (byteInKmer == 0) {
-            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmerChain.getBlockBytes()[0 + kmerChain.getKmerOffset()] & 0xff) >> posInByteOfChain);
+            kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmerChain.getBlockBytes()[0 + kmerChain
+                    .getKmerOffset()] & 0xff) >> posInByteOfChain);
         }
         kmer.clearLeadBit();
         return kmer;
@@ -160,12 +169,14 @@ public class KmerFactory {
     public VKmer mergeKmerWithNextCode(final VKmer kmer, byte nextCode) {
         this.kmer.reset(kmer.getKmerLetterLength() + 1);
         for (int i = 1; i <= kmer.getKmerByteLength(); i++) {
-            this.kmer.getBlockBytes()[this.kmer.getKmerOffset() + this.kmer.getKmerByteLength() - i] = kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i];
+            this.kmer.getBlockBytes()[this.kmer.getKmerOffset() + this.kmer.getKmerByteLength() - i] = kmer
+                    .getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i];
         }
         if (this.kmer.getKmerByteLength() > kmer.getKmerByteLength()) {
             this.kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) (nextCode & 0x3);
         } else {
-            this.kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) (kmer.getBlockBytes()[0 + kmer.getKmerOffset()] | ((nextCode & 0x3) << ((kmer.getKmerLetterLength() % 4) << 1)));
+            this.kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) (kmer.getBlockBytes()[0 + kmer.getKmerOffset()] | ((nextCode & 0x3) << ((kmer
+                    .getKmerLetterLength() % 4) << 1)));
         }
         this.kmer.clearLeadBit();
         return this.kmer;
@@ -188,13 +199,16 @@ public class KmerFactory {
         this.kmer.reset(kmer.getKmerLetterLength() + 1);
         int byteInMergedKmer = 0;
         if (kmer.getKmerLetterLength() % 4 == 0) {
-            this.kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmer.getBlockBytes()[0 + kmer.getKmerOffset()] >> 6) & 0x3);
+            this.kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((kmer.getBlockBytes()[0 + kmer
+                    .getKmerOffset()] >> 6) & 0x3);
             byteInMergedKmer++;
         }
         for (int i = 0; i < kmer.getKmerByteLength() - 1; i++, byteInMergedKmer++) {
-            this.kmer.getBlockBytes()[byteInMergedKmer + kmer.getKmerOffset()] = (byte) ((kmer.getBlockBytes()[i + kmer.getKmerOffset()] << 2) | ((kmer.getBlockBytes()[i + kmer.getKmerOffset() + 1] >> 6) & 0x3));
+            this.kmer.getBlockBytes()[byteInMergedKmer + kmer.getKmerOffset()] = (byte) ((kmer.getBlockBytes()[i
+                    + kmer.getKmerOffset()] << 2) | ((kmer.getBlockBytes()[i + kmer.getKmerOffset() + 1] >> 6) & 0x3));
         }
-        this.kmer.getBlockBytes()[byteInMergedKmer + kmer.getKmerOffset()] = (byte) ((kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - 1] << 2) | (preCode & 0x3));
+        this.kmer.getBlockBytes()[byteInMergedKmer + kmer.getKmerOffset()] = (byte) ((kmer.getBlockBytes()[kmer
+                .getKmerOffset() + kmer.getKmerByteLength() - 1] << 2) | (preCode & 0x3));
         this.kmer.clearLeadBit();
         return this.kmer;
     }
@@ -217,24 +231,29 @@ public class KmerFactory {
         kmer.reset(preKmer.getKmerLetterLength() + nextKmer.getKmerLetterLength());
         int i = 1;
         for (; i <= preKmer.getKmerByteLength(); i++) {
-            kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] = preKmer.getBlockBytes()[preKmer.getKmerOffset() + preKmer.getKmerByteLength() - i];
+            kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] = preKmer.getBlockBytes()[preKmer
+                    .getKmerOffset() + preKmer.getKmerByteLength() - i];
         }
         if (i > 1) {
             i--;
         }
         if (preKmer.getKmerLetterLength() % 4 == 0) {
             for (int j = 1; j <= nextKmer.getKmerByteLength(); j++) {
-                kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i - j] = nextKmer.getBlockBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j];
+                kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i - j] = nextKmer
+                        .getBlockBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j];
             }
         } else {
             int posNeedToMove = ((preKmer.getKmerLetterLength() % 4) << 1);
-            kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] |= nextKmer.getBlockBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - 1] << posNeedToMove;
+            kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i] |= nextKmer.getBlockBytes()[nextKmer
+                    .getKmerOffset() + nextKmer.getKmerByteLength() - 1] << posNeedToMove;
             for (int j = 1; j < nextKmer.getKmerByteLength(); j++) {
-                kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i - j] = (byte) (((nextKmer.getBlockBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j] & 0xff) >> (8 - posNeedToMove)) | (nextKmer
+                kmer.getBlockBytes()[kmer.getKmerOffset() + kmer.getKmerByteLength() - i - j] = (byte) (((nextKmer
+                        .getBlockBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j] & 0xff) >> (8 - posNeedToMove)) | (nextKmer
                         .getBlockBytes()[nextKmer.getKmerOffset() + nextKmer.getKmerByteLength() - j - 1] << posNeedToMove));
             }
             if (nextKmer.getKmerLetterLength() % 4 == 0 || (nextKmer.getKmerLetterLength() % 4) * 2 + posNeedToMove > 8) {
-                kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((0xff & nextKmer.getBlockBytes()[0 + nextKmer.getKmerOffset()]) >> (8 - posNeedToMove));
+                kmer.getBlockBytes()[0 + kmer.getKmerOffset()] = (byte) ((0xff & nextKmer.getBlockBytes()[0 + nextKmer
+                        .getKmerOffset()]) >> (8 - posNeedToMove));
             }
         }
         kmer.clearLeadBit();

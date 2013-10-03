@@ -54,16 +54,16 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
     public static final RecordDescriptor nodeOutputRec = new RecordDescriptor(new ISerializerDeserializer[1]);
 
     public class MapReadToNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
-        public static final int INT_LENGTH = 4;  
-        private final IHyracksTaskContext ctx;  
-        private final RecordDescriptor inputRecDesc; 
-        private final RecordDescriptor outputRecDesc; 
+        public static final int INT_LENGTH = 4;
+        private final IHyracksTaskContext ctx;
+        private final RecordDescriptor inputRecDesc;
+        private final RecordDescriptor outputRecDesc;
 
         private FrameTupleAccessor accessor;
         private ByteBuffer writeBuffer;
         private ArrayTupleBuilder builder;
         private FrameTupleAppender appender;
-        
+
         Node readNode;
         Kmer readKmer;
 
@@ -72,9 +72,9 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
             this.ctx = ctx;
             this.inputRecDesc = inputRecDesc;
             this.outputRecDesc = outputRecDesc;
-   
+
             readNode = new Node();
-            readKmer = new Kmer();            
+            readKmer = new Kmer();
         }
 
         @Override
@@ -105,7 +105,6 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
             outputNode(readNode);
         }
 
-
         private void setKmer(Kmer kmer, int offset) {
             ByteBuffer buffer = accessor.getBuffer();
             kmer.setAsCopy(buffer.array(), offset);
@@ -115,7 +114,6 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
             ByteBuffer buffer = accessor.getBuffer();
             node.setAsCopy(buffer.array(), offset);
         }
-
 
         private void outputNode(Node node) throws HyracksDataException {
 
@@ -158,4 +156,3 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
     }
 
 }
-

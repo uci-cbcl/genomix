@@ -63,14 +63,15 @@ public class JobGenCheckReader extends JobGenBrujinGraph {
 
     public AbstractSingleActivityOperatorDescriptor generateRootByWriteKmerReader(JobSpecification jobSpec,
             HDFSReadOperatorDescriptor readOperator) throws HyracksException {
-        
+
         HDFSWriteOperatorDescriptor writeKmerOperator = new HDFSWriteOperatorDescriptor(jobSpec,
                 hadoopJobConfFactory.getConf(), new ITupleWriterFactory() {
 
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
+                    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
+                            throws HyracksDataException {
                         Kmer.setGlobalKmerLength(kmerSize); // TODO is this the right place for this?
                         return new ITupleWriter() {
 

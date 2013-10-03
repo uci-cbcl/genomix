@@ -10,31 +10,31 @@ import org.apache.hadoop.io.Writable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.type.VKmerList;
 
-public class KmerListAndFlagList implements Writable{
+public class KmerListAndFlagList implements Writable {
     private ArrayListWritable<BooleanWritable> flagList;
     private VKmerList kmerList;
-    
-    public KmerListAndFlagList(){
+
+    public KmerListAndFlagList() {
         flagList = new ArrayListWritable<BooleanWritable>();
         kmerList = new VKmerList();
     }
-    
-    public void set(KmerListAndFlagList kmerAndflag){
+
+    public void set(KmerListAndFlagList kmerAndflag) {
         flagList.clear();
         kmerList.reset();
         flagList.addAll(kmerAndflag.getFlagList());
         kmerList.appendList(kmerAndflag.getKmerList());
     }
-    
-    public void add(KmerListAndFlagList otherKmerAndFlag){
+
+    public void add(KmerListAndFlagList otherKmerAndFlag) {
         this.flagList.addAll(otherKmerAndFlag.getFlagList());
         this.kmerList.appendList(otherKmerAndFlag.getKmerList());
     }
-    
-    public int size(){
+
+    public int size() {
         return flagList.size();
     }
-    
+
     public ArrayListWritable<BooleanWritable> getFlagList() {
         return flagList;
     }
@@ -64,5 +64,5 @@ public class KmerListAndFlagList implements Writable{
         flagList.readFields(in);
         kmerList.readFields(in);
     }
-    
+
 }

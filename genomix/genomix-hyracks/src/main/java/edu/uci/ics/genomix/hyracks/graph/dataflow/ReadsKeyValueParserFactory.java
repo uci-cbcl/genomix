@@ -56,7 +56,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
     private final int kmerSize;
     public ConfFactory confFac;
-    
+
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
             null });
 
@@ -71,13 +71,14 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     }
 
     @Override
-    public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx) throws HyracksDataException {
+    public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx)
+            throws HyracksDataException {
         final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(2);
         final ByteBuffer outputBuffer = ctx.allocateFrame();
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());
         outputAppender.reset(outputBuffer, true);
         Kmer.setGlobalKmerLength(kmerSize);
-        
+
         return new IKeyValueParser<LongWritable, Text>() {
 
             private ReadHeadInfo positionId = new ReadHeadInfo();
@@ -95,55 +96,58 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             byte mateId = (byte) 0;
             boolean fastqFormat = false;
-//            int lineCount = 0;
-            
+
+            //            int lineCount = 0;
+
             @Override
-            public void parse(LongWritable key, Text value, IFrameWriter writer,  String fileString) throws HyracksDataException {
-                
-                String[] tokens = fileString.split("\\.(?=[^\\.]+$)");  // split on the last "." to get the basename and the extension
-                if (tokens.length > 2) 
-                    throw new IllegalStateException("Parse error trying to parse filename... split extension tokens are: " + tokens.toString());
+            public void parse(LongWritable key, Text value, IFrameWriter writer, String fileString)
+                    throws HyracksDataException {
+
+                String[] tokens = fileString.split("\\.(?=[^\\.]+$)"); // split on the last "." to get the basename and the extension
+                if (tokens.length > 2)
+                    throw new IllegalStateException(
+                            "Parse error trying to parse filename... split extension tokens are: " + tokens.toString());
                 String basename = tokens[0];
-                String extension = tokens.length == 2 ? tokens[1] : ""; 
-                
+                String extension = tokens.length == 2 ? tokens[1] : "";
+
                 if (basename.endsWith("_2")) {
                     mateId = (byte) 1;
                 } else {
                     mateId = (byte) 0;
                 }
-                
+
                 if (extension.contains("fastq") || extension.contains("fq")) {
                     //TODO
-//                    if (! (job.getInputFormat() instanceof NLineInputFormat)) {
-//                        throw new IllegalStateException("Fastq files require the NLineInputFormat (was " + job.getInputFormat() + " ).");
-//                    }
-//                    if (job.getInt("mapred.line.input.format.linespermap", -1) % 4 != 0) {
-//                        throw new IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was " + job.get("mapred.line.input.format.linespermap") + ").");
-//                    }
+                    //                    if (! (job.getInputFormat() instanceof NLineInputFormat)) {
+                    //                        throw new IllegalStateException("Fastq files require the NLineInputFormat (was " + job.getInputFormat() + " ).");
+                    //                    }
+                    //                    if (job.getInt("mapred.line.input.format.linespermap", -1) % 4 != 0) {
+                    //                        throw new IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was " + job.get("mapred.line.input.format.linespermap") + ").");
+                    //                    }
                     fastqFormat = true;
                 }
-                
-//                String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
-//                if (geneLine.length != 2) {
-//                    throw new IllegalArgumentException("malformed line found in parser. Two values aren't separated by tabs: " + value.toString());
-//                }
-//                int readID = 0;
-//                try {
-//                    readID = Integer.parseInt(geneLine[0]);
-//                } catch (NumberFormatException e) {
-//                    throw new IllegalArgumentException("Malformed line found in parser: ", e);
-//                }
-                
-//                lineCount++;
+
+                //                String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
+                //                if (geneLine.length != 2) {
+                //                    throw new IllegalArgumentException("malformed line found in parser. Two values aren't separated by tabs: " + value.toString());
+                //                }
+                //                int readID = 0;
+                //                try {
+                //                    readID = Integer.parseInt(geneLine[0]);
+                //                } catch (NumberFormatException e) {
+                //                    throw new IllegalArgumentException("Malformed line found in parser: ", e);
+                //                }
+
+                //                lineCount++;
                 long readID = 0;
                 String geneLine;
                 if (fastqFormat) {
-//                    if ((lineCount - 1) % 4 == 1) {
-                        readID = key.get();  // this is actually the offset into the file... will it be the same across all files?? //
-                        geneLine = value.toString().trim();
-//                    } else {
-//                        return;  //skip all other lines
-//                    }
+                    //                    if ((lineCount - 1) % 4 == 1) {
+                    readID = key.get(); // this is actually the offset into the file... will it be the same across all files?? //
+                    geneLine = value.toString().trim();
+                    //                    } else {
+                    //                        return;  //skip all other lines
+                    //                    }
                 } else {
                     String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
                     if (rawLine.length != 2) {
@@ -152,7 +156,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     readID = Long.parseLong(rawLine[0]);
                     geneLine = rawLine[1];
                 }
-                
+
                 Pattern genePattern = Pattern.compile("[AGCT]+");
                 Matcher geneMatcher = genePattern.matcher(geneLine);
                 boolean isValid = geneMatcher.matches();
@@ -162,22 +166,23 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
 
             private void SplitReads(long readID, byte[] array, IFrameWriter writer) {
-//                boolean verbose = false;
+                //                boolean verbose = false;
                 /*first kmer*/
                 if (kmerSize >= array.length) {
-                    throw new IllegalArgumentException("kmersize (k="+kmerSize+") is larger than the read length (" + array.length + ")");
+                    throw new IllegalArgumentException("kmersize (k=" + kmerSize + ") is larger than the read length ("
+                            + array.length + ")");
                 }
-                
-//                if (readID == 12009721) {
-//                    verbose = false;
-//                    System.out.println("found it: " + readID);
-//                } else if (readID == 11934501) {
-//                    verbose = false;
-//                    System.out.println("found it: " + readID);
-//                } else {
-//                    verbose = false;
-//                }
-                
+
+                //                if (readID == 12009721) {
+                //                    verbose = false;
+                //                    System.out.println("found it: " + readID);
+                //                } else if (readID == 11934501) {
+                //                    verbose = false;
+                //                    System.out.println("found it: " + readID);
+                //                } else {
+                //                    verbose = false;
+                //                }
+
                 curNode.reset();
                 nextNode.reset();
                 curNode.setAvgCoverage(1);
@@ -188,16 +193,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
                 setThisReadId(mateId, readID, 0);
-                if(curKmerDir == KmerDir.FORWARD)
+                if (curKmerDir == KmerDir.FORWARD)
                     curNode.getStartReads().append(positionId);
                 else
                     curNode.getEndReads().append(positionId);
                 setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readIdList);
-                
+
                 writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
-//                if (verbose) {
-//                    System.out.println("First kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
-//                }
+                //                if (verbose) {
+                //                    System.out.println("First kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
+                //                }
                 /*middle kmer*/
                 int i = kmerSize + 1;
                 for (; i < array.length; i++) {
@@ -210,16 +215,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
                     setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readIdList);
                     writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
-//                    if (verbose) {
-//                        System.out.println("middle kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
-//                    }
+                    //                    if (verbose) {
+                    //                        System.out.println("middle kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
+                    //                    }
                 }
 
                 /*last kmer*/
                 writeToFrame(nextForwardKmer, nextReverseKmer, nextKmerDir, nextNode, writer);
-//                if (verbose) {
-//                    System.out.println("last kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
-//                }
+                //                if (verbose) {
+                //                    System.out.println("last kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
+                //                }
             }
 
             public void setThisReadId(byte mateId, long readId, int posId) {
@@ -228,15 +233,14 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 positionId.set(mateId, readId, posId);
             }
 
-            public KmerDir setNextKmer(Kmer forwardKmer, Kmer ReverseKmer,
-                    byte nextChar) {
+            public KmerDir setNextKmer(Kmer forwardKmer, Kmer ReverseKmer, byte nextChar) {
                 forwardKmer.shiftKmerWithNextChar(nextChar);
                 ReverseKmer.setReversedFromStringBytes(forwardKmer.toString().getBytes(), forwardKmer.getOffset());
                 return forwardKmer.compareTo(ReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
             }
 
-            public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, KmerDir curKmerDir,
-                    Node node, IFrameWriter writer) {
+            public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, KmerDir curKmerDir, Node node,
+                    IFrameWriter writer) {
                 switch (curKmerDir) {
                     case FORWARD:
                         InsertToFrame(forwardKmer, node, writer);

@@ -15,12 +15,11 @@ import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Remove Bridge
+ * 
  * @author anbangx
- *
  */
-public class BridgeRemoveVertex extends
-    BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
-    
+public class BridgeRemoveVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+
     private int MIN_LENGTH_TO_KEEP = -1;
 
     /**
@@ -29,29 +28,30 @@ public class BridgeRemoveVertex extends
     @Override
     public void initVertex() {
         super.initVertex();
-        if(MIN_LENGTH_TO_KEEP == -1)
-            MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
-        if(outgoingMsg == null)
+        if (MIN_LENGTH_TO_KEEP == -1)
+            MIN_LENGTH_TO_KEEP = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
+        if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         StatisticsAggregator.preGlobalCounters.clear();
-//        else
-//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        //        else
+        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-    
+
     /**
      * step 1: detect neighbor of bridge vertex
      */
-    public void detectBridgeNeighbor(){
-      //detect neighbor of bridge vertex
+    public void detectBridgeNeighbor() {
+        //detect neighbor of bridge vertex
         VertexValueWritable vertex = getVertexValue();
-        if(vertex.getDegree() == 3){
-            for(DIR d : DIR.values()){
+        if (vertex.getDegree() == 3) {
+            for (DIR d : DIR.values()) {
                 //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
-                if(vertex.degree(d) == 2){
-                    for(EDGETYPE et : d.edgeTypes()){
-                        for(VKmer dest : vertex.getEdgeList(et).keySet()){
+                if (vertex.degree(d) == 2) {
+                    for (EDGETYPE et : d.edgeTypes()) {
+                        for (VKmer dest : vertex.getEdgeList(et).keySet()) {
                             sendMsg(dest, outgoingMsg);
                         }
                     }
@@ -59,24 +59,24 @@ public class BridgeRemoveVertex extends
             }
         }
     }
-    
+
     /**
      * step2: remove bridge pattern
      */
-    public void removeBridge(Iterator<MessageWritable> msgIterator){
+    public void removeBridge(Iterator<MessageWritable> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
         //only the vertex which has and only has 2 degree can be bridge vertex
-        if(vertex.getDegree() == 2){
+        if (vertex.getDegree() == 2) {
             //count #receivedMsg
             int count = 0;
             while (msgIterator.hasNext()) {
-                if(count == 3)
+                if (count == 3)
                     break;
                 count++;
             }
             //remove bridge
-            if(count == 2){ //I'm bridge vertex
-                if(vertex.getKmerLength() < MIN_LENGTH_TO_KEEP){
+            if (count == 2) { //I'm bridge vertex
+                if (vertex.getKmerLength() < MIN_LENGTH_TO_KEEP) {
                     broadcastKillself();
                     //set statistics counter: Num_RemovedBridges
                     incrementCounter(StatisticsCounter.Num_RemovedBridges);
@@ -85,15 +85,15 @@ public class BridgeRemoveVertex extends
             }
         }
     }
-    
+
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        if(getSuperstep() == 1){
+        if (getSuperstep() == 1) {
             initVertex();
             detectBridgeNeighbor();
-        } else if(getSuperstep() == 2){
+        } else if (getSuperstep() == 2) {
             removeBridge(msgIterator);
-        } else if(getSuperstep() == 3){
+        } else if (getSuperstep() == 3) {
             responseToDeadNode(msgIterator);
         }
         voteToHalt();

@@ -62,15 +62,14 @@ public class HadoopMiniClusterTest {
 
     protected static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
             Configuration conf) throws IOException {
-    	copyResultsToLocal(hdfsSrcDir, localDestFile, resultsAreText, conf, true);
+        copyResultsToLocal(hdfsSrcDir, localDestFile, resultsAreText, conf, true);
     }
-    
+
     public static void copyResultsToLocal(String hdfsSrcDir, String localDestFile, boolean resultsAreText,
             Configuration conf, boolean ignoreZeroOutputs) throws IOException {
-        copyResultsToLocal(hdfsSrcDir, localDestFile, resultsAreText,
-                conf, ignoreZeroOutputs, dfs);
+        copyResultsToLocal(hdfsSrcDir, localDestFile, resultsAreText, conf, ignoreZeroOutputs, dfs);
     }
-    
+
     /*
      * Merge and copy a DFS directory to a local destination, converting to text if necessary. 
      * Also locally store the binary-formatted result if available.
@@ -86,26 +85,26 @@ public class HadoopMiniClusterTest {
             // save the entire binary output dir
             FileUtil.copy(FileSystem.get(conf), new Path(hdfsSrcDir), FileSystem.getLocal(new Configuration()),
                     new Path(localDestFile + "bin"), false, conf); //bindir
-            
+
             // chomp through output files
-            FileStatus[] files = ArrayUtils.addAll(dfs.globStatus(new Path(hdfsSrcDir + "*")), dfs.globStatus(new Path(hdfsSrcDir + "*/*")));
+            FileStatus[] files = ArrayUtils.addAll(dfs.globStatus(new Path(hdfsSrcDir + "*")),
+                    dfs.globStatus(new Path(hdfsSrcDir + "*/*")));
             FileStatus validFile = null;
             for (FileStatus f : files) {
-            	if (f.getLen() != 0) {
-            		validFile = f;
-            		break;
-            	}
+                if (f.getLen() != 0) {
+                    validFile = f;
+                    break;
+                }
             }
             if (validFile == null) {
-            	if (ignoreZeroOutputs) {
-            		// just make a dummy output dir
-            		FileSystem lfs = FileSystem.getLocal(new Configuration());
-            		lfs.mkdirs(new Path(localDestFile).getParent());
-            		return;
-            	}
-            	else {
-            		throw new IOException("No non-zero outputs in source directory " + hdfsSrcDir);
-            	}
+                if (ignoreZeroOutputs) {
+                    // just make a dummy output dir
+                    FileSystem lfs = FileSystem.getLocal(new Configuration());
+                    lfs.mkdirs(new Path(localDestFile).getParent());
+                    return;
+                } else {
+                    throw new IOException("No non-zero outputs in source directory " + hdfsSrcDir);
+                }
             }
 
             // also load the Nodes and write them out as text locally. 
@@ -148,9 +147,9 @@ public class HadoopMiniClusterTest {
 
     protected static boolean checkResults(String expectedPath, String actualPath, int[] poslistField) throws Exception {
         if (poslistField != null) {
-//            TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
+            //            TestUtils.compareWithUnSortedPosition(new File(expectedPath), dumped, poslistField);
         } else {
-//            TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
+            //            TestUtils.compareWithSortedResult(new File(expectedPath), dumped);
         }
         return true;
     }
@@ -163,9 +162,9 @@ public class HadoopMiniClusterTest {
     }
 
     protected static void startHDFS() throws IOException {
-//        conf.addResource(new Path(HADOOP_CONF_ROOT + "core-site.xml"));
+        //        conf.addResource(new Path(HADOOP_CONF_ROOT + "core-site.xml"));
         //        conf.addResource(new Path(HADOOP_CONF_ROOT + "mapred-site.xml"));
-//        conf.addResource(new Path(HADOOP_CONF_ROOT + "hdfs-site.xml"));
+        //        conf.addResource(new Path(HADOOP_CONF_ROOT + "hdfs-site.xml"));
 
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
@@ -175,8 +174,7 @@ public class HadoopMiniClusterTest {
         mrCluster = new MiniMRCluster(4, dfs.getUri().toString(), 2);
         System.out.println(dfs.getUri().toString());
 
-        DataOutputStream confOutput = new DataOutputStream(
-                new FileOutputStream(new File(HADOOP_CONF)));
+        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
         conf.writeXml(confOutput);
         confOutput.close();
     }
@@ -185,8 +183,8 @@ public class HadoopMiniClusterTest {
         Path dest = new Path(hdfsDest);
         dfs.mkdirs(dest);
         System.out.println("copying from " + localSrc + " to " + dest);
-        for (File f : new File(localSrc).listFiles()) {  
-        	dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);
+        for (File f : new File(localSrc).listFiles()) {
+            dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);
         }
     }
 
@@ -216,27 +214,27 @@ public class HadoopMiniClusterTest {
         dfsCluster.shutdown();
         mrCluster.shutdown();
     }
-    
-//    public void buildGraph() throws IOException {
-//        JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 
-//        FileInputFormat.setInputPaths(buildConf, SEQUENCE);
-//        FileOutputFormat.setOutputPath(buildConf, new Path(INPUT_GRAPH));
-//        
-//        GraphBuildingDriver tldriver = new GraphBuildingDriver();
-//        tldriver.run(SEQUENCE, INPUT_GRAPH, 2, kmerByteSize, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
-//        
-//        boolean resultsAreText = true;
-//        copyResultsToLocal(INPUT_GRAPH, ACTUAL_ROOT + INPUT_GRAPH, resultsAreText, buildConf);
-//    }
-//    
-//    private void prepareGraph() throws IOException {
-//        if (regenerateGraph) {
-//            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
-//            buildGraph();
-//            copyLocalToDFS(ACTUAL_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
-//        } else {
-//            copyLocalToDFS(EXPECTED_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
-//        }
-//    }
+
+    //    public void buildGraph() throws IOException {
+    //        JobConf buildConf = new JobConf(conf);  // use a separate conf so we don't interfere with other jobs 
+    //        FileInputFormat.setInputPaths(buildConf, SEQUENCE);
+    //        FileOutputFormat.setOutputPath(buildConf, new Path(INPUT_GRAPH));
+    //        
+    //        GraphBuildingDriver tldriver = new GraphBuildingDriver();
+    //        tldriver.run(SEQUENCE, INPUT_GRAPH, 2, kmerByteSize, READ_LENGTH, false, true, HADOOP_CONF_ROOT + "conf.xml");
+    //        
+    //        boolean resultsAreText = true;
+    //        copyResultsToLocal(INPUT_GRAPH, ACTUAL_ROOT + INPUT_GRAPH, resultsAreText, buildConf);
+    //    }
+    //    
+    //    private void prepareGraph() throws IOException {
+    //        if (regenerateGraph) {
+    //            copyLocalToDFS(LOCAL_SEQUENCE_FILE, SEQUENCE);
+    //            buildGraph();
+    //            copyLocalToDFS(ACTUAL_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
+    //        } else {
+    //            copyLocalToDFS(EXPECTED_ROOT + INPUT_GRAPH + readsFile + ".binmerge", INPUT_GRAPH);
+    //        }
+    //    }
 
 }

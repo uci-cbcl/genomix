@@ -13,12 +13,11 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
-public class CheckerOutputFormat extends
-    GraphCleanVertexOutputFormat<VKmer, VertexValueWritable, NullWritable> {
+public class CheckerOutputFormat extends GraphCleanVertexOutputFormat<VKmer, VertexValueWritable, NullWritable> {
 
     @Override
-    public VertexWriter<VKmer, VertexValueWritable, NullWritable> createVertexWriter(
-            TaskAttemptContext context) throws IOException, InterruptedException {
+    public VertexWriter<VKmer, VertexValueWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
+            throws IOException, InterruptedException {
         @SuppressWarnings("unchecked")
         RecordWriter<VKmer, VertexValueWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
         return new BinaryLoadGraphVertexWriter(recordWriter);
@@ -34,10 +33,10 @@ public class CheckerOutputFormat extends
         }
 
         @Override
-        public void writeVertex(Vertex<VKmer, VertexValueWritable, NullWritable, ?> vertex)
-                throws IOException, InterruptedException {
-            byte state = (byte)(vertex.getVertexValue().getState() & State.VERTEX_MASK);
-            if(state == State.IS_ERROR)
+        public void writeVertex(Vertex<VKmer, VertexValueWritable, NullWritable, ?> vertex) throws IOException,
+                InterruptedException {
+            byte state = (byte) (vertex.getVertexValue().getState() & State.VERTEX_MASK);
+            if (state == State.IS_ERROR)
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
         }
     }

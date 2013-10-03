@@ -29,13 +29,12 @@ import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.util.KmerUtil;
 import edu.uci.ics.genomix.util.Marshal;
 
-
 /**
  * Variable-length kmer which stores its length internally.
  * Note: `offset` as used in this class is the offset at which the *kmer*
  * begins. There is a {@value HEADER_SIZE}-byte header preceding the kmer
  */
-public class VKmer extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> { 
+public class VKmer extends BinaryComparable implements Serializable, WritableComparable<BinaryComparable> {
     private static final long serialVersionUID = 1L;
     protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 }; // int indicating 0 length
     protected static final int HEADER_SIZE = 4; // number of bytes for header info
@@ -44,7 +43,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     protected int bytesUsed;
     protected byte[] bytes;
     protected int kmerStartOffset;
-    protected int storageMaxSize;  // since we may be a reference inside a larger datablock, we must track our maximum size
+    protected int storageMaxSize; // since we may be a reference inside a larger datablock, we must track our maximum size
 
     /**
      * Initialize as empty kmer
@@ -99,7 +98,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         this(other.lettersInKmer);
         setAsCopy(other);
     }
-    
+
     /**
      * deep copy of kmer in other
      * 
@@ -122,7 +121,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             System.arraycopy(other.bytes, other.kmerStartOffset, bytes, this.kmerStartOffset, bytesUsed);
         }
     }
-    
+
     /**
      * Deep copy of the given kmer
      * 
@@ -156,7 +155,6 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.kmerStartOffset, bytesUsed);
     }
 
-    
     /**
      * Point this datablock to the given bytes array It works like the pointer
      * to new datablock.
@@ -174,7 +172,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             throw new IllegalArgumentException("Requested " + bytesRequested + " bytes (k=" + kRequested
                     + ") but buffer has only " + (newData.length - blockOffset) + " bytes");
         }
-        storageMaxSize = bytesRequested;  // since we are a reference, store our max capacity
+        storageMaxSize = bytesRequested; // since we are a reference, store our max capacity
         setKmerLength(kRequested);
     }
 
@@ -292,7 +290,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     public byte[] getBytes() {
         return ByteBuffer.wrap(bytes, getBlockOffset(), getLength()).array();
     }
-    
+
     public byte[] getBlockBytes() {
         return bytes;
     }
@@ -318,14 +316,13 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     public int getLength() {
         return bytesUsed + HEADER_SIZE;
     }
-    
+
     /**
      * Return the number of bytes used by the kmer chain
      */
     public int getKmerByteLength() {
         return bytesUsed;
     }
-    
 
     public void setKmerLength(int k) {
         this.bytesUsed = KmerUtil.getByteNumFromK(k);
@@ -334,7 +331,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     }
 
     protected int getKmerByteCapacity() {
-        return storageMaxSize  - HEADER_SIZE;
+        return storageMaxSize - HEADER_SIZE;
     }
 
     protected void setKmerByteCapacity(int new_cap) {
@@ -414,8 +411,8 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             int kmerlength1 = Marshal.getInt(b1, s1);
             int kmerlength2 = Marshal.getInt(b2, s2);
             if (kmerlength1 == kmerlength2) {
-                return compareBytes(b1, s1 + HEADER_SIZE, KmerUtil.getByteNumFromK(kmerlength1), 
-                        b2, s2 + HEADER_SIZE, KmerUtil.getByteNumFromK(kmerlength2));
+                return compareBytes(b1, s1 + HEADER_SIZE, KmerUtil.getByteNumFromK(kmerlength1), b2, s2 + HEADER_SIZE,
+                        KmerUtil.getByteNumFromK(kmerlength2));
             }
             return kmerlength1 - kmerlength2;
         }
@@ -512,9 +509,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      *            : the next kmer
      */
     public void mergeWithFFKmer(int initialKmerSize, VKmer kmer) {
-    	if (lettersInKmer < initialKmerSize - 1 || kmer.lettersInKmer < initialKmerSize - 1) {
-    		throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K=" + initialKmerSize + ", merge '" + this + "' with '" + kmer + "'.");
-    	}
+        if (lettersInKmer < initialKmerSize - 1 || kmer.lettersInKmer < initialKmerSize - 1) {
+            throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K="
+                    + initialKmerSize + ", merge '" + this + "' with '" + kmer + "'.");
+        }
         int preKmerLength = lettersInKmer;
         int preSize = bytesUsed;
         lettersInKmer += kmer.lettersInKmer - initialKmerSize + 1;
@@ -523,15 +521,14 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             bytes[kmerStartOffset + bytesUsed - i] = bytes[kmerStartOffset + preSize - i];
         }
         for (int k = initialKmerSize - 1; k < kmer.getKmerLetterLength(); k += 4) {
-            byte onebyte = Kmer.getOneByteFromKmerAtPosition(k, kmer.bytes, kmer.kmerStartOffset,
-                    kmer.bytesUsed);
-            Kmer.appendOneByteAtPosition(preKmerLength + k - initialKmerSize + 1, onebyte, bytes,
-                    kmerStartOffset, bytesUsed);
+            byte onebyte = Kmer.getOneByteFromKmerAtPosition(k, kmer.bytes, kmer.kmerStartOffset, kmer.bytesUsed);
+            Kmer.appendOneByteAtPosition(preKmerLength + k - initialKmerSize + 1, onebyte, bytes, kmerStartOffset,
+                    bytesUsed);
         }
         clearLeadBit();
         saveHeader(lettersInKmer);
     }
-    
+
     public void mergeWithFFKmer(int kmerSize, Kmer kmer) {
         // TODO make this more efficient
         mergeWithFFKmer(kmerSize, new VKmer(kmer.toString()));
@@ -548,9 +545,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      *            : the next kmer
      */
     public void mergeWithFRKmer(int initialKmerSize, VKmer kmer) {
-    	if (lettersInKmer < initialKmerSize - 1 || kmer.lettersInKmer < initialKmerSize - 1) {
-    		throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K=" + initialKmerSize + ", merge '" + this + "' with '" + kmer + "'.");
-    	}
+        if (lettersInKmer < initialKmerSize - 1 || kmer.lettersInKmer < initialKmerSize - 1) {
+            throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K="
+                    + initialKmerSize + ", merge '" + this + "' with '" + kmer + "'.");
+        }
         int preSize = bytesUsed;
         int preKmerLength = lettersInKmer;
         lettersInKmer += kmer.lettersInKmer - initialKmerSize + 1;
@@ -580,7 +578,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         saveHeader(lettersInKmer);
     }
-    
+
     public void mergeWithFRKmer(int kmerSize, Kmer kmer) {
         // TODO make this more efficient
         mergeWithFRKmer(kmerSize, new VKmer(kmer.toString()));
@@ -602,7 +600,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         reversed.setReversedFromStringBytes(preKmer.toString().getBytes(), 0);
         mergeWithRRKmer(initialKmerSize, reversed);
     }
-    
+
     public void mergeWithRFKmer(int kmerSize, Kmer kmer) {
         // TODO make this more efficient
         mergeWithRFKmer(kmerSize, new VKmer(kmer.toString()));
@@ -618,9 +616,10 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      *            : the previous kmer
      */
     public void mergeWithRRKmer(int initialKmerSize, VKmer preKmer) {
-    	if (lettersInKmer < initialKmerSize - 1 || preKmer.lettersInKmer < initialKmerSize - 1) {
-    		throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K=" + initialKmerSize + ", merge '" + this + "' with '" + preKmer + "'.");
-    	}
+        if (lettersInKmer < initialKmerSize - 1 || preKmer.lettersInKmer < initialKmerSize - 1) {
+            throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K="
+                    + initialKmerSize + ", merge '" + this + "' with '" + preKmer + "'.");
+        }
         int preKmerLength = lettersInKmer;
         int preSize = bytesUsed;
         lettersInKmer += preKmer.lettersInKmer - initialKmerSize + 1;
@@ -638,16 +637,16 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         int k = 4;
         for (; k < preKmerLength; k += 4) {
             byte onebyte = Kmer.getOneByteFromKmerAtPosition(k, bytes, kmerStartOffset, preSize);
-            Kmer.appendOneByteAtPosition(preKmer.lettersInKmer - initialKmerSize + k - 4 + 1, cacheByte,
-                    bytes, kmerStartOffset, bytesUsed);
+            Kmer.appendOneByteAtPosition(preKmer.lettersInKmer - initialKmerSize + k - 4 + 1, cacheByte, bytes,
+                    kmerStartOffset, bytesUsed);
             cacheByte = onebyte;
         }
-        Kmer.appendOneByteAtPosition(preKmer.lettersInKmer - initialKmerSize + k - 4 + 1, cacheByte,
-                bytes, kmerStartOffset, bytesUsed);
+        Kmer.appendOneByteAtPosition(preKmer.lettersInKmer - initialKmerSize + k - 4 + 1, cacheByte, bytes,
+                kmerStartOffset, bytesUsed);
         clearLeadBit();
         saveHeader(lettersInKmer);
     }
-    
+
     public void mergeWithRRKmer(int kmerSize, Kmer kmer) {
         // TODO make this more efficient
         mergeWithRRKmer(kmerSize, new VKmer(kmer.toString()));
@@ -671,6 +670,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
                 throw new RuntimeException("Direction not recognized: " + edgeType);
         }
     }
+
     public void mergeWithKmerInDir(EDGETYPE edgeType, int initialKmerSize, Kmer kmer) {
         // TODO make this more efficient
         mergeWithKmerInDir(edgeType, initialKmerSize, new VKmer(kmer.toString()));
@@ -678,79 +678,77 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
 
     public Kmer asFixedLengthKmer() {
         if (lettersInKmer != Kmer.getKmerLength()) {
-            throw new IllegalArgumentException("VKmer " + this.toString() + " is not of the same length as the fixed length Kmer (" + Kmer.getKmerLength() + " )!");
+            throw new IllegalArgumentException("VKmer " + this.toString()
+                    + " is not of the same length as the fixed length Kmer (" + Kmer.getKmerLength() + " )!");
         }
         return new Kmer(bytes, kmerStartOffset);
     }
-    
+
     /**
      * return the edit distance required to transform kemr1 into kmer2 using substitutions, insertions, and deletions.
-     * 
-     * This uses the classic dynamic programming algorithm and takes O(length_1 * length_2) time and space. 
+     * This uses the classic dynamic programming algorithm and takes O(length_1 * length_2) time and space.
      */
     public static int editDistance(VKmer kmer1, VKmer kmer2) {
-    	int rows = kmer1.getKmerLetterLength() + 1, columns = kmer2.getKmerLetterLength() + 1, r=0, c=0, match=0;
-    	int[][] distMat = new int[rows][columns];
-    	
-    	// initialize top row and left column
-    	for (r = 0; r < rows; r++) {
-    		distMat[r][0] = r;
-    	}
-    	for (c = 0; c < columns; c++) {
-    		distMat[0][c] = c;
-    	}
-    	
-    	// fill out the matrix as the min of left+1, up+1, and diag+nomatch
-    	for (r = 1; r < rows; r++) {
-    		for (c = 1; c < columns; c++) {
-    			match = kmer1.getGeneCodeAtPosition(r-1) == kmer2.getGeneCodeAtPosition(c-1) ? 0 : 1;
-    			distMat[r][c] = min(distMat[r-1][c] + 1,
-    								distMat[r][c-1] + 1,
-    								distMat[r-1][c-1] + match);
-    		}
-    	}
-    	return distMat[rows - 1][columns - 1];
+        int rows = kmer1.getKmerLetterLength() + 1, columns = kmer2.getKmerLetterLength() + 1, r = 0, c = 0, match = 0;
+        int[][] distMat = new int[rows][columns];
+
+        // initialize top row and left column
+        for (r = 0; r < rows; r++) {
+            distMat[r][0] = r;
+        }
+        for (c = 0; c < columns; c++) {
+            distMat[0][c] = c;
+        }
+
+        // fill out the matrix as the min of left+1, up+1, and diag+nomatch
+        for (r = 1; r < rows; r++) {
+            for (c = 1; c < columns; c++) {
+                match = kmer1.getGeneCodeAtPosition(r - 1) == kmer2.getGeneCodeAtPosition(c - 1) ? 0 : 1;
+                distMat[r][c] = min(distMat[r - 1][c] + 1, distMat[r][c - 1] + 1, distMat[r - 1][c - 1] + match);
+            }
+        }
+        return distMat[rows - 1][columns - 1];
     }
-    
+
     private static int min(int a, int b, int c) {
-    	return a <= b ? (a <= c ? a : c) : (b <= c ? b : c);
+        return a <= b ? (a <= c ? a : c) : (b <= c ? b : c);
     }
+
     private static int min(int a, int b) {
         return a <= b ? a : b;
     }
-    
+
     public int editDistance(VKmer other) {
-    	return editDistance(this, other);
+        return editDistance(this, other);
     }
-    
+
     /**
-     * return the fractional difference between the given kmers.  This is the edit distance divided by the smaller length.
-     * 
+     * return the fractional difference between the given kmers. This is the edit distance divided by the smaller length.
      * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)
-     * 
      * For example, two kmers AAAAA and AAAT have an edit distance of 2; the fracDissimilar will be 2/4 = .5
      */
     public static float fracDissimilar(VKmer kmer1, VKmer kmer2) {
         return editDistance(kmer1, kmer2) / (float) min(kmer1.getKmerLetterLength(), kmer2.getKmerLetterLength());
     }
-    
+
     public float fracDissimilar(boolean sameOrientation, VKmer other) {
-        if(sameOrientation)
+        if (sameOrientation)
             return fracDissimilar(this, other);
-        else{
+        else {
             String reverse = other.toString(); // TODO don't use toString here (something more efficient?)
             VKmer reverseKmer = new VKmer();
             reverseKmer.setReversedFromStringBytes(reverse.length(), reverse.getBytes(), 0);
             return fracDissimilar(this, reverseKmer);
         }
     }
-    
+
     @Override
     public int compareTo(BinaryComparable other) {
         Comparator c = new Comparator();
         if (other instanceof VKmer) {
-            VKmer otherVK = (VKmer) other; 
-            return c.compare(getBlockBytes(), getBlockOffset(), getLength(), otherVK.getBlockBytes(), otherVK.getBlockOffset(), otherVK.getLength());
+            VKmer otherVK = (VKmer) other;
+            return c.compare(getBlockBytes(), getBlockOffset(), getLength(), otherVK.getBlockBytes(),
+                    otherVK.getBlockOffset(), otherVK.getLength());
         }
         return c.compare(getBlockBytes(), getBlockOffset(), getLength(), other.getBytes(), 0, other.getLength());
     }

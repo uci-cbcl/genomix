@@ -18,14 +18,13 @@ import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Serializable {
     private static final long serialVersionUID = 1L;
-    protected static final byte[] EMPTY_BYTES = {0,0,0,0};
+    protected static final byte[] EMPTY_BYTES = { 0, 0, 0, 0 };
     protected static final int HEADER_SIZE = 4;
-    
+
     protected byte[] storage;
     protected int offset;
     protected int valueCount;
     protected int maxStorageSize;
-
 
     protected ReadHeadInfo posIter = new ReadHeadInfo();
 
@@ -47,7 +46,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
             append(p);
         }
     }
-  
+
     public ReadHeadSet(ReadHeadSet other) {
         this();
         set(other);
@@ -77,9 +76,9 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         else
             throw new RuntimeException("This position is null pointer!");
     }
-    
-    public void appendReadId(long readId){
-        append((byte)0, readId, 0);
+
+    public void appendReadId(long readId) {
+        append((byte) 0, readId, 0);
     }
 
     /*
@@ -115,19 +114,19 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
             append(pos);
         }
     }
-    
+
     /**
      * version of unionUpdate that imposes a maximum number on the number of positions added
      */
     public void unionUpdateCappedCount(ReadHeadSet otherList) {
         HashSet<ReadHeadInfo> uniqueElements = new HashSet<ReadHeadInfo>(valueCount + otherList.valueCount);
         for (ReadHeadInfo pos : this) {
-//            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
-                uniqueElements.add(new ReadHeadInfo(pos));
+            //            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
+            uniqueElements.add(new ReadHeadInfo(pos));
         }
         for (ReadHeadInfo pos : otherList) {
-//            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
-                uniqueElements.add(new ReadHeadInfo(pos));
+            //            if (uniqueElements.size() < EdgeWritable.MAX_READ_IDS_PER_EDGE)
+            uniqueElements.add(new ReadHeadInfo(pos));
         }
         valueCount = 0;
         setSize(uniqueElements.size() * ReadHeadInfo.LENGTH + HEADER_SIZE);
@@ -135,7 +134,6 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
             append(pos);
         }
     }
-    
 
     public static int getCountByDataLength(int length) {
         if (length % ReadHeadInfo.LENGTH != 0) {
@@ -152,7 +150,8 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         int newValueCount = Marshal.getInt(newData, newOffset);
         setSize(newValueCount * ReadHeadInfo.LENGTH + HEADER_SIZE);
         if (newValueCount > 0) {
-            System.arraycopy(newData, newOffset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, newValueCount * ReadHeadInfo.LENGTH);
+            System.arraycopy(newData, newOffset + HEADER_SIZE, storage, this.offset + HEADER_SIZE, newValueCount
+                    * ReadHeadInfo.LENGTH);
         }
         valueCount = newValueCount;
         Marshal.putInt(valueCount, storage, this.offset);
@@ -172,22 +171,22 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     protected int getCapacity() {
         return maxStorageSize - offset;
     }
-    
-    public String printStartReadIdSet(){
+
+    public String printStartReadIdSet() {
         String output = "5':[";
-        if(valueCount > 0){
-            for(int i = 0; i < valueCount - 1; i++)
+        if (valueCount > 0) {
+            for (int i = 0; i < valueCount - 1; i++)
                 output += getPosition(i).getReadId() + ",";
             output += getPosition(valueCount - 1).getReadId();
         }
         output += "]";
         return output;
     }
-    
-    public String printEndReadIdSet(){
+
+    public String printEndReadIdSet() {
         String output = "~5':[";
-        if(valueCount > 0){
-            for(int i = 0; i < valueCount - 1; i++)
+        if (valueCount > 0) {
+            for (int i = 0; i < valueCount - 1; i++)
                 output += getPosition(i).getReadId() + ",";
             output += getPosition(valueCount - 1).getReadId();
         }
@@ -221,13 +220,13 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         }
         Marshal.putLong(uuid, storage, offset + i * ReadHeadInfo.LENGTH + HEADER_SIZE);
     }
-    
+
     public void removePosition(int i) {
         if (i < 0 || i > valueCount)
-            throw new IllegalArgumentException("Invalid position specified in removePosition! Should be 0 <= " + i + " <= " + valueCount + ").");
-        System.arraycopy(storage, offset + i * ReadHeadInfo.LENGTH + HEADER_SIZE, storage, offset
-                + (i - 1) * ReadHeadInfo.LENGTH + HEADER_SIZE, (valueCount - i)
-                * ReadHeadInfo.LENGTH);
+            throw new IllegalArgumentException("Invalid position specified in removePosition! Should be 0 <= " + i
+                    + " <= " + valueCount + ").");
+        System.arraycopy(storage, offset + i * ReadHeadInfo.LENGTH + HEADER_SIZE, storage, offset + (i - 1)
+                * ReadHeadInfo.LENGTH + HEADER_SIZE, (valueCount - i) * ReadHeadInfo.LENGTH);
         valueCount--;
         Marshal.putInt(valueCount, storage, offset);
     }
@@ -267,9 +266,9 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
             @Override
             public void remove() {
                 if (currentIndex < valueCount)
-                    System.arraycopy(storage, offset + currentIndex * ReadHeadInfo.LENGTH + HEADER_SIZE, storage, offset
-                            + (currentIndex - 1) * ReadHeadInfo.LENGTH + HEADER_SIZE, (valueCount - currentIndex)
-                            * ReadHeadInfo.LENGTH);
+                    System.arraycopy(storage, offset + currentIndex * ReadHeadInfo.LENGTH + HEADER_SIZE, storage,
+                            offset + (currentIndex - 1) * ReadHeadInfo.LENGTH + HEADER_SIZE,
+                            (valueCount - currentIndex) * ReadHeadInfo.LENGTH);
                 valueCount--;
                 currentIndex--;
                 Marshal.putInt(valueCount, storage, offset);
@@ -286,7 +285,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         while (posIterator.hasNext()) {
             if (toRemove.equals(posIterator.next())) {
                 posIterator.remove();
-                return;  // found it. return early. 
+                return; // found it. return early. 
             }
         }
         // element not found.
@@ -299,10 +298,10 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     public void remove(ReadHeadInfo toRemove) {
         remove(toRemove, false);
     }
-    
-    public void removeReadId(long readId){
+
+    public void removeReadId(long readId) {
         ReadHeadInfo toRemove = new ReadHeadInfo();
-        toRemove.set((byte)0, readId, 0);
+        toRemove.set((byte) 0, readId, 0);
         remove(toRemove);
     }
 
@@ -337,31 +336,31 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         sbuilder.append(']');
         return sbuilder.toString();
     }
-    
+
     public long[] toUUIDArray() {
         long[] result = new long[valueCount];
-        for (int i=0; i < valueCount; i++) {
+        for (int i = 0; i < valueCount; i++) {
             result[i] = getPosition(i).getUUID();
         }
         return result;
     }
-    
+
     public long[] toReadIDArray() {
         long[] result = new long[valueCount];
-        for (int i=0; i < valueCount; i++) {
+        for (int i = 0; i < valueCount; i++) {
             result[i] = getPosition(i).getReadId();
         }
         return result;
     }
-    
-    public Set<Long> getSetOfReadIds(){
+
+    public Set<Long> getSetOfReadIds() {
         Set<Long> readIds = new HashSet<Long>();
-        for(long readId : toReadIDArray()){
+        for (long readId : toReadIDArray()) {
             readIds.add(readId);
         }
         return readIds;
     }
-    
+
     @Override
     public int hashCode() {
         return Marshal.hashBytes(getByteArray(), getStartOffset(), getLengthInBytes());
@@ -380,12 +379,12 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         }
         return true;
     }
-    
-    public boolean isEmpty(){
+
+    public boolean isEmpty() {
         return this.getCountOfPosition() == 0;
     }
-    
-    public static ReadHeadSet getIntersection(ReadHeadSet list1, ReadHeadSet list2){
+
+    public static ReadHeadSet getIntersection(ReadHeadSet list1, ReadHeadSet list2) {
         ReadHeadSet intersection = new ReadHeadSet(list1);
         intersection.retainAll(list2);
         return intersection;

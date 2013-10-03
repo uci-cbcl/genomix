@@ -44,7 +44,7 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
     private ConfFactory confFactory;
-    
+
     public KeyValueSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
         this.kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
@@ -65,8 +65,8 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
         @Override
         public void open(DataOutput output) throws HyracksDataException {
             try {
-                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, VKmer.class,
-                        Node.class, CompressionType.NONE, null);
+                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, VKmer.class, Node.class,
+                        CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }

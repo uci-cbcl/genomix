@@ -25,16 +25,15 @@ public class P2InitialGraphCleanInputFormat extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> createVertexReader(
-            InputSplit split, TaskAttemptContext context) throws IOException {
+    public VertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> createVertexReader(InputSplit split,
+            TaskAttemptContext context) throws IOException {
         return new P2BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
 }
 
 @SuppressWarnings("rawtypes")
-class P2BinaryLoadGraphReader extends
-        BinaryVertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> {
-    
+class P2BinaryLoadGraphReader extends BinaryVertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> {
+
     private Vertex vertex;
     private VKmer vertexId = new VKmer();
     private Node node = new Node();
@@ -51,14 +50,14 @@ class P2BinaryLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<VKmer, P2VertexValue, NullWritable, MessageWritable> getCurrentVertex()
-            throws IOException, InterruptedException {
+    public Vertex<VKmer, P2VertexValue, NullWritable, MessageWritable> getCurrentVertex() throws IOException,
+            InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-    
+
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
-    
+
         vertex.reset();
         if (getRecordReader() != null) {
             /**
@@ -75,7 +74,7 @@ class P2BinaryLoadGraphReader extends
             vertexValue.setState(State.IS_NON);
             vertex.setVertexValue(vertexValue);
         }
-    
+
         return vertex;
     }
 }

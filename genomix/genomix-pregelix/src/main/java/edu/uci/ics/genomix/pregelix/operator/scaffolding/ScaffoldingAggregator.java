@@ -14,19 +14,17 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 
-public class ScaffoldingAggregator extends
-    StatisticsAggregator{
-    
+public class ScaffoldingAggregator extends StatisticsAggregator {
+
     public static HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> preScaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
-    
+
     @Override
     public void init() {
         super.init();
     }
 
     @Override
-    public void step(Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> v)
-            throws HyracksDataException {
+    public void step(Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> v) throws HyracksDataException {
         super.step(v);
         updateScaffoldingMap(v.getVertexValue().getScaffoldingMap());
     }
@@ -36,18 +34,18 @@ public class ScaffoldingAggregator extends
         super.step(partialResult);
         updateScaffoldingMap(partialResult.getScaffoldingMap());
     }
-    
-    public void updateScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> otherMap){
+
+    public void updateScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> otherMap) {
         HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> curMap = value.getScaffoldingMap();
-        for(LongWritable readId : otherMap.keySet()){
-            if(curMap.containsKey(readId)){
+        for (LongWritable readId : otherMap.keySet()) {
+            if (curMap.containsKey(readId)) {
                 curMap.get(readId).addAll(otherMap.get(readId));
-            } else{
+            } else {
                 curMap.put(readId, otherMap.get(readId));
             }
         }
     }
-    
+
     @Override
     public VertexValueWritable finishPartial() {
         return value;

@@ -34,17 +34,18 @@ public class NodeTextWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
     public static final int OutputNodeField = AssembleKeyIntoNodeOperator.OutputNodeField;
-    
+
     public NodeTextWriterFactory(int k) {
         this.kmerSize = k;
     }
 
     @Override
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
+            throws HyracksDataException {
         Kmer.setGlobalKmerLength(kmerSize);
         return new ITupleWriter() {
             Node node = new Node();
-            
+
             @Override
             public void open(DataOutput output) throws HyracksDataException {
 

@@ -21,48 +21,47 @@ public class Marshal {
         return ((bytes[offset] & 0xff) << 24) + ((bytes[offset + 1] & 0xff) << 16) + ((bytes[offset + 2] & 0xff) << 8)
                 + ((bytes[offset + 3] & 0xff) << 0);
     }
-    
-    public static long getLong(byte[] bytes, int offset) {   
+
+    public static long getLong(byte[] bytes, int offset) {
         long value = 0;
-        for (int i = offset; i < bytes.length && i < offset + 8; i++)
-        {
-           value = (value << 8) + (bytes[i] & 0xff);
+        for (int i = offset; i < bytes.length && i < offset + 8; i++) {
+            value = (value << 8) + (bytes[i] & 0xff);
         }
         return value;
-//        return ((bytes[offset] & 0xff) << 56) + ((bytes[offset + 1] & 0xff) << 48) + ((bytes[offset + 2] & 0xff) << 40) 
-//                + ((bytes[offset + 3] & 0xff) << 32) + ((bytes[offset + 4] & 0xff) << 24) + ((bytes[offset + 5] & 0xff) << 16) 
-//                + ((bytes[offset + 6] & 0xff) << 8) + ((bytes[offset + 7] & 0xff) << 0);
+        //        return ((bytes[offset] & 0xff) << 56) + ((bytes[offset + 1] & 0xff) << 48) + ((bytes[offset + 2] & 0xff) << 40) 
+        //                + ((bytes[offset + 3] & 0xff) << 32) + ((bytes[offset + 4] & 0xff) << 24) + ((bytes[offset + 5] & 0xff) << 16) 
+        //                + ((bytes[offset + 6] & 0xff) << 8) + ((bytes[offset + 7] & 0xff) << 0);
     }
-    
-    public static float getFloat(byte[] bytes, int offset) {   
+
+    public static float getFloat(byte[] bytes, int offset) {
         return ByteBuffer.wrap(bytes, offset, 4).getFloat();
     }
-    
+
     public static void putInt(int val, byte[] bytes, int offset) {
-        bytes[offset] = (byte)((val >>> 24) & 0xFF);        
-        bytes[offset + 1] = (byte)((val >>> 16) & 0xFF);
-        bytes[offset + 2] = (byte)((val >>>  8) & 0xFF);
-        bytes[offset + 3] = (byte)((val >>>  0) & 0xFF);
+        bytes[offset] = (byte) ((val >>> 24) & 0xFF);
+        bytes[offset + 1] = (byte) ((val >>> 16) & 0xFF);
+        bytes[offset + 2] = (byte) ((val >>> 8) & 0xFF);
+        bytes[offset + 3] = (byte) ((val >>> 0) & 0xFF);
     }
-    
+
     public static void putLong(long val, byte[] bytes, int offset) {
-        ByteBuffer byteBuffer = ByteBuffer.allocate(8); 
+        ByteBuffer byteBuffer = ByteBuffer.allocate(8);
         System.arraycopy(byteBuffer.putLong(val).array(), 0, bytes, offset, 8);
-//        bytes[offset] = (byte)((val >>> 56) & 0xFF);        
-//        bytes[offset + 1] = (byte)((val >>> 48) & 0xFF);
-//        bytes[offset + 2] = (byte)((val >>> 40) & 0xFF);
-//        bytes[offset + 3] = (byte)((val >>> 32) & 0xFF);
-//        bytes[offset + 4] = (byte)((val >>> 24) & 0xFF);
-//        bytes[offset + 5] = (byte)((val >>> 16) & 0xFF);
-//        bytes[offset + 6] = (byte)((val >>> 8) & 0xFF);
-//        bytes[offset + 7] = (byte)((val >>> 0) & 0xFF);
+        //        bytes[offset] = (byte)((val >>> 56) & 0xFF);        
+        //        bytes[offset + 1] = (byte)((val >>> 48) & 0xFF);
+        //        bytes[offset + 2] = (byte)((val >>> 40) & 0xFF);
+        //        bytes[offset + 3] = (byte)((val >>> 32) & 0xFF);
+        //        bytes[offset + 4] = (byte)((val >>> 24) & 0xFF);
+        //        bytes[offset + 5] = (byte)((val >>> 16) & 0xFF);
+        //        bytes[offset + 6] = (byte)((val >>> 8) & 0xFF);
+        //        bytes[offset + 7] = (byte)((val >>> 0) & 0xFF);
     }
-    
+
     public static void putFloat(float val, byte[] bytes, int offset) {
         ByteBuffer byteBuffer = ByteBuffer.allocate(4);
         System.arraycopy(byteBuffer.putFloat(val).array(), 0, bytes, offset, 4);
     }
-    
+
     public static int hashBytes(byte[] bytes, int offset, int length) {
         int hash = 1;
         for (int i = offset; i < offset + length; i++)

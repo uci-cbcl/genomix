@@ -30,7 +30,7 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
-public class JobGenUnMergedGraph extends JobGenBrujinGraph{
+public class JobGenUnMergedGraph extends JobGenBrujinGraph {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,7 +38,7 @@ public class JobGenUnMergedGraph extends JobGenBrujinGraph{
             int numPartitionPerMachine) throws HyracksDataException {
         super(job, scheduler, ncMap, numPartitionPerMachine);
     }
-    
+
     public AbstractOperatorDescriptor generateUnmergedunMergedWriterOpertator(JobSpecification jobSpec,
             AbstractOperatorDescriptor kmerCrossAggregator) throws HyracksException {
         ITupleWriterFactory unMergedWriter = null;
@@ -59,7 +59,7 @@ public class JobGenUnMergedGraph extends JobGenBrujinGraph{
                 new OneToOneConnectorDescriptor(jobSpec));
         return writeNodeOperator;
     }
-    
+
     @Override
     public JobSpecification generateJob() throws HyracksException {
 
@@ -77,5 +77,5 @@ public class JobGenUnMergedGraph extends JobGenBrujinGraph{
         jobSpec.addRoot(lastOperator);
         return jobSpec;
     }
-    
+
 }

@@ -9,42 +9,42 @@ import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessage.P2MessageType;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class P2VertexValue extends VertexValueWritable{
-    
+public class P2VertexValue extends VertexValueWritable {
+
     private static final long serialVersionUID = -6600330062969997327L;
-    
+
     private Node prependMergeNode;
     private Node appendMergeNode;
-    
+
     private HashMapWritable<VKmer, KmerAndDir> apexMap; //<apexId, deleteKmerAndDir>
-    
-    public P2VertexValue(){
+
+    public P2VertexValue() {
         super();
         prependMergeNode = new Node();
         appendMergeNode = new Node();
         apexMap = new HashMapWritable<VKmer, KmerAndDir>();
     }
-    
-    public VertexValueWritable get(){
-        VertexValueWritable tmpValue = new VertexValueWritable(); 
+
+    public VertexValueWritable get() {
+        VertexValueWritable tmpValue = new VertexValueWritable();
         tmpValue.setAsCopy(getNode());
         tmpValue.setState(getState());
         tmpValue.setFakeVertex(isFakeVertex());
         tmpValue.setCounters(getCounters());
         tmpValue.setScaffoldingMap(getScaffoldingMap());
-        
+
         return tmpValue;
     }
-    
-    public void reset(){
+
+    public void reset() {
         super.reset();
         prependMergeNode.reset();
         appendMergeNode.reset();
-//        apexMap.clear();
+        //        apexMap.clear();
     }
-    
-    public Node getMergeNode(byte mergeMsgType){
-        switch(mergeMsgType){
+
+    public Node getMergeNode(byte mergeMsgType) {
+        switch (mergeMsgType) {
             case P2MessageType.FROM_PREDECESSOR:
                 return getPrependMergeNode();
             case P2MessageType.FROM_SUCCESSOR:
@@ -52,21 +52,21 @@ public class P2VertexValue extends VertexValueWritable{
         }
         return null;
     }
-    
+
     /**
-     * process finalNode 
+     * process finalNode
      */
-    public void processFinalNode(){
+    public void processFinalNode() {
         int internalKmerLength = getNode().getInternalKmer().getKmerLetterLength();
         setNode(prependMergeNode);
         getNode().mergeWithNodeWithoutKmer(appendMergeNode);
-        
+
         String prepend = prependMergeNode.getInternalKmer().toString();
         String append = appendMergeNode.getInternalKmer().toString();
         String merge = prepend + append.substring(internalKmerLength);
         getNode().getInternalKmer().setFromStringBytes(merge.length(), merge.getBytes(), 0);
     }
-    
+
     public Node getPrependMergeNode() {
         return prependMergeNode;
     }
@@ -82,7 +82,7 @@ public class P2VertexValue extends VertexValueWritable{
     public void setAppendMergeNode(Node appendMergeNode) {
         this.appendMergeNode.setAsCopy(appendMergeNode);
     }
-    
+
     public HashMapWritable<VKmer, KmerAndDir> getApexMap() {
         return apexMap;
     }
@@ -99,7 +99,7 @@ public class P2VertexValue extends VertexValueWritable{
         appendMergeNode.readFields(in);
         apexMap.readFields(in);
     }
-    
+
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);

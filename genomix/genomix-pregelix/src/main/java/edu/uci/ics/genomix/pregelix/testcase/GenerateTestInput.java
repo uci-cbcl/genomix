@@ -15,7 +15,7 @@ public class GenerateTestInput {
         for (int i = 0; i < numLines; i++)
             output += rs.nextString(0) + "\r\n";
         return output;
-        
+
     }
 
     /**
@@ -30,7 +30,7 @@ public class GenerateTestInput {
         String s2 = rs.nextString(startBridge) + s1.substring(bridgeLength + startBridge - kmerSize);
         return s1 + "\r\n" + s2;
     }
-    
+
     /**
      * Tree Path
      */
@@ -55,24 +55,24 @@ public class GenerateTestInput {
         String s2 = s1 + s1.substring(1, kmerSize + 1);
         return s2;
     }
-    
+
     /**
      * Grid
      */
-    public static String gridPath(int kmerSize){
+    public static String gridPath(int kmerSize) {
         int length = kmerSize + kmerSize + kmerSize + 1;
         RandomString rs = new RandomString(kmerSize, length); // 3 + 3 + 3
         String row1 = rs.nextString(0, length).substring(0, length - 1);
         rs.nextString(kmerSize, kmerSize + 1);
-        String row2 = rs.nextString(2*kmerSize, 2*kmerSize + 1).substring(1, length);
-        String column1 = row1.substring(0, kmerSize) + row2.substring(0, 2*kmerSize - 1);
-        String column2 = row1.substring(1, 1 + 2*kmerSize - 1) + row2.substring(2*kmerSize - 1, 3*kmerSize - 1);
-        String column3 = row1.substring(1 + kmerSize, length - 1) + row2.substring(length -1);
+        String row2 = rs.nextString(2 * kmerSize, 2 * kmerSize + 1).substring(1, length);
+        String column1 = row1.substring(0, kmerSize) + row2.substring(0, 2 * kmerSize - 1);
+        String column2 = row1.substring(1, 1 + 2 * kmerSize - 1) + row2.substring(2 * kmerSize - 1, 3 * kmerSize - 1);
+        String column3 = row1.substring(1 + kmerSize, length - 1) + row2.substring(length - 1);
         return row1 + "\r\n" + row2 + "\r\n" + column1 + "\r\n" + column2 + "\r\n" + column3;
 
     }
-    
-    public static void generateSimplePath(String destDir, int kmerSize, int readLength, int numLines){
+
+    public static void generateSimplePath(String destDir, int kmerSize, int readLength, int numLines) {
         OutputStreamWriter writer;
         try {
             writer = new OutputStreamWriter(new FileOutputStream(destDir));
@@ -82,8 +82,8 @@ public class GenerateTestInput {
             e.printStackTrace();
         }
     }
-    
-    public static void generateBridgePath(String destDir, int kmerSize, int headLength, int bridgeLength, int readLength){
+
+    public static void generateBridgePath(String destDir, int kmerSize, int headLength, int bridgeLength, int readLength) {
         OutputStreamWriter writer;
         try {
             writer = new OutputStreamWriter(new FileOutputStream(destDir));
@@ -93,8 +93,8 @@ public class GenerateTestInput {
             e.printStackTrace();
         }
     }
-    
-    public static void generateTreePath(String destDir, int kmerSize, int x, int y, int z){
+
+    public static void generateTreePath(String destDir, int kmerSize, int x, int y, int z) {
         OutputStreamWriter writer;
         try {
             writer = new OutputStreamWriter(new FileOutputStream(destDir));
@@ -104,8 +104,8 @@ public class GenerateTestInput {
             e.printStackTrace();
         }
     }
-    
-    public static void generateCyclePath(String destDir, int kmerSize, int cycleLength){
+
+    public static void generateCyclePath(String destDir, int kmerSize, int cycleLength) {
         OutputStreamWriter writer;
         try {
             writer = new OutputStreamWriter(new FileOutputStream(destDir));
@@ -115,8 +115,8 @@ public class GenerateTestInput {
             e.printStackTrace();
         }
     }
-    
-    public static void generateGridPath(String destDir, int kmerSize){
+
+    public static void generateGridPath(String destDir, int kmerSize) {
         OutputStreamWriter writer;
         try {
             writer = new OutputStreamWriter(new FileOutputStream(destDir));
@@ -126,16 +126,16 @@ public class GenerateTestInput {
             e.printStackTrace();
         }
     }
-    
+
     public static void main(String[] args) {
-        int kmerSize = 5; 
+        int kmerSize = 5;
         /** SimplePath **/
         int readLength = 9;
         int numLines = 3;
         generateSimplePath("graph/SimplePath", kmerSize, readLength, numLines);
         /** BridgePath **/
         int headLength = 2;
-        int bridgeLength = 4; 
+        int bridgeLength = 4;
         generateBridgePath("graph/BridgePath", kmerSize, headLength, bridgeLength, readLength);
         /** TreePath **/
         int x = 5;

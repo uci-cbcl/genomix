@@ -40,21 +40,22 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
      */
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
-    
+
     public AggregateKmerAggregateFactory(int k) {
         this.kmerSize = k;
     }
-    
+
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
             throws HyracksDataException {
         Kmer.setGlobalKmerLength(kmerSize);
         return new IAggregatorDescriptor() {
-            
+
             private Node readNode = new Node();
-//            private KmerBytesWritable readKmer = new KmerBytesWritable();
-            
+
+            //            private KmerBytesWritable readKmer = new KmerBytesWritable();
+
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, fieldId);
@@ -81,40 +82,40 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                     AggregateState state) throws HyracksDataException {
                 Node localUniNode = (Node) state.state;
                 localUniNode.reset();
-//                localUniNode.foundMe = false;
-//                localUniNode.previous = "";
-//                localUniNode.stepCount = 0;
-//                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
+                //                localUniNode.foundMe = false;
+                //                localUniNode.previous = "";
+                //                localUniNode.stepCount = 0;
+                //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                
-//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
-//                    Iterator<VKmerBytesWritable> it = readNode.getEdgeList(DirectionFlag.DIR_FR).getKeys();
-//                    while (it.hasNext()) {
-//                        System.out.println("---------->readNode  "
-//                                + it.next().toString());
-//                    }
-//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {
-//                        System.out.println("---------->localUniNode "
-//                                + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString());
-//                        localUniNode.foundMe = true;
-//                    }
-//                }
+
+                //                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+                //                    Iterator<VKmerBytesWritable> it = readNode.getEdgeList(DirectionFlag.DIR_FR).getKeys();
+                //                    while (it.hasNext()) {
+                //                        System.out.println("---------->readNode  "
+                //                                + it.next().toString());
+                //                    }
+                //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {
+                //                        System.out.println("---------->localUniNode "
+                //                                + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString());
+                //                        localUniNode.foundMe = true;
+                //                    }
+                //                }
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeList(e).unionUpdate((readNode.getEdgeList(e)));
                 }
                 localUniNode.getStartReads().appendList(readNode.getStartReads());
                 localUniNode.getEndReads().appendList(readNode.getEndReads());
-                localUniNode.addCoverage(readNode);            
+                localUniNode.addCoverage(readNode);
 
             }
 
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                
+
                 Node localUniNode = (Node) state.state;
 
-//                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
+                //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
@@ -122,34 +123,34 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 localUniNode.getStartReads().appendList(readNode.getStartReads());
                 localUniNode.getEndReads().appendList(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
-//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
-//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
-//                        System.out.println("***********************************************************");
-//                        
-//                        System.out.println("---------->readNode  "
-//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                        System.out.println("---------->localUniNode "
-//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                        
-//                        System.out.println("-->number for FR: " + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().getCountOfPosition());
-//                        
-//                        localUniNode.foundMe = true;
-//                        localUniNode.previous = localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString();
-//                        localUniNode.stepCount++;
-//                    } else if (localUniNode.foundMe) {
-//                        if (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0) {
-//                            if (localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {
-//                            // good, it's still there
-//                                localUniNode.stepCount++;
-//                                localUniNode.previous = localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString(); 
-//                            } else {
-//                                
-//                                System.out.println("-->number for FR: " + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().getCountOfPosition());
-//                                System.out.println("ERROR: the value has disappeared! previously:\n" + "stepCount: " + localUniNode.stepCount + localUniNode.previous + "\n\ncurrently:\n" + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString());
-//                            }
-//                        }
-//                    }
-//                }
+                //                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+                //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+                //                        System.out.println("***********************************************************");
+                //                        
+                //                        System.out.println("---------->readNode  "
+                //                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                        System.out.println("---------->localUniNode "
+                //                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                        
+                //                        System.out.println("-->number for FR: " + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().getCountOfPosition());
+                //                        
+                //                        localUniNode.foundMe = true;
+                //                        localUniNode.previous = localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString();
+                //                        localUniNode.stepCount++;
+                //                    } else if (localUniNode.foundMe) {
+                //                        if (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0) {
+                //                            if (localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {
+                //                            // good, it's still there
+                //                                localUniNode.stepCount++;
+                //                                localUniNode.previous = localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString(); 
+                //                            } else {
+                //                                
+                //                                System.out.println("-->number for FR: " + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().getCountOfPosition());
+                //                                System.out.println("ERROR: the value has disappeared! previously:\n" + "stepCount: " + localUniNode.stepCount + localUniNode.previous + "\n\ncurrently:\n" + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString());
+                //                            }
+                //                        }
+                //                    }
+                //                }
             }
 
             @Override
@@ -161,19 +162,19 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             @Override
             public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-//                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
-                
+                //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
+
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 Node localUniNode = (Node) state.state;
-//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
-//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
-//                        System.out.println("local final output***********************************************************");
-//                        System.out.println("---------->readNode  "
-//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                        System.out.println("---------->localUniNode "
-//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                    }
-//                }
+                //                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+                //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+                //                        System.out.println("local final output***********************************************************");
+                //                        System.out.println("---------->readNode  "
+                //                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                        System.out.println("---------->localUniNode "
+                //                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                    }
+                //                }
                 try {
                     fieldOutput.write(localUniNode.marshalToByteArray(), 0, localUniNode.getSerializedLength());
                     tupleBuilder.addFieldEndOffset();

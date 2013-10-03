@@ -23,13 +23,12 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 /**
  * Testing tool: Add Bubble
  * Add a bubble to a "good" graph
+ * 
  * @author anbangx
- *
  */
-public class BubbleAddVertex extends
-        Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
+public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;
-   
+
     private VKmer majorVertexId = new VKmer("ACA"); //forward
     private VKmer middleVertexId = new VKmer("ATG"); //reverse
     private VKmer minorVertexId = new VKmer("TCA"); //forward
@@ -38,9 +37,9 @@ public class BubbleAddVertex extends
     private float coverageOfInsertedBubble = 1;
     private EDGETYPE majorToNewBubbleDir = EDGETYPE.FR;
     private EDGETYPE minorToNewBubbleDir = EDGETYPE.FR;
-    
+
     private EdgeMap[] edges = new EdgeMap[4];
-    
+
     /**
      * initiate kmerSize, length
      */
@@ -49,12 +48,12 @@ public class BubbleAddVertex extends
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
-   
+
     /**
      * add a bubble
      */
     @SuppressWarnings("unchecked")
-    public void insertBubble(EdgeMap[] edges, VKmer insertedBubble, VKmer internalKmer){
+    public void insertBubble(EdgeMap[] edges, VKmer insertedBubble, VKmer internalKmer) {
         //add bubble vertex
         @SuppressWarnings("rawtypes")
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -74,39 +73,37 @@ public class BubbleAddVertex extends
         vertexValue.setInternalKmer(internalKmerInNewBubble);
 
         vertex.setVertexValue(vertexValue);
-        
+
         addVertex(insertedBubble, vertex);
     }
-    
-    public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmer insertedBubble){
-        EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror(); 
+
+    public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmer insertedBubble) {
+        EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror();
         getVertexValue().getEdgeList(newBubbleToMeDir).put(insertedBubble, new ReadIdSet(Arrays.asList(new Long(0))));
     }
-    
-    public void setupEdgeForInsertedBubble(){
+
+    public void setupEdgeForInsertedBubble() {
         for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
             edges[et.get()] = new EdgeMap();
         }
         edges[majorToNewBubbleDir.get()].put(majorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
         edges[minorToNewBubbleDir.get()].put(minorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
     }
-    
+
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        initVertex(); 
-        if(getSuperstep() == 1){
-            if(getVertexId().equals(majorVertexId)){
+        initVertex();
+        if (getSuperstep() == 1) {
+            if (getVertexId().equals(majorVertexId)) {
                 /** add edge pointing to insertedBubble **/
                 addEdgeToInsertedBubble(majorToNewBubbleDir, insertedBubble);
-            } 
-            else if(getVertexId().equals(minorVertexId)){
+            } else if (getVertexId().equals(minorVertexId)) {
                 /** add edge pointing to insertedBubble **/
                 addEdgeToInsertedBubble(minorToNewBubbleDir, insertedBubble);
-            } 
-            else if(getVertexId().equals(middleVertexId)){
-                /** setup edges of insertedBubble**/
+            } else if (getVertexId().equals(middleVertexId)) {
+                /** setup edges of insertedBubble **/
                 setupEdgeForInsertedBubble();
-                
+
                 /** insert new bubble **/
                 insertBubble(edges, insertedBubble, getVertexValue().getInternalKmer());
             }

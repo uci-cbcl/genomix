@@ -9,13 +9,13 @@ import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class BubbleMergeMessage extends MessageWritable{
+public class BubbleMergeMessage extends MessageWritable {
 
-    public static class DirToMajor{
+    public static class DirToMajor {
         public static final byte FORWARD = 0;
         public static final byte REVERSE = 1;
     }
-    
+
     private VKmer majorVertexId; //use for MergeBubble
     private VKmer minorVertexId;
     private Node node; //except kmer, other field should be updated when MergeBubble
@@ -23,8 +23,8 @@ public class BubbleMergeMessage extends MessageWritable{
     private byte minorToBubbleEdgetype;
     private VKmer topCoverageVertexId;
     private boolean isFlip;
-    
-    public BubbleMergeMessage(){
+
+    public BubbleMergeMessage() {
         super();
         majorVertexId = new VKmer();
         minorVertexId = new VKmer();
@@ -34,12 +34,12 @@ public class BubbleMergeMessage extends MessageWritable{
         topCoverageVertexId = new VKmer();
         isFlip = false;
     }
-    
-    public BubbleMergeMessage(BubbleMergeMessage msg){
+
+    public BubbleMergeMessage(BubbleMergeMessage msg) {
         set(msg);
     }
-    
-    public void set(BubbleMergeMessage msg){
+
+    public void set(BubbleMergeMessage msg) {
         this.setSourceVertexId(msg.getSourceVertexId());
         this.setFlag(msg.getFlag());
         this.setMajorVertexId(msg.getMajorVertexId());
@@ -50,8 +50,8 @@ public class BubbleMergeMessage extends MessageWritable{
         this.setTopCoverageVertexId(msg.topCoverageVertexId);
         this.setFlip(msg.isFlip());
     }
-    
-    public void reset(){
+
+    public void reset() {
         super.reset();
         majorVertexId.reset(0);
         minorVertexId.reset(0);
@@ -61,24 +61,23 @@ public class BubbleMergeMessage extends MessageWritable{
         topCoverageVertexId.reset(0);
         isFlip = false;
     }
-    
+
     public VKmer getMajorVertexId() {
         return majorVertexId;
     }
 
     public void setMajorVertexId(VKmer majorVertexId) {
-        if(this.majorVertexId == null)
+        if (this.majorVertexId == null)
             this.majorVertexId = new VKmer();
         this.majorVertexId.setAsCopy(majorVertexId);
     }
-    
-    
+
     public VKmer getMinorVertexId() {
         return minorVertexId;
     }
 
     public void setMinorVertexId(VKmer minorVertexId) {
-        if(this.minorVertexId == null)
+        if (this.minorVertexId == null)
             this.minorVertexId = new VKmer();
         this.minorVertexId.setAsCopy(minorVertexId);
     }
@@ -88,21 +87,21 @@ public class BubbleMergeMessage extends MessageWritable{
     }
 
     public void setTopCoverageVertexId(VKmer topCoverageVertexId) {
-        if(this.topCoverageVertexId == null)
+        if (this.topCoverageVertexId == null)
             this.topCoverageVertexId = new VKmer();
         this.topCoverageVertexId.setAsCopy(topCoverageVertexId);
     }
-    
+
     public Node getNode() {
         return node;
     }
 
     public void setNode(Node node) {
-        if(this.node == null)
+        if (this.node == null)
             this.node = new Node();
         this.node.setAsCopy(node);
     }
-    
+
     public EDGETYPE getMajorToBubbleEdgetype() {
         return EDGETYPE.fromByte(majorToBubbleEdgetype);
     }
@@ -126,7 +125,7 @@ public class BubbleMergeMessage extends MessageWritable{
     public void setFlip(boolean isFlip) {
         this.isFlip = isFlip;
     }
-    
+
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
@@ -139,7 +138,7 @@ public class BubbleMergeMessage extends MessageWritable{
         topCoverageVertexId.readFields(in);
         isFlip = in.readBoolean();
     }
-    
+
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
@@ -151,18 +150,18 @@ public class BubbleMergeMessage extends MessageWritable{
         topCoverageVertexId.write(out);
         out.writeBoolean(isFlip);
     }
-    
+
     public static class SortByCoverage implements Comparator<BubbleMergeMessage> {
         @Override
         public int compare(BubbleMergeMessage left, BubbleMergeMessage right) {
             return -Float.compare(left.node.getAverageCoverage(), right.node.getAverageCoverage());
         }
     }
-    
-    public boolean sameOrientation(BubbleMergeMessage other){
+
+    public boolean sameOrientation(BubbleMergeMessage other) {
         return EDGETYPE.sameOrientation(this.majorToBubbleEdgetype, other.majorToBubbleEdgetype);
     }
-    
+
     public float computeDissimilar(BubbleMergeMessage other) {
         boolean sameOrientation = sameOrientation(other);
         return this.getNode().getInternalKmer().fracDissimilar(sameOrientation, other.getNode().getInternalKmer());

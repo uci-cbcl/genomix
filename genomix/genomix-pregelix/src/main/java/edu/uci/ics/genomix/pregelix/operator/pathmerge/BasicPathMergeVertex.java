@@ -20,9 +20,9 @@ import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * The super class of different path merge algorithms
- * This maximally compresses linear subgraphs (A->B->C->...->Z) into into individual nodes (ABC...Z). 
+ * This maximally compresses linear subgraphs (A->B->C->...->Z) into into individual nodes (ABC...Z).
+ * 
  * @author anbangx
- *
  */
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
         BasicGraphCleanVertex<V, M> {
@@ -69,10 +69,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(et.mirror().dir().get());
                     if (verbose)
-                        LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                                + "send restriction from " + getVertexId() + " to " + destId + " in my " + et
-                                + " and their " + et.mirror() + " (" + EDGETYPE.dir(et.mirror()) + "); I am "
-                                + getVertexValue());
+                        LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send restriction from " + getVertexId()
+                                + " to " + destId + " in my " + et + " and their " + et.mirror() + " ("
+                                + EDGETYPE.dir(et.mirror()) + "); I am " + getVertexValue());
                     sendMsg(destId, outgoingMsg);
                 }
             }
@@ -87,8 +86,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         boolean updated = false;
         while (msgIterator.hasNext()) {
             if (verbose)
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                        + "before restriction " + getVertexId() + ": " + DIR.enumSetFromByte(restrictedDirs));
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before restriction " + getVertexId() + ": "
+                        + DIR.enumSetFromByte(restrictedDirs));
             M incomingMsg = msgIterator.next();
             restrictedDirs |= incomingMsg.getFlag();
             if (verbose)
@@ -134,8 +133,8 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
             for (VKmer dest : vertex.getEdgeList(updateEdge).keySet()) {
                 if (verbose)
-                    LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                            + "send update message from " + getVertexId() + " to " + dest + ": " + outgoingMsg);
+                    LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
+                            + " to " + dest + ": " + outgoingMsg);
                 sendMsg(dest, outgoingMsg);
             }
         }
@@ -149,8 +148,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         while (msgIterator.hasNext()) {
             M incomingMsg = msgIterator.next();
             if (verbose)
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                        + "before update from neighbor: " + getVertexValue());
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
             node.getEdgeList(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
@@ -193,15 +191,15 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             sendMsg(dest, outgoingMsg);
 
             if (verbose) {
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                        + "send merge mesage from " + getVertexId() + " to " + dest + ": " + outgoingMsg
-                        + "; my restrictions are: " + DIR.enumSetFromByte(vertex.getState())
-                        + ", their restrictions are: " + DIR.enumSetFromByte(outgoingMsg.getFlag()));
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send merge mesage from " + getVertexId() + " to "
+                        + dest + ": " + outgoingMsg + "; my restrictions are: "
+                        + DIR.enumSetFromByte(vertex.getState()) + ", their restrictions are: "
+                        + DIR.enumSetFromByte(outgoingMsg.getFlag()));
             }
         }
     }
 
-//-----LOG----------------------------------------------------------------------------------------------------//
+    //-----LOG----------------------------------------------------------------------------------------------------//
     /**
      * Logging the vertexId and vertexValue
      */
@@ -217,5 +215,5 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
         LOG.fine(logMessage);
     }
-    
+
 }

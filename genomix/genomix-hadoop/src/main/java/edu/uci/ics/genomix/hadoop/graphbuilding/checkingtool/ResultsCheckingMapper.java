@@ -28,14 +28,12 @@ import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
-public class ResultsCheckingMapper extends MapReduceBase implements
-        Mapper<VKmer, Node, Text, Text> {
+public class ResultsCheckingMapper extends MapReduceBase implements Mapper<VKmer, Node, Text, Text> {
     public static Text textkey = new Text();
     public static Text textvalue = new Text();
 
     @Override
-    public void map(VKmer key, Node value, OutputCollector<Text, Text> output, Reporter reporter)
-            throws IOException {
+    public void map(VKmer key, Node value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
         FileSplit fileSplit = (FileSplit) reporter.getInputSplit();
         String filename = fileSplit.getPath().getName();
         textkey.set(key.toString() + "\t" + value.toString());

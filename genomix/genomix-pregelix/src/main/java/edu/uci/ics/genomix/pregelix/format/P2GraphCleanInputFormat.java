@@ -18,21 +18,21 @@ import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexInputFormat.Bi
 import edu.uci.ics.genomix.type.VKmer;
 
 public class P2GraphCleanInputFormat extends
-    GraphCleanVertexInputFormat<VKmer, P2VertexValue, NullWritable, MessageWritable> {
+        GraphCleanVertexInputFormat<VKmer, P2VertexValue, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> createVertexReader(
-            InputSplit split, TaskAttemptContext context) throws IOException {
+    public VertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> createVertexReader(InputSplit split,
+            TaskAttemptContext context) throws IOException {
         return new P2BinaryDataCleanLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
 }
 
 @SuppressWarnings("rawtypes")
 class P2BinaryDataCleanLoadGraphReader extends
-    BinaryDataCleanVertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> {
+        BinaryDataCleanVertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> {
     private Vertex vertex;
     private VKmer vertexId = new VKmer();
     private P2VertexValue vertexValue = new P2VertexValue();
@@ -48,8 +48,8 @@ class P2BinaryDataCleanLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<VKmer, P2VertexValue, NullWritable, MessageWritable> getCurrentVertex()
-            throws IOException, InterruptedException {
+    public Vertex<VKmer, P2VertexValue, NullWritable, MessageWritable> getCurrentVertex() throws IOException,
+            InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
 

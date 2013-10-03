@@ -8,33 +8,33 @@ import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class EdgeTypes implements Writable{
+public class EdgeTypes implements Writable {
 
     private byte meToPrevEdgeType;
     private byte meToNextEdgeType;
-    
-    public EdgeTypes(){
+
+    public EdgeTypes() {
         meToPrevEdgeType = 0;
         meToNextEdgeType = 0;
     }
 
     public EDGETYPE getMeToPrevEdgeType() {
-		return EDGETYPE.fromByte(meToPrevEdgeType);
-	}
+        return EDGETYPE.fromByte(meToPrevEdgeType);
+    }
 
-	public void setMeToPrevEdgeType(EDGETYPE meToPrevEdgeType) {
-		this.meToPrevEdgeType = meToPrevEdgeType.get();
-	}
+    public void setMeToPrevEdgeType(EDGETYPE meToPrevEdgeType) {
+        this.meToPrevEdgeType = meToPrevEdgeType.get();
+    }
 
-	public EDGETYPE getMeToNextEdgeType() {
-		return EDGETYPE.fromByte(meToNextEdgeType);
-	}
+    public EDGETYPE getMeToNextEdgeType() {
+        return EDGETYPE.fromByte(meToNextEdgeType);
+    }
 
-	public void setMeToNextEdgeType(EDGETYPE meToNextEdgeType) {
-		this.meToNextEdgeType = meToNextEdgeType.get();
-	}
+    public void setMeToNextEdgeType(EDGETYPE meToNextEdgeType) {
+        this.meToNextEdgeType = meToNextEdgeType.get();
+    }
 
-	@Override
+    @Override
     public void write(DataOutput out) throws IOException {
         out.writeByte(meToPrevEdgeType);
         out.writeByte(meToNextEdgeType);

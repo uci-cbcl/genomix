@@ -142,7 +142,8 @@ public class JobGenBrujinGraph extends JobGen {
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
-                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize, hadoopJobConfFactory));
+                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize,
+                            hadoopJobConfFactory));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -232,17 +233,17 @@ public class JobGenBrujinGraph extends JobGen {
         Configuration conf = confFactory.getConf();
         kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
         frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
-//        tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
+        //        tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
         System.out.println(DEFAULT_FRAME_SIZE);
         System.out.println(frameSize);
         groupbyType = GroupbyType.PRECLUSTER;
         outputFormat = OutputFormat.BINARY;
-        
+
         try {
             JobConf jobconf = new JobConf(conf);
             hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
-            
+
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
             readSchedule = scheduler.getLocationConstraints(splits);

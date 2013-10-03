@@ -10,34 +10,34 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {
-    
+
     private VKmer sourceVertexId; // stores srcNode id
     private short flag; // stores message type
-    
-    public MessageWritable(){
+
+    public MessageWritable() {
         sourceVertexId = new VKmer();
         flag = 0;
     }
-    
-    public void setAsCopy(MessageWritable other){
+
+    public void setAsCopy(MessageWritable other) {
         setSourceVertexId(other.getSourceVertexId());
         flag = other.getFlag();
     }
-    
-    public void reset(){
+
+    public void reset() {
         sourceVertexId.reset(0);
         flag = 0;
     }
-    
+
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
         sbuilder.append(sourceVertexId.toString());
         sbuilder.append('}');
         return sbuilder.toString();
     }
-    
+
     public VKmer getSourceVertexId() {
         return sourceVertexId;
     }
@@ -53,7 +53,6 @@ public class MessageWritable implements Writable, WritableSizable {
     public void setFlag(short flag) {
         this.flag = flag;
     }
-
 
     @Override
     public void readFields(DataInput in) throws IOException {

@@ -21,15 +21,15 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 
 /**
  * @author anbangx
- * Add tip 
+ *         Add tip
  */
-public class TipAddVertex extends
-        Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
+public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;
-   
+
     private VKmer splitNode = new VKmer("CTA");
     private VKmer insertedTip = new VKmer("AGC");
     private EDGETYPE tipToSplitDir = EDGETYPE.FR;
+
     /**
      * initiate kmerSize, length
      */
@@ -38,13 +38,13 @@ public class TipAddVertex extends
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
-    
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertTip(EDGETYPE dir, EdgeMap edgeList, VKmer insertedTip){
+    public void insertTip(EDGETYPE dir, EdgeMap edgeList, VKmer insertedTip) {
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
-        
+
         VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
         /**
          * set the src vertex id
@@ -55,28 +55,28 @@ public class TipAddVertex extends
          */
         vertexValue.setEdgeList(dir, edgeList);
         vertex.setVertexValue(vertexValue);
-        
+
         addVertex(insertedTip, vertex);
     }
-    
-    public EdgeMap getEdgeListFromKmer(VKmer kmer){
+
+    public EdgeMap getEdgeListFromKmer(VKmer kmer) {
         EdgeMap edgeList = new EdgeMap();
         edgeList.put(kmer, new ReadIdSet(Arrays.asList(new Long(0))));
         return edgeList;
     }
-    
-    public void addEdgeToInsertedTip(EDGETYPE dir, VKmer insertedTip){
+
+    public void addEdgeToInsertedTip(EDGETYPE dir, VKmer insertedTip) {
         getVertexValue().getEdgeList(dir).put(insertedTip, new ReadIdSet(Arrays.asList(new Long(0))));
     }
-    
+
     /**
      * create a new vertex point to split node
      */
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        initVertex(); 
-        if(getSuperstep() == 1){
-            if(getVertexId().equals(splitNode)){
+        initVertex();
+        if (getSuperstep() == 1) {
+            if (getVertexId().equals(splitNode)) {
                 /** add edge pointing to insertedTip **/
                 addEdgeToInsertedTip(tipToSplitDir, insertedTip);
                 /** insert tip **/

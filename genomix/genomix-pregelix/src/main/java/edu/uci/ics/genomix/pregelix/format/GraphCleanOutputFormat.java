@@ -13,12 +13,11 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
-public class GraphCleanOutputFormat extends
-    GraphCleanVertexOutputFormat<VKmer, VertexValueWritable, NullWritable> {
+public class GraphCleanOutputFormat extends GraphCleanVertexOutputFormat<VKmer, VertexValueWritable, NullWritable> {
 
     @Override
-    public VertexWriter<VKmer, VertexValueWritable, NullWritable> createVertexWriter(
-            TaskAttemptContext context) throws IOException, InterruptedException {
+    public VertexWriter<VKmer, VertexValueWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
+            throws IOException, InterruptedException {
         @SuppressWarnings("unchecked")
         RecordWriter<VKmer, VertexValueWritable> recordWriter = binaryOutputFormat.getRecordWriter(context);
         return new BinaryLoadGraphVertexWriter(recordWriter);
@@ -34,15 +33,15 @@ public class GraphCleanOutputFormat extends
         }
 
         @Override
-        public void writeVertex(Vertex<VKmer, VertexValueWritable, NullWritable, ?> vertex)
-                throws IOException, InterruptedException {
+        public void writeVertex(Vertex<VKmer, VertexValueWritable, NullWritable, ?> vertex) throws IOException,
+                InterruptedException {
             boolean isFake = false;
-            synchronized(BasicGraphCleanVertex.lock){
+            synchronized (BasicGraphCleanVertex.lock) {
                 BasicGraphCleanVertex.fakeVertexExist = false;
                 BasicGraphCleanVertex.fakeVertex = null;
                 isFake = vertex.getVertexValue().isFakeVertex();
             }
-            if(!isFake)
+            if (!isFake)
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue());
         }
     }

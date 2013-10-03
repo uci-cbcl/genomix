@@ -10,14 +10,14 @@ import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class SplitRepeatMessage extends MessageWritable {
-    
+
     private Entry<VKmer, ReadIdSet> createdEdge;
     private Entry<VKmer, ReadIdSet> deletedEdge;
-    
-    public SplitRepeatMessage(){
+
+    public SplitRepeatMessage() {
         super();
     }
-    
+
     public Entry<VKmer, ReadIdSet> getCreatedEdge() {
         return createdEdge;
     }
@@ -38,20 +38,20 @@ public class SplitRepeatMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        
+
         VKmer createdKmer = new VKmer();
         createdKmer.readFields(in);
         ReadIdSet createdReadIds = new ReadIdSet();
         createdReadIds.readFields(in);
         setCreatedEdge(createdKmer, createdReadIds);
-        
+
         VKmer deletedKmer = new VKmer();
         deletedKmer.readFields(in);
         ReadIdSet deletedReadIds = new ReadIdSet();
         deletedReadIds.readFields(in);
         setDeletedEdge(deletedKmer, deletedReadIds);
     }
-    
+
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);

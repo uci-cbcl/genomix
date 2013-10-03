@@ -25,101 +25,104 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 
 /**
  * Graph clean pattern: Bubble Merge
+ * 
  * @author anbangx
- *
  */
-public class ComplexBubbleMergeVertex extends
-    BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
+public class ComplexBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float dissimilarThreshold = -1;
-    
-    public static class EdgeType{
+
+    public static class EdgeType {
         public static final byte INCOMINGEDGE = 0b1 << 0;
         public static final byte OUTGOINGEDGE = 0b1 << 1;
     }
-    
+
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
     private ArrayList<BubbleMergeMessage> receivedMsgList = new ArrayList<BubbleMergeMessage>();
     private BubbleMergeMessage topMsg = new BubbleMergeMessage();
     private BubbleMergeMessage curMsg = new BubbleMergeMessage();
-//    private Set<BubbleMergeMessageWritable> unchangedSet = new HashSet<BubbleMergeMessageWritable>();
-//    private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
-    
-//    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
+    //    private Set<BubbleMergeMessageWritable> unchangedSet = new HashSet<BubbleMergeMessageWritable>();
+    //    private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
+
+    //    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
     private static Set<VKmer> allDeletedSet = Collections.synchronizedSet(new HashSet<VKmer>());
-    
-    private EdgeMap incomingEdgeList = null; 
+
+    private EdgeMap incomingEdgeList = null;
     private EdgeMap outgoingEdgeList = null;
     private EDGETYPE incomingEdgeType;
-    private EDGETYPE outgoingEdgeType; 
-//    private VKmerBytesWritable incomingKmer = new VKmerBytesWritable();
-//    private VKmerBytesWritable outgoingKmer = new VKmerBytesWritable();
-//    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
-//    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
-    
-    public void setEdgeListAndEdgeType(int i){
+    private EDGETYPE outgoingEdgeType;
+
+    //    private VKmerBytesWritable incomingKmer = new VKmerBytesWritable();
+    //    private VKmerBytesWritable outgoingKmer = new VKmerBytesWritable();
+    //    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
+    //    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
+
+    public void setEdgeListAndEdgeType(int i) {
         incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
         incomingEdgeType = connectedTable[i][0];
-  
+
         outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
         outgoingEdgeType = connectedTable[i][1];
     }
+
     /**
      * initiate kmerSize, maxIteration
      */
     @Override
     public void initVertex() {
         super.initVertex();
-        if(dissimilarThreshold == -1)
-            dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
-        if(outgoingMsg == null)
+        if (dissimilarThreshold == -1)
+            dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(
+                    GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
+        if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessage();
         else
             outgoingMsg.reset();
-        if(incomingEdgeList == null)
+        if (incomingEdgeList == null)
             incomingEdgeList = new EdgeMap();
-        if(outgoingEdgeList == null)
+        if (outgoingEdgeList == null)
             outgoingEdgeList = new EdgeMap();
         outFlag = 0;
-        if(fakeVertex == null){
+        if (fakeVertex == null) {
             fakeVertex = new VKmer();
             String random = generaterRandomString(kmerSize + 1);
-            fakeVertex.setFromStringBytes(kmerSize + 1, random.getBytes(), 0); 
+            fakeVertex.setFromStringBytes(kmerSize + 1, random.getBytes(), 0);
         }
-        if(getSuperstep() == 1)
+        if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-//        else
-//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        //        else
+        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-    
-    public void sendBubbleAndMajorVertexMsgToMinorVertex(){
-        for(int i = 0; i < 4; i++){
+
+    public void sendBubbleAndMajorVertexMsgToMinorVertex() {
+        for (int i = 0; i < 4; i++) {
             // set edgeList and edgeDir based on connectedTable 
             setEdgeListAndEdgeType(i);
-            
-            for(Entry<VKmer, ReadIdSet> incomingEdge : incomingEdgeList.entrySet()){
-                for(Entry<VKmer, ReadIdSet> outgoingEdge : outgoingEdgeList.entrySet()){
+
+            for (Entry<VKmer, ReadIdSet> incomingEdge : incomingEdgeList.entrySet()) {
+                for (Entry<VKmer, ReadIdSet> outgoingEdge : outgoingEdgeList.entrySet()) {
                     // get majorVertex and minorVertex and meToMajorDir and meToMinorDir
                     VKmer incomingKmer = incomingEdge.getKey();
                     VKmer outgoingKmer = outgoingEdge.getKey();
                     VKmer majorVertexId = null;
-                    EDGETYPE majorToMeEdgetype = null; 
-                    EDGETYPE minorToMeEdgetype = null; 
+                    EDGETYPE majorToMeEdgetype = null;
+                    EDGETYPE minorToMeEdgetype = null;
                     VKmer minorVertexId = null;
-                    if(incomingKmer.compareTo(outgoingKmer) >= 0){
+                    if (incomingKmer.compareTo(outgoingKmer) >= 0) {
                         majorVertexId = incomingKmer;
                         majorToMeEdgetype = incomingEdgeType;
                         minorVertexId = outgoingKmer;
                         minorToMeEdgetype = outgoingEdgeType;
-                    } else{
+                    } else {
                         majorVertexId = outgoingKmer;
                         majorToMeEdgetype = outgoingEdgeType;
                         minorVertexId = incomingKmer;
                         minorToMeEdgetype = incomingEdgeType;
                     }
-                    if(majorVertexId == minorVertexId)
-                        throw new IllegalArgumentException("majorVertexId is equal to minorVertexId, this is not allowd!");
+                    if (majorVertexId == minorVertexId)
+                        throw new IllegalArgumentException(
+                                "majorVertexId is equal to minorVertexId, this is not allowd!");
                     EDGETYPE meToMajorEdgetype = majorToMeEdgetype.mirror();
                     EDGETYPE meToMinorEdgetype = minorToMeEdgetype.mirror();
 
@@ -134,60 +137,62 @@ public class ComplexBubbleMergeVertex extends
             }
         }
     }
-    
+
     @SuppressWarnings({ "unchecked" })
-    public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessage> msgIterator){
+    public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessage> msgIterator) {
         while (msgIterator.hasNext()) {
             BubbleMergeMessage incomingMsg = msgIterator.next();
-            if(!receivedMsgMap.containsKey(incomingMsg.getMajorVertexId())){
+            if (!receivedMsgMap.containsKey(incomingMsg.getMajorVertexId())) {
                 receivedMsgList.clear();
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessage>)receivedMsgList.clone());
-            }
-            else{
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(),
+                        (ArrayList<BubbleMergeMessage>) receivedMsgList.clone());
+            } else {
                 receivedMsgList.clear();
                 receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getMajorVertexId()));
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessage>)receivedMsgList.clone());
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(),
+                        (ArrayList<BubbleMergeMessage>) receivedMsgList.clone());
             }
         }
     }
-    
-    public boolean isValidMajorAndMinor(){
+
+    public boolean isValidMajorAndMinor() {
         EDGETYPE topMajorToBubbleEdgetype = topMsg.getMajorToBubbleEdgetype();
         EDGETYPE curMajorToBubbleEdgetype = curMsg.getMajorToBubbleEdgetype();
         EDGETYPE topMinorToBubbleEdgetype = topMsg.getMinorToBubbleEdgetype();
         EDGETYPE curMinorToBubbleEdgetype = curMsg.getMinorToBubbleEdgetype();
-        return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir()) && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
+        return (topMajorToBubbleEdgetype.dir() == curMajorToBubbleEdgetype.dir())
+                && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
-    
-    public void processSimilarSetToUnchangeSetAndDeletedSet(){
+
+    public void processSimilarSetToUnchangeSetAndDeletedSet() {
         topMsg.reset();
         curMsg.reset();
-        while(!receivedMsgList.isEmpty()){
+        while (!receivedMsgList.isEmpty()) {
             Iterator<BubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg.set(it.next());
             it.remove(); //delete topCoverage node
             Node topNode = topMsg.getNode();
-            while(it.hasNext()){
+            while (it.hasNext()) {
                 curMsg.set(it.next());
                 //check if the vertex is valid minor and if it comes from valid major
-                if(!isValidMajorAndMinor())
+                if (!isValidMajorAndMinor())
                     continue;
-                
+
                 //compute the similarity
                 float fracDissimilar = topMsg.computeDissimilar(curMsg);
-                
-                if(fracDissimilar < dissimilarThreshold){ //if similar with top node, delete this node and put it in deletedSet
+
+                if (fracDissimilar < dissimilarThreshold) { //if similar with top node, delete this node and put it in deletedSet
                     // 1. update my own(minor's) edges
                     EDGETYPE MinorToBubble = curMsg.getMinorToBubbleEdgetype();
                     getVertexValue().getEdgeList(MinorToBubble).remove(curMsg.getSourceVertexId());
                     activate();
-                    
+
                     // 2. add coverage to top node -- for unchangedSet
                     boolean sameOrientation = topMsg.sameOrientation(curMsg);
-                    topNode.addFromNode(sameOrientation, curMsg.getNode()); 
-                    
+                    topNode.addFromNode(sameOrientation, curMsg.getNode());
+
                     // 3. treat msg as a bubble vertex, broadcast kill self message to major vertex to update their edges
                     EDGETYPE majorToBubble = curMsg.getMajorToBubbleEdgetype();
                     EDGETYPE bubbleToMajor = majorToBubble.mirror();
@@ -196,18 +201,18 @@ public class ComplexBubbleMergeVertex extends
                     outFlag |= bubbleToMajor.get() | MESSAGETYPE.UPDATE.get();
                     outgoingMsg.setFlag(outFlag);
                     sendMsg(curMsg.getMajorVertexId(), outgoingMsg);
-//                    boolean flip = curMsg.isFlip(topCoverageVertexMsg);
-//                    curMsg.setFlip(flip);
-//                    curMsg.setTopCoverageVertexId(topCoverageVertexMsg.getSourceVertexId());
-//                    curMsg.setMinorVertexId(getVertexId());
-//                    deletedSet.add(new BubbleMergeMessageWritable(curMsg));
-                    
+                    //                    boolean flip = curMsg.isFlip(topCoverageVertexMsg);
+                    //                    curMsg.setFlip(flip);
+                    //                    curMsg.setTopCoverageVertexId(topCoverageVertexMsg.getSourceVertexId());
+                    //                    curMsg.setMinorVertexId(getVertexId());
+                    //                    deletedSet.add(new BubbleMergeMessageWritable(curMsg));
+
                     // 4. store deleted vertices -- for deletedSet
                     allDeletedSet.add(new VKmer(curMsg.getSourceVertexId()));
                     it.remove();
                 }
             }
-            
+
             //process unchangedSet -- send message to topVertex to update their coverage
             outgoingMsg.reset();
             outFlag = 0;
@@ -215,83 +220,83 @@ public class ComplexBubbleMergeVertex extends
             outgoingMsg.setNode(topNode);
             outgoingMsg.setFlag(outFlag);
             sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
-//            unchangedSet.add(new BubbleMergeMessageWritable(topCoverageVertexMsg));
+            //            unchangedSet.add(new BubbleMergeMessageWritable(topCoverageVertexMsg));
         }
     }
-    
-//    public void processUnchangedSet(){
-//        for(BubbleMergeMessageWritable msg : unchangedSet){
-//            outFlag = MessageFlag.UNCHANGE;
-//            outgoingMsg.setFlag(outFlag);
-//            outgoingMsg.setNode(msg.getNode());
-//            sendMsg(msg.getSourceVertexId(), outgoingMsg);
-//        }
-//    }
-//    
-//    public void processDeletedSet(){
-//        for(BubbleMergeMessageWritable msg : deletedSet){
-//            outgoingMsg.set(msg);
-//            outFlag = MessageFlag.KILL;
-//            outgoingMsg.setFlag(outFlag);
-//            outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
-//            sendMsg(msg.getSourceVertexId(), outgoingMsg);
-//        }
-//    }
-    
-//    public void processAllDeletedSet(){
-//        synchronized(allDeletedSet){
-//            for(BubbleMergeMessageWritable msg : allDeletedSet){
-//                outgoingMsg.set(msg);
-//                outFlag = MessageFlag.KILL;
-//                outgoingMsg.setFlag(outFlag);
-//                outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
-//                sendMsg(msg.getSourceVertexId(), outgoingMsg);
-//            }
-//        }
-//    }
-    
-//    public void removeEdgesToMajorAndMinor(BubbleMergeMessageWritable incomingMsg){
-//        EDGETYPE meToMajorDir = EDGETYPE.fromByte(incomingMsg.getMeToMajorEdgetype());
-//        EDGETYPE majorToMeDir = meToMajorDir.mirror();
-//        EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorEdgetype());
-//        EDGETYPE minorToMeDir = meToMinorDir.mirror();
-//        getVertexValue().getEdgeList(majorToMeDir).remove(incomingMsg.getMajorVertexId());
-//        getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
-//    }
-    
-    public void broadcaseUpdateEdges(BubbleMergeMessage incomingMsg){
+
+    //    public void processUnchangedSet(){
+    //        for(BubbleMergeMessageWritable msg : unchangedSet){
+    //            outFlag = MessageFlag.UNCHANGE;
+    //            outgoingMsg.setFlag(outFlag);
+    //            outgoingMsg.setNode(msg.getNode());
+    //            sendMsg(msg.getSourceVertexId(), outgoingMsg);
+    //        }
+    //    }
+    //    
+    //    public void processDeletedSet(){
+    //        for(BubbleMergeMessageWritable msg : deletedSet){
+    //            outgoingMsg.set(msg);
+    //            outFlag = MessageFlag.KILL;
+    //            outgoingMsg.setFlag(outFlag);
+    //            outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
+    //            sendMsg(msg.getSourceVertexId(), outgoingMsg);
+    //        }
+    //    }
+
+    //    public void processAllDeletedSet(){
+    //        synchronized(allDeletedSet){
+    //            for(BubbleMergeMessageWritable msg : allDeletedSet){
+    //                outgoingMsg.set(msg);
+    //                outFlag = MessageFlag.KILL;
+    //                outgoingMsg.setFlag(outFlag);
+    //                outgoingMsg.setSourceVertexId(msg.getMinorVertexId());
+    //                sendMsg(msg.getSourceVertexId(), outgoingMsg);
+    //            }
+    //        }
+    //    }
+
+    //    public void removeEdgesToMajorAndMinor(BubbleMergeMessageWritable incomingMsg){
+    //        EDGETYPE meToMajorDir = EDGETYPE.fromByte(incomingMsg.getMeToMajorEdgetype());
+    //        EDGETYPE majorToMeDir = meToMajorDir.mirror();
+    //        EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorEdgetype());
+    //        EDGETYPE minorToMeDir = meToMinorDir.mirror();
+    //        getVertexValue().getEdgeList(majorToMeDir).remove(incomingMsg.getMajorVertexId());
+    //        getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
+    //    }
+
+    public void broadcaseUpdateEdges(BubbleMergeMessage incomingMsg) {
         outFlag = 0;
         outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
-        
+
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
         outgoingMsg.setFlip(incomingMsg.isFlip());
-//        sendSettledMsgToAllNeighborNodes(getVertexValue());
+        //        sendSettledMsgToAllNeighborNodes(getVertexValue());
     }
-    
+
     /**
      * broadcast kill self to all neighbors and send message to update neighbor's edges ***
      */
-    public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessage incomingMsg){
+    public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessage incomingMsg) {
         outFlag = 0;
         outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
-        
+
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
         outgoingMsg.setFlip(incomingMsg.isFlip());
-//        sendSettledMsgToAllNeighborNodes(getVertexValue());
-        
+        //        sendSettledMsgToAllNeighborNodes(getVertexValue());
+
         deleteVertex(getVertexId());
     }
-    
+
     /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
-    public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessage incomingMsg){
-        VertexValueWritable vertex = getVertexValue(); 
+    public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessage incomingMsg) {
+        VertexValueWritable vertex = getVertexValue();
         ReadIdSet readIds;
 
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
-        
+
         if (vertex.getEdgeList(neighborToMeDir).containsKey(incomingMsg.getSourceVertexId())) {
             readIds = vertex.getEdgeList(neighborToMeDir).get(incomingMsg.getSourceVertexId());
             vertex.getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
@@ -301,49 +306,49 @@ public class ComplexBubbleMergeVertex extends
         EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
         getVertexValue().getEdgeList(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
     }
-    
+
     @Override
     public void compute(Iterator<BubbleMergeMessage> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
-            if(VertexUtil.isBubbleVertex(getVertexValue())){
+            if (VertexUtil.isBubbleVertex(getVertexValue())) {
                 // clean allDeleteSet 
                 allDeletedSet.clear();
-//                // add a fake node
-//                addFakeVertex();
+                //                // add a fake node
+                //                addFakeVertex();
                 // send bubble and major vertex msg to minor vertex 
                 sendBubbleAndMajorVertexMsgToMinorVertex();
             }
-        } else if (getSuperstep() == 2){
-            if(!getVertexValue().isFakeVertex()){
+        } else if (getSuperstep() == 2) {
+            if (!getVertexValue().isFakeVertex()) {
                 // aggregate bubble nodes and grouped by major vertex
                 aggregateBubbleNodesByMajorNode(msgIterator);
-                
-                for(VKmer majorVertexId : receivedMsgMap.keySet()){
+
+                for (VKmer majorVertexId : receivedMsgMap.keySet()) {
                     receivedMsgList.clear();
                     receivedMsgList = receivedMsgMap.get(majorVertexId);
-//                    receivedMsgList.addAll(receivedMsgMap.get(majorVertexId));
-                    if(receivedMsgList.size() > 1){ // filter bubble
+                    //                    receivedMsgList.addAll(receivedMsgMap.get(majorVertexId));
+                    if (receivedMsgList.size() > 1) { // filter bubble
                         // for each majorVertex, sort the node by decreasing order of coverage
                         Collections.sort(receivedMsgList, new BubbleMergeMessage.SortByCoverage());
-                        
+
                         // process similarSet, keep the unchanged set and deleted set & add coverage to unchange node 
                         processSimilarSetToUnchangeSetAndDeletedSet();
-                        
-//                        // send message to the unchanged set for updating coverage & send kill message to the deleted set
-//                        processUnchangedSet();
-//                        processDeletedSet();
+
+                        //                        // send message to the unchanged set for updating coverage & send kill message to the deleted set
+                        //                        processUnchangedSet();
+                        //                        processDeletedSet();
                     }
                 }
             }
-        } else if (getSuperstep() == 3){
-            if(allDeletedSet.contains(getVertexId()))
+        } else if (getSuperstep() == 3) {
+            if (allDeletedSet.contains(getVertexId()))
                 deleteVertex(getVertexId());
-            else{
-                while(msgIterator.hasNext()){
+            else {
+                while (msgIterator.hasNext()) {
                     BubbleMergeMessage incomingMsg = msgIterator.next();
                     MESSAGETYPE msgType = MESSAGETYPE.fromByte(incomingMsg.getFlag());
-                    switch(msgType){
+                    switch (msgType) {
                         case UPDATE:
                             break;
                         case REPLACE_NODE:
@@ -351,54 +356,54 @@ public class ComplexBubbleMergeVertex extends
                     }
                 }
             }
-            
-//            if(!isFakeVertex()){
-//                while(msgIterator.hasNext()) {
-//                    incomingMsg = msgIterator.next();
-//                    if(incomingMsg.getFlag() == MessageFlag.KILL){
-//                        broadcaseUpdateEdges();
-//                    } else 
-//                    if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
-//                        // update Node including average coverage 
-//                        getVertexValue().setNode(incomingMsg.getNode());
-//                    }
-//                }
-//            }
-        } 
-//        else if(getSuperstep() == 4){
-//            if(!isFakeVertex()){
-//                while(msgIterator.hasNext()) {
-//                    incomingMsg = msgIterator.next();
-//                    if(isResponseKillMsg()){
-//                        responseToDeadVertexAndUpdateEdges();
-//                    }
-//                }
-//            }else{
-//                processAllDeletedSet();
-//                deleteVertex(getVertexId());
-//            }
-//        } else if(getSuperstep() == 5){
-//            while(msgIterator.hasNext()) {
-//                incomingMsg = msgIterator.next();
-//                if(incomingMsg.getFlag() == MessageFlag.KILL){
-//                    broadcaseKillselfAndNoticeToUpdateEdges();
-//                    //set statistics counter: Num_RemovedBubbles
-//                    updateStatisticsCounter(StatisticsCounter.Num_RemovedBubbles);
-//                    getVertexValue().setCounters(counters);
-//                }
-//            }
-//        } else if(getSuperstep() == 6){
-//            while(msgIterator.hasNext()) {
-//                incomingMsg = msgIterator.next();
-//                if(isResponseKillMsg()){
-//                    responseToDeadVertexAndUpdateEdges();
-//                }
-//            }
-//        }
-//        if(!isFakeVertex())
-//            voteToHalt();
+
+            //            if(!isFakeVertex()){
+            //                while(msgIterator.hasNext()) {
+            //                    incomingMsg = msgIterator.next();
+            //                    if(incomingMsg.getFlag() == MessageFlag.KILL){
+            //                        broadcaseUpdateEdges();
+            //                    } else 
+            //                    if(incomingMsg.getFlag() == MessageFlag.UNCHANGE){
+            //                        // update Node including average coverage 
+            //                        getVertexValue().setNode(incomingMsg.getNode());
+            //                    }
+            //                }
+            //            }
+        }
+        //        else if(getSuperstep() == 4){
+        //            if(!isFakeVertex()){
+        //                while(msgIterator.hasNext()) {
+        //                    incomingMsg = msgIterator.next();
+        //                    if(isResponseKillMsg()){
+        //                        responseToDeadVertexAndUpdateEdges();
+        //                    }
+        //                }
+        //            }else{
+        //                processAllDeletedSet();
+        //                deleteVertex(getVertexId());
+        //            }
+        //        } else if(getSuperstep() == 5){
+        //            while(msgIterator.hasNext()) {
+        //                incomingMsg = msgIterator.next();
+        //                if(incomingMsg.getFlag() == MessageFlag.KILL){
+        //                    broadcaseKillselfAndNoticeToUpdateEdges();
+        //                    //set statistics counter: Num_RemovedBubbles
+        //                    updateStatisticsCounter(StatisticsCounter.Num_RemovedBubbles);
+        //                    getVertexValue().setCounters(counters);
+        //                }
+        //            }
+        //        } else if(getSuperstep() == 6){
+        //            while(msgIterator.hasNext()) {
+        //                incomingMsg = msgIterator.next();
+        //                if(isResponseKillMsg()){
+        //                    responseToDeadVertexAndUpdateEdges();
+        //                }
+        //            }
+        //        }
+        //        if(!isFakeVertex())
+        //            voteToHalt();
     }
-    
+
     public static void main(String[] args) throws Exception {
         Client.run(args, getConfiguredJob(null, ComplexBubbleMergeVertex.class));
     }

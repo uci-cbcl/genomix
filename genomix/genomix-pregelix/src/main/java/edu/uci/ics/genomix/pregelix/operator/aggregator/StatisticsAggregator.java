@@ -11,17 +11,19 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.pregelix.api.graph.GlobalAggregator;
 import edu.uci.ics.pregelix.api.graph.Vertex;
+
 /**
  * Global agrregator
+ * 
  * @author anbangx
- *
  */
-public class StatisticsAggregator extends
-    GlobalAggregator<VKmer, VertexValueWritable, NullWritable, MessageWritable, VertexValueWritable, VertexValueWritable>{
+public class StatisticsAggregator
+        extends
+        GlobalAggregator<VKmer, VertexValueWritable, NullWritable, MessageWritable, VertexValueWritable, VertexValueWritable> {
 
     public static HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
     protected VertexValueWritable value = new VertexValueWritable();
-    
+
     @Override
     public void init() {
         value.reset();
@@ -38,19 +40,18 @@ public class StatisticsAggregator extends
         HashMapWritable<ByteWritable, VLongWritable> counters = partialResult.getCounters();
         updateAggregateState(counters);
     }
-    
-    public void updateAggregateState(HashMapWritable<ByteWritable, VLongWritable> counters){
-        for(ByteWritable counterName : counters.keySet()){
-            if(value.getCounters().containsKey(counterName)){
+
+    public void updateAggregateState(HashMapWritable<ByteWritable, VLongWritable> counters) {
+        for (ByteWritable counterName : counters.keySet()) {
+            if (value.getCounters().containsKey(counterName)) {
                 VLongWritable counterVal = value.getCounters().get(counterName);
                 value.getCounters().get(counterName).set(counterVal.get() + counters.get(counterName).get());
-            }
-            else{
+            } else {
                 value.getCounters().put(counterName, counters.get(counterName));
             }
         }
     }
-    
+
     @Override
     public VertexValueWritable finishPartial() {
         return value;

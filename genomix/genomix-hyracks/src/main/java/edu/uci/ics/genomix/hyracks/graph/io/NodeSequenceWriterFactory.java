@@ -44,9 +44,9 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
     private ConfFactory confFactory;
-    
+
     public static final int OutputNodeField = AssembleKeyIntoNodeOperator.OutputNodeField;
-    
+
     public NodeSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
         this.kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));

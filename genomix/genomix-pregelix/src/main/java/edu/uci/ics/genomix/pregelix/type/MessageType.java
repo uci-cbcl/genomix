@@ -12,6 +12,6 @@ public class MessageType {
     public static final byte OneMsgFromOldHeadToHead = 0b1000 << 1;
     public static final byte OneMsgFromOldHeadAndOneFromHead = 0b1001 << 1;
     public static final byte NO_MSG = 0b1010 << 1;
-    
+
     public static final byte NO_INFO = 0 << 0;
 }

@@ -49,5 +49,4 @@ public class KmerUtil {
         return strKmer.toString();
     }
 
-
 }

@@ -11,11 +11,11 @@ public class StatisticsCounter {
     public static final byte Num_SplitRepeats = 0b0111 << 0;
     public static final byte Num_Scaffodings = 0b1000 << 0;
     public static final byte Num_Cycles = 0b1001 << 0;
-    
-    public final static class COUNTER_CONTENT{
-        public static String getContent(byte code){
+
+    public final static class COUNTER_CONTENT {
+        public static String getContent(byte code) {
             String r = "";
-            switch(code){
+            switch (code) {
                 case Num_MergedNodes:
                     r = "num of merged nodes";
                     break;

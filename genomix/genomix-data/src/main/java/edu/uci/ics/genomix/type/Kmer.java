@@ -84,7 +84,7 @@ public class Kmer extends BinaryComparable implements Serializable, WritableComp
         this();
         setAsCopy(other);
     }
-    
+
     /**
      * copy kmer in other
      * 
@@ -105,7 +105,7 @@ public class Kmer extends BinaryComparable implements Serializable, WritableComp
             System.arraycopy(other.bytes, other.offset, bytes, offset, getBytesUsed());
         }
     }
-    
+
     /**
      * Deep copy of the given kmer
      * 
@@ -113,13 +113,13 @@ public class Kmer extends BinaryComparable implements Serializable, WritableComp
      */
     public void setAsCopy(VKmer other) {
         if (other.lettersInKmer != lettersInKmer) {
-            throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was " + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
+            throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was "
+                    + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
         }
         if (lettersInKmer > 0) {
             System.arraycopy(other.bytes, other.kmerStartOffset, bytes, offset, getBytesUsed());
         }
     }
-
 
     /**
      * Deep copy of the given bytes data
@@ -150,7 +150,7 @@ public class Kmer extends BinaryComparable implements Serializable, WritableComp
         bytes = newData;
         offset = newOffset;
     }
-    
+
     /**
      * Point this datablock to the given kmer's byte array It works like the pointer
      * to new datablock.
@@ -160,7 +160,8 @@ public class Kmer extends BinaryComparable implements Serializable, WritableComp
      */
     public void setAsReference(VKmer other) {
         if (other.lettersInKmer != lettersInKmer) {
-            throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was " + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
+            throw new IllegalArgumentException("Provided VKmer (" + other + ") is of an incompatible length (was "
+                    + other.getKmerLetterLength() + ", should be " + lettersInKmer + ")!");
         }
         bytes = other.bytes;
         offset = other.kmerStartOffset;
@@ -193,7 +194,7 @@ public class Kmer extends BinaryComparable implements Serializable, WritableComp
     public static int getKmerLength() {
         return lettersInKmer;
     }
-    
+
     public static int getBytesPerKmer() {
         return getBytesUsed();
     }
@@ -353,7 +354,7 @@ public class Kmer extends BinaryComparable implements Serializable, WritableComp
         if (right_obj instanceof Kmer) {
             // since these may be backed by storage of different sizes, we have to manually check each byte
             Kmer right = (Kmer) right_obj;
-            for (int i=0; i < getBytesUsed(); i++) {
+            for (int i = 0; i < getBytesUsed(); i++) {
                 if (bytes[offset + i] != right.bytes[right.offset + i]) {
                     return false;
                 }

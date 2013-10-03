@@ -40,7 +40,6 @@ import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * This test only applied on SequenceInputFormat
- *
  */
 
 @SuppressWarnings("deprecation")
@@ -54,13 +53,13 @@ public class ResultsCheckingTest {
     private static final String HDFS_HADOOP_PATH = "/hadoop";
     private static final String HDFS_HYRACKS_PATH = "/hyracks";
     private static final String RESULT_PATH = "/checkingresult";
-    
+
     private static final int COUNT_REDUCER = 2;
-    
+
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
     private FileSystem dfs;
-    
+
     @Test
     public void test() throws Exception {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
@@ -71,7 +70,7 @@ public class ResultsCheckingTest {
         dumpResult();
         cleanupHadoop();
     }
-    
+
     public void startHadoop() throws IOException {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
@@ -84,17 +83,17 @@ public class ResultsCheckingTest {
         Path dest = new Path(HDFS_HADOOP_PATH + "/");
         dfs.mkdirs(dest);
         dfs.copyFromLocalFile(src, dest);
-//        System.out.println(dest.toString());
-//        System.out.println(dest.getName());
-//        SequenceFile.Reader reader = null;
-//        Path path = new Path(HDFS_HADOOP_PATH + "/hadoopfile");
-//        reader = new SequenceFile.Reader(dfs, path, conf); 
-//        VKmerBytesWritable key = new VKmerBytesWritable();
-//        NodeWritable value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-//        while(reader.next(key, value)) {
-//            System.out.println(key.toString());
-//            System.out.println(value.toString());
-//        }
+        //        System.out.println(dest.toString());
+        //        System.out.println(dest.getName());
+        //        SequenceFile.Reader reader = null;
+        //        Path path = new Path(HDFS_HADOOP_PATH + "/hadoopfile");
+        //        reader = new SequenceFile.Reader(dfs, path, conf); 
+        //        VKmerBytesWritable key = new VKmerBytesWritable();
+        //        NodeWritable value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+        //        while(reader.next(key, value)) {
+        //            System.out.println(key.toString());
+        //            System.out.println(value.toString());
+        //        }
         src = new Path(HYRACKS_PATH);
         dest = new Path(HDFS_HYRACKS_PATH + "/");
         dfs.mkdirs(dest);
@@ -105,12 +104,12 @@ public class ResultsCheckingTest {
         confOutput.flush();
         confOutput.close();
     }
-    
+
     public void cleanupHadoop() throws IOException {
         mrCluster.shutdown();
         dfsCluster.shutdown();
     }
-    
+
     private void dumpResult() throws IOException {
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR);
