@@ -17,7 +17,8 @@ public class BFSTraverseMessage extends MessageWritable {
     private long readId; //use for BFSTravese
     private boolean srcFlip; //use for BFSTravese
     private boolean destFlip; //use for BFSTravese
-    private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes 
+    private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes
+    private int totalBFSLength;
 
     public BFSTraverseMessage() {
         super();
@@ -28,6 +29,7 @@ public class BFSTraverseMessage extends MessageWritable {
         srcFlip = false;
         destFlip = false;
         isTraverseMsg = true;
+        totalBFSLength = 0;
     }
 
     public void reset() {
@@ -39,6 +41,7 @@ public class BFSTraverseMessage extends MessageWritable {
         srcFlip = false;
         destFlip = false;
         isTraverseMsg = true;
+        totalBFSLength = 0;
     }
 
     public VKmerList getPathList() {
@@ -97,6 +100,14 @@ public class BFSTraverseMessage extends MessageWritable {
     public void setTraverseMsg(boolean isTraverseMsg) {
         this.isTraverseMsg = isTraverseMsg;
     }
+    
+    public int getTotalBFSLength() {
+        return totalBFSLength;
+    }
+
+    public void setTotalBFSLength(int totalBFSLength) {
+        this.totalBFSLength = totalBFSLength;
+    }
 
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -109,6 +120,7 @@ public class BFSTraverseMessage extends MessageWritable {
         srcFlip = in.readBoolean();
         destFlip = in.readBoolean();
         isTraverseMsg = in.readBoolean();
+        totalBFSLength = in.readInt();
     }
 
     @Override
@@ -121,5 +133,6 @@ public class BFSTraverseMessage extends MessageWritable {
         out.writeBoolean(srcFlip);
         out.writeBoolean(destFlip);
         out.writeBoolean(isTraverseMsg);
+        out.writeInt(totalBFSLength);
     }
 }

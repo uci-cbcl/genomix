@@ -99,9 +99,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         super.initVertex();
         if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-        // TODO move readGlobalAggregator into 2nd iteration
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        else if(getSuperstep() == 2)
+            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         if (getSuperstep() == 1)
             ScaffoldingAggregator.preScaffoldingMap.clear();
         else if (getSuperstep() == 2)
@@ -182,42 +181,50 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
      * step 3:
      */
     public void BFSearch(Iterator<BFSTraverseMessage> msgIterator) {
+        VertexValueWritable vertex = getVertexValue();
         BFSTraverseMessage incomingMsg;
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            if (incomingMsg.isTraverseMsg()) {
-                // check if find destination
-                // TODO explicitly set message type
-                // TODO Switch is better than if else
-                int traversalLength = incomingMsg.getPathList().getCountOfPosition();
-                if (incomingMsg.getSeekedVertexId().equals(getVertexId())) {
-                    //TODO change this length to internalKmerLength
-                    //TODO keep track of the total kmerLength you've come (account for partial overlaps)
-                    // final step to process BFS -- pathList and edgeTypesList
-                    finalProcessBFS(incomingMsg); //TODO add 
-                    if (isValidDestination(incomingMsg) && isInRange(traversalLength)) {
-                        // TODO store BFS paths until all finish, if more than 1, it's ambiguous
-                        // send message to all the path nodes to add this common readId
-                        sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
-                                incomingMsg.getEdgeTypesList());
-                        //set statistics counter: Num_RemovedLowCoverageNodes
-                        incrementCounter(StatisticsCounter.Num_Scaffodings);
-                        getVertexValue().setCounters(counters);
-
-                    }
-                }
-                if (isInRange(traversalLength)) {
-                    //continue to BFS
-                    broadcaseBFSTraverse(incomingMsg);
-                }
-                //                } else {
-                //                    //begin(step == 3) or continue(step > 3) to BFS
-                //                    broadcaseBFSTraverse(incomingMsg);
-                //                }
-            } else {
-                // append common readId to the corresponding edge
-                appendCommonReadId(incomingMsg);
+            // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
+            if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
+                // update totalBFSLength 
+//                int totalBFSLength = incomingMsg.getTotalBFSLength() + vertex.getStartReads();
             }
+            // For all nodes -- send messge to all neighbor if there exists valid path
+            
+//            if (incomingMsg.isTraverseMsg()) {
+//                // check if find destination
+//                // TODO explicitly set message type
+//                // TODO Switch is better than if else
+//                int traversalLength = incomingMsg.getPathList().getCountOfPosition();
+//                if (incomingMsg.getSeekedVertexId().equals(getVertexId())) {
+//                    //TODO change this length to internalKmerLength
+//                    //TODO keep track of the total kmerLength you've come (account for partial overlaps)
+//                    // final step to process BFS -- pathList and edgeTypesList
+//                    finalProcessBFS(incomingMsg); //TODO add 
+//                    if (isValidDestination(incomingMsg) && isInRange(traversalLength)) {
+//                        // TODO store BFS paths until all finish, if more than 1, it's ambiguous
+//                        // send message to all the path nodes to add this common readId
+//                        sendMsgToPathNodeToAddCommondReadId(incomingMsg.getReadId(), incomingMsg.getPathList(),
+//                                incomingMsg.getEdgeTypesList());
+//                        //set statistics counter: Num_RemovedLowCoverageNodes
+//                        incrementCounter(StatisticsCounter.Num_Scaffodings);
+//                        getVertexValue().setCounters(counters);
+//
+//                    }
+//                }
+//                if (isInRange(traversalLength)) {
+//                    //continue to BFS
+//                    broadcaseBFSTraverse(incomingMsg);
+//                }
+//                //                } else {
+//                //                    //begin(step == 3) or continue(step > 3) to BFS
+//                //                    broadcaseBFSTraverse(incomingMsg);
+//                //                }
+//            } else {
+//                // append common readId to the corresponding edge
+//                appendCommonReadId(incomingMsg);
+//            }
         }
         voteToHalt();
     }
