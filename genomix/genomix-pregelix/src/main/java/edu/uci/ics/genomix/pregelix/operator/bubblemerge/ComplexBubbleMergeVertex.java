@@ -31,11 +31,6 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 public class ComplexBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float dissimilarThreshold = -1;
 
-    public static class EdgeType {
-        public static final byte INCOMINGEDGE = 0b1 << 0;
-        public static final byte OUTGOINGEDGE = 0b1 << 1;
-    }
-
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
     private ArrayList<BubbleMergeMessage> receivedMsgList = new ArrayList<BubbleMergeMessage>();
     private BubbleMergeMessage topMsg = new BubbleMergeMessage();

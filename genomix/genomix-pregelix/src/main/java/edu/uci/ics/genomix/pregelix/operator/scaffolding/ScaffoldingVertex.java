@@ -19,11 +19,14 @@ import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.EdgeType;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
@@ -84,6 +87,27 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             flip = in.readBoolean();
         }
     }
+    
+    public static class PathAndEdgeTypeList implements Writable {
+
+        @Override
+        public void write(DataOutput out) throws IOException {
+            // TODO Auto-generated method stub
+            
+        }
+
+        @Override
+        public void readFields(DataInput in) throws IOException {
+            // TODO Auto-generated method stub
+            
+        }
+//        VKmerList kmerList;
+//        ArrayListWritable<EdgeType> edgeTypeList;
+//        
+//        public PathAndEdgeTypeList(){
+//            
+//        }
+    }
 
     // add to driver
     public static int SCAFFOLDING_MIN_TRAVERSAL_LENGTH = 20;
@@ -132,7 +156,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     }
 
     public boolean isInRange(int traversalLength) {
-        return traversalLength < SCAFFOLDING_MAX_TRAVERSAL_LENGTH && traversalLength > SCAFFOLDING_MIN_TRAVERSAL_LENGTH;
+        return traversalLength < SCAFFOLDING_MAX_TRAVERSAL_LENGTH 
+                && traversalLength > SCAFFOLDING_MIN_TRAVERSAL_LENGTH;
     }
 
     /**
@@ -176,7 +201,12 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
 
         deleteVertex(getVertexId());
     }
-
+    
+    public int updateBFSLength(BFSTraverseMessage incomingMsg){
+        VertexValueWritable vertex = getVertexValue();
+        ReadHeadSet readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
+        return incomingMsg.getTotalBFSLength() + readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
+    }
     /**
      * step 3:
      */
@@ -188,8 +218,20 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
             if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                 // update totalBFSLength 
-                ReadHeadSet readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
-//                int totalBFSLength = incomingMsg.getTotalBFSLength() + readHeadSet.get
+                int totalBFSLength = updateBFSLength(incomingMsg);
+                long commonReadId = incomingMsg.getReadId();
+                if(isInRange(totalBFSLength)){ 
+                    HashMapWritable<LongWritable, VKmerList> pathMap = vertex.getPathMap();
+                    if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path
+                        // put empty in value to mark it as ambiguous path
+                        pathMap.get(commonReadId).reset(); 
+                        continue;
+                    } else{ // if valid, save 
+                        VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
+                        updatedKmerList.append(getVertexId());
+                        pathMap.put(new LongWritable(commonReadId), updatedKmerList);
+                    }
+                }
             }
             // For all nodes -- send messge to all neighbor if there exists valid path
             

@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class VertexValueWritable extends Node {
 
@@ -40,13 +41,15 @@ public class VertexValueWritable extends Node {
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
     private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap; //use for scaffolding, think optimaztion way
-
+    private HashMapWritable<LongWritable, VKmerList> pathMap;
+    
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
         counters = new HashMapWritable<ByteWritable, VLongWritable>();
         scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
+        pathMap = new HashMapWritable<LongWritable, VKmerList>();
     }
 
     public void setAsCopy(VertexValueWritable other) {
@@ -57,6 +60,8 @@ public class VertexValueWritable extends Node {
         counters.putAll(other.getCounters());
         scaffoldingMap.clear();
         scaffoldingMap.putAll(other.getScaffoldingMap());
+        pathMap.clear();
+        pathMap.putAll(other.pathMap);
     }
 
     public void setNode(Node node) {
@@ -130,6 +135,15 @@ public class VertexValueWritable extends Node {
         this.scaffoldingMap.clear();
         this.scaffoldingMap.putAll(scaffoldingMap);
     }
+    
+    public HashMapWritable<LongWritable, VKmerList> getPathMap() {
+        return pathMap;
+    }
+
+    public void setPathMap(HashMapWritable<LongWritable, VKmerList> pathMap) {
+        this.pathMap.clear();
+        this.pathMap.putAll(pathMap);
+    }
 
     public void reset() {
         super.reset();
@@ -137,6 +151,7 @@ public class VertexValueWritable extends Node {
         this.isFakeVertex = false;
         this.counters.clear();
         scaffoldingMap.clear();
+        pathMap.clear();
     }
 
     @Override
@@ -147,6 +162,7 @@ public class VertexValueWritable extends Node {
         this.isFakeVertex = in.readBoolean();
         //        this.counters.readFields(in);
         //        scaffoldingMap.readFields(in);
+        pathMap.readFields(in);
     }
 
     @Override
@@ -156,6 +172,7 @@ public class VertexValueWritable extends Node {
         out.writeBoolean(this.isFakeVertex);
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
+        pathMap.write(out);
     }
 
     public int getDegree() {

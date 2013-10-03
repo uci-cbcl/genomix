@@ -39,6 +39,13 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         setNewReference(data, offset);
     }
 
+    public VKmerList(VKmerList kmerList){
+        this();
+        for (VKmer kmer : kmerList) {
+            append(kmer);
+        }
+    }
+    
     public VKmerList(List<VKmer> kmers) {
         this();
         for (VKmer kmer : kmers) {

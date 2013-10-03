@@ -27,11 +27,6 @@ import edu.uci.ics.genomix.type.VKmer;
 public class SimpleBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float DISSIMILAR_THRESHOLD = -1;
 
-    public static class EdgeType {
-        public static final byte INCOMINGEDGE = 0b1 << 0;
-        public static final byte OUTGOINGEDGE = 0b1 << 1;
-    }
-
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
     private ArrayList<BubbleMergeMessage> receivedMsgList = new ArrayList<BubbleMergeMessage>();
     private BubbleMergeMessage topMsg = new BubbleMergeMessage();

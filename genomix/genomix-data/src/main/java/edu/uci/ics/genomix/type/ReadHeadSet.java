@@ -47,6 +47,10 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         return null;
     }
     
+    public int getOffsetFromReadId(long readId){
+        return getReadHeadInfoFromReadId(readId).getPosId();
+    }
+    
     public ReadHeadSet(List<ReadHeadInfo> posns) {
         this();
         setSize(posns.size() * ReadHeadInfo.LENGTH + HEADER_SIZE); // reserve space for all elements
