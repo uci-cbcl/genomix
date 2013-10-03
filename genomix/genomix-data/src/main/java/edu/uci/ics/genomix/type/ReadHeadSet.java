@@ -13,8 +13,8 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Serializable {
     private static final long serialVersionUID = 1L;

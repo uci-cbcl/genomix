@@ -5,24 +5,24 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessageWritable.P2MessageType;
+import edu.uci.ics.genomix.pregelix.io.message.P2PathMergeMessage.P2MessageType;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class P2VertexValueWritable extends VertexValueWritable{
+public class P2VertexValue extends VertexValueWritable{
     
     private static final long serialVersionUID = -6600330062969997327L;
     
     private Node prependMergeNode;
     private Node appendMergeNode;
     
-    private HashMapWritable<VKmer, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
+    private HashMapWritable<VKmer, KmerAndDir> apexMap; //<apexId, deleteKmerAndDir>
     
-    public P2VertexValueWritable(){
+    public P2VertexValue(){
         super();
         prependMergeNode = new Node();
         appendMergeNode = new Node();
-        apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>();
+        apexMap = new HashMapWritable<VKmer, KmerAndDir>();
     }
     
     public VertexValueWritable get(){
@@ -83,12 +83,12 @@ public class P2VertexValueWritable extends VertexValueWritable{
         this.appendMergeNode.setAsCopy(appendMergeNode);
     }
     
-    public HashMapWritable<VKmer, KmerAndDirWritable> getApexMap() {
+    public HashMapWritable<VKmer, KmerAndDir> getApexMap() {
         return apexMap;
     }
 
-    public void setApexMap(HashMapWritable<VKmer, KmerAndDirWritable> apexMap) {
-        this.apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>(apexMap);
+    public void setApexMap(HashMapWritable<VKmer, KmerAndDir> apexMap) {
+        this.apexMap = new HashMapWritable<VKmer, KmerAndDir>(apexMap);
     }
 
     @Override

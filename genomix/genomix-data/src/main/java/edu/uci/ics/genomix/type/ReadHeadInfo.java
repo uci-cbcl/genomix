@@ -8,8 +8,8 @@ import java.io.Serializable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadHeadInfo implements Writable, Serializable{
     private static final long serialVersionUID = 1L;

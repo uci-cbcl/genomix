@@ -28,7 +28,7 @@ import java.util.TreeMap;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.data.Marshal;
+import edu.uci.ics.genomix.util.Marshal;
 
 public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Serializable {
 

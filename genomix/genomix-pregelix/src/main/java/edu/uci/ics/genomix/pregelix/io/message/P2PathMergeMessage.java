@@ -4,11 +4,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.pregelix.io.KmerAndDirWritable;
+import edu.uci.ics.genomix.pregelix.io.KmerAndDir;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
+public class P2PathMergeMessage extends PathMergeMessage{
     
     public class P2MessageType{
         public static final byte FROM_PREDECESSOR = 0b1 << 1;
@@ -17,17 +17,17 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
     
     private byte messageType; // otherwise, isFromSuccessor.
     
-    private HashMapWritable<VKmer, KmerAndDirWritable> apexMap; //<apexId, deleteKmerAndDir>
+    private HashMapWritable<VKmer, KmerAndDir> apexMap; //<apexId, deleteKmerAndDir>
     private boolean isUpdateApexEdges;
     
-    public P2PathMergeMessageWritable(){
+    public P2PathMergeMessage(){
         super();
         messageType = 0;
-        apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>();
+        apexMap = new HashMapWritable<VKmer, KmerAndDir>();
         isUpdateApexEdges = false;
     }
     
-    public P2PathMergeMessageWritable(P2PathMergeMessageWritable msg){
+    public P2PathMergeMessage(P2PathMergeMessage msg){
         setSourceVertexId(msg.getSourceVertexId());
         setFlag(msg.getFlag());
         setNode(msg.getNode());
@@ -53,12 +53,12 @@ public class P2PathMergeMessageWritable extends PathMergeMessageWritable{
         this.messageType = messageType;
     }
 
-    public HashMapWritable<VKmer, KmerAndDirWritable> getApexMap() {
+    public HashMapWritable<VKmer, KmerAndDir> getApexMap() {
         return apexMap;
     }
 
-    public void setApexMap(HashMapWritable<VKmer, KmerAndDirWritable> apexMap) {
-        this.apexMap = new HashMapWritable<VKmer, KmerAndDirWritable>(apexMap);
+    public void setApexMap(HashMapWritable<VKmer, KmerAndDir> apexMap) {
+        this.apexMap = new HashMapWritable<VKmer, KmerAndDir>(apexMap);
     }
     
     public boolean isUpdateApexEdges() {

@@ -9,12 +9,12 @@ import java.util.AbstractMap.SimpleEntry;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class SplitRepeatMessageWritable extends MessageWritable {
+public class SplitRepeatMessage extends MessageWritable {
     
     private Entry<VKmer, ReadIdSet> createdEdge;
     private Entry<VKmer, ReadIdSet> deletedEdge;
     
-    public SplitRepeatMessageWritable(){
+    public SplitRepeatMessage(){
         super();
     }
     

@@ -13,25 +13,25 @@ import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class PathMergeMessageWritable extends MessageWritable{
+public class PathMergeMessage extends MessageWritable{
     
     private Node node;
     private boolean isFlip; // use for path merge
     private boolean updateMsg; // use for distinguish updateMsg or mergeMsg
 
-    public PathMergeMessageWritable(){
+    public PathMergeMessage(){
         super();
         node = new Node();
         isFlip = false;
         updateMsg = false;
     }
     
-    public PathMergeMessageWritable(PathMergeMessageWritable other){
+    public PathMergeMessage(PathMergeMessage other){
         this();
         this.setAsCopy(other);
     }
     
-    public void setAsCopy(PathMergeMessageWritable other){
+    public void setAsCopy(PathMergeMessage other){
         super.setAsCopy(other);
         this.node.setAsCopy(other.getNode());
         this.isFlip = other.isFlip();

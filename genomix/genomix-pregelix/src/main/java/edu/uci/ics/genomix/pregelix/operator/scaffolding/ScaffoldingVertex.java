@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
-import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
@@ -181,8 +181,8 @@ public class ScaffoldingVertex extends
     /**
      * step 3:
      */
-    public void BFSearch(Iterator<BFSTraverseMessageWritable> msgIterator){
-    	BFSTraverseMessageWritable incomingMsg;
+    public void BFSearch(Iterator<BFSTraverseMessage> msgIterator){
+    	BFSTraverseMessage incomingMsg;
         while(msgIterator.hasNext()){
             incomingMsg = msgIterator.next();
             if(incomingMsg.isTraverseMsg()){
@@ -223,7 +223,7 @@ public class ScaffoldingVertex extends
     }
     
     @Override
-    public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
+    public void compute(Iterator<BFSTraverseMessage> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
         	generateScaffoldingMap();

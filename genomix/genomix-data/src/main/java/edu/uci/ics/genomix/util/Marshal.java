@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.data;
+package edu.uci.ics.genomix.util;
 
 import java.nio.ByteBuffer;
 

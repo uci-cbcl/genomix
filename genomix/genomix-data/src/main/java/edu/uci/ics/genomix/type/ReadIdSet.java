@@ -20,8 +20,8 @@ import java.util.TreeSet;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.file.tfile.ByteArray;
 
-import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadIdSet extends TreeSet<Long> implements Writable, Serializable {
     private static final long serialVersionUID = 1L;

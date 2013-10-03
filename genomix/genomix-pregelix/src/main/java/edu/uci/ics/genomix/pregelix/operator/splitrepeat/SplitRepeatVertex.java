@@ -11,7 +11,7 @@ import java.util.Set;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessage;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
@@ -32,7 +32,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  *
  */
 public class SplitRepeatVertex extends 
-    BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessageWritable>{
+    BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessage>{
     
     public static final int NUM_LETTERS_TO_APPEND = 3;
     private static long randSeed = 1; //static for save memory
@@ -47,7 +47,7 @@ public class SplitRepeatVertex extends
     public void initVertex() {
         super.initVertex();
         if(outgoingMsg == null)
-            outgoingMsg = new SplitRepeatMessageWritable();
+            outgoingMsg = new SplitRepeatMessage();
         randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if (randGenerator == null)
             randGenerator = new Random(randSeed);
@@ -180,9 +180,9 @@ public class SplitRepeatVertex extends
         }
     }
     
-    public void responseToRepeat(Iterator<SplitRepeatMessageWritable> msgIterator){
+    public void responseToRepeat(Iterator<SplitRepeatMessage> msgIterator){
         while(msgIterator.hasNext()){
-            SplitRepeatMessageWritable incomingMsg = msgIterator.next();
+            SplitRepeatMessage incomingMsg = msgIterator.next();
             
             // update edgelist to new/created vertex
             EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
@@ -195,7 +195,7 @@ public class SplitRepeatVertex extends
     }
     
     @Override
-    public void compute(Iterator<SplitRepeatMessageWritable> msgIterator) {
+    public void compute(Iterator<SplitRepeatMessage> msgIterator) {
         if(getSuperstep() == 1){
             initVertex();
             detectRepeatAndSplit();

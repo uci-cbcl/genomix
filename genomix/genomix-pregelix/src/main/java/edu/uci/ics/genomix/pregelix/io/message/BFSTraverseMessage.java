@@ -9,7 +9,7 @@ import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
-public class BFSTraverseMessageWritable extends MessageWritable{
+public class BFSTraverseMessage extends MessageWritable{
     
     private VKmerList pathList; //use for BFSTravese
     private ArrayListWritable<EdgeTypes> edgeTypesList;
@@ -19,7 +19,7 @@ public class BFSTraverseMessageWritable extends MessageWritable{
     private boolean destFlip; //use for BFSTravese
     private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes 
     
-    public BFSTraverseMessageWritable(){
+    public BFSTraverseMessage(){
         super();
         pathList = new VKmerList();
         edgeTypesList = new ArrayListWritable<EdgeTypes>();

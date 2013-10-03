@@ -5,7 +5,7 @@ import java.util.Iterator;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
-import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex.SearchInfo;
 import edu.uci.ics.genomix.pregelix.type.EdgeTypes;
@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 public class BFSTraverseVertex extends
-    BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessage> {
     
 //    protected VKmerBytesWritable srcNode = new VKmerBytesWritable("AAT");
 //    protected VKmerBytesWritable destNode = new VKmerBytesWritable("AGA");
@@ -28,7 +28,7 @@ public class BFSTraverseVertex extends
     public void initVertex() {
         super.initVertex();
         if(outgoingMsg == null)
-            outgoingMsg = new BFSTraverseMessageWritable();
+            outgoingMsg = new BFSTraverseMessage();
         else
             outgoingMsg.reset();
         if(fakeVertex == null){
@@ -50,7 +50,7 @@ public class BFSTraverseVertex extends
         return srcNode;
     }
     
-    public void broadcaseBFSTraverse(BFSTraverseMessageWritable incomingMsg){
+    public void broadcaseBFSTraverse(BFSTraverseMessage incomingMsg){
     	// keep same seekedVertexId, srcFlip, destFlip, commonReadId, pathList and edgeTypesList
         outgoingMsg.reset();
         outgoingMsg.setAsCopy(incomingMsg); 
@@ -87,7 +87,7 @@ public class BFSTraverseVertex extends
     }
     
     
-    public boolean isValidDestination(BFSTraverseMessageWritable incomingMsg){
+    public boolean isValidDestination(BFSTraverseMessage incomingMsg){
         EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
         if(incomingMsg.isDestFlip())
             return meToNeighbor.dir() == DIR.REVERSE;
@@ -95,7 +95,7 @@ public class BFSTraverseVertex extends
             return meToNeighbor.dir() == DIR.FORWARD;
     }
     
-    public void finalProcessBFS(BFSTraverseMessageWritable incomingMsg){
+    public void finalProcessBFS(BFSTraverseMessage incomingMsg){
         VKmerList pathList = incomingMsg.getPathList();
         pathList.append(getVertexId());
         EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
@@ -129,7 +129,7 @@ public class BFSTraverseVertex extends
         }
     }
     
-    public void appendCommonReadId(BFSTraverseMessageWritable incomingMsg){
+    public void appendCommonReadId(BFSTraverseMessage incomingMsg){
         long readId = incomingMsg.getReadId();
         VKmer tmpKmer;
         //add readId to prev edge 
@@ -147,7 +147,7 @@ public class BFSTraverseVertex extends
     }
     
     @Override
-    public void compute(Iterator<BFSTraverseMessageWritable> msgIterator) {
+    public void compute(Iterator<BFSTraverseMessage> msgIterator) {
         initVertex();
         if(getSuperstep() == 1){
             addFakeVertex("A");
@@ -164,14 +164,14 @@ public class BFSTraverseVertex extends
             deleteVertex(getVertexId());
         } else if(getSuperstep() == 3){
             while(msgIterator.hasNext()){
-                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
+                BFSTraverseMessage incomingMsg = msgIterator.next();
                 // begin to BFS
                 broadcaseBFSTraverse(incomingMsg);
             }
             voteToHalt();
         } else if(getSuperstep() > 3){
             while(msgIterator.hasNext()){
-                BFSTraverseMessageWritable incomingMsg = msgIterator.next();
+                BFSTraverseMessage incomingMsg = msgIterator.next();
                 if(incomingMsg.isTraverseMsg()){
                     // check if find destination
                     if(incomingMsg.getSeekedVertexId().equals(getVertexId())){

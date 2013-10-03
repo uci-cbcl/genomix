@@ -17,7 +17,7 @@ package edu.uci.ics.genomix.hyracks.data.accessors;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.genomix.data.Marshal;
+import edu.uci.ics.genomix.util.Marshal;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;

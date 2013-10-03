@@ -8,7 +8,7 @@ import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.type.VKmer;
 
-public class KmerAndDirWritable implements Writable{
+public class KmerAndDir implements Writable{
 
     public VKmer getDeleteKmer() {
 		return deleteKmer;
@@ -29,7 +29,7 @@ public class KmerAndDirWritable implements Writable{
 	private VKmer deleteKmer;
     private byte deleteDir;
     
-    public KmerAndDirWritable(){
+    public KmerAndDir(){
     	deleteKmer = new VKmer();
     	deleteDir = 0;
     }

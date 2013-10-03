@@ -9,7 +9,7 @@ import java.util.Map;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
@@ -25,7 +25,7 @@ import edu.uci.ics.genomix.type.VKmer;
  *
  */
 public class SimpleBubbleMergeVertex extends
-    BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float DISSIMILAR_THRESHOLD = -1;
     
     public static class EdgeType{
@@ -33,10 +33,10 @@ public class SimpleBubbleMergeVertex extends
         public static final byte OUTGOINGEDGE = 0b1 << 1;
     }
     
-    private Map<VKmer, ArrayList<BubbleMergeMessageWritable>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessageWritable>>();
-    private ArrayList<BubbleMergeMessageWritable> receivedMsgList = new ArrayList<BubbleMergeMessageWritable>();
-    private BubbleMergeMessageWritable topMsg = new BubbleMergeMessageWritable();
-    private BubbleMergeMessageWritable curMsg = new BubbleMergeMessageWritable();
+    private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
+    private ArrayList<BubbleMergeMessage> receivedMsgList = new ArrayList<BubbleMergeMessage>();
+    private BubbleMergeMessage topMsg = new BubbleMergeMessage();
+    private BubbleMergeMessage curMsg = new BubbleMergeMessage();
     
     /**
      * initiate kmerSize, maxIteration
@@ -47,7 +47,7 @@ public class SimpleBubbleMergeVertex extends
         if(DISSIMILAR_THRESHOLD < 0)
             DISSIMILAR_THRESHOLD = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if(outgoingMsg == null)
-            outgoingMsg = new BubbleMergeMessageWritable();
+            outgoingMsg = new BubbleMergeMessage();
         else
             outgoingMsg.reset();
         outFlag = 0;
@@ -86,15 +86,15 @@ public class SimpleBubbleMergeVertex extends
         sendMsg(minorVertexId, outgoingMsg);
     }
     
-    public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessageWritable> msgIterator){
+    public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessage> msgIterator){
     	receivedMsgMap.clear();
-    	BubbleMergeMessageWritable incomingMsg;
-    	ArrayList<BubbleMergeMessageWritable> curMsgList;
+    	BubbleMergeMessage incomingMsg;
+    	ArrayList<BubbleMergeMessage> curMsgList;
     	
         while (msgIterator.hasNext()) {
         	incomingMsg = msgIterator.next();
             if(!receivedMsgMap.containsKey(incomingMsg.getMajorVertexId())){
-            	curMsgList = new ArrayList<BubbleMergeMessageWritable>();
+            	curMsgList = new ArrayList<BubbleMergeMessage>();
                 receivedMsgMap.put(incomingMsg.getMajorVertexId(), curMsgList);
             } else {
             	curMsgList = receivedMsgMap.get(incomingMsg.getMajorVertexId());                
@@ -103,7 +103,7 @@ public class SimpleBubbleMergeVertex extends
         }
     }
     
-    public static boolean isValidMajorAndMinor(BubbleMergeMessageWritable topMsg, BubbleMergeMessageWritable curMsg){
+    public static boolean isValidMajorAndMinor(BubbleMergeMessage topMsg, BubbleMergeMessage curMsg){
         EDGETYPE topMajorToBubbleEdgetype = topMsg.getMajorToBubbleEdgetype();
         EDGETYPE curMajorToBubbleEdgetype = curMsg.getMajorToBubbleEdgetype();
         EDGETYPE topMinorToBubbleEdgetype = topMsg.getMinorToBubbleEdgetype();
@@ -113,7 +113,7 @@ public class SimpleBubbleMergeVertex extends
     
     public void processSimilarSet(){
         while(!receivedMsgList.isEmpty()){
-            Iterator<BubbleMergeMessageWritable> it = receivedMsgList.iterator();
+            Iterator<BubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg = it.next();
             it.remove(); //delete topCoverage node
             Node topNode = topMsg.getNode();
@@ -169,7 +169,7 @@ public class SimpleBubbleMergeVertex extends
     /**
      * step 2
      */
-    public void processBubblesInMinorVertex(Iterator<BubbleMergeMessageWritable> msgIterator){
+    public void processBubblesInMinorVertex(Iterator<BubbleMergeMessage> msgIterator){
     	// aggregate bubble nodes and grouped by major vertex
         aggregateBubbleNodesByMajorNode(msgIterator);
         
@@ -177,7 +177,7 @@ public class SimpleBubbleMergeVertex extends
             receivedMsgList = receivedMsgMap.get(majorVertexId);
             if(receivedMsgList.size() > 1){ // filter simple paths
                 // for each majorVertex, sort the node by decreasing order of coverage
-                Collections.sort(receivedMsgList, new BubbleMergeMessageWritable.SortByCoverage());
+                Collections.sort(receivedMsgList, new BubbleMergeMessage.SortByCoverage());
                 
                 // process similarSet, keep the unchanged set and deleted set & add coverage to unchange node 
                 processSimilarSet();
@@ -188,9 +188,9 @@ public class SimpleBubbleMergeVertex extends
     /**
      * step 3
      */
-    public void receiveUpdates(Iterator<BubbleMergeMessageWritable> msgIterator){
+    public void receiveUpdates(Iterator<BubbleMergeMessage> msgIterator){
         while(msgIterator.hasNext()){
-            BubbleMergeMessageWritable incomingMsg = msgIterator.next();
+            BubbleMergeMessage incomingMsg = msgIterator.next();
             MESSAGETYPE mt = MESSAGETYPE.fromByte(incomingMsg.getFlag());
             switch(mt){
                 case REPLACE_NODE:
@@ -210,7 +210,7 @@ public class SimpleBubbleMergeVertex extends
     }
     
     @Override
-    public void compute(Iterator<BubbleMergeMessageWritable> msgIterator) {
+    public void compute(Iterator<BubbleMergeMessage> msgIterator) {
         if (getSuperstep() == 1) {
         	initVertex();
             detectBubble();

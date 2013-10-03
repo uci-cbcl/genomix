@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
@@ -20,12 +20,12 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.Node.DIR;
 
 public class P1ForPathMergeVertex extends
-    BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
+    BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
     
     private static final Logger LOG = Logger.getLogger(P1ForPathMergeVertex.class.getName());
     
-    private HashSet<PathMergeMessageWritable> updateMsgs = new HashSet<PathMergeMessageWritable>();
-    private HashSet<PathMergeMessageWritable> neighborMsgs = new HashSet<PathMergeMessageWritable>();
+    private HashSet<PathMergeMessage> updateMsgs = new HashSet<PathMergeMessage>();
+    private HashSet<PathMergeMessage> neighborMsgs = new HashSet<PathMergeMessage>();
     /**
      * initiate kmerSize, maxIteration
      */
@@ -33,7 +33,7 @@ public class P1ForPathMergeVertex extends
     public void initVertex() {
         super.initVertex();
         if(outgoingMsg == null)
-            outgoingMsg = new PathMergeMessageWritable();
+            outgoingMsg = new PathMergeMessage();
         else
             outgoingMsg.reset();
         if(repeatKmer == null)
@@ -81,7 +81,7 @@ public class P1ForPathMergeVertex extends
     /**
      * step4: receive and process Merges  for P1
      */
-    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
+    public void receiveMerges(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
         Node node = vertex.getNode();
         short state = vertex.getState();
@@ -91,9 +91,9 @@ public class P1ForPathMergeVertex extends
         int numMerged = 0;
         
         // aggregate incomingMsg
-        ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
+        ArrayList<PathMergeMessage> receivedMsgList = new ArrayList<PathMergeMessage>();
         while(msgIterator.hasNext())
-            receivedMsgList.add(new PathMergeMessageWritable(msgIterator.next()));
+            receivedMsgList.add(new PathMergeMessage(msgIterator.next()));
         
         if(receivedMsgList.size() > 2)
             throw new IllegalStateException("In path merge, it is impossible to receive more than 2 messages!");
@@ -103,7 +103,7 @@ public class P1ForPathMergeVertex extends
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                         + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
-            for(PathMergeMessageWritable msg : receivedMsgList){
+            for(PathMergeMessage msg : receivedMsgList){
                 senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
                 node.mergeWithNode(senderEdgetype, msg.getNode());
                 state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
@@ -118,7 +118,7 @@ public class P1ForPathMergeVertex extends
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                         + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
-            PathMergeMessageWritable msg = receivedMsgList.get(0);
+            PathMergeMessage msg = receivedMsgList.get(0);
             senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
             state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
             VKmer me = getVertexId();
@@ -182,18 +182,18 @@ public class P1ForPathMergeVertex extends
         }
     }
     
-    public void catagorizeMsg(Iterator<PathMergeMessageWritable> msgIterator){
+    public void catagorizeMsg(Iterator<PathMergeMessage> msgIterator){
         updateMsgs.clear();
         neighborMsgs.clear();
         while(msgIterator.hasNext()){
-            PathMergeMessageWritable incomingMsg = msgIterator.next();
+            PathMergeMessage incomingMsg = msgIterator.next();
             MESSAGETYPE msgType = MESSAGETYPE.fromByte(incomingMsg.getFlag());
             switch(msgType){
                 case UPDATE:
-                    updateMsgs.add(new PathMergeMessageWritable(incomingMsg));
+                    updateMsgs.add(new PathMergeMessage(incomingMsg));
                     break;
                 case TO_NEIGHBOR:
-                    neighborMsgs.add(new PathMergeMessageWritable(incomingMsg));
+                    neighborMsgs.add(new PathMergeMessage(incomingMsg));
                     break;
                 default:
                     throw new IllegalStateException("Message types are allowd for only TO_UPDATE and TO_NEIGHBOR!");
@@ -201,13 +201,13 @@ public class P1ForPathMergeVertex extends
         }
     }
     
-    public void receiveToNeighbor(Iterator<PathMergeMessageWritable> msgIterator){
+    public void receiveToNeighbor(Iterator<PathMergeMessage> msgIterator){
         VertexValueWritable value = getVertexValue();
         if (verbose)
             LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                     + "before update from dead vertex: " + value);
         while(msgIterator.hasNext()){
-            PathMergeMessageWritable incomingMsg = msgIterator.next();
+            PathMergeMessage incomingMsg = msgIterator.next();
             EDGETYPE deleteToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
             EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
             
@@ -240,7 +240,7 @@ public class P1ForPathMergeVertex extends
     }
     
     @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws Exception {
+    public void compute(Iterator<PathMergeMessage> msgIterator) throws Exception {
         initVertex();
         if (getSuperstep() > maxIteration) {
         	voteToHalt();

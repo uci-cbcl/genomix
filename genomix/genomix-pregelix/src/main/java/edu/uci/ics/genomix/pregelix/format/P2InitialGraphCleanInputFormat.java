@@ -12,20 +12,20 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.pregelix.io.P2VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.P2VertexValue;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.api.io.binary.InitialGraphCleanVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.api.io.binary.InitialGraphCleanVertexInputFormat.BinaryVertexReader;
 
 public class P2InitialGraphCleanInputFormat extends
-        InitialGraphCleanVertexInputFormat<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> {
+        InitialGraphCleanVertexInputFormat<VKmer, P2VertexValue, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */
     @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
+    public VertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
         return new P2BinaryLoadGraphReader(binaryInputFormat.createRecordReader(split, context));
     }
@@ -33,12 +33,12 @@ public class P2InitialGraphCleanInputFormat extends
 
 @SuppressWarnings("rawtypes")
 class P2BinaryLoadGraphReader extends
-        BinaryVertexReader<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> {
+        BinaryVertexReader<VKmer, P2VertexValue, NullWritable, MessageWritable> {
     
     private Vertex vertex;
     private VKmer vertexId = new VKmer();
     private Node node = new Node();
-    private P2VertexValueWritable vertexValue = new P2VertexValueWritable();
+    private P2VertexValue vertexValue = new P2VertexValue();
 
     public P2BinaryLoadGraphReader(RecordReader<VKmer, Node> recordReader) {
         super(recordReader);
@@ -51,7 +51,7 @@ class P2BinaryLoadGraphReader extends
 
     @SuppressWarnings("unchecked")
     @Override
-    public Vertex<VKmer, P2VertexValueWritable, NullWritable, MessageWritable> getCurrentVertex()
+    public Vertex<VKmer, P2VertexValue, NullWritable, MessageWritable> getCurrentVertex()
             throws IOException, InterruptedException {
         if (vertex == null)
             vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());

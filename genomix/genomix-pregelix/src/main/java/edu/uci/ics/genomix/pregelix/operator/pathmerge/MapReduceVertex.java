@@ -5,11 +5,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
+public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
 	BasicPathMergeVertex<V, M>{
     
     protected VKmer forwardKmer = new VKmer();
@@ -23,7 +23,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
     public void initVertex() {
         super.initVertex();
         if(outgoingMsg == null) {
-            outgoingMsg = (M) new PathMergeMessageWritable();
+            outgoingMsg = (M) new PathMergeMessage();
         }
     }
     

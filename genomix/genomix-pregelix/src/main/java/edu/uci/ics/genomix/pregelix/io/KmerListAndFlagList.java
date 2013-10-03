@@ -10,23 +10,23 @@ import org.apache.hadoop.io.Writable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.type.VKmerList;
 
-public class KmerListAndFlagListWritable implements Writable{
+public class KmerListAndFlagList implements Writable{
     private ArrayListWritable<BooleanWritable> flagList;
     private VKmerList kmerList;
     
-    public KmerListAndFlagListWritable(){
+    public KmerListAndFlagList(){
         flagList = new ArrayListWritable<BooleanWritable>();
         kmerList = new VKmerList();
     }
     
-    public void set(KmerListAndFlagListWritable kmerAndflag){
+    public void set(KmerListAndFlagList kmerAndflag){
         flagList.clear();
         kmerList.reset();
         flagList.addAll(kmerAndflag.getFlagList());
         kmerList.appendList(kmerAndflag.getKmerList());
     }
     
-    public void add(KmerListAndFlagListWritable otherKmerAndFlag){
+    public void add(KmerListAndFlagList otherKmerAndFlag){
         this.flagList.addAll(otherKmerAndFlag.getFlagList());
         this.kmerList.appendList(otherKmerAndFlag.getKmerList());
     }

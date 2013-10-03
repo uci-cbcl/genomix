@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
@@ -24,7 +24,7 @@ import edu.uci.ics.genomix.type.VKmer;
  * @author anbangx
  *
  */
-public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessageWritable> extends
+public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
         BasicGraphCleanVertex<V, M> {
 
     private static final Logger LOG = Logger.getLogger(BasicPathMergeVertex.class.getName());
@@ -145,7 +145,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         VertexValueWritable vertex = getVertexValue();
         Node node = vertex.getNode();
         boolean updated = false;
-        ArrayList<PathMergeMessageWritable> allSeenMsgs = new ArrayList<PathMergeMessageWritable>();
+        ArrayList<PathMergeMessage> allSeenMsgs = new ArrayList<PathMergeMessage>();
         while (msgIterator.hasNext()) {
             M incomingMsg = msgIterator.next();
             if (verbose)
@@ -213,7 +213,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
     /**
      * Logging message
      */
-    public void loggingMessage(byte loggingType, PathMergeMessageWritable msg, VKmer dest) {
+    public void loggingMessage(byte loggingType, PathMergeMessage msg, VKmer dest) {
         String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
         LOG.fine(logMessage);
     }

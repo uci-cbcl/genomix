@@ -17,7 +17,7 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
@@ -29,7 +29,7 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
  *
  */
 public class ComplexBubbleMergeVertex extends
-    BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessageWritable> {
+    BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float dissimilarThreshold = -1;
     
     public static class EdgeType{
@@ -37,10 +37,10 @@ public class ComplexBubbleMergeVertex extends
         public static final byte OUTGOINGEDGE = 0b1 << 1;
     }
     
-    private Map<VKmer, ArrayList<BubbleMergeMessageWritable>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessageWritable>>();
-    private ArrayList<BubbleMergeMessageWritable> receivedMsgList = new ArrayList<BubbleMergeMessageWritable>();
-    private BubbleMergeMessageWritable topMsg = new BubbleMergeMessageWritable();
-    private BubbleMergeMessageWritable curMsg = new BubbleMergeMessageWritable();
+    private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
+    private ArrayList<BubbleMergeMessage> receivedMsgList = new ArrayList<BubbleMergeMessage>();
+    private BubbleMergeMessage topMsg = new BubbleMergeMessage();
+    private BubbleMergeMessage curMsg = new BubbleMergeMessage();
 //    private Set<BubbleMergeMessageWritable> unchangedSet = new HashSet<BubbleMergeMessageWritable>();
 //    private Set<BubbleMergeMessageWritable> deletedSet = new HashSet<BubbleMergeMessageWritable>();
     
@@ -72,7 +72,7 @@ public class ComplexBubbleMergeVertex extends
         if(dissimilarThreshold == -1)
             dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if(outgoingMsg == null)
-            outgoingMsg = new BubbleMergeMessageWritable();
+            outgoingMsg = new BubbleMergeMessage();
         else
             outgoingMsg.reset();
         if(incomingEdgeList == null)
@@ -136,19 +136,19 @@ public class ComplexBubbleMergeVertex extends
     }
     
     @SuppressWarnings({ "unchecked" })
-    public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessageWritable> msgIterator){
+    public void aggregateBubbleNodesByMajorNode(Iterator<BubbleMergeMessage> msgIterator){
         while (msgIterator.hasNext()) {
-            BubbleMergeMessageWritable incomingMsg = msgIterator.next();
+            BubbleMergeMessage incomingMsg = msgIterator.next();
             if(!receivedMsgMap.containsKey(incomingMsg.getMajorVertexId())){
                 receivedMsgList.clear();
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessageWritable>)receivedMsgList.clone());
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessage>)receivedMsgList.clone());
             }
             else{
                 receivedMsgList.clear();
                 receivedMsgList.addAll(receivedMsgMap.get(incomingMsg.getMajorVertexId()));
                 receivedMsgList.add(incomingMsg);
-                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessageWritable>)receivedMsgList.clone());
+                receivedMsgMap.put(incomingMsg.getMajorVertexId(), (ArrayList<BubbleMergeMessage>)receivedMsgList.clone());
             }
         }
     }
@@ -165,7 +165,7 @@ public class ComplexBubbleMergeVertex extends
         topMsg.reset();
         curMsg.reset();
         while(!receivedMsgList.isEmpty()){
-            Iterator<BubbleMergeMessageWritable> it = receivedMsgList.iterator();
+            Iterator<BubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg.set(it.next());
             it.remove(); //delete topCoverage node
             Node topNode = topMsg.getNode();
@@ -259,7 +259,7 @@ public class ComplexBubbleMergeVertex extends
 //        getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
 //    }
     
-    public void broadcaseUpdateEdges(BubbleMergeMessageWritable incomingMsg){
+    public void broadcaseUpdateEdges(BubbleMergeMessage incomingMsg){
         outFlag = 0;
         outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
         
@@ -271,7 +271,7 @@ public class ComplexBubbleMergeVertex extends
     /**
      * broadcast kill self to all neighbors and send message to update neighbor's edges ***
      */
-    public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessageWritable incomingMsg){
+    public void broadcaseKillselfAndNoticeToUpdateEdges(BubbleMergeMessage incomingMsg){
         outFlag = 0;
         outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
         
@@ -285,7 +285,7 @@ public class ComplexBubbleMergeVertex extends
     /**
      * do some remove operations on adjMap after receiving the info about dead Vertex
      */
-    public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessageWritable incomingMsg){
+    public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessage incomingMsg){
         VertexValueWritable vertex = getVertexValue(); 
         ReadIdSet readIds;
 
@@ -303,7 +303,7 @@ public class ComplexBubbleMergeVertex extends
     }
     
     @Override
-    public void compute(Iterator<BubbleMergeMessageWritable> msgIterator) {
+    public void compute(Iterator<BubbleMergeMessage> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
             if(VertexUtil.isBubbleVertex(getVertexValue())){
@@ -325,7 +325,7 @@ public class ComplexBubbleMergeVertex extends
 //                    receivedMsgList.addAll(receivedMsgMap.get(majorVertexId));
                     if(receivedMsgList.size() > 1){ // filter bubble
                         // for each majorVertex, sort the node by decreasing order of coverage
-                        Collections.sort(receivedMsgList, new BubbleMergeMessageWritable.SortByCoverage());
+                        Collections.sort(receivedMsgList, new BubbleMergeMessage.SortByCoverage());
                         
                         // process similarSet, keep the unchanged set and deleted set & add coverage to unchange node 
                         processSimilarSetToUnchangeSetAndDeletedSet();
@@ -341,7 +341,7 @@ public class ComplexBubbleMergeVertex extends
                 deleteVertex(getVertexId());
             else{
                 while(msgIterator.hasNext()){
-                    BubbleMergeMessageWritable incomingMsg = msgIterator.next();
+                    BubbleMergeMessage incomingMsg = msgIterator.next();
                     MESSAGETYPE msgType = MESSAGETYPE.fromByte(incomingMsg.getFlag());
                     switch(msgType){
                         case UPDATE:

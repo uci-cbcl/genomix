@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.data;
+package edu.uci.ics.genomix.util;
 
 import edu.uci.ics.genomix.type.GeneCode;
 

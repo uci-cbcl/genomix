@@ -9,7 +9,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
  * 
  * @author anbangx
  */
-public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
+public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
 
     private static final Logger LOG = Logger.getLogger(P4ForPathMergeVertex.class.getName());
 
@@ -48,7 +48,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     public void initVertex() {
         super.initVertex();
         if (outgoingMsg == null)
-            outgoingMsg = new PathMergeMessageWritable();
+            outgoingMsg = new PathMergeMessage();
         else
             outgoingMsg.reset();
         randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
@@ -182,7 +182,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     /**
      * step4: receive and process Merges
      */
-    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
+    public void receiveMerges(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
         Node node = vertex.getNode();
         short state = vertex.getState();
@@ -191,7 +191,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         @SuppressWarnings("unused")
         int numMerged = 0;
         while (msgIterator.hasNext()) {
-            PathMergeMessageWritable incomingMsg = msgIterator.next();
+            PathMergeMessage incomingMsg = msgIterator.next();
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" 
                         + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
@@ -224,7 +224,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     }
 
     @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws HyracksDataException {
+    public void compute(Iterator<PathMergeMessage> msgIterator) throws HyracksDataException {
         initVertex();
         if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
         	voteToHalt();

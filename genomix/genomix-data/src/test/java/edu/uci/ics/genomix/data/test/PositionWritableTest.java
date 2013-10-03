@@ -6,8 +6,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.Marshal;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.util.Marshal;
 
 public class PositionWritableTest {
 

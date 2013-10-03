@@ -9,7 +9,7 @@ import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class BubbleMergeMessageWritable extends MessageWritable{
+public class BubbleMergeMessage extends MessageWritable{
 
     public static class DirToMajor{
         public static final byte FORWARD = 0;
@@ -24,7 +24,7 @@ public class BubbleMergeMessageWritable extends MessageWritable{
     private VKmer topCoverageVertexId;
     private boolean isFlip;
     
-    public BubbleMergeMessageWritable(){
+    public BubbleMergeMessage(){
         super();
         majorVertexId = new VKmer();
         minorVertexId = new VKmer();
@@ -35,11 +35,11 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         isFlip = false;
     }
     
-    public BubbleMergeMessageWritable(BubbleMergeMessageWritable msg){
+    public BubbleMergeMessage(BubbleMergeMessage msg){
         set(msg);
     }
     
-    public void set(BubbleMergeMessageWritable msg){
+    public void set(BubbleMergeMessage msg){
         this.setSourceVertexId(msg.getSourceVertexId());
         this.setFlag(msg.getFlag());
         this.setMajorVertexId(msg.getMajorVertexId());
@@ -152,18 +152,18 @@ public class BubbleMergeMessageWritable extends MessageWritable{
         out.writeBoolean(isFlip);
     }
     
-    public static class SortByCoverage implements Comparator<BubbleMergeMessageWritable> {
+    public static class SortByCoverage implements Comparator<BubbleMergeMessage> {
         @Override
-        public int compare(BubbleMergeMessageWritable left, BubbleMergeMessageWritable right) {
+        public int compare(BubbleMergeMessage left, BubbleMergeMessage right) {
             return -Float.compare(left.node.getAverageCoverage(), right.node.getAverageCoverage());
         }
     }
     
-    public boolean sameOrientation(BubbleMergeMessageWritable other){
+    public boolean sameOrientation(BubbleMergeMessage other){
         return EDGETYPE.sameOrientation(this.majorToBubbleEdgetype, other.majorToBubbleEdgetype);
     }
     
-    public float computeDissimilar(BubbleMergeMessageWritable other) {
+    public float computeDissimilar(BubbleMergeMessage other) {
         boolean sameOrientation = sameOrientation(other);
         return this.getNode().getInternalKmer().fracDissimilar(sameOrientation, other.getNode().getInternalKmer());
     }
