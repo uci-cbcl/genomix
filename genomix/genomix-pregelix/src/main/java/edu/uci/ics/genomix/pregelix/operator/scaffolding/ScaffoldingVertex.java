@@ -41,9 +41,13 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     public enum READHEADTYPE {
         UNFLIPPED,
         FLIPPED;
-
     }
-
+    
+    public enum UPDATELENGTHTYPE {
+        OFFSET,
+        WHOLE_LENGTH;
+    }
+    
     // TODO BFS can seperate into simple BFS to filter and real BFS
     public static class SearchInfo implements Writable {
         private VKmer kmer;
@@ -215,10 +219,18 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         deleteVertex(getVertexId());
     }
     
-    public int updateBFSLength(BFSTraverseMessage incomingMsg){
+    public int updateBFSLength(BFSTraverseMessage incomingMsg, UPDATELENGTHTYPE type){
         VertexValueWritable vertex = getVertexValue();
         ReadHeadSet readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
-        return incomingMsg.getTotalBFSLength() + readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
+        switch(type){
+            case OFFSET:
+                return incomingMsg.getTotalBFSLength() + readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
+            case WHOLE_LENGTH:
+                return incomingMsg.getTotalBFSLength() + vertex.getInternalKmer().getLength() - kmerSize + 1;
+            default:
+                throw new IllegalStateException("Update length type only has two kinds: offset and whole_length!");
+        }
+        
     }
     /**
      * step 3:
@@ -230,9 +242,10 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             incomingMsg = msgIterator.next();
             boolean exceedMaxLength = false;
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
+            int totalBFSLength;
             if(incomingMsg.getSeekedVertexId().equals(getVertexId())){
                 // update totalBFSLength 
-                int totalBFSLength = updateBFSLength(incomingMsg);
+                totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTHTYPE.OFFSET);
                 long commonReadId = incomingMsg.getReadId();
                 if(isInRange(totalBFSLength)){ 
                     HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
@@ -247,10 +260,12 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                         PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList, incomingMsg.getEdgeTypeList());
                         pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
                     }
-                } else if(totalBFSLength > SCAFFOLDING_MAX_TRAVERSAL_LENGTH)
-                    exceedMaxLength = true;
+                }  
             }
             // For all nodes -- send messge to all neighbor if there exists valid path
+            totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTHTYPE.WHOLE_LENGTH);
+            if(totalBFSLength > SCAFFOLDING_MAX_TRAVERSAL_LENGTH)
+                exceedMaxLength = true;
             if(!exceedMaxLength){
                 
             }
