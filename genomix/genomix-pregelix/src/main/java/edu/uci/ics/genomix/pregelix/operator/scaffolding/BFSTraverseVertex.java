@@ -74,7 +74,7 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         }
     }
     
-    public static class PathAndEdgeTypeList implements Writable {
+    public static class PathAndEdgeTypeList implements Writable { // TODO make into a generic PairWritable or perhaps a EntryWritable?
         VKmerList kmerList;
         ArrayListWritable<EdgeType> edgeTypeList;
       
@@ -95,7 +95,7 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         }
         
         public int size(){
-            return kmerList.getCountOfPosition();
+            return kmerList.getCountOfPosition(); // TODO rename to size
         }
         
         @Override
@@ -162,12 +162,12 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         return srcNode;
     }
     
-    public boolean isValidDestination(BFSTraverseMessage incomingMsg) {
-        EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
+    public boolean isValidOrientation(BFSTraverseMessage incomingMsg) {
+        EDGETYPE meToIncoming = EDGETYPE.fromByte(incomingMsg.getFlag());
         if (incomingMsg.isDestFlip())
-            return meToNeighbor.dir() == DIR.REVERSE;
+            return meToIncoming.dir() == DIR.REVERSE;
         else
-            return meToNeighbor.dir() == DIR.FORWARD;
+            return meToIncoming.dir() == DIR.FORWARD;
     }
     
     @Override

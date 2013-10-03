@@ -111,7 +111,10 @@ public class Node implements Writable, Serializable {
         }
     }
 
-    public enum EDGETYPE {
+    public enum EDGETYPE { 
+    	// TODO implements Writable
+    	// TODO remove EdgeType class
+ 
 
         FF((byte) (0b00 << 0)),
         FR((byte) (0b01 << 0)),
