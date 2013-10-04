@@ -2,14 +2,9 @@ package edu.uci.ics.genomix.pregelix.io;
 
 import java.io.*;
 
-import org.apache.hadoop.io.LongWritable;
-
-import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex.PathAndEdgeTypeList;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex.SearchInfo;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
@@ -40,16 +35,12 @@ public class VertexValueWritable extends Node {
     private short state;
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
-    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap; //use for scaffolding, think optimaztion way
-    private HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap;
     
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
         counters = new HashMapWritable<ByteWritable, VLongWritable>();
-        scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
-        pathMap = new HashMapWritable<LongWritable, PathAndEdgeTypeList>();
     }
 
     public void setAsCopy(VertexValueWritable other) {
@@ -58,10 +49,6 @@ public class VertexValueWritable extends Node {
         isFakeVertex = other.isFakeVertex();
         counters.clear();
         counters.putAll(other.getCounters());
-        scaffoldingMap.clear();
-        scaffoldingMap.putAll(other.getScaffoldingMap());
-        pathMap.clear();
-        pathMap.putAll(other.pathMap);
     }
 
     public boolean isValidReadHead(int minCoverage, int minLength){
@@ -140,31 +127,11 @@ public class VertexValueWritable extends Node {
         this.counters.putAll(counters);
     }
 
-    public HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> getScaffoldingMap() {
-        return scaffoldingMap;
-    }
-
-    public void setScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap) {
-        this.scaffoldingMap.clear();
-        this.scaffoldingMap.putAll(scaffoldingMap);
-    }
-    
-    public HashMapWritable<LongWritable, PathAndEdgeTypeList> getPathMap() {
-        return pathMap;
-    }
-
-    public void setPathMap(HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap) {
-        this.pathMap.clear();
-        this.pathMap.putAll(pathMap);
-    }
-
     public void reset() {
         super.reset();
         this.state = 0;
         this.isFakeVertex = false;
         this.counters.clear();
-        scaffoldingMap.clear();
-        pathMap.clear();
     }
 
     @Override
@@ -175,7 +142,6 @@ public class VertexValueWritable extends Node {
         this.isFakeVertex = in.readBoolean();
         //        this.counters.readFields(in);
         //        scaffoldingMap.readFields(in);
-        pathMap.readFields(in);
     }
 
     @Override
@@ -185,7 +151,6 @@ public class VertexValueWritable extends Node {
         out.writeBoolean(this.isFakeVertex);
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
-        pathMap.write(out);
     }
 
     public int getDegree() {

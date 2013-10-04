@@ -31,7 +31,6 @@ public class P2VertexValue extends VertexValueWritable {
         tmpValue.setState(getState());
         tmpValue.setFakeVertex(isFakeVertex());
         tmpValue.setCounters(getCounters());
-        tmpValue.setScaffoldingMap(getScaffoldingMap());
 
         return tmpValue;
     }

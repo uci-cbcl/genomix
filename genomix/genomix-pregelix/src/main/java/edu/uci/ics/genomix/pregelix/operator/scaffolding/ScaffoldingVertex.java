@@ -10,6 +10,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
@@ -132,7 +133,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         // add a fake vertex 
         addFakeVertex("A");
         // grouped by 5'/~5' readId in aggregator
-        VertexValueWritable vertex = getVertexValue();
+        ScaffoldingVertexValueWritable vertex = getVertexValue();
         if (vertex.isValidReadHead(SCAFFOLDING_MIN_COVERAGE, SCAFFOLDING_MIN_LENGTH)){
             addReadsToScaffoldingMap(vertex.getStartReads(), READHEAD_TYPE.UNFLIPPED);
             addReadsToScaffoldingMap(vertex.getEndReads(), READHEAD_TYPE.FLIPPED);
@@ -185,7 +186,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
      * step 3:
      */
     public void BFSearch(Iterator<BFSTraverseMessage> msgIterator, SEARCH_TYPE searchType) {
-        VertexValueWritable vertex = getVertexValue();
+        ScaffoldingVertexValueWritable vertex = getVertexValue();
         BFSTraverseMessage incomingMsg;
         Map<Long, Boolean> unambiguousReadIds = new HashMap<Long, Boolean>(); // TODO move into the vertex and remember its value
         while (msgIterator.hasNext()) {
@@ -295,7 +296,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
      * step 4:
      */
     public void sendMsgToPathNode(){
-        VertexValueWritable vertex = getVertexValue();
+        ScaffoldingVertexValueWritable vertex = getVertexValue();
         // send message to all the path nodes to add this common readId
         sendMsgToPathNodeToAddCommondReadId(vertex.getPathMap());
         //set statistics counter: Num_Scaffodings
@@ -353,7 +354,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     public static HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> readScaffoldingMapResult(
             Configuration conf) {
         try {
-            VertexValueWritable value = (VertexValueWritable) IterationUtils.readGlobalAggregateValue(conf,
+            ScaffoldingVertexValueWritable value = (ScaffoldingVertexValueWritable) IterationUtils.readGlobalAggregateValue(conf,
                     BspUtils.getJobId(conf));
             return value.getScaffoldingMap();
         } catch (IOException e) {

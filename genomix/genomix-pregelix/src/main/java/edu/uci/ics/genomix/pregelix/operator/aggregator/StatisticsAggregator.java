@@ -17,12 +17,13 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
  * 
  * @author anbangx
  */
-public class StatisticsAggregator
+public class StatisticsAggregator<V extends VertexValueWritable>
         extends
-        GlobalAggregator<VKmer, VertexValueWritable, NullWritable, MessageWritable, VertexValueWritable, VertexValueWritable> {
+        GlobalAggregator<VKmer, V, NullWritable, MessageWritable, V, V> {
 
     public static HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
-    protected VertexValueWritable value = new VertexValueWritable();
+    @SuppressWarnings("unchecked")
+    protected V value = (V) new VertexValueWritable();
 
     @Override
     public void init() {
@@ -30,13 +31,13 @@ public class StatisticsAggregator
     }
 
     @Override
-    public void step(Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> v) throws HyracksDataException {
+    public void step(Vertex<VKmer, V, NullWritable, MessageWritable> v) throws HyracksDataException {
         HashMapWritable<ByteWritable, VLongWritable> counters = v.getVertexValue().getCounters();
         updateAggregateState(counters);
     }
 
     @Override
-    public void step(VertexValueWritable partialResult) {
+    public void step(V partialResult) {
         HashMapWritable<ByteWritable, VLongWritable> counters = partialResult.getCounters();
         updateAggregateState(counters);
     }
@@ -53,12 +54,12 @@ public class StatisticsAggregator
     }
 
     @Override
-    public VertexValueWritable finishPartial() {
+    public V finishPartial() {
         return value;
     }
 
     @Override
-    public VertexValueWritable finishFinal() {
+    public V finishFinal() {
         updateAggregateState(preGlobalCounters);
         return value;
     }
