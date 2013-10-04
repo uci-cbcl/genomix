@@ -35,8 +35,8 @@ import edu.uci.ics.genomix.util.Marshal;
 
 public class Node implements Writable, Serializable {
 
-    public Logger LOG = Logger.getLogger(Node.class.getName());
-    private boolean DEBUG = true;
+    public static final Logger LOG = Logger.getLogger(Node.class.getName());
+    private static boolean DEBUG = true;
     public static List<VKmer> problemKmers = new ArrayList<VKmer>();
 
     public enum DIR {
@@ -622,25 +622,29 @@ public class Node implements Writable, Serializable {
         averageCoverage = Marshal.getFloat(data, curOffset);
     }
 
-    @Override
-    public void write(DataOutput out) throws IOException {
+    public static void write(Node n, DataOutput out) throws IOException {
         for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()].write(out);
+            n.edges[e.get()].write(out);
         }
-        startReads.write(out);
-        endReads.write(out);
-        this.internalKmer.write(out);
-        out.writeFloat(averageCoverage);
+        n.startReads.write(out);
+        n.endReads.write(out);
+        n.internalKmer.write(out);
+        out.writeFloat(n.averageCoverage);
 
         if (DEBUG) {
             boolean verbose = false;
             for (VKmer problemKmer : problemKmers) {
-                verbose |= findEdge(problemKmer) != null;
+                verbose |= n.findEdge(problemKmer) != null;
             }
             if (verbose) {
-                LOG.fine("write: " + toString());
+                LOG.fine("write: " + n.toString());
             }
         }
+    }
+    
+    @Override
+    public void write(DataOutput out) throws IOException {
+        write(this, out);
     }
 
     @Override
