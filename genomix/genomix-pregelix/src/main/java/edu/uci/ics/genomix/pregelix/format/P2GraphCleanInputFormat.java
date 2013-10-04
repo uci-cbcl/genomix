@@ -13,12 +13,12 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.pregelix.io.P2VertexValue;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.api.io.binary.GraphCleanVertexInputFormat.BinaryDataCleanVertexReader;
+import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexInputFormat.BinaryDataCleanVertexReader;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class P2GraphCleanInputFormat extends
-        GraphCleanVertexInputFormat<VKmer, P2VertexValue, NullWritable, MessageWritable> {
+        BinaryVertexInputFormat<VKmer, P2VertexValue, NullWritable, MessageWritable> {
     /**
      * Format INPUT
      */

@@ -17,7 +17,7 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class GraphCleanVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
+public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
         extends VertexInputFormat<I, V, E, M> {
 
     /** Uses the SequenceFileInputFormat to do everything */
