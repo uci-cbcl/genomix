@@ -9,7 +9,7 @@ import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.util.Marshal;
 
-public class SingleEntryForEdgeMapTest {
+public class ReadIdSetTest {
 
     /**
      * basic check for adding and reading operation related to ReadIdSet

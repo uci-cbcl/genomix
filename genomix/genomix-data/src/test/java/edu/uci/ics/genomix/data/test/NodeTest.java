@@ -15,7 +15,7 @@ import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class NodeWritableTest {
+public class NodeTest {
 
  /*   @Test
     public void TestMergeRF_FF() throws IOException {

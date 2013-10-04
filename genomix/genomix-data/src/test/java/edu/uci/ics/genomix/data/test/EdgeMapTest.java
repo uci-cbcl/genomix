@@ -26,7 +26,7 @@ import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class EdgeListWritableTest {
+public class EdgeMapTest {
 
     @Test
     public void TestGraphBuildNodes() throws IOException {

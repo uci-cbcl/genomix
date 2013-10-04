@@ -10,7 +10,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
-public class KmerListWritableTest {
+public class VKmerListTest {
 
     @Test
     public void TestInitial() {

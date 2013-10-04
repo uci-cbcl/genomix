@@ -9,7 +9,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 
-public class PositionListWritableTest {
+public class ReadHeadSetTest {
 
     @Test
     public void TestInitial() {
