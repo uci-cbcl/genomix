@@ -415,8 +415,10 @@ public class Node implements Writable, Serializable {
         for (EDGETYPE e : EDGETYPE.values()) {
             this.edges[e.get()].setAsCopy(edges[e.get()]);
         }
-        this.startReads.set(startReads);
-        this.endReads.set(endReads);
+        this.startReads.clear();
+        this.startReads.addAll(startReads);
+        this.endReads.clear();
+        this.endReads.addAll(endReads);
         this.internalKmer.setAsCopy(kmer);
         this.averageCoverage = coverage;
     }
@@ -425,8 +427,8 @@ public class Node implements Writable, Serializable {
         for (EDGETYPE e : EDGETYPE.values()) {
             edges[e.get()].clear();
         }
-        startReads.reset();
-        endReads.reset();
+        startReads.clear();
+        endReads.clear();
         internalKmer.reset(0);
         averageCoverage = 0;
     }
@@ -543,7 +545,8 @@ public class Node implements Writable, Serializable {
     }
 
     public void setStartReads(ReadHeadSet startReads) {
-        this.startReads.set(startReads);
+        this.startReads.clear();
+        this.startReads.addAll(startReads);
     }
 
     public ReadHeadSet getEndReads() {
@@ -551,7 +554,8 @@ public class Node implements Writable, Serializable {
     }
 
     public void setEndReads(ReadHeadSet endReads) {
-        this.endReads.set(endReads);
+        this.endReads.clear();
+        this.endReads.addAll(endReads);
     }
 
     /**
@@ -600,9 +604,9 @@ public class Node implements Writable, Serializable {
             edges[e.get()].setAsReference(data, curOffset);
             curOffset += edges[e.get()].getLengthInBytes();
         }
-        startReads.setAsReference(data, curOffset);
+        startReads.setAsCopy(data, curOffset);
         curOffset += startReads.getLengthInBytes();
-        endReads.setAsReference(data, curOffset);
+        endReads.setAsCopy(data, curOffset);
         curOffset += endReads.getLengthInBytes();
 
         internalKmer.setAsReference(data, curOffset);
@@ -751,19 +755,19 @@ public class Node implements Writable, Serializable {
         if (!flip) {
             // stream theirs in, adjusting to the new total length
             for (ReadHeadInfo p : other.startReads) {
-                startReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
+                startReads.add(p.getMateId(), p.getReadId(), (int) (p.getOffset() * lengthFactor));
             }
             for (ReadHeadInfo p : other.endReads) {
-                endReads.append(p.getMateId(), p.getReadId(), (int) (p.getPosId() * lengthFactor));
+                endReads.add(p.getMateId(), p.getReadId(), (int) (p.getOffset() * lengthFactor));
             }
         } else {
             int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
             // stream theirs in, offset and flipped
             for (ReadHeadInfo p : other.startReads) {
-                endReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
+                endReads.add(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getOffset() * lengthFactor));
             }
             for (ReadHeadInfo p : other.endReads) {
-                startReads.append(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getPosId() * lengthFactor));
+                startReads.add(p.getMateId(), p.getReadId(), (int) (newOtherOffset - p.getOffset() * lengthFactor));
             }
         }
     }
@@ -850,20 +854,20 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = thisLength - K + 1;
                 // stream theirs in with my offset
                 for (ReadHeadInfo p : other.startReads) {
-                    startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                    startReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
                 }
                 for (ReadHeadInfo p : other.endReads) {
-                    endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                    endReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
                 }
                 break;
             case FR:
                 newOtherOffset = thisLength - K + 1 + otherLength - K;
                 // stream theirs in, offset and flipped
                 for (ReadHeadInfo p : other.startReads) {
-                    endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                    endReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
                 }
                 for (ReadHeadInfo p : other.endReads) {
-                    startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                    startReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
                 }
                 break;
             case RF:
@@ -871,33 +875,33 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = otherLength - K;
                 // shift my offsets (other is prepended)
                 for (ReadHeadInfo p : startReads) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
                 }
                 for (ReadHeadInfo p : endReads) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
                 }
                 //stream theirs in, not offset (they are first now) but flipped
                 for (ReadHeadInfo p : other.startReads) {
-                    endReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                    endReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
                 }
                 for (ReadHeadInfo p : other.endReads) {
-                    startReads.append(p.getMateId(), p.getReadId(), newOtherOffset + p.getPosId());
+                    startReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
                 }
                 break;
             case RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
                 for (ReadHeadInfo p : startReads) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
                 }
                 for (ReadHeadInfo p : endReads) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getPosId());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
                 }
                 for (ReadHeadInfo p : other.startReads) {
-                    startReads.append(p);
+                    startReads.add(p);
                 }
                 for (ReadHeadInfo p : other.endReads) {
-                    endReads.append(p);
+                    endReads.add(p);
                 }
                 break;
         }
@@ -948,7 +952,7 @@ public class Node implements Writable, Serializable {
     }
 
     public boolean isStartReadOrEndRead() {
-        return startReads.getCountOfPosition() > 0 || endReads.getCountOfPosition() > 0;
+        return startReads.size() > 0 || endReads.size() > 0;
     }
 
 }

@@ -54,8 +54,8 @@ public class GenerateGraphViz {
                 if (value.isStartReadOrEndRead())
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
                 outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
-                        + value.getStartReads().printStartReadIdSet() + "|<f2> "
-                        + value.getEndReads().printEndReadIdSet() + "|<f3> " + value.getAvgCoverage() + "\"]\n";
+                        + "5':" + value.getStartReads().toReadIdString() + "|<f2> "
+                        + "~5'" + value.getEndReads().toReadIdString() + "|<f3> " + value.getAvgCoverage() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
@@ -102,8 +102,8 @@ public class GenerateGraphViz {
                 if (value.isStartReadOrEndRead())
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
                 outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
-                        + value.getStartReads().printStartReadIdSet() + "|<f2> "
-                        + value.getEndReads().printEndReadIdSet() + "|<f3> " + value.getAvgCoverage() + "|<f4> "
+                        + "5':" + value.getStartReads().toReadIdString() + "|<f2> "
+                        + "~5'" + value.getEndReads().toReadIdString() + "|<f3> " + value.getAvgCoverage()
                         + value.getInternalKmer() + "\"]\n";
                 gv.addln(outputNode);
             }
