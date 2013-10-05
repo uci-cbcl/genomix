@@ -39,18 +39,32 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     // TODO BFS can seperate into simple BFS to filter and real BFS
     
     // TODO add to driver
-    public static int SCAFFOLDING_MIN_TRAVERSAL_LENGTH = 20;
-    public static int SCAFFOLDING_MAX_TRAVERSAL_LENGTH = 100;
-    public static int SCAFFOLDING_MIN_COVERAGE = 20;
-    public static int SCAFFOLDING_MIN_LENGTH = 20;
+    public static int SCAFFOLDING_MIN_TRAVERSAL_LENGTH = -1;
+    public static int SCAFFOLDING_MAX_TRAVERSAL_LENGTH = -1;
+    public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = -1;
+    public static int SCAFFOLDING_VERTEX_MIN_LENGTH = -1;
     
-    public static int NUM_STEP_END_BFS = SCAFFOLDING_MAX_TRAVERSAL_LENGTH - kmerSize + 3;
+    public static int NUM_STEP_END_BFS = -1;
 
     private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
 
     @Override
     public void initVertex() {
         super.initVertex();
+        if(SCAFFOLDING_MIN_TRAVERSAL_LENGTH < 0)
+        	SCAFFOLDING_MIN_TRAVERSAL_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.SCAFFOLDING_MIN_TRAVERSAL_LENGTH));
+        if(SCAFFOLDING_MAX_TRAVERSAL_LENGTH < 0)
+        	SCAFFOLDING_MAX_TRAVERSAL_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.SCAFFOLDING_MAX_TRAVERSAL_LENGTH));
+        if(SCAFFOLDING_VERTEX_MIN_COVERAGE < 0)
+        	SCAFFOLDING_VERTEX_MIN_COVERAGE = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.SCAFFOLDING_VERTEX_MIN_COVERAGE));
+        if(SCAFFOLDING_VERTEX_MIN_LENGTH < 0)
+        	SCAFFOLDING_VERTEX_MIN_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.SCAFFOLDING_VERTEX_MIN_LENGTH));
+        if(NUM_STEP_END_BFS < 0)
+        	NUM_STEP_END_BFS = SCAFFOLDING_MAX_TRAVERSAL_LENGTH - kmerSize + 3;
         if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
         else if(getSuperstep() == 2)
@@ -133,7 +147,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         addFakeVertex("A");
         // grouped by 5'/~5' readId in aggregator
         ScaffoldingVertexValueWritable vertex = getVertexValue();
-        if (vertex.isValidReadHead(SCAFFOLDING_MIN_COVERAGE, SCAFFOLDING_MIN_LENGTH)){
+        if (vertex.isValidReadHead(SCAFFOLDING_VERTEX_MIN_COVERAGE, SCAFFOLDING_VERTEX_MIN_LENGTH)){
             addReadsToScaffoldingMap(vertex.getStartReads(), READHEAD_TYPE.UNFLIPPED);
             addReadsToScaffoldingMap(vertex.getEndReads(), READHEAD_TYPE.FLIPPED);
             vertex.setScaffoldingMap(scaffoldingMap);
