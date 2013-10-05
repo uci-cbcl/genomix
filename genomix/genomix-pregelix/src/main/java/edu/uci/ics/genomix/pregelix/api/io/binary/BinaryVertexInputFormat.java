@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
@@ -36,10 +36,10 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
      * @param <E>
      *            Edge value
      */
-    public static abstract class BinaryDataCleanVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
+    public static abstract class BinaryVertexReader<I extends WritableComparable<?>, V extends Writable, E extends Writable, M extends WritableSizable>
             implements VertexReader<I, V, E, M> {
         /** Internal line record reader */
-        private final RecordReader<VKmer, VertexValueWritable> lineRecordReader;
+        private final RecordReader<VKmer, Node> lineRecordReader;
         /** Context passed to initialize */
         private TaskAttemptContext context;
 
@@ -49,7 +49,7 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
          * @param recordReader
          *            Line record reader from SequenceFileInputFormat
          */
-        public BinaryDataCleanVertexReader(RecordReader<VKmer, VertexValueWritable> recordReader) {
+        public BinaryVertexReader(RecordReader<VKmer, Node> recordReader) {
             this.lineRecordReader = recordReader;
         }
 
@@ -75,7 +75,7 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
          * 
          * @return Record reader to be used for reading.
          */
-        protected RecordReader<VKmer, VertexValueWritable> getRecordReader() {
+        protected RecordReader<VKmer, Node> getRecordReader() {
             return lineRecordReader;
         }
 

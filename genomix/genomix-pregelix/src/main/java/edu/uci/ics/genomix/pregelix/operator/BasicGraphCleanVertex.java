@@ -15,8 +15,8 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
 import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
@@ -164,7 +164,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
             job = new PregelixJob(conf, vertexClass.getSimpleName());
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexClass(vertexClass);
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
