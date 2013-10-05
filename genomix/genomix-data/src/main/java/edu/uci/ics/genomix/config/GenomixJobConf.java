@@ -143,6 +143,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-logReadIds", usage = "Log all readIds with the selected edges at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private boolean logReadIds = false;
+        
+        @Option(name = "-gage", usage = "Do metrics evalution after dumpting the intermediate data.", required = false)
+        private boolean gage = false;
 
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
@@ -253,6 +256,9 @@ public class GenomixJobConf extends JobConf {
     public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
     public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
 
+    // intermediate date evaluation
+    public static final String GAGE = "genomix.evaluation.tool.gage";
+    
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
@@ -369,6 +375,15 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
+
+
+        if(getBoolean(GAGE, false) == false)
+            setBoolean(GAGE, false);
+        //        if (getBoolean(RUN_LOCAL, false)) {
+        //            // override any other settings for HOST and PORT
+        //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
+        //            setInt(PORT, PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
+        //        }
     }
 
     private void setFromOpts(Options opts) {
@@ -396,6 +411,7 @@ public class GenomixJobConf extends JobConf {
         setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
+        setBoolean(GAGE, opts.gage);
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
         setBoolean(LOG_READIDS, opts.logReadIds);

@@ -2,21 +2,106 @@ package edu.uci.ics.genomix.data.test;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Iterator;
-
 import junit.framework.Assert;
-
 import org.junit.Test;
-
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 public class NodeTest {
-
+    
+    /**
+     * basic checking for enum DIR in Node class
+     * @throws IOException
+     */
+    @Test
+    public void testDIR() throws IOException{
+        Assert.assertEquals(0b01 << 2, DIR.REVERSE.get());
+        Assert.assertEquals(0b10 << 2, DIR.FORWARD.get());
+        DIR testDir1 = DIR.FORWARD;
+        DIR testDir2 = DIR.REVERSE;
+        Assert.assertEquals(DIR.REVERSE, testDir1.mirror());
+        Assert.assertEquals(DIR.FORWARD, testDir2.mirror());
+        Assert.assertEquals(0b11 << 2, DIR.fromSet(EnumSet.allOf(DIR.class)));
+        Assert.assertEquals(0b00 << 2, DIR.fromSet(EnumSet.noneOf(DIR.class)));
+        
+        EnumSet<EDGETYPE> edgeTypes1 = testDir1.edgeTypes();
+        EnumSet<EDGETYPE> edgeExample1 = EnumSet.noneOf(EDGETYPE.class);
+        EnumSet<EDGETYPE> edgeTypes2 = testDir2.edgeTypes();
+        EnumSet<EDGETYPE> edgeExample2 = EnumSet.noneOf(EDGETYPE.class);
+        edgeExample1.add(EDGETYPE.FF);
+        edgeExample1.add(EDGETYPE.FR);
+        Assert.assertEquals(edgeExample1, edgeTypes1);
+        
+        edgeExample2.add(EDGETYPE.RF);
+        edgeExample2.add(EDGETYPE.RR);
+        Assert.assertEquals(edgeExample2, edgeTypes2);
+        
+        Assert.assertEquals(edgeExample1, DIR.edgeTypesInDir(testDir1));
+        Assert.assertEquals(edgeExample2, DIR.edgeTypesInDir(testDir2));
+        
+        EnumSet<DIR> dirExample = EnumSet.noneOf(DIR.class);
+        dirExample.add(DIR.FORWARD);
+        Assert.assertEquals(dirExample, DIR.enumSetFromByte((short)8));
+        dirExample.clear();
+        dirExample.add(DIR.REVERSE);
+        Assert.assertEquals(dirExample, DIR.enumSetFromByte((short)4));
+        
+        dirExample.clear();
+        dirExample.add(DIR.FORWARD);
+        Assert.assertEquals(dirExample, DIR.flipSetFromByte((short)4));
+        dirExample.clear();
+        dirExample.add(DIR.REVERSE);
+        Assert.assertEquals(dirExample, DIR.flipSetFromByte((short)8));
+    }
+    
+    /**
+     * basic checking for EDGETYPE in Node class
+     * @throws IOException
+     */
+    @Test
+    public void testEDGETYPE() throws IOException{
+        //fromByte()
+        Assert.assertEquals(EDGETYPE.FF, EDGETYPE.fromByte((byte)0));
+        Assert.assertEquals(EDGETYPE.FR, EDGETYPE.fromByte((byte)1));
+        Assert.assertEquals(EDGETYPE.RF, EDGETYPE.fromByte((byte)2));
+        Assert.assertEquals(EDGETYPE.RR, EDGETYPE.fromByte((byte)3));
+        //mirror()
+        Assert.assertEquals(EDGETYPE.RR, EDGETYPE.FF.mirror());
+        Assert.assertEquals(EDGETYPE.FR, EDGETYPE.FR.mirror());
+        Assert.assertEquals(EDGETYPE.RF, EDGETYPE.RF.mirror());
+        Assert.assertEquals(EDGETYPE.FF, EDGETYPE.RR.mirror());
+        //DIR()
+        Assert.assertEquals(DIR.FORWARD, EDGETYPE.FF.dir());
+        Assert.assertEquals(DIR.FORWARD, EDGETYPE.FR.dir());
+        Assert.assertEquals(DIR.REVERSE, EDGETYPE.RF.dir());
+        Assert.assertEquals(DIR.REVERSE, EDGETYPE.RR.dir());
+        //resolveEdgeThroughPath()
+        Assert.assertEquals(EDGETYPE.RF, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)0), EDGETYPE.fromByte((byte)2)));
+        Assert.assertEquals(EDGETYPE.RR, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)0), EDGETYPE.fromByte((byte)3)));
+        
+        Assert.assertEquals(EDGETYPE.FF, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)1), EDGETYPE.fromByte((byte)2)));
+        Assert.assertEquals(EDGETYPE.FR, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)1), EDGETYPE.fromByte((byte)3)));
+        
+        Assert.assertEquals(EDGETYPE.RF, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)2), EDGETYPE.fromByte((byte)0)));
+        Assert.assertEquals(EDGETYPE.RR, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)2), EDGETYPE.fromByte((byte)1)));
+        
+        Assert.assertEquals(EDGETYPE.FF, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)3), EDGETYPE.fromByte((byte)0)));
+        Assert.assertEquals(EDGETYPE.FR, EDGETYPE.resolveEdgeThroughPath(EDGETYPE.fromByte((byte)3), EDGETYPE.fromByte((byte)1)));
+        //causeFlip()
+        Assert.assertEquals(false, EDGETYPE.FF.causesFlip());
+        Assert.assertEquals(true, EDGETYPE.FR.causesFlip());
+        Assert.assertEquals(true, EDGETYPE.RF.causesFlip());
+        Assert.assertEquals(false, EDGETYPE.RR.causesFlip());
+        //flipNeighbor()
+        
+    }
  /*   @Test
     public void TestMergeRF_FF() throws IOException {
         Kmer.setGlobalKmerLength(5);
