@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.io.common;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
@@ -12,7 +11,7 @@ public class EntryWritable<K extends Writable, V extends Writable>
     extends SimpleEntry<K, V> implements Writable{
 
     /**
-     * 
+     * The key in this SimpleEntry is not final! 
      */
     private static final long serialVersionUID = 1L;
 
@@ -52,6 +51,8 @@ public class EntryWritable<K extends Writable, V extends Writable>
             value = (V) valueClass.newInstance();
             value.readFields(in);
             
+            setKey(key);
+            setValue(value);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
