@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -171,10 +172,10 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         return isValidOrientation(incomingMsg) && isInRange(totalBFSLength); 
     }
     
-    public boolean anyUnambiguous(Map<Long, Boolean> unambiguousReadIds){
+    public boolean anyUnambiguous(HashMapWritable<LongWritable, BooleanWritable> unambiguousReadIds){
         boolean anyUnambiguous = false;
-        for(boolean b : unambiguousReadIds.values()){
-            if(b == true){
+        for(BooleanWritable b : unambiguousReadIds.values()){
+            if(b.get() == true){
                 anyUnambiguous = true;
                 break;
             }
@@ -188,7 +189,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     public void BFSearch(Iterator<BFSTraverseMessage> msgIterator, SEARCH_TYPE searchType) {
         ScaffoldingVertexValueWritable vertex = getVertexValue();
         BFSTraverseMessage incomingMsg;
-        Map<Long, Boolean> unambiguousReadIds = new HashMap<Long, Boolean>(); // TODO move into the vertex and remember its value
+        HashMapWritable<LongWritable, BooleanWritable> unambiguousReadIds = vertex.getUnambiguousReadIds();
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
@@ -198,7 +199,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path FIXME
                     // put empty in value to mark it as ambiguous path
                     pathMap.remove(commonReadId);
-                    unambiguousReadIds.put(commonReadId, false);
+                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(false));
                     continue; // stop BFS search here
                 } else{ // if it's unambiguous path, save 
                     VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
@@ -206,7 +207,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     // doesn't need to update edgeTypeList
                     PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList, incomingMsg.getEdgeTypeList());
                     pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
-                    unambiguousReadIds.put(commonReadId, true);
+                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(true));
                 }
             }  
             // For all nodes -- send messge to all neighbor if there exists valid path

@@ -21,7 +21,7 @@ public class ScaffoldingVertexValueWritable extends VertexValueWritable {
     
     private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap; //use for scaffolding, think optimaztion way
     private HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap;
-    HashMapWritable<LongWritable, BooleanWritable> unambiguousReadIds;
+    private HashMapWritable<LongWritable, BooleanWritable> unambiguousReadIds;
     
     public ScaffoldingVertexValueWritable(){
         super();
