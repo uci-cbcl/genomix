@@ -15,7 +15,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.GenericVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
@@ -108,7 +108,7 @@ public class BridgeAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
          * BinaryInput and BinaryOutput
          */
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexOutputFormatClass(GenericVertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(Kmer.class);
         job.setOutputValueClass(VertexValueWritable.class);

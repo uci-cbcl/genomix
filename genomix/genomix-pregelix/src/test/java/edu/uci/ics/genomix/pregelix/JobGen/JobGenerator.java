@@ -10,9 +10,10 @@ import org.apache.commons.io.FileUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeAddVertex;
@@ -41,8 +42,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(UnrollTandemRepeat.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -57,7 +58,7 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(MapReduceVertex.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -72,8 +73,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(P1ForPathMergeVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class); //GraphCleanInputFormat
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class); //GraphCleanInputFormat
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -123,8 +124,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(P4ForPathMergeVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -141,8 +142,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(RemoveLowCoverageVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -158,8 +159,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(TipAddVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -176,7 +177,7 @@ public class JobGenerator {
         job.setVertexClass(TipRemoveVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -192,8 +193,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BridgeAddVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -210,7 +211,7 @@ public class JobGenerator {
         job.setVertexClass(BridgeRemoveVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -226,8 +227,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BubbleAddVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -244,7 +245,7 @@ public class JobGenerator {
         job.setVertexClass(ComplexBubbleMergeVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -260,8 +261,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(SplitRepeatVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class); 
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class); 
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -275,8 +276,8 @@ public class JobGenerator {
     private static void generateBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BFSTraverseVertex.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -292,8 +293,8 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(ScaffoldingVertex.class);
         job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
+        job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -309,7 +310,7 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(SymmetryCheckerVertex.class);
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(CheckerOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);

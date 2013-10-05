@@ -10,7 +10,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.io.VertexOutputFormat;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
@@ -27,7 +27,7 @@ import edu.uci.ics.pregelix.api.io.VertexWriter;
  *            Edge value
  */
 @SuppressWarnings("rawtypes")
-public abstract class GraphCleanVertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable>
+public abstract class BinaryVertexOutputFormat<I extends WritableComparable, V extends Writable, E extends Writable>
         extends VertexOutputFormat<I, V, E> {
     /** Uses the SequenceFileOutputFormat to do everything */
     protected SequenceFileOutputFormat binaryOutputFormat = new SequenceFileOutputFormat();
@@ -49,7 +49,7 @@ public abstract class GraphCleanVertexOutputFormat<I extends WritableComparable,
         /** Context passed to initialize */
         private TaskAttemptContext context;
         /** Internal line record writer */
-        private final RecordWriter<VKmer, VertexValueWritable> lineRecordWriter;
+        private final RecordWriter<VKmer, Node> lineRecordWriter;
 
         /**
          * Initialize with the LineRecordWriter.
@@ -57,7 +57,7 @@ public abstract class GraphCleanVertexOutputFormat<I extends WritableComparable,
          * @param lineRecordWriter
          *            Line record writer from SequenceFileOutputFormat
          */
-        public BinaryVertexWriter(RecordWriter<VKmer, VertexValueWritable> lineRecordWriter) {
+        public BinaryVertexWriter(RecordWriter<VKmer, Node> lineRecordWriter) {
             this.lineRecordWriter = lineRecordWriter;
         }
 
@@ -76,7 +76,7 @@ public abstract class GraphCleanVertexOutputFormat<I extends WritableComparable,
          * 
          * @return Record writer to be used for writing.
          */
-        public RecordWriter<VKmer, VertexValueWritable> getRecordWriter() {
+        public RecordWriter<VKmer, Node> getRecordWriter() {
             return lineRecordWriter;
         }
 

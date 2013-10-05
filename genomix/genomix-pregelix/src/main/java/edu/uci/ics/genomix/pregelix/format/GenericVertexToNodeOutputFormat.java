@@ -8,37 +8,35 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
-public class CheckerOutputFormat extends BinaryVertexOutputFormat<VKmer, VertexValueWritable, NullWritable> {
+public abstract class GenericVertexToNodeOutputFormat<V extends VertexValueWritable> 
+	extends BinaryVertexOutputFormat<VKmer, V, NullWritable> {
 
     @Override
-    public VertexWriter<VKmer, VertexValueWritable, NullWritable> createVertexWriter(TaskAttemptContext context)
+    public VertexWriter<VKmer, V, NullWritable> createVertexWriter(TaskAttemptContext context)
             throws IOException, InterruptedException {
         @SuppressWarnings("unchecked")
         RecordWriter<VKmer, Node> recordWriter = binaryOutputFormat.getRecordWriter(context);
-        return new BinaryLoadGraphVertexWriter(recordWriter);
+        return new BinaryLoadGraphVertexWriter<V>(recordWriter);
     }
 
     /**
      * Simple VertexWriter that supports {@link BinaryLoadGraphVertex}
      */
-    public static class BinaryLoadGraphVertexWriter extends
-            BinaryVertexWriter<VKmer, VertexValueWritable, NullWritable> {
+    public static class BinaryLoadGraphVertexWriter<V extends VertexValueWritable> extends
+            BinaryVertexWriter<VKmer, V, NullWritable> {
         public BinaryLoadGraphVertexWriter(RecordWriter<VKmer, Node> lineRecordWriter) {
             super(lineRecordWriter);
         }
 
         @Override
-        public void writeVertex(Vertex<VKmer, VertexValueWritable, NullWritable, ?> vertex) throws IOException,
+        public void writeVertex(Vertex<VKmer, V, NullWritable, ?> vertex) throws IOException,
                 InterruptedException {
-            byte state = (byte) (vertex.getVertexValue().getState() & State.VERTEX_MASK);
-            if (state == State.IS_ERROR)
-                getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().getNode());
+            getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().getNode());
         }
     }
 }

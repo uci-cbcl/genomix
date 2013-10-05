@@ -36,8 +36,7 @@ import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.P2InitialGraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex;
@@ -179,7 +178,7 @@ public class GenomixDriver {
             //            if (P2ForPathMergeVertex.class.equals(BspUtils.getVertexClass(job.getConfiguration()))) {
             //                job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
             //            } else {
-            job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
+            job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
             //            }
         }
         if (job.getClass().equals(SymmetryCheckerVertex.class)) {
