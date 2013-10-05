@@ -263,6 +263,7 @@ public class GenomixJobConf extends JobConf {
         super(new Configuration());
         setInt(KMER_LENGTH, kmerLength);
         fillMissingDefaults();
+        validateConf(this);
     }
 
     public GenomixJobConf(Configuration other) {
@@ -368,12 +369,6 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
-
-        //        if (getBoolean(RUN_LOCAL, false)) {
-        //            // override any other settings for HOST and PORT
-        //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
-        //            setInt(PORT, PregelixHyracksIntegrationUtil.TEST_HYRACKS_CC_CLIENT_PORT);
-        //        }
     }
 
     private void setFromOpts(Options opts) {
