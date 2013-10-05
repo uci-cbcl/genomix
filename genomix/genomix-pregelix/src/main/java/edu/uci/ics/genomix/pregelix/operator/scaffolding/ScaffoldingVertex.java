@@ -38,7 +38,6 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     // TODO Optimization: send map to readId.hashValue() bin
     // TODO BFS can seperate into simple BFS to filter and real BFS
     
-    // TODO add to driver
     public static int SCAFFOLDING_MIN_TRAVERSAL_LENGTH = -1;
     public static int SCAFFOLDING_MAX_TRAVERSAL_LENGTH = -1;
     public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = -1;
@@ -99,20 +98,26 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     
 
     public int updateBFSLength(BFSTraverseMessage incomingMsg, UPDATELENGTH_TYPE type){
+    	int totalBFSLength = incomingMsg.getTotalBFSLength();
         VertexValueWritable vertex = getVertexValue();
+        int internalKmerLength = vertex.getInternalKmer().getLength();
         ReadHeadSet readHeadSet;
+        int offset;
         switch(type){
             // remember to account for partial overlaps
+        	// src or dest, as long as flip, updateLength += offset, otherwise updateLength += kmerLength - offset
             case SRC_OFFSET:
-                readHeadSet = incomingMsg.isSrcFlip() ? vertex.getEndReads() : vertex.getStartReads();
-                return vertex.getInternalKmer().getLength() - readHeadSet.getOffsetFromReadId(incomingMsg.getReadId()) - kmerSize + 1; 
+            	boolean srcIsFlip = incomingMsg.isSrcFlip();
+                readHeadSet = srcIsFlip ? vertex.getEndReads() : vertex.getStartReads();
+                offset = readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
+                return srcIsFlip ? offset : internalKmerLength - offset;
             case DEST_OFFSET:
-                readHeadSet = incomingMsg.isDestFlip() ? vertex.getEndReads() : vertex.getStartReads();
-                //FIXME is it offset or (length - offset)
-                return incomingMsg.getTotalBFSLength() + vertex.getInternalKmer().getLength() - 
-                        readHeadSet.getOffsetFromReadId(incomingMsg.getReadId()) - kmerSize + 1; 
+            	boolean destIsFlip = incomingMsg.isDestFlip();
+                readHeadSet = destIsFlip ? vertex.getEndReads() : vertex.getStartReads();
+                offset = readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
+                return destIsFlip ? totalBFSLength + offset - kmerSize + 1 : totalBFSLength + internalKmerLength - offset - kmerSize + 1;
             case WHOLE_LENGTH:
-                return incomingMsg.getTotalBFSLength() + vertex.getInternalKmer().getLength() - kmerSize + 1;
+                return totalBFSLength + internalKmerLength - kmerSize + 1;
             default:
                 throw new IllegalStateException("Update length type only has two kinds: offset and whole_length!");
         }
