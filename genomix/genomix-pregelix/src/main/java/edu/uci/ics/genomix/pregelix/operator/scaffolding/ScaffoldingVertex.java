@@ -1,9 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
