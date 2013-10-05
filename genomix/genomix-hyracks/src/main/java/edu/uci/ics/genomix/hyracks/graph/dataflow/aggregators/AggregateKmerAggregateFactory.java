@@ -103,8 +103,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeList(e).unionUpdate((readNode.getEdgeList(e)));
                 }
-                localUniNode.getStartReads().appendList(readNode.getStartReads());
-                localUniNode.getEndReads().appendList(readNode.getEndReads());
+                localUniNode.getStartReads().addAll(readNode.getStartReads());
+                localUniNode.getEndReads().addAll(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
 
             }
@@ -120,8 +120,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
                 }
-                localUniNode.getStartReads().appendList(readNode.getStartReads());
-                localUniNode.getEndReads().appendList(readNode.getEndReads());
+                localUniNode.getStartReads().addAll(readNode.getStartReads());
+                localUniNode.getEndReads().addAll(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
                 //                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
                 //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        

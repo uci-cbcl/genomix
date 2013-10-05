@@ -16,39 +16,31 @@ import edu.uci.ics.genomix.util.KmerUtil;
 import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializable {
-
     private static final long serialVersionUID = 1L;
-    protected byte[] storage;
-    protected int offset;
-    public static final int LENGTH = 8;
+    public static final int ITEM_SIZE = 8;
 
     public static final int totalBits = 64;
     private static final int bitsForMate = 1;
     private static final int bitsForPosition = 16;
     private static final int readIdShift = bitsForPosition + bitsForMate;
     private static final int positionIdShift = bitsForMate;
+    
+    private long value;
 
-    public ReadHeadInfo() {
-        storage = new byte[LENGTH];
-        offset = 0;
-    }
-
-    public ReadHeadInfo(byte mateId, long readId, int posId) {
-        this();
-        set(mateId, readId, posId);
+    public ReadHeadInfo(byte mateId, long readId, int offset) {
+        set(mateId, readId, offset);
     }
 
     public ReadHeadInfo(ReadHeadInfo other) {
-        this();
         set(other);
     }
 
-    public ReadHeadInfo(byte[] storage, int offset) {
-        setNewReference(storage, offset);
+    public ReadHeadInfo(long uuid) {
+        set(uuid);
     }
 
     public void set(long uuid) {
-        Marshal.putLong(uuid, storage, offset);
+        value = uuid;
     }
 
     public static long makeUUID(byte mateId, long readId, int posId) {
@@ -56,72 +48,49 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     }
 
     public void set(byte mateId, long readId, int posId) {
-        Marshal.putLong(makeUUID(mateId, readId, posId), storage, offset);
+        value = makeUUID(mateId, readId, posId);
     }
 
-    public void set(ReadHeadInfo pos) {
-        set(pos.getMateId(), pos.getReadId(), pos.getPosId());
+    public void set(ReadHeadInfo head) {
+        set(head.value);
     }
 
-    public void setNewReference(byte[] storage, int offset) {
-        this.storage = storage;
-        this.offset = offset;
-    }
-
-    public void reset() {
-        storage = new byte[LENGTH];
-        offset = 0;
-    }
-
-    public long getUUID() {
-        return Marshal.getLong(storage, offset);
+    public long asLong() {
+        return value;
     }
 
     public byte getMateId() {
-        return (byte) (Marshal.getLong(storage, offset) & 0b1);
+        return (byte) (value & 0b1);
     }
 
     public long getReadId() {
-        return Marshal.getLong(storage, offset) >>> readIdShift;
+        return value >>> readIdShift;
     }
 
-    public int getPosId() {
-        return (int) ((Marshal.getLong(storage, offset) >>> positionIdShift) & 0xffff);
-    }
-
-    public byte[] getByteArray() {
-        return storage;
-    }
-
-    public int getStartOffset() {
-        return offset;
-    }
-
-    public int getLength() {
-        return LENGTH;
+    public int getOffset() {
+        return (int) ((value >>> positionIdShift) & 0xffff);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        in.readFully(storage, offset, LENGTH);
+        value = in.readLong();
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.write(storage, offset, LENGTH);
+        out.writeLong(value);
     }
 
     @Override
     public int hashCode() {
-        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
+        return Long.valueOf(value).hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ReadHeadInfo))
             return false;
-        ReadHeadInfo other = (ReadHeadInfo) o;
-        return this.getUUID() == other.getUUID();
+        return ((ReadHeadInfo) o).value == this.value;
     }
 
     /*
@@ -129,21 +98,19 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
      */
     @Override
     public String toString() {
-        return "(" + this.getReadId() + "-" + this.getPosId() + "_" + (this.getMateId()) + ")";
+        return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId());
     }
 
-    public static int compareLong(long x, long y) {
-        return (x < y) ? -1 : ((x == y) ? 0 : 1);
-    }
-    
+    /** sort by readId, then mateId, then offset
+     */
     @Override
     public int compareTo(ReadHeadInfo o) {
         if (this.getReadId() == o.getReadId()) {
             if(this.getMateId() == o.getMateId()){
-                return this.getPosId() - o.getPosId();
+                return this.getOffset() - o.getOffset();
             }
             return this.getMateId() - o.getMateId();
         }
-        return compareLong(this.getReadId(), o.getReadId());
+        return Long.compare(this.getReadId(), o.getReadId());
     }
 }

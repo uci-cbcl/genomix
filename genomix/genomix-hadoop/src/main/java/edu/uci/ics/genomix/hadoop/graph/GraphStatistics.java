@@ -66,13 +66,13 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         reporter.getCounter("coverage-bins", Integer.toString(Math.round(value.getAverageCoverage()))).increment(1);
         reporter.getCounter("totals", "coverage").increment(Math.round(value.getAverageCoverage()));
 
-        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().getCountOfPosition())))
+        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().size())))
                 .increment(1);
-        reporter.getCounter("totals", "startRead").increment(Math.round(value.getStartReads().getCountOfPosition()));
+        reporter.getCounter("totals", "startRead").increment(Math.round(value.getStartReads().size()));
 
-        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().getCountOfPosition())))
+        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().size())))
                 .increment(1);
-        reporter.getCounter("totals", "endRead").increment(Math.round(value.getEndReads().getCountOfPosition()));
+        reporter.getCounter("totals", "endRead").increment(Math.round(value.getEndReads().size()));
 
         long totalEdgeReads = 0;
         long totalSelf = 0;

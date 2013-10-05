@@ -72,7 +72,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         curReverseKmer = new VKmer();
         nextForwardKmer = new VKmer();
         nextReverseKmer = new VKmer();
-        nodeId = new ReadHeadInfo();
+        nodeId = new ReadHeadInfo(0);
         nodeIdList = new ReadHeadSet();
         readIdList = new ReadIdSet();
         edgeListForPreKmer = new EdgeMap();
@@ -198,8 +198,8 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 
     public void setNodeId(byte mateId, long readId, int posId) {
         nodeId.set(mateId, readId, posId);
-        nodeIdList.reset();
-        nodeIdList.append(nodeId);
+        nodeIdList.clear();
+        nodeIdList.add(nodeId);
 
         readIdList.clear();
         readIdList.add(readId);

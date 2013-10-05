@@ -103,6 +103,9 @@ public class Driver {
         try {
             Map<String, NodeControllerInfo> ncMap = hcc.getNodeControllerInfos();
             LOG.info("ncmap:" + ncMap.size() + " " + ncMap.keySet().toString());
+            if (ncMap.size() == 0) {
+                throw new IllegalStateException("No registered worker NC's to build the graph!");
+            }
             switch (planChoice) {
                 case BUILD_OLD_DEBRUJIN_GRAPH_STEP1:
                     jobGen = new JobGenBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);

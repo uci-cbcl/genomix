@@ -14,7 +14,7 @@ public class ReadHeadSetTest {
     @Test
     public void TestInitial() {
         ReadHeadSet plist = new ReadHeadSet();
-        Assert.assertEquals(plist.getCountOfPosition(), 0);
+        Assert.assertEquals(plist.size(), 0);
         
         byte mateId;
         long readId;
@@ -23,34 +23,25 @@ public class ReadHeadSetTest {
             mateId = (byte)1;
             readId = (long)i;
             posId = i;
-            plist.append(mateId, readId, posId);
-            Assert.assertEquals(plist.getPosition(i).getMateId(), mateId);
-            Assert.assertEquals(plist.getPosition(i).getReadId(), readId);
-            Assert.assertEquals(plist.getPosition(i).getPosId(), posId);
-            Assert.assertEquals(i + 1, plist.getCountOfPosition());
+            plist.add(mateId, readId, posId);
+            Assert.assertTrue(plist.contains(new ReadHeadInfo(mateId, readId, posId)));
+            Assert.assertEquals(i + 1, plist.size());
         }
         
         int i = 0;
         for (ReadHeadInfo pos : plist) {
             Assert.assertEquals((byte)1, pos.getMateId());
             Assert.assertEquals((long) i, pos.getReadId());
-            Assert.assertEquals(i, pos.getPosId());
+            Assert.assertEquals(i, pos.getOffset());
             i++;
         }
         
-        byte [] another = new byte [plist.getLengthInBytes()*2];
-        int start = 20;
-        System.arraycopy(plist.getByteArray(), 0, another, start, plist.getLengthInBytes());
-        ReadHeadSet plist2 = new ReadHeadSet(another,start);
-        for( i = 0; i < plist2.getCountOfPosition(); i++){
-            Assert.assertEquals(plist.getPosition(i), plist2.getPosition(i));
-        }
     }
     
     @Test
     public void TestRemove() {
         ReadHeadSet plist = new ReadHeadSet();
-        Assert.assertEquals(plist.getCountOfPosition(), 0);
+        Assert.assertEquals(plist.size(), 0);
         
         byte mateId;
         long readId;
@@ -59,30 +50,29 @@ public class ReadHeadSetTest {
             mateId = (byte)1;
             readId = (long)i;
             posId = i;
-            plist.append(mateId, readId, posId);
-            Assert.assertEquals(plist.getPosition(i).getMateId(), mateId);
-            Assert.assertEquals(plist.getPosition(i).getReadId(), readId);
-            Assert.assertEquals(plist.getPosition(i).getPosId(), posId);
-            Assert.assertEquals(i + 1, plist.getCountOfPosition());
+            plist.add(mateId, readId, posId);
+            Assert.assertTrue(plist.contains(new ReadHeadInfo(mateId, readId, posId)));
+            Assert.assertEquals(i + 1, plist.size());
         }
         
         int i = 0;
         for (ReadHeadInfo pos : plist) {
             Assert.assertEquals((byte)1, pos.getMateId());
             Assert.assertEquals((long) i, pos.getReadId());
-            Assert.assertEquals(i, pos.getPosId());
+            Assert.assertEquals(i, pos.getOffset());
             i++;
         }
         
         //delete one element each time
         i = 0;
         ReadHeadSet copyList = new ReadHeadSet();
-        copyList.set(plist);
-        ReadHeadInfo pos = new ReadHeadInfo();
+        copyList.clear();
+        copyList.addAll(plist);
+        ReadHeadInfo pos = new ReadHeadInfo(0);
         Iterator<ReadHeadInfo> iterator;
         for(int j = 0; j < 5; j++){
             iterator = copyList.iterator();
-            ReadHeadInfo deletePos = new ReadHeadInfo();
+            ReadHeadInfo deletePos = new ReadHeadInfo(0);
             deletePos.set((byte)1, (long)j, j);
             boolean removed = false;
             while(iterator.hasNext()){
@@ -94,12 +84,12 @@ public class ReadHeadSetTest {
                 }
             }
             Assert.assertTrue(removed);
-            Assert.assertEquals(5 - 1 - j, copyList.getCountOfPosition());
+            Assert.assertEquals(5 - 1 - j, copyList.size());
             while(iterator.hasNext()){
                 pos = iterator.next();
-                Assert.assertTrue(! (pos.getUUID() == deletePos.getUUID() && 
-                                  pos.getReadId() == deletePos.getReadId() && 
-                                  pos.getPosId() == deletePos.getPosId()));
+                Assert.assertTrue(! (pos.asLong() == deletePos.asLong() && 
+                                  pos.getReadId() == deletePos.getReadId() &&
+                                  pos.getOffset() == deletePos.getOffset()));
                 i++;
             }
         }
@@ -112,6 +102,6 @@ public class ReadHeadSetTest {
             iterator.remove();
         }
         
-        Assert.assertEquals(0, plist.getCountOfPosition());
+        Assert.assertEquals(0, plist.size());
     }
 }
