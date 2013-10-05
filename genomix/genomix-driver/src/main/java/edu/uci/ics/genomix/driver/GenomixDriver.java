@@ -25,10 +25,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobConf;
 import org.kohsuke.args4j.CmdLineException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
+import edu.uci.ics.genomix.hadoop.converttofasta.ConvertToFasta;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
@@ -95,7 +97,7 @@ public class GenomixDriver {
                 queuePregelixJob(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
                 break;
             case MERGE_P2:
-                //                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
+//                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
                 break;
             case MERGE:
             case MERGE_P4:
@@ -127,8 +129,17 @@ public class GenomixDriver {
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
-                DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
-                curOutput = prevOutput; // use previous job's output 
+                if(runLocal){
+                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild); //?? why curOutput TODO
+                    curOutput = prevOutput; // use previous job's output 
+                }
+                else{
+                    dumpGraphWithHadoop(conf, curOutput, numCoresPerMachine * numMachines);
+                    if(Boolean.parseBoolean(conf.get(GenomixJobConf.GAGE)) == true){
+                        DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
+                    }
+                    curOutput = prevOutput;
+                }
                 break;
             case CHECK_SYMMETRY:
                 queuePregelixJob(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
@@ -226,7 +237,20 @@ public class GenomixDriver {
         }
         pregelixJobs.clear();
     }
+    
+    private void dumpGraphWithHadoop(GenomixJobConf conf, String outputPath, int numReducers) throws Exception{
+        LOG.info("Building dump Graph using Hadoop...");
+        
+        manager.startCluster(ClusterType.HADOOP);
+        GenomixJobConf.tick("dumpGraphWithHadoop");
 
+        ConvertToFasta.run(outputPath, numReducers, conf);
+        System.out.println("Finished dumping Graph");
+
+        manager.stopCluster(ClusterType.HADOOP);
+        LOG.info("Dumping the graph took " + GenomixJobConf.tock("dumpGraphWithHadoop") + "ms");
+    }
+    
     private void initGenomix(GenomixJobConf conf) throws Exception {
         GenomixJobConf.setGlobalStaticConstants(conf);
         DriverUtils.updateCCProperties(conf);

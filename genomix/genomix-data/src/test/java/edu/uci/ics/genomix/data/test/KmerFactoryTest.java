@@ -22,7 +22,7 @@ import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.KmerFactory;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class KmerBytesWritableFactoryTest {
+public class KmerFactoryTest {
     static byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };
 
     KmerFactory kmerFactory = new KmerFactory(8);

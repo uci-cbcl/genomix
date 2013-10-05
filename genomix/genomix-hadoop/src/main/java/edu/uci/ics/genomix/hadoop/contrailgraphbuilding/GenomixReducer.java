@@ -43,8 +43,8 @@ public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node
             for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                 outputNode.getEdgeList(e).unionUpdate(tmpNode.getEdgeList(e));
             }
-            outputNode.getStartReads().unionUpdate(tmpNode.getStartReads());
-            outputNode.getEndReads().unionUpdate(tmpNode.getEndReads());
+            outputNode.getStartReads().addAll(tmpNode.getStartReads());
+            outputNode.getEndReads().addAll(tmpNode.getEndReads());
             averageCoverage += tmpNode.getAvgCoverage();
         }
         outputNode.setAvgCoverage(averageCoverage);

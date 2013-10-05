@@ -22,7 +22,7 @@ import org.junit.Test;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.Kmer;
 
-public class KmerBytesWritableTest {
+public class KmerTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
     static int k = 7;
 

@@ -81,7 +81,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
         return new IKeyValueParser<LongWritable, Text>() {
 
-            private ReadHeadInfo positionId = new ReadHeadInfo();
+            private ReadHeadInfo positionId = new ReadHeadInfo(0);
             private ReadIdSet readIdList = new ReadIdSet();
             private Node curNode = new Node();
             private Node nextNode = new Node();
@@ -194,9 +194,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
                 setThisReadId(mateId, readID, 0);
                 if (curKmerDir == KmerDir.FORWARD)
-                    curNode.getStartReads().append(positionId);
+                    curNode.getStartReads().add(positionId);
                 else
-                    curNode.getEndReads().append(positionId);
+                    curNode.getEndReads().add(positionId);
                 setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readIdList);
 
                 writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);

@@ -79,7 +79,7 @@ public class DriverUtils {
             if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
                 conf.set(GenomixJobConf.IP_ADDRESS, GenomixClusterManager.LOCAL_IP);
             }
-            if (Integer.parseInt(conf.get(GenomixJobConf.PORT)) == -1) {
+            if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
                 conf.setInt(GenomixJobConf.PORT, GenomixClusterManager.LOCAL_HYRACKS_CC_PORT);
             }
         } else {
@@ -119,6 +119,7 @@ public class DriverUtils {
         for (FileStatus f : files) {
             if (f.getLen() != 0) {
                 try {
+                    
                     reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
                     key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                     value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
