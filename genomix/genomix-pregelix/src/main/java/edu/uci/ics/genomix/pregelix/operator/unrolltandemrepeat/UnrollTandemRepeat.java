@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
@@ -19,7 +19,7 @@ import edu.uci.ics.genomix.type.VKmer;
  * Graph clean pattern: Unroll TandemRepeat
  * 
  */
-public class UnrollTandemRepeat extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
     /**
      * initiate kmerSize, length

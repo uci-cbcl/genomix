@@ -29,11 +29,11 @@ import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 
-public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
+public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmer, V, NullWritable, M> {
 
     //logger
-    public Logger LOG = Logger.getLogger(BasicGraphCleanVertex.class.getName());
+    public Logger LOG = Logger.getLogger(DeBruijnGraphCleanVertex.class.getName());
 
     public static int kmerSize = -1;
     public static int maxIteration = -1;
@@ -154,7 +154,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
 
     //2013.9.21 ------------------------------------------------------------------//
     public static PregelixJob getConfiguredJob(GenomixJobConf conf,
-            Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
+            Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
             throws IOException {
         // the following class weirdness is because java won't let me get the runtime class in a static context :(
         PregelixJob job;

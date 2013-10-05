@@ -17,7 +17,7 @@ import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -56,7 +56,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
         else if(getSuperstep() == 2)
-            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+            StatisticsAggregator.preGlobalCounters = DeBruijnGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         if (getSuperstep() == 1)
             ScaffoldingAggregator.preScaffoldingMap.clear();
         else if (getSuperstep() == 2)
@@ -368,9 +368,9 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     }
 
     public static PregelixJob getConfiguredJob(GenomixJobConf conf,
-            Class<? extends BasicGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
+            Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
             throws IOException {
-        PregelixJob job = BasicGraphCleanVertex.getConfiguredJob(conf, vertexClass);
+        PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
         job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
         return job;
     }

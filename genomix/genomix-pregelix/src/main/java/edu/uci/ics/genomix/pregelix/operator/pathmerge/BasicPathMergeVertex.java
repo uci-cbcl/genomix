@@ -11,7 +11,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.DIR;
@@ -24,7 +24,7 @@ import edu.uci.ics.genomix.type.VKmer;
  * 
  */
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
-        BasicGraphCleanVertex<V, M> {
+        DeBruijnGraphCleanVertex<V, M> {
 
     private static final Logger LOG = Logger.getLogger(BasicPathMergeVertex.class.getName());
 

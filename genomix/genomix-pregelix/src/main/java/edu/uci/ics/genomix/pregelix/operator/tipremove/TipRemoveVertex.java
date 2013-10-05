@@ -7,7 +7,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeMap;
@@ -23,7 +23,7 @@ import edu.uci.ics.genomix.type.Node.DIR;
  * by recompressing the graph.
  * 
  */
-public class TipRemoveVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
     private static final Logger LOG = Logger.getLogger(TipRemoveVertex.class.getName());
 

@@ -11,13 +11,13 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class BFSTraverseVertex extends BasicGraphCleanVertex<ScaffoldingVertexValueWritable, BFSTraverseMessage> {
+public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, BFSTraverseMessage> {
 
     public enum READHEAD_TYPE {
         UNFLIPPED,

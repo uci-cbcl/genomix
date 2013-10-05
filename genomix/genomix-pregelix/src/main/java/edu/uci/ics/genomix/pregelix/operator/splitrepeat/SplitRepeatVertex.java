@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessage;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeMap;
@@ -30,7 +30,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * reads. It is very experimental, with marginal improvements to the graph
  * 
  */
-public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessage> {
+public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, SplitRepeatMessage> {
 
     public static final int NUM_LETTERS_TO_APPEND = 3;
     private static long randSeed = 1; //static for save memory
