@@ -24,7 +24,8 @@ public class GraphBuildingTestSuite extends TestSuite {
     private static int LINES_PERMAP = 4 * 100000;
     public static final String PreFix = "data/webmap/PathMerge_TestSet";
     public static final String[] TestDir = { PreFix + File.separator
-                + "4"}; //, PreFix + File.separator
+    	+ "4"};
+//                + "2", PreFix + File.separator
 //                + "3", PreFix + File.separator
 //                + "4", PreFix + File.separator
 //                + "5", PreFix + File.separator

@@ -43,7 +43,7 @@ public class SimpleEntry<K,V>
         this.key   = entry.getKey();
         this.value = entry.getValue();
     }
-
+    
     /**
      * Returns the key corresponding to this entry.
      *

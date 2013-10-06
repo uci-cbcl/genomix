@@ -131,8 +131,8 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values()) {
             for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
-                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"black\" label =\"" + et + ": "
-                        + e.getValue() + "\"]\n";
+                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + 
+                		getColor(et) + "\" label =\"" + et + ": " + e.getValue() + "\"]\n";
             }
         }
         //TODO should output actualKmer instead of kmer
@@ -140,8 +140,19 @@ public class GenerateGraphViz {
             outputEdge += outputNode;
         return outputEdge;
     }
-
-    public static void main(String[] args) throws Exception {
-        GenerateGraphViz.convertGraphCleanOutputToGraphViz("data/actual/bubbleadd/BubbleAddGraph/bin/5", "graphtest");
+    
+    public static String getColor(EDGETYPE et){
+    	switch(et){
+	    	case FF:
+	    		return "black";
+	    	case FR:
+	    		return "blue";
+	    	case RF:
+	    		return "green";
+	    	case RR:
+	    		return "red";
+    		default:
+    			throw new IllegalStateException("Invalid input Edge Type!!!");
+    	}
     }
 }

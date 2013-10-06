@@ -36,11 +36,32 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 	public enum KMERTYPE{
 		PREVIOUS,
 		CURRENT,
-		NEXT;
+		NEXT,
+	}
+	
+	public enum MEMORY{
+		BLOCK1,
+		BLOCK2,
+		BLOCK3;
+		
+		public static MEMORY getFreeBlock(int i){
+			switch(i % 3){
+				case 1:
+					return MEMORY.BLOCK1;
+				case 2:
+					return MEMORY.BLOCK2;
+				case 3:
+					return MEMORY.BLOCK3;
+				default:
+					throw new IllegalStateException("Programmer error!!!");
+			}
+		}
 	}
 	
     public static int KMER_SIZE;
     
+    private VKmer preForwardKmer;
+    private VKmer preReverseKmer;
     private VKmer curForwardKmer;
     private VKmer curReverseKmer;
     private VKmer nextForwardKmer;
@@ -65,6 +86,8 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get(GenomixJobConf.KMER_LENGTH));
         Kmer.setGlobalKmerLength(KMER_SIZE);
+        preForwardKmer = new VKmer();
+        preReverseKmer = new VKmer();
         curForwardKmer = new VKmer();
         curReverseKmer = new VKmer();
         nextForwardKmer = new VKmer();
@@ -139,8 +162,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             }
             /** first kmer **/
             outputNode.reset();
-            curKmerAndDir = getKmerAndDir(array, 0, KMERTYPE.CURRENT);
-            nextKmerAndDir = getKmerAndDir(array, 1, KMERTYPE.NEXT);
+            curKmerAndDir = getKmerAndDir(array, 0, MEMORY.BLOCK2);
+            
+            nextKmerAndDir = getKmerAndDir(array, 1, MEMORY.BLOCK3);
             //set node.EdgeMap in meToNext dir
             setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, KMERTYPE.NEXT);
             //set value.ReadHeadInfo because this is the first kmer in read
@@ -156,7 +180,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 preKmerAndDir = curKmerAndDir; //old curKmer becomes current preKmer
                 curKmerAndDir = nextKmerAndDir; //old nextKmer becomes current curKmer
                 
-                nextKmerAndDir = getKmerAndDir(array, i - KMER_SIZE + 1, KMERTYPE.NEXT);
+                nextKmerAndDir = getKmerAndDir(array, i - KMER_SIZE + 1, MEMORY.getFreeBlock(i - KMER_SIZE));
                 //set node.EdgeMap in meToPrev and meToNext dir
                 setEdgeMap(readID, curKmerAndDir, preKmerAndDir, KMERTYPE.PREVIOUS);
                 setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, KMERTYPE.NEXT);
@@ -179,20 +203,24 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         }
     }
 	
-	public SimpleEntry<VKmer, DIR> getKmerAndDir(byte[] array, int startIdx, KMERTYPE kmerType){
+	public SimpleEntry<VKmer, DIR> getKmerAndDir(byte[] array, int startIdx, MEMORY block){
 		VKmer forwardKmer;
 		VKmer reverseKmer;
-        switch(kmerType){
-	    	case CURRENT:
+        switch(block){
+	    	case BLOCK1:
+	    		forwardKmer = preForwardKmer;
+	    		reverseKmer = preReverseKmer;
+	    		break;
+	    	case BLOCK2:
 	    		forwardKmer = curForwardKmer;
 	    		reverseKmer = curReverseKmer;
 	    		break;
-	    	case NEXT:
+	    	case BLOCK3:
 	    		forwardKmer = nextForwardKmer;
 	    		reverseKmer = nextReverseKmer;
 	    		break;
 			default:
-				throw new IllegalStateException("In setKmerAndDir, kmer type can only be CURRENT or NEXT!");
+				throw new IllegalStateException("In setKmerAndDir, kmer type can only be TEMP or CURRENT or NEXT!");
         }
         forwardKmer.setFromStringBytes(KMER_SIZE, array, startIdx);
         reverseKmer.setReversedFromStringBytes(KMER_SIZE, array, startIdx);
@@ -216,7 +244,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         		et = EDGETYPE.getEdgeTypeFromDirToDir(me.getValue(), neighbor.getValue());
         		break;
         	case PREVIOUS:
-        		et = EDGETYPE.getEdgeTypeFromDirToDir(neighbor.getValue(), me.getValue());
+        		et = EDGETYPE.getEdgeTypeFromDirToDir(neighbor.getValue(), me.getValue()).mirror();
         		break;
     		default:
     			throw new IllegalStateException("Invalid input kmer type!");
