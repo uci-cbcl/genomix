@@ -1,13 +1,12 @@
-package edu.uci.ics.genomix.pregelix.io.common;
+package edu.uci.ics.genomix.type;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.io.Writable;
 
-public class EntryWritable<K extends Writable, V extends Writable> 
+public class Entry<K extends Writable, V extends Writable> 
     extends SimpleEntry<K, V> implements Writable{
 
     /**
@@ -15,11 +14,11 @@ public class EntryWritable<K extends Writable, V extends Writable>
      */
     private static final long serialVersionUID = 1L;
 
-    public EntryWritable(K key, V value){
+    public Entry(K key, V value){
         super(key, value);
     }
     
-    public EntryWritable(Entry<? extends K, ? extends V> entry) {
+    public Entry(Entry<? extends K, ? extends V> entry) {
         super(entry);
     }
     

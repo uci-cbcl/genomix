@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.io.common;
+package edu.uci.ics.genomix.type;
 
 import java.util.Map;
 import java.util.Map.Entry;
