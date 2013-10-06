@@ -53,7 +53,7 @@ public class PathMergeMessage extends MessageWritable {
     }
 
     public EdgeMap getEdgeList(EDGETYPE edgeType) {
-        return node.getEdgeList(edgeType);
+        return node.getEdgeMap(edgeType);
     }
 
     public Entry<VKmer, ReadIdSet> getNeighborEdge() {
@@ -66,7 +66,7 @@ public class PathMergeMessage extends MessageWritable {
     }
 
     public void setEdgeList(EDGETYPE edgeType, EdgeMap edgeList) {
-        this.node.setEdgeList(edgeType, edgeList);
+        this.node.setEdgeMap(edgeType, edgeList);
     }
 
     public ReadHeadSet getStartReads() {

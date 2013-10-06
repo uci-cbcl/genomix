@@ -53,14 +53,14 @@ public class EdgeMapTest {
         for (long i = numelements * 2 / 3; i < numelements; i++) {
             plist3.add(i);
         }
-        n1.getEdgeList(EDGETYPE.RF).put(k2, plist1);
-        Assert.assertEquals(numelements / 3, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
-        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeMap(Arrays.asList(new SimpleEntry<VKmer, ReadIdSet>(k2, plist2))));
-        Assert.assertEquals(numelements * 2 / 3 + numoverlap, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
-        n1.getEdgeList(EDGETYPE.RF).unionUpdate(new EdgeMap(Arrays.asList(new SimpleEntry<VKmer, ReadIdSet>(k2, plist3))));
-        Assert.assertEquals(numelements, n1.getEdgeList(EDGETYPE.RF).get(k2).size());
+        n1.getEdgeMap(EDGETYPE.RF).put(k2, plist1);
+        Assert.assertEquals(numelements / 3, n1.getEdgeMap(EDGETYPE.RF).get(k2).size());
+        n1.getEdgeMap(EDGETYPE.RF).unionUpdate(new EdgeMap(Arrays.asList(new SimpleEntry<VKmer, ReadIdSet>(k2, plist2))));
+        Assert.assertEquals(numelements * 2 / 3 + numoverlap, n1.getEdgeMap(EDGETYPE.RF).get(k2).size());
+        n1.getEdgeMap(EDGETYPE.RF).unionUpdate(new EdgeMap(Arrays.asList(new SimpleEntry<VKmer, ReadIdSet>(k2, plist3))));
+        Assert.assertEquals(numelements, n1.getEdgeMap(EDGETYPE.RF).get(k2).size());
 
-        Long[] allReadIDs = n1.getEdgeList(EDGETYPE.RF).get(k2).toArray(new Long[0]);
+        Long[] allReadIDs = n1.getEdgeMap(EDGETYPE.RF).get(k2).toArray(new Long[0]);
         // make sure all readids are accounted for...
         for (long i = 0; i < numelements; i++) {
             boolean found = false;

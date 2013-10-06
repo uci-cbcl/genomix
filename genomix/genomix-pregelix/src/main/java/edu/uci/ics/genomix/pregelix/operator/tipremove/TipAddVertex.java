@@ -52,7 +52,7 @@ public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritabl
         /**
          * set the vertex value
          */
-        vertexValue.setEdgeList(dir, edgeList);
+        vertexValue.setEdgeMap(dir, edgeList);
         vertex.setVertexValue(vertexValue);
 
         addVertex(insertedTip, vertex);
@@ -65,7 +65,7 @@ public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritabl
     }
 
     public void addEdgeToInsertedTip(EDGETYPE dir, VKmer insertedTip) {
-        getVertexValue().getEdgeList(dir).put(insertedTip, new ReadIdSet(Arrays.asList(new Long(0))));
+        getVertexValue().getEdgeMap(dir).put(insertedTip, new ReadIdSet(Arrays.asList(new Long(0))));
     }
 
     /**

@@ -46,14 +46,14 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
      */
     public boolean repeatCanBeMerged() {
         tmpValue.setAsCopy(getVertexValue());
-        tmpValue.getEdgeList(repeatEdgetype).remove(repeatKmer);
+        tmpValue.getEdgeMap(repeatEdgetype).remove(repeatKmer);
         boolean hasFlip = false;
         // pick one edge and flip 
         for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
-            for (Entry<VKmer, ReadIdSet> edge : tmpValue.getEdgeList(et).entrySet()) {
+            for (Entry<VKmer, ReadIdSet> edge : tmpValue.getEdgeMap(et).entrySet()) {
                 EDGETYPE flipDir = et.flipNeighbor();
-                tmpValue.getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
-                tmpValue.getEdgeList(et).remove(edge);
+                tmpValue.getEdgeMap(flipDir).put(edge.getKey(), edge.getValue());
+                tmpValue.getEdgeMap(et).remove(edge);
                 // setup hasFlip to go out of the loop 
                 hasFlip = true;
                 break;
@@ -74,14 +74,14 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
      */
     public void mergeTandemRepeat() {
         getVertexValue().getInternalKmer().mergeWithKmerInDir(repeatEdgetype, kmerSize, getVertexId());
-        getVertexValue().getEdgeList(repeatEdgetype).remove(getVertexId());
+        getVertexValue().getEdgeMap(repeatEdgetype).remove(getVertexId());
         boolean hasFlip = false;
         /** pick one edge and flip **/
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (Entry<VKmer, ReadIdSet> edge : getVertexValue().getEdgeList(et).entrySet()) {
+            for (Entry<VKmer, ReadIdSet> edge : getVertexValue().getEdgeMap(et).entrySet()) {
                 EDGETYPE flipDir = et.flipNeighbor();
-                getVertexValue().getEdgeList(flipDir).put(edge.getKey(), edge.getValue());
-                getVertexValue().getEdgeList(et).remove(edge);
+                getVertexValue().getEdgeMap(flipDir).put(edge.getKey(), edge.getValue());
+                getVertexValue().getEdgeMap(et).remove(edge);
                 /** send flip message to node for updating edgeDir **/
                 outgoingMsg.setFlag(flipDir.get());
                 outgoingMsg.setSourceVertexId(getVertexId());
@@ -103,9 +103,9 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         EDGETYPE flipDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE prevNeighborToMe = flipDir.mirror();
         EDGETYPE curNeighborToMe = flipDir.mirror(); //mirrorDirection((byte)(incomingMsg.getFlag() & MessageFlag.DEAD_MASK));
-        vertex.getEdgeList(curNeighborToMe).put(incomingMsg.getSourceVertexId(),
-                vertex.getEdgeList(prevNeighborToMe).get(incomingMsg.getSourceVertexId()));
-        vertex.getEdgeList(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
+        vertex.getEdgeMap(curNeighborToMe).put(incomingMsg.getSourceVertexId(),
+                vertex.getEdgeMap(prevNeighborToMe).get(incomingMsg.getSourceVertexId()));
+        vertex.getEdgeMap(prevNeighborToMe).remove(incomingMsg.getSourceVertexId());
     }
 
     @Override

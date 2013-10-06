@@ -62,35 +62,35 @@ public class VertexValueWritable extends Node {
     }
 
     public EdgeMap getFFList() {
-        return getEdgeList(EDGETYPE.FF);
+        return getEdgeMap(EDGETYPE.FF);
     }
 
     public EdgeMap getFRList() {
-        return getEdgeList(EDGETYPE.FR);
+        return getEdgeMap(EDGETYPE.FR);
     }
 
     public EdgeMap getRFList() {
-        return getEdgeList(EDGETYPE.RF);
+        return getEdgeMap(EDGETYPE.RF);
     }
 
     public EdgeMap getRRList() {
-        return getEdgeList(EDGETYPE.RR);
+        return getEdgeMap(EDGETYPE.RR);
     }
 
     public void setFFList(EdgeMap forwardForwardList) {
-        setEdgeList(EDGETYPE.FF, forwardForwardList);
+        setEdgeMap(EDGETYPE.FF, forwardForwardList);
     }
 
     public void setFRList(EdgeMap forwardReverseList) {
-        setEdgeList(EDGETYPE.FR, forwardReverseList);
+        setEdgeMap(EDGETYPE.FR, forwardReverseList);
     }
 
     public void setRFList(EdgeMap reverseForwardList) {
-        setEdgeList(EDGETYPE.RF, reverseForwardList);
+        setEdgeMap(EDGETYPE.RF, reverseForwardList);
     }
 
     public void setRRList(EdgeMap reverseReverseList) {
-        setEdgeList(EDGETYPE.RR, reverseReverseList);
+        setEdgeMap(EDGETYPE.RR, reverseReverseList);
     }
 
     public short getState() {
@@ -172,7 +172,7 @@ public class VertexValueWritable extends Node {
      * Delete the corresponding edge
      */
     public void processDelete(EDGETYPE neighborToDeleteEdgetype, VKmer keyToDelete) {
-        ReadIdSet prevList = this.getEdgeList(neighborToDeleteEdgetype).remove(keyToDelete);
+        ReadIdSet prevList = this.getEdgeMap(neighborToDeleteEdgetype).remove(keyToDelete);
         if (prevList == null) {
             throw new IllegalArgumentException("processDelete tried to remove an edge that didn't exist: "
                     + keyToDelete + " but I am " + this);

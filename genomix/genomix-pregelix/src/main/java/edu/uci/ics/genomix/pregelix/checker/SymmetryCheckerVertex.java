@@ -41,7 +41,7 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
                 MessageWritable incomingMsg = msgIterator.next();
                 EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
                 EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
-                boolean exist = getVertexValue().getEdgeList(neighborToMeDir).containsKey(
+                boolean exist = getVertexValue().getEdgeMap(neighborToMeDir).containsKey(
                         incomingMsg.getSourceVertexId());
                 if (!exist) {
                     getVertexValue().setState(State.IS_ERROR);

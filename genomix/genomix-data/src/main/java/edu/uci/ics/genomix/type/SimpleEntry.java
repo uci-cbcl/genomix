@@ -20,7 +20,7 @@ public class SimpleEntry<K,V>
 
     private K key;
     private V value;
-
+    
     /**
      * Creates an entry representing a mapping from the specified
      * key to the specified value.

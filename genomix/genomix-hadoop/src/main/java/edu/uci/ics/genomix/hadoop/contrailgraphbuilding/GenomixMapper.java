@@ -18,6 +18,7 @@ import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.SimpleEntry;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadHeadSet;
@@ -29,26 +30,32 @@ import edu.uci.ics.genomix.type.Node.EDGETYPE;
  * 
  * @author anbangx
  */
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation"}) 
 public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable, Text, VKmer, Node> {
 
+	public enum KMERTYPE{
+		PREVIOUS,
+		CURRENT,
+		NEXT;
+	}
+	
     public static int KMER_SIZE;
-    private VKmer preForwardKmer;
-    private VKmer preReverseKmer;
+    
     private VKmer curForwardKmer;
     private VKmer curReverseKmer;
     private VKmer nextForwardKmer;
     private VKmer nextReverseKmer;
+    private SimpleEntry<VKmer, DIR> preKmerAndDir;
+    private SimpleEntry<VKmer, DIR> curKmerAndDir;
+    private SimpleEntry<VKmer, DIR> nextKmerAndDir;
+    
+    private ReadIdSet readIdSet;
+    private EdgeMap edgeMap;
+    
     private ReadHeadInfo readHeadInfo;
     private ReadHeadSet readHeadSet;
-    private ReadIdSet readIdSet;
-    private EdgeMap edgeMapForPreKmer;
-    private EdgeMap edgeMapForNextKmer;
+    
     private Node outputNode;
-
-    private DIR preKmerDir;
-    private DIR curKmerDir;
-    private DIR nextKmerDir;
 
     byte mateId = (byte) 0;
     boolean fastqFormat = false;
@@ -58,8 +65,6 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get(GenomixJobConf.KMER_LENGTH));
         Kmer.setGlobalKmerLength(KMER_SIZE);
-        preForwardKmer = new VKmer();
-        preReverseKmer = new VKmer();
         curForwardKmer = new VKmer();
         curReverseKmer = new VKmer();
         nextForwardKmer = new VKmer();
@@ -67,14 +72,10 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         readHeadInfo = new ReadHeadInfo(0);
         readHeadSet = new ReadHeadSet();
         readIdSet = new ReadIdSet();
-        edgeMapForPreKmer = new EdgeMap();
-        edgeMapForNextKmer = new EdgeMap();
+        edgeMap = new EdgeMap();
         outputNode = new Node();
-        preKmerDir = DIR.FORWARD;
-        curKmerDir = DIR.FORWARD;
-        nextKmerDir = DIR.FORWARD;
         lineCount = 0;
-
+        
         // paired-end reads should be named something like dsm3757.01-31-2011.ln6_1.fastq
         // when we have a proper driver, we will set a config field instead of reading in the filename
         String filename = job.get("map.input.file");
@@ -105,7 +106,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         }
     }
 
-    @Override
+	@Override
     public void map(LongWritable key, Text value, OutputCollector<VKmer, Node> output, Reporter reporter)
             throws IOException {
         lineCount++;
@@ -138,171 +139,100 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             }
             /** first kmer **/
             outputNode.reset();
-            curForwardKmer.setFromStringBytes(KMER_SIZE, array, 0);
-            curReverseKmer.setReversedFromStringBytes(KMER_SIZE, array, 0);
-            curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
-            setNextKmer(array[KMER_SIZE]);
-            //set nodeId
-            setNodeId(mateId, readID, 0);
-            //set value.edgeList and value.threads/readId
-            setEdgeListForNextKmer();
+            curKmerAndDir = getKmerAndDir(array, 0, KMERTYPE.CURRENT);
+            nextKmerAndDir = getKmerAndDir(array, 1, KMERTYPE.NEXT);
+            //set node.EdgeMap in meToNext dir
+            setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, KMERTYPE.NEXT);
+            //set value.ReadHeadInfo because this is the first kmer in read
+            setReadHeadInfo(mateId, readID);
             //set value.coverage = 1
             outputNode.setAvgCoverage(1);
-            //set value.startReads because this is the first kmer in read
-            if (curKmerDir == DIR.FORWARD)
-                outputNode.setStartReads(readHeadSet);
-            else
-                outputNode.setEndReads(readHeadSet);
             //output mapper result
-            setMapperOutput(output);
+            output.collect(curKmerAndDir.getKey(), outputNode);
 
             /** middle kmer **/
             for (int i = KMER_SIZE + 1; i < array.length; i++) {
                 outputNode.reset();
-                setPreKmerByOldCurKmer();
-                setCurKmerByOldNextKmer();
-                setNextKmer(array[i]);
-                //set nodeId
-                setNodeId(mateId, readID, i - KMER_SIZE + 1);
-                //set value.edgeList and value.threads/readId
-                setEdgeListForPreKmer();
-                setEdgeListForNextKmer();
+                preKmerAndDir = curKmerAndDir; //old curKmer becomes current preKmer
+                curKmerAndDir = nextKmerAndDir; //old nextKmer becomes current curKmer
+                
+                nextKmerAndDir = getKmerAndDir(array, i - KMER_SIZE + 1, KMERTYPE.NEXT);
+                //set node.EdgeMap in meToPrev and meToNext dir
+                setEdgeMap(readID, curKmerAndDir, preKmerAndDir, KMERTYPE.PREVIOUS);
+                setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, KMERTYPE.NEXT);
                 //set coverage = 1
                 outputNode.setAvgCoverage(1);
                 //output mapper result
-                setMapperOutput(output);
+                output.collect(curKmerAndDir.getKey(), outputNode);
             }
 
             /** last kmer **/
             outputNode.reset();
-            setPreKmerByOldCurKmer();
-            setCurKmerByOldNextKmer();
-            //set nodeId
-            setNodeId(mateId, readID, array.length - KMER_SIZE + 1);
-            //set value.edgeList and value.threads/readId
-            setEdgeListForPreKmer();
+            preKmerAndDir = curKmerAndDir; //old curKmer becomes current preKmer
+            curKmerAndDir = nextKmerAndDir; //old nextKmer becomes current curKmer
+            //set node.EdgeMap in meToPrev dir
+            setEdgeMap(readID, curKmerAndDir, preKmerAndDir, KMERTYPE.PREVIOUS);
             //set coverage = 1
             outputNode.setAvgCoverage(1);
             //output mapper result
-            setMapperOutput(output);
+            output.collect(curKmerAndDir.getKey(), outputNode);
         }
     }
-
-    public void setNodeId(byte mateId, long readId, int posId) {
-        readHeadInfo.set(mateId, readId, posId);
+	
+	public SimpleEntry<VKmer, DIR> getKmerAndDir(byte[] array, int startIdx, KMERTYPE kmerType){
+		VKmer forwardKmer;
+		VKmer reverseKmer;
+        switch(kmerType){
+	    	case CURRENT:
+	    		forwardKmer = curForwardKmer;
+	    		reverseKmer = curReverseKmer;
+	    		break;
+	    	case NEXT:
+	    		forwardKmer = nextForwardKmer;
+	    		reverseKmer = nextReverseKmer;
+	    		break;
+			default:
+				throw new IllegalStateException("In setKmerAndDir, kmer type can only be CURRENT or NEXT!");
+        }
+        forwardKmer.setFromStringBytes(KMER_SIZE, array, startIdx);
+        reverseKmer.setReversedFromStringBytes(KMER_SIZE, array, startIdx);
+        boolean forwardIsSmaller = forwardKmer.compareTo(reverseKmer) <= 0;
+        
+        return new SimpleEntry<VKmer, DIR>(forwardIsSmaller ? forwardKmer : reverseKmer,
+        				forwardIsSmaller ? DIR.FORWARD : DIR.REVERSE);
+    }
+	
+	public void setEdgeMap(long readID, SimpleEntry<VKmer, DIR> me, 
+    		SimpleEntry<VKmer, DIR> neighbor, KMERTYPE kmerType) {
+        //set readId
+        readIdSet.clear();
+        readIdSet.add(readID);
+        edgeMap.clear();
+        edgeMap.put(neighbor.getKey(), readIdSet);
+        
+        EDGETYPE et = null;
+        switch(kmerType){
+        	case NEXT:
+        		et = EDGETYPE.getEdgeTypeFromDirToDir(me.getValue(), neighbor.getValue());
+        		break;
+        	case PREVIOUS:
+        		et = EDGETYPE.getEdgeTypeFromDirToDir(neighbor.getValue(), me.getValue());
+        		break;
+    		default:
+    			throw new IllegalStateException("Invalid input kmer type!");
+        }
+        
+        outputNode.setEdgeMap(et, edgeMap);
+    }
+	
+	public void setReadHeadInfo(byte mateId, long readID){
+        readHeadInfo.set(mateId, readID, 0);
         readHeadSet.clear();
         readHeadSet.add(readHeadInfo);
-
-        readIdSet.clear();
-        readIdSet.add(readId);
-    }
-
-    public void setEdgeListForPreKmer() {
-        switch (curKmerDir) {
-            case FORWARD:
-                switch (preKmerDir) {
-                    case FORWARD:
-                        edgeMapForPreKmer.clear();
-                        edgeMapForPreKmer.put(preForwardKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.RR, edgeMapForPreKmer);
-                        break;
-                    case REVERSE:
-                        edgeMapForPreKmer.clear();
-                        edgeMapForPreKmer.put(preReverseKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.RF, edgeMapForPreKmer);
-                        break;
-                }
-                break;
-            case REVERSE:
-                switch (preKmerDir) {
-                    case FORWARD:
-                        edgeMapForPreKmer.clear();
-                        edgeMapForPreKmer.put(preForwardKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.FR, edgeMapForPreKmer);
-                        break;
-                    case REVERSE:
-                        edgeMapForPreKmer.clear();
-                        edgeMapForPreKmer.put(preReverseKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.FF, edgeMapForPreKmer);
-                        break;
-                }
-                break;
-        }
-    }
-
-    public void setEdgeListForNextKmer() {
-        switch (curKmerDir) {
-            case FORWARD:
-                switch (nextKmerDir) {
-                    case FORWARD:
-                    	edgeMapForNextKmer.clear();
-                    	edgeMapForNextKmer.put(nextForwardKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.FF, edgeMapForNextKmer);
-                        break;
-                    case REVERSE:
-                    	edgeMapForNextKmer.clear();
-                    	edgeMapForNextKmer.put(nextReverseKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.FR, edgeMapForNextKmer);
-                        break;
-                }
-                break;
-            case REVERSE:
-                switch (nextKmerDir) {
-                    case FORWARD:
-                    	edgeMapForNextKmer.clear();
-                    	edgeMapForNextKmer.put(nextForwardKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.RF, edgeMapForNextKmer);
-                        break;
-                    case REVERSE:
-                    	edgeMapForNextKmer.clear();
-                    	edgeMapForNextKmer.put(nextReverseKmer, readIdSet);
-                        outputNode.setEdgeList(EDGETYPE.RR, edgeMapForNextKmer);
-                        break;
-                }
-                break;
-        }
-    }
-
-    //set preKmer by shifting curKmer with preChar
-    public void setPreKmer(byte preChar) {
-        preForwardKmer.setAsCopy(curForwardKmer);
-        preForwardKmer.shiftKmerWithPreChar(preChar);
-        preReverseKmer.setReversedFromStringBytes(KMER_SIZE, preForwardKmer.toString().getBytes(),
-                preForwardKmer.getBlockOffset());
-        preKmerDir = preForwardKmer.compareTo(preReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
-    }
-
-    //set nextKmer by shifting curKmer with nextChar
-    public void setNextKmer(byte nextChar) {
-        nextForwardKmer.setAsCopy(curForwardKmer);
-        nextForwardKmer.shiftKmerWithNextChar(nextChar);
-        nextReverseKmer.setReversedFromStringBytes(KMER_SIZE, nextForwardKmer.toString().getBytes(),
-                nextForwardKmer.getBlockOffset());
-        nextKmerDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
-    }
-
-    //old curKmer becomes current preKmer
-    public void setPreKmerByOldCurKmer() {
-        preKmerDir = curKmerDir;
-        preForwardKmer.setAsCopy(curForwardKmer);
-        preReverseKmer.setAsCopy(curReverseKmer);
-    }
-
-    //old nextKmer becomes current curKmer
-    public void setCurKmerByOldNextKmer() {
-        curKmerDir = nextKmerDir;
-        curForwardKmer.setAsCopy(nextForwardKmer);
-        curReverseKmer.setAsCopy(nextReverseKmer);
-    }
-
-    public void setMapperOutput(OutputCollector<VKmer, Node> output) throws IOException {
-        switch (curKmerDir) {
-            case FORWARD:
-                output.collect(curForwardKmer, outputNode);
-                break;
-            case REVERSE:
-                output.collect(curReverseKmer, outputNode);
-                break;
-        }
-    }
+        if (curKmerAndDir.getValue() == DIR.FORWARD)
+            outputNode.setStartReads(readHeadSet);
+        else
+            outputNode.setEndReads(readHeadSet);
+	}
+	
 }

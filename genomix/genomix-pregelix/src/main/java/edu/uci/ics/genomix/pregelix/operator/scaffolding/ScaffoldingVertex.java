@@ -127,7 +127,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     public void sendMsgToNeighbors(ArrayListWritable<EDGETYPE> edgeTypeList, DIR direction){
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeList(et).keySet()) {
+            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
@@ -286,7 +286,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 if(i == pathAndEdgeTypeList.size() - 1){ // only update self
                     EDGETYPE prevToMe = edgeTypeList.get(i - 1);
                     VKmer preKmer = kmerList.getPosition(i - 1);
-                    vertex.getEdgeList(prevToMe.mirror()).get(preKmer).add(commonReadId.get());
+                    vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(commonReadId.get());
                 } else{
                 	pathList.reset();
                     // next (0-1)bit
@@ -336,12 +336,12 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                         "PathList should only have one(next) or two(prev and next) elements!");
             VKmer nextKmer = incomingMsg.getPathList().getPosition(0);
             EDGETYPE meToNext = EDGETYPE.fromByte(incomingMsg.getFlag());
-            vertex.getEdgeList(meToNext).get(nextKmer).add(commonReadId);
+            vertex.getEdgeMap(meToNext).get(nextKmer).add(commonReadId);
             
             if(incomingMsg.getPathList().size() == 2){
                 VKmer prevKmer = incomingMsg.getPathList().getPosition(1);
                 EDGETYPE meToPrev = EDGETYPE.fromByte((short)(incomingMsg.getFlag() >>> 2));
-                vertex.getEdgeList(meToPrev).get(prevKmer).add(commonReadId);
+                vertex.getEdgeMap(meToPrev).get(prevKmer).add(commonReadId);
             }
         }
     }

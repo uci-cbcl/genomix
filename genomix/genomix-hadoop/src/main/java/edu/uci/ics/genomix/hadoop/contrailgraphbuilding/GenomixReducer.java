@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.mapred.JobConf;
@@ -39,9 +38,9 @@ public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node
         averageCoverage = 0;
 
         while (values.hasNext()) {
-            tmpNode.setAsCopy(values.next());
-            for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                outputNode.getEdgeList(e).unionUpdate(tmpNode.getEdgeList(e));
+            tmpNode = values.next();
+            for (EDGETYPE e : EDGETYPE.values()) {
+                outputNode.getEdgeMap(e).unionUpdate(tmpNode.getEdgeMap(e));
             }
             outputNode.getStartReads().addAll(tmpNode.getStartReads());
             outputNode.getEndReads().addAll(tmpNode.getEndReads());

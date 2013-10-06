@@ -88,7 +88,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 //                }
 
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
+                    localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
                 localUniNode.getStartReads().addAll(readNode.getStartReads());
                 localUniNode.getEndReads().addAll(readNode.getEndReads());
@@ -127,7 +127,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
                 //                }
 
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
+                    localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
                 localUniNode.getStartReads().addAll(readNode.getStartReads());
                 localUniNode.getEndReads().addAll(readNode.getEndReads());

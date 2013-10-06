@@ -63,8 +63,8 @@ public class BridgeAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
         /**
          * set the vertex value
          */
-        vertexValue.setEdgeList(dirToUp, edgeListToUp);
-        vertexValue.setEdgeList(dirToDown, edgeListToDown);
+        vertexValue.setEdgeMap(dirToUp, edgeListToUp);
+        vertexValue.setEdgeMap(dirToDown, edgeListToDown);
         vertex.setVertexValue(vertexValue);
 
         addVertex(insertedBridge, vertex);
@@ -77,7 +77,7 @@ public class BridgeAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
     }
 
     public void addEdgeToInsertedBridge(EDGETYPE dir, VKmer insertedBridge) {
-        getVertexValue().getEdgeList(dir).put(insertedBridge, new ReadIdSet(Arrays.asList(new Long(0))));
+        getVertexValue().getEdgeMap(dir).put(insertedBridge, new ReadIdSet(Arrays.asList(new Long(0))));
     }
 
     @Override

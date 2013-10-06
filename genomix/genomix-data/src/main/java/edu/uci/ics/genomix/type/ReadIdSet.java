@@ -1,26 +1,16 @@
 package edu.uci.ics.genomix.type;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.file.tfile.ByteArray;
 
-import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadIdSet extends TreeSet<Long> implements Writable, Serializable {
