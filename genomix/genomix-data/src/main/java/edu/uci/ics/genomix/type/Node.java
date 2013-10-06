@@ -736,11 +736,11 @@ public class Node implements Writable, Serializable {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
         for (EDGETYPE e : EDGETYPE.values()) {
-            sbuilder.append(edges[e.get()].toString()).append('\t');
+            sbuilder.append(e + ":").append(edges[e.get()].toString()).append('\t');
         }
-        sbuilder.append("{5':" + startReads.toString() + ", ~5':" + endReads.toString() + "}").append('\t');
-        sbuilder.append(internalKmer.toString()).append('\t');
-        sbuilder.append(averageCoverage).append('x').append('}');
+        sbuilder.append("5':" + startReads.toString() + ", ~5':" + endReads.toString()).append('\t');
+        sbuilder.append("kmer:" + internalKmer.toString()).append('\t');
+        sbuilder.append("cov:" + averageCoverage).append('x').append('}');
         return sbuilder.toString();
     }
 
