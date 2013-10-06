@@ -24,33 +24,32 @@ public class GraphBuildingTestSuite extends TestSuite {
     private static int LINES_PERMAP = 4 * 100000;
     public static final String PreFix = "data/webmap/PathMerge_TestSet";
     public static final String[] TestDir = { PreFix + File.separator
-    	+ "4"};
-//                + "2", PreFix + File.separator
-//                + "3", PreFix + File.separator
-//                + "4", PreFix + File.separator
-//                + "5", PreFix + File.separator
-//                + "6", PreFix + File.separator
-//                + "7", PreFix + File.separator
-//                + "8", PreFix + File.separator
-//                + "9", PreFix + File.separator
-//                + "P2_3", PreFix + File.separator
-//                + "P2_4", PreFix + File.separator
-//                + "P2_5", PreFix + File.separator
-//                + "P2_6", PreFix + File.separator
-//                + "P2_7", PreFix + File.separator
-//                + "P2_8", PreFix + File.separator
-//                
-//                + "LeftAdj", PreFix + File.separator
-//                + "RightAdj", PreFix + File.separator
-//                
-//                + "SimplePath", PreFix + File.separator
-//                + "ThreeDuplicate", PreFix + File.separator 
-//                + "CyclePath", PreFix + File.separator
-//                + "RingPath", PreFix + File.separator
-//                + "SimpleBridgePath", PreFix + File.separator
-//                + "SimpleTreePath", PreFix + File.separator
-//                + "ComplexTreePath", PreFix + File.separator
-//                + "Rectangle", PreFix + File.separator
+                + "2", PreFix + File.separator
+                + "3", PreFix + File.separator
+                + "4", PreFix + File.separator
+                + "5", PreFix + File.separator
+                + "6", PreFix + File.separator
+                + "7", PreFix + File.separator
+                + "8", PreFix + File.separator
+                + "9", PreFix + File.separator
+                + "P2_3", PreFix + File.separator
+                + "P2_4", PreFix + File.separator
+                + "P2_5", PreFix + File.separator
+                + "P2_6", PreFix + File.separator
+                + "P2_7", PreFix + File.separator
+                + "P2_8", PreFix + File.separator
+                
+                + "LeftAdj", PreFix + File.separator
+                + "RightAdj", PreFix + File.separator
+                
+                + "SimplePath", PreFix + File.separator
+                + "ThreeDuplicate", PreFix + File.separator 
+                + "CyclePath", PreFix + File.separator
+                + "RingPath", PreFix + File.separator
+                + "SimpleBridgePath", PreFix + File.separator
+                + "SimpleTreePath", PreFix + File.separator
+                + "ComplexTreePath", PreFix + File.separator
+                + "Rectangle"}; //, PreFix + File.separator
 //                
 //                + "SelfTandemRepeat", PreFix + File.separator
 //                + "TandemRepeatWithMergeEdge", PreFix + File.separator 

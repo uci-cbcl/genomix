@@ -45,7 +45,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 		BLOCK3;
 		
 		public static MEMORY getFreeBlock(int i){
-			switch(i % 3){
+			switch(i % 3 + 1){
 				case 1:
 					return MEMORY.BLOCK1;
 				case 2:
@@ -60,6 +60,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 	
     public static int KMER_SIZE;
     
+    // three memory block
     private VKmer preForwardKmer;
     private VKmer preReverseKmer;
     private VKmer curForwardKmer;
@@ -180,7 +181,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 preKmerAndDir = curKmerAndDir; //old curKmer becomes current preKmer
                 curKmerAndDir = nextKmerAndDir; //old nextKmer becomes current curKmer
                 
-                nextKmerAndDir = getKmerAndDir(array, i - KMER_SIZE + 1, MEMORY.getFreeBlock(i - KMER_SIZE));
+                nextKmerAndDir = getKmerAndDir(array, i - KMER_SIZE + 1, MEMORY.getFreeBlock(i - KMER_SIZE - 1));
                 //set node.EdgeMap in meToPrev and meToNext dir
                 setEdgeMap(readID, curKmerAndDir, preKmerAndDir, KMERTYPE.PREVIOUS);
                 setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, KMERTYPE.NEXT);
@@ -220,7 +221,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 	    		reverseKmer = nextReverseKmer;
 	    		break;
 			default:
-				throw new IllegalStateException("In setKmerAndDir, kmer type can only be TEMP or CURRENT or NEXT!");
+				throw new IllegalStateException("In setKmerAndDir, the number of memory block is three!");
         }
         forwardKmer.setFromStringBytes(KMER_SIZE, array, startIdx);
         reverseKmer.setReversedFromStringBytes(KMER_SIZE, array, startIdx);
