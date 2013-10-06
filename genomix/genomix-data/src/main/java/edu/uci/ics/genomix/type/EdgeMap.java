@@ -139,6 +139,7 @@ public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Seri
             kmer.readFields(in);
             ReadIdSet ids = new ReadIdSet();
             ids.readFields(in);
+            put(kmer, ids);
         }
     }
 
