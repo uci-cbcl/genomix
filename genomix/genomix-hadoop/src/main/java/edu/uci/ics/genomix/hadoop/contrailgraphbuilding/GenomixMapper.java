@@ -155,7 +155,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             //set value.edgeList and value.threads/readId
             setEdgeListForNextKmer();
             //set value.coverage = 1
-            outputNode.setAvgCoverage(1);
+            outputNode.setAverageCoverage(1);
             //set value.startReads because this is the first kmer in read
             if (curKmerDir == KmerDir.FORWARD)
                 outputNode.setStartReads(nodeIdList);
@@ -176,7 +176,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 setEdgeListForPreKmer();
                 setEdgeListForNextKmer();
                 //set coverage = 1
-                outputNode.setAvgCoverage(1);
+                outputNode.setAverageCoverage(1);
                 //output mapper result
                 setMapperOutput(output);
             }
@@ -190,7 +190,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             //set value.edgeList and value.threads/readId
             setEdgeListForPreKmer();
             //set coverage = 1
-            outputNode.setAvgCoverage(1);
+            outputNode.setAverageCoverage(1);
             //output mapper result
             setMapperOutput(output);
         }

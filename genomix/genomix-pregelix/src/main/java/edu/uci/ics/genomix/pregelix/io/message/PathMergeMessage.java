@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.io.message;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.type.EdgeMap;
@@ -86,12 +85,12 @@ public class PathMergeMessage extends MessageWritable {
         this.node.setEndReads(endReads);
     }
 
-    public void setAvgCoverage(float coverage) {
-        this.node.setAvgCoverage(coverage);
+    public void setAverageCoverage(float coverage) {
+        this.node.setAverageCoverage(coverage);
     }
 
     public float getAvgCoverage() {
-        return this.node.getAvgCoverage();
+        return this.node.getAverageCoverage();
     }
 
     public boolean isFlip() {

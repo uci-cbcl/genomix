@@ -48,7 +48,7 @@ public class RemoveLowCoverageVertex extends BasicGraphCleanVertex<VertexValueWr
     }
 
     public void detectLowCoverageVertex() {
-        if (getVertexValue().getAvgCoverage() <= minAverageCoverage) {
+        if (getVertexValue().getAverageCoverage() <= minAverageCoverage) {
             //broadcase kill self
             broadcastKillself();
             deadNodeSet.add(new VKmer(getVertexId()));

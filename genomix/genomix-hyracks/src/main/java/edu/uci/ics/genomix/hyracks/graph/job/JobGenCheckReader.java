@@ -36,7 +36,8 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
-public class JobGenCheckReader extends JobGenBrujinGraph {
+//TODO move it to test-code
+public class JobGenCheckReader extends JobGenOldBrujinGraph {
 
     /**
      * 

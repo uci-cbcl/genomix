@@ -38,7 +38,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
      */
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOG = Logger.getLogger(MergeKmerAggregateFactory.class.getName());
+    private static final Logger LOG = Logger.getLogger(AggregateKmerAggregateFactory.class.getName());
 
     public AggregateKmerAggregateFactory(int k) {
     }

@@ -43,7 +43,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hadoop.graph.test.HadoopMiniClusterTest;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
-import edu.uci.ics.genomix.hyracks.graph.job.JobGenBrujinGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenOldBrujinGraph;
 import edu.uci.ics.genomix.hyracks.graph.test.TestSet.DirType;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 
@@ -156,8 +156,8 @@ public class ParameteredTestCaseForSet {
         conf.setInt(GenomixJobConf.KMER_LENGTH, this.KmerSize);
         FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH + File.separator + src.getName());
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH + File.separator + src.getName()));
-        conf.setInt(GenomixJobConf.FRAME_LIMIT, JobGenBrujinGraph.DEFAULT_FRAME_LIMIT);
-        conf.setInt(GenomixJobConf.FRAME_SIZE, JobGenBrujinGraph.DEFAULT_FRAME_SIZE);
+        conf.setInt(GenomixJobConf.FRAME_LIMIT, JobGenOldBrujinGraph.DEFAULT_FRAME_LIMIT);
+        conf.setInt(GenomixJobConf.FRAME_SIZE, JobGenOldBrujinGraph.DEFAULT_FRAME_SIZE);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUIJN_GRAPH, true);
         dumpResult();
         

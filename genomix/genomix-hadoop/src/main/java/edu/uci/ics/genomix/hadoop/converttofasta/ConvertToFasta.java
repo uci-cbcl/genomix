@@ -41,7 +41,7 @@ public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node,
     public void map(VKmer key, Node value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
 
         textKey.set(">node_" + key.toString() + "\t" + value.getInternalKmer().getKmerLetterLength() + "\t"
-                + value.getAvgCoverage() + "\n");
+                + value.getAverageCoverage() + "\n");
         textValue.set(value.getInternalKmer().toString());
         output.collect(textKey, textValue);
     }

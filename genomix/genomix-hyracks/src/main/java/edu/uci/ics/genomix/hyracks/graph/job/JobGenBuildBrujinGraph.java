@@ -30,11 +30,11 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
-public class JobGenUnMergedGraph extends JobGenBrujinGraph {
+public class JobGenBuildBrujinGraph extends JobGenOldBrujinGraph {
 
     private static final long serialVersionUID = 1L;
 
-    public JobGenUnMergedGraph(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
+    public JobGenBuildBrujinGraph(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job, scheduler, ncMap, numPartitionPerMachine);
     }
@@ -78,4 +78,5 @@ public class JobGenUnMergedGraph extends JobGenBrujinGraph {
         return jobSpec;
     }
 
+    
 }

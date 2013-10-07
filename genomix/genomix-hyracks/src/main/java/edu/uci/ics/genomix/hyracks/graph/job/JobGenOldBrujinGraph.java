@@ -60,23 +60,25 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 @SuppressWarnings("deprecation")
-public class JobGenBrujinGraph extends JobGen {
+public class JobGenOldBrujinGraph extends JobGen {
 
     private static final long serialVersionUID = 1L;
 
+    // TODO this is covered by genomix-driver.
     public enum GroupbyType {
         EXTERNAL,
         PRECLUSTER,
         HYBRIDHASH,
     }
 
+    // TODO remove this,
     public enum OutputFormat {
         TEXT,
         BINARY,
     }
 
     protected ConfFactory hadoopJobConfFactory;
-    private static final Logger LOG = Logger.getLogger(JobGenBrujinGraph.class.getName());
+    private static final Logger LOG = Logger.getLogger(JobGenOldBrujinGraph.class.getName());
     public static final int DEFAULT_FRAME_LIMIT = 4096;
     public static final int DEFAULT_FRAME_SIZE = 65535;
     protected String[] ncNodeNames;
@@ -93,7 +95,7 @@ public class JobGenBrujinGraph extends JobGen {
         LOG.fine(status + " nc nodes:" + ncNodeNames.length);
     }
 
-    public JobGenBrujinGraph(GenomixJobConf job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
+    public JobGenOldBrujinGraph(GenomixJobConf job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job);
         String[] nodes = new String[ncMap.size()];
@@ -153,14 +155,14 @@ public class JobGenBrujinGraph extends JobGen {
     }
 
     public AbstractOperatorDescriptor generateGroupbyKmerJob(JobSpecification jobSpec,
-            AbstractOperatorDescriptor readOperator) throws HyracksDataException {
+            AbstractOperatorDescriptor parserOperator) throws HyracksDataException {
         int[] keyFields = new int[] { 0 }; // the id of grouped key
 
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(jobSpec, frameLimits, keyFields,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
                 ReadsKeyValueParserFactory.readKmerOutputRec);
 
-        connectOperators(jobSpec, readOperator, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
+        connectOperators(jobSpec, parserOperator, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
                 jobSpec));
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });

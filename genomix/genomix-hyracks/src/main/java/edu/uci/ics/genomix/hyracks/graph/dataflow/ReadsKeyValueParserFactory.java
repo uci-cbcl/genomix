@@ -15,25 +15,19 @@
 
 package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
-import java.io.IOException;
+import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadHeadSet;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -49,20 +43,18 @@ import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOG = Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
+//    private static final Logger LOG = Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
 
     public static final int OutputKmerField = 0;
     public static final int OutputNodeField = 1;
 
-    private final int kmerSize;
-    public ConfFactory confFac;
-
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
             null });
 
+    //TODO remove conFac 
+    //TODO remove Kmer.getKmerLength()
     public ReadsKeyValueParserFactory(int k, ConfFactory conFac) {
-        this.kmerSize = k;
-        this.confFac = conFac;
+        Kmer.setGlobalKmerLength(k);
     }
 
     @Override
@@ -72,7 +64,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         final ByteBuffer outputBuffer = ctx.allocateFrame();
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());
         outputAppender.reset(outputBuffer, true);
-        Kmer.setGlobalKmerLength(kmerSize);
 
         return new IKeyValueParser<LongWritable, Text>() {
 
@@ -87,16 +78,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private Kmer nextReverseKmer = new Kmer();
 
             @Override
-            public void parse(LongWritable key, Text value, IFrameWriter writer, String fileString)
+            public void parse(LongWritable key, Text value, IFrameWriter writer, String filename)
                     throws HyracksDataException {
 
-                String basename = fileString.substring(fileString.lastIndexOf('\\') + 1);
-                String extension = basename.substring(basename.lastIndexOf('.'));
+                String basename = filename.substring(filename.lastIndexOf(File.separator) + 1);
+                String extension = basename.substring(basename.lastIndexOf('.') + 1);
 
                 byte mateId = basename.endsWith("_2" + extension) ? (byte) 1 : (byte) 0;
                 boolean fastqFormat = false;
                 if (extension.contains("fastq") || extension.contains("fq")) {
-                    //TODO
+                    //TODO make NLineInputFormat works on hyracks HDFS reader
                     //                    if (! (job.getInputFormat() instanceof NLineInputFormat)) {
                     //                        throw new IllegalStateException("Fastq files require the NLineInputFormat (was " + job.getInputFormat() + " ).");
                     //                    }
@@ -109,7 +100,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 long readID = 0;
                 String geneLine;
                 if (fastqFormat) {
-                    //FIXME : this is offset == readid only works on the only one input file
+                    //FIXME : this is offset == readid only works on the only one input file, one solution: put the filename into the part of the readid
                     readID = key.get(); //TODO check: this is actually the offset into the file... will it be the same across all files?? //
                     geneLine = value.toString().trim();
                 } else {
@@ -124,22 +115,22 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 Pattern genePattern = Pattern.compile("[AGCT]+");
                 Matcher geneMatcher = genePattern.matcher(geneLine);
                 if (geneMatcher.matches()) {
-                    setThisReadId(mateId, readID, 0);
+                    setReadInfo(mateId, readID, 0);
                     SplitReads(readID, geneLine.getBytes(), writer);
                 }
             }
 
-            private void SplitReads(long readID, byte[] array, IFrameWriter writer) {
+            private void SplitReads(long readID, byte[] readLetters, IFrameWriter writer) {
                 /*first kmer*/
-                if (kmerSize >= array.length) {
-                    throw new IllegalArgumentException("kmersize (k=" + kmerSize + ") is larger than the read length ("
-                            + array.length + ")");
+                if (Kmer.getKmerLength() >= readLetters.length) {
+                    throw new IllegalArgumentException("kmersize (k=" + Kmer.getKmerLength()
+                            + ") is larger than the read length (" + readLetters.length + ")");
                 }
 
                 curNode.reset();
                 curNode.setAverageCoverage(1);
-                curForwardKmer.setFromStringBytes(array, 0);
-                curReverseKmer.setReversedFromStringBytes(array, 0);
+                curForwardKmer.setFromStringBytes(readLetters, 0);
+                curReverseKmer.setReversedFromStringBytes(readLetters, 0);
 
                 Node.DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? Node.DIR.FORWARD
                         : Node.DIR.REVERSE;
@@ -154,11 +145,11 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
                 /*middle kmer*/
                 nextForwardKmer.setAsCopy(curForwardKmer);
-                for (int i = kmerSize; i < array.length; i++) {
+                for (int i = Kmer.getKmerLength(); i < readLetters.length; i++) {
                     nextNode.reset();
                     nextNode.setAverageCoverage(1);
-                    nextForwardKmer.shiftKmerWithNextChar(array[i]);
-                    nextReverseKmer.setReversedFromStringBytes(array, i - kmerSize + 1);
+                    nextForwardKmer.shiftKmerWithNextChar(readLetters[i]);
+                    nextReverseKmer.setReversedFromStringBytes(readLetters, i - Kmer.getKmerLength() + 1);
                     nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? Node.DIR.FORWARD : Node.DIR.REVERSE;
 
                     setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode, readIdList);
@@ -172,12 +163,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
 
                 /*last kmer*/
-                if (kmerSize < array.length) {
-                    writeToFrame(nextForwardKmer, nextReverseKmer, nextNodeDir, nextNode, writer);
-                }
+                writeToFrame(nextForwardKmer, nextReverseKmer, nextNodeDir, nextNode, writer);
             }
 
-            public void setThisReadId(byte mateId, long readId, int posId) {
+            public void setReadInfo(byte mateId, long readId, int posId) {
                 readIdList.clear();
                 readIdList.add(readId);
                 readHeadInfo.set(mateId, readId, posId);
@@ -197,24 +186,25 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             public void setEdgeListForCurAndNext(Node.DIR curNodeDir, Node curNode, Node.DIR nextNodeDir,
                     Node nextNode, ReadIdSet readIdList) {
+                //TODO simplify this function
                 if (curNodeDir == Node.DIR.FORWARD && nextNodeDir == Node.DIR.FORWARD) {
                     curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
                     return;
                 }
                 if (curNodeDir == Node.DIR.FORWARD && nextNodeDir == Node.DIR.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextReverseKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
+                    curNode.getEdgeList(EDGETYPE.FR).put(new VKmer(nextReverseKmer), readIdList);
+                    nextNode.getEdgeList(EDGETYPE.FR).put(new VKmer(curForwardKmer), readIdList);
                     return;
                 }
                 if (curNodeDir == Node.DIR.REVERSE && nextNodeDir == Node.DIR.FORWARD) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curReverseKmer), readIdList);
+                    curNode.getEdgeList(EDGETYPE.RF).put(new VKmer(nextForwardKmer), readIdList);
+                    nextNode.getEdgeList(EDGETYPE.RF).put(new VKmer(curReverseKmer), readIdList);
                     return;
                 }
                 if (curNodeDir == Node.DIR.REVERSE && nextNodeDir == Node.DIR.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextReverseKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curReverseKmer), readIdList);
+                    curNode.getEdgeList(EDGETYPE.RR).put(new VKmer(nextReverseKmer), readIdList);
+                    nextNode.getEdgeList(EDGETYPE.FF).put(new VKmer(curReverseKmer), readIdList);
                     return;
                 }
             }
