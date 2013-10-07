@@ -137,6 +137,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         long readID = 0;
         String geneLine;
 
+        // TODO remember to set NLineInputFormat 
+        // TODO relax the input file name restrict
+        // TODO current lineCount is incorrect, if we have multiple input files
         if (fastqFormat) {
             if ((lineCount - 1) % 4 == 1) {
                 readID = key.get(); // this is actually the offset into the file... will it be the same across all files?? //TODO test this
@@ -155,19 +158,18 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 
         Pattern genePattern = Pattern.compile("[AGCT]+");
         Matcher geneMatcher = genePattern.matcher(geneLine);
-        boolean isValid = geneMatcher.matches();
-        if (isValid == true) {
+        if (geneMatcher.matches()) {
             byte[] array = geneLine.getBytes();
             if (KMER_SIZE >= array.length) {
                 throw new IOException("short read");
             }
             /** first kmer **/
             outputNode.reset();
-            curKmerAndDir = getKmerAndDir(array, 0, MEMORY.BLOCK2);
+            curKmerAndDir = getKmerAndDir(array, 0, MEMORY.BLOCK2); // TODO
             
             nextKmerAndDir = getKmerAndDir(array, 1, MEMORY.BLOCK3);
             //set node.EdgeMap in meToNext dir
-            setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, KMERTYPE.NEXT);
+            setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, DIR.FORWARD);
             //set value.ReadHeadInfo because this is the first kmer in read
             setReadHeadInfo(mateId, readID);
             //set value.coverage = 1
@@ -182,9 +184,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 curKmerAndDir = nextKmerAndDir; //old nextKmer becomes current curKmer
                 
                 nextKmerAndDir = getKmerAndDir(array, i - KMER_SIZE + 1, MEMORY.getFreeBlock(i - KMER_SIZE - 1));
-                //set node.EdgeMap in meToPrev and meToNext dir
-                setEdgeMap(readID, curKmerAndDir, preKmerAndDir, KMERTYPE.PREVIOUS);
-                setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, KMERTYPE.NEXT);
+                //set node.EdgeMap in meToPrev and meToNext dir  // TODO check refactor of genomix-hyracks
+                setEdgeMap(readID, curKmerAndDir, preKmerAndDir, DIR.REVERSE);
+                setEdgeMap(readID, curKmerAndDir, nextKmerAndDir, DIR.FORWARD);
                 //set coverage = 1
                 outputNode.setAvgCoverage(1);
                 //output mapper result
@@ -196,7 +198,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             preKmerAndDir = curKmerAndDir; //old curKmer becomes current preKmer
             curKmerAndDir = nextKmerAndDir; //old nextKmer becomes current curKmer
             //set node.EdgeMap in meToPrev dir
-            setEdgeMap(readID, curKmerAndDir, preKmerAndDir, KMERTYPE.PREVIOUS);
+            setEdgeMap(readID, curKmerAndDir, preKmerAndDir, DIR.REVERSE);
             //set coverage = 1
             outputNode.setAvgCoverage(1);
             //output mapper result
@@ -204,7 +206,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         }
     }
 	
-	public SimpleEntry<VKmer, DIR> getKmerAndDir(byte[] array, int startIdx, MEMORY block){
+	public SimpleEntry<VKmer, DIR> getKmerAndDir(byte[] array, int startIdx, MEMORY block){ // TODO array to lettersInRead
 		VKmer forwardKmer;
 		VKmer reverseKmer;
         switch(block){
@@ -232,7 +234,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
     }
 	
 	public void setEdgeMap(long readID, SimpleEntry<VKmer, DIR> me, 
-    		SimpleEntry<VKmer, DIR> neighbor, KMERTYPE kmerType) {
+    		SimpleEntry<VKmer, DIR> neighbor, DIR dir) {
         //set readId
         readIdSet.clear();
         readIdSet.add(readID);
@@ -240,11 +242,11 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         edgeMap.put(neighbor.getKey(), readIdSet);
         
         EDGETYPE et = null;
-        switch(kmerType){
-        	case NEXT:
+        switch(dir){
+        	case FORWARD:
         		et = EDGETYPE.getEdgeTypeFromDirToDir(me.getValue(), neighbor.getValue());
         		break;
-        	case PREVIOUS:
+        	case REVERSE:
         		et = EDGETYPE.getEdgeTypeFromDirToDir(neighbor.getValue(), me.getValue()).mirror();
         		break;
     		default:
@@ -259,7 +261,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         readHeadSet.clear();
         readHeadSet.add(readHeadInfo);
         if (curKmerAndDir.getValue() == DIR.FORWARD)
-            outputNode.setStartReads(readHeadSet);
+            outputNode.setStartReads(readHeadSet); 
         else
             outputNode.setEndReads(readHeadSet);
 	}

@@ -22,31 +22,30 @@ import edu.uci.ics.genomix.type.VKmer;
 public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node, VKmer, Node> {
 
     private Node outputNode;
-    private Node tmpNode;
-    private float averageCoverage;
 
     @Override
     public void configure(JobConf job) {
         outputNode = new Node();
-        tmpNode = new Node();
     }
 
     @Override
     public void reduce(VKmer key, Iterator<Node> values, OutputCollector<VKmer, Node> output, Reporter reporter)
             throws IOException {
         outputNode.reset();
-        averageCoverage = 0;
-
+        float averageCoverage = 0;
+        
+        Node curNode;
         while (values.hasNext()) {
-            tmpNode = values.next();
+        	curNode = values.next();
             for (EDGETYPE e : EDGETYPE.values()) {
-                outputNode.getEdgeMap(e).unionUpdate(tmpNode.getEdgeMap(e));
+                outputNode.getEdgeMap(e).unionUpdate(curNode.getEdgeMap(e));
             }
-            outputNode.getStartReads().addAll(tmpNode.getStartReads());
-            outputNode.getEndReads().addAll(tmpNode.getEndReads());
-            averageCoverage += tmpNode.getAvgCoverage();
+            outputNode.getStartReads().addAll(curNode.getStartReads());
+            outputNode.getEndReads().addAll(curNode.getEndReads());
+            averageCoverage += curNode.getAvgCoverage();
         }
         outputNode.setAvgCoverage(averageCoverage);
+        
         output.collect(key, outputNode);
     }
 

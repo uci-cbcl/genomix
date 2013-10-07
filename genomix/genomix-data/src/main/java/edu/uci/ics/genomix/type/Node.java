@@ -587,6 +587,7 @@ public class Node implements Writable, Serializable {
         return startReads;
     }
 
+    // TODO rename the function
     public void setStartReads(ReadHeadSet startReads) {
         this.startReads.clear();
         this.startReads.addAll(startReads);
