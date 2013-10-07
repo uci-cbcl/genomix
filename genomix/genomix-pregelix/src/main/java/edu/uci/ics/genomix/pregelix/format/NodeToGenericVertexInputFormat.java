@@ -68,6 +68,8 @@ class BinaryDataCleanLoadGraphReader<V extends VertexValueWritable> extends
              * set the vertex value
              */
             vertexValue.setAsCopy(getRecordReader().getCurrentValue());
+            if(vertexValue.getInternalKmer().getKmerLetterLength() == 0) // initial input directly from graph building
+            	vertexValue.setInternalKmer(vertexId);
             vertex.setVertexValue(vertexValue);
         }
 

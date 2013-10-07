@@ -55,7 +55,8 @@ public class GenerateGraphViz {
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
                 outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
                         + "5':" + value.getStartReads().toReadIdString() + "|<f2> "
-                        + "~5'" + value.getEndReads().toReadIdString() + "|<f3> " + value.getAvgCoverage() + "\"]\n";
+                        + "~5'" + value.getEndReads().toReadIdString() + "|<f3> "
+                        + value.getAvgCoverage() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
@@ -103,7 +104,8 @@ public class GenerateGraphViz {
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
                 outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
                         + "5':" + value.getStartReads().toReadIdString() + "|<f2> "
-                        + "~5'" + value.getEndReads().toReadIdString() + "|<f3> " + value.getAvgCoverage()
+                        + "~5':" + value.getEndReads().toReadIdString() + "|<f3> "  
+                        + value.getAvgCoverage() + "|<f4> " 
                         + value.getInternalKmer() + "\"]\n";
                 gv.addln(outputNode);
             }
