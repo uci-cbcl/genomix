@@ -1,6 +1,6 @@
 package edu.uci.ics.genomix.config;
 
-//TODO This test should move to the script 
+//TODO by Jianfeng: This test should move to the script 
 public class OSValidator {
 
     private static String OS = System.getProperty("os.name").toLowerCase();
