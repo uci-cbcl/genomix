@@ -65,11 +65,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         this.confFac = conFac;
     }
 
-    public enum KmerDir {
-        FORWARD,
-        REVERSE,
-    }
-
     @Override
     public IKeyValueParser<LongWritable, Text> createKeyValueParser(final IHyracksTaskContext ctx)
             throws HyracksDataException {
@@ -81,7 +76,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
         return new IKeyValueParser<LongWritable, Text>() {
 
-            private ReadHeadInfo positionId = new ReadHeadInfo(0);
+            private ReadHeadInfo readHeadInfo = new ReadHeadInfo(0);
             private ReadIdSet readIdList = new ReadIdSet();
             private Node curNode = new Node();
             private Node nextNode = new Node();
@@ -90,32 +85,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private Kmer curReverseKmer = new Kmer();
             private Kmer nextForwardKmer = new Kmer();
             private Kmer nextReverseKmer = new Kmer();
-            private VKmer edgeVKmer = new VKmer();
-            private KmerDir curKmerDir = KmerDir.FORWARD;
-            private KmerDir nextKmerDir = KmerDir.FORWARD;
-
-            byte mateId = (byte) 0;
-            boolean fastqFormat = false;
-
-            //            int lineCount = 0;
 
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer, String fileString)
                     throws HyracksDataException {
 
-                String[] tokens = fileString.split("\\.(?=[^\\.]+$)"); // split on the last "." to get the basename and the extension
-                if (tokens.length > 2)
-                    throw new IllegalStateException(
-                            "Parse error trying to parse filename... split extension tokens are: " + tokens.toString());
-                String basename = tokens[0];
-                String extension = tokens.length == 2 ? tokens[1] : "";
+                String basename = fileString.substring(fileString.lastIndexOf('\\') + 1);
+                String extension = basename.substring(basename.lastIndexOf('.'));
 
-                if (basename.endsWith("_2")) {
-                    mateId = (byte) 1;
-                } else {
-                    mateId = (byte) 0;
-                }
-
+                byte mateId = basename.endsWith("_2" + extension) ? (byte) 1 : (byte) 0;
+                boolean fastqFormat = false;
                 if (extension.contains("fastq") || extension.contains("fq")) {
                     //TODO
                     //                    if (! (job.getInputFormat() instanceof NLineInputFormat)) {
@@ -127,27 +106,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     fastqFormat = true;
                 }
 
-                //                String[] geneLine = value.toString().split("\\t"); // Read the Real Gene Line
-                //                if (geneLine.length != 2) {
-                //                    throw new IllegalArgumentException("malformed line found in parser. Two values aren't separated by tabs: " + value.toString());
-                //                }
-                //                int readID = 0;
-                //                try {
-                //                    readID = Integer.parseInt(geneLine[0]);
-                //                } catch (NumberFormatException e) {
-                //                    throw new IllegalArgumentException("Malformed line found in parser: ", e);
-                //                }
-
-                //                lineCount++;
                 long readID = 0;
                 String geneLine;
                 if (fastqFormat) {
-                    //                    if ((lineCount - 1) % 4 == 1) {
-                    readID = key.get(); // this is actually the offset into the file... will it be the same across all files?? //
+                    //FIXME : this is offset == readid only works on the only one input file
+                    readID = key.get(); //TODO check: this is actually the offset into the file... will it be the same across all files?? //
                     geneLine = value.toString().trim();
-                    //                    } else {
-                    //                        return;  //skip all other lines
-                    //                    }
                 } else {
                     String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
                     if (rawLine.length != 2) {
@@ -159,89 +123,69 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
                 Pattern genePattern = Pattern.compile("[AGCT]+");
                 Matcher geneMatcher = genePattern.matcher(geneLine);
-                boolean isValid = geneMatcher.matches();
-                if (isValid) {
+                if (geneMatcher.matches()) {
+                    setThisReadId(mateId, readID, 0);
                     SplitReads(readID, geneLine.getBytes(), writer);
                 }
             }
 
             private void SplitReads(long readID, byte[] array, IFrameWriter writer) {
-                //                boolean verbose = false;
                 /*first kmer*/
                 if (kmerSize >= array.length) {
                     throw new IllegalArgumentException("kmersize (k=" + kmerSize + ") is larger than the read length ("
                             + array.length + ")");
                 }
 
-                //                if (readID == 12009721) {
-                //                    verbose = false;
-                //                    System.out.println("found it: " + readID);
-                //                } else if (readID == 11934501) {
-                //                    verbose = false;
-                //                    System.out.println("found it: " + readID);
-                //                } else {
-                //                    verbose = false;
-                //                }
-
                 curNode.reset();
-                nextNode.reset();
-                curNode.setAvgCoverage(1);
-                nextNode.setAvgCoverage(1);
+                curNode.setAverageCoverage(1);
                 curForwardKmer.setFromStringBytes(array, 0);
                 curReverseKmer.setReversedFromStringBytes(array, 0);
-                curKmerDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
-                nextForwardKmer.setAsCopy(curForwardKmer);
-                nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[kmerSize]);
-                setThisReadId(mateId, readID, 0);
-                if (curKmerDir == KmerDir.FORWARD)
-                    curNode.getStartReads().add(positionId);
-                else
-                    curNode.getEndReads().add(positionId);
-                setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readIdList);
 
-                writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
-                //                if (verbose) {
-                //                    System.out.println("First kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
-                //                }
+                Node.DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? Node.DIR.FORWARD
+                        : Node.DIR.REVERSE;
+
+                if (curNodeDir == Node.DIR.FORWARD) {
+                    curNode.getStartReads().add(readHeadInfo);
+                } else {
+                    curNode.getEndReads().add(readHeadInfo);
+                }
+
+                Node.DIR nextNodeDir = Node.DIR.FORWARD;
+
                 /*middle kmer*/
-                int i = kmerSize + 1;
-                for (; i < array.length; i++) {
+                nextForwardKmer.setAsCopy(curForwardKmer);
+                for (int i = kmerSize; i < array.length; i++) {
+                    nextNode.reset();
+                    nextNode.setAverageCoverage(1);
+                    nextForwardKmer.shiftKmerWithNextChar(array[i]);
+                    nextReverseKmer.setReversedFromStringBytes(array, i - kmerSize + 1);
+                    nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? Node.DIR.FORWARD : Node.DIR.REVERSE;
+
+                    setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode, readIdList);
+                    writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
+
+                    curNode.reset();
+                    curNode.setAverageCoverage(1);
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
-                    curKmerDir = nextKmerDir;
-                    curNode.setAsCopy(nextNode);
-                    nextNode.reset();
-                    nextNode.setAvgCoverage(1);
-                    nextKmerDir = setNextKmer(nextForwardKmer, nextReverseKmer, array[i]);
-                    setEdgeAndThreadListForCurAndNextKmer(curKmerDir, curNode, nextKmerDir, nextNode, readIdList);
-                    writeToFrame(curForwardKmer, curReverseKmer, curKmerDir, curNode, writer);
-                    //                    if (verbose) {
-                    //                        System.out.println("middle kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
-                    //                    }
+                    curNodeDir = nextNodeDir;
                 }
 
                 /*last kmer*/
-                writeToFrame(nextForwardKmer, nextReverseKmer, nextKmerDir, nextNode, writer);
-                //                if (verbose) {
-                //                    System.out.println("last kmer emitting:" + curForwardKmer.toString() + '\t' + curReverseKmer + '\t' + curKmerDir + '\t' + curNode);
-                //                }
+                if (kmerSize < array.length) {
+                    writeToFrame(nextForwardKmer, nextReverseKmer, nextNodeDir, nextNode, writer);
+                }
             }
 
             public void setThisReadId(byte mateId, long readId, int posId) {
                 readIdList.clear();
                 readIdList.add(readId);
-                positionId.set(mateId, readId, posId);
+                readHeadInfo.set(mateId, readId, posId);
             }
 
-            public KmerDir setNextKmer(Kmer forwardKmer, Kmer ReverseKmer, byte nextChar) {
-                forwardKmer.shiftKmerWithNextChar(nextChar);
-                ReverseKmer.setReversedFromStringBytes(forwardKmer.toString().getBytes(), forwardKmer.getOffset());
-                return forwardKmer.compareTo(ReverseKmer) <= 0 ? KmerDir.FORWARD : KmerDir.REVERSE;
-            }
-
-            public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, KmerDir curKmerDir, Node node,
+            public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, Node.DIR curNodeDir, Node node,
                     IFrameWriter writer) {
-                switch (curKmerDir) {
+                switch (curNodeDir) {
                     case FORWARD:
                         InsertToFrame(forwardKmer, node, writer);
                         break;
@@ -251,23 +195,27 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
             }
 
-            public void setEdgeAndThreadListForCurAndNextKmer(KmerDir curKmerDir, Node curNode, KmerDir nextKmerDir,
+            public void setEdgeListForCurAndNext(Node.DIR curNodeDir, Node curNode, Node.DIR nextNodeDir,
                     Node nextNode, ReadIdSet readIdList) {
-                if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.FORWARD) {
+                if (curNodeDir == Node.DIR.FORWARD && nextNodeDir == Node.DIR.FORWARD) {
                     curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
+                    return;
                 }
-                if (curKmerDir == KmerDir.FORWARD && nextKmerDir == KmerDir.REVERSE) {
+                if (curNodeDir == Node.DIR.FORWARD && nextNodeDir == Node.DIR.REVERSE) {
                     curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextReverseKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
+                    return;
                 }
-                if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.FORWARD) {
+                if (curNodeDir == Node.DIR.REVERSE && nextNodeDir == Node.DIR.FORWARD) {
                     curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curReverseKmer), readIdList);
+                    return;
                 }
-                if (curKmerDir == KmerDir.REVERSE && nextKmerDir == KmerDir.REVERSE) {
+                if (curNodeDir == Node.DIR.REVERSE && nextNodeDir == Node.DIR.REVERSE) {
                     curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextReverseKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curReverseKmer), readIdList);
+                    return;
                 }
             }
 

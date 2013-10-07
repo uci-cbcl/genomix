@@ -40,15 +40,12 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
     public AssembleKeyIntoNodeOperator(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc, int kmerSize) {
         super(spec, 1, 1);
         recordDescriptors[0] = outRecDesc;
-        this.kmerSize = kmerSize;
-        Kmer.setGlobalKmerLength(this.kmerSize);
     }
 
     private static final long serialVersionUID = 1L;
-    private final int kmerSize;
 
     public static final int InputKmerField = 0;
-    public static final int InputtempNodeField = 1;
+    public static final int InputTempNodeField = 1;
     public static final int OutputNodeField = 0;
 
     public static final RecordDescriptor nodeOutputRec = new RecordDescriptor(new ISerializerDeserializer[1]);
@@ -64,8 +61,8 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
         private ArrayTupleBuilder builder;
         private FrameTupleAppender appender;
 
-        Node readNode;
-        Kmer readKmer;
+        private Node readNode;
+        private Kmer readKmer;
 
         public MapReadToNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc,
                 RecordDescriptor outputRecDesc) {
@@ -99,20 +96,20 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
         private void generateNodeFromKmer(int tIndex) throws HyracksDataException {
             int offsetPoslist = accessor.getTupleStartOffset(tIndex) + accessor.getFieldSlotsLength();
             setKmer(readKmer, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputKmerField));
-            readNode.reset();
-            setNode(readNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputtempNodeField));
+            setNode(readNode, offsetPoslist + accessor.getFieldStartOffset(tIndex, InputTempNodeField));
             readNode.getInternalKmer().setAsCopy(readKmer);
             outputNode(readNode);
         }
 
         private void setKmer(Kmer kmer, int offset) {
             ByteBuffer buffer = accessor.getBuffer();
-            kmer.setAsCopy(buffer.array(), offset);
+            kmer.setAsReference(buffer.array(), offset);
         }
 
         private void setNode(Node node, int offset) {
+            node.reset();
             ByteBuffer buffer = accessor.getBuffer();
-            node.setAsCopy(buffer.array(), offset);
+            node.setAsReference(buffer.array(), offset);
         }
 
         private void outputNode(Node node) throws HyracksDataException {

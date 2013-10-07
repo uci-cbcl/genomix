@@ -19,12 +19,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.lib.NLineInputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
@@ -34,9 +32,7 @@ import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.AggregateKmerAggregateFactory;
-import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.graph.io.NodeSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.graph.io.NodeTextWriterFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -171,7 +167,7 @@ public class JobGenBrujinGraph extends JobGen {
         jobSpec.setFrameSize(frameSize);
 
         Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(
-                kmerSize), new MergeKmerAggregateFactory(kmerSize), new KmerHashPartitioncomputerFactory(),
+                kmerSize), new AggregateKmerAggregateFactory(kmerSize), new KmerHashPartitioncomputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         logDebug("LocalKmerGroupby Operator");
@@ -233,15 +229,14 @@ public class JobGenBrujinGraph extends JobGen {
         Configuration conf = confFactory.getConf();
         kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
         frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
-        //        tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
+        //tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
-        System.out.println(DEFAULT_FRAME_SIZE);
-        System.out.println(frameSize);
         groupbyType = GroupbyType.PRECLUSTER;
         outputFormat = OutputFormat.BINARY;
 
         try {
             JobConf jobconf = new JobConf(conf);
+            jobconf.setInputFormat(TextInputFormat.class);
             hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
 
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()
