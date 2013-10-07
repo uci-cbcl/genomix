@@ -68,6 +68,8 @@ import edu.uci.ics.genomix.config.OSValidator;
  * @version v0.1, 2003/12/04 (December) -- first release
  * @author Laszlo Szathmary (<a href="jabba.laci@gmail.com">jabba.laci@gmail.com</a>)
  */
+
+//TODO by Jianfeng: Using system dependent scrpit to generate the graph
 public class GraphViz {
     /**
      * The dir. where temporary files will be created.

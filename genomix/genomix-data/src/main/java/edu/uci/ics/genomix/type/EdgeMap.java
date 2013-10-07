@@ -21,7 +21,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;

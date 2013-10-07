@@ -45,7 +45,6 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
         Kmer.setGlobalKmerLength(kmerSize);
         return new ITupleWriter() {
             private Node outputNode = new Node();
-            private Kmer tempKmer = new Kmer();
             private VKmer outputKey = new VKmer();
 
             @Override
@@ -56,15 +55,14 @@ public class KeyValueTextWriterFactory implements ITupleWriterFactory {
             @Override
             public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
                 try {
-                    if (tempKmer.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
+                    if (outputKey.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
                         throw new IllegalArgumentException("Not enough kmer bytes");
                     }
-                    tempKmer.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
+                    outputKey.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputKmerField));
 
                     outputNode.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-                    outputKey.setAsCopy(tempKmer);
                     output.write(outputKey.toString().getBytes());
                     output.writeByte('\t');
                     output.write(outputNode.toString().getBytes());

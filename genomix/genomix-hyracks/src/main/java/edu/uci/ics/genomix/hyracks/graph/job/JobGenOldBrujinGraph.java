@@ -140,8 +140,7 @@ public class JobGenOldBrujinGraph extends JobGen {
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
-                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize,
-                            hadoopJobConfFactory));
+                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

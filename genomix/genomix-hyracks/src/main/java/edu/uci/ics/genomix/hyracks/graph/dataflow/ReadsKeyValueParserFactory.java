@@ -39,7 +39,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
-import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
@@ -51,9 +50,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
             null });
 
-    //TODO remove conFac 
-    //TODO remove Kmer.getKmerLength()
-    public ReadsKeyValueParserFactory(int k, ConfFactory conFac) {
+    public ReadsKeyValueParserFactory(int k) {
         Kmer.setGlobalKmerLength(k);
     }
 
@@ -186,7 +183,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             public void setEdgeListForCurAndNext(Node.DIR curNodeDir, Node curNode, Node.DIR nextNodeDir,
                     Node nextNode, ReadIdSet readIdList) {
-                //TODO simplify this function
+                //TODO simplify this function after Anbang merge the edgeType detect code
                 if (curNodeDir == Node.DIR.FORWARD && nextNodeDir == Node.DIR.FORWARD) {
                     curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
