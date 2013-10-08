@@ -16,6 +16,7 @@ import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
+//TODO by Jianfeng: move this to script
 public class GenerateGraphViz {
 
     /**
