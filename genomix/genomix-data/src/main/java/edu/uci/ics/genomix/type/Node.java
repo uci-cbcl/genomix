@@ -447,7 +447,7 @@ public class Node implements Writable, Serializable {
     public Node getNode() { // TODO what is this used for???
     	Node node = new Node();
     	node.setAsCopy(this.edges, this.startReads, this.endReads, this.internalKmer, this.averageCoverage);
-        return this;
+        return node;
     }
 
     public void setAsCopy(Node node) {

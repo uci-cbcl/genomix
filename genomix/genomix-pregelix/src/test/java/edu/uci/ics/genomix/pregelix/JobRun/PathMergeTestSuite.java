@@ -6,7 +6,7 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
 
     public static Test suite() throws Exception {
         String pattern ="PathMerge"; 
-        String testSet[] = {"SimpleTreePath", "9", "RingPath", "ThreeNodesCycle", "CyclePath", "Head_10", "ComplexTandemRepeat", "SimpleTreePath"
+        String testSet[] = {"LtoL", "LtoR", "RtoL", "RtoR"//"SimpleTreePath", "9", "RingPath", "ThreeNodesCycle", "CyclePath", "Head_10", "ComplexTandemRepeat", "SimpleTreePath"
 //                "2", "3", "4", "5", "6", "7", "8", "9", 
 //                "Head_5", "Head_6", "Head_7", "Head_8", "Head_9", "Head_10",
 //                "LeftAdj", "RightAdj",

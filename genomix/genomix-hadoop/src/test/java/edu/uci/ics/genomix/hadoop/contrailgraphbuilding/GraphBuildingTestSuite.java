@@ -22,8 +22,9 @@ public class GraphBuildingTestSuite extends TestSuite {
 
     private static int SIZE_KMER = 3;
     private static int LINES_PERMAP = 4 * 100000;
-    public static final String PreFix = "data/webmap/PathMerge_TestSet";
+    public static final String PreFix = "data/webmap/BubbleMerge_TestSet";
     public static final String[] TestDir = { PreFix + File.separator
+    	// PathMerge
 //                + "2", PreFix + File.separator
 //                + "3", PreFix + File.separator
 //                + "4", PreFix + File.separator
@@ -66,14 +67,19 @@ public class GraphBuildingTestSuite extends TestSuite {
 //                + "Cluster", PreFix + File.separator
 //                + "SameGeneCodeWithoutEdge", PreFix + File.separator 
 //                + "SameGeneCodeWithEdge", PreFix + File.separator 
-//                
-                + "synthetic"
-                
+//                + "synthetic"
+              // Bubble Merge
+//    	+ "LtoL", PreFix + File.separator
+//    	+ "LtoR", PreFix + File.separator
+//    	+ "RtoL", PreFix + File.separator
+//    	+ "RtoR"
+    	+ "SimpleBubble", PreFix + File.separator
+    	+ "BubbleWithTip", PreFix + File.separator
+    	+ "SideBubble", PreFix + File.separator
+    	+ "OverlapBubble", PreFix + File.separator
+    	+ "FRandRF"
                 };
-//  + "LtoL", PreFix + File.separator
-//  + "LtoR", PreFix + File.separator
-//  + "RtoL", PreFix + File.separator
-//  + "RtoR", PreFix + File.separator
+//    + "InvalidBubble", PreFix + File.separator
 //                + "SimpleRectangle", PreFix + File.separator
 //                + "MediumRectangle", PreFix + File.separator
 //                + "ComplexRectangle", PreFix + File.separator

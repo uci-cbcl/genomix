@@ -1,0 +1,12 @@
+AAA	{FF:{AAG=[1]}	FR:{}	RF:{}	RR:{GAA=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
+GAA	{FF:{AAA=[1]}	FR:{}	RF:{}	RR:{CGA=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
+CCA	{FF:{CAG=[2]}	FR:{}	RF:{GGA=[2]}	RR:{}	5':[], ~5':[]	kmer:	cov:1.0x}
+CGA	{FF:{GAA=[1]}	FR:{}	RF:{}	RR:{ACG=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
+GGA	{FF:{}	FR:{}	RF:{CCA=[2]}	RR:{AGG=[1]}	5':[], ~5':[]	kmer:	cov:2.0x}
+GCC	{FF:{CCG=[2]}	FR:{}	RF:{}	RR:{AGC=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
+AGC	{FF:{GCC=[2]}	FR:{}	RF:{}	RR:{CAG=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
+AAG	{FF:{AGG=[1]}	FR:{}	RF:{}	RR:{AAA=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
+CAG	{FF:{AGC=[2]}	FR:{}	RF:{}	RR:{CCA=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
+ACG	{FF:{CGA=[1]}	FR:{CCG=[2]}	RF:{}	RR:{}	5':[1-0_0,2-0_0], ~5':[]	kmer:	cov:2.0x}
+CCG	{FF:{}	FR:{ACG=[2]}	RF:{}	RR:{GCC=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
+AGG	{FF:{GGA=[1]}	FR:{}	RF:{}	RR:{AAG=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
