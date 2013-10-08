@@ -22,4 +22,4 @@ output
 tmp
 dist
 .idea
-data
+genomix/genomix-hadoop/data
