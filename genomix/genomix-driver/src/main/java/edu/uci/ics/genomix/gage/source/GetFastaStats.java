@@ -12,7 +12,7 @@ import java.util.HashMap;
 public class GetFastaStats {
     private static final int MIN_GAP_SIZE = 20;
     private static int MIN_LENGTH = 2000;
-    private static final int CONTIG_AT_INITIAL_STEP = 1000000;
+    private static final int CONTIG_AT_INITIAL_STEP = 1000000; //TODO
 
     private static final String[] suffix = { "final", "split", "fasta", "scafSeq", "fa" };
     private static final NumberFormat nf = new DecimalFormat("############.##");
@@ -30,7 +30,7 @@ public class GetFastaStats {
         public long goal;
     }
 
-    boolean baylorFormat = false;
+    boolean baylorFormat = false; //TODO
     boolean oldStyle = false;
     boolean storeCtgs = false;
     HashMap<String, Integer> fastaLens = new HashMap<String, Integer>();
@@ -49,12 +49,12 @@ public class GetFastaStats {
             BufferedReader bf = Utils.getFile(inputFile, "lens");
             String line = null;
             while ((line = bf.readLine()) != null) {
-                String[] splitLine = line.trim().split("\\s+");
+                String[] splitLine = line.trim().split("\\s+"); //TODO one of more white spaces 
                 fastaLens.put(splitLine[0], Integer.parseInt(splitLine[1]));
             }
             bf.close();
         } else {
-            BufferedReader bf = Utils.getFile(inputFile, suffix);
+            BufferedReader bf = Utils.getFile(inputFile, suffix); //TODO learn it! no java doc!
 
             String line = null;
             StringBuffer fastaSeq = new StringBuffer();
@@ -63,16 +63,16 @@ public class GetFastaStats {
             while ((line = bf.readLine()) != null) {
                 if (line.startsWith(">")) {
                     String fastaString = fastaSeq.toString().replaceAll("-", "");
-                    fastaString = fastaString.toString().replaceAll("\\.", "");
+                    fastaString = fastaString.toString().replaceAll("\\.", ""); //TODO what is it?
 
-                    //String[] split = fastaString.trim().split("N+");
+                    //String[] split = fastaString.trim().split("N+");  //TODO ? N+
                     //String[] split = { fastaString.replaceAll("N", "").trim() };
                     String[] split = { fastaString.trim() };
                     //System.err.println("SPLIT one ctg of length " + fastaString.length() + " INTO " + split.length);
 
                     for (int i = 0; i < split.length; i++) {
                         if (split[i].length() != 0) {
-                            fastaLens.put(header + "_" + i, split[i].length());
+                            fastaLens.put(header + "_" + i, split[i].length()); //TODO why header need _i
                             if (storeCtgs)
                                 ctgs.put(header + "_" + i, split[i].toString());
                         }
@@ -106,6 +106,7 @@ public class GetFastaStats {
         }
     }
 
+    //TODO no reference
     public void countReads(String posmapFile, boolean isNB) throws Exception {
         BufferedReader bf = new BufferedReader(new InputStreamReader(new FileInputStream(posmapFile)));
 
@@ -137,6 +138,7 @@ public class GetFastaStats {
         }
     }
 
+    //TODO no reference
     public void convertToScaffolds(String scaffFile) throws Exception {
         BufferedReader bf = new BufferedReader(new InputStreamReader(new FileInputStream(scaffFile)));
 
@@ -210,9 +212,9 @@ public class GetFastaStats {
         int n95count = 0;
 
         int totalOverLength = 0;
-        long totalBPOverLength = 0;
+        long totalBPOverLength = 0; //TODO
 
-        double fSize = 0;
+        double fSize = 0;//TODO
         for (String s : fastaLens.keySet()) {
             int len = fastaLens.get(s);
 
@@ -236,48 +238,48 @@ public class GetFastaStats {
             }
             count++;
 
-            // compute the F-size
+            // compute the F-size TODO
             fSize += Math.pow(len, 2);
             if (len > MIN_LENGTH) {
-                totalOverLength++;
-                totalBPOverLength += len;
+                totalOverLength++; //TODO
+                totalBPOverLength += len; //TODO
             }
         }
-        fSize /= genomeSize;
+        fSize /= genomeSize; //TODO
 
-        // get the goal contig at X bases (1MBp, 2MBp)
+        // get the goal contig at X bases (1MBp, 2MBp)TODO
         ArrayList<ContigAt> contigAtArray = new ArrayList<ContigAt>();
-        if (baylorFormat == true) {
+        if (baylorFormat == true) { //TODO
             contigAtArray.add(new ContigAt(1 * CONTIG_AT_INITIAL_STEP));
             contigAtArray.add(new ContigAt(2 * CONTIG_AT_INITIAL_STEP));
             contigAtArray.add(new ContigAt(5 * CONTIG_AT_INITIAL_STEP));
             contigAtArray.add(new ContigAt(10 * CONTIG_AT_INITIAL_STEP));
         } else {
-            long step = CONTIG_AT_INITIAL_STEP;
+            long step = CONTIG_AT_INITIAL_STEP; //TODO
             long currentBases = 0;
             while (currentBases <= total) {
                 if ((currentBases / step) >= 10) {
                     step *= 10;
                 }
                 currentBases += step;
-                contigAtArray.add(new ContigAt(currentBases));
+                contigAtArray.add(new ContigAt(currentBases));//TODO
             }
         }
         ContigAt[] contigAtVals = contigAtArray.toArray(new ContigAt[0]);
 
         Integer[] vals = fastaLens.values().toArray(new Integer[0]);
         Arrays.sort(vals);
-
+//TODO
         long sum = 0;
         double median = 0;
         int medianCount = 0;
         int numberContigsSeen = 1;
         int currentValPoint = 0;
         for (int i = vals.length - 1; i >= 0; i--) {
-            if (((int) (count / 2)) == i) {
-                median += vals[i];
+            if (((int) (count / 2)) == i) { //TODO
+                median += vals[i]; //TODO why median +=
                 medianCount++;
-            } else if (count % 2 == 0 && ((((int) (count / 2)) + 1) == i)) {
+            } else if (count % 2 == 0 && ((((int) (count / 2)) + 1) == i)) { //TODO
                 median += vals[i];
                 medianCount++;
             }
@@ -296,7 +298,7 @@ public class GetFastaStats {
             }
             // calculate the NXs
             if (sum / (double) total >= 0.1 && n10count == 0) {
-                n10 = vals[i];
+                n10 = vals[i];//TODO
                 n10count = vals.length - i;
 
             }
@@ -322,6 +324,7 @@ public class GetFastaStats {
 
             numberContigsSeen++;
         }
+        //sdfsdfsdf TODO
         if (medianCount != 1 && medianCount != 2) {
             System.err.println("ERROR INVALID MEDIAN COUNT " + medianCount);
             System.exit(1);
@@ -386,6 +389,7 @@ public class GetFastaStats {
     }
 
     public static void main(String[] args) throws Exception {
+
         if (args.length < 1) {
             printUsage();
             System.exit(1);
@@ -397,20 +401,20 @@ public class GetFastaStats {
         }
         */
 
-        boolean useBaylorFormat = false;
+        boolean useBaylorFormat = false; 
         boolean oldStyle = false;
         long genomeSize = 0;
         int initialVal = 0;
         while (args[initialVal].startsWith("-")) {
-            if (args[initialVal].trim().equalsIgnoreCase("-b")) {
+            if (args[initialVal].trim().equalsIgnoreCase("-b")) { //TODO what is the BaylorFormat? -- Nan
                 useBaylorFormat = true;
             } else if (args[initialVal].trim().equalsIgnoreCase("-min")) {
-                GetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
+                GetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]); //TODO minimun length for single contig -- Nan
             } else if (args[initialVal].trim().equalsIgnoreCase("-o")) {
-                oldStyle = true;
-            } else if (args[initialVal].trim().equalsIgnoreCase("-genomeSize")) {
+                oldStyle = true;   //TODO what is oldStyle? -- Nan (the instruction require me to  specify this para)
+            } else if (args[initialVal].trim().equalsIgnoreCase("-genomeSize")) { //TODO I guess it is the total length for all of contigs, if we don't know we could set to 0?--N
                 initialVal++;
-                genomeSize = Long.parseLong(args[initialVal]);
+                genomeSize = Long.parseLong(args[initialVal]); 
                 System.err.println("Found genome size at position " + initialVal + " with value " + args[initialVal]
                         + " aka " + genomeSize);
             } else {
@@ -422,9 +426,14 @@ public class GetFastaStats {
         }
 
         for (int i = initialVal; i < args.length; i++) {
-            String assemblyTitle = args[i].trim().split("/")[0];
+            
+            /******debug -Nan*/
+            String[] a = args[i].trim().split("/");
+            System.out.println(a.toString());
+            /*******/
+            String assemblyTitle = args[i].trim().split("/")[0];  //TODO 
             GetFastaStats f = new GetFastaStats(useBaylorFormat, oldStyle, genomeSize);
-            String[] splitLine = args[i].trim().split(",");
+            String[] splitLine = args[i].trim().split(","); //TODO use "," to seperate the input files
 
             for (int j = 0; j < splitLine.length; j++) {
                 f.processFile(splitLine[j]);
