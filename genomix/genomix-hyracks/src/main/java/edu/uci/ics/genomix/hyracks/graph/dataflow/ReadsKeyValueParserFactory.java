@@ -184,23 +184,23 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     ReadIdSet readIdList) {
                 //TODO simplify this function after Anbang merge the edgeType detect code
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
+                    curNode.getEdgeMap(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
+                    nextNode.getEdgeMap(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
                     return;
                 }
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.FR).put(new VKmer(nextReverseKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.FR).put(new VKmer(curForwardKmer), readIdList);
+                    curNode.getEdgeMap(EDGETYPE.FR).put(new VKmer(nextReverseKmer), readIdList);
+                    nextNode.getEdgeMap(EDGETYPE.FR).put(new VKmer(curForwardKmer), readIdList);
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeList(EDGETYPE.RF).put(new VKmer(nextForwardKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.RF).put(new VKmer(curReverseKmer), readIdList);
+                    curNode.getEdgeMap(EDGETYPE.RF).put(new VKmer(nextForwardKmer), readIdList);
+                    nextNode.getEdgeMap(EDGETYPE.RF).put(new VKmer(curReverseKmer), readIdList);
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.RR).put(new VKmer(nextReverseKmer), readIdList);
-                    nextNode.getEdgeList(EDGETYPE.FF).put(new VKmer(curReverseKmer), readIdList);
+                    curNode.getEdgeMap(EDGETYPE.RR).put(new VKmer(nextReverseKmer), readIdList);
+                    nextNode.getEdgeMap(EDGETYPE.FF).put(new VKmer(curReverseKmer), readIdList);
                     return;
                 }
             }

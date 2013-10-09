@@ -103,8 +103,8 @@ public class GenerateGraphViz {
                 if (value.isStartReadOrEndRead())
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
                 outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> " + "5':"
-                        + value.getStartReads().toReadIdString() + "|<f2> " + "~5'"
-                        + value.getEndReads().toReadIdString() + "|<f3> " + value.getAverageCoverage()
+                        + value.getStartReads().toReadIdString() + "|<f2> " + "~5':"
+                        + value.getEndReads().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "|<f4> "
                         + value.getInternalKmer() + "\"]\n";
                 gv.addln(outputNode);
             }
@@ -131,9 +131,9 @@ public class GenerateGraphViz {
     public static String convertEdgeToGraph(String outputNode, Node value) {
         String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (Entry<VKmer, ReadIdSet> e : value.getEdgeList(et).entrySet()) {
-                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"black\" label =\"" + et + ": "
-                        + e.getValue() + "\"]\n";
+            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
+                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + getColor(et)
+                        + "\" label =\"" + et + ": " + e.getValue() + "\"]\n";
             }
         }
         //TODO should output actualKmer instead of kmer
@@ -142,7 +142,18 @@ public class GenerateGraphViz {
         return outputEdge;
     }
 
-    public static void main(String[] args) throws Exception {
-        GenerateGraphViz.convertGraphCleanOutputToGraphViz("data/actual/bubbleadd/BubbleAddGraph/bin/5", "graphtest");
+    public static String getColor(EDGETYPE et) {
+        switch (et) {
+            case FF:
+                return "black";
+            case FR:
+                return "blue";
+            case RF:
+                return "green";
+            case RR:
+                return "red";
+            default:
+                throw new IllegalStateException("Invalid input Edge Type!!!");
+        }
     }
 }

@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.mapred.JobConf;
@@ -23,31 +22,30 @@ import edu.uci.ics.genomix.type.VKmer;
 public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node, VKmer, Node> {
 
     private Node outputNode;
-    private Node tmpNode;
-    private float averageCoverage;
 
     @Override
     public void configure(JobConf job) {
         outputNode = new Node();
-        tmpNode = new Node();
     }
 
     @Override
     public void reduce(VKmer key, Iterator<Node> values, OutputCollector<VKmer, Node> output, Reporter reporter)
             throws IOException {
         outputNode.reset();
-        averageCoverage = 0;
+        float averageCoverage = 0;
 
+        Node curNode;
         while (values.hasNext()) {
-            tmpNode.setAsCopy(values.next());
-            for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                outputNode.getEdgeList(e).unionUpdate(tmpNode.getEdgeList(e));
+            curNode = values.next();
+            for (EDGETYPE e : EDGETYPE.values()) {
+                outputNode.getEdgeMap(e).unionUpdate(curNode.getEdgeMap(e));
             }
-            outputNode.getStartReads().addAll(tmpNode.getStartReads());
-            outputNode.getEndReads().addAll(tmpNode.getEndReads());
-            averageCoverage += tmpNode.getAverageCoverage();
+            outputNode.getStartReads().addAll(curNode.getStartReads());
+            outputNode.getEndReads().addAll(curNode.getEndReads());
+            averageCoverage += curNode.getAverageCoverage();
         }
         outputNode.setAverageCoverage(averageCoverage);
+
         output.collect(key, outputNode);
     }
 

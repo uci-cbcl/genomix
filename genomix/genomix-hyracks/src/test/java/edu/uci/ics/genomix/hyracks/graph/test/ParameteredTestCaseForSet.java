@@ -32,7 +32,6 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +52,7 @@ public class ParameteredTestCaseForSet {
     public static final DirType testSetType = DirType.TIP;
     public String dataPath;
     public int KmerSize;
-    
+
     public ParameteredTestCaseForSet(String otherPath, String otherKmerSize) {
         this.dataPath = otherPath;
         this.KmerSize = Integer.parseInt(otherKmerSize);
@@ -72,7 +71,7 @@ public class ParameteredTestCaseForSet {
                 boolean found = m.find();
                 if (!found)
                     throw new Exception("the number of parameters is not enough");
-                data.add(new Object[] { testDirPointer, m.group(1)});
+                data.add(new Object[] { testDirPointer, m.group(1) });
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -86,7 +85,7 @@ public class ParameteredTestCaseForSet {
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
     private static final String EXPECTED_PATH = "expected";
-    
+
     private static MiniDFSCluster dfsCluster;
     private static FileSystem dfs;
     private static JobConf conf = new JobConf();
@@ -102,7 +101,7 @@ public class ParameteredTestCaseForSet {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHDFS();
-        
+
         driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
                 edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
@@ -117,9 +116,9 @@ public class ParameteredTestCaseForSet {
         System.setProperty("hadoop.log.dir", "logs");
         dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
         dfs = FileSystem.get(conf);
-        
+
         TestSet ts = new TestSet(testSetType);
-        String [] dirSet = ts.getAllTestInputinDir();
+        String[] dirSet = ts.getAllTestInputinDir();
         for (String testDir : dirSet) {
             File src = new File(testDir);
             Path dest = new Path(HDFS_INPUT_PATH + File.separator + src.getName());
@@ -160,10 +159,10 @@ public class ParameteredTestCaseForSet {
         conf.setInt(GenomixJobConf.FRAME_SIZE, JobGenOldBrujinGraph.DEFAULT_FRAME_SIZE);
         driver.runJob(new GenomixJobConf(conf), Plan.BUILD_DEBRUIJN_GRAPH, true);
         dumpResult();
-        
-//        Assert.assertEquals(true,
-//                TestUtils.compareWithSortedResult(new File(ACTUAL_RESULT_DIR + File.separator + 
-//                        File.separator + src.getName() + "/test.txt"), new File(EXPECTED_PATH + File.separator + src.getName() + ".txt")));
+
+        //        Assert.assertEquals(true,
+        //                TestUtils.compareWithSortedResult(new File(ACTUAL_RESULT_DIR + File.separator + 
+        //                        File.separator + src.getName() + "/test.txt"), new File(EXPECTED_PATH + File.separator + src.getName() + ".txt")));
     }
 
     private void cleanUpReEntry() throws IOException {
@@ -175,10 +174,12 @@ public class ParameteredTestCaseForSet {
 
     public void dumpResult() throws Exception {
         File src = new File(dataPath);
-        HadoopMiniClusterTest.copyResultsToLocal(HDFS_OUTPUT_PATH + File.separator + src.getName(), ACTUAL_RESULT_DIR + File.separator + 
-                 File.separator + src.getName() + File.separator + src.getName(), false, conf, true, dfs);
-        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(ACTUAL_RESULT_DIR + File.separator + 
-                File.separator + src.getName() + File.separator + src.getName() + ".bindir", ACTUAL_RESULT_DIR + File.separator + src.getName() + "/graphviz");
+        HadoopMiniClusterTest.copyResultsToLocal(HDFS_OUTPUT_PATH + File.separator + src.getName(), ACTUAL_RESULT_DIR
+                + File.separator + File.separator + src.getName() + File.separator + src.getName(), false, conf, true,
+                dfs);
+        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(
+                ACTUAL_RESULT_DIR + File.separator + File.separator + src.getName() + File.separator + src.getName()
+                        + ".bindir", ACTUAL_RESULT_DIR + File.separator + src.getName() + "/graphviz");
     }
 
     @AfterClass

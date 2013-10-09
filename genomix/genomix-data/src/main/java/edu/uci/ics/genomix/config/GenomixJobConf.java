@@ -130,6 +130,19 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
         private int maxReadIDsPerEdge = -1;
+        
+        // scaffolding
+        @Option(name = "-minScaffoldingTraveralLength", usage = "The minimum length that can be travelled by scaffolding", required = false)
+        private int minScaffoldingTraveralLength = -1;
+        
+        @Option(name = "-maxScaffoldingTraveralLength", usage = "The maximum length that can be travelled by scaffolding", required = false)
+        private int maxScaffoldingTraveralLength = -1;
+        
+        @Option(name = "-minScaffoldingVertexMinCoverage", usage = "The minimum vertex coverage that can be the head of scaffolding", required = false)
+        private int minScaffoldingVertexMinCoverage = -1;
+        
+        @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private int minScaffoldingVertexMinLength = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -239,6 +252,10 @@ public class GenomixJobConf extends JobConf {
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.max.readids.per.edge";
     public static final String P4_RANDOM_SEED = "genomix.p4.random.seed";
+    public static final String SCAFFOLDING_MIN_TRAVERSAL_LENGTH = "scaffolding.min.traveral.length";
+    public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "scaffolding.max.traveral.length";
+    public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "scaffolding.vertex.min.coverage";
+    public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
 
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
@@ -364,7 +381,20 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
-
+        
+        // scaffolding
+        if (getInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, -1) == -1)
+            setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 20);
+        
+        if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
+            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 100);
+        
+        if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
+            setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 5);
+        
+        if (getInt(SCAFFOLDING_VERTEX_MIN_LENGTH, -1) == -1)
+            setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 5);
+        
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
@@ -427,6 +457,10 @@ public class GenomixJobConf extends JobConf {
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
+        setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, opts.minScaffoldingTraveralLength);
+        setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
+        setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
+        setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
     }
 
     /**

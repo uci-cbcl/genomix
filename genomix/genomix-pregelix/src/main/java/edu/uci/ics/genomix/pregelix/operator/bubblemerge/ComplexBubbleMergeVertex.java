@@ -18,7 +18,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
@@ -26,9 +26,8 @@ import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 /**
  * Graph clean pattern: Bubble Merge
  * 
- * @author anbangx
  */
-public class ComplexBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
+public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float dissimilarThreshold = -1;
 
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
@@ -52,10 +51,10 @@ public class ComplexBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueW
     //    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
 
     public void setEdgeListAndEdgeType(int i) {
-        incomingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][0]));
+        incomingEdgeList.setAsCopy(getVertexValue().getEdgeMap(connectedTable[i][0]));
         incomingEdgeType = connectedTable[i][0];
 
-        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeList(connectedTable[i][1]));
+        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeMap(connectedTable[i][1]));
         outgoingEdgeType = connectedTable[i][1];
     }
 
@@ -181,7 +180,7 @@ public class ComplexBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueW
                 if (fracDissimilar < dissimilarThreshold) { //if similar with top node, delete this node and put it in deletedSet
                     // 1. update my own(minor's) edges
                     EDGETYPE MinorToBubble = curMsg.getMinorToBubbleEdgetype();
-                    getVertexValue().getEdgeList(MinorToBubble).remove(curMsg.getSourceVertexId());
+                    getVertexValue().getEdgeMap(MinorToBubble).remove(curMsg.getSourceVertexId());
                     activate();
 
                     // 2. add coverage to top node -- for unchangedSet
@@ -292,14 +291,14 @@ public class ComplexBubbleMergeVertex extends BasicGraphCleanVertex<VertexValueW
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
 
-        if (vertex.getEdgeList(neighborToMeDir).containsKey(incomingMsg.getSourceVertexId())) {
-            readIds = vertex.getEdgeList(neighborToMeDir).get(incomingMsg.getSourceVertexId());
-            vertex.getEdgeList(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
+        if (vertex.getEdgeMap(neighborToMeDir).containsKey(incomingMsg.getSourceVertexId())) {
+            readIds = vertex.getEdgeMap(neighborToMeDir).get(incomingMsg.getSourceVertexId());
+            vertex.getEdgeMap(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
         } else {
             readIds = new ReadIdSet();
         }
         EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
-        getVertexValue().getEdgeList(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
+        getVertexValue().getEdgeMap(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
     }
 
     @Override

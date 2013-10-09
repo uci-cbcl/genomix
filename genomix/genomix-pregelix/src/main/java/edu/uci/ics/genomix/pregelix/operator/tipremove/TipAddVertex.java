@@ -14,14 +14,13 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 
 /**
- * @author anbangx
- *         Add tip
+ *  Add tip
  */
 public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;
@@ -53,7 +52,7 @@ public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritabl
         /**
          * set the vertex value
          */
-        vertexValue.setEdgeList(dir, edgeList);
+        vertexValue.setEdgeMap(dir, edgeList);
         vertex.setVertexValue(vertexValue);
 
         addVertex(insertedTip, vertex);
@@ -66,7 +65,7 @@ public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritabl
     }
 
     public void addEdgeToInsertedTip(EDGETYPE dir, VKmer insertedTip) {
-        getVertexValue().getEdgeList(dir).put(insertedTip, new ReadIdSet(Arrays.asList(new Long(0))));
+        getVertexValue().getEdgeMap(dir).put(insertedTip, new ReadIdSet(Arrays.asList(new Long(0))));
     }
 
     /**
@@ -93,8 +92,8 @@ public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritabl
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);

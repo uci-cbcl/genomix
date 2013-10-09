@@ -12,7 +12,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessage;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeMap;
@@ -29,9 +29,8 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * reads. The algorithms are similar to scaffolding, but uses individual
  * reads. It is very experimental, with marginal improvements to the graph
  * 
- * @author anbangx
  */
-public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable, SplitRepeatMessage> {
+public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, SplitRepeatMessage> {
 
     public static final int NUM_LETTERS_TO_APPEND = 3;
     private static long randSeed = 1; //static for save memory
@@ -92,9 +91,9 @@ public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable
         VKmer vertexId = new VKmer();
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
-        vertexValue.getEdgeList(reverseNeighborInfo.et).put(reverseNeighborInfo.kmer,
+        vertexValue.getEdgeMap(reverseNeighborInfo.et).put(reverseNeighborInfo.kmer,
                 new ReadIdSet(reverseNeighborInfo.readIds));
-        vertexValue.getEdgeList(forwardNeighborInfo.et).put(forwardNeighborInfo.kmer,
+        vertexValue.getEdgeMap(forwardNeighborInfo.et).put(forwardNeighborInfo.kmer,
                 new ReadIdSet(forwardNeighborInfo.readIds));
 
         vertexValue.setInternalKmer(getVertexId());
@@ -123,7 +122,7 @@ public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable
 
     public void deleteEdgeFromOldVertex(Set<NeighborInfo> neighborsInfo) {
         for (NeighborInfo neighborInfo : neighborsInfo)
-            getVertexValue().getEdgeList(neighborInfo.et).removeReadIdSubset(neighborInfo.kmer, neighborInfo.readIds);
+            getVertexValue().getEdgeMap(neighborInfo.et).removeReadIdSubset(neighborInfo.kmer, neighborInfo.readIds);
     }
 
     public void detectRepeatAndSplit() {
@@ -135,8 +134,8 @@ public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable
                 // set edgeType and the corresponding edgeList based on connectedTable
                 EDGETYPE reverseEdgeType = connectedTable[i][0];
                 EDGETYPE forwardEdgeType = connectedTable[i][1];
-                EdgeMap reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
-                EdgeMap forwardEdgeList = vertex.getEdgeList(forwardEdgeType);
+                EdgeMap reverseEdgeList = vertex.getEdgeMap(reverseEdgeType);
+                EdgeMap forwardEdgeList = vertex.getEdgeMap(forwardEdgeType);
 
                 for (Entry<VKmer, ReadIdSet> reverseEdge : reverseEdgeList.entrySet()) {
                     for (Entry<VKmer, ReadIdSet> forwardEdge : forwardEdgeList.entrySet()) {
@@ -158,7 +157,7 @@ public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable
 
                             //set statistics counter: Num_SplitRepeats
                             incrementCounter(StatisticsCounter.Num_SplitRepeats);
-                            getVertexValue().setCounters(counters);
+                            vertex.setCounters(counters);
 
                             // send msg to neighbors to update their edges to new vertex 
                             updateNeighbors(createdVertexId, edgeIntersection, newReverseNeighborInfo,
@@ -193,8 +192,8 @@ public class SplitRepeatVertex extends BasicGraphCleanVertex<VertexValueWritable
             Entry<VKmer, ReadIdSet> deletedEdge = new SimpleEntry<VKmer, ReadIdSet>(incomingMsg.getSourceVertexId(),
                     createdEdge.getValue());
 
-            getVertexValue().getEdgeList(meToNeighbor).put(createdEdge.getKey(), new ReadIdSet(createdEdge.getValue()));
-            getVertexValue().getEdgeList(meToNeighbor).removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
+            getVertexValue().getEdgeMap(meToNeighbor).put(createdEdge.getKey(), new ReadIdSet(createdEdge.getValue()));
+            getVertexValue().getEdgeMap(meToNeighbor).removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
         }
     }
 

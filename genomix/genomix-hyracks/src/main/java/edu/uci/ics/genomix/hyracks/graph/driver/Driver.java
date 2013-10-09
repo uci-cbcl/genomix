@@ -32,9 +32,9 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
-import edu.uci.ics.genomix.hyracks.graph.job.JobGenOldBrujinGraph;
-import edu.uci.ics.genomix.hyracks.graph.job.JobGenCheckReader;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenBuildBrujinGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenCheckReader;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenOldBrujinGraph;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;

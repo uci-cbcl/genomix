@@ -8,17 +8,16 @@ import java.util.Iterator;
 import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.EdgeType;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable, BFSTraverseMessage> {
+public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, BFSTraverseMessage> {
 
     public enum READHEAD_TYPE {
         UNFLIPPED,
@@ -29,6 +28,11 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         SRC_OFFSET,
         DEST_OFFSET,
         WHOLE_LENGTH;
+    }
+    
+    public enum SEARCH_TYPE {
+        BEGIN_SEARCH,
+        CONTINUE_SEARCH;
     }
     
     public static class SearchInfo implements Writable {
@@ -74,16 +78,16 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         }
     }
     
-    public static class PathAndEdgeTypeList implements Writable {
+    public static class PathAndEdgeTypeList implements Writable { 
         VKmerList kmerList;
-        ArrayListWritable<EdgeType> edgeTypeList;
+        ArrayListWritable<EDGETYPE> edgeTypeList;
       
         public PathAndEdgeTypeList(){
             kmerList = new VKmerList();
-            edgeTypeList = new ArrayListWritable<EdgeType>();
+            edgeTypeList = new ArrayListWritable<EDGETYPE>();
         }
         
-        public PathAndEdgeTypeList(VKmerList kmerList, ArrayListWritable<EdgeType> edgeTypeList){
+        public PathAndEdgeTypeList(VKmerList kmerList, ArrayListWritable<EDGETYPE> edgeTypeList){
             this.kmerList.setCopy(kmerList);
             this.edgeTypeList.clear();
             this.edgeTypeList.addAll(edgeTypeList);
@@ -95,7 +99,7 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
         }
         
         public int size(){
-            return kmerList.getCountOfPosition();
+            return kmerList.getCountOfPosition(); // TODO rename to size
         }
         
         @Override
@@ -118,11 +122,11 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
             this.kmerList.setCopy(kmerList);
         }
 
-        public ArrayListWritable<EdgeType> getEdgeTypeList() {
+        public ArrayListWritable<EDGETYPE> getEdgeTypeList() {
             return edgeTypeList;
         }
 
-        public void setEdgeTypeList(ArrayListWritable<EdgeType> edgeTypeList) {
+        public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList) {
             this.edgeTypeList.clear();
             this.edgeTypeList.addAll(edgeTypeList);
         }
@@ -145,29 +149,42 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
             outgoingMsg.reset();
         if (fakeVertex == null) {
             fakeVertex = new VKmer();
-            //            String random = generaterRandomString(kmerSize + 1);
-            //            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
+//            String random = generaterRandomString(kmerSize + 1);
+//            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
         }
     }
 
     public VKmer setOutgoingSrcAndDest(long readId, ArrayListWritable<SearchInfo> searchInfoList) {
-        //TODO src is smaller; dest is greater
-        VKmer srcNode = searchInfoList.get(0).getKmer();
-        outgoingMsg.setSrcFlip(searchInfoList.get(0).isFlip());
-        VKmer destNode = searchInfoList.get(1).getKmer();
-        outgoingMsg.setDestFlip(searchInfoList.get(1).isFlip());
-        outgoingMsg.setReadId(readId); // commonReadId
-        outgoingMsg.setSeekedVertexId(destNode);
+        // src is greater; dest is smaller
+        boolean firstIsSrc = searchInfoList.get(0).kmer.compareTo(searchInfoList.get(1).kmer) >= 0;
+        VKmer firstKmer = searchInfoList.get(0).getKmer();
+        boolean firstFlip = searchInfoList.get(0).isFlip();
+        VKmer secondKmer = searchInfoList.get(1).getKmer();
+        boolean secondFlip = searchInfoList.get(1).isFlip();
+        VKmer srcNode;
+        if(firstIsSrc){
+            srcNode = firstKmer;
+            outgoingMsg.setSrcFlip(firstFlip);
+            outgoingMsg.setSeekedVertexId(secondKmer);
+            outgoingMsg.setDestFlip(secondFlip);
+        } else {
+            srcNode = secondKmer;
+            outgoingMsg.setSrcFlip(secondFlip);
+            outgoingMsg.setSeekedVertexId(firstKmer);
+            outgoingMsg.setDestFlip(firstFlip);
+        }
+        
+        outgoingMsg.setReadId(readId); // commonReadI
 
         return srcNode;
     }
     
-    public boolean isValidDestination(BFSTraverseMessage incomingMsg) {
-        EDGETYPE meToNeighbor = EDGETYPE.fromByte(incomingMsg.getFlag());
+    public boolean isValidOrientation(BFSTraverseMessage incomingMsg) {
+        EDGETYPE meToIncoming = EDGETYPE.fromByte(incomingMsg.getFlag());
         if (incomingMsg.isDestFlip())
-            return meToNeighbor.dir() == DIR.REVERSE;
+            return meToIncoming.dir() == DIR.REVERSE;
         else
-            return meToNeighbor.dir() == DIR.FORWARD;
+            return meToIncoming.dir() == DIR.FORWARD;
     }
     
     @Override
@@ -177,12 +194,12 @@ public class BFSTraverseVertex extends BasicGraphCleanVertex<VertexValueWritable
             addFakeVertex("A");
             voteToHalt();
         } else if (getSuperstep() == 2) {
-            //            // for test, assign two kmer to srcNode and destNode
-            //            kmerList.append(srcNode);
-            //            kmerList.append(destNode);
-            //            // initiate two nodes -- srcNode and destNode
-            //            initiateSrcAndDestNode(kmerList, commonReadId, false, true);
-            //            sendMsg(srcNode, outgoingMsg);
+//            // for test, assign two kmer to srcNode and destNode
+//            kmerList.append(srcNode);
+//            kmerList.append(destNode);
+//            // initiate two nodes -- srcNode and destNode
+//            initiateSrcAndDestNode(kmerList, commonReadId, false, true);
+//            sendMsg(srcNode, outgoingMsg);
 
             deleteVertex(getVertexId());
         } 

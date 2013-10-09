@@ -15,8 +15,8 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.InitialGraphCleanInputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 
@@ -79,7 +79,7 @@ public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
 
     public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmer insertedBubble) {
         EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror();
-        getVertexValue().getEdgeList(newBubbleToMeDir).put(insertedBubble, new ReadIdSet(Arrays.asList(new Long(0))));
+        getVertexValue().getEdgeMap(newBubbleToMeDir).put(insertedBubble, new ReadIdSet(Arrays.asList(new Long(0))));
     }
 
     public void setupEdgeForInsertedBubble() {
@@ -117,8 +117,8 @@ public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(InitialGraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);

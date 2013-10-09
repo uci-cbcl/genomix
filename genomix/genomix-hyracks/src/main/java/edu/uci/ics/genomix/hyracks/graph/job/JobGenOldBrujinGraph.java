@@ -165,7 +165,6 @@ public class JobGenOldBrujinGraph extends JobGen {
                 jobSpec));
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
-        
 
         Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(),
                 new AggregateKmerAggregateFactory(), new KmerHashPartitioncomputerFactory(),

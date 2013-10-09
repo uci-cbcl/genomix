@@ -7,7 +7,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EdgeMap;
@@ -18,13 +18,12 @@ import edu.uci.ics.genomix.type.Node.DIR;
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
  * Details: Sequencing errors at the ends of the reads form "tips": short, low coverage nodes
- * with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
- * The algorithm identifies these nodes and prunes them from the graph. This is then followed
- * by recompressing the graph.
+ * 			with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
+ * 			The algorithm identifies these nodes and prunes them from the graph. This is then followed
+ * 			by recompressing the graph.
  * 
- * @author anbangx
  */
-public class TipRemoveVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
     private static final Logger LOG = Logger.getLogger(TipRemoveVertex.class.getName());
 
@@ -75,7 +74,7 @@ public class TipRemoveVertex extends BasicGraphCleanVertex<VertexValueWritable, 
             outgoingMsg.reset();
             outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            EdgeMap edgeList = getVertexValue().getEdgeList(tipToNeighborEdgetype);
+            EdgeMap edgeList = getVertexValue().getEdgeMap(tipToNeighborEdgetype);
             if (edgeList.size() != 1)
                 throw new IllegalArgumentException("In this edgeType, the size of edges has to be 1!");
             VKmer destVertexId = edgeList.firstKey();

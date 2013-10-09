@@ -35,11 +35,11 @@ import edu.uci.ics.genomix.util.Marshal;
 
 public class Node implements Writable, Serializable {
 
-    public Logger LOG = Logger.getLogger(Node.class.getName());
-    private boolean DEBUG = true;
+    public static final Logger LOG = Logger.getLogger(Node.class.getName());
+    private static boolean DEBUG = true;
     public static List<VKmer> problemKmers = new ArrayList<VKmer>();
 
-    public enum DIR {
+    public enum DIR{
 
         REVERSE((byte) (0b01 << 2)),
         FORWARD((byte) (0b10 << 2));
@@ -109,9 +109,12 @@ public class Node implements Writable, Serializable {
                 retSet.add(DIR.REVERSE);
             return retSet;
         }
+
     }
 
-    public enum EDGETYPE {
+    public enum EDGETYPE implements Writable{ 
+    	// TODO implements Writable
+    	// TODO remove EdgeType class
 
         FF((byte) (0b00 << 0)),
         FR((byte) (0b01 << 0)),
@@ -168,7 +171,35 @@ public class Node implements Writable, Serializable {
                     throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
             }
         }
-
+        
+        /**
+         * 
+         */
+        public static EDGETYPE getEdgeTypeFromDirToDir(DIR dir1, DIR dir2){
+        	switch(dir1){
+        		case FORWARD:
+        			switch(dir2){
+        				case FORWARD:
+        					return FF;
+        				case REVERSE:
+        					return FR;
+        				default:
+                            throw new IllegalArgumentException("Invalid direction2 given: " + dir2);
+        			}
+        		case REVERSE:
+        			switch(dir2){
+	    				case FORWARD:
+	    					return RF;
+	    				case REVERSE:
+	    					return RR;
+	    				default:
+	                        throw new IllegalArgumentException("Invalid direction2 given: " + dir2);
+        			}
+        		default:
+                    throw new IllegalArgumentException("Invalid direction1 given: " + dir2);
+        	}
+        }
+        
         public DIR dir() {
             return dir(this);
         }
@@ -296,6 +327,16 @@ public class Node implements Writable, Serializable {
             EDGETYPE et2 = EDGETYPE.fromByte(b2);
             return sameOrientation(et1, et2);
         }
+
+        @Override
+        public void write(DataOutput out) throws IOException {
+            out.writeByte(this.get());
+        }
+
+        @Override
+        public void readFields(DataInput in) throws IOException {
+            fromByte(in.readByte());
+        }
     }
 
     public static class NeighborInfo {
@@ -404,7 +445,9 @@ public class Node implements Writable, Serializable {
     }
 
     public Node getNode() { // TODO what is this used for???
-        return this;
+    	Node node = new Node();
+    	node.setAsCopy(this.edges, this.startReads, this.endReads, this.internalKmer, this.averageCoverage);
+        return node;
     }
 
     public void setAsCopy(Node node) {
@@ -452,7 +495,7 @@ public class Node implements Writable, Serializable {
                     "getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
         EnumSet<EDGETYPE> ets = direction.edgeTypes();
         for (EDGETYPE et : ets) {
-            if (getEdgeList(et).size() > 0)
+            if (getEdgeMap(et).size() > 0)
                 return et;
         }
         throw new IllegalStateException("Programmer error: we shouldn't get here... Degree is 1 in " + direction
@@ -467,8 +510,8 @@ public class Node implements Writable, Serializable {
             return null;
         }
         for (EDGETYPE et : direction.edgeTypes()) {
-            if (getEdgeList(et).size() > 0) {
-                return new NeighborInfo(et, getEdgeList(et).firstEntry());
+            if (getEdgeMap(et).size() > 0) {
+                return new NeighborInfo(et, getEdgeMap(et).firstEntry());
             }
         }
         return null;
@@ -478,17 +521,17 @@ public class Node implements Writable, Serializable {
      * Get this node's edgeType and edgeList in this given edgeType. Return null if there is no neighbor
      */
     public NeighborsInfo getNeighborsInfo(EDGETYPE et) {
-        if (getEdgeList(et).size() == 0)
+        if (getEdgeMap(et).size() == 0)
             return null;
-        return new NeighborsInfo(et, getEdgeList(et));
+        return new NeighborsInfo(et, getEdgeMap(et));
     }
 
-    public EdgeMap getEdgeList(EDGETYPE edgeType) {
+    public EdgeMap getEdgeMap(EDGETYPE edgeType) {
         return edges[edgeType.get()];
     }
 
-    public void setEdgeList(EDGETYPE edgeType, EdgeMap edgeList) {
-        this.edges[edgeType.get()].setAsCopy(edgeList);
+    public void setEdgeMap(EDGETYPE edgeType, EdgeMap edgeMap) {
+        this.edges[edgeType.get()].setAsCopy(edgeMap);
     }
 
     public EdgeMap[] getEdges() {
@@ -506,7 +549,7 @@ public class Node implements Writable, Serializable {
     public void setAverageCoverage(float averageCoverage) {
         this.averageCoverage = averageCoverage;
     }
-
+    
     /**
      * Update my coverage to be the average of this and other. Used when merging
      * paths.
@@ -536,6 +579,7 @@ public class Node implements Writable, Serializable {
         return startReads;
     }
 
+    // TODO rename the function
     public void setStartReads(ReadHeadSet startReads) {
         this.startReads.clear();
         this.startReads.addAll(startReads);
@@ -606,25 +650,29 @@ public class Node implements Writable, Serializable {
         averageCoverage = Marshal.getFloat(data, curOffset);
     }
 
+    public static void write(Node n, DataOutput out) throws IOException {
+        for (EDGETYPE e : EDGETYPE.values()) {
+            n.edges[e.get()].write(out);
+        }
+        n.startReads.write(out);
+        n.endReads.write(out);
+        n.internalKmer.write(out);
+        out.writeFloat(n.averageCoverage);
+
+//        if (DEBUG) {
+//            boolean verbose = false;
+//            for (VKmer problemKmer : problemKmers) {
+//                verbose |= n.findEdge(problemKmer) != null;
+//            }
+//            if (verbose) {
+//                LOG.fine("write: " + n.toString());
+//            }
+//        }
+    }
+    
     @Override
     public void write(DataOutput out) throws IOException {
-        for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()].write(out);
-        }
-        startReads.write(out);
-        endReads.write(out);
-        this.internalKmer.write(out);
-        out.writeFloat(averageCoverage);
-
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-                LOG.fine("write: " + toString());
-            }
-        }
+        write(this, out);
     }
 
     @Override
@@ -681,11 +729,11 @@ public class Node implements Writable, Serializable {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
         for (EDGETYPE e : EDGETYPE.values()) {
-            sbuilder.append(edges[e.get()].toString()).append('\t');
+            sbuilder.append(e + ":").append(edges[e.get()].toString()).append('\t');
         }
-        sbuilder.append("{5':" + startReads.toString() + ", ~5':" + endReads.toString() + "}").append('\t');
-        sbuilder.append(internalKmer.toString()).append('\t');
-        sbuilder.append(averageCoverage).append('x').append('}');
+        sbuilder.append("5':" + startReads.toString() + ", ~5':" + endReads.toString()).append('\t');
+        sbuilder.append("kmer:" + internalKmer.toString()).append('\t');
+        sbuilder.append("cov:" + averageCoverage).append('x').append('}');
         return sbuilder.toString();
     }
 

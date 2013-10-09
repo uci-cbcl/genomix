@@ -5,11 +5,11 @@ import java.util.Iterator;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
-public class SymmetryCheckerVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
     @Override
     public void initVertex() {
@@ -41,7 +41,7 @@ public class SymmetryCheckerVertex extends BasicGraphCleanVertex<VertexValueWrit
                 MessageWritable incomingMsg = msgIterator.next();
                 EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
                 EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
-                boolean exist = getVertexValue().getEdgeList(neighborToMeDir).containsKey(
+                boolean exist = getVertexValue().getEdgeMap(neighborToMeDir).containsKey(
                         incomingMsg.getSourceVertexId());
                 if (!exist) {
                     getVertexValue().setState(State.IS_ERROR);

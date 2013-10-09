@@ -11,7 +11,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.DIR;
@@ -22,10 +22,9 @@ import edu.uci.ics.genomix.type.VKmer;
  * The super class of different path merge algorithms
  * This maximally compresses linear subgraphs (A->B->C->...->Z) into into individual nodes (ABC...Z).
  * 
- * @author anbangx
  */
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
-        BasicGraphCleanVertex<V, M> {
+        DeBruijnGraphCleanVertex<V, M> {
 
     private static final Logger LOG = Logger.getLogger(BasicPathMergeVertex.class.getName());
 
@@ -65,7 +64,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         // send a message to each neighbor indicating they can't merge towards me
         for (DIR dir : dirsToRestrict) {
             for (EDGETYPE et : dir.edgeTypes()) {
-                for (VKmer destId : vertex.getEdgeList(et).keySet()) {
+                for (VKmer destId : vertex.getEdgeMap(et).keySet()) {
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(et.mirror().dir().get());
                     if (verbose)
@@ -127,11 +126,11 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag(outFlag);
             for (EDGETYPE mergeEdge : mergeEdges) {
                 EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);
-                outgoingMsg.getNode().setEdgeList(newEdgetype, getVertexValue().getEdgeList(mergeEdge)); // copy into outgoingMsg
+                outgoingMsg.getNode().setEdgeMap(newEdgetype, getVertexValue().getEdgeMap(mergeEdge)); // copy into outgoingMsg
             }
 
             // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
-            for (VKmer dest : vertex.getEdgeList(updateEdge).keySet()) {
+            for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
                 if (verbose)
                     LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
                             + " to " + dest + ": " + outgoingMsg);
@@ -150,10 +149,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
-            node.getEdgeList(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
+            node.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
             for (EDGETYPE edgeType : EnumSet.allOf(EDGETYPE.class)) {
-                node.getEdgeList(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
+                node.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
             }
             updated = true;
             if (verbose) {
@@ -187,7 +186,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);
-            VKmer dest = vertex.getEdgeList(mergeEdgetype).firstKey();
+            VKmer dest = vertex.getEdgeMap(mergeEdgetype).firstKey();
             sendMsg(dest, outgoingMsg);
 
             if (verbose) {

@@ -95,7 +95,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                }
 
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                    localUniNode.getEdgeList(e).unionUpdate((readNode.getEdgeList(e)));
+                    localUniNode.getEdgeMap(e).unionUpdate((readNode.getEdgeMap(e)));
                 }
                 localUniNode.getStartReads().addAll(readNode.getStartReads());
                 localUniNode.getEndReads().addAll(readNode.getEndReads());
@@ -110,7 +110,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
+                    localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
                 localUniNode.getStartReads().addAll(readNode.getStartReads());
                 localUniNode.getEndReads().addAll(readNode.getEndReads());

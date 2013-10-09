@@ -6,7 +6,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.Node.DIR;
@@ -16,9 +16,8 @@ import edu.uci.ics.genomix.type.VKmer;
 /**
  * Graph clean pattern: Remove Bridge
  * 
- * @author anbangx
  */
-public class BridgeRemoveVertex extends BasicGraphCleanVertex<VertexValueWritable, MessageWritable> {
+public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
     private int MIN_LENGTH_TO_KEEP = -1;
 
@@ -51,7 +50,7 @@ public class BridgeRemoveVertex extends BasicGraphCleanVertex<VertexValueWritabl
                 //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
                 if (vertex.degree(d) == 2) {
                     for (EDGETYPE et : d.edgeTypes()) {
-                        for (VKmer dest : vertex.getEdgeList(et).keySet()) {
+                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                             sendMsg(dest, outgoingMsg);
                         }
                     }
