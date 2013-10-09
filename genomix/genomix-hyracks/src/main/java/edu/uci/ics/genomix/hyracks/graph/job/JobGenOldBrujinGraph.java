@@ -165,10 +165,10 @@ public class JobGenOldBrujinGraph extends JobGen {
                 jobSpec));
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
-        jobSpec.setFrameSize(frameSize);
+        
 
-        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(
-                kmerSize), new AggregateKmerAggregateFactory(kmerSize), new KmerHashPartitioncomputerFactory(),
+        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(),
+                new AggregateKmerAggregateFactory(), new KmerHashPartitioncomputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         logDebug("LocalKmerGroupby Operator");
@@ -209,6 +209,7 @@ public class JobGenOldBrujinGraph extends JobGen {
     public JobSpecification generateJob() throws HyracksException {
 
         JobSpecification jobSpec = new JobSpecification();
+        jobSpec.setFrameSize(frameSize);
         logDebug("ReadKmer Operator");
 
         HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);

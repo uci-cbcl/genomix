@@ -25,6 +25,7 @@ import org.apache.hadoop.io.Text;
 
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadIdSet;
@@ -42,7 +43,7 @@ import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
-//    private static final Logger LOG = Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
+    //    private static final Logger LOG = Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
 
     public static final int OutputKmerField = 0;
     public static final int OutputNodeField = 1;
@@ -65,7 +66,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         return new IKeyValueParser<LongWritable, Text>() {
 
             private ReadHeadInfo readHeadInfo = new ReadHeadInfo(0);
-            private ReadIdSet readIdList = new ReadIdSet();
+            private ReadIdSet readIdSet = new ReadIdSet();
             private Node curNode = new Node();
             private Node nextNode = new Node();
 
@@ -129,16 +130,15 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 curForwardKmer.setFromStringBytes(readLetters, 0);
                 curReverseKmer.setReversedFromStringBytes(readLetters, 0);
 
-                Node.DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? Node.DIR.FORWARD
-                        : Node.DIR.REVERSE;
+                DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
 
-                if (curNodeDir == Node.DIR.FORWARD) {
+                if (curNodeDir == DIR.FORWARD) {
                     curNode.getStartReads().add(readHeadInfo);
                 } else {
                     curNode.getEndReads().add(readHeadInfo);
                 }
 
-                Node.DIR nextNodeDir = Node.DIR.FORWARD;
+                DIR nextNodeDir = DIR.FORWARD;
 
                 /*middle kmer*/
                 nextForwardKmer.setAsCopy(curForwardKmer);
@@ -147,9 +147,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextNode.setAverageCoverage(1);
                     nextForwardKmer.shiftKmerWithNextChar(readLetters[i]);
                     nextReverseKmer.setReversedFromStringBytes(readLetters, i - Kmer.getKmerLength() + 1);
-                    nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? Node.DIR.FORWARD : Node.DIR.REVERSE;
+                    nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
 
-                    setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode, readIdList);
+                    setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode, readIdSet);
                     writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
 
                     curNode.reset();
@@ -164,13 +164,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
 
             public void setReadInfo(byte mateId, long readId, int posId) {
-                readIdList.clear();
-                readIdList.add(readId);
+                readIdSet.clear();
+                readIdSet.add(readId);
                 readHeadInfo.set(mateId, readId, posId);
             }
 
-            public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, Node.DIR curNodeDir, Node node,
-                    IFrameWriter writer) {
+            public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, DIR curNodeDir, Node node, IFrameWriter writer) {
                 switch (curNodeDir) {
                     case FORWARD:
                         InsertToFrame(forwardKmer, node, writer);
@@ -181,25 +180,25 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
             }
 
-            public void setEdgeListForCurAndNext(Node.DIR curNodeDir, Node curNode, Node.DIR nextNodeDir,
-                    Node nextNode, ReadIdSet readIdList) {
+            public void setEdgeListForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode,
+                    ReadIdSet readIdList) {
                 //TODO simplify this function after Anbang merge the edgeType detect code
-                if (curNodeDir == Node.DIR.FORWARD && nextNodeDir == Node.DIR.FORWARD) {
+                if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.FORWARD) {
                     curNode.getEdgeList(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
                     return;
                 }
-                if (curNodeDir == Node.DIR.FORWARD && nextNodeDir == Node.DIR.REVERSE) {
+                if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.REVERSE) {
                     curNode.getEdgeList(EDGETYPE.FR).put(new VKmer(nextReverseKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.FR).put(new VKmer(curForwardKmer), readIdList);
                     return;
                 }
-                if (curNodeDir == Node.DIR.REVERSE && nextNodeDir == Node.DIR.FORWARD) {
+                if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.FORWARD) {
                     curNode.getEdgeList(EDGETYPE.RF).put(new VKmer(nextForwardKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.RF).put(new VKmer(curReverseKmer), readIdList);
                     return;
                 }
-                if (curNodeDir == Node.DIR.REVERSE && nextNodeDir == Node.DIR.REVERSE) {
+                if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.REVERSE) {
                     curNode.getEdgeList(EDGETYPE.RR).put(new VKmer(nextReverseKmer), readIdList);
                     nextNode.getEdgeList(EDGETYPE.FF).put(new VKmer(curReverseKmer), readIdList);
                     return;

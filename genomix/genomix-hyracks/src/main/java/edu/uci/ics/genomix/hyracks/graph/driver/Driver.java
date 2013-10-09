@@ -166,6 +166,8 @@ public class Driver {
 
     // TODO remove this main because we already have the genomix_driver
     public static void main(String[] args) throws Exception {
+        //String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",  
+        // "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-hyracksBuildOutputText", "true"};
         GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
         int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));

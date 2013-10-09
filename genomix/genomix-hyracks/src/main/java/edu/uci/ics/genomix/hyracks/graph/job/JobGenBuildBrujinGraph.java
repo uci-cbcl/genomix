@@ -64,6 +64,7 @@ public class JobGenBuildBrujinGraph extends JobGenOldBrujinGraph {
     public JobSpecification generateJob() throws HyracksException {
 
         JobSpecification jobSpec = new JobSpecification();
+        jobSpec.setFrameSize(frameSize);
         logDebug("ReadKmer Operator");
 
         HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
@@ -78,5 +79,4 @@ public class JobGenBuildBrujinGraph extends JobGenOldBrujinGraph {
         return jobSpec;
     }
 
-    
 }

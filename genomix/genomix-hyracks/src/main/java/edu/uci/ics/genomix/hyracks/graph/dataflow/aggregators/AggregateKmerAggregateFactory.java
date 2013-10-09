@@ -40,7 +40,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
     private static final Logger LOG = Logger.getLogger(AggregateKmerAggregateFactory.class.getName());
 
-    public AggregateKmerAggregateFactory(int k) {
+    public AggregateKmerAggregateFactory() {
     }
 
     @Override
@@ -80,12 +80,26 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 localUniNode.reset();
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
 
+                //TODO This piece of code is for the debug use. It's better to have a better solution for it.
+                //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+                //                    Iterator<VKmerBytesWritable> it = readNode.getEdgeList(DirectionFlag.DIR_FR).getKeys();
+                //                    while (it.hasNext()) {
+                //                        System.out.println("---------->readNode  "
+                //                                + it.next().toString());
+                //                    }
+                //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {
+                //                        System.out.println("---------->localUniNode "
+                //                                + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString());
+                //                        localUniNode.foundMe = true;
+                //                    }
+                //                }
+
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeList(e).unionUpdate((readNode.getEdgeList(e)));
                 }
                 localUniNode.getStartReads().addAll(readNode.getStartReads());
                 localUniNode.getEndReads().addAll(readNode.getEndReads());
-                localUniNode.addCoverage(readNode); // TODO: should be renamed as updateCoverage ?
+                localUniNode.addCoverage(readNode); // TODO: should be renamed as addCoverageFromNode() ?
             }
 
             @Override
@@ -101,6 +115,36 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 localUniNode.getStartReads().addAll(readNode.getStartReads());
                 localUniNode.getEndReads().addAll(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
+
+                //TODO This piece of code is for the debug use. It's better to have a better solution for it.
+                //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+                //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+                //                        System.out.println("***********************************************************");
+                //                        
+                //                        System.out.println("---------->readNode  "
+                //                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                        System.out.println("---------->localUniNode "
+                //                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                        
+                //                        System.out.println("-->number for FR: " + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().getCountOfPosition());
+                //                        
+                //                        localUniNode.foundMe = true;
+                //                        localUniNode.previous = localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString();
+                //                        localUniNode.stepCount++;
+                //                    } else if (localUniNode.foundMe) {
+                //                        if (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0) {
+                //                            if (localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {
+                //                            // good, it's still there
+                //                                localUniNode.stepCount++;
+                //                                localUniNode.previous = localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString(); 
+                //                            } else {
+                //                                
+                //                                System.out.println("-->number for FR: " + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().getCountOfPosition());
+                //                                System.out.println("ERROR: the value has disappeared! previously:\n" + "stepCount: " + localUniNode.stepCount + localUniNode.previous + "\n\ncurrently:\n" + localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString());
+                //                            }
+                //                        }
+                //                    }
+                //                }
             }
 
             @Override
@@ -115,12 +159,23 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
                 Node localUniNode = (Node) state.state;
+
+                //TODO This piece of code is for the debug use. It's better to have a better solution for it.
+                //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
+                //                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
+                //                        System.out.println("local final output***********************************************************");
+                //                        System.out.println("---------->readNode  "
+                //                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                        System.out.println("---------->localUniNode "
+                //                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
+                //                    }
+                //                }
                 try {
                     fieldOutput.write(localUniNode.marshalToByteArray(), 0, localUniNode.getSerializedLength());
                     tupleBuilder.addFieldEndOffset();
                     if (localUniNode.getSerializedLength() > frameSize / 2) {
                         LOG.warning("Aggregate Kmer: output data kmerByteSize is too big: "
-                                + localUniNode.getSerializedLength());
+                                + localUniNode.getSerializedLength() + "\nNode is:" + localUniNode.toString());
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
