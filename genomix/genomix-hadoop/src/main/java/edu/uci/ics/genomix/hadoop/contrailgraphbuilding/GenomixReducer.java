@@ -33,10 +33,10 @@ public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node
             throws IOException {
         outputNode.reset();
         float averageCoverage = 0;
-        
+
         Node curNode;
         while (values.hasNext()) {
-        	curNode = values.next();
+            curNode = values.next();
             for (EDGETYPE e : EDGETYPE.values()) {
                 outputNode.getEdgeMap(e).unionUpdate(curNode.getEdgeMap(e));
             }
@@ -45,7 +45,7 @@ public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node
             averageCoverage += curNode.getAvgCoverage();
         }
         outputNode.setAvgCoverage(averageCoverage);
-        
+
         output.collect(key, outputNode);
     }
 
