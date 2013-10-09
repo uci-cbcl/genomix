@@ -60,6 +60,7 @@ public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Seri
     //        // TODO Auto-generated constructor stub
     //    }
 
+    // FIXME setAsCopy??? But it doesn't copy key.
     public void setAsCopy(EdgeMap other) {
         clear();
         for (Entry<VKmer, ReadIdSet> e : other.entrySet()) {
