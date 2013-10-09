@@ -96,7 +96,7 @@ public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
      * step 2
      */
     public void processUpdates(Iterator<MessageWritable> msgIterator) {
-        responseToDeadNode(msgIterator);
+        pruneDeadEdges(msgIterator);
     }
 
     @Override

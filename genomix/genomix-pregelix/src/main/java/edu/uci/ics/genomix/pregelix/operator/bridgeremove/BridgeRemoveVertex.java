@@ -93,7 +93,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
         } else if (getSuperstep() == 2) {
             removeBridge(msgIterator);
         } else if (getSuperstep() == 3) {
-            responseToDeadNode(msgIterator);
+            pruneDeadEdges(msgIterator);
         }
         voteToHalt();
     }

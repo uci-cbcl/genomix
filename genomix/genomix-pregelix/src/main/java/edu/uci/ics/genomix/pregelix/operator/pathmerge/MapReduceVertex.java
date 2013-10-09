@@ -100,7 +100,7 @@ public class MapReduceVertex<V extends VertexValueWritable, M extends PathMergeM
         } else if (getSuperstep() == 4) {
             broadcastKillself();
         } else if (getSuperstep() == 5) {
-            responseToDeadNode(msgIterator);
+            pruneDeadEdges(msgIterator);
             voteToHalt();
         }
     }

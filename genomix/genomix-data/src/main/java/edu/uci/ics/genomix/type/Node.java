@@ -514,7 +514,7 @@ public class Node implements Writable, Serializable {
                 return new NeighborInfo(et, getEdgeMap(et).firstEntry());
             }
         }
-        return null;
+        throw new IllegalStateException("Programmer error!!!");
     }
 
     /**
