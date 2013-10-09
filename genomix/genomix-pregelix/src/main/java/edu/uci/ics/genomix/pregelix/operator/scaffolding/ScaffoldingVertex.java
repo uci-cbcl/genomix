@@ -205,15 +205,15 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
      */
     public void BFSearch(Iterator<BFSTraverseMessage> msgIterator, SEARCH_TYPE searchType) {
         ScaffoldingVertexValueWritable vertex = getVertexValue();
-        BFSTraverseMessage incomingMsg;
         HashMapWritable<LongWritable, BooleanWritable> unambiguousReadIds = vertex.getUnambiguousReadIds();
+        BFSTraverseMessage incomingMsg;
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            // For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous)
+            /** For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous) **/
             if(incomingMsg.getSeekedVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)){
             	long commonReadId = incomingMsg.getReadId();
                 HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
-                if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path FIXME
+                if(pathMap.containsKey(commonReadId)){ // if it's ambiguous path
                     // put empty in value to mark it as ambiguous path
                     pathMap.remove(commonReadId);
                     unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(false));
@@ -227,7 +227,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(true));
                 }
             }  
-            // For all nodes -- send messge to all neighbor if there exists valid path
+            /** For all nodes -- send messge to all neighbor if there exists valid path **/
             // iteration 3 is the beginning of the search-- use the portion of the kmer remaining after accounting for the offset
             int totalBFSLength = updateBFSLength(incomingMsg, 
                     searchType == SEARCH_TYPE.BEGIN_SEARCH ? UPDATELENGTH_TYPE.SRC_OFFSET : UPDATELENGTH_TYPE.WHOLE_LENGTH);
