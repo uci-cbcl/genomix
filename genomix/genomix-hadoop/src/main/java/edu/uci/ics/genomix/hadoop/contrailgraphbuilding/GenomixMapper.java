@@ -14,46 +14,45 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.SimpleEntry;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadHeadSet;
-import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 /**
  * GenomixMapper the 1st step of graph building
  * 
  * @author anbangx
  */
-@SuppressWarnings({"deprecation"}) 
+@SuppressWarnings({ "deprecation" })
 public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable, Text, VKmer, Node> {
 
-	public enum KMERTYPE{
-		PREVIOUS,
-		CURRENT,
-		NEXT,
-	}
-	
+    public enum KMERTYPE {
+        PREVIOUS,
+        CURRENT,
+        NEXT,
+    }
+
     public static int KMER_SIZE;
-    
+
     private VKmer curForwardKmer = new VKmer();
     private VKmer curReverseKmer = new VKmer();
     private VKmer nextForwardKmer = new VKmer();
     private VKmer nextReverseKmer = new VKmer();
     private SimpleEntry<VKmer, DIR> curKmerAndDir;
     private SimpleEntry<VKmer, DIR> nextKmerAndDir;
-    
+
     private ReadIdSet readIdSet = new ReadIdSet();
-    
+
     private ReadHeadInfo readHeadInfo = new ReadHeadInfo(0);
     private ReadHeadSet readHeadSet = new ReadHeadSet();
-    
+
     private Node curNode = new Node();
     private Node nextNode = new Node();
 
@@ -66,7 +65,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         KMER_SIZE = Integer.parseInt(job.get(GenomixJobConf.KMER_LENGTH));
         Kmer.setGlobalKmerLength(KMER_SIZE);
         lineCount = 0;
-        
+
         // paired-end reads should be named something like dsm3757.01-31-2011.ln6_1.fastq
         // when we have a proper driver, we will set a config field instead of reading in the filename
         String filename = job.get("map.input.file");
@@ -97,7 +96,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         }
     }
 
-	@Override
+    @Override
     public void map(LongWritable key, Text value, OutputCollector<VKmer, Node> output, Reporter reporter)
             throws IOException {
         lineCount++;
@@ -130,26 +129,26 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             if (KMER_SIZE >= readLetters.length) {
                 throw new IOException("short read");
             }
-            
+
             curNode.reset();
             nextNode.reset();
             //set readId once per line
             readIdSet.clear();
             readIdSet.add(readID);
-            curKmerAndDir = getKmerAndDir(curForwardKmer, curReverseKmer, readLetters, 0); 
+            curKmerAndDir = getKmerAndDir(curForwardKmer, curReverseKmer, readLetters, 0);
             nextKmerAndDir = getKmerAndDir(nextForwardKmer, nextReverseKmer, readLetters, 1);
             //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
             setCurAndNextEdgeMap(readIdSet, curKmerAndDir, nextKmerAndDir);
             //set value.coverage = 1
             curNode.setAvgCoverage(1);
             //only set node.ReadHeadInfo for the first kmer
-        	setReadHeadInfo(mateId, readID);
+            setReadHeadInfo(mateId, readID);
             //output mapper result
             output.collect(curKmerAndDir.getKey(), curNode);
 
-            for(int i = KMER_SIZE; i < readLetters.length - 1; i++){
-            	curNode.setAsCopy(nextNode);
-                curKmerAndDir = getKmerAndDir(curForwardKmer, curReverseKmer, readLetters[i]); 
+            for (int i = KMER_SIZE; i < readLetters.length - 1; i++) {
+                curNode.setAsCopy(nextNode);
+                curKmerAndDir = getKmerAndDir(curForwardKmer, curReverseKmer, readLetters[i]);
                 nextKmerAndDir = getKmerAndDir(nextForwardKmer, nextReverseKmer, readLetters[i + 1]);
                 //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
                 setCurAndNextEdgeMap(readIdSet, curKmerAndDir, nextKmerAndDir);
@@ -158,46 +157,45 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 //output mapper result
                 output.collect(curKmerAndDir.getKey(), curNode);
             }
-            
+
             output.collect(nextKmerAndDir.getKey(), nextNode);
         }
     }
-	
-	public SimpleEntry<VKmer, DIR> getKmerAndDir(VKmer forwardKmer, VKmer reverseKmer,
-			byte[] readLetters, int startIdx){
+
+    public SimpleEntry<VKmer, DIR> getKmerAndDir(VKmer forwardKmer, VKmer reverseKmer, byte[] readLetters, int startIdx) {
         forwardKmer.setFromStringBytes(KMER_SIZE, readLetters, startIdx);
         reverseKmer.setReversedFromStringBytes(KMER_SIZE, readLetters, startIdx);
         boolean forwardIsSmaller = forwardKmer.compareTo(reverseKmer) <= 0;
-        
-        return new SimpleEntry<VKmer, DIR>(forwardIsSmaller ? forwardKmer : reverseKmer,
-        				forwardIsSmaller ? DIR.FORWARD : DIR.REVERSE);
+
+        return new SimpleEntry<VKmer, DIR>(forwardIsSmaller ? forwardKmer : reverseKmer, forwardIsSmaller ? DIR.FORWARD
+                : DIR.REVERSE);
     }
-	
-	public SimpleEntry<VKmer, DIR> getKmerAndDir(VKmer forwardKmer, VKmer reverseKmer,
-			byte nextChar){
-		forwardKmer.shiftKmerWithNextChar(nextChar);
-		reverseKmer.shiftKmerWithPreChar(GeneCode.getPairedSymbolFromSymbol(nextChar));
+
+    public SimpleEntry<VKmer, DIR> getKmerAndDir(VKmer forwardKmer, VKmer reverseKmer, byte nextChar) {
+        forwardKmer.shiftKmerWithNextChar(nextChar);
+        reverseKmer.shiftKmerWithPreChar(GeneCode.getPairedSymbolFromSymbol(nextChar));
         boolean forwardIsSmaller = forwardKmer.compareTo(reverseKmer) <= 0;
-        
-        return new SimpleEntry<VKmer, DIR>(forwardIsSmaller ? forwardKmer : reverseKmer,
-        				forwardIsSmaller ? DIR.FORWARD : DIR.REVERSE);
+
+        return new SimpleEntry<VKmer, DIR>(forwardIsSmaller ? forwardKmer : reverseKmer, forwardIsSmaller ? DIR.FORWARD
+                : DIR.REVERSE);
     }
-	
-	public void setCurAndNextEdgeMap(ReadIdSet readIdSet, SimpleEntry<VKmer, DIR> curKmerAndDir, SimpleEntry<VKmer, DIR> neighborKmerAndDir) {
+
+    public void setCurAndNextEdgeMap(ReadIdSet readIdSet, SimpleEntry<VKmer, DIR> curKmerAndDir,
+            SimpleEntry<VKmer, DIR> neighborKmerAndDir) {
         EDGETYPE et = EDGETYPE.getEdgeTypeFromDirToDir(curKmerAndDir.getValue(), neighborKmerAndDir.getValue());
         curNode.getEdgeMap(et).put(neighborKmerAndDir.getKey(), readIdSet);
         nextNode.reset();
         nextNode.getEdgeMap(et.mirror()).put(new VKmer(curKmerAndDir.getKey()), readIdSet);
     }
-	
-	public void setReadHeadInfo(byte mateId, long readID){
+
+    public void setReadHeadInfo(byte mateId, long readID) {
         readHeadInfo.set(mateId, readID, 0);
         readHeadSet.clear();
         readHeadSet.add(readHeadInfo);
         if (curKmerAndDir.getValue() == DIR.FORWARD)
-            curNode.setStartReads(readHeadSet); 
+            curNode.setStartReads(readHeadSet);
         else
             curNode.setEndReads(readHeadSet);
-	}
-	
+    }
+
 }

@@ -5,6 +5,7 @@ import java.io.*;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
@@ -51,8 +52,9 @@ public class VertexValueWritable extends Node {
         counters.putAll(other.getCounters());
     }
 
-    public boolean isValidReadHead(int minCoverage, int minLength){
-        return getAverageCoverage() >= minCoverage && getInternalKmer().getLength() >= minLength;
+    public boolean isValidScaffoldingSearchNode(){
+        return getAverageCoverage() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_COVERAGE 
+                && getInternalKmer().getLength() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_LENGTH;
     }
     
     public void setNode(Node node) {

@@ -14,7 +14,7 @@ public class BFSTraverseMessage extends MessageWritable {
     private long readId; //use for BFSTravese
     private VKmerList pathList; //use for BFSTravese
     private ArrayListWritable<EDGETYPE> edgeTypeList; //use for BFSTravese
-    private VKmer seekedVertexId; //use for BFSTravese
+    private VKmer targetVertexId; //use for BFSTravese
     private boolean srcFlip; //use for BFSTravese
     private boolean destFlip; //use for BFSTravese
     private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes
@@ -24,7 +24,7 @@ public class BFSTraverseMessage extends MessageWritable {
         super();
         pathList = new VKmerList();
         edgeTypeList = new ArrayListWritable<EDGETYPE>();
-        seekedVertexId = new VKmer();
+        targetVertexId = new VKmer();
         readId = 0;
         srcFlip = false;
         destFlip = false;
@@ -36,7 +36,7 @@ public class BFSTraverseMessage extends MessageWritable {
         super.reset();
         pathList.reset();
         edgeTypeList.clear();
-        seekedVertexId.reset(0);
+        targetVertexId.reset(0);
         readId = 0;
         srcFlip = false;
         destFlip = false;
@@ -61,12 +61,12 @@ public class BFSTraverseMessage extends MessageWritable {
         this.edgeTypeList.addAll(edgeDirsList);
     }
 
-    public VKmer getSeekedVertexId() {
-        return seekedVertexId;
+    public VKmer getTargetVertexId() {
+        return targetVertexId;
     }
 
-    public void setSeekedVertexId(VKmer seekedVertexId) {
-        this.seekedVertexId.setAsCopy(seekedVertexId);
+    public void setTargetVertexId(VKmer targetVertexId) {
+        this.targetVertexId.setAsCopy(targetVertexId);
     }
 
     public long getReadId() {
@@ -115,7 +115,7 @@ public class BFSTraverseMessage extends MessageWritable {
         super.readFields(in);
         pathList.readFields(in);
         edgeTypeList.readFields(in);
-        seekedVertexId.readFields(in);
+        targetVertexId.readFields(in);
         readId = in.readLong();
         srcFlip = in.readBoolean();
         destFlip = in.readBoolean();
@@ -128,7 +128,7 @@ public class BFSTraverseMessage extends MessageWritable {
         super.write(out);
         pathList.write(out);
         edgeTypeList.write(out);
-        seekedVertexId.write(out);
+        targetVertexId.write(out);
         out.writeLong(readId);
         out.writeBoolean(srcFlip);
         out.writeBoolean(destFlip);
