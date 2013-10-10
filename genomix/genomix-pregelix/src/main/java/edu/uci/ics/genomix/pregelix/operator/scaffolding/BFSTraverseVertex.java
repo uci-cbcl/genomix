@@ -24,12 +24,19 @@ import edu.uci.ics.genomix.type.VKmerList;
 
 public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, BFSTraverseMessage> {
 
-    public static int SCAFFOLDING_MIN_TRAVERSAL_LENGTH = -1;
-    public static int SCAFFOLDING_MAX_TRAVERSAL_LENGTH = -1;
-    public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = -1;
-    public static int SCAFFOLDING_VERTEX_MIN_LENGTH = -1;
+    public static final String NUM_STEP_SIMULATION_END_BFS = "BFSTraverseVertex.maxBFSIteration";
+    public static final String MAX_TRAVERSAL_LENGTH = "BFSTraverseVertex.maxTraversalLength";
+    public static final String SOURCE = "BFSTraverseVertex.source";
+    public static final String DESTINATION = "BFSTraverseVertex.destination";
+    public static final String COMMOND_READID = "BFSTraverseVertex.commonReadId";
 
-    public static final int NUM_STEP_SIMULATION_END_BFS = 20;
+    private int maxBFSIteration = -1;
+    private int maxTraversalLength = -1;
+    private String source = "";
+    private String destination = "";
+    private VKmer srcNode;
+    private VKmer destNode;
+    private long commonReadId = -1;
 
     public enum READHEAD_TYPE {
         UNFLIPPED,
@@ -163,16 +170,29 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
 
     }
 
-    private VKmer srcNode = new VKmer("AAT");
-    private VKmer destNode = new VKmer("AGA");
-    private long commonReadId = 2;
-
     /**
      * initiate kmerSize, maxIteration
      */
     @Override
     public void initVertex() {
         super.initVertex();
+        if (maxBFSIteration == -1) {
+            maxBFSIteration = getContext().getConfiguration().getInt(NUM_STEP_SIMULATION_END_BFS, 10);
+        }
+        if (maxTraversalLength == -1) {
+            maxTraversalLength = getContext().getConfiguration().getInt(MAX_TRAVERSAL_LENGTH, 10);
+        }
+        if (source == "") {
+            source = getContext().getConfiguration().get(SOURCE);
+            srcNode = new VKmer(source);
+        }
+        if (destination == "") {
+            destination = getContext().getConfiguration().get(DESTINATION);
+            destNode = new VKmer(destination);
+        }
+        if (commonReadId == -1) {
+            commonReadId = getContext().getConfiguration().getLong(COMMOND_READID, 5);
+        }
         if (outgoingMsg == null)
             outgoingMsg = new BFSTraverseMessage();
         else
@@ -236,11 +256,6 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         }
     }
 
-    public boolean isInRange(int traversalLength) {
-        return traversalLength <= SCAFFOLDING_MAX_TRAVERSAL_LENGTH
-                && traversalLength >= SCAFFOLDING_MIN_TRAVERSAL_LENGTH;
-    }
-
     public VKmer setOutgoingMsgSrcAndDest(long readId, ArrayListWritable<SearchInfo> searchInfoList) {
         // src is greater; dest is smaller
         boolean firstIsSrc = searchInfoList.get(0).destKmer.compareTo(searchInfoList.get(1).destKmer) >= 0;
@@ -266,12 +281,6 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         return srcNode;
     }
 
-    public boolean isValidDestination(BFSTraverseMessage incomingMsg) {
-        // update totalBFSLength
-        int totalBFSLength = updateBFSLength(incomingMsg, UPDATELENGTH_TYPE.DEST_OFFSET);
-        return isValidOrientation(incomingMsg) && isInRange(totalBFSLength);
-    }
-
     public boolean anyUnambiguous(HashMapWritable<LongWritable, BooleanWritable> unambiguousReadIds) {
         boolean anyUnambiguous = false;
         for (BooleanWritable b : unambiguousReadIds.values()) {
@@ -293,7 +302,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             /** For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous) **/
-            if (incomingMsg.getTargetVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)) {
+            if (incomingMsg.getTargetVertexId().equals(getVertexId())) {
                 long commonReadId = incomingMsg.getReadId();
                 HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
                 if (pathMap.containsKey(commonReadId)) { // if it's ambiguous path
@@ -311,12 +320,12 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
                     unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(true));
                 }
             }
-            /** For all nodes -- send messge to all neighbor if there exists valid path **/
+            /** For all nodes -- send messge to all neighbors if there exists valid path **/
             // iteration 3 is the beginning of the search-- use the portion of the kmer remaining after accounting for the offset
             int totalBFSLength = updateBFSLength(incomingMsg,
                     searchType == SEARCH_TYPE.BEGIN_SEARCH ? UPDATELENGTH_TYPE.SRC_OFFSET
                             : UPDATELENGTH_TYPE.WHOLE_LENGTH);
-            if (totalBFSLength < SCAFFOLDING_MAX_TRAVERSAL_LENGTH) {
+            if (totalBFSLength < maxTraversalLength) {
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
 
@@ -446,10 +455,10 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
                 BFSearch(msgIterator, SEARCH_TYPE.BEGIN_SEARCH);
             else
                 BFSearch(msgIterator, SEARCH_TYPE.CONTINUE_SEARCH);
-        } else if (getSuperstep() == NUM_STEP_SIMULATION_END_BFS) {
+        } else if (getSuperstep() == maxBFSIteration) {
             sendMsgToPathNode();
             voteToHalt();
-        } else if (getSuperstep() == NUM_STEP_SIMULATION_END_BFS + 1) {
+        } else if (getSuperstep() == maxBFSIteration + 1) {
             appendCommonReadId(msgIterator);
             voteToHalt();
         } else {

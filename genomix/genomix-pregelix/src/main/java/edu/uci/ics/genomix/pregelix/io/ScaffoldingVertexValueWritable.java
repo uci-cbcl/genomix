@@ -78,8 +78,7 @@ public class ScaffoldingVertexValueWritable extends VertexValueWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        //        this.counters.readFields(in);
-        //        scaffoldingMap.readFields(in);
+        scaffoldingMap.readFields(in);
         pathMap.readFields(in);
         unambiguousReadIds.readFields(in);
     }
@@ -87,8 +86,7 @@ public class ScaffoldingVertexValueWritable extends VertexValueWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        //        this.counters.write(out);
-        //        scaffoldingMap.write(out);
+        scaffoldingMap.write(out);
         pathMap.write(out);
         unambiguousReadIds.write(out);
     }
