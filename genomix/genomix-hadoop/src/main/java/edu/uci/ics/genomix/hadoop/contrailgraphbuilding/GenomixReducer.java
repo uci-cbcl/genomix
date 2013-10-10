@@ -42,9 +42,9 @@ public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node
             }
             outputNode.getStartReads().addAll(curNode.getStartReads());
             outputNode.getEndReads().addAll(curNode.getEndReads());
-            averageCoverage += curNode.getAvgCoverage();
+            averageCoverage += curNode.getAverageCoverage();
         }
-        outputNode.setAvgCoverage(averageCoverage);
+        outputNode.setAverageCoverage(averageCoverage);
 
         output.collect(key, outputNode);
     }

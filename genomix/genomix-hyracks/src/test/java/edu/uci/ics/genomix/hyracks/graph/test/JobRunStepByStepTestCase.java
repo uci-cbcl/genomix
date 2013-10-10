@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -49,43 +48,42 @@ public class JobRunStepByStepTestCase {
     private static final String DATA_INPUT_PATH = "src/test/resources/data/lastesttest/test.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
-    
+
     private static final String DUMPED_RESULT = ACTUAL_RESULT_DIR + HDFS_OUTPUT_PATH + "/walk_random_seq1.txt";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private MiniDFSCluster dfsCluster;
-    
+
     private GenomixJobConf conf = new GenomixJobConf(KmerSize);
     private int numberOfNC = 2;
     private int numPartitionPerMachine = 2;
-    
+
     private Driver driver;
-    
+
     @Test
     public void TestAll() throws Exception {
-//        TestReader();
-//        TestGroupby();
+        //        TestReader();
+        //        TestGroupby();
         TestGroupbyUnMerged();
     }
-    
-    
+
     public void TestReader() throws Exception {
         cleanUpReEntry();
         driver.runJob(conf, Plan.BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER, true);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, DUMPED_RESULT);
     }
-    
+
     public void TestGroupby() throws Exception {
         cleanUpReEntry();
         driver.runJob(conf, Plan.BUILD_OLD_DEBRUJIN_GRAPH_STEP1, true);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, DUMPED_RESULT);
     }
-    
+
     public void TestGroupbyUnMerged() throws Exception {
         cleanUpReEntry();
         driver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, true);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, DUMPED_RESULT);
     }
-    
+
     @Before
     public void setUp() throws Exception {
         cleanupStores();
@@ -104,7 +102,7 @@ public class JobRunStepByStepTestCase {
         driver = new Driver(edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.CC_HOST,
                 edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT, numPartitionPerMachine);
     }
-    
+
     private void cleanupStores() throws IOException {
         FileUtils.forceMkdir(new File("teststore"));
         FileUtils.forceMkdir(new File("build"));
@@ -133,7 +131,7 @@ public class JobRunStepByStepTestCase {
         confOutput.flush();
         confOutput.close();
     }
-    
+
     private void cleanUpReEntry() throws IOException {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         if (lfs.exists(new Path(DUMPED_RESULT))) {
@@ -144,7 +142,7 @@ public class JobRunStepByStepTestCase {
             dfs.delete(new Path(HDFS_OUTPUT_PATH), true);
         }
     }
-    
+
     @After
     public void tearDown() throws Exception {
         edu.uci.ics.hyracks.hdfs.utils.HyracksUtils.deinit();

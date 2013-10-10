@@ -5,15 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.io.WritableComparator;
-
-import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.VKmer.Comparator;
-import edu.uci.ics.genomix.util.KmerUtil;
-import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializable {
     private static final long serialVersionUID = 1L;

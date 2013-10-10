@@ -54,10 +54,9 @@ public class GenerateGraphViz {
                 String fillColor = "";
                 if (value.isStartReadOrEndRead())
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
-                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
-                        + "5':" + value.getStartReads().toReadIdString() + "|<f2> "
-                        + "~5'" + value.getEndReads().toReadIdString() + "|<f3> "
-                        + value.getAvgCoverage() + "\"]\n";
+                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> " + "5':"
+                        + value.getStartReads().toReadIdString() + "|<f2> " + "~5'"
+                        + value.getEndReads().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
@@ -103,10 +102,9 @@ public class GenerateGraphViz {
                 String fillColor = "";
                 if (value.isStartReadOrEndRead())
                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
-                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
-                        + "5':" + value.getStartReads().toReadIdString() + "|<f2> "
-                        + "~5':" + value.getEndReads().toReadIdString() + "|<f3> "  
-                        + value.getAvgCoverage() + "|<f4> " 
+                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> " + "5':"
+                        + value.getStartReads().toReadIdString() + "|<f2> " + "~5':"
+                        + value.getEndReads().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "|<f4> "
                         + value.getInternalKmer() + "\"]\n";
                 gv.addln(outputNode);
             }
@@ -134,8 +132,8 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values()) {
             for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
-                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + 
-                		getColor(et) + "\" label =\"" + et + ": " + e.getValue() + "\"]\n";
+                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + getColor(et)
+                        + "\" label =\"" + et + ": " + e.getValue() + "\"]\n";
             }
         }
         //TODO should output actualKmer instead of kmer
@@ -143,19 +141,19 @@ public class GenerateGraphViz {
             outputEdge += outputNode;
         return outputEdge;
     }
-    
-    public static String getColor(EDGETYPE et){
-    	switch(et){
-	    	case FF:
-	    		return "black";
-	    	case FR:
-	    		return "blue";
-	    	case RF:
-	    		return "green";
-	    	case RR:
-	    		return "red";
-    		default:
-    			throw new IllegalStateException("Invalid input Edge Type!!!");
-    	}
+
+    public static String getColor(EDGETYPE et) {
+        switch (et) {
+            case FF:
+                return "black";
+            case FR:
+                return "blue";
+            case RF:
+                return "green";
+            case RR:
+                return "red";
+            default:
+                throw new IllegalStateException("Invalid input Edge Type!!!");
+        }
     }
 }

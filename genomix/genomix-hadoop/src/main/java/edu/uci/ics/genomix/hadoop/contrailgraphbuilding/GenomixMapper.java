@@ -16,14 +16,14 @@ import org.apache.hadoop.mapred.lib.NLineInputFormat;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.SimpleEntry;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadHeadSet;
-import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 /**
  * GenomixMapper the 1st step of graph building
@@ -140,7 +140,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
             setCurAndNextEdgeMap(readIdSet, curKmerAndDir, nextKmerAndDir);
             //set value.coverage = 1
-            curNode.setAvgCoverage(1);
+            curNode.setAverageCoverage(1);
             //only set node.ReadHeadInfo for the first kmer
             setReadHeadInfo(mateId, readID);
             //output mapper result
@@ -153,7 +153,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
                 setCurAndNextEdgeMap(readIdSet, curKmerAndDir, nextKmerAndDir);
                 //set value.coverage = 1
-                curNode.setAvgCoverage(1);
+                curNode.setAverageCoverage(1);
                 //output mapper result
                 output.collect(curKmerAndDir.getKey(), curNode);
             }

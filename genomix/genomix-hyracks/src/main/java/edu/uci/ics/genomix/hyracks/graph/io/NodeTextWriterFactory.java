@@ -18,8 +18,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
-import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;

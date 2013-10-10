@@ -85,12 +85,12 @@ public class PathMergeMessage extends MessageWritable {
         this.node.setEndReads(endReads);
     }
 
-    public void setAvgCoverage(float coverage) {
-        this.node.setAvgCoverage(coverage);
+    public void setAverageCoverage(float coverage) {
+        this.node.setAverageCoverage(coverage);
     }
 
     public float getAvgCoverage() {
-        return this.node.getAvgCoverage();
+        return this.node.getAverageCoverage();
     }
 
     public boolean isFlip() {

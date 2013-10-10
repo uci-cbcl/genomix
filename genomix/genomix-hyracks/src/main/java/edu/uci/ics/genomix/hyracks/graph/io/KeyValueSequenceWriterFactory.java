@@ -25,8 +25,8 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -42,12 +42,11 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
      * Write the node to Text
      */
     private static final long serialVersionUID = 1L;
-    private final int kmerSize;
     private ConfFactory confFactory;
 
     public KeyValueSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
-        this.kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
+        Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
     }
 
     public class TupleWriter implements ITupleWriter {
@@ -59,7 +58,6 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
         ConfFactory cf;
         Writer writer = null;
         private Node outputNode = new Node();
-        private Kmer tempKmer = new Kmer();
         private VKmer outputKey = new VKmer();
 
         @Override
@@ -75,14 +73,13 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
         @Override
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
             try {
-                if (tempKmer.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
+                if (outputKey.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
                     throw new IllegalArgumentException("Not enough kmer bytes");
                 }
-                tempKmer.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
+                outputKey.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
                         tuple.getFieldStart(ReadsKeyValueParserFactory.OutputKmerField));
                 outputNode.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                         tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-                outputKey.setAsCopy(tempKmer);
                 writer.append(outputKey, outputNode);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
@@ -98,7 +95,6 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
     @Override
     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
             throws HyracksDataException {
-        Kmer.setGlobalKmerLength(kmerSize);
         return new TupleWriter(confFactory);
     }
 

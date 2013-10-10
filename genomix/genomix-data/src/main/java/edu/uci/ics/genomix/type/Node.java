@@ -575,14 +575,6 @@ public class Node implements Writable, Serializable {
         averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
     }
 
-    public void setAvgCoverage(float coverage) {
-        averageCoverage = coverage;
-    }
-
-    public float getAvgCoverage() {
-        return averageCoverage;
-    }
-
     public ReadHeadSet getStartReads() {
         return startReads;
     }
