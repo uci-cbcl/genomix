@@ -57,7 +57,7 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     protected short selfFlag;
     
     protected static List<VKmerBytesWritable> problemKmers = null;
-    protected boolean debug = false;
+    protected static boolean debug = false;
     protected boolean verbose = false;
     protected boolean logReadIds = false;
     
@@ -77,19 +77,20 @@ public abstract class BasicGraphCleanVertex<V extends VertexValueWritable, M ext
     }
     
     public void configureDebugOption(){
+        debug = getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null;
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmerBytesWritable>();
-            if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
-                debug = true;
-                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
+            if (debug) {
+                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(",")) {
                     problemKmers.add(new VKmerBytesWritable(kmer));
+                }
                 NodeWritable.problemKmers = problemKmers;
             }
         }
-                
         verbose = false;
-        for (VKmerBytesWritable problemKmer : problemKmers)
+        for (VKmerBytesWritable problemKmer : problemKmers) {
             verbose |= debug && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+        }
     }
     
     /**
