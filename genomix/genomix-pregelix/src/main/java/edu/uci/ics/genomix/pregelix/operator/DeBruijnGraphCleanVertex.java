@@ -153,7 +153,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     }
 
     //2013.9.21 ------------------------------------------------------------------//
-    public static PregelixJob getConfiguredJob(GenomixJobConf conf,
+    public static PregelixJob getConfiguredJob(
+            GenomixJobConf conf,
             Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
             throws IOException {
         // the following class weirdness is because java won't let me get the runtime class in a static context :(
@@ -233,9 +234,13 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     }
 
     /**
-     * response to dead node //TODO use general remove and process update function
+     * Ex. A and B are bubbles and we want to keep A and delete B. 
+     * B will receive kill msg from majorVertex and then broadcast killself to all the neighbor to delete the edge which points to B. 
+     * Here, pruneDeadEdges() is when one vertex receives msg from B, 
+     * it needs to delete the edge which points to B 
+     * //TODO use general remove and process update function
      */
-    public void responseToDeadNode(Iterator<M> msgIterator) {
+    public void pruneDeadEdges(Iterator<M> msgIterator) {
         if (verbose) {
             LOG.fine("Before update " + "\r\n" + "My vertexId is " + getVertexId() + "\r\n" + "My vertexValue is "
                     + getVertexValue() + "\r\n\n");

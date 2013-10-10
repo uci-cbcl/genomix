@@ -514,7 +514,7 @@ public class Node implements Writable, Serializable {
                 return new NeighborInfo(et, getEdgeMap(et).firstEntry());
             }
         }
-        return null;
+        throw new IllegalStateException("Programmer error!!!");
     }
 
     /**
@@ -573,14 +573,6 @@ public class Node implements Writable, Serializable {
         float myAdjustedLength = internalKmer.getKmerLetterLength() - Kmer.getKmerLength() - 1;
         float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - Kmer.getKmerLength() - 1;
         averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
-    }
-
-    public void setAvgCoverage(float coverage) {
-        averageCoverage = coverage;
-    }
-
-    public float getAvgCoverage() {
-        return averageCoverage;
     }
 
     public ReadHeadSet getStartReads() {

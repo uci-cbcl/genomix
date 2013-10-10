@@ -140,7 +140,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
             setCurAndNextEdgeMap(readIdSet, curKmerAndDir, nextKmerAndDir);
             //set value.coverage = 1
-            curNode.setAvgCoverage(1);
+            curNode.setAverageCoverage(1);
             //only set node.ReadHeadInfo for the first kmer
             setReadHeadInfo(mateId, readID);
             //output mapper result
@@ -153,7 +153,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
                 setCurAndNextEdgeMap(readIdSet, curKmerAndDir, nextKmerAndDir);
                 //set value.coverage = 1
-                curNode.setAvgCoverage(1);
+                curNode.setAverageCoverage(1);
                 //output mapper result
                 output.collect(curKmerAndDir.getKey(), curNode);
             }
@@ -173,7 +173,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 
     public SimpleEntry<VKmer, DIR> getKmerAndDir(VKmer forwardKmer, VKmer reverseKmer, byte nextChar) {
         forwardKmer.shiftKmerWithNextChar(nextChar);
-        reverseKmer.shiftKmerWithPreChar(GeneCode.getPairedSymbolFromSymbol(nextChar));
+        reverseKmer.shiftKmerWithPreChar(GeneCode.getComplimentSymbolFromSymbol(nextChar));
         boolean forwardIsSmaller = forwardKmer.compareTo(reverseKmer) <= 0;
 
         return new SimpleEntry<VKmer, DIR>(forwardIsSmaller ? forwardKmer : reverseKmer, forwardIsSmaller ? DIR.FORWARD

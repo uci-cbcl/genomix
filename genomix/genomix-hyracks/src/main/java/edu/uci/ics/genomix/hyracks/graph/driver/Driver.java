@@ -32,9 +32,9 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
-import edu.uci.ics.genomix.hyracks.graph.job.JobGenBrujinGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenBuildBrujinGraph;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenCheckReader;
-import edu.uci.ics.genomix.hyracks.graph.job.JobGenUnMergedGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenOldBrujinGraph;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -47,7 +47,7 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 @SuppressWarnings("deprecation")
 public class Driver {
-    public enum Plan {
+    public enum Plan { //TODO remove the old stuff
         BUILD_OLD_DEBRUJIN_GRAPH_STEP1,
         BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER,
         BUILD_DEBRUIJN_GRAPH,
@@ -91,6 +91,7 @@ public class Driver {
             LOG.info("hadoopHdfs URL:  " + hadoopHdfs.toString());
         job.addResource(hadoopHdfs);
 
+        // TODO make hyracks works on this linespermap
         //        job.setInt("mapred.line.input.format.linespermap", 2000000); // must be a multiple of 4
         //        job.setInputFormat(NLineInputFormat.class);
 
@@ -108,13 +109,13 @@ public class Driver {
             }
             switch (planChoice) {
                 case BUILD_OLD_DEBRUJIN_GRAPH_STEP1:
-                    jobGen = new JobGenBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
+                    jobGen = new JobGenOldBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
                 case BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER:
                     jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
                 case BUILD_DEBRUIJN_GRAPH:
-                    jobGen = new JobGenUnMergedGraph(job, scheduler, ncMap, numPartitionPerMachine);
+                    jobGen = new JobGenBuildBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
                 default:
                     throw new IllegalArgumentException("Unrecognized planChoice: " + planChoice);
@@ -163,17 +164,18 @@ public class Driver {
         hcc.waitForCompletion(jobId);
     }
 
+    // TODO remove this main because we already have the genomix_driver
     public static void main(String[] args) throws Exception {
-        //                String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",
-        //                        "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-hyracksBuildOutputText", "true"};
+        //String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",  
+        // "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-hyracksBuildOutputText", "true"};
         GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
-
         String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
         int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));
         String IODirs = jobConf.get(GenomixJobConf.HYRACKS_IO_DIRS, null);
         int numOfDuplicate = IODirs != null ? IODirs.split(",").length : 4;
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
 
+        // TODO change these two lines to LOG
         System.out.println(GenomixJobConf.INITIAL_INPUT_DIR);
         System.out.println(GenomixJobConf.FINAL_OUTPUT_DIR);
         FileInputFormat.setInputPaths(jobConf, new Path(jobConf.get(GenomixJobConf.INITIAL_INPUT_DIR)));

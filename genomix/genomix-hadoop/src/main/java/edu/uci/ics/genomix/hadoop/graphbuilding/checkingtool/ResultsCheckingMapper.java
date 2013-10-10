@@ -16,9 +16,9 @@
 package edu.uci.ics.genomix.hadoop.graphbuilding.checkingtool;
 
 import java.io.IOException;
+
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;

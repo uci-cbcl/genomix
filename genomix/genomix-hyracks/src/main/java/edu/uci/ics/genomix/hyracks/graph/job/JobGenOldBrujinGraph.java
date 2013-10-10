@@ -19,12 +19,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.lib.NLineInputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
@@ -34,9 +32,7 @@ import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.AggregateKmerAggregateFactory;
-import edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators.MergeKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.graph.io.NodeSequenceWriterFactory;
-import edu.uci.ics.genomix.hyracks.graph.io.NodeTextWriterFactory;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -64,23 +60,25 @@ import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
 @SuppressWarnings("deprecation")
-public class JobGenBrujinGraph extends JobGen {
+public class JobGenOldBrujinGraph extends JobGen {
 
     private static final long serialVersionUID = 1L;
 
+    // TODO this is covered by genomix-driver.
     public enum GroupbyType {
         EXTERNAL,
         PRECLUSTER,
         HYBRIDHASH,
     }
 
+    // TODO remove this,
     public enum OutputFormat {
         TEXT,
         BINARY,
     }
 
     protected ConfFactory hadoopJobConfFactory;
-    private static final Logger LOG = Logger.getLogger(JobGenBrujinGraph.class.getName());
+    private static final Logger LOG = Logger.getLogger(JobGenOldBrujinGraph.class.getName());
     public static final int DEFAULT_FRAME_LIMIT = 4096;
     public static final int DEFAULT_FRAME_SIZE = 65535;
     protected String[] ncNodeNames;
@@ -97,7 +95,7 @@ public class JobGenBrujinGraph extends JobGen {
         LOG.fine(status + " nc nodes:" + ncNodeNames.length);
     }
 
-    public JobGenBrujinGraph(GenomixJobConf job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
+    public JobGenOldBrujinGraph(GenomixJobConf job, Scheduler scheduler, final Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job);
         String[] nodes = new String[ncMap.size()];
@@ -142,8 +140,7 @@ public class JobGenBrujinGraph extends JobGen {
                     .getSplits(hadoopJobConfFactory.getConf(), ncNodeNames.length);
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
-                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize,
-                            hadoopJobConfFactory));
+                    hadoopJobConfFactory.getConf(), splits, readSchedule, new ReadsKeyValueParserFactory(kmerSize));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
@@ -157,21 +154,20 @@ public class JobGenBrujinGraph extends JobGen {
     }
 
     public AbstractOperatorDescriptor generateGroupbyKmerJob(JobSpecification jobSpec,
-            AbstractOperatorDescriptor readOperator) throws HyracksDataException {
+            AbstractOperatorDescriptor parserOperator) throws HyracksDataException {
         int[] keyFields = new int[] { 0 }; // the id of grouped key
 
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(jobSpec, frameLimits, keyFields,
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(KmerPointable.FACTORY) },
                 ReadsKeyValueParserFactory.readKmerOutputRec);
 
-        connectOperators(jobSpec, readOperator, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
+        connectOperators(jobSpec, parserOperator, ncNodeNames, sorter, ncNodeNames, new OneToOneConnectorDescriptor(
                 jobSpec));
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null, null });
-        jobSpec.setFrameSize(frameSize);
 
-        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(
-                kmerSize), new MergeKmerAggregateFactory(kmerSize), new KmerHashPartitioncomputerFactory(),
+        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(),
+                new AggregateKmerAggregateFactory(), new KmerHashPartitioncomputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         logDebug("LocalKmerGroupby Operator");
@@ -212,6 +208,7 @@ public class JobGenBrujinGraph extends JobGen {
     public JobSpecification generateJob() throws HyracksException {
 
         JobSpecification jobSpec = new JobSpecification();
+        jobSpec.setFrameSize(frameSize);
         logDebug("ReadKmer Operator");
 
         HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
@@ -233,15 +230,14 @@ public class JobGenBrujinGraph extends JobGen {
         Configuration conf = confFactory.getConf();
         kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
         frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
-        //        tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
+        //tableSize = conf.getInt(GenomixJobConf.TABLE_SIZE, GenomixJobConf.DEFAULT_TABLE_SIZE);
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
-        System.out.println(DEFAULT_FRAME_SIZE);
-        System.out.println(frameSize);
         groupbyType = GroupbyType.PRECLUSTER;
         outputFormat = OutputFormat.BINARY;
 
         try {
             JobConf jobconf = new JobConf(conf);
+            jobconf.setInputFormat(TextInputFormat.class);
             hadoopJobConfFactory = new ConfFactory(new JobConf(conf));
 
             InputSplit[] splits = hadoopJobConfFactory.getConf().getInputFormat()

@@ -22,79 +22,29 @@ public class GraphBuildingTestSuite extends TestSuite {
 
     private static int SIZE_KMER = 3;
     private static int LINES_PERMAP = 4 * 100000;
-    public static final String PreFix = "data/webmap/PathMerge_TestSet";
-    public static final String[] TestDir = { PreFix + File.separator
-    	+ "4"
-    };
-    	// PathMerge
-//                + "2", PreFix + File.separator
-//                + "3", PreFix + File.separator
-//                + "4", PreFix + File.separator
-//                + "5", PreFix + File.separator
-//                + "6", PreFix + File.separator
-//                + "7", PreFix + File.separator
-//                + "8", PreFix + File.separator
-//                + "9", PreFix + File.separator
-//                + "Head_5", PreFix + File.separator
-//                + "Head_6", PreFix + File.separator
-//                + "Head_7", PreFix + File.separator
-//                + "Head_8", PreFix + File.separator
-//                + "Head_9", PreFix + File.separator
-//                + "Head_10"};//, PreFix + File.separator
-                
-//                
-//                + "LeftAdj", PreFix + File.separator
-//                + "RightAdj", PreFix + File.separator
-//                
-//      		  + "ThreeDuplicate", PreFix + File.separator 
-//                + "SimplePath", PreFix + File.separator
-//                + "CyclePath", PreFix + File.separator
-//                + "RingPath", PreFix + File.separator
-//                + "SimpleBridgePath", PreFix + File.separator
-//                + "SimpleTreePath", PreFix + File.separator
-
-//                + "SelfTandemRepeat", PreFix + File.separator
-//                + "TandemRepeatWithMergeEdge", PreFix + File.separator 
-//                + "TandemRepeatWithUnmergeEdge", PreFix + File.separator
-//                + "ComplexTandemRepeat", PreFix + File.separator
-//                + "TandemRepeatAndCycle", PreFix + File.separator
-//      	      + "TandemRepeatAndThreeNodes", PreFix + File.separator
-//    			  + "ThreeNodesCycle", PreFix + File.separator
-//                
-//                + "MultiTandemRepeat", PreFix + File.separator
-//                + "MultiTandemRepeat2", PreFix + File.separator
-//                + "MultiTandemRepeat3"};//, PreFix + File.separator
-//                
-//                + "AlreadyInEdgeList", PreFix + File.separator
-//                
-//                + "Cluster", PreFix + File.separator
-//                + "SameGeneCodeWithoutEdge", PreFix + File.separator 
-//                + "SameGeneCodeWithEdge", PreFix + File.separator 
-//                + "synthetic"
-              // Bubble Merge
-//    	+ "LtoL", PreFix + File.separator
-//    	+ "LtoR", PreFix + File.separator
-//    	+ "RtoL", PreFix + File.separator
-//    	+ "RtoR"
-//    	+ "SimpleBubble", PreFix + File.separator
-//    	+ "BubbleWithTip", PreFix + File.separator
-//    	+ "SideBubble", PreFix + File.separator
-//    	+ "OverlapBubble", PreFix + File.separator
-//    	+ "FRandRF"
-//                };
-//    + "InvalidBubble", PreFix + File.separator
-//                + "SimpleRectangle", PreFix + File.separator
-//                + "MediumRectangle", PreFix + File.separator
-//                + "ComplexRectangle", PreFix + File.separator
-//                + "SimpleBubble", PreFix + File.separator
-//                + "InvalidBubble", PreFix + File.separator
-//                + "BubbleWithTip", PreFix + File.separator
-//                + "SideBubble", PreFix + File.separator
-//                + "OverlapBubble", PreFix + File.separator
+    public static final String PreFix = "data/webmap/PathMerge_TestSet"; // PathMerge
+    public static final String[] TestDir = { PreFix + File.separator + "2", PreFix + File.separator + "3",
+            PreFix + File.separator + "4", PreFix + File.separator + "5", PreFix + File.separator + "6",
+            PreFix + File.separator + "7", PreFix + File.separator + "8", PreFix + File.separator + "9",
+            PreFix + File.separator + "Head_5", PreFix + File.separator + "Head_6", PreFix + File.separator + "Head_7",
+            PreFix + File.separator + "Head_8", PreFix + File.separator + "Head_9",
+            PreFix + File.separator + "Head_10", PreFix + File.separator + "LeftAdj",
+            PreFix + File.separator + "RightAdj", PreFix + File.separator + "ThreeDuplicate",
+            PreFix + File.separator + "SimplePath", PreFix + File.separator + "CyclePath",
+            PreFix + File.separator + "RingPath", PreFix + File.separator + "SimpleBridgePath",
+            PreFix + File.separator + "SimpleTreePath", PreFix + File.separator + "SelfTandemRepeat",
+            PreFix + File.separator + "TandemRepeatWithMergeEdge",
+            PreFix + File.separator + "TandemRepeatWithUnmergeEdge", PreFix + File.separator + "ComplexTandemRepeat",
+            PreFix + File.separator + "TandemRepeatAndCycle", PreFix + File.separator + "TandemRepeatAndThreeNodes",
+            PreFix + File.separator + "ThreeNodesCycle", PreFix + File.separator + "MultiTandemRepeat",
+            PreFix + File.separator + "MultiTandemRepeat2", PreFix + File.separator + "MultiTandemRepeat3",
+            PreFix + File.separator + "AlreadyInEdgeList", PreFix + File.separator + "Cluster",
+            PreFix + File.separator + "SameGeneCodeWithoutEdge", PreFix + File.separator + "SameGeneCodeWithEdge",
+            PreFix + File.separator + "synthetic" };
     //        + "SmallGenome"
     //        + "SmallCycle"
     //        + "sameWithEdge"
-           
+
     //    };
     //        + "Rectangle", PreFix + File.separator
     //        + "Grid"};
@@ -148,11 +98,6 @@ public class GraphBuildingTestSuite extends TestSuite {
                 dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);
             }
         }
-        //        
-        //        Path src = new Path(DATA_PATH);
-        //        Path dest = new Path(HDFS_PATH + "/");
-        //        dfs.mkdirs(dest);
-        //        dfs.copyFromLocalFile(src, dest);
 
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_PATH)));
         conf.writeXml(confOutput);

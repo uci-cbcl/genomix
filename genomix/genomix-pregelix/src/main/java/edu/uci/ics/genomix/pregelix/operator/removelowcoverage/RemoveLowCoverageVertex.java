@@ -47,7 +47,7 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
     }
 
     public void detectLowCoverageVertex() {
-        if (getVertexValue().getAvgCoverage() <= minAverageCoverage) {
+        if (getVertexValue().getAverageCoverage() <= minAverageCoverage) {
             //broadcase kill self
             broadcastKillself();
             deadNodeSet.add(new VKmer(getVertexId()));

@@ -21,7 +21,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -64,7 +63,7 @@ public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Seri
     public void setAsCopy(EdgeMap other) {
         clear();
         for (Entry<VKmer, ReadIdSet> e : other.entrySet()) {
-            put(e.getKey(), new ReadIdSet(e.getValue()));
+            put(new VKmer(e.getKey()), new ReadIdSet(e.getValue()));
         }
     }
 

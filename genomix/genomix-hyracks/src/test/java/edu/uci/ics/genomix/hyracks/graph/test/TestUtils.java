@@ -35,7 +35,7 @@ public class TestUtils {
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
         ArrayList<String> actualLines = new ArrayList<String>();
         ArrayList<String> expectedLines = new ArrayList<String>();
-        
+
         String lineExpected, lineActual;
         boolean flag = true;
         try {
@@ -43,7 +43,7 @@ public class TestUtils {
                 actualLines.add(lineActual);
             }
             Collections.sort(actualLines);
-            
+
             while ((lineExpected = readerExpected.readLine()) != null) {
                 expectedLines.add(lineExpected);
             }

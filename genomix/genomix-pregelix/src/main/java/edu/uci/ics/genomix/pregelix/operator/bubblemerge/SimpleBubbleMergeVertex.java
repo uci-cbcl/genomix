@@ -21,7 +21,6 @@ import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Simple Bubble Merge
- * 
  */
 public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float DISSIMILAR_THRESHOLD = -1;
@@ -42,9 +41,6 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessage();
-        else
-            outgoingMsg.reset();
-        outFlag = 0;
         StatisticsAggregator.preGlobalCounters.clear();
         //        else
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
@@ -54,12 +50,12 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     public void sendBubbleAndMajorVertexMsgToMinorVertex() {
         VertexValueWritable vertex = getVertexValue();
+        // SingleNeighbor: single neighbor in the given direction, return null if there are multiple or no neighbors
         NeighborInfo reverseNeighbor = vertex.getSingleNeighbor(DIR.REVERSE);
         NeighborInfo forwardNeighbor = vertex.getSingleNeighbor(DIR.FORWARD);
 
-        //TODO combine into only one byte, change internally/under the hood
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
-        if (forwardNeighbor.kmer == reverseNeighbor.kmer) // FIXME should this *really* be == or .equals?
+        if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer))
             throw new IllegalStateException("majorVertexId is equal to minorVertexId, this is not allowed!");
 
         VKmer minorVertexId;
@@ -130,21 +126,16 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
                     // 2. send message to delete vertices -- for deletedSet
                     outgoingMsg.reset();
-                    outFlag = 0;
-                    outFlag |= MESSAGETYPE.KILL_SELF.get(); //TODO make msg type flag to enum
-                    outgoingMsg.setFlag(outFlag);
+                    outgoingMsg.setFlag(MESSAGETYPE.KILL_SELF.get());
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);
                     it.remove();
                 }
             }
             // process topNode -- send message to topVertex to update their coverage
-            //TODO if only one field needs to set in flag, directly set
             if (topChanged) {
                 outgoingMsg.reset();
-                outFlag = 0;
-                outFlag |= MESSAGETYPE.KILL_SELF.get();
+                outgoingMsg.setFlag(MESSAGETYPE.KILL_SELF.get());
                 outgoingMsg.setNode(topNode);
-                outgoingMsg.setFlag(outFlag);
                 sendMsg(topMsg.getSourceVertexId(), outgoingMsg);
             }
         }
@@ -214,7 +205,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         } else if (getSuperstep() == 3) {
             receiveUpdates(msgIterator);
         } else if (getSuperstep() == 4) {
-            responseToDeadNode(msgIterator);
+            pruneDeadEdges(msgIterator);
         }
     }
 
