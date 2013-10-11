@@ -48,7 +48,12 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
 
     @Override
     public void initVertex() {
-        super.initVertex();
+        if (kmerSize == -1)
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+        if (maxIteration < 0)
+            maxIteration = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         if (SCAFFOLDING_MIN_TRAVERSAL_LENGTH < 0)
             SCAFFOLDING_MIN_TRAVERSAL_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.SCAFFOLDING_MIN_TRAVERSAL_LENGTH));

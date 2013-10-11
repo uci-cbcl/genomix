@@ -38,8 +38,6 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
     private int maxTraversalLength = -1;
     private String source = "";
     private String destination = "";
-    private VKmer srcNode;
-    private VKmer destNode;
     private long commonReadId = -1;
 
     public enum READHEAD_TYPE {
@@ -126,11 +124,9 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         }
         if (source == "") {
             source = getContext().getConfiguration().get(SOURCE);
-            srcNode = new VKmer(source);
         }
         if (destination == "") {
             destination = getContext().getConfiguration().get(DESTINATION);
-            destNode = new VKmer(destination);
         }
         if (commonReadId == -1) {
             commonReadId = getContext().getConfiguration().getLong(COMMOND_READID, 5);
@@ -349,22 +345,24 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             EdgeTypeList edgeTypeList = pathAndEdgeTypeList.getEdgeTypeList();
             EdgeTypeList outputEdgeTypeList = outgoingMsg.getEdgeTypeList();
             VKmerList pathList = outgoingMsg.getPathList();
-            // in outgoingMsg.flag (0-1)bit for nextEdgeType, (2-3)bit for prevEdgeType
+            // msg.pathList and msg.edgeTypeList store neighbor information 
             for (int i = 0; i < pathAndEdgeTypeList.size() - 1; i++) {
                 pathList.reset();
                 // set next edgeType
                 outputEdgeTypeList.clear();
-                outputEdgeTypeList.add(edgeTypeList.get(i)); // outputEdgeTypeList[0] stores nextEdgeType
+                outputEdgeTypeList.add(edgeTypeList.get(i)); // msg.edgeTypeList[0] stores nextEdgeType
                 VKmer nextKmer = kmerList.getPosition(i + 1);
                 pathList.append(nextKmer); // msg.pathList[0] stores nextKmer
 
-                if (i > 0) { // first iteration doesn't need to send prev edgeType to srcNode
+                // first iteration doesn't need to send prev edgeType to srcNode
+                if (i == 0) {
+                    sendMsg(kmerList.getPosition(i), outgoingMsg);
+                } else {
                     // set prev edgeType
-                    outputEdgeTypeList.add(edgeTypeList.get(i - 1).mirror()); // outputEdgeTypeList[1] stores preEdgeType
+                    outputEdgeTypeList.add(edgeTypeList.get(i - 1).mirror()); // msg.edgeTypeList[1] stores preEdgeType
                     VKmer preKmer = kmerList.getPosition(i - 1);
                     pathList.append(preKmer); // msg.pathList[1] stores preKmer 
 
-                    outgoingMsg.setFlag(outFlag);
                     sendMsg(kmerList.getPosition(i), outgoingMsg);
                 }
             }
@@ -372,7 +370,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             EDGETYPE prevToMe = edgeTypeList.get(pathAndEdgeTypeList.size() - 2);
             VKmer preKmer = kmerList.getPosition(pathAndEdgeTypeList.size() - 2);
 
-            vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(commonReadId.get());
+            vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(new Long(2));//commonReadId.get()
         }
     }
 
@@ -403,6 +401,8 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             voteToHalt();
         } else if (getSuperstep() == 2) {
             // for test, assign two kmer to srcNode and destNode
+            VKmer srcNode = new VKmer(source);
+            VKmer destNode = new VKmer(destination);
             SearchInfo srcSearchInfo = new SearchInfo(srcNode, false);
             SearchInfo destSearchInfo = new SearchInfo(destNode, true);
             ArrayListWritable<SearchInfo> searchInfoList = new ArrayListWritable<SearchInfo>();
