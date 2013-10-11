@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.gage.source;
+package edu.uci.ics.genomix.gage.sourcecode;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;

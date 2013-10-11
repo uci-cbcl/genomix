@@ -31,6 +31,7 @@ import org.kohsuke.args4j.CmdLineException;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
 import edu.uci.ics.genomix.hadoop.converttofasta.ConvertToFasta;
+import edu.uci.ics.genomix.hadoop.gage.GetFastaStatsJob;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
@@ -130,14 +131,11 @@ public class GenomixDriver {
             case DUMP_FASTA:
                 flushPendingJobs(conf);
                 if(runLocal){
-                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild); //?? why curOutput TODO
+                    DriverUtils.dumpGraph(conf, prevOutput, "genome.fasta", followingBuild);
                     curOutput = prevOutput; // use previous job's output 
                 }
                 else{
-                    dumpGraphWithHadoop(conf, curOutput, numCoresPerMachine * numMachines);
-                    if(Boolean.parseBoolean(conf.get(GenomixJobConf.GAGE)) == true){
-                        DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
-                    }
+                    dumpGraphWithHadoop(conf, prevOutput, curOutput, numCoresPerMachine * numMachines);
                     curOutput = prevOutput;
                 }
                 break;
@@ -151,6 +149,10 @@ public class GenomixDriver {
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters);
                 curOutput = prevOutput; // use previous job's output
+            case GAGE:
+                flushPendingJobs(conf);
+                getMetricsWithGage(conf, prevOutput, curOutput, numCoresPerMachine * numMachines);
+                curOutput = prevOutput;
         }
     }
 
@@ -238,17 +240,31 @@ public class GenomixDriver {
         pregelixJobs.clear();
     }
     
-    private void dumpGraphWithHadoop(GenomixJobConf conf, String outputPath, int numReducers) throws Exception{
+    private void dumpGraphWithHadoop(GenomixJobConf conf, String inputPath, String outputPath, int numReducers) throws Exception{
         LOG.info("Building dump Graph using Hadoop...");
         
         manager.startCluster(ClusterType.HADOOP);
         GenomixJobConf.tick("dumpGraphWithHadoop");
 
-        ConvertToFasta.run(outputPath, numReducers, conf);
+        ConvertToFasta.run(inputPath, outputPath, numReducers, conf);
         System.out.println("Finished dumping Graph");
 
         manager.stopCluster(ClusterType.HADOOP);
         LOG.info("Dumping the graph took " + GenomixJobConf.tock("dumpGraphWithHadoop") + "ms");
+    }
+    
+    private void getMetricsWithGage(GenomixJobConf conf, String inputPath, String outputPath, int numReducers) throws Exception{
+        LOG.info("Begin Analyze with Gage");
+        
+        manager.startCluster(ClusterType.HADOOP);
+        GenomixJobConf.tick("beginWithGage");
+
+        GetFastaStatsJob fastaStatsJob = new GetFastaStatsJob();
+        fastaStatsJob.run(inputPath, outputPath, numReducers, conf);
+        System.out.println("finish Analyze!");
+
+        manager.stopCluster(ClusterType.HADOOP);
+        LOG.info("Analyze the graph took " + GenomixJobConf.tock("beginWithGage") + "ms");
     }
     
     private void initGenomix(GenomixJobConf conf) throws Exception {

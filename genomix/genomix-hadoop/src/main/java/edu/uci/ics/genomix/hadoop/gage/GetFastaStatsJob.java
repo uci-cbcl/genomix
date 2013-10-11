@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.uci.ics.genomix.hadoop.gage;
 
 import java.io.IOException;
@@ -26,27 +41,28 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.hadoop.gage.IntPair.FirstPartitioner;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class GetFastaStats {
+public class GetFastaStatsJob {
 
     @SuppressWarnings("deprecation")
-    public static class GetFastaStatsMapper extends MapReduceBase implements
-            Mapper<VKmer, Node, PairIntWritable, IntWritable> {
+    public static class GetFastaStatsMapper extends MapReduceBase implements Mapper<VKmer, Node, IntPair, IntWritable> {
 
-        private PairIntWritable outputKey = new PairIntWritable();
+        private IntPair outputKey = new IntPair();
         private IntWritable outputValue = new IntWritable();
         private static final String[] suffix = { "final", "split", "fasta", "scafSeq", "fa" };
-        public static int MIN_CONTIG_LENGTH;
-        public static int EXPECTED_GENOME_SIZE;
+
+        //        public static int MIN_CONTIG_LENGTH;
+        //        public static int EXPECTED_GENOME_SIZE;
 
         private boolean isExtensionInSuffix(String extension) {
             for (int i = 0; i < suffix.length; i++) {
-                if (!extension.equals(suffix[i]))
-                    return false;
+                if (extension.equals(suffix[i]))
+                    return true;
             }
-            return true;
+            return false;
         }
 
         @Override
@@ -59,34 +75,35 @@ public class GetFastaStats {
             if (!isExtensionInSuffix(extension)) {
                 throw new IllegalStateException("Can not parse the kind of result file");
             }
-            //            TODO MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.MIN_CONTIG_LENGTH));
-            //            TODO EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.EXPECTED_GENOMIX_SIZE));
-            MIN_CONTIG_LENGTH = 25; //TODO for test
-            EXPECTED_GENOME_SIZE = 150; //TODO for test
+            //                        TODO MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.MIN_CONTIG_LENGTH));
+            //                        TODO EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.EXPECTED_GENOMIX_SIZE));
+            //            MIN_CONTIG_LENGTH = 25; //TODO for test
+            //            EXPECTED_GENOME_SIZE = 150; //TODO for test
 
         }
 
         @Override
-        public void map(VKmer key, Node value, OutputCollector<PairIntWritable, IntWritable> output, Reporter reporter)
+        public void map(VKmer key, Node value, OutputCollector<IntPair, IntWritable> output, Reporter reporter)
                 throws IOException {
-            String fastaString = value.getInternalKmer().toString().replaceAll("-", "");
-            fastaString = fastaString.toString().replaceAll("\\.", "");
-            outputKey.set(0, fastaString.length());
-            outputValue.set(fastaString.length());
+            //            String fastaString = value.getInternalKmer().toString().replaceAll("-", "");
+            //            fastaString = fastaString.toString().replaceAll("\\.", "");
+            outputKey.set(0, value.getInternalKmer().getKmerLetterLength());
+            outputValue.set(value.getInternalKmer().getKmerLetterLength());
+
             output.collect(outputKey, outputValue);
         }
     }
 
     @SuppressWarnings("deprecation")
     public static class GetFastaStatsReducer extends MapReduceBase implements
-            Reducer<PairIntWritable, IntWritable, Text, NullWritable> {
+            Reducer<IntPair, IntWritable, Text, NullWritable> {
+        private ArrayList<Integer> contigLengthList;
 
         public static boolean USE_BAYLOR_FORMAT;
         public static boolean OLD_STYLE;
         public static int MIN_CONTIG_LENGTH;
         public static int EXPECTED_GENOME_SIZE;
 
-        private ArrayList<Integer> contigLengthList;
         int maxContig;
         int minContig;
         long totalContigLength;
@@ -109,7 +126,7 @@ public class GetFastaStats {
         private static final NumberFormat nf = new DecimalFormat("############.##");
 
         private NullWritable nullWritable;
-        private Text outKey = new Text();
+        private Text outKey;
         private StringBuffer tempKey;
 
         private class ContigAt {
@@ -127,12 +144,10 @@ public class GetFastaStats {
 
         @Override
         public void configure(JobConf job) {
-            //            USE_BAYLOR_FORMAT = Boolean.parseBoolean(conf.get(GenomixJobConf.USE_BAYLOR_FORMAT));
-            //            OLD_STYLE = Boolean.parseBoolean(conf.get(GenomixJobConf.OLD_STYLE));
-            USE_BAYLOR_FORMAT = false;
-            OLD_STYLE = true;
-            MIN_CONTIG_LENGTH = 25; //TODO for test
-            EXPECTED_GENOME_SIZE = 150; //TODO for test
+            USE_BAYLOR_FORMAT = Boolean.parseBoolean(job.get(GenomixJobConf.USE_BAYLOR_FORMAT));
+            OLD_STYLE = Boolean.parseBoolean(job.get(GenomixJobConf.OLD_STYLE));
+            MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.MIN_CONTIG_LENGTH));
+            EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.EXPECTED_GENOME_SIZE));
 
             contigLengthList = new ArrayList<Integer>();
             maxContig = Integer.MIN_VALUE;
@@ -159,10 +174,11 @@ public class GetFastaStats {
         }
 
         @Override
-        public void reduce(PairIntWritable key, Iterator<IntWritable> values,
-                OutputCollector<Text, NullWritable> output, Reporter reporter) throws IOException {
+        public void reduce(IntPair key, Iterator<IntWritable> values, OutputCollector<Text, NullWritable> output,
+                Reporter reporter) throws IOException {
             while (values.hasNext())
                 contigLengthList.add(values.next().get());
+
             for (Integer curLength : contigLengthList) {
                 if (curLength <= MIN_CONTIG_LENGTH) {
                     continue;
@@ -216,7 +232,7 @@ public class GetFastaStats {
             }
             ContigAt[] contigAtVals = contigAtArray.toArray(new ContigAt[0]);
             /*----------------------------------------------------------------*/
-            Collections.sort(contigLengthList);
+            //            Collections.sort(contigLengthList);
 
             long sum = 0;
             double median = 0;
@@ -302,25 +318,25 @@ public class GetFastaStats {
                     }
                 }
                 tempKey.append("\n");
-            }
+                //            }
 
-            //            tempKey.append(title);
-            tempKey.append("," + nf.format(contigCount));
-            tempKey.append("," + nf.format(totalContigLength));
-            tempKey.append("," + nf.format(totalOverLength));
-            tempKey.append("," + nf.format(totalBPOverLength));
-            tempKey.append("," + nf.format(minContig));
-            tempKey.append("," + nf.format(maxContig));
-            tempKey.append("," + nf.format((double) totalContigLength / contigCount));
-            tempKey.append("," + nf.format((double) median / medianCount));
+                //            tempKey.append(title);
+                tempKey.append("," + nf.format(contigCount));
+                tempKey.append("," + nf.format(totalContigLength));
+                tempKey.append("," + nf.format(totalOverLength));
+                tempKey.append("," + nf.format(totalBPOverLength));
+                tempKey.append("," + nf.format(minContig));
+                tempKey.append("," + nf.format(maxContig));
+                tempKey.append("," + nf.format((double) totalContigLength / contigCount));
+                tempKey.append("," + nf.format((double) median / medianCount));
 
-            for (int i = 0; i < contigAtVals.length; i++) {
-                if (contigAtVals[i].count != 0) {
-                    tempKey.append("," + contigAtVals[i].count + ","
-                            + /*contigAtVals[i].totalBP + "," +*/contigAtVals[i].len);
+                for (int i = 0; i < contigAtVals.length; i++) {
+                    if (contigAtVals[i].count != 0) {
+                        tempKey.append("," + contigAtVals[i].count + ","
+                                + /*contigAtVals[i].totalBP + "," +*/contigAtVals[i].len);
+                    }
                 }
             }
-            //            }
             outKey.set(tempKey.toString());
             output.collect(outKey, nullWritable);
         }
@@ -330,15 +346,12 @@ public class GetFastaStats {
     public void run(String inputPath, String outputPath, int numReducers, JobConf baseConf) throws IOException {
         JobConf conf = new JobConf(baseConf);
         conf.setJarByClass(GetFastaStatsTest.class);
-        conf.setJobName("MergePathsH3 " + inputPath);
-
-        FileInputFormat.addInputPath(conf, new Path(inputPath));
-        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+        conf.setJobName("GetFastaStats" + inputPath);
 
         conf.setInputFormat(SequenceFileInputFormat.class);
         conf.setOutputFormat(TextOutputFormat.class);
 
-        conf.setMapOutputKeyClass(PairIntWritable.class);
+        conf.setMapOutputKeyClass(IntPair.class);
         conf.setMapOutputValueClass(IntWritable.class);
         conf.setOutputKeyClass(Text.class);
         conf.setOutputValueClass(NullWritable.class);
@@ -346,12 +359,15 @@ public class GetFastaStats {
         conf.setMapperClass(GetFastaStatsMapper.class);
         conf.setReducerClass(GetFastaStatsReducer.class);
 
+        conf.setPartitionerClass(IntPair.FirstPartitioner.class);
+        conf.setOutputKeyComparatorClass(IntPair.Comparator.class);
+        conf.setOutputValueGroupingComparator(IntPair.FirstGroupingComparator.class);
+
         FileInputFormat.setInputPaths(conf, new Path(inputPath));
         FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         conf.setNumReduceTasks(numReducers);
-        
-        FileSystem.get(conf).delete(new Path(outputPath), true);
 
+        FileSystem.get(conf).delete(new Path(outputPath), true);
         JobClient.runJob(conf);
     }
 

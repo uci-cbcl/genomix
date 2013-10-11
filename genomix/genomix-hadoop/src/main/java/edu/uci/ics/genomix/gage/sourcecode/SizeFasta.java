@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.gage.source;
+package edu.uci.ics.genomix.gage.sourcecode;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

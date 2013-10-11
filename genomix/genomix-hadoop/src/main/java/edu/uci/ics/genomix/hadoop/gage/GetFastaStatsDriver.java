@@ -1,3 +1,17 @@
+/*
+ * Copyright 2009-2012 by The Regents of the University of California
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * you may obtain a copy of the License from
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.uci.ics.genomix.hadoop.gage;
 
 import org.apache.hadoop.mapred.JobConf;
@@ -5,6 +19,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 
+@SuppressWarnings("deprecation")
 public class GetFastaStatsDriver {
     
     private static class Options {
@@ -18,12 +33,11 @@ public class GetFastaStatsDriver {
         public int numReducers;
     }
     
-    @SuppressWarnings("deprecation")
     public static void main(String[] args) throws Exception {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-        GetFastaStatsTest driver = new GetFastaStatsTest();
+        GetFastaStatsJob driver = new GetFastaStatsJob();
         driver.run(options.inputPath, options.outputPath, options.numReducers, new JobConf());
     }
     

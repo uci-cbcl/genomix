@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -23,7 +25,7 @@ import edu.uci.ics.genomix.type.VKmer;
 public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node, Text, Text> {
     public static final Logger LOG = Logger.getLogger(ConvertToFasta.class.getName());
     private static class Options {
-        @Option(name = "-inputpath1", usage = "the input path", required = false)
+        @Option(name = "-inputpath", usage = "the input path", required = false)
         public String inputPath1;
 
         @Option(name = "-outputpath", usage = "the output path", required = false)
@@ -43,7 +45,7 @@ public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node,
         output.collect(textKey, textValue);
     }
 
-    public static void run(String outputPath, int numReducers, GenomixJobConf baseConf) throws IOException {
+    public static void run(String inputPath, String outputPath, int numReducers, GenomixJobConf baseConf) throws IOException {
 
         GenomixJobConf conf = new GenomixJobConf(baseConf);
 
@@ -60,8 +62,8 @@ public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node,
         conf.setOutputKeyClass(Text.class);
         conf.setOutputValueClass(Text.class);
 
-//        FileInputFormat.setInputPaths(conf, new Path(inputPath));
-//        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
+        FileInputFormat.setInputPaths(conf, new Path(inputPath));
+        FileOutputFormat.setOutputPath(conf, new Path(outputPath));
         conf.setNumReduceTasks(numReducers);
 
         FileSystem dfs = FileSystem.get(conf);
