@@ -5,9 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Comparator;
 
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 
 public class BubbleMergeMessage extends MessageWritable {
 

@@ -16,11 +16,13 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, BFSTraverseMessage> {
 
@@ -199,8 +201,25 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             outgoingMsg.reset();
         if (fakeVertex == null) {
             fakeVertex = new VKmer();
-            //            String random = generaterRandomString(kmerSize + 1);
-            //            fakeVertex.setByRead(kmerSize + 1, random.getBytes(), 0); 
+        }
+    }
+
+    public void addFakeVertex(String fakeKmer) {
+        synchronized (lock) {
+            fakeVertex.setFromStringBytes(1, fakeKmer.getBytes(), 0);
+            if (!fakeVertexExist) {
+                //add a fake vertex
+                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+
+                ScaffoldingVertexValueWritable vertexValue = new ScaffoldingVertexValueWritable();
+                vertexValue.setFakeVertex(true);
+
+                vertex.setVertexId(fakeVertex);
+                vertex.setVertexValue(vertexValue);
+
+                addVertex(fakeVertex, vertex);
+                fakeVertexExist = true;
+            }
         }
     }
 
@@ -256,7 +275,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         }
     }
 
-    public VKmer setOutgoingMsgSrcAndDest(long readId, ArrayListWritable<SearchInfo> searchInfoList) {
+    public VKmer setSrcAndOutgoingMsgForDest(long readId, ArrayListWritable<SearchInfo> searchInfoList) {
         // src is greater; dest is smaller
         boolean firstIsSrc = searchInfoList.get(0).destKmer.compareTo(searchInfoList.get(1).destKmer) >= 0;
         VKmer firstKmer = searchInfoList.get(0).getDestKmer();
@@ -442,11 +461,13 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             voteToHalt();
         } else if (getSuperstep() == 2) {
             // for test, assign two kmer to srcNode and destNode
-            SearchInfo searchInfo = new SearchInfo(destNode, true);
+            SearchInfo srcSearchInfo = new SearchInfo(srcNode, false);
+            SearchInfo destSearchInfo = new SearchInfo(destNode, true);
             ArrayListWritable<SearchInfo> searchInfoList = new ArrayListWritable<SearchInfo>();
-            searchInfoList.add(searchInfo);
+            searchInfoList.add(srcSearchInfo);
+            searchInfoList.add(destSearchInfo);
             // initiate two nodes -- srcNode and destNode
-            setOutgoingMsgSrcAndDest(commonReadId, searchInfoList);
+            setSrcAndOutgoingMsgForDest(commonReadId, searchInfoList);
             sendMsg(srcNode, outgoingMsg);
 
             deleteVertex(getVertexId());

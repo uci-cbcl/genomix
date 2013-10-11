@@ -18,8 +18,8 @@ import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
@@ -124,7 +124,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                                 + searchInfoList.size() + "!");
             if (searchInfoList.size() == 2) {
                 outgoingMsg.reset();
-                VKmer srcNode = setOutgoingMsgSrcAndDest(entry.getKey().get(), searchInfoList);
+                VKmer srcNode = setSrcAndOutgoingMsgForDest(entry.getKey().get(), searchInfoList);
                 sendMsg(srcNode, outgoingMsg);
             }
         }

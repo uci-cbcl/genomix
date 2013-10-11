@@ -268,7 +268,7 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BFSTraverseVertex.class);
         job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
-        job.setVertexOutputFormatClass(NodeToScaffoldingVertexInputFormat.class);
+        job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
@@ -276,7 +276,7 @@ public class JobGenerator {
         job.getConfiguration().setInt(BFSTraverseVertex.MAX_TRAVERSAL_LENGTH, 10);
         job.getConfiguration().set(BFSTraverseVertex.SOURCE, "AAT"); // source and destination are based on input file
         job.getConfiguration().set(BFSTraverseVertex.DESTINATION, "AGA");
-        job.getConfiguration().setLong(BFSTraverseVertex.COMMOND_READID, 2);
+        job.getConfiguration().setLong(BFSTraverseVertex.COMMOND_READID, 1);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
