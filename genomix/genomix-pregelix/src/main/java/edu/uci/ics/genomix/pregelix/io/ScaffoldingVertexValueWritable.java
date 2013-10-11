@@ -9,7 +9,6 @@ import org.apache.hadoop.io.LongWritable;
 
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex.SearchInfo;
 
 public class ScaffoldingVertexValueWritable extends VertexValueWritable {

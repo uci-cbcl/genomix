@@ -10,6 +10,7 @@ import org.apache.hadoop.io.LongWritable;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;

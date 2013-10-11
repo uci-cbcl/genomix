@@ -9,6 +9,7 @@ import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 
+import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
@@ -109,68 +110,6 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             destKmer.readFields(in);
             flip = in.readBoolean();
         }
-    }
-
-    /**
-     * PathAndEdgeTypeList stores all the kmers along the BTS path by VKmerList
-     * and all the edgeType along it by ArrayListWritable<EDGETYPE>
-     * Ex. After BFSearch a path A -> B -> C -> D, kmerList: A, B, C, D and
-     * edgeTypeList: EDGETYPE(A-B), EDGETYPE(B-C), EDGETYPE(C-D)
-     */
-    public static class PathAndEdgeTypeList implements Writable {
-        VKmerList kmerList;
-        EdgeTypeList edgeTypeList;
-
-        public PathAndEdgeTypeList() {
-            kmerList = new VKmerList();
-            edgeTypeList = new EdgeTypeList();
-        }
-
-        public PathAndEdgeTypeList(VKmerList kmerList, EdgeTypeList edgeTypeList) {
-            this();
-            this.kmerList.setCopy(kmerList);
-            this.edgeTypeList.clear();
-            this.edgeTypeList.addAll(edgeTypeList);
-        }
-
-        public void reset() {
-            kmerList.reset();
-            edgeTypeList.clear();
-        }
-
-        public int size() {
-            return kmerList.size();
-        }
-
-        @Override
-        public void write(DataOutput out) throws IOException {
-            kmerList.write(out);
-            edgeTypeList.write(out);
-        }
-
-        @Override
-        public void readFields(DataInput in) throws IOException {
-            kmerList.readFields(in);
-            edgeTypeList.readFields(in);
-        }
-
-        public VKmerList getKmerList() {
-            return kmerList;
-        }
-
-        public void setKmerList(VKmerList kmerList) {
-            this.kmerList.setCopy(kmerList);
-        }
-
-        public EdgeTypeList getEdgeTypeList() {
-            return edgeTypeList;
-        }
-
-        public void setEdgeTypeList(EdgeTypeList edgeTypeList) {
-            this.edgeTypeList.clear();
-            this.edgeTypeList.addAll(edgeTypeList);
-        }
-
     }
 
     /**
@@ -348,7 +287,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             if (totalBFSLength < maxTraversalLength) {
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
-                
+
                 // copy targetVertex
                 outgoingMsg.setTargetVertexId(incomingMsg.getTargetVertexId());
                 // update totalBFSLength 
@@ -403,7 +342,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         VertexValueWritable vertex = getVertexValue();
         for (LongWritable commonReadId : pathMap.keySet()) {
             outgoingMsg.reset();
-            outgoingMsg.setReadId(commonReadId.get());
+            outgoingMsg.setReadId(2); //commonReadId.get()
 
             PathAndEdgeTypeList pathAndEdgeTypeList = pathMap.get(commonReadId);
             VKmerList kmerList = pathAndEdgeTypeList.getKmerList();
@@ -474,7 +413,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             sendMsg(srcNode, outgoingMsg);
 
             deleteVertex(getVertexId());
-        } else if (getSuperstep() >= 3) {
+        } else if (getSuperstep() >= 3 && getSuperstep() < maxBFSIteration) {
             if (getSuperstep() == 3)
                 BFSearch(msgIterator, SEARCH_TYPE.BEGIN_SEARCH);
             else

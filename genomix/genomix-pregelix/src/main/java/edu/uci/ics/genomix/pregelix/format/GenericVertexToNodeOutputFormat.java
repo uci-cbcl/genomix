@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 
-public abstract class GenericVertexToNodeOutputFormat<V extends VertexValueWritable> 
+public abstract class GenericVertexToNodeOutputFormat<V extends Node> 
 	extends BinaryVertexOutputFormat<VKmer, V, NullWritable> {
 
     @Override
@@ -27,7 +27,7 @@ public abstract class GenericVertexToNodeOutputFormat<V extends VertexValueWrita
     /**
      * Simple VertexWriter that supports {@link BinaryLoadGraphVertex}
      */
-    public static class BinaryLoadGraphVertexWriter<V extends VertexValueWritable> extends
+    public static class BinaryLoadGraphVertexWriter<V extends Node> extends
             BinaryVertexWriter<VKmer, V, NullWritable> {
         public BinaryLoadGraphVertexWriter(RecordWriter<VKmer, Node> lineRecordWriter) {
             super(lineRecordWriter);
