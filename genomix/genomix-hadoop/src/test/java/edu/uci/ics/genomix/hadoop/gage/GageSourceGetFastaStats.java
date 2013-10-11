@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.gage.sourcecode;
+package edu.uci.ics.genomix.hadoop.gage;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class GetFastaStats {
+
+public class GageSourceGetFastaStats {
     private static final int MIN_GAP_SIZE = 20;
     public static int MIN_LENGTH = 2000;
     public static final int CONTIG_AT_INITIAL_STEP = 1000000;
@@ -38,7 +39,7 @@ public class GetFastaStats {
     int totalCount = 0;
     private long genomeSize = 0;
 
-    public GetFastaStats(boolean useBaylor, boolean old, long g) {
+    public GageSourceGetFastaStats(boolean useBaylor, boolean old, long g) {
         baylorFormat = useBaylor;
         oldStyle = old;
         genomeSize = g;
@@ -46,7 +47,7 @@ public class GetFastaStats {
 
     public void processFile(String inputFile) throws Exception {
         if (inputFile.contains("lens")) {
-            BufferedReader bf = Utils.getFile(inputFile, "lens");
+            BufferedReader bf = GageSourceUtils.getFile(inputFile, "lens");
             String line = null;
             while ((line = bf.readLine()) != null) {
                 String[] splitLine = line.trim().split("\\s+");
@@ -54,7 +55,7 @@ public class GetFastaStats {
             }
             bf.close();
         } else {
-            BufferedReader bf = Utils.getFile(inputFile, suffix);
+            BufferedReader bf = GageSourceUtils.getFile(inputFile, suffix);
 
             String line = null;
             StringBuffer fastaSeq = new StringBuffer();
@@ -175,7 +176,7 @@ public class GetFastaStats {
             if (!currID.equalsIgnoreCase(id)) {
                 if (fastaSeq.length() != 0) {
                     System.err.println(">scaffold_" + currID);
-                    System.err.println(Utils.convertToFasta(fastaSeq.toString().trim()));
+                    System.err.println(GageSourceUtils.convertToFasta(fastaSeq.toString().trim()));
                     fastaSeq = new StringBuffer();
                 }
                 currID = id;
@@ -184,7 +185,7 @@ public class GetFastaStats {
 
         if (fastaSeq.length() != 0) {
             System.err.println(">scaffold_" + currID);
-            System.err.println(Utils.convertToFasta(fastaSeq.toString().trim()));
+            System.err.println(GageSourceUtils.convertToFasta(fastaSeq.toString().trim()));
         }
 
         System.out.println("NEGATIVE GAPS IS " + negGaps);
@@ -322,6 +323,7 @@ public class GetFastaStats {
 
             numberContigsSeen++;
         }
+        
         if (medianCount != 1 && medianCount != 2) {
             System.err.println("ERROR INVALID MEDIAN COUNT " + medianCount);
             System.exit(1);
@@ -405,7 +407,7 @@ public class GetFastaStats {
             if (args[initialVal].trim().equalsIgnoreCase("-b")) {
                 useBaylorFormat = true;
             } else if (args[initialVal].trim().equalsIgnoreCase("-min")) {
-                GetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
+                GageSourceGetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
             } else if (args[initialVal].trim().equalsIgnoreCase("-o")) {
                 oldStyle = true;
             } else if (args[initialVal].trim().equalsIgnoreCase("-genomeSize")) {
@@ -423,7 +425,7 @@ public class GetFastaStats {
 
         for (int i = initialVal; i < args.length; i++) {
             String assemblyTitle = args[i].trim().split("/")[0];
-            GetFastaStats f = new GetFastaStats(useBaylorFormat, oldStyle, genomeSize);
+            GageSourceGetFastaStats f = new GageSourceGetFastaStats(useBaylorFormat, oldStyle, genomeSize);
             String[] splitLine = args[i].trim().split(",");
 
             for (int j = 0; j < splitLine.length; j++) {

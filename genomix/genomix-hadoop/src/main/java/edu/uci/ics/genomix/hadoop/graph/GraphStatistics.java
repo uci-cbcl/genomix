@@ -4,7 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.logging.Logger;
@@ -13,6 +18,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
@@ -20,6 +26,7 @@ import org.apache.hadoop.mapred.Counters.Group;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -66,12 +73,10 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         reporter.getCounter("coverage-bins", Integer.toString(Math.round(value.getAverageCoverage()))).increment(1);
         reporter.getCounter("totals", "coverage").increment(Math.round(value.getAverageCoverage()));
 
-        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().size())))
-                .increment(1);
+        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().size()))).increment(1);
         reporter.getCounter("totals", "startRead").increment(Math.round(value.getStartReads().size()));
 
-        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().size())))
-                .increment(1);
+        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().size()))).increment(1);
         reporter.getCounter("totals", "endRead").increment(Math.round(value.getEndReads().size()));
 
         long totalEdgeReads = 0;
@@ -103,8 +108,8 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     /**
      * Run a map-reduce aggregator to get statistics on the graph (stored in returned job's counters)
      */
-    public static Counters run(String inputPath, String outputPath, GenomixJobConf baseConf) throws IOException {
-        GenomixJobConf conf = new GenomixJobConf(baseConf);
+    public static Counters run(String inputPath, String outputPath, JobConf baseConf) throws IOException {
+        JobConf conf = new JobConf(baseConf);
         conf.setJobName("Graph Statistics");
         conf.setMapperClass(GraphStatistics.class);
         conf.setNumReduceTasks(0); // no reducer
@@ -192,5 +197,240 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
             chartOut.close();
         }
+    }
+
+    public static void loadDataFromCounters(HashMap<Integer, Long> map, Counters jobCounters) {
+        for (Group g : jobCounters) {
+            if (g.getName().equals("kmerLength-bins")) {
+                for (Counter c : g) {
+                    Integer X = Integer.parseInt(c.getName());
+                    if (map.get(X) != null) {
+                        map.put(X, map.get(X) + c.getCounter());
+                    } else {
+                        map.put(X, c.getCounter());
+                    }
+                }
+            }
+        }
+    }
+
+    private static ArrayList<Integer> contigLengthList = new ArrayList<Integer>();
+
+    public static boolean USE_BAYLOR_FORMAT;
+    public static boolean OLD_STYLE;
+    public static int MIN_CONTIG_LENGTH;
+    public static int EXPECTED_GENOME_SIZE;
+
+    static int maxContig = Integer.MIN_VALUE;
+    static int minContig = Integer.MAX_VALUE;
+    static long total = 0;
+    static int count = 0;
+    static int n10 = 0;
+    static int n25 = 0;
+    static int n50 = 0; // is the size of the smallest contig such that 50% of the genome is contained in contigs of size N50 or larger
+    static int n75 = 0;
+    static int n95 = 0;
+    static int n10count = 0;
+    static int n25count = 0;
+    static int n50count = 0;
+    static int n75count = 0;
+    static int n95count = 0;
+    static int totalOverLength = 0;
+    static long totalBPOverLength = 0;
+    static double fSize; // Esize what's expect contig size, if we randomly choose one position in reference genome
+
+    private static final int CONTIG_AT_INITIAL_STEP = 1000000; //TODO ??? I am relly confused this which related to baylor format
+    private static final NumberFormat nf = new DecimalFormat("############.##");
+
+    private static class ContigAt {
+        ContigAt(long currentBases) {
+            this.count = this.len = 0;
+            this.totalBP = 0;
+            this.goal = currentBases;
+        }
+
+        public int count;
+        public long totalBP;
+        public int len;
+        public long goal;
+    }
+    
+    public static void getFastaStatsForGage(String outputDir, Counters jobCounters, JobConf job) throws IOException {
+        HashMap<Integer, Long> ctgSizeCounts = new HashMap<Integer, Long>();
+        loadDataFromCounters(ctgSizeCounts, jobCounters);
+        USE_BAYLOR_FORMAT = Boolean.parseBoolean(job.get(GenomixJobConf.USE_BAYLOR_FORMAT));
+        OLD_STYLE = Boolean.parseBoolean(job.get(GenomixJobConf.OLD_STYLE));
+        MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.MIN_CONTIG_LENGTH));
+        EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.EXPECTED_GENOME_SIZE));
+        for (Integer s : ctgSizeCounts.keySet()) {
+            for (int i = 0; i < ctgSizeCounts.get(s); i++)
+                contigLengthList.add(s);
+        }
+        for (Integer curLength : contigLengthList) {
+            if (curLength <= MIN_CONTIG_LENGTH) {
+                continue;
+            }
+
+            if (OLD_STYLE == true && curLength <= MIN_CONTIG_LENGTH) {
+                continue;
+            }
+
+            if (curLength > maxContig) {
+                maxContig = curLength;
+            }
+
+            if (curLength < minContig) {
+                minContig = curLength;
+            }
+            if (EXPECTED_GENOME_SIZE == 0) {
+                total += curLength;
+            } else {
+                total = EXPECTED_GENOME_SIZE;
+            }
+            count++;
+
+            // compute the E-size
+            fSize += Math.pow(curLength, 2);
+            if (curLength > MIN_CONTIG_LENGTH) {
+                totalOverLength++; // just like a count
+                totalBPOverLength += curLength;
+            }
+        }
+        fSize /= EXPECTED_GENOME_SIZE;
+
+        /*----------------------------------------------------------------*/
+        // get the goal contig at X bases (1MBp, 2MBp)
+        ArrayList<ContigAt> contigAtArray = new ArrayList<ContigAt>();
+        if (USE_BAYLOR_FORMAT == true) {
+            contigAtArray.add(new ContigAt(1 * CONTIG_AT_INITIAL_STEP));
+            contigAtArray.add(new ContigAt(2 * CONTIG_AT_INITIAL_STEP));
+            contigAtArray.add(new ContigAt(5 * CONTIG_AT_INITIAL_STEP));
+            contigAtArray.add(new ContigAt(10 * CONTIG_AT_INITIAL_STEP));
+        } else {
+            long step = CONTIG_AT_INITIAL_STEP;
+            long currentBases = 0;
+            while (currentBases <= total) {
+                if ((currentBases / step) >= 10) {
+                    step *= 10;
+                }
+                currentBases += step;
+                contigAtArray.add(new ContigAt(currentBases));//
+            }
+        }
+        ContigAt[] contigAtVals = contigAtArray.toArray(new ContigAt[0]);
+        /*----------------------------------------------------------------*/
+                    Collections.sort(contigLengthList);
+
+        long sum = 0;
+        double median = 0;
+        int medianCount = 0;
+        int numberContigsSeen = 1;
+        int currentValPoint = 0;
+
+        for (int i = contigLengthList.size() - 1; i >= 0; i--) {
+            if (((int) (count / 2)) == i) {
+                median += contigLengthList.get(i);
+                medianCount++;
+            } else if (count % 2 == 0 && ((((int) (count / 2)) + 1) == i)) {
+                median += contigLengthList.get(i);
+                medianCount++;
+            }
+
+            sum += contigLengthList.get(i);
+
+            // calculate the bases at
+            /*----------------------------------------------------------------*/
+            while (currentValPoint < contigAtVals.length && sum >= contigAtVals[currentValPoint].goal
+                    && contigAtVals[currentValPoint].count == 0) {
+                System.err.println("Calculating point at " + currentValPoint + " and the sum is " + sum
+                        + " and i is" + i + " and lens is " + contigLengthList.size() + " and length is "
+                        + contigLengthList.get(i));
+                contigAtVals[currentValPoint].count = numberContigsSeen;
+                contigAtVals[currentValPoint].len = contigLengthList.get(i);
+                contigAtVals[currentValPoint].totalBP = sum;
+                currentValPoint++;
+            }
+            /*----------------------------------------------------------------*/
+            // calculate the NXs
+            if (sum / (double) total >= 0.1 && n10count == 0) {
+                n10 = contigLengthList.get(i);
+                n10count = contigLengthList.size() - i;
+            }
+            if (sum / (double) total >= 0.25 && n25count == 0) {
+                n25 = contigLengthList.get(i);
+                n25count = contigLengthList.size() - i;
+            }
+            if (sum / (double) total >= 0.5 && n50count == 0) {
+                n50 = contigLengthList.get(i);
+                n50count = contigLengthList.size() - i;
+            }
+            if (sum / (double) total >= 0.75 && n75count == 0) {
+                n75 = contigLengthList.get(i);
+                n75count = contigLengthList.size() - i;
+            }
+            if (sum / (double) total >= 0.95 && n95count == 0) {
+                n95 = contigLengthList.get(i);
+                n95count = contigLengthList.size() - i;
+            }
+            numberContigsSeen++;
+        }
+
+        StringBuffer outputStr = new StringBuffer();
+        if (OLD_STYLE == true) {
+            outputStr.append("Total units: " + count + "\n");
+            outputStr.append("Reference: " + total + "\n");
+            outputStr.append("BasesInFasta: " + totalBPOverLength + "\n");
+            outputStr.append("Min: " + minContig + "\n");
+            outputStr.append("Max: " + maxContig + "\n");
+            outputStr.append("N10: " + n10 + " COUNT: " + n10count + "\n");
+            outputStr.append("N25: " + n25 + " COUNT: " + n25count + "\n");
+            outputStr.append("N50: " + n50 + " COUNT: " + n50count + "\n");
+            outputStr.append("N75: " + n75 + " COUNT: " + n75count + "\n");
+            outputStr.append("E-size:" + nf.format(fSize) + "\n");
+        } else {
+            //                if (outputHeader) {
+            outputStr.append("Assembly");
+            outputStr.append(",Unit Number");
+            outputStr.append(",Unit Total BP");
+            outputStr.append(",Number Units > " + MIN_CONTIG_LENGTH);
+            outputStr.append(",Total BP in Units > " + MIN_CONTIG_LENGTH);
+            outputStr.append(",Min");
+            outputStr.append(",Max");
+            outputStr.append(",Average");
+            outputStr.append(",Median");
+
+            for (int i = 0; i < contigAtVals.length; i++) {
+                if (contigAtVals[i].count != 0) {
+                    outputStr.append(",Unit At " + nf.format(contigAtVals[i].goal) + " Unit Count,"
+                            + /*"Total Length," + */" Actual Unit Length");
+                }
+            }
+            outputStr.append("\n");
+            //            }
+
+            //            outputStr.append(title);
+            outputStr.append("," + nf.format(count));
+            outputStr.append("," + nf.format(total));
+            outputStr.append("," + nf.format(totalOverLength));
+            outputStr.append("," + nf.format(totalBPOverLength));
+            outputStr.append("," + nf.format(minContig));
+            outputStr.append("," + nf.format(maxContig));
+            outputStr.append("," + nf.format((double) total / count));
+            outputStr.append("," + nf.format((double) median / medianCount));
+
+            for (int i = 0; i < contigAtVals.length; i++) {
+                if (contigAtVals[i].count != 0) {
+                    outputStr.append("," + contigAtVals[i].count + ","
+                            + /*contigAtVals[i].totalBP + "," +*/contigAtVals[i].len);
+                }
+            }
+        }
+        FileSystem dfs = FileSystem.get(job);
+        dfs.mkdirs(new Path(outputDir));
+        FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "gagestatsFasta.txt"), true);
+        PrintWriter writer = new PrintWriter(outstream);
+            writer.println(outputStr.toString());
+        writer.close();
+        
     }
 }

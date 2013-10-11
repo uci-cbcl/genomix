@@ -151,7 +151,8 @@ public class GenomixDriver {
                 curOutput = prevOutput; // use previous job's output
             case GAGE:
                 flushPendingJobs(conf);
-                getMetricsWithGage(conf, prevOutput, curOutput, numCoresPerMachine * numMachines);
+                Counters statsCounters = GraphStatistics.run(prevOutput, curOutput, conf);
+                GraphStatistics.getFastaStatsForGage(curOutput, statsCounters, conf);
                 curOutput = prevOutput;
         }
     }
@@ -253,19 +254,6 @@ public class GenomixDriver {
         LOG.info("Dumping the graph took " + GenomixJobConf.tock("dumpGraphWithHadoop") + "ms");
     }
     
-    private void getMetricsWithGage(GenomixJobConf conf, String inputPath, String outputPath, int numReducers) throws Exception{
-        LOG.info("Begin Analyze with Gage");
-        
-        manager.startCluster(ClusterType.HADOOP);
-        GenomixJobConf.tick("beginWithGage");
-
-        GetFastaStatsJob fastaStatsJob = new GetFastaStatsJob();
-        fastaStatsJob.run(inputPath, outputPath, numReducers, conf);
-        System.out.println("finish Analyze!");
-
-        manager.stopCluster(ClusterType.HADOOP);
-        LOG.info("Analyze the graph took " + GenomixJobConf.tock("beginWithGage") + "ms");
-    }
     
     private void initGenomix(GenomixJobConf conf) throws Exception {
         GenomixJobConf.setGlobalStaticConstants(conf);

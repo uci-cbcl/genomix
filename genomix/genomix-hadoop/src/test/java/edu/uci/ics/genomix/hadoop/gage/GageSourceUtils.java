@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.gage.sourcecode;
+package edu.uci.ics.genomix.hadoop.gage;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileReader;
 
-public class Utils {
+public class GageSourceUtils {
    public static final int MBYTES = 1048576;
    public static final int FASTA_LINE_LENGTH = 60;
    public static MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
@@ -239,7 +239,7 @@ public class Utils {
    }
 
    public static int countLetterInRead(String fasta, String letter, Boolean caseSensitive) {
-      String ungapped = Utils.getUngappedRead(fasta);
+      String ungapped = GageSourceUtils.getUngappedRead(fasta);
       int len = ungapped.length();
       if (len == 0) { return -1; }
    

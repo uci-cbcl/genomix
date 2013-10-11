@@ -31,12 +31,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Writer;
+import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.gage.sourcecode.GetFastaStats;
+import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hadoop.graphbuilding.checkingtool.ResultsCheckingDriver;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 import edu.uci.ics.genomix.type.Node;
@@ -101,7 +102,9 @@ public class GetFastaStatsTest {
         conf.setInt(GenomixJobConf.EXPECTED_GENOME_SIZE, 150);
         conf.setBoolean(GenomixJobConf.USE_BAYLOR_FORMAT, false);
         conf.setBoolean(GenomixJobConf.OLD_STYLE, true);
-        driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, conf);
+        Counters counters = GraphStatistics.run(HDFS_PATH, RESULT_PATH, conf);
+        GraphStatistics.getFastaStatsForGage(RESULT_PATH, counters, conf);
+//        driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, conf);
         dumpResult();
         cleanupHadoop();
         if (!compareWithGageSourceCodeResults("actual/metrics.txt"))
@@ -139,7 +142,7 @@ public class GetFastaStatsTest {
             if (args[initialVal].trim().equalsIgnoreCase("-b")) {
                 useBaylorFormat = true;
             } else if (args[initialVal].trim().equalsIgnoreCase("-min")) {
-                GetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
+                GageSourceGetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
             } else if (args[initialVal].trim().equalsIgnoreCase("-o")) {
                 oldStyle = true;
             } else if (args[initialVal].trim().equalsIgnoreCase("-genomeSize")) {
@@ -157,7 +160,7 @@ public class GetFastaStatsTest {
 
         //        for (int i = initialVal; i < args.length; i++) {
         String assemblyTitle = args[initialVal].trim().split("/")[0];
-        GetFastaStats f = new GetFastaStats(useBaylorFormat, oldStyle, genomeSize);
+        GageSourceGetFastaStats f = new GageSourceGetFastaStats(useBaylorFormat, oldStyle, genomeSize);
         String[] splitLine = args[initialVal].trim().split(",");
 
         for (int j = 0; j < splitLine.length; j++) {
