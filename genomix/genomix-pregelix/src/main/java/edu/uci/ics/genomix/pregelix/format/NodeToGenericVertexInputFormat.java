@@ -19,60 +19,49 @@ import edu.uci.ics.genomix.type.VKmer;
 
 public abstract class NodeToGenericVertexInputFormat<V extends VertexValueWritable> extends
         BinaryVertexInputFormat<VKmer, V, NullWritable, MessageWritable> {
-    /**
-     * Format INPUT
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public VertexReader<VKmer, V, NullWritable, MessageWritable> createVertexReader(InputSplit split,
-            TaskAttemptContext context) throws IOException {
-        return new BinaryDataCleanLoadGraphReader<V>(binaryInputFormat.createRecordReader(split, context));
-    }
-}
-
-@SuppressWarnings("rawtypes")
-class BinaryDataCleanLoadGraphReader<V extends VertexValueWritable> extends
-        BinaryVertexReader<VKmer, V, NullWritable, MessageWritable> {
-    private Vertex vertex;
-    private VKmer vertexId = new VKmer();
-    @SuppressWarnings("unchecked")
-	private V vertexValue = (V)new VertexValueWritable();
-
-    public BinaryDataCleanLoadGraphReader(RecordReader<VKmer, Node> recordReader) {
-        super(recordReader);
-    }
-
-    @Override
-    public boolean nextVertex() throws IOException, InterruptedException {
-        return getRecordReader().nextKeyValue();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public Vertex<VKmer, V, NullWritable, MessageWritable> getCurrentVertex() throws IOException,
-            InterruptedException {
-        if (vertex == null)
-            vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-
-        vertex.getMsgList().clear();
-        vertex.getEdges().clear();
-
-        vertex.reset();
-        if (getRecordReader() != null) {
-            /**
-             * set the src vertex id
-             */
-            vertexId.setAsCopy(getRecordReader().getCurrentKey());
-            vertex.setVertexId(vertexId);
-            /**
-             * set the vertex value
-             */
-            vertexValue.setAsCopy(getRecordReader().getCurrentValue());
-            if(vertexValue.getInternalKmer().getKmerLetterLength() == 0) // initial input directly from graph building
-            	vertexValue.setInternalKmer(vertexId);
-            vertex.setVertexValue(vertexValue);
+    
+    protected static class BinaryDataCleanLoadGraphReader<V extends VertexValueWritable> extends
+    BinaryVertexReader<VKmer, V, NullWritable, MessageWritable> {
+        private Vertex vertex;
+        private VKmer vertexId = new VKmer();
+        protected V vertexValue;
+        
+        public BinaryDataCleanLoadGraphReader(RecordReader<VKmer, Node> recordReader) {
+            super(recordReader);
         }
-
-        return vertex;
+        
+        @Override
+        public boolean nextVertex() throws IOException, InterruptedException {
+            return getRecordReader().nextKeyValue();
+        }
+        
+        @Override
+        public Vertex<VKmer, V, NullWritable, MessageWritable> getCurrentVertex() throws IOException,
+        InterruptedException {
+            if (vertex == null)
+                vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+            
+            vertex.getMsgList().clear();
+            vertex.getEdges().clear();
+            
+            vertex.reset();
+            if (getRecordReader() != null) {
+                /**
+                 * set the src vertex id
+                 */
+                vertexId.setAsCopy(getRecordReader().getCurrentKey());
+                vertex.setVertexId(vertexId);
+                /**
+                 * set the vertex value
+                 */
+                vertexValue.setAsCopy(getRecordReader().getCurrentValue());
+                if(vertexValue.getInternalKmer().getKmerLetterLength() == 0) // initial input directly from graph building
+                    vertexValue.setInternalKmer(vertexId);
+                vertex.setVertexValue(vertexValue);
+            }
+            
+            return vertex;
+        }
     }
 }
+
