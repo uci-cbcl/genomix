@@ -46,7 +46,10 @@ import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class GetFastaStatsJob {
-
+    
+    /**
+     * use secondary sort, before all elements go to reducer
+     */
     @SuppressWarnings("deprecation")
     public static class GetFastaStatsMapper extends MapReduceBase implements Mapper<VKmer, Node, IntPair, IntWritable> {
 
@@ -97,6 +100,8 @@ public class GetFastaStatsJob {
     @SuppressWarnings("deprecation")
     public static class GetFastaStatsReducer extends MapReduceBase implements
             Reducer<IntPair, IntWritable, Text, NullWritable> {
+        
+
         private ArrayList<Integer> contigLengthList;
 
         public static boolean USE_BAYLOR_FORMAT;
