@@ -4,7 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.io.LongWritable;
+
+import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex.SearchInfo;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
@@ -16,8 +21,8 @@ public class BFSTraverseMessage extends MessageWritable {
     private VKmer targetVertexId; //use for BFSTravese
     private boolean srcFlip; //use for BFSTravese
     private boolean destFlip; //use for BFSTravese
-    private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes
     private int totalBFSLength;
+    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap;
 
     public BFSTraverseMessage() {
         super();
@@ -27,8 +32,8 @@ public class BFSTraverseMessage extends MessageWritable {
         readId = 0;
         srcFlip = false;
         destFlip = false;
-        isTraverseMsg = true;
         totalBFSLength = 0;
+        scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
     }
 
     public void reset() {
@@ -39,8 +44,8 @@ public class BFSTraverseMessage extends MessageWritable {
         readId = 0;
         srcFlip = false;
         destFlip = false;
-        isTraverseMsg = true;
         totalBFSLength = 0;
+        scaffoldingMap.clear();
     }
 
     public VKmerList getPathList() {
@@ -92,20 +97,21 @@ public class BFSTraverseMessage extends MessageWritable {
         this.destFlip = destFlip;
     }
 
-    public boolean isTraverseMsg() {
-        return isTraverseMsg;
-    }
-
-    public void setTraverseMsg(boolean isTraverseMsg) {
-        this.isTraverseMsg = isTraverseMsg;
-    }
-
     public int getTotalBFSLength() {
         return totalBFSLength;
     }
 
     public void setTotalBFSLength(int totalBFSLength) {
         this.totalBFSLength = totalBFSLength;
+    }
+    
+    public HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> getScaffoldingMap() {
+        return scaffoldingMap;
+    }
+
+    public void setScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap) {
+        this.scaffoldingMap.clear();
+        this.scaffoldingMap.putAll(scaffoldingMap);
     }
 
     @Override
@@ -118,8 +124,8 @@ public class BFSTraverseMessage extends MessageWritable {
         readId = in.readLong();
         srcFlip = in.readBoolean();
         destFlip = in.readBoolean();
-        isTraverseMsg = in.readBoolean();
         totalBFSLength = in.readInt();
+        scaffoldingMap.readFields(in);
     }
 
     @Override
@@ -131,7 +137,7 @@ public class BFSTraverseMessage extends MessageWritable {
         out.writeLong(readId);
         out.writeBoolean(srcFlip);
         out.writeBoolean(destFlip);
-        out.writeBoolean(isTraverseMsg);
         out.writeInt(totalBFSLength);
+        scaffoldingMap.write(out);
     }
 }

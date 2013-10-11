@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 
@@ -27,8 +26,6 @@ import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 /**
  * Graph clean pattern: Scaffolding
@@ -44,7 +41,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = -1;
     public static int SCAFFOLDING_VERTEX_MIN_LENGTH = -1;
 
-    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
+    //    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
 
     @Override
     public void initVertex() {
@@ -54,6 +51,10 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        if (outgoingMsg == null)
+            outgoingMsg = new BFSTraverseMessage();
+        else
+            outgoingMsg.reset();
         if (SCAFFOLDING_MIN_TRAVERSAL_LENGTH < 0)
             SCAFFOLDING_MIN_TRAVERSAL_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.SCAFFOLDING_MIN_TRAVERSAL_LENGTH));
@@ -73,17 +74,17 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         else if (getSuperstep() == 2)
             StatisticsAggregator.preGlobalCounters = DeBruijnGraphCleanVertex.readStatisticsCounterResult(getContext()
                     .getConfiguration());
-        if (getSuperstep() == 1)
-            ScaffoldingAggregator.preScaffoldingMap.clear();
-        else if (getSuperstep() == 2)
-            ScaffoldingAggregator.preScaffoldingMap = readScaffoldingMapResult(getContext().getConfiguration());
+//        if (getSuperstep() == 1)
+//            ScaffoldingAggregator.preScaffoldingMap.clear();
+//        else if (getSuperstep() == 2)
+//            ScaffoldingAggregator.preScaffoldingMap = readScaffoldingMapResult(getContext().getConfiguration());
         counters.clear();
-        scaffoldingMap.clear();
+        //        scaffoldingMap.clear();
         getVertexValue().getCounters().clear();
-        getVertexValue().getScaffoldingMap().clear();
     }
 
-    public void addReadsToScaffoldingMap(ReadHeadSet readIds, READHEAD_TYPE isFlip) {
+    public void addReadsToScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap,
+            ReadHeadSet readIds, READHEAD_TYPE isFlip) {
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
 
@@ -109,9 +110,11 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         // grouped by 5'/~5' readId in aggregator
         ScaffoldingVertexValueWritable vertex = getVertexValue();
         if (vertex.isValidScaffoldingSearchNode()) {
-            addReadsToScaffoldingMap(vertex.getStartReads(), READHEAD_TYPE.UNFLIPPED);
-            addReadsToScaffoldingMap(vertex.getEndReads(), READHEAD_TYPE.FLIPPED);
-            vertex.setScaffoldingMap(scaffoldingMap);
+            outgoingMsg.reset();
+            HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> map = outgoingMsg.getScaffoldingMap();
+            addReadsToScaffoldingMap(map, vertex.getStartReads(), READHEAD_TYPE.UNFLIPPED);
+            addReadsToScaffoldingMap(map, vertex.getEndReads(), READHEAD_TYPE.FLIPPED);
+            sendMsg(fakeVertex, outgoingMsg);
         }
         voteToHalt();
     }
@@ -119,11 +122,27 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     /**
      * step 2:
      */
-    public void processScaffoldingMap() {
+    public void processScaffoldingMap(Iterator<BFSTraverseMessage> msgIterator) {
+        // aggregate incomingMsg.scaffoldingMap
+        HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
+        BFSTraverseMessage incomingMsg;
+        HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> curMap;
+        while (msgIterator.hasNext()) {
+            incomingMsg = msgIterator.next();
+            curMap = incomingMsg.getScaffoldingMap();
+            ArrayListWritable<SearchInfo> value;
+            for(LongWritable key : curMap.keySet()){
+                if(scaffoldingMap.containsKey(key)){
+                    value = scaffoldingMap.get(key);
+                } else {
+                    value = new ArrayListWritable<SearchInfo>();
+                }
+                value.addAll(curMap.get(key));
+            }
+        }
         // fake vertex process scaffoldingMap 
         ArrayListWritable<SearchInfo> searchInfoList;
-        for (Entry<LongWritable, ArrayListWritable<SearchInfo>> entry : ScaffoldingAggregator.preScaffoldingMap
-                .entrySet()) {
+        for (Entry<LongWritable, ArrayListWritable<SearchInfo>> entry : scaffoldingMap.entrySet()) {
             searchInfoList = entry.getValue();
             if (searchInfoList.size() > 2)
                 throw new IllegalStateException(
@@ -224,7 +243,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         if (getSuperstep() == 1) {
             generateScaffoldingMap();
         } else if (getSuperstep() == 2) {
-            processScaffoldingMap();
+            processScaffoldingMap(msgIterator);
         } else if (getSuperstep() >= 3) {
             if (getSuperstep() == 3)
                 BFSearch(msgIterator, SEARCH_TYPE.BEGIN_SEARCH);
@@ -241,16 +260,16 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         }
     }
 
-    public static HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> readScaffoldingMapResult(
-            Configuration conf) {
-        try {
-            ScaffoldingVertexValueWritable value = (ScaffoldingVertexValueWritable) IterationUtils
-                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
-            return value.getScaffoldingMap();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+//    public static HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> readScaffoldingMapResult(
+//            Configuration conf) {
+//        try {
+//            ScaffoldingVertexValueWritable value = (ScaffoldingVertexValueWritable) IterationUtils
+//                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
+//            return value.getScaffoldingMap();
+//        } catch (IOException e) {
+//            throw new IllegalStateException(e);
+//        }
+//    }
 
     public static void main(String[] args) throws Exception {
         Client.run(args, getConfiguredJob(null, ScaffoldingVertex.class));
@@ -261,7 +280,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
             throws IOException {
         PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
-        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
+//        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
         return job;
     }
 }

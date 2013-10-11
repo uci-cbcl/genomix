@@ -24,7 +24,6 @@ import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingAggregator;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipAddVertex;
@@ -287,7 +286,7 @@ public class JobGenerator {
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(ScaffoldingVertex.class);
-        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
         job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);

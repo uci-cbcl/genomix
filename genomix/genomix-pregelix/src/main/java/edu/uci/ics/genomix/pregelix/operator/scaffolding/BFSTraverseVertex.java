@@ -61,32 +61,32 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
      * Used by scaffolding
      */
     public static class SearchInfo implements Writable {
-        private VKmer destKmer;
+        private VKmer srcOrDestKmer;
         private boolean flip; // TODO if use enum, move byte transformation inside write()...
 
         public SearchInfo() {
-            destKmer = new VKmer();
+            srcOrDestKmer = new VKmer();
             flip = false;
         }
 
         public SearchInfo(VKmer otherKmer, boolean flip) {
             this();
-            this.destKmer.setAsCopy(otherKmer);
+            this.srcOrDestKmer.setAsCopy(otherKmer);
             this.flip = flip;
         }
 
         public SearchInfo(VKmer otherKmer, READHEAD_TYPE flip) {
             this();
-            this.destKmer.setAsCopy(otherKmer);
+            this.srcOrDestKmer.setAsCopy(otherKmer);
             this.flip = flip == READHEAD_TYPE.FLIPPED ? true : false;
         }
 
         public VKmer getDestKmer() {
-            return destKmer;
+            return srcOrDestKmer;
         }
 
         public void setDestKmer(VKmer destKmer) {
-            this.destKmer = destKmer;
+            this.srcOrDestKmer = destKmer;
         }
 
         public boolean isFlip() {
@@ -99,14 +99,23 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
 
         @Override
         public void write(DataOutput out) throws IOException {
-            destKmer.write(out);
+            srcOrDestKmer.write(out);
             out.writeBoolean(flip);
         }
 
         @Override
         public void readFields(DataInput in) throws IOException {
-            destKmer.readFields(in);
+            srcOrDestKmer.readFields(in);
             flip = in.readBoolean();
+        }
+
+        public String toString() {
+            StringBuilder sbuilder = new StringBuilder();
+            sbuilder.append('(');
+            sbuilder.append("DestKmer: " + this.srcOrDestKmer + ", ");
+            sbuilder.append("Flip: " + this.isFlip());
+            sbuilder.append(')');
+            return sbuilder.toString();
         }
     }
 
@@ -213,7 +222,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
 
     public VKmer setSrcAndOutgoingMsgForDest(long readId, ArrayListWritable<SearchInfo> searchInfoList) {
         // src is greater; dest is smaller
-        boolean firstIsSrc = searchInfoList.get(0).destKmer.compareTo(searchInfoList.get(1).destKmer) >= 0;
+        boolean firstIsSrc = searchInfoList.get(0).srcOrDestKmer.compareTo(searchInfoList.get(1).srcOrDestKmer) >= 0;
         VKmer firstKmer = searchInfoList.get(0).getDestKmer();
         boolean firstFlip = searchInfoList.get(0).isFlip();
         VKmer secondKmer = searchInfoList.get(1).getDestKmer();

@@ -1,6 +1,8 @@
 package edu.uci.ics.genomix.pregelix.io;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
@@ -37,7 +39,7 @@ public class VertexValueWritable extends Node {
     private short state;
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
-    
+
     public VertexValueWritable() {
         super();
         state = 0;
@@ -53,11 +55,12 @@ public class VertexValueWritable extends Node {
         counters.putAll(other.getCounters());
     }
 
-    public boolean isValidScaffoldingSearchNode(){
-        return getAverageCoverage() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_COVERAGE 
-                && getInternalKmer().getLength() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_LENGTH;
+    public boolean isValidScaffoldingSearchNode() {
+        return (this.getStartReads().size() > 0 || this.getEndReads().size() > 0)
+                && (getAverageCoverage() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_COVERAGE && getInternalKmer()
+                        .getLength() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_LENGTH);
     }
-    
+
     public void setNode(Node node) {
         // TODO invertigate... does this need to be a copy?
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(), node.getInternalKmer(),
@@ -107,7 +110,7 @@ public class VertexValueWritable extends Node {
     public void setFakeVertex(boolean isFakeVertex) {
         this.isFakeVertex = isFakeVertex;
     }
-    
+
     // reuse isFakeVertex to store isSaved()
     public boolean isSaved() {
         return isFakeVertex;
