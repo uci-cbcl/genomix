@@ -123,6 +123,11 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         curKmer = getVertexId();
         curHead = isNodeRandomHead(curKmer);
         checkNeighbors();
+        if (verbose) {
+            LOG.fine("choosing mergeDir: \ncurKmer: " + curKmer + "  curHead: " + curHead
+                    + "\nprevKmer: " + prevKmer + "  prevHead: " + prevHead
+                    + "\nnextKmer: " + nextKmer + "  nextHead: " + nextHead);
+        }
 
         if (!hasNext && !hasPrev) { // TODO check if logic for previous updates is the same as here (just look at internal flags?)
             voteToHalt(); // this node can never merge (restricted by neighbors or my structure)
@@ -160,9 +165,13 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             }
         }
         if (verbose) {
-            LOG.fine("Iteration " + getSuperstep() + "\r\n"
-            		+ "Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
-                    + "; node is " + getVertexValue());
+            if ((getVertexValue().getState() & State.MERGE) != 0) {
+                LOG.fine("Iteration " + getSuperstep() + "\r\n"
+                        + "Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
+                        + "; node is " + getVertexValue());
+            } else {
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "Mark: No Merge for " + getVertexId() +" node is " + getVertexValue());
+            }
         }
     }
 
