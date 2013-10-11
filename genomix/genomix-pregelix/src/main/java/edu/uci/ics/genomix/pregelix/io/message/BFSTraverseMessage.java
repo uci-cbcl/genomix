@@ -4,8 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
-import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
@@ -13,7 +12,7 @@ public class BFSTraverseMessage extends MessageWritable {
 
     private long readId; //use for BFSTravese
     private VKmerList pathList; //use for BFSTravese
-    private ArrayListWritable<EDGETYPE> edgeTypeList; //use for BFSTravese
+    private EdgeTypeList edgeTypeList; //use for BFSTravese
     private VKmer targetVertexId; //use for BFSTravese
     private boolean srcFlip; //use for BFSTravese
     private boolean destFlip; //use for BFSTravese
@@ -23,7 +22,7 @@ public class BFSTraverseMessage extends MessageWritable {
     public BFSTraverseMessage() {
         super();
         pathList = new VKmerList();
-        edgeTypeList = new ArrayListWritable<EDGETYPE>();
+        edgeTypeList = new EdgeTypeList();
         targetVertexId = new VKmer();
         readId = 0;
         srcFlip = false;
@@ -52,11 +51,11 @@ public class BFSTraverseMessage extends MessageWritable {
         this.pathList = pathList;
     }
 
-    public ArrayListWritable<EDGETYPE> getEdgeTypeList() {
+    public EdgeTypeList getEdgeTypeList() {
         return edgeTypeList;
     }
 
-    public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeDirsList) {
+    public void setEdgeTypeList(EdgeTypeList edgeDirsList) {
         this.edgeTypeList.clear();
         this.edgeTypeList.addAll(edgeDirsList);
     }
@@ -100,7 +99,7 @@ public class BFSTraverseMessage extends MessageWritable {
     public void setTraverseMsg(boolean isTraverseMsg) {
         this.isTraverseMsg = isTraverseMsg;
     }
-    
+
     public int getTotalBFSLength() {
         return totalBFSLength;
     }

@@ -13,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
+import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
@@ -187,7 +188,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 outgoingMsg.setPathList(updatedKmerList);
 
                 // send message to valid neighbor
-                ArrayListWritable<EDGETYPE> oldEdgeTypeList = incomingMsg.getEdgeTypeList();
+                EdgeTypeList oldEdgeTypeList = incomingMsg.getEdgeTypeList();
                 if (searchType == SEARCH_TYPE.BEGIN_SEARCH) { // the initial BFS 
                     // send message to the neighbors based on srcFlip and update EdgeTypeList
                     if (incomingMsg.isSrcFlip())

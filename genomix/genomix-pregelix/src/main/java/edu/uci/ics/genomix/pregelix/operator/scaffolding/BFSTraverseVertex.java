@@ -12,6 +12,7 @@ import org.apache.hadoop.io.Writable;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
+import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
@@ -118,14 +119,14 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
      */
     public static class PathAndEdgeTypeList implements Writable {
         VKmerList kmerList;
-        ArrayListWritable<EDGETYPE> edgeTypeList;
+        EdgeTypeList edgeTypeList;
 
         public PathAndEdgeTypeList() {
             kmerList = new VKmerList();
-            edgeTypeList = new ArrayListWritable<EDGETYPE>();
+            edgeTypeList = new EdgeTypeList();
         }
 
-        public PathAndEdgeTypeList(VKmerList kmerList, ArrayListWritable<EDGETYPE> edgeTypeList) {
+        public PathAndEdgeTypeList(VKmerList kmerList, EdgeTypeList edgeTypeList) {
             this();
             this.kmerList.setCopy(kmerList);
             this.edgeTypeList.clear();
@@ -161,11 +162,11 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             this.kmerList.setCopy(kmerList);
         }
 
-        public ArrayListWritable<EDGETYPE> getEdgeTypeList() {
+        public EdgeTypeList getEdgeTypeList() {
             return edgeTypeList;
         }
 
-        public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList) {
+        public void setEdgeTypeList(EdgeTypeList edgeTypeList) {
             this.edgeTypeList.clear();
             this.edgeTypeList.addAll(edgeTypeList);
         }
@@ -234,7 +235,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
     public int updateBFSLength(BFSTraverseMessage incomingMsg, UPDATELENGTH_TYPE type) {
         int totalBFSLength = incomingMsg.getTotalBFSLength();
         VertexValueWritable vertex = getVertexValue();
-        int internalKmerLength = vertex.getInternalKmer().getLength();
+        int internalKmerLength = vertex.getInternalKmer().getKmerLetterLength();
         ReadHeadSet readHeadSet;
         int offset;
         switch (type) {
@@ -260,7 +261,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
 
     }
 
-    public void sendMsgToNeighbors(ArrayListWritable<EDGETYPE> edgeTypeList, DIR direction) {
+    public void sendMsgToNeighbors(EdgeTypeList edgeTypeList, DIR direction) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
@@ -347,7 +348,9 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             if (totalBFSLength < maxTraversalLength) {
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
-
+                
+                // copy targetVertex
+                outgoingMsg.setTargetVertexId(incomingMsg.getTargetVertexId());
                 // update totalBFSLength 
                 outgoingMsg.setTotalBFSLength(totalBFSLength);
 
@@ -357,7 +360,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
                 outgoingMsg.setPathList(updatedKmerList);
 
                 // send message to valid neighbor
-                ArrayListWritable<EDGETYPE> oldEdgeTypeList = incomingMsg.getEdgeTypeList();
+                EdgeTypeList oldEdgeTypeList = incomingMsg.getEdgeTypeList();
                 if (searchType == SEARCH_TYPE.BEGIN_SEARCH) { // the initial BFS 
                     // send message to the neighbors based on srcFlip and update EdgeTypeList
                     if (incomingMsg.isSrcFlip())
@@ -404,8 +407,8 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
 
             PathAndEdgeTypeList pathAndEdgeTypeList = pathMap.get(commonReadId);
             VKmerList kmerList = pathAndEdgeTypeList.getKmerList();
-            ArrayListWritable<EDGETYPE> edgeTypeList = pathAndEdgeTypeList.getEdgeTypeList();
-            ArrayListWritable<EDGETYPE> outputEdgeTypeList = outgoingMsg.getEdgeTypeList();
+            EdgeTypeList edgeTypeList = pathAndEdgeTypeList.getEdgeTypeList();
+            EdgeTypeList outputEdgeTypeList = outgoingMsg.getEdgeTypeList();
             VKmerList pathList = outgoingMsg.getPathList();
             // in outgoingMsg.flag (0-1)bit for nextEdgeType, (2-3)bit for prevEdgeType
             for (int i = 0; i < pathAndEdgeTypeList.size() - 1; i++) {
@@ -443,7 +446,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             BFSTraverseMessage incomingMsg = msgIterator.next();
             long commonReadId = incomingMsg.getReadId();
             VKmerList pathList = incomingMsg.getPathList();
-            ArrayListWritable<EDGETYPE> edgeTypeList = incomingMsg.getEdgeTypeList();
+            EdgeTypeList edgeTypeList = incomingMsg.getEdgeTypeList();
             if (pathList.size() > 2)
                 throw new IllegalStateException("When path node receives message to append common readId,"
                         + "PathList should only have one(next) or two(prev and next) elements!");
