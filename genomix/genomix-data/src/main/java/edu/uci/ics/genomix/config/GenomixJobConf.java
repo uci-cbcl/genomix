@@ -387,7 +387,7 @@ public class GenomixJobConf extends JobConf {
             setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 2);
         
         if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 10);
+            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 15);
         
         if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
             setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 1);

@@ -1,16 +1,13 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Writable;
 
 import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.SearchInfo;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
@@ -20,6 +17,7 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
@@ -40,11 +38,6 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
     private String destination = "";
     private long commonReadId = -1;
 
-    public enum READHEAD_TYPE {
-        UNFLIPPED,
-        FLIPPED;
-    }
-
     public enum UPDATELENGTH_TYPE {
         SRC_OFFSET,
         DEST_OFFSET,
@@ -54,69 +47,6 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
     public enum SEARCH_TYPE {
         BEGIN_SEARCH,
         CONTINUE_SEARCH;
-    }
-
-    /**
-     * SearchInfo stores information about destinationKmer and ifFlip(true == from EndReads; false == from startReads)
-     * Used by scaffolding
-     */
-    public static class SearchInfo implements Writable {
-        private VKmer srcOrDestKmer;
-        private boolean flip; // TODO if use enum, move byte transformation inside write()...
-
-        public SearchInfo() {
-            srcOrDestKmer = new VKmer();
-            flip = false;
-        }
-
-        public SearchInfo(VKmer otherKmer, boolean flip) {
-            this();
-            this.srcOrDestKmer.setAsCopy(otherKmer);
-            this.flip = flip;
-        }
-
-        public SearchInfo(VKmer otherKmer, READHEAD_TYPE flip) {
-            this();
-            this.srcOrDestKmer.setAsCopy(otherKmer);
-            this.flip = flip == READHEAD_TYPE.FLIPPED ? true : false;
-        }
-
-        public VKmer getDestKmer() {
-            return srcOrDestKmer;
-        }
-
-        public void setDestKmer(VKmer destKmer) {
-            this.srcOrDestKmer = destKmer;
-        }
-
-        public boolean isFlip() {
-            return flip;
-        }
-
-        public void setFlip(boolean flip) {
-            this.flip = flip;
-        }
-
-        @Override
-        public void write(DataOutput out) throws IOException {
-            srcOrDestKmer.write(out);
-            out.writeBoolean(flip);
-        }
-
-        @Override
-        public void readFields(DataInput in) throws IOException {
-            srcOrDestKmer.readFields(in);
-            flip = in.readBoolean();
-        }
-
-        public String toString() {
-            StringBuilder sbuilder = new StringBuilder();
-            sbuilder.append('(');
-            sbuilder.append("DestKmer: " + this.srcOrDestKmer + ", ");
-            sbuilder.append("Flip: " + this.isFlip());
-            sbuilder.append(')');
-            return sbuilder.toString();
-        }
     }
 
     /**
@@ -168,15 +98,8 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         }
     }
 
-    public boolean isValidOrientation(BFSTraverseMessage incomingMsg) {
-        EDGETYPE meToIncoming = EDGETYPE.fromByte(incomingMsg.getFlag());
-        if (incomingMsg.isDestFlip())
-            return meToIncoming.dir() == DIR.REVERSE;
-        else
-            return meToIncoming.dir() == DIR.FORWARD;
-    }
-
     public int updateBFSLength(BFSTraverseMessage incomingMsg, UPDATELENGTH_TYPE type) {
+
         int totalBFSLength = incomingMsg.getTotalBFSLength();
         VertexValueWritable vertex = getVertexValue();
         int internalKmerLength = vertex.getInternalKmer().getKmerLetterLength();
@@ -185,14 +108,13 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         switch (type) {
         // remember to account for partial overlaps
         // src or dest, as long as flip, updateLength += offset, otherwise updateLength += kmerLength - offset
-        // TODO (Anbang) Please check this update length during the code review
             case SRC_OFFSET:
-                boolean srcIsFlip = incomingMsg.isSrcFlip();
+                boolean srcIsFlip = incomingMsg.getSrcReadHeadOrientation() == READHEAD_ORIENTATION.FLIPPED;
                 readHeadSet = srcIsFlip ? vertex.getEndReads() : vertex.getStartReads();
                 offset = readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
                 return srcIsFlip ? offset : internalKmerLength - offset;
             case DEST_OFFSET:
-                boolean destIsFlip = incomingMsg.isDestFlip();
+                boolean destIsFlip = incomingMsg.getDestReadHeadOrientation() == READHEAD_ORIENTATION.FLIPPED;
                 readHeadSet = destIsFlip ? vertex.getEndReads() : vertex.getStartReads();
                 offset = readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
                 return destIsFlip ? totalBFSLength + offset - kmerSize + 1 : totalBFSLength + internalKmerLength
@@ -222,24 +144,24 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
 
     public VKmer setSrcAndOutgoingMsgForDest(long readId, ArrayListWritable<SearchInfo> searchInfoList) {
         // src is greater; dest is smaller
-        boolean firstIsSrc = searchInfoList.get(0).srcOrDestKmer.compareTo(searchInfoList.get(1).srcOrDestKmer) >= 0;
-        VKmer firstKmer = searchInfoList.get(0).getDestKmer();
-        boolean firstFlip = searchInfoList.get(0).isFlip();
-        VKmer secondKmer = searchInfoList.get(1).getDestKmer();
-        boolean secondFlip = searchInfoList.get(1).isFlip();
+        boolean firstIsSrc = searchInfoList.get(0).getSrcOrDestKmer()
+                .compareTo(searchInfoList.get(1).getSrcOrDestKmer()) >= 0;
+        VKmer firstKmer = searchInfoList.get(0).getSrcOrDestKmer();
+        READHEAD_ORIENTATION firstReadHeadType = searchInfoList.get(0).getReadHeadOrientation();
+        VKmer secondKmer = searchInfoList.get(1).getSrcOrDestKmer();
+        READHEAD_ORIENTATION secondReadHeadType = searchInfoList.get(1).getReadHeadOrientation();
         VKmer srcNode;
         if (firstIsSrc) {
             srcNode = firstKmer;
-            outgoingMsg.setSrcFlip(firstFlip);
+            outgoingMsg.setSrcReadHeadOrientation(firstReadHeadType);
             outgoingMsg.setTargetVertexId(secondKmer);
-            outgoingMsg.setDestFlip(secondFlip);
+            outgoingMsg.setDestReadHeadOrientation(secondReadHeadType);
         } else {
             srcNode = secondKmer;
-            outgoingMsg.setSrcFlip(secondFlip);
+            outgoingMsg.setSrcReadHeadOrientation(secondReadHeadType);
             outgoingMsg.setTargetVertexId(firstKmer);
-            outgoingMsg.setDestFlip(firstFlip);
+            outgoingMsg.setDestReadHeadOrientation(firstReadHeadType);
         }
-
         outgoingMsg.setReadId(readId); // commonReadId
 
         return srcNode;
@@ -295,6 +217,8 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
 
                 // copy targetVertex
                 outgoingMsg.setTargetVertexId(incomingMsg.getTargetVertexId());
+                // copy commonReadId
+                outgoingMsg.setReadId(incomingMsg.getReadId());
                 // update totalBFSLength 
                 outgoingMsg.setTotalBFSLength(totalBFSLength);
 
@@ -307,10 +231,16 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
                 EdgeTypeList oldEdgeTypeList = incomingMsg.getEdgeTypeList();
                 if (searchType == SEARCH_TYPE.BEGIN_SEARCH) { // the initial BFS 
                     // send message to the neighbors based on srcFlip and update EdgeTypeList
-                    if (incomingMsg.isSrcFlip())
-                        sendMsgToNeighbors(oldEdgeTypeList, DIR.REVERSE);
-                    else
-                        sendMsgToNeighbors(oldEdgeTypeList, DIR.FORWARD);
+                    switch (incomingMsg.getSrcReadHeadOrientation()) {
+                        case FLIPPED:
+                            sendMsgToNeighbors(oldEdgeTypeList, DIR.REVERSE);
+                            break;
+                        case UNFLIPPED:
+                            sendMsgToNeighbors(oldEdgeTypeList, DIR.FORWARD);
+                            break;
+                        default:
+                            throw new IllegalStateException("ReadHeadType only has two kinds: FLIPPED AND UNFLIPPED!");
+                    }
                 } else {
                     // A -> B -> C, neighor: A, me: B, validDir: B -> C 
                     EDGETYPE BtoA = EDGETYPE.fromByte(incomingMsg.getFlag());
@@ -347,7 +277,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         VertexValueWritable vertex = getVertexValue();
         for (LongWritable commonReadId : pathMap.keySet()) {
             outgoingMsg.reset();
-            outgoingMsg.setReadId(2); //commonReadId.get()
+            outgoingMsg.setReadId(commonReadId.get()); // Option: put 2 for test
 
             PathAndEdgeTypeList pathAndEdgeTypeList = pathMap.get(commonReadId);
             VKmerList kmerList = pathAndEdgeTypeList.getKmerList();
@@ -379,7 +309,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             EDGETYPE prevToMe = edgeTypeList.get(pathAndEdgeTypeList.size() - 2);
             VKmer preKmer = kmerList.getPosition(pathAndEdgeTypeList.size() - 2);
 
-            vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(new Long(2));//commonReadId.get()
+            vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(commonReadId.get()); // Option: put 2 for test
         }
     }
 
@@ -402,6 +332,18 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         }
     }
 
+    public boolean isValidOrientation(BFSTraverseMessage incomingMsg) {
+        EDGETYPE meToIncoming = EDGETYPE.fromByte(incomingMsg.getFlag());
+        switch (incomingMsg.getDestReadHeadOrientation()) {
+            case FLIPPED:
+                return meToIncoming.dir() == DIR.REVERSE;
+            case UNFLIPPED:
+                return meToIncoming.dir() == DIR.FORWARD;
+            default:
+                throw new IllegalStateException("ReadHeadType only has two kinds: FLIPPED AND UNFLIPPED!");
+        }
+    }
+
     @Override
     public void compute(Iterator<BFSTraverseMessage> msgIterator) {
         initVertex();
@@ -412,8 +354,8 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             // for test, assign two kmer to srcNode and destNode
             VKmer srcNode = new VKmer(source);
             VKmer destNode = new VKmer(destination);
-            SearchInfo srcSearchInfo = new SearchInfo(srcNode, false);
-            SearchInfo destSearchInfo = new SearchInfo(destNode, true);
+            SearchInfo srcSearchInfo = new SearchInfo(srcNode, READHEAD_ORIENTATION.UNFLIPPED);
+            SearchInfo destSearchInfo = new SearchInfo(destNode, READHEAD_ORIENTATION.FLIPPED);
             ArrayListWritable<SearchInfo> searchInfoList = new ArrayListWritable<SearchInfo>();
             searchInfoList.add(srcSearchInfo);
             searchInfoList.add(destSearchInfo);
@@ -436,6 +378,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
         } else {
             throw new IllegalStateException("Programmer error!!!");
         }
+
     }
 
 }

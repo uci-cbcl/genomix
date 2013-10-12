@@ -9,11 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
@@ -22,10 +17,14 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
+import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Bubble Merge
- * 
  */
 public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
     private float dissimilarThreshold = -1;
@@ -263,7 +262,8 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
         outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
 
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
-        outgoingMsg.setFlip(incomingMsg.isFlip());
+        // TODO remove? Clean up!!!
+        //        outgoingMsg.setFlip(incomingMsg.isFlip());
         //        sendSettledMsgToAllNeighborNodes(getVertexValue());
     }
 
@@ -275,7 +275,7 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
         outFlag |= MESSAGETYPE.KILL_SELF.get() | MESSAGETYPE.FROM_DEAD.get();
 
         outgoingMsg.setTopCoverageVertexId(incomingMsg.getTopCoverageVertexId());
-        outgoingMsg.setFlip(incomingMsg.isFlip());
+        //        outgoingMsg.setFlip(incomingMsg.isFlip());
         //        sendSettledMsgToAllNeighborNodes(getVertexValue());
 
         deleteVertex(getVertexId());
@@ -297,8 +297,8 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
         } else {
             readIds = new ReadIdSet();
         }
-        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
-        getVertexValue().getEdgeMap(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
+        //        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
+        //        getVertexValue().getEdgeMap(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
     }
 
     @Override

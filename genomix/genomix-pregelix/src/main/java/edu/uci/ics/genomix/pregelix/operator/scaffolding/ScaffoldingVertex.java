@@ -11,6 +11,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.SearchInfo;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
@@ -18,9 +19,9 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
@@ -40,8 +41,6 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
     public static int SCAFFOLDING_MAX_TRAVERSAL_LENGTH = -1;
     public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = -1;
     public static int SCAFFOLDING_VERTEX_MIN_LENGTH = -1;
-
-    //    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
 
     @Override
     public void initVertex() {
@@ -69,22 +68,13 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                     GenomixJobConf.SCAFFOLDING_VERTEX_MIN_LENGTH));
         if (NUM_STEP_END_BFS < 0)
             NUM_STEP_END_BFS = SCAFFOLDING_MAX_TRAVERSAL_LENGTH - kmerSize + 3;
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
-        else if (getSuperstep() == 2)
-            StatisticsAggregator.preGlobalCounters = DeBruijnGraphCleanVertex.readStatisticsCounterResult(getContext()
-                    .getConfiguration());
-//        if (getSuperstep() == 1)
-//            ScaffoldingAggregator.preScaffoldingMap.clear();
-//        else if (getSuperstep() == 2)
-//            ScaffoldingAggregator.preScaffoldingMap = readScaffoldingMapResult(getContext().getConfiguration());
         counters.clear();
-        //        scaffoldingMap.clear();
         getVertexValue().getCounters().clear();
     }
 
     public void addReadsToScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap,
-            ReadHeadSet readIds, READHEAD_TYPE isFlip) {
+            ReadHeadSet readIds, READHEAD_ORIENTATION readHeadType) {
+        // searchInfo can be a struct but not a class
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
 
@@ -96,7 +86,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 searchInfoList = new ArrayListWritable<SearchInfo>();
                 scaffoldingMap.put(new LongWritable(readId), searchInfoList);
             }
-            searchInfo = new SearchInfo(getVertexId(), isFlip);
+            searchInfo = new SearchInfo(getVertexId(), readHeadType);
             searchInfoList.add(searchInfo);
         }
     }
@@ -112,8 +102,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         if (vertex.isValidScaffoldingSearchNode()) {
             outgoingMsg.reset();
             HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> map = outgoingMsg.getScaffoldingMap();
-            addReadsToScaffoldingMap(map, vertex.getStartReads(), READHEAD_TYPE.UNFLIPPED);
-            addReadsToScaffoldingMap(map, vertex.getEndReads(), READHEAD_TYPE.FLIPPED);
+            addReadsToScaffoldingMap(map, vertex.getStartReads(), READHEAD_ORIENTATION.UNFLIPPED);
+            addReadsToScaffoldingMap(map, vertex.getEndReads(), READHEAD_ORIENTATION.FLIPPED);
             sendMsg(fakeVertex, outgoingMsg);
         }
         voteToHalt();
@@ -130,14 +120,15 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             curMap = incomingMsg.getScaffoldingMap();
-            ArrayListWritable<SearchInfo> value;
-            for(LongWritable key : curMap.keySet()){
-                if(scaffoldingMap.containsKey(key)){
+            for (LongWritable key : curMap.keySet()) {
+                ArrayListWritable<SearchInfo> value;
+                if (scaffoldingMap.containsKey(key)) {
                     value = scaffoldingMap.get(key);
                 } else {
                     value = new ArrayListWritable<SearchInfo>();
                 }
                 value.addAll(curMap.get(key));
+                scaffoldingMap.put(key, value);
             }
         }
         // fake vertex process scaffoldingMap 
@@ -204,6 +195,10 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
 
+                // copy targetVertex
+                outgoingMsg.setTargetVertexId(incomingMsg.getTargetVertexId());
+                // copy commonReadId
+                outgoingMsg.setReadId(incomingMsg.getReadId());
                 // update totalBFSLength 
                 outgoingMsg.setTotalBFSLength(totalBFSLength);
 
@@ -216,10 +211,16 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
                 EdgeTypeList oldEdgeTypeList = incomingMsg.getEdgeTypeList();
                 if (searchType == SEARCH_TYPE.BEGIN_SEARCH) { // the initial BFS 
                     // send message to the neighbors based on srcFlip and update EdgeTypeList
-                    if (incomingMsg.isSrcFlip())
-                        sendMsgToNeighbors(oldEdgeTypeList, DIR.REVERSE);
-                    else
-                        sendMsgToNeighbors(oldEdgeTypeList, DIR.FORWARD);
+                    switch (incomingMsg.getSrcReadHeadOrientation()) {
+                        case FLIPPED:
+                            sendMsgToNeighbors(oldEdgeTypeList, DIR.REVERSE);
+                            break;
+                        case UNFLIPPED:
+                            sendMsgToNeighbors(oldEdgeTypeList, DIR.FORWARD);
+                            break;
+                        default:
+                            throw new IllegalStateException("ReadHeadType only has two kinds: FLIPPED AND UNFLIPPED!");
+                    }
                 } else {
                     // A -> B -> C, neighor: A, me: B, validDir: B -> C 
                     EDGETYPE BtoA = EDGETYPE.fromByte(incomingMsg.getFlag());
@@ -244,7 +245,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             generateScaffoldingMap();
         } else if (getSuperstep() == 2) {
             processScaffoldingMap(msgIterator);
-        } else if (getSuperstep() >= 3) {
+        } else if (getSuperstep() >= 3 && getSuperstep() < NUM_STEP_END_BFS) {
             if (getSuperstep() == 3)
                 BFSearch(msgIterator, SEARCH_TYPE.BEGIN_SEARCH);
             else
@@ -260,17 +261,6 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         }
     }
 
-//    public static HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> readScaffoldingMapResult(
-//            Configuration conf) {
-//        try {
-//            ScaffoldingVertexValueWritable value = (ScaffoldingVertexValueWritable) IterationUtils
-//                    .readGlobalAggregateValue(conf, BspUtils.getJobId(conf));
-//            return value.getScaffoldingMap();
-//        } catch (IOException e) {
-//            throw new IllegalStateException(e);
-//        }
-//    }
-
     public static void main(String[] args) throws Exception {
         Client.run(args, getConfiguredJob(null, ScaffoldingVertex.class));
     }
@@ -280,7 +270,7 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
             throws IOException {
         PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
-//        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
+        //        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
         return job;
     }
 }

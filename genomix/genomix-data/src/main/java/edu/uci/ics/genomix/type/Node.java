@@ -111,9 +111,30 @@ public class Node implements Writable, Serializable {
         }
 
     }
-
     
+    public enum READHEAD_ORIENTATION {
+        UNFLIPPED((byte) 0),
+        FLIPPED((byte) 1);
+        
+        private final byte val;
 
+        private READHEAD_ORIENTATION(byte val) {
+            this.val = val;
+        }
+
+        public final byte get() {
+            return val;
+        }
+        
+        public static READHEAD_ORIENTATION fromByte(byte b) {
+            if(b == UNFLIPPED.val)
+                return UNFLIPPED;
+            else if(b == FLIPPED.val)
+                return FLIPPED;
+            return null;
+        }
+    }
+    
     public static class NeighborInfo {
         public EDGETYPE et;
         public ReadIdSet readIds;

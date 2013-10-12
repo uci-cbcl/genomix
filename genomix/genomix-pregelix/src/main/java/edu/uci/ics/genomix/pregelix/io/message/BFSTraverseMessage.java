@@ -6,10 +6,11 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.LongWritable;
 
+import edu.uci.ics.genomix.pregelix.io.SearchInfo;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.BFSTraverseVertex.SearchInfo;
+import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
@@ -19,8 +20,8 @@ public class BFSTraverseMessage extends MessageWritable {
     private VKmerList pathList; //use for BFSTravese
     private EdgeTypeList edgeTypeList; //use for BFSTravese
     private VKmer targetVertexId; //use for BFSTravese
-    private boolean srcFlip; //use for BFSTravese
-    private boolean destFlip; //use for BFSTravese
+    private READHEAD_ORIENTATION srcReadHeadOrientation; //use for BFSTravese
+    private READHEAD_ORIENTATION destReadHeadOrientation; //use for BFSTravese
     private int totalBFSLength;
     private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap;
 
@@ -30,8 +31,8 @@ public class BFSTraverseMessage extends MessageWritable {
         edgeTypeList = new EdgeTypeList();
         targetVertexId = new VKmer();
         readId = 0;
-        srcFlip = false;
-        destFlip = false;
+        srcReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
+        destReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
         totalBFSLength = 0;
         scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
     }
@@ -42,8 +43,8 @@ public class BFSTraverseMessage extends MessageWritable {
         edgeTypeList.clear();
         targetVertexId.reset(0);
         readId = 0;
-        srcFlip = false;
-        destFlip = false;
+        srcReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
+        destReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
         totalBFSLength = 0;
         scaffoldingMap.clear();
     }
@@ -81,20 +82,20 @@ public class BFSTraverseMessage extends MessageWritable {
         this.readId = readId;
     }
 
-    public boolean isSrcFlip() {
-        return srcFlip;
+    public READHEAD_ORIENTATION getSrcReadHeadOrientation() {
+        return srcReadHeadOrientation;
     }
 
-    public void setSrcFlip(boolean srcFlip) {
-        this.srcFlip = srcFlip;
+    public void setSrcReadHeadOrientation(READHEAD_ORIENTATION srcReadHeadOrientation) {
+        this.srcReadHeadOrientation = srcReadHeadOrientation;
     }
 
-    public boolean isDestFlip() {
-        return destFlip;
+    public READHEAD_ORIENTATION getDestReadHeadOrientation() {
+        return destReadHeadOrientation;
     }
 
-    public void setDestFlip(boolean destFlip) {
-        this.destFlip = destFlip;
+    public void setDestReadHeadOrientation(READHEAD_ORIENTATION destReadHeadOrientation) {
+        this.destReadHeadOrientation = destReadHeadOrientation;
     }
 
     public int getTotalBFSLength() {
@@ -122,8 +123,8 @@ public class BFSTraverseMessage extends MessageWritable {
         edgeTypeList.readFields(in);
         targetVertexId.readFields(in);
         readId = in.readLong();
-        srcFlip = in.readBoolean();
-        destFlip = in.readBoolean();
+        srcReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
+        destReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
         totalBFSLength = in.readInt();
         scaffoldingMap.readFields(in);
     }
@@ -135,8 +136,8 @@ public class BFSTraverseMessage extends MessageWritable {
         edgeTypeList.write(out);
         targetVertexId.write(out);
         out.writeLong(readId);
-        out.writeBoolean(srcFlip);
-        out.writeBoolean(destFlip);
+        out.writeByte(srcReadHeadOrientation.get());
+        out.writeByte(destReadHeadOrientation.get());
         out.writeInt(totalBFSLength);
         scaffoldingMap.write(out);
     }
