@@ -180,6 +180,9 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      */
     @Override
     public void sendMergeMsg(){
+        if (verbose) {
+            LOG.fine("Checking if I should send a merge message..." + getVertexValue());
+        }
         super.sendMergeMsg();
         if ((getVertexValue().getState() & State.MERGE) != 0) {
             deleteVertex(getVertexId());
@@ -197,7 +200,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
-        @SuppressWarnings("unused")
         int numMerged = 0;
         while (msgIterator.hasNext()) {
             PathMergeMessageWritable incomingMsg = msgIterator.next();
@@ -243,10 +245,11 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         if (getSuperstep() == 1) {
             restrictNeighbors();
         } else if (getSuperstep() % 2 == 0) {
-            if (getSuperstep() == 2)
+            if (getSuperstep() == 2) {
                 recieveRestrictions(msgIterator);
-            else
+            } else {
                 receiveMerges(msgIterator);
+            }
             chooseMergeDir();
             updateNeighbors();
         } else if (getSuperstep() % 2 == 1) {

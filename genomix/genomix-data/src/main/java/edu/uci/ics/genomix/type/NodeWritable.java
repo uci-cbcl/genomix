@@ -360,7 +360,7 @@ public class NodeWritable implements Writable, Serializable {
     private VKmerBytesWritable internalKmer;
 
     private float averageCoverage;
-    private boolean DEBUG = true;
+    protected boolean DEBUG = true;
     public static List<VKmerBytesWritable> problemKmers = new ArrayList<VKmerBytesWritable>();
 
     //    public boolean foundMe;
@@ -612,16 +612,6 @@ public class NodeWritable implements Writable, Serializable {
         endReads.write(out);
         this.internalKmer.write(out);
         out.writeFloat(averageCoverage);
-        
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmerBytesWritable problemKmer : problemKmers) {
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-                LOG.fine("write: " + toString());
-            }
-        }
     }
 
     @Override
@@ -634,16 +624,6 @@ public class NodeWritable implements Writable, Serializable {
         endReads.readFields(in);
         this.internalKmer.readFields(in);
         averageCoverage = in.readFloat();
-        
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmerBytesWritable problemKmer : problemKmers) {
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-                LOG.fine("readFields: " + toString());
-            }
-        }
     }
 
     public class SortByCoverage implements Comparator<NodeWritable> {

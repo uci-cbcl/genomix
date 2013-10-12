@@ -8,6 +8,8 @@ import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.type.EdgeListWritable;
 import edu.uci.ics.genomix.type.EdgeWritable;
 import edu.uci.ics.genomix.type.NodeWritable;
+import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.NodeWritable.DIR;
 
 public class VertexValueWritable 
     extends NodeWritable{
@@ -143,6 +145,16 @@ public class VertexValueWritable
         this.isFakeVertex = in.readBoolean();
         this.counters.readFields(in);
         scaffoldingMap.readFields(in);
+        
+        if (DEBUG) {
+            boolean verbose = false;
+            for (VKmerBytesWritable problemKmer : problemKmers) {
+                verbose |= findEdge(problemKmer) != null;
+            }
+            if (verbose) {
+                LOG.fine("VertexValue.readFields: " + toString());
+            }
+        }
     }
 
     @Override
@@ -152,6 +164,16 @@ public class VertexValueWritable
         out.writeBoolean(this.isFakeVertex);
         this.counters.write(out);
         scaffoldingMap.write(out);
+        
+        if (DEBUG) {
+            boolean verbose = false;
+            for (VKmerBytesWritable problemKmer : problemKmers) {
+                verbose |= findEdge(problemKmer) != null;
+            }
+            if (verbose) {
+                LOG.fine("VertexValue.write: " + toString());
+            }
+        }
     }
     
     public int getDegree(){
@@ -190,6 +212,6 @@ public class VertexValueWritable
     
     @Override
     public String toString() {
-        return super.toString();
+        return super.toString() + " state: " + state + " which in P4 means will merge: " + ((getState() & State.MERGE) != 0) + ", mergeDir: " + EDGETYPE.fromByte(getState()) + ", restrictions: " + DIR.enumSetFromByte(getState());
     }
 }
