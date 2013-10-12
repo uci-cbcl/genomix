@@ -31,7 +31,6 @@ import org.kohsuke.args4j.CmdLineException;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
 import edu.uci.ics.genomix.hadoop.converttofasta.ConvertToFasta;
-import edu.uci.ics.genomix.hadoop.gage.GetFastaStatsJob;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;

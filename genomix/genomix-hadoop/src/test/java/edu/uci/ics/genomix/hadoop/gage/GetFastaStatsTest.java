@@ -96,7 +96,7 @@ public class GetFastaStatsTest {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
-        GetFastaStatsJob driver = new GetFastaStatsJob();
+//        GetFastaStatsJob driver = new GetFastaStatsJob();
         JobConf conf = new JobConf(HADOOP_CONF_PATH);
         conf.setInt(GenomixJobConf.MIN_CONTIG_LENGTH, 25);
         conf.setInt(GenomixJobConf.EXPECTED_GENOME_SIZE, 150);
