@@ -4,5 +4,5 @@ jdk:
     - openjdk7
     - openjdk6
 
-script: mvn clean package -am -pl genomix/genomix-driver
-
+script: mvn clean package -q -am -pl genomix/genomix-driver
+install: mvn install -q -am -pl genomix/genomix-driver -DskipTests=true
