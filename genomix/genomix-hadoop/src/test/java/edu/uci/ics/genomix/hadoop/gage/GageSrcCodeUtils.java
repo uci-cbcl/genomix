@@ -8,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileReader;
 
-public class GageSourceUtils {
+public class GageSrcCodeUtils {
    public static final int MBYTES = 1048576;
    public static final int FASTA_LINE_LENGTH = 60;
    public static MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
@@ -239,7 +239,7 @@ public class GageSourceUtils {
    }
 
    public static int countLetterInRead(String fasta, String letter, Boolean caseSensitive) {
-      String ungapped = GageSourceUtils.getUngappedRead(fasta);
+      String ungapped = GageSrcCodeUtils.getUngappedRead(fasta);
       int len = ungapped.length();
       if (len == 0) { return -1; }
    

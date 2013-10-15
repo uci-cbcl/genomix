@@ -147,12 +147,8 @@ public class GenomixDriver {
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters);
+                GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
                 curOutput = prevOutput; // use previous job's output
-            case GAGE:
-                flushPendingJobs(conf);
-                Counters statsCounters = GraphStatistics.run(prevOutput, curOutput, conf);
-                GraphStatistics.getFastaStatsForGage(curOutput, statsCounters, conf);
-                curOutput = prevOutput;
         }
     }
 

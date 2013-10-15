@@ -215,32 +215,22 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     }
 
     private static ArrayList<Integer> contigLengthList = new ArrayList<Integer>();
+    static boolean OLD_STYLE = true;
+    private static int MIN_CONTIG_LENGTH;
+    private static int EXPECTED_GENOME_SIZE;
+    private static int maxContig = Integer.MIN_VALUE;
+    private static int minContig = Integer.MAX_VALUE;
+    private static long total = 0;
+    private static int count = 0;
 
-    public static boolean USE_BAYLOR_FORMAT;
-    public static boolean OLD_STYLE;
-    public static int MIN_CONTIG_LENGTH;
-    public static int EXPECTED_GENOME_SIZE;
+    private static int totalOverLength = 0;
+    private static long totalBPOverLength = 0;
+    private static double eSize;
 
-    static int maxContig = Integer.MIN_VALUE;
-    static int minContig = Integer.MAX_VALUE;
-    static long total = 0;
-    static int count = 0;
-    static int n10 = 0;
-    static int n25 = 0;
-    static int n50 = 0; // is the size of the smallest contig such that 50% of the genome is contained in contigs of size N50 or larger
-    static int n75 = 0;
-    static int n95 = 0;
-    static int n10count = 0;
-    static int n25count = 0;
-    static int n50count = 0;
-    static int n75count = 0;
-    static int n95count = 0;
-    static int totalOverLength = 0;
-    static long totalBPOverLength = 0;
-    static double fSize; // Esize what's expect contig size, if we randomly choose one position in reference genome
-
-    private static final int CONTIG_AT_INITIAL_STEP = 1000000; //TODO ??? I am relly confused this which related to baylor format
+    private static final int CONTIG_AT_INITIAL_STEP = 1000000;
     private static final NumberFormat nf = new DecimalFormat("############.##");
+    private static double[] nxThresholds = { 0.1, 0.25, 0.5, 0.75, 0.95 };
+    private static int[] nxValueAndCount = new int[10];
 
     private static class ContigAt {
         ContigAt(long currentBases) {
@@ -248,20 +238,19 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             this.totalBP = 0;
             this.goal = currentBases;
         }
-
         public int count;
         public long totalBP;
         public int len;
         public long goal;
     }
-    
+
+
     public static void getFastaStatsForGage(String outputDir, Counters jobCounters, JobConf job) throws IOException {
         HashMap<Integer, Long> ctgSizeCounts = new HashMap<Integer, Long>();
         loadDataFromCounters(ctgSizeCounts, jobCounters);
-        USE_BAYLOR_FORMAT = Boolean.parseBoolean(job.get(GenomixJobConf.USE_BAYLOR_FORMAT));
-        OLD_STYLE = Boolean.parseBoolean(job.get(GenomixJobConf.OLD_STYLE));
-        MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.MIN_CONTIG_LENGTH));
-        EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.EXPECTED_GENOME_SIZE));
+        MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.STATS_MIN_CONTIGLENGTH));
+        EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.STATS_EXPECTED_GENOMESIZE));
+        OLD_STYLE = Boolean.parseBoolean(job.get(GenomixJobConf.STATS_GAGE_OLDSTYLE));
         for (Integer s : ctgSizeCounts.keySet()) {
             for (int i = 0; i < ctgSizeCounts.get(s); i++)
                 contigLengthList.add(s);
@@ -270,15 +259,9 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             if (curLength <= MIN_CONTIG_LENGTH) {
                 continue;
             }
-
-            if (OLD_STYLE == true && curLength <= MIN_CONTIG_LENGTH) {
-                continue;
-            }
-
             if (curLength > maxContig) {
                 maxContig = curLength;
             }
-
             if (curLength < minContig) {
                 minContig = curLength;
             }
@@ -288,45 +271,32 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
                 total = EXPECTED_GENOME_SIZE;
             }
             count++;
-
-            // compute the E-size
-            fSize += Math.pow(curLength, 2);
-            if (curLength > MIN_CONTIG_LENGTH) {
-                totalOverLength++; // just like a count
-                totalBPOverLength += curLength;
-            }
+            eSize += Math.pow(curLength, 2);
+            totalOverLength++;
+            totalBPOverLength += curLength;
         }
-        fSize /= EXPECTED_GENOME_SIZE;
+        eSize /= EXPECTED_GENOME_SIZE;
 
         /*----------------------------------------------------------------*/
         // get the goal contig at X bases (1MBp, 2MBp)
         ArrayList<ContigAt> contigAtArray = new ArrayList<ContigAt>();
-        if (USE_BAYLOR_FORMAT == true) {
-            contigAtArray.add(new ContigAt(1 * CONTIG_AT_INITIAL_STEP));
-            contigAtArray.add(new ContigAt(2 * CONTIG_AT_INITIAL_STEP));
-            contigAtArray.add(new ContigAt(5 * CONTIG_AT_INITIAL_STEP));
-            contigAtArray.add(new ContigAt(10 * CONTIG_AT_INITIAL_STEP));
-        } else {
-            long step = CONTIG_AT_INITIAL_STEP;
-            long currentBases = 0;
-            while (currentBases <= total) {
-                if ((currentBases / step) >= 10) {
-                    step *= 10;
-                }
-                currentBases += step;
-                contigAtArray.add(new ContigAt(currentBases));//
+        long step = CONTIG_AT_INITIAL_STEP;
+        long currentBases = 0;
+        while (currentBases <= total) {
+            if ((currentBases / step) >= 10) {
+                step *= 10;
             }
+            currentBases += step;
+            contigAtArray.add(new ContigAt(currentBases));//
         }
         ContigAt[] contigAtVals = contigAtArray.toArray(new ContigAt[0]);
         /*----------------------------------------------------------------*/
-                    Collections.sort(contigLengthList);
-
+        Collections.sort(contigLengthList);
         long sum = 0;
         double median = 0;
         int medianCount = 0;
         int numberContigsSeen = 1;
         int currentValPoint = 0;
-
         for (int i = contigLengthList.size() - 1; i >= 0; i--) {
             if (((int) (count / 2)) == i) {
                 median += contigLengthList.get(i);
@@ -342,35 +312,19 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             /*----------------------------------------------------------------*/
             while (currentValPoint < contigAtVals.length && sum >= contigAtVals[currentValPoint].goal
                     && contigAtVals[currentValPoint].count == 0) {
-                System.err.println("Calculating point at " + currentValPoint + " and the sum is " + sum
-                        + " and i is" + i + " and lens is " + contigLengthList.size() + " and length is "
-                        + contigLengthList.get(i));
+                System.err.println("Calculating point at " + currentValPoint + " and the sum is " + sum + " and i is"
+                        + i + " and lens is " + contigLengthList.size() + " and length is " + contigLengthList.get(i));
                 contigAtVals[currentValPoint].count = numberContigsSeen;
                 contigAtVals[currentValPoint].len = contigLengthList.get(i);
                 contigAtVals[currentValPoint].totalBP = sum;
                 currentValPoint++;
             }
             /*----------------------------------------------------------------*/
-            // calculate the NXs
-            if (sum / (double) total >= 0.1 && n10count == 0) {
-                n10 = contigLengthList.get(i);
-                n10count = contigLengthList.size() - i;
-            }
-            if (sum / (double) total >= 0.25 && n25count == 0) {
-                n25 = contigLengthList.get(i);
-                n25count = contigLengthList.size() - i;
-            }
-            if (sum / (double) total >= 0.5 && n50count == 0) {
-                n50 = contigLengthList.get(i);
-                n50count = contigLengthList.size() - i;
-            }
-            if (sum / (double) total >= 0.75 && n75count == 0) {
-                n75 = contigLengthList.get(i);
-                n75count = contigLengthList.size() - i;
-            }
-            if (sum / (double) total >= 0.95 && n95count == 0) {
-                n95 = contigLengthList.get(i);
-                n95count = contigLengthList.size() - i;
+            for (int j = 0; j < 5; j++) {
+                if (sum / (double) total >= nxThresholds[j] && nxValueAndCount[j + 5] == 0) {
+                    nxValueAndCount[j] = contigLengthList.get(i);
+                    nxValueAndCount[j + 5] = contigLengthList.size() - i;
+                }
             }
             numberContigsSeen++;
         }
@@ -382,11 +336,11 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             outputStr.append("BasesInFasta: " + totalBPOverLength + "\n");
             outputStr.append("Min: " + minContig + "\n");
             outputStr.append("Max: " + maxContig + "\n");
-            outputStr.append("N10: " + n10 + " COUNT: " + n10count + "\n");
-            outputStr.append("N25: " + n25 + " COUNT: " + n25count + "\n");
-            outputStr.append("N50: " + n50 + " COUNT: " + n50count + "\n");
-            outputStr.append("N75: " + n75 + " COUNT: " + n75count + "\n");
-            outputStr.append("E-size:" + nf.format(fSize) + "\n");
+            outputStr.append("N10: " + nxValueAndCount[0] + " COUNT: " + nxValueAndCount[0 + 5] + "\n");
+            outputStr.append("N25: " + nxValueAndCount[1] + " COUNT: " + nxValueAndCount[1 + 5] + "\n");
+            outputStr.append("N50: " + nxValueAndCount[2] + " COUNT: " + nxValueAndCount[2 + 5] + "\n");
+            outputStr.append("N75: " + nxValueAndCount[3] + " COUNT: " + nxValueAndCount[3 + 5] + "\n");
+            outputStr.append("E-size:" + nf.format(eSize) + "\n");
         } else {
             //                if (outputHeader) {
             outputStr.append("Assembly");
@@ -407,7 +361,6 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             }
             outputStr.append("\n");
             //            }
-
             //            outputStr.append(title);
             outputStr.append("," + nf.format(count));
             outputStr.append("," + nf.format(total));
@@ -429,8 +382,8 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         dfs.mkdirs(new Path(outputDir));
         FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "gagestatsFasta.txt"), true);
         PrintWriter writer = new PrintWriter(outstream);
-            writer.println(outputStr.toString());
+        writer.println(outputStr.toString());
         writer.close();
-        
+
     }
 }

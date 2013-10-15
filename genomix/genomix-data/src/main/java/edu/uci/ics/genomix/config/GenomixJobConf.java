@@ -158,20 +158,14 @@ public class GenomixJobConf extends JobConf {
         private boolean logReadIds = false;
         
         //Metrics Parameters for Our Mapreduce Gage Job
-        @Option(name = "-gage", usage = "Do metrics evalution after dumpting the intermediate data.", required = false)
-        private boolean gage = false;
+        @Option(name = "-stats_gage_oldStyle", usage = "choose the stats input format.", required = false)
+        private boolean stats_gageOldStyle = true;
         
-        @Option(name = "-genomeSize", usage = "The expected length for this whole genome data", required = false)
-        private int genomeSize = -1;
+        @Option(name = "-stats_expectedGenomeSize", usage = "The expected length for this whole genome data", required = false)
+        private int stats_expectedGenomeSize = -1;
         
-        @Option(name = "-minContigLength", usage = "The minimum allowed contig length", required = false)
-        private int minContigLength = -1;
-        
-        @Option(name = "-useBaylorFormat", usage = "Some kind of input file format? but gage require oldstyle as default input", required = false)
-        private boolean useBaylorFormat = false;
-        
-        @Option(name = "-oldStyle", usage = "I thougth it's basic fasta input file as opposed to BaylorFormat", required = false)
-        private boolean oldStyle = false;
+        @Option(name = "-stats_minContigLength", usage = "The minimum allowed contig length", required = false)
+        private int stats_minContigLength = -1;
         
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
@@ -198,8 +192,7 @@ public class GenomixJobConf extends JobConf {
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,
-        STATS,
-        GAGE;
+        STATS;
 
         /**
          * Get a comma-separated pipeline from the given array of Patterns
@@ -288,11 +281,9 @@ public class GenomixJobConf extends JobConf {
     public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
 
     // GAGE Metrics Evaluation 
-    public static final String GAGE = "genomix.evaluation.gage";
-    public static final String EXPECTED_GENOME_SIZE = "genomix.evaluation.gage.genomeSize";
-    public static final String MIN_CONTIG_LENGTH = "genomix.evaluation.gage.minContigLength";
-    public static final String OLD_STYLE = "genomix.evaluation.gage.oldStyle";
-    public static final String USE_BAYLOR_FORMAT = "genomix.evaluation.gage.baylorFormat";
+    public static final String STATS_GAGE_OLDSTYLE = "genomix.evaluation.gage.oldstyle";
+    public static final String STATS_EXPECTED_GENOMESIZE = "genomix.gage.expectedGenomeSize";
+    public static final String STATS_MIN_CONTIGLENGTH = "genomix.gage.minContigLength";
     
     
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
@@ -424,13 +415,7 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
-
-        if (getInt(EXPECTED_GENOME_SIZE, -1) == -1)
-            setInt(EXPECTED_GENOME_SIZE, 0);
-        
-        if(getInt(MIN_CONTIG_LENGTH, -1) == -1)
-            setInt(MIN_CONTIG_LENGTH, 1);
-        
+               
         //        if (getBoolean(RUN_LOCAL, false)) {
         //            // override any other settings for HOST and PORT
         //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
@@ -463,7 +448,7 @@ public class GenomixJobConf extends JobConf {
         setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
-        setBoolean(GAGE, opts.gage);
+        
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
         setBoolean(LOG_READIDS, opts.logReadIds);
@@ -485,10 +470,9 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
         
         //Gage Evaluation
-        setInt(EXPECTED_GENOME_SIZE, opts.genomeSize);
-        setInt(MIN_CONTIG_LENGTH, opts.minContigLength);
-        setBoolean(USE_BAYLOR_FORMAT, opts.useBaylorFormat);
-        setBoolean(OLD_STYLE, opts.oldStyle);
+        setBoolean(STATS_GAGE_OLDSTYLE, opts.stats_gageOldStyle);
+        setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
+        setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
     }
 
     /**

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 
-public class GageSourceGetFastaStats {
+public class GageSrcCodeGetFastaStats {
     private static final int MIN_GAP_SIZE = 20;
     public static int MIN_LENGTH = 2000;
     public static final int CONTIG_AT_INITIAL_STEP = 1000000;
@@ -39,7 +39,7 @@ public class GageSourceGetFastaStats {
     int totalCount = 0;
     private long genomeSize = 0;
 
-    public GageSourceGetFastaStats(boolean useBaylor, boolean old, long g) {
+    public GageSrcCodeGetFastaStats(boolean useBaylor, boolean old, long g) {
         baylorFormat = useBaylor;
         oldStyle = old;
         genomeSize = g;
@@ -47,7 +47,7 @@ public class GageSourceGetFastaStats {
 
     public void processFile(String inputFile) throws Exception {
         if (inputFile.contains("lens")) {
-            BufferedReader bf = GageSourceUtils.getFile(inputFile, "lens");
+            BufferedReader bf = GageSrcCodeUtils.getFile(inputFile, "lens");
             String line = null;
             while ((line = bf.readLine()) != null) {
                 String[] splitLine = line.trim().split("\\s+");
@@ -55,7 +55,7 @@ public class GageSourceGetFastaStats {
             }
             bf.close();
         } else {
-            BufferedReader bf = GageSourceUtils.getFile(inputFile, suffix);
+            BufferedReader bf = GageSrcCodeUtils.getFile(inputFile, suffix);
 
             String line = null;
             StringBuffer fastaSeq = new StringBuffer();
@@ -176,7 +176,7 @@ public class GageSourceGetFastaStats {
             if (!currID.equalsIgnoreCase(id)) {
                 if (fastaSeq.length() != 0) {
                     System.err.println(">scaffold_" + currID);
-                    System.err.println(GageSourceUtils.convertToFasta(fastaSeq.toString().trim()));
+                    System.err.println(GageSrcCodeUtils.convertToFasta(fastaSeq.toString().trim()));
                     fastaSeq = new StringBuffer();
                 }
                 currID = id;
@@ -185,7 +185,7 @@ public class GageSourceGetFastaStats {
 
         if (fastaSeq.length() != 0) {
             System.err.println(">scaffold_" + currID);
-            System.err.println(GageSourceUtils.convertToFasta(fastaSeq.toString().trim()));
+            System.err.println(GageSrcCodeUtils.convertToFasta(fastaSeq.toString().trim()));
         }
 
         System.out.println("NEGATIVE GAPS IS " + negGaps);
@@ -407,7 +407,7 @@ public class GageSourceGetFastaStats {
             if (args[initialVal].trim().equalsIgnoreCase("-b")) {
                 useBaylorFormat = true;
             } else if (args[initialVal].trim().equalsIgnoreCase("-min")) {
-                GageSourceGetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
+                GageSrcCodeGetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
             } else if (args[initialVal].trim().equalsIgnoreCase("-o")) {
                 oldStyle = true;
             } else if (args[initialVal].trim().equalsIgnoreCase("-genomeSize")) {
@@ -425,7 +425,7 @@ public class GageSourceGetFastaStats {
 
         for (int i = initialVal; i < args.length; i++) {
             String assemblyTitle = args[i].trim().split("/")[0];
-            GageSourceGetFastaStats f = new GageSourceGetFastaStats(useBaylorFormat, oldStyle, genomeSize);
+            GageSrcCodeGetFastaStats f = new GageSrcCodeGetFastaStats(useBaylorFormat, oldStyle, genomeSize);
             String[] splitLine = args[i].trim().split(",");
 
             for (int j = 0; j < splitLine.length; j++) {
