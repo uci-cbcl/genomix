@@ -63,7 +63,6 @@ public class GenerateGraphViz {
         }
 
         gv.addln(gv.end_graph());
-        System.out.println(gv.getDotSource());
 
         String type = "svg";
         File folder = new File(destDir);
@@ -112,7 +111,6 @@ public class GenerateGraphViz {
         }
 
         gv.addln(gv.end_graph());
-        System.out.println(gv.getDotSource());
 
         String type = "svg";
         //        File folder = new File(destDir);
