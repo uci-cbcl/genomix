@@ -176,8 +176,6 @@ public class GenomixDriver {
         edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
         hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine * numMachines,
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, conf);
-
-        System.out.println("Finished job Hadoop-Build-Graph");
         followingBuild = true;
 
         manager.stopCluster(ClusterType.HADOOP);

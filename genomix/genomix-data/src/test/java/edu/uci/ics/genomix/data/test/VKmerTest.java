@@ -476,7 +476,7 @@ public class VKmerTest {
         // does this test belong in VKmer so it can have variable-length kmers?
 //        kmer.reset(msgString.length() - index);
         kmer.setFromStringBytes(kmerSize, msgString.substring(index).getBytes(), 0);
-        System.out.println(kmer.toString());
+//        System.out.println(kmer.toString());  // TODO use an assert instead of a print
         
         //FR test
         selfString = F1;
@@ -485,7 +485,7 @@ public class VKmerTest {
         index = msgString.indexOf(match);
         kmer.reset(msgString.length() - index);
         kmer.setFromStringBytes(kmerSize, msgString.substring(index).getBytes(), 0);
-        System.out.println(kmer.toString());
+//        System.out.println(kmer.toString());  // TODO use an assert instead of a print
         
         //RF test
         selfString = R1;
@@ -494,7 +494,7 @@ public class VKmerTest {
         index = msgString.lastIndexOf(match) + kmerSize - 2;
         kmer.reset(index + 1);
         kmer.setReversedFromStringBytes(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
-        System.out.println(kmer.toString());
+//        System.out.println(kmer.toString());
         
         //RR test
         selfString = R1;
@@ -503,7 +503,7 @@ public class VKmerTest {
         index = msgString.lastIndexOf(match) + kmerSize - 2;
         kmer.reset(index + 1);
         kmer.setFromStringBytes(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
-        System.out.println(kmer.toString());
+//        System.out.println(kmer.toString());  // TODO use an assert instead of a print
         
         String[][] connectedTable = new String[][]{
                 {"FF", "RF"},
@@ -511,7 +511,7 @@ public class VKmerTest {
                 {"FR", "RF"},
                 {"FR", "RR"}
         };
-        System.out.println(connectedTable[0][1]);
+//        System.out.println(connectedTable[0][1]);  // TODO use an assert instead of a print
         
         Set<Long> s1 = new HashSet<Long>();
         Set<Long> s2 = new HashSet<Long>();
@@ -522,11 +522,11 @@ public class VKmerTest {
         Set<Long> intersection = new HashSet<Long>();
         intersection.addAll(s1);
         intersection.retainAll(s2);
-        System.out.println(intersection.toString());
+//        System.out.println(intersection.toString());  // TODO use an assert instead of a print
         Set<Long> difference = new HashSet<Long>();
         difference.addAll(s1);
         difference.removeAll(s2);
-        System.out.println(difference.toString());
+//        System.out.println(difference.toString());  // TODO use an assert instead of a print
         
         Map<VKmer, Set<Long>> map = new HashMap<VKmer, Set<Long>>();
         VKmer k1 = new VKmer();
@@ -552,17 +552,18 @@ public class VKmerTest {
         VKmerList kmerList = new VKmerList();
         kmerList.append(k1);
         kmerList.append(k2);
-        System.out.println("CTA = " + map.get(k1).toString());
-        System.out.println("GTA = " + map.get(k2).toString());
-        System.out.println("ATG = " + map.get(k3).toString());
-        System.out.println("AAT = " + map.get(k4).toString());
-        System.out.println(k1.compareTo(k2));
-        System.out.println(k2.compareTo(k1));
+          // TODO use an assert instead of a print
+//        System.out.println("CTA = " + map.get(k1).toString());
+//        System.out.println("GTA = " + map.get(k2).toString());
+//        System.out.println("ATG = " + map.get(k3).toString());
+//        System.out.println("AAT = " + map.get(k4).toString());
+//        System.out.println(k1.compareTo(k2));
+//        System.out.println(k2.compareTo(k1));
         
-        System.out.println("CTA = " + kmerList.getPosition(0).toString());
-        System.out.println("GTA = " + kmerList.getPosition(1).toString());
-        System.out.println("CTA = " + map.get(kmerList.getPosition(0)).toString());
-        System.out.println("GTA = " + map.get(kmerList.getPosition(1)).toString());
+//        System.out.println("CTA = " + kmerList.getPosition(0).toString());
+//        System.out.println("GTA = " + kmerList.getPosition(1).toString());
+//        System.out.println("CTA = " + map.get(kmerList.getPosition(0)).toString());
+//        System.out.println("GTA = " + map.get(kmerList.getPosition(1)).toString());
     }
     
     @Test

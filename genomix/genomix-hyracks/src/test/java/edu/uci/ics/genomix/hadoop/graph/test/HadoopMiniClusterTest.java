@@ -133,7 +133,7 @@ public class HadoopMiniClusterTest {
                         break;
                     }
                     bw.write(key.toString() + "\t" + value.toString());
-                    System.out.println(key.toString() + "\t" + value.toString());
+//                    System.out.println(key.toString() + "\t" + value.toString());
                     bw.newLine();
                     writer.append(key, value);
 
@@ -169,7 +169,7 @@ public class HadoopMiniClusterTest {
         dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
         dfs = dfsCluster.getFileSystem();
         mrCluster = new MiniMRCluster(4, dfs.getUri().toString(), 2);
-        System.out.println(dfs.getUri().toString());
+//        System.out.println(dfs.getUri().toString());
 
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
         conf.writeXml(confOutput);

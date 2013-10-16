@@ -114,7 +114,7 @@ public class VKmerListTest {
         k.setFromStringBytes(3, ("CCC").getBytes(), 0);
         edgeList.append(k);
         for(VKmer edge : edgeList){
-        	System.out.println(edge.toString());
+//        	System.out.println(edge.toString()); // TODO use asserts
         }
     }
     
