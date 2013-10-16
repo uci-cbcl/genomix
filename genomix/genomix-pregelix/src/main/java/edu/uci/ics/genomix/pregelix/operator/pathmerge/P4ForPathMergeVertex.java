@@ -166,11 +166,10 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
         if (verbose) {
             if ((getVertexValue().getState() & State.MERGE) != 0) {
-                LOG.fine("Iteration " + getSuperstep() + "\r\n"
-                        + "Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
+                LOG.fine("Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
                         + "; node is " + getVertexValue());
             } else {
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "Mark: No Merge for " + getVertexId() +" node is " + getVertexValue());
+                LOG.fine("Mark: No Merge for " + getVertexId() +" node is " + getVertexValue());
             }
         }
     }
@@ -204,8 +203,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         while (msgIterator.hasNext()) {
             PathMergeMessageWritable incomingMsg = msgIterator.next();
             if (verbose)
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                        + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
             node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
@@ -237,6 +235,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws HyracksDataException {
         initVertex();
+        if (verbose)
+            LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
         if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
         	voteToHalt();
         	return;
