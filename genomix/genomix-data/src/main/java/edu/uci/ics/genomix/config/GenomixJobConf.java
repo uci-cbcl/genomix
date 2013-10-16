@@ -27,6 +27,7 @@ import java.util.logging.LogManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
+import org.jfree.base.log.MemoryUsageMessage;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -167,6 +168,15 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-stats_minContigLength", usage = "The minimum allowed contig length", required = false)
         private int stats_minContigLength = -1;
         
+        @Option(name = "-useMUMmer", usage = "use MUMmer to compare the genome.", required = false)
+        private boolean useMUMmer = false;
+        
+        @Option(name = "-homeDirForMUMmer", usage = "the home directory of MUMmer", required = false)
+        private String homeDirForMUMmer = null;
+        
+        @Option(name = "-refGenomePath", usage = "the reference genome path", required = false)
+        private String refGenomePath = null;
+        
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
     }
@@ -284,7 +294,9 @@ public class GenomixJobConf extends JobConf {
     public static final String STATS_GAGE_OLDSTYLE = "genomix.evaluation.gage.oldstyle";
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.gage.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.gage.minContigLength";
-    
+    public static final String USE_MUMMER = "genomix.gage.mummer";
+    public static final String HomeDIR_MUMMER = "genomix.gage.mummer.homedir";
+    public static final String REF_GENOME_PATH = "genomix.gage.ref.genome.path";
     
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
@@ -473,6 +485,9 @@ public class GenomixJobConf extends JobConf {
         setBoolean(STATS_GAGE_OLDSTYLE, opts.stats_gageOldStyle);
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
+        setBoolean(USE_MUMMER, opts.useMUMmer);
+        set(HomeDIR_MUMMER, opts.homeDirForMUMmer);
+        set(REF_GENOME_PATH, opts.refGenomePath);
     }
 
     /**

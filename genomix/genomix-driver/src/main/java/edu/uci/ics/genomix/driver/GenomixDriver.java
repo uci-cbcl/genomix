@@ -16,10 +16,12 @@
 package edu.uci.ics.genomix.driver;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
@@ -73,6 +75,8 @@ public class GenomixDriver {
     private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
 
+    private static String fastaOuputPath;
+
     @SuppressWarnings("deprecation")
     private void setOutput(GenomixJobConf conf, Patterns step) {
         prevOutput = curOutput;
@@ -97,7 +101,7 @@ public class GenomixDriver {
                 queuePregelixJob(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
                 break;
             case MERGE_P2:
-//                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
+                //                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
                 break;
             case MERGE:
             case MERGE_P4:
@@ -129,12 +133,12 @@ public class GenomixDriver {
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
-                if(runLocal){
+                if (runLocal) {
                     DriverUtils.dumpGraph(conf, prevOutput, "genome.fasta", followingBuild);
                     curOutput = prevOutput; // use previous job's output 
-                }
-                else{
+                } else {
                     dumpGraphWithHadoop(conf, prevOutput, curOutput, numCoresPerMachine * numMachines);
+                    fastaOuputPath = curOutput;
                     curOutput = prevOutput;
                 }
                 break;
@@ -144,10 +148,14 @@ public class GenomixDriver {
                 break;
             case STATS:
                 flushPendingJobs(conf);
-                Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
-                GraphStatistics.saveGraphStats(curOutput, counters, conf);
-                GraphStatistics.drawStatistics(curOutput, counters);
-                GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
+                if (Boolean.parseBoolean(conf.get(GenomixJobConf.USE_MUMMER))) {
+                    Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
+                    GraphStatistics.saveGraphStats(curOutput, counters, conf);
+                    GraphStatistics.drawStatistics(curOutput, counters);
+                    GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
+                } else {
+                    compareRefWithMUMmer(conf);
+                }
                 curOutput = prevOutput; // use previous job's output
         }
     }
@@ -235,10 +243,11 @@ public class GenomixDriver {
         }
         pregelixJobs.clear();
     }
-    
-    private void dumpGraphWithHadoop(GenomixJobConf conf, String inputPath, String outputPath, int numReducers) throws Exception{
+
+    private void dumpGraphWithHadoop(GenomixJobConf conf, String inputPath, String outputPath, int numReducers)
+            throws Exception {
         LOG.info("Building dump Graph using Hadoop...");
-        
+
         manager.startCluster(ClusterType.HADOOP);
         GenomixJobConf.tick("dumpGraphWithHadoop");
 
@@ -248,8 +257,24 @@ public class GenomixDriver {
         manager.stopCluster(ClusterType.HADOOP);
         LOG.info("Dumping the graph took " + GenomixJobConf.tock("dumpGraphWithHadoop") + "ms");
     }
-    
-    
+
+    private void compareRefWithMUMmer(GenomixJobConf conf) throws IOException, InterruptedException {
+        LOG.info("Begin MUMmer statistical Analysis");
+        int sleepms = Integer.parseInt(conf.get(GenomixJobConf.CLUSTER_WAIT_TIME));
+        String MUMmerDir = conf.get(GenomixJobConf.HomeDIR_MUMMER);
+        String ReferencePath= conf.get(GenomixJobConf.REF_GENOME_PATH);
+        String exeMUMmer = "sh " + MUMmerDir + File.separator + "MUMmer3.23" + File.separator
+                + "getCorrectnessStats.sh " + ReferencePath + " " + fastaOuputPath;
+        Process p = Runtime.getRuntime().exec(exeMUMmer);
+        p.waitFor();
+        Thread.sleep(sleepms + 2000);
+        System.out.println("\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                + IOUtils.toString(p.getErrorStream()));
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to use MUMmer" + p.exitValue() + "\nstdout: "
+                    + IOUtils.toString(p.getInputStream()) + "\nstderr: " + IOUtils.toString(p.getErrorStream()));
+    }
+
     private void initGenomix(GenomixJobConf conf) throws Exception {
         GenomixJobConf.setGlobalStaticConstants(conf);
         DriverUtils.updateCCProperties(conf);
