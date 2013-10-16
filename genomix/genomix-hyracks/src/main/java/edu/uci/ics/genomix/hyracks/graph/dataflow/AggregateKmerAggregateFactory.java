@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.graph.dataflow.aggregators;
+package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -99,7 +99,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 }
                 localUniNode.getStartReads().addAll(readNode.getStartReads());
                 localUniNode.getEndReads().addAll(readNode.getEndReads());
-                localUniNode.addCoverage(readNode); // TODO: should be renamed as addCoverageFromNode() ?
+                localUniNode.addCoverage(readNode);
             }
 
             @Override

@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.data.accessors;
+package edu.uci.ics.genomix.hyracks.data.primitive;
 
-import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunction;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
 
-public class KmerBinaryHashFunctionFamily implements IBinaryHashFunctionFamily {
+public class KmerHashFunctionFamily implements IBinaryHashFunctionFamily {
     private static final long serialVersionUID = 1L;
 
     @Override

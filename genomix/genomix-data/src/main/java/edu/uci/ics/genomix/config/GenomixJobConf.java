@@ -264,6 +264,7 @@ public class GenomixJobConf extends JobConf {
     public static final String RUN_LOCAL = "genomix.runLocal";
     public static final String DEBUG_KMERS = "genomix.debugKmers";
     public static final String LOG_READIDS = "genomix.logReadIds";
+    public static final String HYRACKS_GROUPBY_TYPE = "genomix.hyracks.groupby";
 
     //    public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_SIZE = "pregelix.framesize";
@@ -405,6 +406,11 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
+        
+        // hyracks graph building groupby operator
+        if (get(HYRACKS_GROUPBY_TYPE) == null){
+            set(HYRACKS_GROUPBY_TYPE, "precluster");
+        }
 
 
         if(getBoolean(GAGE, false) == false)

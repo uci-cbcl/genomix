@@ -104,9 +104,8 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      * 
      * @param other
      */
-    @SuppressWarnings("static-access")
     public VKmer(Kmer other) {
-        this(other.lettersInKmer);
+        this(Kmer.lettersInKmer);
         setAsCopy(other);
     }
 

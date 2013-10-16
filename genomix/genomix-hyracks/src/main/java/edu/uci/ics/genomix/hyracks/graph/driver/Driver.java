@@ -29,12 +29,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 //import org.apache.hadoop.mapred.lib.NLineInputFormat;
+import org.jfree.util.Log;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenBuildBrujinGraph;
-import edu.uci.ics.genomix.hyracks.graph.job.JobGenCheckReader;
-import edu.uci.ics.genomix.hyracks.graph.job.JobGenOldBrujinGraph;
+import edu.uci.ics.genomix.hyracks.graph.job.JobGenReadLetterParser;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -45,12 +45,16 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
-@SuppressWarnings("deprecation")
 public class Driver {
-    public enum Plan { //TODO remove the old stuff
-        BUILD_OLD_DEBRUJIN_GRAPH_STEP1,
-        BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER,
+    public enum Plan {
+        /**
+         * Build the deBruijin graph from original readID file to the final graph binary file
+         */
         BUILD_DEBRUIJN_GRAPH,
+        /**
+         * Parser the original readID into kmer + node text file only. Used to check the intermediate result.
+         */
+        BUILD_READ_PARSER,
     }
 
     private static final Logger LOG = Logger.getLogger(Driver.class.getName());
@@ -108,14 +112,11 @@ public class Driver {
                 throw new IllegalStateException("No registered worker NC's to build the graph!");
             }
             switch (planChoice) {
-                case BUILD_OLD_DEBRUJIN_GRAPH_STEP1:
-                    jobGen = new JobGenOldBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
-                    break;
-                case BUILD_OLD_DEBRUIJN_GRAPH_STEP2_CHECK_KMERREADER:
-                    jobGen = new JobGenCheckReader(job, scheduler, ncMap, numPartitionPerMachine);
-                    break;
                 case BUILD_DEBRUIJN_GRAPH:
                     jobGen = new JobGenBuildBrujinGraph(job, scheduler, ncMap, numPartitionPerMachine);
+                    break;
+                case BUILD_READ_PARSER:
+                    jobGen = new JobGenReadLetterParser(job, scheduler, ncMap, numPartitionPerMachine);
                     break;
                 default:
                     throw new IllegalArgumentException("Unrecognized planChoice: " + planChoice);
@@ -164,7 +165,7 @@ public class Driver {
         hcc.waitForCompletion(jobId);
     }
 
-    // TODO remove this main because we already have the genomix_driver
+    // Keep this main function for debug or test usage.
     public static void main(String[] args) throws Exception {
         //String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",  
         // "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-hyracksBuildOutputText", "true"};
@@ -175,9 +176,8 @@ public class Driver {
         int numOfDuplicate = IODirs != null ? IODirs.split(",").length : 4;
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
 
-        // TODO change these two lines to LOG
-        System.out.println(GenomixJobConf.INITIAL_INPUT_DIR);
-        System.out.println(GenomixJobConf.FINAL_OUTPUT_DIR);
+        Log.info("Input dir:" + GenomixJobConf.INITIAL_INPUT_DIR);
+        Log.info("Output dir:" + GenomixJobConf.FINAL_OUTPUT_DIR);
         FileInputFormat.setInputPaths(jobConf, new Path(jobConf.get(GenomixJobConf.INITIAL_INPUT_DIR)));
         {
             Path path = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.INITIAL_INPUT_DIR));
