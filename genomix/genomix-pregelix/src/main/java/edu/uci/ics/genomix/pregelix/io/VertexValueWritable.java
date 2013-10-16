@@ -149,6 +149,7 @@ public class VertexValueWritable
         if (DEBUG) {
             boolean verbose = false;
             for (VKmerBytesWritable problemKmer : problemKmers) {
+                verbose |= this.getInternalKmer().equals(problemKmer);
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
@@ -168,6 +169,7 @@ public class VertexValueWritable
         if (DEBUG) {
             boolean verbose = false;
             for (VKmerBytesWritable problemKmer : problemKmers) {
+                verbose |= this.getInternalKmer().equals(problemKmer);
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
