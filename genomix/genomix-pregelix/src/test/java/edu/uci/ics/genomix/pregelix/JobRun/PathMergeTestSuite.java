@@ -18,7 +18,7 @@ public class PathMergeTestSuite extends BasicGraphCleanTestSuite{
                 "TandemRepeatWithUnmergeEdge", "ComplexTandemRepeat",
                 "MultiTandemRepeat", "MultiTandemRepeat2", "MultiTandemRepeat3",
                 "TandemRepeatWithThreeNodes", "TandemRepeatAndCycle",
-        		  "ThreeNodesCycle",
+                "ThreeNodesCycle",
                 "SameGeneCodeWithEdge", "SameGeneCodeWithoutEdge",
                 "synthetic",
         };

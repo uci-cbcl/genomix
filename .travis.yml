@@ -3,7 +3,6 @@ language: java
 jdk:
     - oraclejdk7
     - openjdk7
-    - openjdk6
 
 install:
     - sudo apt-get install graphviz
@@ -14,3 +13,4 @@ before_script:
 
 script:
     - mvn package -q -e -am -pl genomix/genomix-driver
+    - ls -t genomix/*/target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran
