@@ -33,7 +33,7 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 /**
  * Graph clean pattern: Scaffolding
  */
-public class ScaffoldingVertex extends BFSTraverseVertex {
+public class ScaffoldingVertex extends BasicBFSTraverseVertex {
 
     // TODO Optimization: send map to readId.hashValue() bin
     // TODO BFS can seperate into simple BFS to filter and real BFS
@@ -162,7 +162,6 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
         return isValidOrientation(incomingMsg) && isInRange(totalBFSLength);
     }
 
-    @Override
     public void BFSearch(Iterator<BFSTraverseMessage> msgIterator, SEARCH_TYPE searchType) {
         ScaffoldingVertexValueWritable vertex = getVertexValue();
         HashMapWritable<LongWritable, BooleanWritable> unambiguousReadIds = vertex.getUnambiguousReadIds();
