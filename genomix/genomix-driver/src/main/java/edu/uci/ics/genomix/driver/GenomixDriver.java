@@ -141,6 +141,7 @@ public class GenomixDriver {
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters);
                 curOutput = prevOutput;  // use previous job's output
+                break;
         }
     }
     
@@ -225,8 +226,8 @@ public class GenomixDriver {
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
             }
             manager.stopCluster(ClusterType.PREGELIX);
+            pregelixJobs.clear();
         }
-        pregelixJobs.clear();
     }
     
     private void initGenomix(GenomixJobConf conf) throws Exception {
