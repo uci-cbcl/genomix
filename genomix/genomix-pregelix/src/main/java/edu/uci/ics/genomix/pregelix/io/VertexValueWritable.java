@@ -140,8 +140,19 @@ public class VertexValueWritable extends Node {
         super.readFields(in);
         this.state = in.readShort();
         this.isFakeVertex = in.readBoolean();
-        //        this.counters.readFields(in);
-        //        scaffoldingMap.readFields(in);
+//        this.counters.readFields(in);
+//        scaffoldingMap.readFields(in);
+        
+        if (DEBUG) {
+            boolean verbose = false;
+            for (VKmer problemKmer : problemKmers) {
+                verbose |= this.getInternalKmer().equals(problemKmer);
+                verbose |= findEdge(problemKmer) != null;
+            }
+            if (verbose) {
+                LOG.fine("VertexValue.readFields: " + toString());
+            }
+        }
     }
 
     @Override
@@ -149,8 +160,19 @@ public class VertexValueWritable extends Node {
         super.write(out);
         out.writeShort(this.state);
         out.writeBoolean(this.isFakeVertex);
-        //        this.counters.write(out);
-        //        scaffoldingMap.write(out);
+//        this.counters.write(out);
+//        scaffoldingMap.write(out);
+        
+        if (DEBUG) {
+            boolean verbose = false;
+            for (VKmer problemKmer : problemKmers) {
+                verbose |= this.getInternalKmer().equals(problemKmer);
+                verbose |= findEdge(problemKmer) != null;
+            }
+            if (verbose) {
+                LOG.fine("VertexValue.write: " + toString());
+            }
+        }
     }
 
     public int getDegree() {
@@ -193,6 +215,6 @@ public class VertexValueWritable extends Node {
 
     @Override
     public String toString() {
-        return super.toString();
+        return super.toString() + " state: " + state + " which in P4 means will merge: " + ((getState() & State.MERGE) != 0) + ", mergeDir: " + EDGETYPE.fromByte(getState()) + ", restrictions: " + DIR.enumSetFromByte(getState());
     }
 }

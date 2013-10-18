@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -45,7 +46,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
+            RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults, IFrameWriter writer)
             throws HyracksDataException {
         final int frameSize = ctx.getFrameSize();
         return new IAggregatorDescriptor() {
@@ -148,13 +149,14 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             }
 
             @Override
-            public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
-                    AggregateState state) throws HyracksDataException {
+            public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor,
+                    int tIndex, AggregateState state) throws HyracksDataException {
                 throw new IllegalStateException("partial result method should not be called");
+                // FIXME return type is boolean; what is it supposed to mean???
             }
 
             @Override
-            public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+            public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
 
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
@@ -180,6 +182,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
                 }
+
+                return true; // FIXME the API doesn't specify what this is supposed to return... 
             }
         };
     }
