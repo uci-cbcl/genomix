@@ -21,7 +21,6 @@ import edu.uci.ics.genomix.type.VKmer;
 /**
  * The super class of different path merge algorithms
  * This maximally compresses linear subgraphs (A->B->C->...->Z) into into individual nodes (ABC...Z).
- * 
  */
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
         DeBruijnGraphCleanVertex<V, M> {

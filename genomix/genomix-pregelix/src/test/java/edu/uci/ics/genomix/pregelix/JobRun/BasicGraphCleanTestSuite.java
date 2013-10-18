@@ -42,26 +42,26 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 @SuppressWarnings("deprecation")
 public class BasicGraphCleanTestSuite extends TestSuite {
     private static final Logger LOGGER = Logger.getLogger(BasicGraphCleanTestSuite.class.getName());
-    
+
     protected static String PreFix; //parameter
     protected static String SufFix; //parameter
     protected static ArrayList<String> TestDir = new ArrayList<String>(); //parameter
-    protected static String PATH_TO_ONLY;  //parameter
+    protected static String PATH_TO_ONLY; //parameter
     protected static String ACTUAL_RESULT_DIR; //parameter
     protected static String HADOOP_CONF_PATH; //initiated by ACTUAL_RESULT_DIR
-    
+
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
     private static final String PATH_TO_CLUSTER_STORE = "src/test/resources/conf/stores.properties";
     private static final String PATH_TO_CLUSTER_PROPERTIES = "src/test/resources/conf/cluster.properties";
     private static final String PATH_TO_JOBS = "src/test/resources/jobs/";
 
     public static final String HDFS_INPUTPATH = "/TestSet";
-    
+
     private MiniDFSCluster dfsCluster;
 
     private JobConf conf = new JobConf();
     private int numberOfNC = 1;
-    
+
     public void setUp() throws Exception {
         ClusterConfig.setStorePath(PATH_TO_CLUSTER_STORE);
         ClusterConfig.setClusterPropertiesPath(PATH_TO_CLUSTER_PROPERTIES);
@@ -88,7 +88,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
         for (String testDir : TestDir) {
             File src = new File(testDir);
             Path dest = new Path(HDFS_INPUTPATH + File.separator + getTestCaseName(testDir));
-//                    + File.separator + src.getName());
+            //                    + File.separator + src.getName());
             dfs.mkdirs(dest);
             //src.listFiles()
             //src.listFiles((FilenameFilter)(new WildcardFileFilter("part*")))
@@ -122,20 +122,20 @@ public class BasicGraphCleanTestSuite extends TestSuite {
         LOGGER.info("Hyracks mini-cluster shut down");
         cleanupHDFS();
     }
-    
-    public static void init(String pattern, String[] testSet){
-        PreFix = "data/TestSet/" + pattern; 
+
+    public static void init(String pattern, String[] testSet) {
+        PreFix = "data/TestSet/" + pattern;
         SufFix = "bin";
         PATH_TO_ONLY = "src/test/resources/only_" + pattern + ".txt";
         ACTUAL_RESULT_DIR = "data/actual/" + pattern;
         HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
         /** Multiple Tests **/
         TestDir.clear();
-        for(String testcase : testSet)
+        for (String testcase : testSet)
             TestDir.add(PreFix + File.separator + testcase + File.separator + SufFix);
     }
-    
-    public static Test makeTestSuite(BasicGraphCleanTestSuite testSuite) throws Exception{
+
+    public static Test makeTestSuite(BasicGraphCleanTestSuite testSuite) throws Exception {
         testSuite.setUp();
         List<String> onlys = getFileList(PATH_TO_ONLY);
         File testData = new File(PATH_TO_JOBS);
@@ -154,28 +154,25 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                 } else {
                     for (String testPathStr : TestDir) {
                         String resultFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) 
-                                + File.separator + "bin";
+                                + File.separator + getTestCaseName(testPathStr) + File.separator + "bin";
                         String textFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) 
-                                + File.separator + "txt" ;
+                                + File.separator + getTestCaseName(testPathStr) + File.separator + "txt";
                         String graphvizFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) 
-                                + File.separator + "graphviz";
-                        String statisticsFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) 
-                                + File.separator + "statistics" ;
+                                + File.separator + getTestCaseName(testPathStr) + File.separator + "graphviz";
+                        String statisticsFileName = ACTUAL_RESULT_DIR + File.separator
+                                + jobExtToResExt(qFile.getName()) + File.separator + getTestCaseName(testPathStr)
+                                + File.separator + "statistics";
                         testSuite.addTest(new BasicSmallTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile
-                                .getAbsolutePath().toString(), dfs,
-                                HDFS_INPUTPATH + File.separator + getTestCaseName(testPathStr) , resultFileName, 
-                                textFileName, graphvizFileName, statisticsFileName));
+                                .getAbsolutePath().toString(), dfs, HDFS_INPUTPATH + File.separator
+                                + getTestCaseName(testPathStr), resultFileName, textFileName, graphvizFileName,
+                                statisticsFileName));
                     }
                 }
             }
         }
         return testSuite;
     }
-    
+
     /**
      * Runs the tests and collects their result in a TestResult.
      */
@@ -195,14 +192,14 @@ public class BasicGraphCleanTestSuite extends TestSuite {
             throw new IllegalStateException(e);
         }
     }
-    
+
     public static String getTestCaseName(String path) {
         char separatorChar = '/';
         int index = path.lastIndexOf(separatorChar);
         int secindex = path.substring(0, index).lastIndexOf(separatorChar);
         return path.substring(0, index).substring(secindex + 1);
     }
-    
+
     protected static List<String> getFileList(String ignorePath) throws FileNotFoundException, IOException {
         BufferedReader reader = new BufferedReader(new FileReader(ignorePath));
         String s = null;

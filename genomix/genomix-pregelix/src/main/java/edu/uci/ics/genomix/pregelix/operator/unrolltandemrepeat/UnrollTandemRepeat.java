@@ -17,7 +17,6 @@ import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Unroll TandemRepeat
- * 
  */
 public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 

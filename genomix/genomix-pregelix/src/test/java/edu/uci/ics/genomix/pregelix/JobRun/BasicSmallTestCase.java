@@ -50,8 +50,8 @@ public class BasicSmallTestCase extends TestCase {
     private final Driver driver = new Driver(this.getClass());
     private final FileSystem dfs;
 
-    public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs,
-            String hdfsInput, String resultFile, String textFile, String graphvizFile, String statisticsFile) throws Exception {
+    public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs, String hdfsInput,
+            String resultFile, String textFile, String graphvizFile, String statisticsFile) throws Exception {
         super("test");
         this.jobFile = jobFile;
         this.job = new PregelixJob("test");
@@ -95,14 +95,15 @@ public class BasicSmallTestCase extends TestCase {
         //covert bin to graphviz
         GenerateGraphViz.convertGraphCleanOutputToGraphViz(resultFileDir, graphvizFileDir);
         //generate statistic counters
-//        generateStatisticsResult(statisticsFileDir);
+        //        generateStatisticsResult(statisticsFileDir);
     }
-    
-    public void generateStatisticsResult(String outPutDir) throws IOException{
+
+    public void generateStatisticsResult(String outPutDir) throws IOException {
         //convert Counters to string
-        HashMapWritable<ByteWritable, VLongWritable> counters = DeBruijnGraphCleanVertex.readStatisticsCounterResult(job.getConfiguration());
+        HashMapWritable<ByteWritable, VLongWritable> counters = DeBruijnGraphCleanVertex
+                .readStatisticsCounterResult(job.getConfiguration());
         String output = convertCountersToString(counters);
-        
+
         //output Counters
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.getLocal(conf);
@@ -112,17 +113,17 @@ public class BasicSmallTestCase extends TestCase {
         bw.write(output);
         bw.close();
     }
-    
-    public String convertCountersToString(HashMapWritable<ByteWritable, VLongWritable> counters){
+
+    public String convertCountersToString(HashMapWritable<ByteWritable, VLongWritable> counters) {
         String output = "";
-        for(ByteWritable counterName : counters.keySet()){
+        for (ByteWritable counterName : counters.keySet()) {
             output += StatisticsCounter.COUNTER_CONTENT.getContent(counterName.get());
             output += ": ";
             output += counters.get(counterName).toString() + "\n";
         }
         return output;
     }
-    
+
     public String toString() {
         return jobFile;
     }

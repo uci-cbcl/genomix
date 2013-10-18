@@ -7,20 +7,17 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 
-public class NodeToVertexInputFormat
-	extends NodeToGenericVertexInputFormat<VertexValueWritable>{
+public class NodeToVertexInputFormat extends NodeToGenericVertexInputFormat<VertexValueWritable> {
 
-    @SuppressWarnings("unchecked")
     @Override
-    public VertexReader<VKmer, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(
-            InputSplit split, TaskAttemptContext context) throws IOException {
+    public VertexReader<VKmer, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(InputSplit split,
+            TaskAttemptContext context) throws IOException {
         return new BinaryDataCleanLoadGraphReaderScaffolding(binaryInputFormat.createRecordReader(split, context));
     }
 

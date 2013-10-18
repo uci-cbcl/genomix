@@ -15,7 +15,6 @@ import edu.uci.ics.pregelix.api.io.VertexReader;
 
 public class NodeToScaffoldingVertexInputFormat extends NodeToGenericVertexInputFormat<ScaffoldingVertexValueWritable> {
 
-    @SuppressWarnings("unchecked")
     @Override
     public VertexReader<VKmer, ScaffoldingVertexValueWritable, NullWritable, MessageWritable> createVertexReader(
             InputSplit split, TaskAttemptContext context) throws IOException {
