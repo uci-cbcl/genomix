@@ -407,12 +407,6 @@ public class GenomixJobConf extends JobConf {
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
         
-        // hyracks graph building groupby operator
-        if (get(HYRACKS_GROUPBY_TYPE) == null){
-            set(HYRACKS_GROUPBY_TYPE, "precluster");
-        }
-
-
         if(getBoolean(GAGE, false) == false)
             setBoolean(GAGE, false);
         //        if (getBoolean(RUN_LOCAL, false)) {
