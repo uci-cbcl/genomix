@@ -23,9 +23,9 @@ import java.util.regex.Pattern;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
+import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadIdSet;

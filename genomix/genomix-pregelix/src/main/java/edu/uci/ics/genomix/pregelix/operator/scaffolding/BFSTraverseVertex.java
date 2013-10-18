@@ -15,8 +15,8 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
@@ -351,7 +351,7 @@ public class BFSTraverseVertex extends DeBruijnGraphCleanVertex<ScaffoldingVerte
             addFakeVertex("A");
             voteToHalt();
         } else if (getSuperstep() == 2) {
-            // for test, assign two kmer to srcNode and destNode
+            // for test, read srcNode and destNode from jobconf
             VKmer srcNode = new VKmer(source);
             VKmer destNode = new VKmer(destination);
             SearchInfo srcSearchInfo = new SearchInfo(srcNode, READHEAD_ORIENTATION.UNFLIPPED);

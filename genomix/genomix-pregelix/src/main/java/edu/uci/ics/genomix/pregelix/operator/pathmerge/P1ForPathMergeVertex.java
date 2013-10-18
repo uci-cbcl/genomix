@@ -13,11 +13,11 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
+import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.Node.DIR;
 
 public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
 

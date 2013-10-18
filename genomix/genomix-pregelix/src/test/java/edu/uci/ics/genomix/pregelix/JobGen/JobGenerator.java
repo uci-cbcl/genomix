@@ -46,14 +46,7 @@ public class JobGenerator {
     }
 
     private static void generateMapReduceGraphJob(String jobName, String outputPath) throws IOException {
-        // TODO this class can't use getConfiguredJob?
-        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-        job.setVertexClass(MapReduceVertex.class);
-        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
-        job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(VKmer.class);
-        job.setOutputValueClass(Node.class);
+        PregelixJob job = MapReduceVertex.getConfiguredJob(new GenomixJobConf(3), MapReduceVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -69,40 +62,6 @@ public class JobGenerator {
     private static void genP1ForMergeGraph() throws IOException {
         generateP1ForMergeGraphJob("P1ForMergeGraph", outputBase + "P1ForMergeGraph.xml");
     }
-
-    //    private static void generateP2ForMergeGraphJob(String jobName, String outputPath) throws IOException {
-    //        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-    //        job.setVertexClass(P2ForPathMergeVertex.class);
-    //        job.setGlobalAggregatorClass(StatisticsAggregator.class);
-    //        job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
-    //        job.setVertexOutputFormatClass(P2PathMergeOutputFormat.class); 
-    //        job.setDynamicVertexValueSize(true);
-    //        job.setOutputKeyClass(VKmerBytesWritable.class);
-    //        job.setOutputValueClass(VertexValueWritable.class);
-    //        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    //    }
-    //
-    //    private static void genP2ForMergeGraph() throws IOException {
-    //        generateP2ForMergeGraphJob("P2ForMergeGraph", outputBase + "P2ForMergeGraph.xml");
-    //    }
-    //    
-    //    private static void generateP3ForMergeGraphJob(String jobName, String outputPath) throws IOException {
-    //        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-    //        job.setVertexClass(P3ForPathMergeVertex.class);
-    //        job.setVertexInputFormatClass(NaiveAlgorithmForPathMergeInputFormat.class);
-    //        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
-    //        job.setDynamicVertexValueSize(true);
-    //        job.setOutputKeyClass(PositionWritable.class);
-    //        job.setOutputValueClass(VertexValueWritable.class);
-    //        job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, 0.3f);
-    //        job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, 2);
-    //        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    //    }
-    //
-    //    private static void genP3ForMergeGraph() throws IOException {
-    //        generateP3ForMergeGraphJob("P3ForMergeGraph", outputBase
-    //                + "P3ForMergeGraph.xml");
-    //    }
 
     private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = P4ForPathMergeVertex.getConfiguredJob(new GenomixJobConf(3), P4ForPathMergeVertex.class);

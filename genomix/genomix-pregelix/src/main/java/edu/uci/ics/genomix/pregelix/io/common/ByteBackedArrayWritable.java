@@ -8,11 +8,11 @@ import java.util.ArrayList;
 
 import org.apache.hadoop.io.Writable;
 /**
- * Enum can't be Writable(it doesn't make sence), but it still can be written.
+ * Enum can't be new and readFields() wouldn't make sense, but it still can be written.
  * ByteArrayListWritable is used for making an ArrayList of Enum type
  * @author anbangx
  */
-public abstract class ByteArrayListWritable<E> extends ArrayList<E> implements Writable{
+public abstract class ByteBackedArrayWritable<E> extends ArrayList<E> implements Writable{
     /**
      * 
      */

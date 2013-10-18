@@ -7,14 +7,12 @@ import java.util.EnumSet;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.type.Node.DIR;
-
 public enum EDGETYPE implements Writable{ 
 
-    FF((byte) (0b00 << 0)),
-    FR((byte) (0b01 << 0)),
-    RF((byte) (0b10 << 0)),
-    RR((byte) (0b11 << 0));
+    FF((byte) (0b00)),
+    FR((byte) (0b01)),
+    RF((byte) (0b10)),
+    RR((byte) (0b11));
 
     public static final byte MASK = (byte) (0b11 << 0);
     public static final byte CLEAR = (byte) (0b1111100 << 0);

@@ -5,7 +5,7 @@ import edu.uci.ics.genomix.type.EDGETYPE;
  * ArrayListWritable of EDGETYPE
  * @author anbangx
  */
-public class EdgeTypeList extends ByteArrayListWritable<EDGETYPE> {
+public class EdgeTypeList extends ByteBackedArrayWritable<EDGETYPE> {
     /**
      * 
      */

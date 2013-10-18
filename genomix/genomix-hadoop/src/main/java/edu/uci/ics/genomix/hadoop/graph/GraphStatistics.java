@@ -34,8 +34,8 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;

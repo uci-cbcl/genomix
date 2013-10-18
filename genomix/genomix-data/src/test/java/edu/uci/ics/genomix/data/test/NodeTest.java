@@ -4,14 +4,17 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
+
 import junit.framework.Assert;
+
 import org.junit.Test;
+
+import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 
 public class NodeTest {
