@@ -1,13 +1,21 @@
 package edu.uci.ics.genomix.pregelix.checker;
 
+import java.io.IOException;
 import java.util.Iterator;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
@@ -50,5 +58,16 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
             voteToHalt();
         }
     }
+
+    
+    public static PregelixJob getConfiguredJob(
+            GenomixJobConf conf,
+            Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
+            throws IOException {
+        PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
+        job.setVertexOutputFormatClass(CheckerOutputFormat.class);
+        return job;
+    }
+    
 
 }

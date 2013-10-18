@@ -12,14 +12,13 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge
- * 
  */
 public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
 

@@ -9,6 +9,8 @@ import org.apache.hadoop.io.LongWritable;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
+import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.SearchInfo;
@@ -270,6 +272,8 @@ public class ScaffoldingVertex extends BFSTraverseVertex {
             Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
             throws IOException {
         PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
+        job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
+        job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
         //        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
         return job;
     }
