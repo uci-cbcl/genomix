@@ -100,6 +100,12 @@ public class NodeTest {
         Assert.assertEquals(true, EDGETYPE.RF.causesFlip());
         Assert.assertEquals(false, EDGETYPE.RR.causesFlip());
         //flipNeighbor()
+        Assert.assertEquals(true, EDGETYPE.sameOrientation(EDGETYPE.FF, EDGETYPE.FR));
+        Assert.assertEquals(false, EDGETYPE.sameOrientation(EDGETYPE.RF, EDGETYPE.FR));
+    }
+    
+    @Test
+    public void testREADHEAD_ORIENTATION() throws IOException{
         
     }
  /*   @Test
