@@ -29,7 +29,6 @@ import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
-
 public class VKmerTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
     static int k = 7;
@@ -43,7 +42,7 @@ public class VKmerTest {
         kmer.setFromStringBytes(k, array, 1);
         Assert.assertEquals(kmer.toString(), "ATAGAAG");
     }
-    
+
     @Test
     public void TestConstructorFromRead() {
         String kmerStr = "ACTAGCTAGCTAGTCGATCGACTAGCTGATCGATCGATCGTAGCTAGC";
@@ -116,15 +115,15 @@ public class VKmerTest {
             kmer.setFromStringBytes(k, array, 0);
             Assert.assertEquals(string.substring(0, k), kmer.toString());
             for (int b = 0; b < k; b++) {
-                byte byteActual = Kmer.getOneByteFromKmerAtPosition(b, kmer.getBlockBytes(),
-                        kmer.getKmerOffset(), kmer.getKmerByteLength());
+                byte byteActual = Kmer.getOneByteFromKmerAtPosition(b, kmer.getBlockBytes(), kmer.getKmerOffset(),
+                        kmer.getKmerByteLength());
                 byte byteExpect = GeneCode.getCodeFromSymbol(array[b]);
                 for (int i = 1; i < 4 && b + i < k; i++) {
                     byteExpect += GeneCode.getCodeFromSymbol(array[b + i]) << (i * 2);
                 }
                 Assert.assertEquals(byteActual, byteExpect);
-                Kmer.appendOneByteAtPosition(b, byteActual, kmerAppend.getBlockBytes(),
-                        kmerAppend.getKmerOffset(), kmerAppend.getKmerByteLength());
+                Kmer.appendOneByteAtPosition(b, byteActual, kmerAppend.getBlockBytes(), kmerAppend.getKmerOffset(),
+                        kmerAppend.getKmerByteLength());
             }
             Assert.assertEquals(kmer.toString(), kmerAppend.toString());
         }
@@ -269,7 +268,7 @@ public class VKmerTest {
         Assert.assertEquals("TCTA", k3.toString());
         // Assert.assertEquals("CTAT", k3); // this is an incorrect test case--
         // the merge always flips the passed-in kmer
-        
+
         String test1;
         String test2;
         test1 = "CTA";
@@ -280,9 +279,7 @@ public class VKmerTest {
         k2.setFromStringBytes(3, test2.getBytes(), 0);
         k1.mergeWithRFKmer(3, k2);
         Assert.assertEquals("TCTA", k1.toString());
-        
-        
-        
+
         test1 = "CTA";
         test2 = "ATA"; //TAT
         k1 = new VKmer();
@@ -291,7 +288,7 @@ public class VKmerTest {
         k2.setFromStringBytes(3, test2.getBytes(), 0);
         k1.mergeWithFRKmer(3, k2);
         Assert.assertEquals("CTAT", k1.toString());
-        
+
         test1 = "ATA";
         test2 = "CTA"; //TAT
         k1 = new VKmer();
@@ -300,7 +297,7 @@ public class VKmerTest {
         k2.setFromStringBytes(3, test2.getBytes(), 0);
         k1.mergeWithFRKmer(3, k2);
         Assert.assertEquals("ATAG", k1.toString());
-        
+
         test1 = "TCTAT";
         test2 = "GAAC";
         k1 = new VKmer();
@@ -453,7 +450,7 @@ public class VKmerTest {
         k1.mergeWithRFKmer(5, k3);
         Assert.assertEquals("GCTAGAT", k1.toString());
     }
-    
+
     @Test
     public void TestFinalMerge() {
         String selfString;
@@ -462,57 +459,52 @@ public class VKmerTest {
         int index;
         VKmer kmer = new VKmer();
         int kmerSize = 3;
-        
+
         String F1 = "AATAG";
         String F2 = "TAGAA";
         String R1 = "CTATT";
         String R2 = "TTCTA";
-        
+
         //FF test
         selfString = F1;
-        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
+        match = selfString.substring(selfString.length() - kmerSize + 1, selfString.length());
         msgString = F2;
         index = msgString.indexOf(match);
         // does this test belong in VKmer so it can have variable-length kmers?
-//        kmer.reset(msgString.length() - index);
+        //        kmer.reset(msgString.length() - index);
         kmer.setFromStringBytes(kmerSize, msgString.substring(index).getBytes(), 0);
-//        System.out.println(kmer.toString());  // TODO use an assert instead of a print
-        
+        Assert.assertEquals("AGA", kmer.toString());
+
         //FR test
         selfString = F1;
-        match = selfString.substring(selfString.length() - kmerSize + 1,selfString.length()); 
+        match = selfString.substring(selfString.length() - kmerSize + 1, selfString.length());
         msgString = GeneCode.reverseComplement(R2);
         index = msgString.indexOf(match);
         kmer.reset(msgString.length() - index);
         kmer.setFromStringBytes(kmerSize, msgString.substring(index).getBytes(), 0);
-//        System.out.println(kmer.toString());  // TODO use an assert instead of a print
-        
+        Assert.assertEquals("AGA", kmer.toString());
+
         //RF test
         selfString = R1;
-        match = selfString.substring(0,kmerSize - 1); 
+        match = selfString.substring(0, kmerSize - 1);
         msgString = GeneCode.reverseComplement(F2);
         index = msgString.lastIndexOf(match) + kmerSize - 2;
         kmer.reset(index + 1);
         kmer.setReversedFromStringBytes(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
-//        System.out.println(kmer.toString());
-        
+        Assert.assertEquals("GAA", kmer.toString());
+
         //RR test
         selfString = R1;
-        match = selfString.substring(0,kmerSize - 1); 
+        match = selfString.substring(0, kmerSize - 1);
         msgString = R2;
         index = msgString.lastIndexOf(match) + kmerSize - 2;
         kmer.reset(index + 1);
         kmer.setFromStringBytes(kmerSize, msgString.substring(0, index + 1).getBytes(), 0);
-//        System.out.println(kmer.toString());  // TODO use an assert instead of a print
-        
-        String[][] connectedTable = new String[][]{
-                {"FF", "RF"},
-                {"FF", "RR"},
-                {"FR", "RF"},
-                {"FR", "RR"}
-        };
-//        System.out.println(connectedTable[0][1]);  // TODO use an assert instead of a print
-        
+        Assert.assertEquals("TTC", kmer.toString());
+
+        String[][] connectedTable = new String[][] { { "FF", "RF" }, { "FF", "RR" }, { "FR", "RF" }, { "FR", "RR" } };
+        Assert.assertEquals("RF", connectedTable[0][1]);
+
         Set<Long> s1 = new HashSet<Long>();
         Set<Long> s2 = new HashSet<Long>();
         s1.add((long) 1);
@@ -522,17 +514,17 @@ public class VKmerTest {
         Set<Long> intersection = new HashSet<Long>();
         intersection.addAll(s1);
         intersection.retainAll(s2);
-//        System.out.println(intersection.toString());  // TODO use an assert instead of a print
+        Assert.assertEquals("[2]", intersection.toString());
         Set<Long> difference = new HashSet<Long>();
         difference.addAll(s1);
         difference.removeAll(s2);
-//        System.out.println(difference.toString());  // TODO use an assert instead of a print
-        
+        Assert.assertEquals("[1]", difference.toString());
+
         Map<VKmer, Set<Long>> map = new HashMap<VKmer, Set<Long>>();
         VKmer k1 = new VKmer();
         Set<Long> set1 = new HashSet<Long>();
         k1.setFromStringBytes(3, ("CTA").getBytes(), 0);
-        set1.add((long)1);
+        set1.add((long) 1);
         map.put(k1, set1);
         VKmer k2 = new VKmer();
         k2.setFromStringBytes(3, ("GTA").getBytes(), 0);
@@ -552,38 +544,35 @@ public class VKmerTest {
         VKmerList kmerList = new VKmerList();
         kmerList.append(k1);
         kmerList.append(k2);
-          // TODO use an assert instead of a print
-//        System.out.println("CTA = " + map.get(k1).toString());
-//        System.out.println("GTA = " + map.get(k2).toString());
-//        System.out.println("ATG = " + map.get(k3).toString());
-//        System.out.println("AAT = " + map.get(k4).toString());
-//        System.out.println(k1.compareTo(k2));
-//        System.out.println(k2.compareTo(k1));
-        
-//        System.out.println("CTA = " + kmerList.getPosition(0).toString());
-//        System.out.println("GTA = " + kmerList.getPosition(1).toString());
-//        System.out.println("CTA = " + map.get(kmerList.getPosition(0)).toString());
-//        System.out.println("GTA = " + map.get(kmerList.getPosition(1)).toString());
+        Assert.assertEquals("[1]", map.get(k1).toString());
+        Assert.assertEquals("[2]", map.get(k2).toString());
+        Assert.assertEquals("[2]", map.get(k3).toString());
+        Assert.assertEquals("[1]", map.get(k4).toString());
+        Assert.assertEquals(-1, k1.compareTo(k2));
+        Assert.assertEquals(1, k2.compareTo(k1));
+        Assert.assertEquals("CTA", kmerList.getPosition(0).toString());
+        Assert.assertEquals("GTA", kmerList.getPosition(1).toString());
+        Assert.assertEquals("[1]", map.get(kmerList.getPosition(0)).toString());
+        Assert.assertEquals("[2]", map.get(kmerList.getPosition(1)).toString());
     }
-    
+
     @Test
     public void TestEditDistance() {
-    	VKmer kmer1 = new VKmer("ACGT");
-    	VKmer kmer2 = new VKmer("AAAACGT");
-    	
-    	Assert.assertEquals(kmer1.editDistance(kmer2), 3);
-    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
-    	Assert.assertEquals(kmer1.fracDissimilar(true, kmer2), .75f);
-    	
-    	kmer1.setAsCopy("");
-    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
-    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
-    	
-    	kmer2.setAsCopy("");
-    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
-    	Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
-    	
-    	
+        VKmer kmer1 = new VKmer("ACGT");
+        VKmer kmer2 = new VKmer("AAAACGT");
+
+        Assert.assertEquals(kmer1.editDistance(kmer2), 3);
+        Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
+        Assert.assertEquals(kmer1.fracDissimilar(true, kmer2), .75f);
+
+        kmer1.setAsCopy("");
+        Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
+        Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
+
+        kmer2.setAsCopy("");
+        Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.getKmerLetterLength());
+        Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
+
     }
 
 }
