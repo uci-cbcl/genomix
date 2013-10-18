@@ -35,7 +35,7 @@ public abstract class GenericVertexToNodeOutputFormat<V extends Node>
         @Override
         public void writeVertex(Vertex<VKmer, V, NullWritable, ?> vertex) throws IOException,
                 InterruptedException {
-            getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().getNode());
+            getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().getCopyAsNode());
         }
     }
 }
