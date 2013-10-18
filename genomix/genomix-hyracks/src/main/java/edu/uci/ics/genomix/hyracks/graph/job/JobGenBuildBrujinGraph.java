@@ -16,7 +16,6 @@
 package edu.uci.ics.genomix.hyracks.graph.job;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -54,38 +53,12 @@ import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 public class JobGenBuildBrujinGraph extends JobGen {
 
     public enum GroupbyType {
-        EXTERNAL("external"),
-        PRECLUSTER("precluster"),
-        HYBRIDHASH("hybridhash");
-
-        public static GroupbyType getGroupbyTypeByString(String typename) {
-            if (typename.equalsIgnoreCase(EXTERNAL.name)) {
-                return EXTERNAL;
-            } else if (typename.equalsIgnoreCase(PRECLUSTER.name)) {
-                return PRECLUSTER;
-            } else if (typename.equalsIgnoreCase(HYBRIDHASH.name)) {
-                return HYBRIDHASH;
-            }
-            return null;
-        }
-
-        private final String name;
-
-        private GroupbyType(String s) {
-            name = s;
-        }
-
-        public boolean equalsName(String otherName) {
-            return (otherName == null) ? false : name.equals(otherName);
-        }
-
-        public String toString() {
-            return name;
-        }
+        EXTERNAL,
+        PRECLUSTER,
+        HYBRIDHASH,
     }
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOG = Logger.getLogger(JobGenBuildBrujinGraph.class.getName());
 
     private GroupbyType groupbyType;
 
@@ -98,7 +71,7 @@ public class JobGenBuildBrujinGraph extends JobGen {
     protected void initGenomixConfiguration() throws HyracksDataException {
         super.initGenomixConfiguration();
         Configuration conf = hadoopJobConfFactory.getConf();
-        groupbyType = GroupbyType.getGroupbyTypeByString(conf.get(GenomixJobConf.HYRACKS_GROUPBY_TYPE,
+        groupbyType = GroupbyType.valueOf(conf.get(GenomixJobConf.HYRACKS_GROUPBY_TYPE,
                 GroupbyType.PRECLUSTER.toString()));
     }
 
@@ -108,10 +81,8 @@ public class JobGenBuildBrujinGraph extends JobGen {
         HDFSReadOperatorDescriptor readOperator = JobGenReadLetterParser.createHDFSReader(jobSpec,
                 super.hadoopJobConfFactory, super.getInputSplit(), super.readSchedule);
 
-        LOG.info("Group by Kmer");
         AbstractOperatorDescriptor lastOperator = generateGroupbyKmerJob(jobSpec, readOperator);
 
-        LOG.info("Generate final node");
         lastOperator = generateKmerNodeWriterOpertator(jobSpec, lastOperator);
 
         jobSpec.addRoot(lastOperator);
@@ -135,11 +106,9 @@ public class JobGenBuildBrujinGraph extends JobGen {
                 new AggregateKmerAggregateFactory(), new KmerPartitionComputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
-        LOG.info("LocalKmerGroupby Operator");
         connectOperators(jobSpec, sorter, ncNodeNames, kmerLocalAggregator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
 
-        LOG.info("CrossKmerGroupby Operator");
         IConnectorDescriptor kmerConnPartition = (IConnectorDescriptor) objs[1];
         AbstractOperatorDescriptor kmerCrossAggregator = (AbstractOperatorDescriptor) objs[2];
         connectOperators(jobSpec, kmerLocalAggregator, ncNodeNames, kmerCrossAggregator, ncNodeNames, kmerConnPartition);
@@ -175,7 +144,6 @@ public class JobGenBuildBrujinGraph extends JobGen {
     public AbstractOperatorDescriptor generateKmerNodeWriterOpertator(JobSpecification jobSpec,
             AbstractOperatorDescriptor kmerCrossAggregator) throws HyracksException {
         ITupleWriterFactory writer = new KmerNodePairSequenceWriterFactory(hadoopJobConfFactory.getConf());
-        LOG.info("WriteOperator");
         // Output Node
         HDFSWriteOperatorDescriptor writeNodeOperator = new HDFSWriteOperatorDescriptor(jobSpec,
                 hadoopJobConfFactory.getConf(), writer);

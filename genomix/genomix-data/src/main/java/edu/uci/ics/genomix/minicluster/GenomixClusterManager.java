@@ -205,7 +205,7 @@ public class GenomixClusterManager {
         ncConfig.clusterNetIPAddress = LOCAL_HOSTNAME;
         ncConfig.dataIPAddress = LOCAL_IP;
         ncConfig.datasetIPAddress = LOCAL_IP;
-        ncConfig.nodeId = "nc-" + clusterType + "id" + id;
+        ncConfig.nodeId = "nc-" + clusterType + "-id-" + id;
         ncConfig.ioDevices = "tmp" + File.separator + "t3" + File.separator + clusterType;
 
         if (clusterType == ClusterType.HYRACKS) {
