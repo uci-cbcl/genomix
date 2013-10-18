@@ -28,11 +28,11 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.pregelix.graph.GenerateGraphViz;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -100,7 +100,7 @@ public class BasicSmallTestCase extends TestCase {
     
     public void generateStatisticsResult(String outPutDir) throws IOException{
         //convert Counters to string
-        HashMapWritable<ByteWritable, VLongWritable> counters = BasicGraphCleanVertex.readStatisticsCounterResult(job.getConfiguration());
+        HashMapWritable<ByteWritable, VLongWritable> counters = DeBruijnGraphCleanVertex.readStatisticsCounterResult(job.getConfiguration());
         String output = convertCountersToString(counters);
         
         //output Counters

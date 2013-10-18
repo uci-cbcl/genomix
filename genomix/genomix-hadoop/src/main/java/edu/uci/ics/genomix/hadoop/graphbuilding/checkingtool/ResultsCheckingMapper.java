@@ -16,26 +16,24 @@
 package edu.uci.ics.genomix.hadoop.graphbuilding.checkingtool;
 
 import java.io.IOException;
+
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
-public class ResultsCheckingMapper extends MapReduceBase implements
-        Mapper<VKmerBytesWritable, NodeWritable, Text, Text> {
+public class ResultsCheckingMapper extends MapReduceBase implements Mapper<VKmer, Node, Text, Text> {
     public static Text textkey = new Text();
     public static Text textvalue = new Text();
 
     @Override
-    public void map(VKmerBytesWritable key, NodeWritable value, OutputCollector<Text, Text> output, Reporter reporter)
-            throws IOException {
+    public void map(VKmer key, Node value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
         FileSplit fileSplit = (FileSplit) reporter.getInputSplit();
         String filename = fileSplit.getPath().getName();
         textkey.set(key.toString() + "\t" + value.toString());

@@ -15,7 +15,6 @@
 
 package edu.uci.ics.genomix.type;
 
-
 public class GeneCode {
     public final static byte[] GENE_SYMBOL = { 'A', 'C', 'G', 'T' };
     /**
@@ -49,25 +48,29 @@ public class GeneCode {
         }
         return r;
     }
-    
-    public static byte getPairedGeneCode(byte genecode){
-        if ( genecode < 0 || genecode > 3){
+
+    public static byte getPairedGeneCode(byte genecode) {
+        if (genecode < 0 || genecode > 3) {
             throw new IllegalArgumentException("Invalid genecode: " + genecode);
         }
-        return (byte) (3- genecode);
+        return (byte) (3 - genecode);
+    }
+
+    public static byte getPairedCodeFromSymbol(byte ch) {
+        return getPairedGeneCode(getCodeFromSymbol(ch));
     }
     
-    public static byte getPairedCodeFromSymbol(byte ch){
-        return getPairedGeneCode(getCodeFromSymbol(ch));
+    public static byte getComplimentSymbolFromSymbol(byte ch) {
+        return getSymbolFromCode(getPairedGeneCode(getCodeFromSymbol(ch)));
     }
 
     public static byte getSymbolFromCode(byte code) {
-        if (code > 3 || code < 0 ) {
+        if (code > 3 || code < 0) {
             throw new IllegalArgumentException("Invalid genecode");
         }
         return GENE_SYMBOL[code];
     }
-    
+
     public static String reverseComplement(String kmer) {
         StringBuilder sb = new StringBuilder();
         for (char letter : kmer.toCharArray()) {
@@ -75,7 +78,7 @@ public class GeneCode {
         }
         return sb.reverse().toString();
     }
-    
+
     public static char complement(char ch) {
         switch (ch) {
             case 'A':

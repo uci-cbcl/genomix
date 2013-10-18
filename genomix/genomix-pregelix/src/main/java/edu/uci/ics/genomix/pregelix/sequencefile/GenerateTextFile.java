@@ -13,7 +13,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 
 public class GenerateTextFile {
 
@@ -26,7 +26,7 @@ public class GenerateTextFile {
         File srcPath = new File(strSrcDir);
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            VKmerBytesWritable key = new VKmerBytesWritable();
+            VKmer key = new VKmer();
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
@@ -34,7 +34,7 @@ public class GenerateTextFile {
                     break;
                 }
                 bw.write(key.toString() + "\t" + value.toString());
-                System.out.println(key.toString());
+//                System.out.println(key.toString());
                 bw.newLine();
             }
             reader.close();
@@ -49,7 +49,7 @@ public class GenerateTextFile {
         for (int i = 0; i < 2; i++) {
             Path path = new Path("/home/anbangx/genomix_result/final_naive/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-            VKmerBytesWritable key = new VKmerBytesWritable();
+            VKmer key = new VKmer();
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
@@ -73,7 +73,7 @@ public class GenerateTextFile {
         for (int i = 0; i < 2; i++) {
             Path path = new Path("/home/anbangx/genomix_result/improvelog2/part-" + i);
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-            VKmerBytesWritable key = new VKmerBytesWritable();
+            VKmer key = new VKmer();
             VertexValueWritable value = new VertexValueWritable();
 
             while (reader.next(key, value)) {
@@ -96,7 +96,7 @@ public class GenerateTextFile {
         FileSystem fileSys = FileSystem.get(conf);
         Path path = new Path("data/input/part-0-out-3000000");
         SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, path, conf);
-        VKmerBytesWritable key = new VKmerBytesWritable();
+        VKmer key = new VKmer();
 
         while (reader.next(key, null)) {
             if (key == null) {

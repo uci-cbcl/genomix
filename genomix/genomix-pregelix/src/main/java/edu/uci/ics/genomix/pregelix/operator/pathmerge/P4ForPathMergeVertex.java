@@ -9,20 +9,19 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge
  * 
- * @author anbangx
  */
-public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
+public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
 
     private static final Logger LOG = Logger.getLogger(P4ForPathMergeVertex.class.getName());
 
@@ -30,9 +29,9 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     private float probBeingRandomHead = -1;
     private Random randGenerator = null;
 
-    private VKmerBytesWritable curKmer = new VKmerBytesWritable();
-    private VKmerBytesWritable nextKmer = new VKmerBytesWritable();
-    private VKmerBytesWritable prevKmer = new VKmerBytesWritable();
+    private VKmer curKmer = new VKmer();
+    private VKmer nextKmer = new VKmer();
+    private VKmer prevKmer = new VKmer();
     private boolean hasNext = false;
     private boolean hasPrev = false;
     private boolean curHead = false;
@@ -48,7 +47,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     public void initVertex() {
         super.initVertex();
         if (outgoingMsg == null)
-            outgoingMsg = new PathMergeMessageWritable();
+            outgoingMsg = new PathMergeMessage();
         else
             outgoingMsg.reset();
         randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
@@ -59,7 +58,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                     GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
         // Node may be marked as head b/c it's a real head or a real tail
         if (repeatKmer == null)
-            repeatKmer = new VKmerBytesWritable();
+            repeatKmer = new VKmer();
         tmpValue.reset();
         if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
@@ -69,26 +68,27 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         getVertexValue().getCounters().clear();
     }
 
-    protected boolean isNodeRandomHead(VKmerBytesWritable nodeKmer) {
+    protected boolean isNodeRandomHead(VKmer nodeKmer) {
         // "deterministically random", based on node id
         randGenerator.setSeed((randSeed ^ nodeKmer.hashCode()) * 10000 * getSuperstep());//randSeed + nodeID.hashCode()
-        for (int i = 0; i < 500; i++)  // destroy initial correlation between similar seeds 
+        for (int i = 0; i < 500; i++)
+            // destroy initial correlation between similar seeds 
             randGenerator.nextFloat();
         boolean isHead = randGenerator.nextFloat() < probBeingRandomHead;
         return isHead;
     }
-    
+
     /**
      * set state as no_merge
      */
-    public void setMerge(byte mergeState){
+    public void setMerge(byte mergeState) {
         short state = getVertexValue().getState();
         state &= State.MERGE_CLEAR;
         state |= (mergeState & State.MERGE_MASK);
         getVertexValue().setState(state);
         activate();
     }
-    
+
     /**
      * checks if there is a valid, mergeable neighbor in the given direction. sets hasNext/Prev, next/prevEdgetype, Kmer and Head
      */
@@ -101,7 +101,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         } else {
             hasNext = true;
             nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdgeList(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
-            nextKmer = vertex.getEdgeList(nextEdgetype).get(0).getKey();
+            nextKmer = vertex.getEdgeMap(nextEdgetype).firstKey();
             nextHead = isNodeRandomHead(nextKmer);
         }
 
@@ -111,7 +111,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         } else {
             hasPrev = true;
             prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdgeList(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
-            prevKmer = vertex.getEdgeList(prevEdgetype).get(0).getKey();
+            prevKmer = vertex.getEdgeMap(prevEdgetype).firstKey();
             prevHead = isNodeRandomHead(prevKmer);
         }
     }
@@ -185,40 +185,43 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         super.sendMergeMsg();
         if ((getVertexValue().getState() & State.MERGE) != 0) {
             deleteVertex(getVertexId());
-            if (verbose) 
+            if (verbose)
                 LOG.fine("killing self: " + getVertexId());
         }
     }
-    
+
     /**
      * step4: receive and process Merges
      */
-    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
+    public void receiveMerges(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        NodeWritable node = vertex.getNode();
+        Node node = vertex.getNode();
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
-        int numMerged = 0;
+//        int numMerged = 0;
         while (msgIterator.hasNext()) {
-            PathMergeMessageWritable incomingMsg = msgIterator.next();
-            if (verbose)
+            PathMergeMessage incomingMsg = msgIterator.next();
+            if (verbose) {
                 LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+            }
             senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
             node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
-            numMerged++;
+//            numMerged++;
             updated = true;
-            if (verbose)
+            if (verbose) {
                 LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+            }
         }
         if (isTandemRepeat(getVertexValue())) {
             // tandem repeats can't merge anymore; restrict all future merges
             state |= DIR.FORWARD.get();
             state |= DIR.REVERSE.get();
             updated = true;
-            if (verbose)
+            if (verbose) {
                 LOG.fine("recieveMerges is a tandem repeat: " + getVertexId() + " " + getVertexValue());
+            }
             //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
         //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
@@ -233,13 +236,13 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     }
 
     @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws HyracksDataException {
+    public void compute(Iterator<PathMergeMessage> msgIterator) throws HyracksDataException {
         initVertex();
         if (verbose)
             LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
         if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
-        	voteToHalt();
-        	return;
+            voteToHalt();
+            return;
         }
 
         if (getSuperstep() == 1) {

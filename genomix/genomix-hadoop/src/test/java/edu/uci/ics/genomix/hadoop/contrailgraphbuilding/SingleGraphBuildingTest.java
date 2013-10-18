@@ -25,15 +25,15 @@ public class SingleGraphBuildingTest {
     private static final String DATA_PATH = "data/webmap/RandomWalk_TestSet/SmallGenome/small.test.reads";
     private static final String HDFS_PATH = "/webmap";
     private static final String RESULT_PATH = "/result";
-    
+
     private static final int COUNT_REDUCER = 2;
     private static final int SIZE_KMER = 3;
     private static int LINES_PERMAP = 4 * 100000;
-    
+
     private MiniDFSCluster dfsCluster;
     private MiniMRCluster mrCluster;
     private FileSystem dfs;
-    
+
     @Test
     public void test() throws Exception {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
@@ -42,13 +42,13 @@ public class SingleGraphBuildingTest {
         TestMapKmerToNode();
         cleanupHadoop();
     }
-    
+
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
         driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, LINES_PERMAP, true, HADOOP_CONF_PATH);
         dumpResult();
     }
-    
+
     private void startHadoop() throws IOException {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
@@ -72,7 +72,7 @@ public class SingleGraphBuildingTest {
         mrCluster.shutdown();
         dfsCluster.shutdown();
     }
-    
+
     private void dumpResult() throws IOException {
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR);

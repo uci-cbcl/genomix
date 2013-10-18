@@ -18,8 +18,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -34,17 +34,18 @@ public class NodeTextWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
     public static final int OutputNodeField = AssembleKeyIntoNodeOperator.OutputNodeField;
-    
+
     public NodeTextWriterFactory(int k) {
         this.kmerSize = k;
     }
 
     @Override
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException {
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
+            throws HyracksDataException {
+        Kmer.setGlobalKmerLength(kmerSize);
         return new ITupleWriter() {
-            NodeWritable node = new NodeWritable();
-            
+            Node node = new Node();
+
             @Override
             public void open(DataOutput output) throws HyracksDataException {
 

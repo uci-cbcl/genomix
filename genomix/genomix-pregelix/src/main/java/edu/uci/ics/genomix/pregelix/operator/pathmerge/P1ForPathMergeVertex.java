@@ -9,43 +9,43 @@ import java.util.logging.Logger;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessageWritable;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
-import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.DIR;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.Node.DIR;
 
-public class P1ForPathMergeVertex extends
-    BasicPathMergeVertex<VertexValueWritable, PathMergeMessageWritable> {
-    
+public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
+
     private static final Logger LOG = Logger.getLogger(P1ForPathMergeVertex.class.getName());
-    
-    private HashSet<PathMergeMessageWritable> updateMsgs = new HashSet<PathMergeMessageWritable>();
-    private HashSet<PathMergeMessageWritable> neighborMsgs = new HashSet<PathMergeMessageWritable>();
+
+    private HashSet<PathMergeMessage> updateMsgs = new HashSet<PathMergeMessage>();
+    private HashSet<PathMergeMessage> neighborMsgs = new HashSet<PathMergeMessage>();
+
     /**
      * initiate kmerSize, maxIteration
      */
     @Override
     public void initVertex() {
         super.initVertex();
-        if(outgoingMsg == null)
-            outgoingMsg = new PathMergeMessageWritable();
+        if (outgoingMsg == null)
+            outgoingMsg = new PathMergeMessage();
         else
             outgoingMsg.reset();
-        if(repeatKmer == null)
-            repeatKmer = new VKmerBytesWritable();
-        if(getSuperstep() == 1)
+        if (repeatKmer == null)
+            repeatKmer = new VKmer();
+        if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-//        else
-//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        //        else
+        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-    
+
     public void chooseMergeDir() {
         VertexValueWritable vertex = getVertexValue();
         short state = vertex.getState();
@@ -53,60 +53,60 @@ public class P1ForPathMergeVertex extends
         boolean updated = false;
         //initiate merge dir
         state &= State.MERGE_CLEAR;
-        state |= State.NO_MERGE;   //setMerge(P4State.NO_MERGE);
-        
+        state |= State.NO_MERGE; //setMerge(P4State.NO_MERGE);
+
         //choose merge dir -- principle: only merge with nextDir
-        if(restrictedDirs.size() == 1){
-        	if((restrictedDirs.contains(DIR.REVERSE) && vertex.getDegree(DIR.FORWARD) == 1) 
-        			|| (restrictedDirs.contains(DIR.FORWARD) && vertex.getDegree(DIR.REVERSE) == 1)){
-	            EDGETYPE edgeType = restrictedDirs.contains(DIR.REVERSE) ? vertex.getNeighborEdgeType(DIR.FORWARD) : vertex.getNeighborEdgeType(DIR.REVERSE);
-	            state |= State.MERGE | edgeType.get();
-	            updated = true;
-        	}
+        if (restrictedDirs.size() == 1) {
+            if ((restrictedDirs.contains(DIR.REVERSE) && vertex.degree(DIR.FORWARD) == 1)
+                    || (restrictedDirs.contains(DIR.FORWARD) && vertex.degree(DIR.REVERSE) == 1)) {
+                EDGETYPE edgeType = restrictedDirs.contains(DIR.REVERSE) ? vertex.getNeighborEdgeType(DIR.FORWARD)
+                        : vertex.getNeighborEdgeType(DIR.REVERSE);
+                state |= State.MERGE | edgeType.get();
+                updated = true;
+            }
         }
-        
+
         getVertexValue().setState(state);
         if (updated)
             activate();
-        else 
+        else
             voteToHalt();
-        
+
         if (verbose) {
-            LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                    + "Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
-                    + "; node is " + getVertexValue());
+            LOG.fine("Iteration " + getSuperstep() + "\r\n" + "Mark: Merge from " + getVertexId() + " towards "
+                    + (EDGETYPE.fromByte(getVertexValue().getState())) + "; node is " + getVertexValue());
         }
     }
-    
+
     /**
-     * step4: receive and process Merges  for P1
+     * step4: receive and process Merges for P1
      */
-    public void receiveMerges(Iterator<PathMergeMessageWritable> msgIterator) {
+    public void receiveMerges(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        NodeWritable node = vertex.getNode();
+        Node node = vertex.getNode();
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
         @SuppressWarnings("unused")
         int numMerged = 0;
-        
+
         // aggregate incomingMsg
-        ArrayList<PathMergeMessageWritable> receivedMsgList = new ArrayList<PathMergeMessageWritable>();
-        while(msgIterator.hasNext())
-            receivedMsgList.add(new PathMergeMessageWritable(msgIterator.next()));
-        
-        if(receivedMsgList.size() > 2)
+        ArrayList<PathMergeMessage> receivedMsgList = new ArrayList<PathMergeMessage>();
+        while (msgIterator.hasNext())
+            receivedMsgList.add(new PathMergeMessage(msgIterator.next()));
+
+        if (receivedMsgList.size() > 2)
             throw new IllegalStateException("In path merge, it is impossible to receive more than 2 messages!");
-        
+
         // odd number of nodes
-        if(receivedMsgList.size() == 2){
+        if (receivedMsgList.size() == 2) {
             if (verbose)
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                        + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
-            for(PathMergeMessageWritable msg : receivedMsgList){
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before merge: " + getVertexValue()
+                        + " restrictions: " + DIR.enumSetFromByte(state));
+            for (PathMergeMessage msg : receivedMsgList) {
                 senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
                 node.mergeWithNode(senderEdgetype, msg.getNode());
-                state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
+                state |= (byte) (msg.getFlag() & DIR.MASK); // update incoming restricted directions
                 numMerged++;
                 updated = true;
                 deleteVertex(msg.getSourceVertexId());
@@ -114,33 +114,34 @@ public class P1ForPathMergeVertex extends
             }
             if (verbose)
                 LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
-        } else if(receivedMsgList.size() == 1){ // even number of nodes
+        } else if (receivedMsgList.size() == 1) { // even number of nodes
             if (verbose)
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                        + "before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
-            PathMergeMessageWritable msg = receivedMsgList.get(0);
+                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before merge: " + getVertexValue()
+                        + " restrictions: " + DIR.enumSetFromByte(state));
+            PathMergeMessage msg = receivedMsgList.get(0);
             senderEdgetype = EDGETYPE.fromByte(msg.getFlag());
-            state |= (byte) (msg.getFlag() & DIR.MASK);  // update incoming restricted directions
-            VKmerBytesWritable me = getVertexId();
-            VKmerBytesWritable other = msg.getSourceVertexId();
+            state |= (byte) (msg.getFlag() & DIR.MASK); // update incoming restricted directions
+            VKmer me = getVertexId();
+            VKmer other = msg.getSourceVertexId();
             // determine if merge. if head msg meets head and #receiveMsg = 1
-            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class))){
-                if(me.compareTo(other) < 0){
+            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class))) {
+                if (me.compareTo(other) < 0) {
                     node.mergeWithNode(senderEdgetype, msg.getNode());
                     numMerged++;
                     updated = true;
                     deleteVertex(other);
-                } else{
+                } else {
                     // broadcast kill self and update pointer to new kmer, update edge from toMe to toOther
                     node.mergeWithNode(senderEdgetype, msg.getNode());
                     outgoingMsg.setSourceVertexId(me);
                     outgoingMsg.getNode().setInternalKmer(other);
                     outFlag = 0;
                     outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
-                    for(EDGETYPE et : EnumSet.allOf(EDGETYPE.class)){
-                        for(VKmerBytesWritable dest : vertex.getEdgeList(et).getKeys()){
+                    for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
+                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                             EDGETYPE meToNeighbor = et.mirror();
-                            EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor() : meToNeighbor;
+                            EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor()
+                                    : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
                             outFlag &= MessageFlag.MERGE_DIR_CLEAR;
                             outFlag |= meToNeighbor.get() | otherToNeighbor.get() << 9;
@@ -148,12 +149,12 @@ public class P1ForPathMergeVertex extends
                             sendMsg(dest, outgoingMsg);
                         }
                     }
-                    
+
                     state |= State.NO_MERGE;
                     vertex.setState(state);
                     voteToHalt();
                 }
-            } else{
+            } else {
                 node.mergeWithNode(senderEdgetype, msg.getNode());
                 numMerged++;
                 updated = true;
@@ -163,68 +164,66 @@ public class P1ForPathMergeVertex extends
             if (verbose)
                 LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
         }
-        
-        if(isTandemRepeat(getVertexValue())) {
+
+        if (isTandemRepeat(getVertexValue())) {
             // tandem repeats can't merge anymore; restrict all future merges
             state |= DIR.FORWARD.get();
             state |= DIR.REVERSE.get();
             updated = true;
-//          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
+            //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
-//      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
-//      getVertexValue().setCounters(counters);
+        //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
+        //      getVertexValue().setCounters(counters);
         if (updated) {
             vertex.setState(state);
             if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class)))
                 voteToHalt();
-            else 
+            else
                 activate();
         }
     }
-    
-    public void catagorizeMsg(Iterator<PathMergeMessageWritable> msgIterator){
+
+    public void catagorizeMsg(Iterator<PathMergeMessage> msgIterator) {
         updateMsgs.clear();
         neighborMsgs.clear();
-        while(msgIterator.hasNext()){
-            PathMergeMessageWritable incomingMsg = msgIterator.next();
+        while (msgIterator.hasNext()) {
+            PathMergeMessage incomingMsg = msgIterator.next();
             MESSAGETYPE msgType = MESSAGETYPE.fromByte(incomingMsg.getFlag());
-            switch(msgType){
+            switch (msgType) {
                 case UPDATE:
-                    updateMsgs.add(new PathMergeMessageWritable(incomingMsg));
+                    updateMsgs.add(new PathMergeMessage(incomingMsg));
                     break;
                 case TO_NEIGHBOR:
-                    neighborMsgs.add(new PathMergeMessageWritable(incomingMsg));
+                    neighborMsgs.add(new PathMergeMessage(incomingMsg));
                     break;
                 default:
                     throw new IllegalStateException("Message types are allowd for only TO_UPDATE and TO_NEIGHBOR!");
             }
         }
     }
-    
-    public void receiveToNeighbor(Iterator<PathMergeMessageWritable> msgIterator){
+
+    public void receiveToNeighbor(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable value = getVertexValue();
         if (verbose)
-            LOG.fine("Iteration " + getSuperstep() + "\r\n" 
-                    + "before update from dead vertex: " + value);
-        while(msgIterator.hasNext()){
-            PathMergeMessageWritable incomingMsg = msgIterator.next();
+            LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from dead vertex: " + value);
+        while (msgIterator.hasNext()) {
+            PathMergeMessage incomingMsg = msgIterator.next();
             EDGETYPE deleteToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
-            EDGETYPE aliveToMe =  EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
-            
-            VKmerBytesWritable deletedKmer = incomingMsg.getSourceVertexId();
-            if(value.getEdgeList(deleteToMe).contains(deletedKmer)){
-                EdgeWritable deletedEdge = value.getEdgeList(deleteToMe).getEdge(deletedKmer);
-                value.getEdgeList(deleteToMe).remove(deletedKmer);
-                
-                deletedEdge.setKey(incomingMsg.getInternalKmer());
-                value.getEdgeList(aliveToMe).unionAdd(deletedEdge);
+            EDGETYPE aliveToMe = EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
+
+            VKmer deletedKmer = incomingMsg.getSourceVertexId();
+            if (value.getEdgeMap(deleteToMe).containsKey(deletedKmer)) {
+                ReadIdSet deletedReadIds = value.getEdgeMap(deleteToMe).get(deletedKmer);
+                value.getEdgeMap(deleteToMe).remove(deletedKmer);
+
+                value.getEdgeMap(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);
             }
             voteToHalt();
         }
         if (verbose)
             LOG.fine("after update from dead vertex: " + value);
     }
-    
+
     /**
      * for P1
      */
@@ -239,15 +238,15 @@ public class P1ForPathMergeVertex extends
             voteToHalt();
         }
     }
-    
+
     @Override
-    public void compute(Iterator<PathMergeMessageWritable> msgIterator) throws Exception {
+    public void compute(Iterator<PathMergeMessage> msgIterator) throws Exception {
         initVertex();
         if (getSuperstep() > maxIteration) {
-        	voteToHalt();
-        	return;
+            voteToHalt();
+            return;
         }
-        
+
         if (getSuperstep() == 1) {
             restrictNeighbors();
         } else if (getSuperstep() % 2 == 0) {
@@ -259,12 +258,12 @@ public class P1ForPathMergeVertex extends
             updateNeighbors();
         } else if (getSuperstep() % 2 == 1) {
             catagorizeMsg(msgIterator);
-            
+
             receiveUpdates(updateMsgs.iterator());
             receiveToNeighbor(neighborMsgs.iterator());
-            
+
             sendMergeMsg();
-        } 
+        }
     }
 
     public static void main(String[] args) throws Exception {

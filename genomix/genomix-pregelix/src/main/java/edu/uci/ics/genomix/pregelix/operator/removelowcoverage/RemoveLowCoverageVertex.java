@@ -9,85 +9,83 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.BasicGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Remove Lowcoverage
- * Detais: Chimeric reads and other sequencing artifacts create edges that are 
- *         only supported by a small number of reads. These edges are identified 
- *         and removed. This is then followed by recompressing the graph. 
- * @author anbangx
- *
+ * Detais: Chimeric reads and other sequencing artifacts create edges that are
+ * 		  only supported by a small number of reads. These edges are identified
+ *		  and removed. This is then followed by recompressing the graph.
+ * 
  */
-public class RemoveLowCoverageVertex extends
-    BasicGraphCleanVertex<VertexValueWritable,MessageWritable> {
+public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     private static float minAverageCoverage = -1;
-    
-    private static Set<VKmerBytesWritable> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmerBytesWritable>());
-    
+
+    private static Set<VKmer> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmer>());
+
     /**
      * initiate kmerSize, length
      */
     @Override
     public void initVertex() {
-        super.initVertex(); 
+        super.initVertex();
         if (minAverageCoverage < 0)
-            minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
-        if(outgoingMsg == null)
+            minAverageCoverage = Float.parseFloat(getContext().getConfiguration().get(
+                    GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
+        if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
-        if(getSuperstep() == 1)
+        if (getSuperstep() == 1)
             StatisticsAggregator.preGlobalCounters.clear();
-//        else
-//            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+        //        else
+        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
-    
-    public void detectLowCoverageVertex(){
-        if(getVertexValue().getAvgCoverage() <= minAverageCoverage){
+
+    public void detectLowCoverageVertex() {
+        if (getVertexValue().getAverageCoverage() <= minAverageCoverage) {
             //broadcase kill self
             broadcastKillself();
-            deadNodeSet.add(new VKmerBytesWritable(getVertexId()));
+            deadNodeSet.add(new VKmer(getVertexId()));
         }
     }
-    
-    public void cleanupDeadVertex(){
+
+    public void cleanupDeadVertex() {
         deleteVertex(getVertexId());
         //set statistics counter: Num_RemovedLowCoverageNodes
         incrementCounter(StatisticsCounter.Num_RemovedLowCoverageNodes);
         getVertexValue().setCounters(counters);
     }
-    
-    public void responseToDeadVertex(Iterator<MessageWritable> msgIterator){
+
+    public void responseToDeadVertex(Iterator<MessageWritable> msgIterator) {
         MessageWritable incomingMsg;
-        while(msgIterator.hasNext()){
+        while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             //response to dead node
             EDGETYPE deadToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdgeList(deadToMeEdgetype).remove(incomingMsg.getSourceVertexId());
+            getVertexValue().getEdgeMap(deadToMeEdgetype).remove(incomingMsg.getSourceVertexId());
         }
     }
-    
+
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
-        if(getSuperstep() == 1){
-            initVertex(); 
+        if (getSuperstep() == 1) {
+            initVertex();
             detectLowCoverageVertex();
-        }
-        else if(getSuperstep() == 2){
-            if(deadNodeSet.contains(getVertexId())){
+        } else if (getSuperstep() == 2) {
+            if (deadNodeSet.contains(getVertexId())) {
                 cleanupDeadVertex();
             } else {
                 responseToDeadVertex(msgIterator);
             }
-        } 
+        }
         voteToHalt();
     }
-    
+
     public static void main(String[] args) throws Exception {
         Client.run(args, getConfiguredJob(null, RemoveLowCoverageVertex.class));
     }

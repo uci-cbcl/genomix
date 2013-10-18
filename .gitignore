@@ -9,7 +9,6 @@ edu.uci.ics.hyracks.control.nc.NodeControllerService
 exception
 teststore1
 teststore2
-checkingrepository
 dev1
 dev2
 dev3
@@ -22,3 +21,4 @@ output
 tmp
 dist
 .idea
+genomix/genomix-hadoop/data

@@ -45,7 +45,7 @@ public class RandomString {
 
         return new String(buf);
     }
-    
+
     public String nextString(int startIdx, int endIdx) {
         String tmp = "";
         for (int idx = startIdx; idx < endIdx;) {
@@ -72,7 +72,7 @@ public class RandomString {
         for (int i = 0; i < tmp.length; i++)
             buf[i] = tmp[i];
     }
-    
+
     public void addString(String s, int startIdx) {
         char[] tmp = s.toCharArray();
         for (int i = startIdx; i < tmp.length; i++)

@@ -29,7 +29,7 @@ public class TestSet {
     public final String RANDOM = "random";
     public final String SINGLEREAD = "singleread";
     public final String MULTIPLE_TANDEM_REPEAT = "multi_tandem_repeat";
-    
+
     public final String[] SRSET = { "HighSplitRepeat", "MidSplitRepeat", "LowSplitRepeat" };
     public final String[] TIPSET = { "Tips1", "Tips2", "Tips3", "Tips4" };
 
@@ -40,7 +40,8 @@ public class TestSet {
         SPLITREPEAT,
         BRIDGE,
         RANDOM,
-        SINGLEREAD, MULTIPLE_TANDEM_REPEAT
+        SINGLEREAD,
+        MULTIPLE_TANDEM_REPEAT
     }
 
     private DirType testSet;
@@ -124,7 +125,7 @@ public class TestSet {
         File src = new File(inputPrefix);
         ArrayList<String> outArray = new ArrayList<String>(src.listFiles().length);
         for (File f : src.listFiles()) {
-            if (!f.getName().contains(".DS_Store")){
+            if (!f.getName().contains(".DS_Store")) {
                 outArray.add(f.getPath().toString());
             }
         }

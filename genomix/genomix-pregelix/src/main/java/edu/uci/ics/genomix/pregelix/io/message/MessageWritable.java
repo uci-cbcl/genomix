@@ -6,43 +6,43 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {
-    
-    private VKmerBytesWritable sourceVertexId; // stores srcNode id
+
+    private VKmer sourceVertexId; // stores srcNode id
     private short flag; // stores message type
-    
-    public MessageWritable(){
-        sourceVertexId = new VKmerBytesWritable();
+
+    public MessageWritable() {
+        sourceVertexId = new VKmer();
         flag = 0;
     }
-    
-    public void setAsCopy(MessageWritable other){
+
+    public void setAsCopy(MessageWritable other) {
         setSourceVertexId(other.getSourceVertexId());
         flag = other.getFlag();
     }
-    
-    public void reset(){
+
+    public void reset() {
         sourceVertexId.reset(0);
         flag = 0;
     }
-    
+
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
         sbuilder.append(sourceVertexId.toString());
         sbuilder.append('}');
         return sbuilder.toString();
     }
-    
-    public VKmerBytesWritable getSourceVertexId() {
+
+    public VKmer getSourceVertexId() {
         return sourceVertexId;
     }
 
-    public void setSourceVertexId(VKmerBytesWritable sourceVertexId) {
+    public void setSourceVertexId(VKmer sourceVertexId) {
         this.sourceVertexId.setAsCopy(sourceVertexId);
     }
 
@@ -53,7 +53,6 @@ public class MessageWritable implements Writable, WritableSizable {
     public void setFlag(short flag) {
         this.flag = flag;
     }
-
 
     @Override
     public void readFields(DataInput in) throws IOException {

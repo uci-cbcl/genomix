@@ -1,41 +1,41 @@
 package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.genomix.type.EdgeListWritable;
-import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanInputFormat;
-import edu.uci.ics.genomix.pregelix.format.GraphCleanOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.GenericVertexToNodeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 
 /**
  * Testing tool: Add Bridge
- * Add some noise data/vertice to "good" graph 
+ * Add some noise data/vertice to "good" graph
+ * 
  * @author anbangx
- *
  */
-public class BridgeAddVertex extends
-        Vertex<VKmerBytesWritable, VertexValueWritable, NullWritable, MessageWritable> {
+public class BridgeAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;
     private int length = -1;
-    
-    private VKmerBytesWritable upBridge = new VKmerBytesWritable("ATA");
-    private VKmerBytesWritable downBridge = new VKmerBytesWritable("ACG");
-    private VKmerBytesWritable insertedBridge = new VKmerBytesWritable("GTA");
-    private EDGETYPE bridgeToUpDir = EDGETYPE.FR; 
-    private EDGETYPE bridgeToDownDir = EDGETYPE.RF; 
-    
+
+    private VKmer upBridge = new VKmer("ATA");
+    private VKmer downBridge = new VKmer("ACG");
+    private VKmer insertedBridge = new VKmer("GTA");
+    private EDGETYPE bridgeToUpDir = EDGETYPE.FR;
+    private EDGETYPE bridgeToDownDir = EDGETYPE.RF;
+
     /**
      * initiate kmerSize, maxIteration
      */
@@ -47,14 +47,14 @@ public class BridgeAddVertex extends
             length = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
     }
-    
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertBridge(EDGETYPE dirToUp, EdgeListWritable edgeListToUp, EDGETYPE dirToDown,
-            EdgeListWritable edgeListToDown, VKmerBytesWritable insertedBridge){
+    public void insertBridge(EDGETYPE dirToUp, EdgeMap edgeListToUp, EDGETYPE dirToDown, EdgeMap edgeListToDown,
+            VKmer insertedBridge) {
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
-        
+
         VertexValueWritable vertexValue = new VertexValueWritable(); //kmerSize
         /**
          * set the src vertex id
@@ -63,46 +63,38 @@ public class BridgeAddVertex extends
         /**
          * set the vertex value
          */
-        vertexValue.setEdgeList(dirToUp, edgeListToUp);
-        vertexValue.setEdgeList(dirToDown, edgeListToDown);
+        vertexValue.setEdgeMap(dirToUp, edgeListToUp);
+        vertexValue.setEdgeMap(dirToDown, edgeListToDown);
         vertex.setVertexValue(vertexValue);
-        
+
         addVertex(insertedBridge, vertex);
     }
-    
-    public EdgeListWritable getEdgeListFromKmer(VKmerBytesWritable kmer){
-        EdgeListWritable edgeList = new EdgeListWritable();
-        EdgeWritable newEdge = new EdgeWritable();
-        newEdge.setKey(kmer);
-        newEdge.appendReadID(0);
-        edgeList.add(newEdge);
+
+    public EdgeMap getEdgeListFromKmer(VKmer kmer) {
+        EdgeMap edgeList = new EdgeMap();
+        edgeList.put(kmer, new ReadIdSet(Arrays.asList(new Long(0))));
         return edgeList;
     }
-    
-    public void addEdgeToInsertedBridge(EDGETYPE dir, VKmerBytesWritable insertedBridge){
-        EdgeWritable newEdge = new EdgeWritable();
-        newEdge.setKey(insertedBridge);
-        newEdge.appendReadID(0);
-        getVertexValue().getEdgeList(dir).add(newEdge);
+
+    public void addEdgeToInsertedBridge(EDGETYPE dir, VKmer insertedBridge) {
+        getVertexValue().getEdgeMap(dir).put(insertedBridge, new ReadIdSet(Arrays.asList(new Long(0))));
     }
-    
+
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
         initVertex();
-        if(getSuperstep() == 1){
-            if(getVertexId().toString().equals("ATA")){
+        if (getSuperstep() == 1) {
+            if (getVertexId().toString().equals("ATA")) {
                 /** add edge pointing to inserted bridge **/
-                EDGETYPE upToBridgeDir = bridgeToUpDir.mirror(); 
+                EDGETYPE upToBridgeDir = bridgeToUpDir.mirror();
                 addEdgeToInsertedBridge(upToBridgeDir, insertedBridge);
-                
+
                 /** insert bridge **/
-                insertBridge(bridgeToUpDir, getEdgeListFromKmer(upBridge),
-                        bridgeToDownDir, getEdgeListFromKmer(downBridge), 
-                        insertedBridge);
-            } 
-            else if(getVertexId().toString().equals("ACG")){
+                insertBridge(bridgeToUpDir, getEdgeListFromKmer(upBridge), bridgeToDownDir,
+                        getEdgeListFromKmer(downBridge), insertedBridge);
+            } else if (getVertexId().toString().equals("ACG")) {
                 /** add edge pointing to new bridge **/
-                EDGETYPE downToBridgeDir = bridgeToDownDir.mirror(); 
+                EDGETYPE downToBridgeDir = bridgeToDownDir.mirror();
                 addEdgeToInsertedBridge(downToBridgeDir, insertedBridge);
             }
         }
@@ -115,10 +107,10 @@ public class BridgeAddVertex extends
         /**
          * BinaryInput and BinaryOutput
          */
-        job.setVertexInputFormatClass(GraphCleanInputFormat.class);
-        job.setVertexOutputFormatClass(GraphCleanOutputFormat.class);
+        job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
+        job.setVertexOutputFormatClass(GenericVertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
-        job.setOutputKeyClass(KmerBytesWritable.class);
+        job.setOutputKeyClass(Kmer.class);
         job.setOutputValueClass(VertexValueWritable.class);
         Client.run(args, job);
     }

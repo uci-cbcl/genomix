@@ -77,14 +77,14 @@ public class GenomixJobConfTest {
     @Test
     public void testFromArgs() {
         try {
-            String[] args = {"-kmerLength", "5", "-ip", "127.0.0.1", "-port", "55"};
+            String[] args = {"-kmerLength", "5", "-localInput", "file1"};
             GenomixJobConf.fromArguments(args);
         } catch(CmdLineException e) {
             Assert.fail("Config was valid-- shouldn't have thrown an error! Error was: " + e.getMessage());
         }
         
         try {
-            String[] args = {"-kmerLength", "2", "-ip", "127.0.0.1", "-port", "55"};
+            String[] args = {"-kmerLength", "2", "-localInput", "file1"};
             GenomixJobConf.fromArguments(args);
             Assert.fail("Should have thrown an exception (SHORT kmer)");
         } catch(IllegalArgumentException e) {
@@ -92,23 +92,9 @@ public class GenomixJobConfTest {
         }
         
         try {
-            String[] args = {"-ip", "127.0.0.1", "-port", "55"};
+            String[] args = {"-localInput", "file1"};
             GenomixJobConf.fromArguments(args);
             Assert.fail("Should have thrown an exception! (Missing Kmer!)");
-        } catch(CmdLineException e) {
-        }
-        
-        try {
-            String[] args = {"-kmerLength", "5", "-port", "55"};
-            GenomixJobConf.fromArguments(args);
-            Assert.fail("Should have thrown an exception! (Missing IP)");
-        } catch(CmdLineException e) {
-        }
-        
-        try {
-            String[] args = {"-kmerLength", "5", "-ip", "127.0.0.1"};
-            GenomixJobConf.fromArguments(args);
-            Assert.fail("Should have thrown an exception! (Missing port)");
         } catch(CmdLineException e) {
         }
         

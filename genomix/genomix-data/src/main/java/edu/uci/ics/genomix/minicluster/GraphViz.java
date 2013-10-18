@@ -68,6 +68,8 @@ import edu.uci.ics.genomix.config.OSValidator;
  * @version v0.1, 2003/12/04 (December) -- first release
  * @author Laszlo Szathmary (<a href="jabba.laci@gmail.com">jabba.laci@gmail.com</a>)
  */
+
+//TODO by Jianfeng: Using system dependent scrpit to generate the graph
 public class GraphViz {
     /**
      * The dir. where temporary files will be created.
@@ -78,7 +80,7 @@ public class GraphViz {
     /**
      * Where is your dot program located? It will be called externally.
      */
-//    private static String DOT = "dot"; // Linux
+    //    private static String DOT = "dot"; // Linux
     //   private static String DOT = "c:/Program Files/Graphviz2.26.3/bin/dot.exe";	// Windows
 
     /**
@@ -203,7 +205,7 @@ public class GraphViz {
             Runtime rt = Runtime.getRuntime();
 
             // patch by Mike Chenault
-            String DOT= OSValidator.getDotPath();
+            String DOT = OSValidator.getDotPath();
             String[] args = { DOT, "-T" + type, dot.getAbsolutePath(), "-o", img.getAbsolutePath() };
             Process p = rt.exec(args);
 

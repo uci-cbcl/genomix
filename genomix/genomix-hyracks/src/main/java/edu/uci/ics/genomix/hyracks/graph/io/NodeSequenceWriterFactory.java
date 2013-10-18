@@ -26,8 +26,8 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.AssembleKeyIntoNodeOperator;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -44,9 +44,9 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
     private static final long serialVersionUID = 1L;
     private final int kmerSize;
     private ConfFactory confFactory;
-    
+
     public static final int OutputNodeField = AssembleKeyIntoNodeOperator.OutputNodeField;
-    
+
     public NodeSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
         this.kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
@@ -60,12 +60,12 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
 
         ConfFactory cf;
         Writer writer = null;
-        NodeWritable node = new NodeWritable();
+        Node node = new Node();
 
         @Override
         public void open(DataOutput output) throws HyracksDataException {
             try {
-                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, NodeWritable.class,
+                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, Node.class,
                         NullWritable.class, CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
@@ -91,7 +91,7 @@ public class NodeSequenceWriterFactory implements ITupleWriterFactory {
     @Override
     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
             throws HyracksDataException {
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(kmerSize);
         return new TupleWriter(confFactory);
     }
 

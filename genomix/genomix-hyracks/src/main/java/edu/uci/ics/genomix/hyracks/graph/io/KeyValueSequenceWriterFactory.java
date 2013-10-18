@@ -25,9 +25,9 @@ import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -42,12 +42,11 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
      * Write the node to Text
      */
     private static final long serialVersionUID = 1L;
-    private final int kmerSize;
     private ConfFactory confFactory;
-    
+
     public KeyValueSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
-        this.kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
+        Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
     }
 
     public class TupleWriter implements ITupleWriter {
@@ -58,15 +57,14 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
 
         ConfFactory cf;
         Writer writer = null;
-        private NodeWritable outputNode = new NodeWritable();
-        private KmerBytesWritable tempKmer = new KmerBytesWritable();
-        private VKmerBytesWritable outputKey = new VKmerBytesWritable();
+        private Node outputNode = new Node();
+        private VKmer outputKey = new VKmer();
 
         @Override
         public void open(DataOutput output) throws HyracksDataException {
             try {
-                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, VKmerBytesWritable.class,
-                        NodeWritable.class, CompressionType.NONE, null);
+                writer = SequenceFile.createWriter(cf.getConf(), (FSDataOutputStream) output, VKmer.class, Node.class,
+                        CompressionType.NONE, null);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
             }
@@ -75,14 +73,13 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
         @Override
         public void write(DataOutput output, ITupleReference tuple) throws HyracksDataException {
             try {
-                if (tempKmer.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
+                if (outputKey.getLength() > tuple.getFieldLength(ReadsKeyValueParserFactory.OutputKmerField)) {
                     throw new IllegalArgumentException("Not enough kmer bytes");
                 }
-                tempKmer.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
+                outputKey.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputKmerField),
                         tuple.getFieldStart(ReadsKeyValueParserFactory.OutputKmerField));
                 outputNode.setAsReference(tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                         tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-                outputKey.setAsCopy(tempKmer);
                 writer.append(outputKey, outputNode);
             } catch (IOException e) {
                 throw new HyracksDataException(e);
@@ -98,7 +95,6 @@ public class KeyValueSequenceWriterFactory implements ITupleWriterFactory {
     @Override
     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
             throws HyracksDataException {
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
         return new TupleWriter(confFactory);
     }
 

@@ -12,7 +12,7 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.uci.ics.genomix.driver.GenomixDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
-import edu.uci.ics.genomix.type.KmerBytesWritable;
+import edu.uci.ics.genomix.type.Kmer;
 
 public class SingleLongReadCreateTool {
     /**
@@ -36,10 +36,10 @@ public class SingleLongReadCreateTool {
 
     private final Random random = new Random();
     private char[] buf;
-    private HashSet<KmerBytesWritable> nonDupSet;
+    private HashSet<Kmer> nonDupSet;
     private int k;
-    private KmerBytesWritable tempKmer;
-    private KmerBytesWritable tempReverseKmer;
+    private Kmer tempKmer;
+    private Kmer tempReverseKmer;
     private KmerDir curKmerDir = KmerDir.FORWARD;
     private String targetPath;
     
@@ -48,10 +48,10 @@ public class SingleLongReadCreateTool {
             throw new IllegalArgumentException("length < 1: " + length);
         buf = new char[length];
         this.k = kmerSize;
-        this.nonDupSet = new HashSet<KmerBytesWritable>(length);
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
-        tempKmer = new KmerBytesWritable();
-        tempReverseKmer = new KmerBytesWritable();
+        this.nonDupSet = new HashSet<Kmer>(length);
+        Kmer.setGlobalKmerLength(kmerSize);
+        tempKmer = new Kmer();
+        tempReverseKmer = new Kmer();
         targetPath = "longreadfortest" + File.separator + "singlelongread_1.fastq";
     }
 
@@ -69,7 +69,7 @@ public class SingleLongReadCreateTool {
                 switch (curKmerDir.toString()){
                     case "FORWARD":
                         if (!nonDupSet.contains(tempKmer)) {
-                            nonDupSet.add(new KmerBytesWritable(tempKmer));
+                            nonDupSet.add(new Kmer(tempKmer));
                             idx++;
                             count = 4;
                         } else if (count == 0) {
@@ -81,7 +81,7 @@ public class SingleLongReadCreateTool {
                         break;
                     case "REVERSE":
                         if (!nonDupSet.contains(tempReverseKmer)) {
-                            nonDupSet.add(new KmerBytesWritable(tempReverseKmer));
+                            nonDupSet.add(new Kmer(tempReverseKmer));
                             idx++;
                             count = 4;
                         } else if (count == 0) {

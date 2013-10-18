@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 
 @SuppressWarnings({ "deprecation", "unused" })
-public class GraphBuildingTestCase extends TestCase{
+public class GraphBuildingTestCase extends TestCase {
 
     private final String RESULT_PATH;
     private final String HADOOP_CONF_PATH;
@@ -27,10 +27,9 @@ public class GraphBuildingTestCase extends TestCase{
     private static final int COUNT_REDUCER = 1;
     private final int SIZE_KMER;
     private final int LINES_PERMAP;
-        
-    public GraphBuildingTestCase(String resultFileDir, String hadoopConfPath,
-            String hdfsInputPath, int kmerSize, int linesPerMap,
-            FileSystem dfs, JobConf conf){
+
+    public GraphBuildingTestCase(String resultFileDir, String hadoopConfPath, String hdfsInputPath, int kmerSize,
+            int linesPerMap, FileSystem dfs, JobConf conf) {
         super("test");
         this.RESULT_PATH = resultFileDir;
         this.HADOOP_CONF_PATH = hadoopConfPath;
@@ -40,13 +39,13 @@ public class GraphBuildingTestCase extends TestCase{
         this.dfs = dfs;
         this.conf = conf;
     }
-    
+
     private void waitawhile() throws InterruptedException {
         synchronized (this) {
             this.wait(20);
         }
     }
-    
+
     @Test
     public void test() throws Exception {
         setUp();
@@ -54,17 +53,17 @@ public class GraphBuildingTestCase extends TestCase{
         tearDown();
         waitawhile();
     }
-    
+
     public void TestMapKmerToNode() throws Exception {
         GenomixDriver driver = new GenomixDriver();
         driver.run(HDFS_INPUTPATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, LINES_PERMAP, true, HADOOP_CONF_PATH);
         dumpResult();
     }
-    
+
     private void dumpResult() throws Exception {
-//        Path src = new Path(RESULT_PATH);
-//        Path dest = new Path(RESULT_PATH);
-//        dfs.copyToLocalFile(src, dest);
+        //        Path src = new Path(RESULT_PATH);
+        //        Path dest = new Path(RESULT_PATH);
+        //        dfs.copyToLocalFile(src, dest);
         HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, RESULT_PATH + "/", false, conf, true, dfs);
         GenerateGraphViz.convertGraphBuildingOutputToGraphViz(RESULT_PATH + "/bin", RESULT_PATH + "/graphviz");
     }

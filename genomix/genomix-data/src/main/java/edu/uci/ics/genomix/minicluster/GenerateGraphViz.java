@@ -2,31 +2,31 @@ package edu.uci.ics.genomix.minicluster;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.uci.ics.genomix.type.EdgeWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.ReadIdSet;
+import edu.uci.ics.genomix.type.VKmer;
 
+//TODO by Jianfeng: move this to script
 public class GenerateGraphViz {
 
-	/**
+    /**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
      */
     public static void convertGraphBuildingOutputToGraphViz(String srcDir, String destDir) throws Exception {
         GraphViz gv = new GraphViz();
         gv.addln(gv.start_graph());
-        
+
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.getLocal(conf);
         File srcPath = new File(srcDir);
@@ -35,11 +35,11 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            VKmerBytesWritable key = new VKmerBytesWritable();
-            NodeWritable value = new NodeWritable();
-            
+            VKmer key = new VKmer();
+            Node value = new Node();
+
             gv.addln("rankdir=LR\n");
-            
+
             while (reader.next(key, value)) {
                 outputNode = "";
                 outputEdge = "";
@@ -52,19 +52,17 @@ public class GenerateGraphViz {
                 gv.addln(outputEdge);
                 /** add readIdSet **/
                 String fillColor = "";
-                if(value.isStartReadOrEndRead())
-                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
-                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() 
-                        + "|<f1> " + value.getStartReads().printStartReadIdSet() 
-                        + "|<f2> " + value.getEndReads().printEndReadIdSet()
-                        + "|<f3> " + value.getAvgCoverage() + "\"]\n";
+                if (value.isStartReadOrEndRead())
+                    fillColor = "fillcolor=\"grey\", style=\"filled\",";
+                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> " + "5':"
+                        + value.getStartReads().toReadIdString() + "|<f2> " + "~5'"
+                        + value.getEndReads().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
         }
-        
+
         gv.addln(gv.end_graph());
-        System.out.println(gv.getDotSource());
 
         String type = "svg";
         File folder = new File(destDir);
@@ -72,11 +70,11 @@ public class GenerateGraphViz {
         File out = new File(destDir + "/result." + type); // Linux
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
-    
+
     public static void convertGraphCleanOutputToGraphViz(String srcDir, String destDir) throws Exception {
         GraphViz gv = new GraphViz();
         gv.addln(gv.start_graph());
-        
+
         Configuration conf = new Configuration();
         FileSystem fileSys = FileSystem.getLocal(conf);
         File srcPath = new File(srcDir);
@@ -85,9 +83,9 @@ public class GenerateGraphViz {
         String outputEdge = "";
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-            VKmerBytesWritable key = (VKmerBytesWritable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-            NodeWritable value = (NodeWritable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-            
+            VKmer key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+            Node value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+
             gv.addln("rankdir=LR\n");
             while (reader.next(key, value)) {
                 outputNode = "";
@@ -101,68 +99,59 @@ public class GenerateGraphViz {
                 gv.addln(outputEdge);
                 /** add readIdSet **/
                 String fillColor = "";
-                if(value.isStartReadOrEndRead())
-                     fillColor = "fillcolor=\"grey\", style=\"filled\",";
-                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() 
-                        + "|<f1> " + value.getStartReads().printStartReadIdSet() 
-                        + "|<f2> " + value.getEndReads().printEndReadIdSet()
-                        + "|<f3> " + value.getAvgCoverage()
-                        + "|<f4> " + value.getInternalKmer() + "\"]\n";
+                if (value.isStartReadOrEndRead())
+                    fillColor = "fillcolor=\"grey\", style=\"filled\",";
+                outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> " + "5':"
+                        + value.getStartReads().toReadIdString() + "|<f2> " + "~5':"
+                        + value.getEndReads().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "|<f4> "
+                        + value.getInternalKmer() + "\"]\n";
                 gv.addln(outputNode);
             }
             reader.close();
         }
-        
+
         gv.addln(gv.end_graph());
-        System.out.println(gv.getDotSource());
 
         String type = "svg";
-//        File folder = new File(destDir);
-//        folder.mkdirs();
+        //        File folder = new File(destDir);
+        //        folder.mkdirs();
         File out = new File(destDir + "." + type); // Linux
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
-    
+
     /**
      * For graph building
+     * 
      * @param outputNode
      * @param value
      * @return
      */
-    public static String convertEdgeToGraph(String outputNode, NodeWritable value){
+    public static String convertEdgeToGraph(String outputNode, Node value) {
         String outputEdge = "";
-        Iterator<EdgeWritable> edgeIterator;
-        edgeIterator = value.getEdgeList(EDGETYPE.FF).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next(); 
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"black\" label =\"FF: " +
-                    edge.printReadIdSet() + "\"]\n";
-        }
-        edgeIterator = value.getEdgeList(EDGETYPE.FR).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"blue\" label =\"FR: " +
-                    edge.printReadIdSet() + "\"]\n";
-        }
-        edgeIterator = value.getEdgeList(EDGETYPE.RF).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"green\" label =\"RF: " +
-                    edge.printReadIdSet() + "\"]\n";
-        }
-        edgeIterator = value.getEdgeList(EDGETYPE.RR).iterator();
-        while(edgeIterator.hasNext()){
-            EdgeWritable edge = edgeIterator.next();
-            outputEdge += outputNode + " -> " + edge.getKey().toString() + "[color = \"red\" label =\"RR: " +
-                    edge.printReadIdSet() + "\"]\n";
+        for (EDGETYPE et : EDGETYPE.values()) {
+            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
+                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + getColor(et)
+                        + "\" label =\"" + et + ": " + e.getValue() + "\"]\n";
+            }
         }
         //TODO should output actualKmer instead of kmer
-        if(outputEdge == "")
+        if (outputEdge == "")
             outputEdge += outputNode;
         return outputEdge;
     }
 
-    public static void main(String[] args) throws Exception {
-        GenerateGraphViz.convertGraphCleanOutputToGraphViz("data/actual/bubbleadd/BubbleAddGraph/bin/5", "graphtest");
+    public static String getColor(EDGETYPE et) {
+        switch (et) {
+            case FF:
+                return "black";
+            case FR:
+                return "blue";
+            case RF:
+                return "green";
+            case RR:
+                return "red";
+            default:
+                throw new IllegalStateException("Invalid input Edge Type!!!");
+        }
     }
 }

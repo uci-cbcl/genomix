@@ -20,13 +20,9 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.logging.Logger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import edu.uci.ics.genomix.type.KmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable;
-import edu.uci.ics.genomix.type.VKmerBytesWritable;
-import edu.uci.ics.genomix.type.NodeWritable.EDGETYPE;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -52,10 +48,10 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults, IFrameWriter writer)
             throws HyracksDataException {
         final int frameSize = ctx.getFrameSize();
-        KmerBytesWritable.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(kmerSize);
         return new IAggregatorDescriptor() {
 
-            private NodeWritable readNode = new NodeWritable();
+            private Node readNode = new Node();
 //            private KmerBytesWritable readKmer = new KmerBytesWritable();
 
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
@@ -67,42 +63,23 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
             @Override
             public AggregateState createAggregateStates() {
-                return new AggregateState(new NodeWritable());
+                return new AggregateState(new Node());
             }
 
             @Override
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
                 localUniNode.reset();
 
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 
-//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
-//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
-//                        System.out.println("Global init before***********************************************************");
-//                        System.out.println("---------->readNode  "
-//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                        System.out.println("---------->localUniNode "
-//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                    }
-//                }
-                
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
+                    localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
-                localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
-                localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
+                localUniNode.getStartReads().addAll(readNode.getStartReads());
+                localUniNode.getEndReads().addAll(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
-//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
-//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
-//                        System.out.println("Global init after ***********************************************************");
-//                        System.out.println("---------->readNode  "
-//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                        System.out.println("---------->localUniNode "
-//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                    }
-//                }
             }
 
             @Override
@@ -113,35 +90,17 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             @Override
             public void aggregate(IFrameTupleAccessor accessor, int tIndex, IFrameTupleAccessor stateAccessor,
                     int stateTupleIndex, AggregateState state) throws HyracksDataException {
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
 //                readKmer.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 0));
                 readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 
-//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
-//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
-//                        System.out.println("Global before ***********************************************************");
-//                        System.out.println("---------->readNode  "
-//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                        System.out.println("---------->localUniNode "
-//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                    }
-//                }
                 
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-                    localUniNode.getEdgeList(e).unionUpdate(readNode.getEdgeList(e));
+                    localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
-                localUniNode.getStartReads().unionUpdate(readNode.getStartReads());
-                localUniNode.getEndReads().unionUpdate(readNode.getEndReads());
+                localUniNode.getStartReads().addAll(readNode.getStartReads());
+                localUniNode.getEndReads().addAll(readNode.getEndReads());
                 localUniNode.addCoverage(readNode);
-//                if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
-//                    if(readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 && readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString().contains("11934501")) {                        
-//                        System.out.println("Global after ***********************************************************");
-//                        System.out.println("---------->readNode  "
-//                                + (readNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? readNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                        System.out.println("---------->localUniNode "
-//                                + (localUniNode.getEdgeList(DirectionFlag.DIR_FR).getCountOfPosition() > 0 ? localUniNode.getEdgeList(DirectionFlag.DIR_FR).get(0).getReadIDs().toString() : "null"));
-//                    }
-//                }
             }
 
             @Override
@@ -154,7 +113,7 @@ public class MergeKmerAggregateFactory implements IAggregatorDescriptorFactory {
             public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 DataOutput fieldOutput = tupleBuilder.getDataOutput();
-                NodeWritable localUniNode = (NodeWritable) state.state;
+                Node localUniNode = (Node) state.state;
                 try {
                     if (localUniNode.getSerializedLength() > frameSize / 2) {
                         LOG.warning("MergeKmer: output data kmerByteSize is too big: " + localUniNode.getSerializedLength());
