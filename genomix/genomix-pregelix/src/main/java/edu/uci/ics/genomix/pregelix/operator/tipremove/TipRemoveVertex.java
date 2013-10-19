@@ -10,10 +10,10 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.Node.DIR;
 
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP

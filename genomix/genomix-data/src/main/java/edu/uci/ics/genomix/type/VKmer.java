@@ -25,7 +25,7 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.util.KmerUtil;
 import edu.uci.ics.genomix.util.Marshal;
 

@@ -132,7 +132,7 @@ public class HadoopMiniClusterTest {
                         break;
                     }
                     bw.write(key.toString() + "\t" + value.toString());
-//                    System.out.println(key.toString() + "\t" + value.toString());
+                    //                    System.out.println(key.toString() + "\t" + value.toString());
                     bw.newLine();
                     writer.append(key, value);
 
@@ -172,7 +172,7 @@ public class HadoopMiniClusterTest {
         dfsCluster = new MiniDFSCluster(conf, numberOfNC, true, null);
         dfs = dfsCluster.getFileSystem();
         mrCluster = new MiniMRCluster(4, dfs.getUri().toString(), 2);
-//        System.out.println(dfs.getUri().toString());
+        //        System.out.println(dfs.getUri().toString());
 
         DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF)));
         conf.writeXml(confOutput);
@@ -182,7 +182,7 @@ public class HadoopMiniClusterTest {
     protected static void copyLocalToDFS(String localSrc, String hdfsDest) throws IOException {
         Path dest = new Path(hdfsDest);
         dfs.mkdirs(dest);
-//        System.out.println("copying from " + localSrc + " to " + dest);
+        //        System.out.println("copying from " + localSrc + " to " + dest);
         for (File f : new File(localSrc).listFiles()) {
             dfs.copyFromLocalFile(new Path(f.getAbsolutePath()), dest);
         }

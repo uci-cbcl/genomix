@@ -17,8 +17,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
  * 
  * @author anbangx
  */
-public class BasicAggregator<V extends VertexValueWritable>
-        extends
+public class BasicAggregator<V extends VertexValueWritable> extends
         GlobalAggregator<VKmer, V, NullWritable, MessageWritable, V, V> {
 
     public static HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();

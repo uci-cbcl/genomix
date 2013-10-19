@@ -385,16 +385,16 @@ public class GenomixJobConf extends JobConf {
         
         // scaffolding
         if (getInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 20);
+            setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 2);
         
         if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 100);
+            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 15);
         
         if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 5);
+            setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 1);
         
         if (getInt(SCAFFOLDING_VERTEX_MIN_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 5);
+            setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
         
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));

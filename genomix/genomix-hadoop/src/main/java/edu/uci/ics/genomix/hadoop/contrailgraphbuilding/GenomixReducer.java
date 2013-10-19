@@ -10,7 +10,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**

@@ -95,7 +95,7 @@ public class GenomixDriver {
                 queuePregelixJob(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
                 break;
             case MERGE_P2:
-//                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
+                //                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
                 break;
             case MERGE:
             case MERGE_P4:
@@ -127,13 +127,12 @@ public class GenomixDriver {
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
-                if(runLocal){
+                if (runLocal) {
                     DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild); //?? why curOutput TODO
                     curOutput = prevOutput; // use previous job's output 
-                }
-                else{
+                } else {
                     dumpGraphWithHadoop(conf, curOutput, numCoresPerMachine * numMachines);
-                    if(Boolean.parseBoolean(conf.get(GenomixJobConf.GAGE)) == true){
+                    if (Boolean.parseBoolean(conf.get(GenomixJobConf.GAGE)) == true) {
                         DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
                     }
                     curOutput = prevOutput;
@@ -149,6 +148,7 @@ public class GenomixDriver {
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters);
                 curOutput = prevOutput; // use previous job's output
+                break;
         }
     }
 
@@ -230,13 +230,13 @@ public class GenomixDriver {
                 LOG.info("Finished job series in " + GenomixJobConf.tock("pregelix-runJobs"));
             }
             manager.stopCluster(ClusterType.PREGELIX);
+            pregelixJobs.clear();
         }
-        pregelixJobs.clear();
     }
-    
-    private void dumpGraphWithHadoop(GenomixJobConf conf, String outputPath, int numReducers) throws Exception{
+
+    private void dumpGraphWithHadoop(GenomixJobConf conf, String outputPath, int numReducers) throws Exception {
         LOG.info("Building dump Graph using Hadoop...");
-        
+
         manager.startCluster(ClusterType.HADOOP);
         GenomixJobConf.tick("dumpGraphWithHadoop");
 
@@ -246,7 +246,7 @@ public class GenomixDriver {
         manager.stopCluster(ClusterType.HADOOP);
         LOG.info("Dumping the graph took " + GenomixJobConf.tock("dumpGraphWithHadoop") + "ms");
     }
-    
+
     private void initGenomix(GenomixJobConf conf) throws Exception {
         GenomixJobConf.setGlobalStaticConstants(conf);
         DriverUtils.updateCCProperties(conf);
