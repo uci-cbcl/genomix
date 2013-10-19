@@ -1,10 +1,15 @@
 package edu.uci.ics.genomix.pregelix.io;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
+import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
@@ -35,7 +40,7 @@ public class VertexValueWritable extends Node {
     private short state;
     private boolean isFakeVertex;
     private HashMapWritable<ByteWritable, VLongWritable> counters;
-    
+
     public VertexValueWritable() {
         super();
         state = 0;
@@ -51,10 +56,12 @@ public class VertexValueWritable extends Node {
         counters.putAll(other.getCounters());
     }
 
-    public boolean isValidReadHead(int minCoverage, int minLength){
-        return getAverageCoverage() >= minCoverage && getInternalKmer().getLength() >= minLength;
+    public boolean isValidScaffoldingSearchNode() {
+        return (this.getStartReads().size() > 0 || this.getEndReads().size() > 0)
+                && (getAverageCoverage() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_COVERAGE && getInternalKmer()
+                        .getLength() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_LENGTH);
     }
-    
+
     public void setNode(Node node) {
         // TODO invertigate... does this need to be a copy?
         super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(), node.getInternalKmer(),
@@ -104,7 +111,7 @@ public class VertexValueWritable extends Node {
     public void setFakeVertex(boolean isFakeVertex) {
         this.isFakeVertex = isFakeVertex;
     }
-    
+
     // reuse isFakeVertex to store isSaved()
     public boolean isSaved() {
         return isFakeVertex;
@@ -140,9 +147,9 @@ public class VertexValueWritable extends Node {
         super.readFields(in);
         this.state = in.readShort();
         this.isFakeVertex = in.readBoolean();
-//        this.counters.readFields(in);
-//        scaffoldingMap.readFields(in);
-        
+        //        this.counters.readFields(in);
+        //        scaffoldingMap.readFields(in);
+
         if (DEBUG) {
             boolean verbose = false;
             for (VKmer problemKmer : problemKmers) {
@@ -160,9 +167,9 @@ public class VertexValueWritable extends Node {
         super.write(out);
         out.writeShort(this.state);
         out.writeBoolean(this.isFakeVertex);
-//        this.counters.write(out);
-//        scaffoldingMap.write(out);
-        
+        //        this.counters.write(out);
+        //        scaffoldingMap.write(out);
+
         if (DEBUG) {
             boolean verbose = false;
             for (VKmer problemKmer : problemKmers) {
@@ -215,6 +222,8 @@ public class VertexValueWritable extends Node {
 
     @Override
     public String toString() {
-        return super.toString() + " state: " + state + " which in P4 means will merge: " + ((getState() & State.MERGE) != 0) + ", mergeDir: " + EDGETYPE.fromByte(getState()) + ", restrictions: " + DIR.enumSetFromByte(getState());
+        return super.toString() + " state: " + state + " which in P4 means will merge: "
+                + ((getState() & State.MERGE) != 0) + ", mergeDir: " + EDGETYPE.fromByte(getState())
+                + ", restrictions: " + DIR.enumSetFromByte(getState());
     }
 }

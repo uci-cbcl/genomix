@@ -4,8 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.io.LongWritable;
+
+import edu.uci.ics.genomix.pregelix.io.SearchInfo;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
+import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
@@ -14,35 +18,35 @@ public class BFSTraverseMessage extends MessageWritable {
 
     private long readId; //use for BFSTravese
     private VKmerList pathList; //use for BFSTravese
-    private ArrayListWritable<EDGETYPE> edgeTypeList; //use for BFSTravese
-    private VKmer seekedVertexId; //use for BFSTravese
+    private EdgeTypeList edgeTypeList; //use for BFSTravese
+    private VKmer targetVertexId; //use for BFSTravese
     private READHEAD_ORIENTATION srcReadHeadOrientation; //use for BFSTravese
     private READHEAD_ORIENTATION destReadHeadOrientation; //use for BFSTravese
-    private boolean isTraverseMsg; //otherwise, it is final message for this path for adding readId to all path nodes
     private int totalBFSLength;
+    private HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap;
 
     public BFSTraverseMessage() {
         super();
         pathList = new VKmerList();
-        edgeTypeList = new ArrayListWritable<EDGETYPE>();
-        seekedVertexId = new VKmer();
+        edgeTypeList = new EdgeTypeList();
+        targetVertexId = new VKmer();
         readId = 0;
         srcReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
         destReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
-        isTraverseMsg = true;
         totalBFSLength = 0;
+        scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
     }
 
     public void reset() {
         super.reset();
         pathList.reset();
         edgeTypeList.clear();
-        seekedVertexId.reset(0);
+        targetVertexId.reset(0);
         readId = 0;
         srcReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
         destReadHeadOrientation = READHEAD_ORIENTATION.UNFLIPPED;
-        isTraverseMsg = true;
         totalBFSLength = 0;
+        scaffoldingMap.clear();
     }
 
     public VKmerList getPathList() {
@@ -53,21 +57,21 @@ public class BFSTraverseMessage extends MessageWritable {
         this.pathList = pathList;
     }
 
-    public ArrayListWritable<EDGETYPE> getEdgeTypeList() {
+    public EdgeTypeList getEdgeTypeList() {
         return edgeTypeList;
     }
 
-    public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeDirsList) {
+    public void setEdgeTypeList(EdgeTypeList edgeDirsList) {
         this.edgeTypeList.clear();
         this.edgeTypeList.addAll(edgeDirsList);
     }
 
-    public VKmer getSeekedVertexId() {
-        return seekedVertexId;
+    public VKmer getTargetVertexId() {
+        return targetVertexId;
     }
 
-    public void setSeekedVertexId(VKmer seekedVertexId) {
-        this.seekedVertexId.setAsCopy(seekedVertexId);
+    public void setTargetVertexId(VKmer targetVertexId) {
+        this.targetVertexId.setAsCopy(targetVertexId);
     }
 
     public long getReadId() {
@@ -94,20 +98,21 @@ public class BFSTraverseMessage extends MessageWritable {
         this.destReadHeadOrientation = destReadHeadOrientation;
     }
 
-    public boolean isTraverseMsg() {
-        return isTraverseMsg;
-    }
-
-    public void setTraverseMsg(boolean isTraverseMsg) {
-        this.isTraverseMsg = isTraverseMsg;
-    }
-    
     public int getTotalBFSLength() {
         return totalBFSLength;
     }
 
     public void setTotalBFSLength(int totalBFSLength) {
         this.totalBFSLength = totalBFSLength;
+    }
+    
+    public HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> getScaffoldingMap() {
+        return scaffoldingMap;
+    }
+
+    public void setScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap) {
+        this.scaffoldingMap.clear();
+        this.scaffoldingMap.putAll(scaffoldingMap);
     }
 
     @Override
@@ -116,12 +121,12 @@ public class BFSTraverseMessage extends MessageWritable {
         super.readFields(in);
         pathList.readFields(in);
         edgeTypeList.readFields(in);
-        seekedVertexId.readFields(in);
+        targetVertexId.readFields(in);
         readId = in.readLong();
         srcReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
         destReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
-        isTraverseMsg = in.readBoolean();
         totalBFSLength = in.readInt();
+        scaffoldingMap.readFields(in);
     }
 
     @Override
@@ -129,11 +134,11 @@ public class BFSTraverseMessage extends MessageWritable {
         super.write(out);
         pathList.write(out);
         edgeTypeList.write(out);
-        seekedVertexId.write(out);
+        targetVertexId.write(out);
         out.writeLong(readId);
         out.writeByte(srcReadHeadOrientation.get());
         out.writeByte(destReadHeadOrientation.get());
-        out.writeBoolean(isTraverseMsg);
         out.writeInt(totalBFSLength);
+        scaffoldingMap.write(out);
     }
 }

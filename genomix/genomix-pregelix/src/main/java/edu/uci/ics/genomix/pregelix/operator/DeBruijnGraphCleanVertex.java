@@ -12,17 +12,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.format.GenericVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -165,12 +165,12 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
             job = new PregelixJob(vertexClass.getSimpleName());
         else
             job = new PregelixJob(conf, vertexClass.getSimpleName());
-        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexClass(vertexClass);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(GenericVertexToNodeOutputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setOutputKeyClass(VKmer.class);
-        job.setOutputValueClass(VertexValueWritable.class);
+        job.setOutputValueClass(Node.class);
         job.setDynamicVertexValueSize(true);
         return job;
     }

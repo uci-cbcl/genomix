@@ -21,8 +21,7 @@ public class BinaryVertexInputFormat<I extends WritableComparable<?>, V extends 
         extends VertexInputFormat<I, V, E, M> {
 
     /** Uses the SequenceFileInputFormat to do everything */
-    @SuppressWarnings("rawtypes")
-    protected SequenceFileInputFormat binaryInputFormat = new SequenceFileInputFormat();
+    protected SequenceFileInputFormat<VKmer, Node> binaryInputFormat = new SequenceFileInputFormat<VKmer, Node>();
 
     /**
      * Abstract class to be implemented by the user based on their specific

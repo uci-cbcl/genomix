@@ -118,7 +118,7 @@ public class StartTasksWork extends AbstractWork {
                 if (LOGGER.isLoggable(Level.INFO)) {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
-                final int partition = tid.getPartition();
+                final int partition = tid.getPartition(); 
                 Task task = new Task(joblet, taId, han.getClass().getName(), ncs.getExecutor(), ncs);
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
 
