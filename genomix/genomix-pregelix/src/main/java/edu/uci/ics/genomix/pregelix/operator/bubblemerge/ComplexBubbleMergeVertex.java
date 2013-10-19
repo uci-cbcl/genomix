@@ -50,11 +50,11 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     //    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
 
     public void setEdgeListAndEdgeType(int i) {
-        incomingEdgeList.setAsCopy(getVertexValue().getEdgeMap(connectedTable[i][0]));
-        incomingEdgeType = connectedTable[i][0];
+        incomingEdgeList.setAsCopy(getVertexValue().getEdgeMap(validPathsTable[i][0]));
+        incomingEdgeType = validPathsTable[i][0];
 
-        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeMap(connectedTable[i][1]));
-        outgoingEdgeType = connectedTable[i][1];
+        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeMap(validPathsTable[i][1]));
+        outgoingEdgeType = validPathsTable[i][1];
     }
 
     /**
@@ -77,7 +77,7 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
         outFlag = 0;
         if (fakeVertex == null) {
             fakeVertex = new VKmer();
-            String random = generaterRandomString(kmerSize + 1);
+            String random = generaterRandomDNAString(kmerSize + 1);
             fakeVertex.setFromStringBytes(kmerSize + 1, random.getBytes(), 0);
         }
         if (getSuperstep() == 1)
