@@ -71,6 +71,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         File logDir = new File("logs");
+        FileUtils.forceMkdir(logDir);
         FileUtils.cleanDirectory(logDir);//TODO make it more general
         startHDFS();
     }
