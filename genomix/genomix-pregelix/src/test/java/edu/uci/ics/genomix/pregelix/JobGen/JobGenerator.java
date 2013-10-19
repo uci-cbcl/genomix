@@ -45,6 +45,43 @@ public class JobGenerator {
         job.setOutputValueClass(Node.class);
     }
     
+    /**
+     * Help Function
+     */
+    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
+        job.setVertexClass(TipAddVertex.class);
+        configureJob(job);
+        job.getConfiguration().setInt(BFSTraverseVertex.NUM_STEP_SIMULATION_END_BFS, 10);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+    
+    private static void genTipAddGraph() throws IOException {
+        generateTipAddGraphJob("TipAddGraph", outputBase + "TipAddGraph.xml");
+    }
+    
+    private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
+        job.setVertexClass(BridgeAddVertex.class);
+        configureJob(job);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBridgeAddGraph() throws IOException {
+        generateBridgeAddGraphJob("BridgeAddGraph", outputBase + "BridgeAddGraph.xml");
+    }
+    
+    private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
+        job.setVertexClass(BubbleAddVertex.class);
+        configureJob(job);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBubbleAddGraph() throws IOException {
+        generateBubbleAddGraphJob("BubbleAddGraph", outputBase + "BubbleAddGraph.xml");
+    }
+    
     private static void generateUnrollTandemRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = UnrollTandemRepeat.getConfiguredJob(new GenomixJobConf(3), UnrollTandemRepeat.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -62,7 +99,34 @@ public class JobGenerator {
     private static void genMapReduceGraph() throws IOException {
         generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
     }
+    
+    private static void generateBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = BFSTraverseVertex.getConfiguredJob(new GenomixJobConf(3), BFSTraverseVertex.class);
+        job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
+        job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
+        job.getConfiguration().setInt(BFSTraverseVertex.NUM_STEP_SIMULATION_END_BFS, 10);
+        job.getConfiguration().setInt(BFSTraverseVertex.MAX_TRAVERSAL_LENGTH, 10);
+        job.getConfiguration().set(BFSTraverseVertex.SOURCE, "AAT"); // source and destination are based on input file
+        job.getConfiguration().set(BFSTraverseVertex.DESTINATION, "AGA");
+        job.getConfiguration().setLong(BFSTraverseVertex.COMMOND_READID, 1);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
 
+    private static void getBFSTraverseGraph() throws IOException {
+        generateBFSTraverseGraphJob("BFSTraversegGraph", outputBase + "BFSTraverseGraph.xml");
+    }
+    
+    private static void generateSymmetryCheckerGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = SymmetryCheckerVertex.getConfiguredJob(new GenomixJobConf(3), SymmetryCheckerVertex.class);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genSymmetryCheckerGraph() throws IOException {
+        generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase + "SymmetryCheckerGraph.xml");
+    }
+    /**
+     * Main Function
+     */
     private static void generateP1ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = P1ForPathMergeVertex.getConfiguredJob(new GenomixJobConf(3), P1ForPathMergeVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -92,18 +156,6 @@ public class JobGenerator {
         generateRemoveLowCoverageGraphJob("RemoveLowCoverageGraph", outputBase + "RemoveLowCoverageGraph.xml");
     }
 
-    private static void generateTipAddGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-        job.setVertexClass(TipAddVertex.class);
-        configureJob(job);
-        job.getConfiguration().setInt(BFSTraverseVertex.NUM_STEP_SIMULATION_END_BFS, 10);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genTipAddGraph() throws IOException {
-        generateTipAddGraphJob("TipAddGraph", outputBase + "TipAddGraph.xml");
-    }
-
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = TipRemoveVertex.getConfiguredJob(new GenomixJobConf(3), TipRemoveVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -113,17 +165,6 @@ public class JobGenerator {
         generateTipRemoveGraphJob("TipRemoveGraph", outputBase + "TipRemoveGraph.xml");
     }
 
-    private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-        job.setVertexClass(BridgeAddVertex.class);
-        configureJob(job);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genBridgeAddGraph() throws IOException {
-        generateBridgeAddGraphJob("BridgeAddGraph", outputBase + "BridgeAddGraph.xml");
-    }
-
     private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = BridgeRemoveVertex.getConfiguredJob(new GenomixJobConf(3), BridgeRemoveVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -131,17 +172,6 @@ public class JobGenerator {
 
     private static void genBridgeRemoveGraph() throws IOException {
         generateBridgeRemoveGraphJob("BridgeRemoveGraph", outputBase + "BridgeRemoveGraph.xml");
-    }
-
-    private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
-        job.setVertexClass(BubbleAddVertex.class);
-        configureJob(job);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genBubbleAddGraph() throws IOException {
-        generateBubbleAddGraphJob("BubbleAddGraph", outputBase + "BubbleAddGraph.xml");
     }
 
     private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
@@ -163,22 +193,6 @@ public class JobGenerator {
         generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
     }
 
-    private static void generateBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = BFSTraverseVertex.getConfiguredJob(new GenomixJobConf(3), BFSTraverseVertex.class);
-        job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
-        job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
-        job.getConfiguration().setInt(BFSTraverseVertex.NUM_STEP_SIMULATION_END_BFS, 10);
-        job.getConfiguration().setInt(BFSTraverseVertex.MAX_TRAVERSAL_LENGTH, 10);
-        job.getConfiguration().set(BFSTraverseVertex.SOURCE, "AAT"); // source and destination are based on input file
-        job.getConfiguration().set(BFSTraverseVertex.DESTINATION, "AGA");
-        job.getConfiguration().setLong(BFSTraverseVertex.COMMOND_READID, 1);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void getBFSTraverseGraph() throws IOException {
-        generateBFSTraverseGraphJob("BFSTraversegGraph", outputBase + "BFSTraverseGraph.xml");
-    }
-
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = ScaffoldingVertex.getConfiguredJob(new GenomixJobConf(3), ScaffoldingVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -186,15 +200,6 @@ public class JobGenerator {
 
     private static void genScaffoldingGraph() throws IOException {
         generateScaffoldingGraphJob("ScaffoldingGraph", outputBase + "ScaffoldingGraph.xml");
-    }
-
-    private static void generateSymmetryCheckerGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = SymmetryCheckerVertex.getConfiguredJob(new GenomixJobConf(3), SymmetryCheckerVertex.class);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genSymmetryCheckerGraph() throws IOException {
-        generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase + "SymmetryCheckerGraph.xml");
     }
 
     public static void main(String[] args) throws IOException {
