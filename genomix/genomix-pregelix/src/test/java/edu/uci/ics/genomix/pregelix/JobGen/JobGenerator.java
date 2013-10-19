@@ -28,6 +28,7 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
@@ -52,7 +53,9 @@ public class JobGenerator {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(TipAddVertex.class);
         configureJob(job);
-        job.getConfiguration().setInt(BFSTraverseVertex.NUM_STEP_SIMULATION_END_BFS, 10);
+        job.getConfiguration().set(TipAddVertex.SPLIT_NODE, "CTA");
+        job.getConfiguration().set(TipAddVertex.INSERTED_TIP, "AGC");
+        job.getConfiguration().setInt(TipAddVertex.TIP_TO_SPLIT_EDGETYPE, EDGETYPE.RF.get());
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
     
