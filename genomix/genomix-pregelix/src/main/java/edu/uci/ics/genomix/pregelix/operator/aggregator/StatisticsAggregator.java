@@ -7,7 +7,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
  * 
  * @author anbangx
  */
-public class StatisticsAggregator
-        extends BasicAggregator<VertexValueWritable> {
+public class StatisticsAggregator extends BasicAggregator<VertexValueWritable> {
 
 }
