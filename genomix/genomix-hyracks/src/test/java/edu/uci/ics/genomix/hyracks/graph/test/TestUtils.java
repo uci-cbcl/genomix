@@ -55,8 +55,8 @@ public class TestUtils {
                 if (lineExpected == null) {
                     flag = false;
                 }
-                System.out.println(actualLine);
-                System.out.println(lineExpected);
+//                System.out.println(actualLine);
+//                System.out.println(lineExpected);
                 if (!equalStrings(lineExpected, actualLine)) {
                     flag = false;
                     System.out.println(lineExpected);

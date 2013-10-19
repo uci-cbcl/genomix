@@ -36,7 +36,7 @@ import edu.uci.ics.genomix.util.Marshal;
 public class Node implements Writable, Serializable {
 
     public static final Logger LOG = Logger.getLogger(Node.class.getName());
-    private static boolean DEBUG = true;
+    protected static boolean DEBUG = true;
     public static List<VKmer> problemKmers = new ArrayList<VKmer>();
 
     public enum READHEAD_ORIENTATION {
@@ -386,17 +386,17 @@ public class Node implements Writable, Serializable {
         n.internalKmer.write(out);
         out.writeFloat(n.averageCoverage);
 
-//        if (DEBUG) {
-//            boolean verbose = false;
-//            for (VKmer problemKmer : problemKmers) {
-//                verbose |= n.findEdge(problemKmer) != null;
-//            }
-//            if (verbose) {
-//                LOG.fine("write: " + n.toString());
-//            }
-//        }
+        //        if (DEBUG) {
+        //            boolean verbose = false;
+        //            for (VKmer problemKmer : problemKmers) {
+        //                verbose |= n.findEdge(problemKmer) != null;
+        //            }
+        //            if (verbose) {
+        //                LOG.fine("write: " + n.toString());
+        //            }
+        //        }
     }
-    
+
     @Override
     public void write(DataOutput out) throws IOException {
         write(this, out);

@@ -122,6 +122,11 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         curKmer = getVertexId();
         curHead = isNodeRandomHead(curKmer);
         checkNeighbors();
+        if (verbose) {
+            LOG.fine("choosing mergeDir: \ncurKmer: " + curKmer + "  curHead: " + curHead
+                    + "\nprevKmer: " + prevKmer + "  prevHead: " + prevHead
+                    + "\nnextKmer: " + nextKmer + "  nextHead: " + nextHead);
+        }
 
         if (!hasNext && !hasPrev) { // TODO check if logic for previous updates is the same as here (just look at internal flags?)
             voteToHalt(); // this node can never merge (restricted by neighbors or my structure)
@@ -159,8 +164,12 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             }
         }
         if (verbose) {
-            LOG.fine("Iteration " + getSuperstep() + "\r\n" + "Mark: Merge from " + getVertexId() + " towards "
-                    + (EDGETYPE.fromByte(getVertexValue().getState())) + "; node is " + getVertexValue());
+            if ((getVertexValue().getState() & State.MERGE) != 0) {
+                LOG.fine("Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
+                        + "; node is " + getVertexValue());
+            } else {
+                LOG.fine("Mark: No Merge for " + getVertexId() +" node is " + getVertexValue());
+            }
         }
     }
 
@@ -168,7 +177,10 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      * for P4
      */
     @Override
-    public void sendMergeMsg() {
+    public void sendMergeMsg(){
+        if (verbose) {
+            LOG.fine("Checking if I should send a merge message..." + getVertexValue());
+        }
         super.sendMergeMsg();
         if ((getVertexValue().getState() & State.MERGE) != 0) {
             deleteVertex(getVertexId());
@@ -186,28 +198,29 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
-        @SuppressWarnings("unused")
-        int numMerged = 0;
+//        int numMerged = 0;
         while (msgIterator.hasNext()) {
             PathMergeMessage incomingMsg = msgIterator.next();
-            if (verbose)
-                LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before merge: " + getVertexValue()
-                        + " restrictions: " + DIR.enumSetFromByte(state));
+            if (verbose) {
+                LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+            }
             senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
             node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
-            numMerged++;
+//            numMerged++;
             updated = true;
-            if (verbose)
+            if (verbose) {
                 LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
+            }
         }
         if (isTandemRepeat(getVertexValue())) {
             // tandem repeats can't merge anymore; restrict all future merges
             state |= DIR.FORWARD.get();
             state |= DIR.REVERSE.get();
             updated = true;
-            if (verbose)
+            if (verbose) {
                 LOG.fine("recieveMerges is a tandem repeat: " + getVertexId() + " " + getVertexValue());
+            }
             //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
         //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
@@ -224,6 +237,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void compute(Iterator<PathMergeMessage> msgIterator) throws HyracksDataException {
         initVertex();
+        if (verbose)
+            LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
         if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
             voteToHalt();
             return;
@@ -232,10 +247,11 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         if (getSuperstep() == 1) {
             restrictNeighbors();
         } else if (getSuperstep() % 2 == 0) {
-            if (getSuperstep() == 2)
+            if (getSuperstep() == 2) {
                 recieveRestrictions(msgIterator);
-            else
+            } else {
                 receiveMerges(msgIterator);
+            }
             chooseMergeDir();
             updateNeighbors();
         } else if (getSuperstep() % 2 == 1) {

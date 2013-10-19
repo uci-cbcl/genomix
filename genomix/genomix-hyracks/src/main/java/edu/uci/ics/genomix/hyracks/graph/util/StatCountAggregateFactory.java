@@ -18,6 +18,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
+import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -79,7 +80,7 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
         }
 
         @Override
-        public void outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+        public boolean outputPartialResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                 AggregateState state) throws HyracksDataException {
             int count = getCount(accessor, tIndex);
             DataOutput fieldOutput = tupleBuilder.getDataOutput();
@@ -89,7 +90,7 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
             } catch (IOException e) {
                 throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
             }
-
+            return true; // FIXME return type???
         }
 
         protected int getCount(IFrameTupleAccessor accessor, int tIndex) {
@@ -102,9 +103,9 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
         }
 
         @Override
-        public void outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
+        public boolean outputFinalResult(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                 AggregateState state) throws HyracksDataException {
-            outputPartialResult(tupleBuilder, accessor, tIndex, state);
+            return outputPartialResult(tupleBuilder, accessor, tIndex, state);
         }
 
         @Override
@@ -116,7 +117,7 @@ public class StatCountAggregateFactory implements IAggregatorDescriptorFactory {
 
     @Override
     public IAggregatorDescriptor createAggregator(IHyracksTaskContext ctx, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults)
+            RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults,  IFrameWriter writer)
             throws HyracksDataException {
         return new CountAggregator(keyFields);
     }

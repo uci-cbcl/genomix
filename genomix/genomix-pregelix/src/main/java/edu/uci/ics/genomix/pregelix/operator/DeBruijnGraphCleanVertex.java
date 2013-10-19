@@ -75,20 +75,22 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     }
 
     public void checkDebug() {
+        debug = getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null;
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmer>();
             if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
-                debug = true;
-                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
+                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(",")) {
                     problemKmers.add(new VKmer(kmer));
+                }
                 Node.problemKmers = problemKmers;
             }
         }
 
         verbose = false;
-        for (VKmer problemKmer : problemKmers)
+        for (VKmer problemKmer : problemKmers) {
             verbose |= debug
                     && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+        }
     }
 
     /**

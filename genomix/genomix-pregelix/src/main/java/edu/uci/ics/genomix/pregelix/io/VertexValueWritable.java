@@ -8,6 +8,7 @@ import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
+import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
@@ -148,6 +149,17 @@ public class VertexValueWritable extends Node {
         this.isFakeVertex = in.readBoolean();
         //        this.counters.readFields(in);
         //        scaffoldingMap.readFields(in);
+
+        if (DEBUG) {
+            boolean verbose = false;
+            for (VKmer problemKmer : problemKmers) {
+                verbose |= this.getInternalKmer().equals(problemKmer);
+                verbose |= findEdge(problemKmer) != null;
+            }
+            if (verbose) {
+                LOG.fine("VertexValue.readFields: " + toString());
+            }
+        }
     }
 
     @Override
@@ -157,6 +169,17 @@ public class VertexValueWritable extends Node {
         out.writeBoolean(this.isFakeVertex);
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
+
+        if (DEBUG) {
+            boolean verbose = false;
+            for (VKmer problemKmer : problemKmers) {
+                verbose |= this.getInternalKmer().equals(problemKmer);
+                verbose |= findEdge(problemKmer) != null;
+            }
+            if (verbose) {
+                LOG.fine("VertexValue.write: " + toString());
+            }
+        }
     }
 
     public int getDegree() {
@@ -199,6 +222,8 @@ public class VertexValueWritable extends Node {
 
     @Override
     public String toString() {
-        return super.toString();
+        return super.toString() + " state: " + state + " which in P4 means will merge: "
+                + ((getState() & State.MERGE) != 0) + ", mergeDir: " + EDGETYPE.fromByte(getState())
+                + ", restrictions: " + DIR.enumSetFromByte(getState());
     }
 }
