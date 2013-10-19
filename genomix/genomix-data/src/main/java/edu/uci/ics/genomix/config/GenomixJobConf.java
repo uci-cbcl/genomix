@@ -381,7 +381,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
         if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
-            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
+            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 1.0f);
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);

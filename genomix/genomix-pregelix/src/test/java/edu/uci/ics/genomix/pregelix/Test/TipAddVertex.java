@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.tipremove;
+package edu.uci.ics.genomix.pregelix.Test;
 
 import java.util.Arrays;
 import java.util.Iterator;
