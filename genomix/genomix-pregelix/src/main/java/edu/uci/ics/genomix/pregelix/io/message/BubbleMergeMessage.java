@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Comparator;
 
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -51,6 +52,16 @@ public class BubbleMergeMessage extends MessageWritable {
         majorToBubbleEdgetype = EDGETYPE.FF;
         minorToBubbleEdgetype = EDGETYPE.FF;
         topCoverageVertexId.reset(0);
+    }
+
+    public EdgeMap getMinorToBubbleEdgeMap() {
+        return node.getEdgeMap(getMinorToBubbleEdgetype().mirror());
+    }
+
+    public void addNewMajorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg) {
+        EDGETYPE majorToBubble = getMajorToBubbleEdgetype();
+        EdgeMap edgeMap = msg.getNode().getEdgeMap(majorToBubble.mirror());
+        getNode().setEdgeMap(sameOrientation ? majorToBubble : majorToBubble.mirror(), edgeMap);
     }
 
     public VKmer getMajorVertexId() {

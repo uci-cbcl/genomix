@@ -20,7 +20,7 @@ import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
-import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
@@ -36,8 +36,8 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 public class JobGenerator {
 
     public static String outputBase = "src/test/resources/jobs/";
-    
-    private static void configureJob(PregelixJob job){
+
+    private static void configureJob(PregelixJob job) {
         job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
@@ -45,7 +45,7 @@ public class JobGenerator {
         job.setOutputKeyClass(VKmer.class);
         job.setOutputValueClass(Node.class);
     }
-    
+
     /**
      * Help Function
      */
@@ -58,11 +58,11 @@ public class JobGenerator {
         job.getConfiguration().setInt(TipAddVertex.TIP_TO_SPLIT_EDGETYPE, EDGETYPE.RF.get());
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
-    
+
     private static void genTipAddGraph() throws IOException {
         generateTipAddGraphJob("TipAddGraph", outputBase + "TipAddGraph.xml");
     }
-    
+
     private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BridgeAddVertex.class);
@@ -73,7 +73,7 @@ public class JobGenerator {
     private static void genBridgeAddGraph() throws IOException {
         generateBridgeAddGraphJob("BridgeAddGraph", outputBase + "BridgeAddGraph.xml");
     }
-    
+
     private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = new PregelixJob(new GenomixJobConf(3), jobName);
         job.setVertexClass(BubbleAddVertex.class);
@@ -84,7 +84,7 @@ public class JobGenerator {
     private static void genBubbleAddGraph() throws IOException {
         generateBubbleAddGraphJob("BubbleAddGraph", outputBase + "BubbleAddGraph.xml");
     }
-    
+
     private static void generateUnrollTandemRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = UnrollTandemRepeat.getConfiguredJob(new GenomixJobConf(3), UnrollTandemRepeat.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -102,7 +102,7 @@ public class JobGenerator {
     private static void genMapReduceGraph() throws IOException {
         generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
     }
-    
+
     private static void generateBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = BFSTraverseVertex.getConfiguredJob(new GenomixJobConf(3), BFSTraverseVertex.class);
         job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
@@ -118,7 +118,7 @@ public class JobGenerator {
     private static void getBFSTraverseGraph() throws IOException {
         generateBFSTraverseGraphJob("BFSTraversegGraph", outputBase + "BFSTraverseGraph.xml");
     }
-    
+
     private static void generateSymmetryCheckerGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = SymmetryCheckerVertex.getConfiguredJob(new GenomixJobConf(3), SymmetryCheckerVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
@@ -127,6 +127,7 @@ public class JobGenerator {
     private static void genSymmetryCheckerGraph() throws IOException {
         generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase + "SymmetryCheckerGraph.xml");
     }
+
     /**
      * Main Function
      */
@@ -178,8 +179,8 @@ public class JobGenerator {
     }
 
     private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = ComplexBubbleMergeVertex.getConfiguredJob(new GenomixJobConf(3),
-                ComplexBubbleMergeVertex.class);
+        PregelixJob job = SimpleBubbleMergeVertex
+                .getConfiguredJob(new GenomixJobConf(3), SimpleBubbleMergeVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

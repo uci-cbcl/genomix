@@ -29,14 +29,14 @@ import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
     public static int kmerSize = -1;
 
-    private VKmer majorVertexId = new VKmer("ACA"); //forward
-    private VKmer middleVertexId = new VKmer("ATG"); //reverse
-    private VKmer minorVertexId = new VKmer("TCA"); //forward
-    private VKmer insertedBubble = new VKmer("ATA"); //reverse
-    private VKmer internalKmerInNewBubble = new VKmer("ATG");
-    private float coverageOfInsertedBubble = 1;
-    private EDGETYPE majorToNewBubbleDir = EDGETYPE.FR;
-    private EDGETYPE minorToNewBubbleDir = EDGETYPE.FR;
+    private VKmer majorVertexId = new VKmer("AAT"); //forward
+    private VKmer middleVertexId = new VKmer("ATA"); //forward
+    private VKmer minorVertexId = new VKmer("CTA"); //forward
+    private VKmer insertedBubble = new VKmer("AAA"); //forward
+    private VKmer internalKmerInNewBubble = new VKmer("AAA");
+    private float coverageOfInsertedBubble = 2;
+    private EDGETYPE newBubbleToMajorEdgetype = EDGETYPE.RR;
+    private EDGETYPE newBubbleToMinorEdgeType = EDGETYPE.FR;
 
     private EdgeMap[] edges = new EdgeMap[4];
 
@@ -86,8 +86,8 @@ public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
         for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
             edges[et.get()] = new EdgeMap();
         }
-        edges[majorToNewBubbleDir.get()].put(majorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
-        edges[minorToNewBubbleDir.get()].put(minorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
+        edges[newBubbleToMajorEdgetype.get()].put(majorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
+        edges[newBubbleToMinorEdgeType.get()].put(minorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
     }
 
     @Override
@@ -96,10 +96,10 @@ public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
         if (getSuperstep() == 1) {
             if (getVertexId().equals(majorVertexId)) {
                 /** add edge pointing to insertedBubble **/
-                addEdgeToInsertedBubble(majorToNewBubbleDir, insertedBubble);
+                addEdgeToInsertedBubble(newBubbleToMajorEdgetype, insertedBubble);
             } else if (getVertexId().equals(minorVertexId)) {
                 /** add edge pointing to insertedBubble **/
-                addEdgeToInsertedBubble(minorToNewBubbleDir, insertedBubble);
+                addEdgeToInsertedBubble(newBubbleToMinorEdgeType, insertedBubble);
             } else if (getVertexId().equals(middleVertexId)) {
                 /** setup edges of insertedBubble **/
                 setupEdgeForInsertedBubble();

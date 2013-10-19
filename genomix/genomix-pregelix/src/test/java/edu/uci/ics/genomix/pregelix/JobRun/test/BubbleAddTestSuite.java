@@ -7,9 +7,10 @@ public class BubbleAddTestSuite extends BasicGraphCleanTestSuite {
 
     public static Test suite() throws Exception {
         String pattern = "BubbleAdd";
-        String testSet[] = { "AdjFR" };
+        String testSet[] = { "3" };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
         return makeTestSuite(testSuite);
     }
 }
+  
