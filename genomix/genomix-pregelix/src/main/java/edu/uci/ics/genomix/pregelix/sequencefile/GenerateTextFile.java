@@ -34,7 +34,7 @@ public class GenerateTextFile {
                     break;
                 }
                 bw.write(key.toString() + "\t" + value.toString());
-                System.out.println(key.toString());
+//                System.out.println(key.toString());
                 bw.newLine();
             }
             reader.close();
