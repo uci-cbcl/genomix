@@ -4,6 +4,9 @@ import java.util.Iterator;
 
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 
 import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
@@ -22,6 +25,7 @@ import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.io.WritableSizable;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
 public class BasicBFSTraverseVertex extends
@@ -43,7 +47,7 @@ public class BasicBFSTraverseVertex extends
             fakeVertex.setFromStringBytes(1, fakeKmer.getBytes(), 0);
             if (!fakeVertexExist) {
                 // add a fake vertex
-                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+                Vertex<VKmer, ScaffoldingVertexValueWritable, NullWritable, BFSTraverseMessage> vertex = BspUtils.createVertex(getContext().getConfiguration());
 
                 ScaffoldingVertexValueWritable vertexValue = new ScaffoldingVertexValueWritable();
                 vertexValue.setFakeVertex(true);
