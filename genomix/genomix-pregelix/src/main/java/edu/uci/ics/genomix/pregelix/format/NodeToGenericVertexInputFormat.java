@@ -18,7 +18,7 @@ public abstract class NodeToGenericVertexInputFormat<V extends VertexValueWritab
 
     protected static class BinaryDataCleanLoadGraphReader<V extends VertexValueWritable> extends
             BinaryVertexReader<VKmer, V, NullWritable, MessageWritable> {
-        private Vertex vertex;
+        private Vertex<VKmer, V, NullWritable, MessageWritable> vertex;
         private VKmer vertexId = new VKmer();
         protected V vertexValue;
 
