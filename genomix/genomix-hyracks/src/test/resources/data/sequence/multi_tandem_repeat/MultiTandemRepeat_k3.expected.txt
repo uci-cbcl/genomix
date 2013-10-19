@@ -1,0 +1,1 @@
+CGC	{FF:{}	FR:{CGC=[1]}	RF:{CGC=[1]}	RR:{}	5':[1-0_0], ~5':[]	kmer:	cov:3.0x}

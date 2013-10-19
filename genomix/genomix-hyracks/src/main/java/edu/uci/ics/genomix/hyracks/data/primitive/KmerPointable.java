@@ -15,7 +15,6 @@
 
 package edu.uci.ics.genomix.hyracks.data.primitive;
 
-import edu.uci.ics.genomix.hyracks.data.accessors.KmerHashPartitioncomputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.data.std.api.AbstractPointable;
 import edu.uci.ics.hyracks.data.std.api.IComparable;
@@ -109,7 +108,7 @@ public final class KmerPointable extends AbstractPointable implements IHashable,
 
     @Override
     public int hash() {
-        int hash = KmerHashPartitioncomputerFactory.hashBytes(bytes, start, length);
+        int hash = KmerPartitionComputerFactory.hashBytes(bytes, start, length);
         return hash;
     }
 

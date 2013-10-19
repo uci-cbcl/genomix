@@ -17,6 +17,13 @@ package edu.uci.ics.genomix.hyracks.graph.job;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
+import org.apache.hadoop.io.SequenceFile.Writer;
+import org.apache.hadoop.mapred.InputSplit;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
@@ -32,37 +39,48 @@ import edu.uci.ics.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescr
 import edu.uci.ics.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriter;
 import edu.uci.ics.hyracks.hdfs.api.ITupleWriterFactory;
+import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSReadOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.dataflow.HDFSWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
-//TODO move it to test-code
-public class JobGenCheckReader extends JobGenOldBrujinGraph {
+public class JobGenReadLetterParser extends JobGen {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
+    private static final Logger LOG = Logger.getLogger(JobGenReadLetterParser.class.getName());
 
-    public JobGenCheckReader(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
+    public JobGenReadLetterParser(GenomixJobConf job, Scheduler scheduler, Map<String, NodeControllerInfo> ncMap,
             int numPartitionPerMachine) throws HyracksDataException {
         super(job, scheduler, ncMap, numPartitionPerMachine);
     }
 
     @Override
-    public JobSpecification generateJob() throws HyracksException {
+    public JobSpecification assignJob(JobSpecification jobSpec) throws HyracksException {
 
-        JobSpecification jobSpec = new JobSpecification();
-        logDebug("ReadKmer Operator");
-        HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec);
+        LOG.info("ReadKmer Operator");
 
-        logDebug("Write kmer to result");
-        generateRootByWriteKmerReader(jobSpec, readOperator);
+        HDFSReadOperatorDescriptor readOperator = createHDFSReader(jobSpec, super.hadoopJobConfFactory,
+                super.getInputSplit(), super.readSchedule);
 
+        LOG.info("Write kmer to result");
+        generateKmerWriter(jobSpec, readOperator);
         return jobSpec;
     }
 
-    public AbstractSingleActivityOperatorDescriptor generateRootByWriteKmerReader(JobSpecification jobSpec,
+    public static HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec, ConfFactory jobFactory,
+            InputSplit[] hdfsInputSplits, String[] readSchedule) throws HyracksDataException {
+        try {
+            return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
+                    jobFactory.getConf(), hdfsInputSplits, readSchedule, new ReadsKeyValueParserFactory());
+        } catch (Exception e) {
+            throw new HyracksDataException(e);
+        }
+    }
+
+    public AbstractSingleActivityOperatorDescriptor generateKmerWriter(JobSpecification jobSpec,
             HDFSReadOperatorDescriptor readOperator) throws HyracksException {
 
         HDFSWriteOperatorDescriptor writeKmerOperator = new HDFSWriteOperatorDescriptor(jobSpec,
@@ -73,14 +91,22 @@ public class JobGenCheckReader extends JobGenOldBrujinGraph {
                     @Override
                     public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
                             throws HyracksDataException {
-                        Kmer.setGlobalKmerLength(kmerSize); // TODO is this the right place for this?
+
                         return new ITupleWriter() {
 
                             private Node outputNode = new Node();
                             private Kmer outputKmer = new Kmer();
+                            private Writer writer;
 
                             @Override
                             public void open(DataOutput output) throws HyracksDataException {
+                                try {
+                                    writer = SequenceFile.createWriter(hadoopJobConfFactory.getConf(),
+                                            (FSDataOutputStream) output, Kmer.class, Node.class, CompressionType.NONE,
+                                            null);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
 
                             @Override
@@ -96,10 +122,7 @@ public class JobGenCheckReader extends JobGenOldBrujinGraph {
                                     outputNode.setAsReference(
                                             tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
-                                    output.write(outputKmer.toString().getBytes());
-                                    output.writeByte('\t');
-                                    output.write(outputNode.toString().getBytes());
-                                    output.writeByte('\n');
+                                    writer.append(outputKmer, outputNode);
                                 } catch (IOException e) {
                                     throw new HyracksDataException(e);
                                 }
@@ -114,9 +137,9 @@ public class JobGenCheckReader extends JobGenOldBrujinGraph {
                     }
 
                 });
+
         connectOperators(jobSpec, readOperator, ncNodeNames, writeKmerOperator, ncNodeNames,
                 new OneToOneConnectorDescriptor(jobSpec));
-        jobSpec.addRoot(writeKmerOperator);
         return writeKmerOperator;
     }
 
