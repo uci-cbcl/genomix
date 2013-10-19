@@ -35,7 +35,7 @@ public abstract class NodeToGenericVertexInputFormat<V extends VertexValueWritab
         public Vertex<VKmer, V, NullWritable, MessageWritable> getCurrentVertex() throws IOException,
                 InterruptedException {
             if (vertex == null)
-                vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+                vertex = BspUtils.createVertex(getContext().getConfiguration());
 
             vertex.getMsgList().clear();
             vertex.getEdges().clear();
