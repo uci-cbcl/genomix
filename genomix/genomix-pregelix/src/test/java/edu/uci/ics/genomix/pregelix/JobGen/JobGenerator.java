@@ -82,7 +82,7 @@ public class JobGenerator {
         job.getConfiguration().set(BubbleAddVertex.MIDDLE_VERTEXID, "ATA"); //forward
         job.getConfiguration().set(BubbleAddVertex.MINOR_VERTEXID, "CTA"); //forward
         job.getConfiguration().set(BubbleAddVertex.INSERTED_BUBBLE, "ACA"); //forward
-        job.getConfiguration().set(BubbleAddVertex.INTERNAL_KMER_IN_NEWBUBBLE, "TTC");
+        job.getConfiguration().set(BubbleAddVertex.INTERNAL_KMER_IN_NEWBUBBLE, "ATA");
         job.getConfiguration().setFloat(BubbleAddVertex.COVERAGE_OF_INSERTED_BUBBLE, 4.0f);
         job.getConfiguration().setLong(BubbleAddVertex.READID, 2);
         job.getConfiguration().setInt(BubbleAddVertex.NEWBUBBLE_TO_MAJOR_EDGETYPE, EDGETYPE.RR.get());

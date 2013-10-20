@@ -5,16 +5,12 @@ import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
@@ -22,8 +18,6 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
     @Override
     public void initVertex() {
         super.initVertex();
-        //        if(incomingMsg == null)
-        //            incomingMsg = new MessageWritable();
         if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
         else
@@ -37,29 +31,33 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
         outFlag = 0;
     }
 
+    /**
+     * check symmetry: A -> B, A'edgeMap should have B and B's corresponding edgeMap should have A
+     * otherwise, output error vertices
+     */
+    public void checkSymmetry(Iterator<MessageWritable> msgIterator) {
+        while (msgIterator.hasNext()) {
+            MessageWritable incomingMsg = msgIterator.next();
+            EDGETYPE neighborToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
+            boolean exist = getVertexValue().getEdgeMap(neighborToMe).containsKey(incomingMsg.getSourceVertexId());
+            if (!exist) {
+                getVertexValue().setState(State.IS_ERROR);
+            }
+        }
+    }
+
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
         if (getSuperstep() == 1) {
-            //            sendSettledMsgToAllNeighborNodes(getVertexValue());
-            voteToHalt();
+            sendSettledMsgToAllNeighborNodes(getVertexValue());
         } else if (getSuperstep() == 2) {
             //check if the corresponding edge exists
-            while (msgIterator.hasNext()) {
-                MessageWritable incomingMsg = msgIterator.next();
-                EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
-                EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
-                boolean exist = getVertexValue().getEdgeMap(neighborToMeDir).containsKey(
-                        incomingMsg.getSourceVertexId());
-                if (!exist) {
-                    getVertexValue().setState(State.IS_ERROR);
-                }
-            }
-            voteToHalt();
+            checkSymmetry(msgIterator);
         }
+        voteToHalt();
     }
 
-    
     public static PregelixJob getConfiguredJob(
             GenomixJobConf conf,
             Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
@@ -68,6 +66,5 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
         job.setVertexOutputFormatClass(CheckerOutputFormat.class);
         return job;
     }
-    
 
 }

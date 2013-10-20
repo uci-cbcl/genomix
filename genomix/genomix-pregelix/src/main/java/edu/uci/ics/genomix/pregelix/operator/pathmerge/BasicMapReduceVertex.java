@@ -54,8 +54,14 @@ public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathM
     public void reduceKeyByInternalKmer(Map<VKmer, VKmerList> kmerMapper) {
         for (VKmer key : kmerMapper.keySet()) {
             VKmerList kmerList = kmerMapper.get(key);
-            for (VKmer dest : kmerList) {
-                sendMsg(dest, outgoingMsg);
+            if(kmerList.size() > 1){
+                boolean isFirstOne = true;
+                for (VKmer dest : kmerList) {
+                    if(isFirstOne)
+                        isFirstOne = false;
+                    else
+                        sendMsg(dest, outgoingMsg);
+                }
             }
         }
     }
@@ -84,24 +90,11 @@ public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathM
         reduceKeyByInternalKmer(kmerMapper);
 
         //delele self(fake vertex)
-        fakeVertexExist = false;
         deleteVertex(fakeVertex);
+        fakeVertexExist = false;
     }
 
     @Override
     public void compute(Iterator<M> msgIterator) {
-        initVertex();
-        if (getSuperstep() == 1) {
-            addFakeVertex("A");
-        } else if (getSuperstep() == 2) {
-            sendMsgToFakeVertex();
-        } else if (getSuperstep() == 3) {
-            mapReduceInFakeVertex(msgIterator);
-        } else if (getSuperstep() == 4) {
-            broadcastKillself();
-        } else if (getSuperstep() == 5) {
-            pruneDeadEdges(msgIterator);
-            voteToHalt();
-        }
     }
 }
