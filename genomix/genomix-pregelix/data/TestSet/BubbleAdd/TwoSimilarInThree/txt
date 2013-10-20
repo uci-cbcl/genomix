@@ -1,5 +1,5 @@
-AAA	{[{AAC:[1]}]	[]	[]	[{CAA:[1]}]	{5':[], ~5':[]}	AAA	1.0x}
-AGA	{[{AAC:[]}]	[]	[]	[{CAA:[]}]	{5':[], ~5':[]}	AGA	2.0x}
-AAC	{[]	[]	[]	[{AAA:[1]},{AGA:[0]},{CCC:[0]}]	{5':[], ~5':[]}	AAC	1.0x}
-CAA	{[{AAA:[1]},{AGA:[0]},{CCC:[0]}]	[]	[]	[]	{5':[(1-0_0)], ~5':[]}	CAA	1.0x}
-CCC	{[{AAC:[]}]	[]	[]	[{CAA:[]}]	{5':[], ~5':[]}	CCC	2.0x}
+AAA	{FF:{}	FR:{CTA=[0]}	RF:{}	RR:{AAT=[0]}	5':[], ~5':[]	kmer:AAA	cov:2.0x}
+AGA	{FF:{}	FR:{CTA=[3]}	RF:{}	RR:{AAT=[3]}	5':[], ~5':[]	kmer:TTT	cov:3.0x}
+ATA	{FF:{}	FR:{CTA=[1]}	RF:{}	RR:{AAT=[1]}	5':[], ~5':[]	kmer:ATA	cov:1.0x}
+AAT	{FF:{AAA=[0], AGA=[3], ATA=[1]}	FR:{}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:AAT	cov:1.0x}
+CTA	{FF:{}	FR:{AAA=[0], AGA=[3], ATA=[1]}	RF:{}	RR:{}	5':[], ~5':[]	kmer:CTA	cov:1.0x}

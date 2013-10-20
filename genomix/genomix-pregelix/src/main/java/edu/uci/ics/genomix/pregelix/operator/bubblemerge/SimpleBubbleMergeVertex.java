@@ -217,6 +217,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                             break;
                         }
                     }
+                    break;
                 default:
                     throw new IllegalStateException("The received message types should have only two kinds: "
                             + MESSAGETYPE.REPLACE_NODE + " and " + MESSAGETYPE.KILL_SELF);

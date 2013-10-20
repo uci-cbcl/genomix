@@ -32,9 +32,10 @@ public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
     private VKmer majorVertexId = new VKmer("AAT"); //forward
     private VKmer middleVertexId = new VKmer("ATA"); //forward
     private VKmer minorVertexId = new VKmer("CTA"); //forward
-    private VKmer insertedBubble = new VKmer("AAA"); //forward
-    private VKmer internalKmerInNewBubble = new VKmer("AAA");
-    private float coverageOfInsertedBubble = 2;
+    private VKmer insertedBubble = new VKmer("ACA"); //forward
+    private VKmer internalKmerInNewBubble = new VKmer("TTC");
+    private float coverageOfInsertedBubble = 4;
+    private long readId = 2;
     private EDGETYPE newBubbleToMajorEdgetype = EDGETYPE.RR;
     private EDGETYPE newBubbleToMinorEdgeType = EDGETYPE.FR;
 
@@ -79,15 +80,15 @@ public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
 
     public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmer insertedBubble) {
         EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror();
-        getVertexValue().getEdgeMap(newBubbleToMeDir).put(insertedBubble, new ReadIdSet(Arrays.asList(new Long(0))));
+        getVertexValue().getEdgeMap(newBubbleToMeDir).put(insertedBubble, new ReadIdSet(Arrays.asList(new Long(readId))));
     }
 
     public void setupEdgeForInsertedBubble() {
         for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
             edges[et.get()] = new EdgeMap();
         }
-        edges[newBubbleToMajorEdgetype.get()].put(majorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
-        edges[newBubbleToMinorEdgeType.get()].put(minorVertexId, new ReadIdSet(Arrays.asList(new Long(0))));
+        edges[newBubbleToMajorEdgetype.get()].put(majorVertexId, new ReadIdSet(Arrays.asList(new Long(readId))));
+        edges[newBubbleToMinorEdgeType.get()].put(minorVertexId, new ReadIdSet(Arrays.asList(new Long(readId))));
     }
 
     @Override
