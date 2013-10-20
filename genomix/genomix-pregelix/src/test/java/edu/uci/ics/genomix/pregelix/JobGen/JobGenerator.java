@@ -8,11 +8,11 @@ import java.util.Random;
 import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.Test.BFSTraverseVertex;
-import edu.uci.ics.genomix.pregelix.Test.BridgeAddVertex;
-import edu.uci.ics.genomix.pregelix.Test.BubbleAddVertex;
-import edu.uci.ics.genomix.pregelix.Test.MapReduceVertex;
-import edu.uci.ics.genomix.pregelix.Test.TipAddVertex;
+import edu.uci.ics.genomix.pregelix.TestHelper.BFSTraverseVertex;
+import edu.uci.ics.genomix.pregelix.TestHelper.BridgeAddVertex;
+import edu.uci.ics.genomix.pregelix.TestHelper.BubbleAddVertex;
+import edu.uci.ics.genomix.pregelix.TestHelper.MapReduceVertex;
+import edu.uci.ics.genomix.pregelix.TestHelper.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;

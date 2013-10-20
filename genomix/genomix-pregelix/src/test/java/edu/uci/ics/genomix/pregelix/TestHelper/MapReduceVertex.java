@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.Test;
+package edu.uci.ics.genomix.pregelix.TestHelper;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;

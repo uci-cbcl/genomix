@@ -41,20 +41,22 @@ public class GraphBuildingTestSuite extends TestSuite {
     //            PreFix + File.separator + "AlreadyInEdgeList", PreFix + File.separator + "Cluster",
     //            PreFix + File.separator + "SameGeneCodeWithoutEdge", PreFix + File.separator + "SameGeneCodeWithEdge",
     //            PreFix + File.separator + "synthetic" };
-//    public static final String PreFix = "data/webmap/SplitRepeat_TestSet";
-//    public static final String[] TestDir = { PreFix + File.separator + "2to1", PreFix + File.separator + "3to1",
-//            PreFix + File.separator + "3to2", PreFix + File.separator + "AdjSplitRepeat",
-//            PreFix + File.separator + "AdjSplitRepeat_1to1", PreFix + File.separator + "AdjSplitRepeat_2to2",
-//            PreFix + File.separator + "AdjSplitRepeat_3to3", PreFix + File.separator + "ComplexSplitManyTimes",
-//            PreFix + File.separator + "SimpleSplitManyTimes", PreFix + File.separator + "SplitOnce",
-//            PreFix + File.separator + "SplitTwice" };
-    public static final String PreFix = "data/webmap/BubbleMerge_TestSet";
-    public static final String[] TestDir = { PreFix + File.separator + "FRandRF", PreFix + File.separator + "LtoL",
-            PreFix + File.separator + "LtoR", PreFix + File.separator + "RtoL",
-            PreFix + File.separator + "RtoR", PreFix + File.separator + "AdjFR",
-            PreFix + File.separator + "AdjSplitRepeat_3to3", PreFix + File.separator + "ComplexSplitManyTimes",
-            PreFix + File.separator + "SimpleSplitManyTimes", PreFix + File.separator + "SplitOnce",
-            PreFix + File.separator + "SplitTwice" };
+    //    public static final String PreFix = "data/webmap/SplitRepeat_TestSet";
+    //    public static final String[] TestDir = { PreFix + File.separator + "2to1", PreFix + File.separator + "3to1",
+    //            PreFix + File.separator + "3to2", PreFix + File.separator + "AdjSplitRepeat",
+    //            PreFix + File.separator + "AdjSplitRepeat_1to1", PreFix + File.separator + "AdjSplitRepeat_2to2",
+    //            PreFix + File.separator + "AdjSplitRepeat_3to3", PreFix + File.separator + "ComplexSplitManyTimes",
+    //            PreFix + File.separator + "SimpleSplitManyTimes", PreFix + File.separator + "SplitOnce",
+    //            PreFix + File.separator + "SplitTwice" };
+    //    public static final String PreFix = "data/webmap/BubbleMerge_TestSet";
+    //    public static final String[] TestDir = { PreFix + File.separator + "FRandRF", PreFix + File.separator + "LtoL",
+    //            PreFix + File.separator + "LtoR", PreFix + File.separator + "RtoL",
+    //            PreFix + File.separator + "RtoR", PreFix + File.separator + "AdjFR",
+    //            PreFix + File.separator + "AdjSplitRepeat_3to3", PreFix + File.separator + "ComplexSplitManyTimes",
+    //            PreFix + File.separator + "SimpleSplitManyTimes", PreFix + File.separator + "SplitOnce",
+    //            PreFix + File.separator + "SplitTwice" };
+    public static final String PreFix = "data/webmap/BridgeAdd_TestSet";
+    public static final String[] TestDir = { PreFix + File.separator + "TwoLines" };
 
     private static JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";

@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.Test;
+package edu.uci.ics.genomix.pregelix.TestHelper;
 
 import java.util.Iterator;
 
