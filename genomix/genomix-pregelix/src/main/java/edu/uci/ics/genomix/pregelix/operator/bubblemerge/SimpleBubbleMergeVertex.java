@@ -18,6 +18,7 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.NeighborInfo;
+import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
@@ -103,10 +104,13 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
 
-    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg) {
+    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, 
+            VKmer topKmer) {
         EdgeMap edgeMap = msg.getMinorToBubbleEdgeMap();
+        ReadIdSet newReadIds = edgeMap.get(getVertexId());
         EDGETYPE minorToBubble = msg.getMinorToBubbleEdgetype();
-        getVertexValue().setEdgeMap(sameOrientation ? minorToBubble : minorToBubble.flipNeighbor(), edgeMap);
+        getVertexValue().getEdgeMap(sameOrientation ? minorToBubble : minorToBubble.flipNeighbor()).get(topKmer)
+                .addAll(newReadIds);
     }
 
     public void processSimilarSet() {
@@ -132,12 +136,12 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     topNode.addFromNode(!sameOrientation, curMsg.getNode());
 
                     // 2. add curMsg.edge in minToBubbleEdgetype to minorVertex
-                    addNewMinorToBubbleEdges(sameOrientation, curMsg);
-                    
+                    addNewMinorToBubbleEdges(sameOrientation, curMsg, topMsg.getSourceVertexId());
+
                     // 3. send message to add curMsg.edge in majorToBubbleEdgetype to majorVertex
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(MESSAGETYPE.ADD_READIDS.get());
-                    outgoingMsg.addNewMajorToBubbleEdges(sameOrientation, curMsg);
+                    outgoingMsg.addNewMajorToBubbleEdges(sameOrientation, curMsg, topMsg.getSourceVertexId());
                     sendMsg(curMsg.getMajorVertexId(), outgoingMsg);
 
                     // 4. send message to delete vertices -- for deletedSet
@@ -204,6 +208,15 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     broadcastKillself();
                     deleteVertex(getVertexId());
                     break;
+                case ADD_READIDS:
+                    for (EDGETYPE et : EDGETYPE.values()) {
+                        EdgeMap edgeMap = incomingMsg.getNode().getEdgeMap(et);
+                        if (edgeMap.size() > 0){
+                            getVertexValue().getEdgeMap(et).unionUpdate(edgeMap);
+                            activate();
+                            break;
+                        }
+                    }
                 default:
                     throw new IllegalStateException("The received message types should have only two kinds: "
                             + MESSAGETYPE.REPLACE_NODE + " and " + MESSAGETYPE.KILL_SELF);
