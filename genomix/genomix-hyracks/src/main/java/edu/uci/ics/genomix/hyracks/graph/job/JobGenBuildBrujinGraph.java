@@ -27,6 +27,7 @@ import edu.uci.ics.genomix.hyracks.graph.dataflow.AggregateKmerAggregateFactory;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ConnectorPolicyAssignmentPolicy;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.KmerNodePairSequenceWriterFactory;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -102,8 +103,9 @@ public class JobGenBuildBrujinGraph extends JobGen {
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
-        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(),
-                new AggregateKmerAggregateFactory(), new KmerPartitionComputerFactory(),
+        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields,
+                new AggregateKmerAggregateFactory(Kmer.getKmerLength()),
+                new AggregateKmerAggregateFactory(Kmer.getKmerLength()), new KmerPartitionComputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         connectOperators(jobSpec, sorter, ncNodeNames, kmerLocalAggregator, ncNodeNames,

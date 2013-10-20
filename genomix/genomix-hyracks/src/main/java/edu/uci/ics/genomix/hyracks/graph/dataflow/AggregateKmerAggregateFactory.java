@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.logging.Logger;
 
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
@@ -41,7 +42,10 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
     private static final Logger LOG = Logger.getLogger(AggregateKmerAggregateFactory.class.getName());
 
-    public AggregateKmerAggregateFactory() {
+    private final int kmerLength;
+
+    public AggregateKmerAggregateFactory(int k) {
+        kmerLength = k;
     }
 
     @Override
@@ -49,9 +53,11 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults, IFrameWriter writer)
             throws HyracksDataException {
         final int frameSize = ctx.getFrameSize();
+        Kmer.setGlobalKmerLength(kmerLength);
+
         return new IAggregatorDescriptor() {
 
-            private Node readNode = new Node();
+            private Node readNode = new Node(); 
 
             protected int getOffSet(IFrameTupleAccessor accessor, int tIndex, int fieldId) {
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
@@ -78,8 +84,9 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 Node localUniNode = (Node) state.state;
+                
                 localUniNode.reset();
-                readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.
                 //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
@@ -109,7 +116,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
                 Node localUniNode = (Node) state.state;
 
-                readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }

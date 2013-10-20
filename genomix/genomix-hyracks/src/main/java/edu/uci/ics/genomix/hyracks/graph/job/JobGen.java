@@ -56,7 +56,6 @@ public abstract class JobGen implements Serializable {
 
     protected String[] readSchedule;
 
-    protected int kmerSize;
     protected int frameLimits;
     protected int frameSize;
     protected String jobId = new UUID(System.currentTimeMillis(), System.nanoTime()).toString();
@@ -95,8 +94,7 @@ public abstract class JobGen implements Serializable {
 
     protected void initGenomixConfiguration() throws HyracksDataException {
         Configuration conf = hadoopJobConfFactory.getConf();
-        kmerSize = Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH));
-        Kmer.setGlobalKmerLength(kmerSize);
+        Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
     }
