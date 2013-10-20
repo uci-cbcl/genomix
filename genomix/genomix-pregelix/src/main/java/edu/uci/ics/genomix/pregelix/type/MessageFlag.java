@@ -10,7 +10,8 @@ public class MessageFlag {
         TO_NEIGHBOR((byte) (0b010 << 4)),
         REPLACE_NODE((byte) (0b011 << 4)),
         KILL_SELF((byte) (0b100 << 4)),
-        FROM_DEAD((byte) (0b101 << 4));
+        FROM_DEAD((byte) (0b101 << 4)),
+        ADD_READIDS((byte) (0b111 << 4));
 
         public static final byte MASK = (byte) (0b111 << 4);
         public static final byte CLEAR = (byte) (0b0001111);
@@ -37,6 +38,8 @@ public class MessageFlag {
                 return KILL_SELF;
             if (b == FROM_DEAD.val)
                 return FROM_DEAD;
+            if (b == ADD_READIDS.val)
+                return ADD_READIDS;
             return null;
 
         }

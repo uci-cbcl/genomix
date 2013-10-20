@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -48,11 +47,11 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         tmpValue.getEdgeMap(repeatEdgetype).remove(repeatKmer);
         boolean hasFlip = false;
         // pick one edge and flip 
-        for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
+        for (EDGETYPE et : EDGETYPE.values()) {
             for (Entry<VKmer, ReadIdSet> edge : tmpValue.getEdgeMap(et).entrySet()) {
-                EDGETYPE flipDir = et.flipNeighbor();
-                tmpValue.getEdgeMap(flipDir).put(edge.getKey(), edge.getValue());
-                tmpValue.getEdgeMap(et).remove(edge);
+                EDGETYPE flipEt = et.flipNeighbor();
+                tmpValue.getEdgeMap(flipEt).put(edge.getKey(), edge.getValue());
+                tmpValue.getEdgeMap(et).remove(edge.getKey());
                 // setup hasFlip to go out of the loop 
                 hasFlip = true;
                 break;
@@ -111,7 +110,7 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
         if (getSuperstep() == 1) {
-            if (isTandemRepeat(getVertexValue()) && repeatCanBeMerged()) {
+            if (isTandemRepeat(getVertexValue())) { // && repeatCanBeMerged()
                 mergeTandemRepeat();
                 //set statistics counter: Num_TandemRepeats
                 incrementCounter(StatisticsCounter.Num_TandemRepeats);

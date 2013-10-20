@@ -1,0 +1,2 @@
+ATA	{FF:{}	FR:{}	RF:{}	RR:{AAT=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
+AAT	{FF:{ATA=[1]}	FR:{}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:	cov:1.0x}

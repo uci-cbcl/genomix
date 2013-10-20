@@ -57,6 +57,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
                 }
             }
         }
+        voteToHalt();
     }
 
     /**
@@ -69,6 +70,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
             //count #receivedMsg
             int count = 0;
             while (msgIterator.hasNext()) {
+                msgIterator.next();
                 if (count == 3)
                     break;
                 count++;
@@ -77,6 +79,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
             if (count == 2) { //I'm bridge vertex
                 if (vertex.getKmerLength() < MIN_LENGTH_TO_KEEP) {
                     broadcastKillself();
+                    deleteVertex(getVertexId());
                     //set statistics counter: Num_RemovedBridges
                     incrementCounter(StatisticsCounter.Num_RemovedBridges);
                     getVertexValue().setCounters(counters);
@@ -87,8 +90,8 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
+        initVertex();
         if (getSuperstep() == 1) {
-            initVertex();
             detectBridgeNeighbor();
         } else if (getSuperstep() == 2) {
             removeBridge(msgIterator);
