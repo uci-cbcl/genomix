@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.data.accessors;
+package edu.uci.ics.genomix.hyracks.data.primitive;
 
-import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 

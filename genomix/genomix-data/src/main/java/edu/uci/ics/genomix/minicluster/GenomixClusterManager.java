@@ -19,6 +19,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
@@ -76,10 +77,20 @@ public class GenomixClusterManager {
     private boolean jarsCopiedToHadoop = false;
 
     private HashMap<ClusterType, Thread> shutdownHooks = new HashMap<ClusterType, Thread>();
+    private int numberDataNodes = 1; // Number of DataNodes in the mini hdfs setting
+    private int numberNC = 1; // Number of NC in local hyracks/pregelix setting.
 
     public GenomixClusterManager(boolean runLocal, GenomixJobConf conf) {
         this.runLocal = runLocal;
         this.conf = conf;
+    }
+
+    public void setNumberOfDataNodesInLocalMiniHDFS(int number) {
+        numberDataNodes = number;
+    }
+
+    public void setNumberOfNC(int number) {
+        numberNC = number;
     }
 
     /**
@@ -93,7 +104,9 @@ public class GenomixClusterManager {
             case PREGELIX:
                 if (runLocal) {
                     startLocalCC(clusterType);
-                    startLocalNC(clusterType);
+                    for (int i = 0; i < numberNC; i++) {
+                        startLocalNC(clusterType, i);
+                    }
                 } else {
                     int sleepms = Integer.parseInt(conf.get(GenomixJobConf.CLUSTER_WAIT_TIME));
                     startCC(sleepms);
@@ -182,7 +195,7 @@ public class GenomixClusterManager {
         }
     }
 
-    private void startLocalNC(ClusterType clusterType) throws Exception {
+    private void startLocalNC(ClusterType clusterType, int id) throws Exception {
         LOG.info("Starting local NC...");
         // ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home")
         // + "/conf/cluster.properties");
@@ -192,7 +205,7 @@ public class GenomixClusterManager {
         ncConfig.clusterNetIPAddress = LOCAL_HOSTNAME;
         ncConfig.dataIPAddress = LOCAL_IP;
         ncConfig.datasetIPAddress = LOCAL_IP;
-        ncConfig.nodeId = "nc-" + clusterType;
+        ncConfig.nodeId = "nc-" + clusterType + "-id-" + id;
         ncConfig.ioDevices = "tmp" + File.separator + "t3" + File.separator + clusterType;
 
         if (clusterType == ClusterType.HYRACKS) {
@@ -211,7 +224,8 @@ public class GenomixClusterManager {
 
     private void startLocalMRCluster() throws IOException {
         LOG.info("Starting local DFS and MR cluster...");
-        localDFSCluster = new MiniDFSCluster(conf, 1, true, null);
+        System.setProperty("hadoop.log.dir", "logs");
+        localDFSCluster = new MiniDFSCluster(conf, numberDataNodes, true, null);
         localMRCluster = new MiniMRCluster(1, localDFSCluster.getFileSystem().getUri().toString(), 1);
     }
 
@@ -361,6 +375,16 @@ public class GenomixClusterManager {
         LOG.info("Copy took " + GenomixJobConf.tock("copyLocalToHDFS") + "ms");
     }
 
+    /**
+     * Copy the file from hdfs and transform the binary format into text format.
+     * The original bin files are stored in the {@code localDestDir}/bin folder.
+     * The transformed text files are stored in the {@code localDestDir}/data file.
+     * 
+     * @param conf
+     * @param hdfsSrcDir
+     * @param localDestDir
+     * @throws IOException
+     */
     public static void copyBinToLocal(JobConf conf, String hdfsSrcDir, String localDestDir) throws IOException {
         LOG.info("Copying HDFS directory " + hdfsSrcDir + " to local: " + localDestDir);
         GenomixJobConf.tick("copyBinToLocal");
@@ -370,7 +394,7 @@ public class GenomixClusterManager {
         // save original binary to output/bin
         dfs.copyToLocalFile(new Path(hdfsSrcDir), new Path(localDestDir + File.separator + "bin"));
 
-        // convert hdfs sequence files to text as output/text
+        // convert hdfs sequence files to text as output/data
         BufferedWriter bw = null;
         SequenceFile.Reader reader = null;
         Writable key = null;
@@ -391,7 +415,7 @@ public class GenomixClusterManager {
                         bw.newLine();
                     }
                 } catch (Exception e) {
-                    System.out.println("Encountered an error copying " + f + " to local:\n" + e);
+                    System.err.println("Encountered an error copying " + f + " to local:\n" + e);
                 } finally {
                     if (reader != null)
                         reader.close();

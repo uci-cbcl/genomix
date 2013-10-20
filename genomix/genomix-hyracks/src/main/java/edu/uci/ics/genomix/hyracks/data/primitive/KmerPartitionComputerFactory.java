@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.data.accessors;
+package edu.uci.ics.genomix.hyracks.data.primitive;
 
 import java.nio.ByteBuffer;
 
@@ -21,7 +21,7 @@ import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import edu.uci.ics.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 
-public class KmerHashPartitioncomputerFactory implements ITuplePartitionComputerFactory {
+public class KmerPartitionComputerFactory implements ITuplePartitionComputerFactory {
 
     private static final long serialVersionUID = 1L;
 

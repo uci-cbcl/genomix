@@ -43,16 +43,15 @@ import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
-    //    private static final Logger LOG = Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
+    // private static final Logger LOG =
+    // Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
 
     public static final int OutputKmerField = 0;
     public static final int OutputNodeField = 1;
 
-    public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[] { null,
-            null });
+    public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
-    public ReadsKeyValueParserFactory(int k) {
-        Kmer.setGlobalKmerLength(k);
+    public ReadsKeyValueParserFactory() {
     }
 
     @Override
@@ -85,24 +84,39 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 byte mateId = basename.endsWith("_2" + extension) ? (byte) 1 : (byte) 0;
                 boolean fastqFormat = false;
                 if (extension.contains("fastq") || extension.contains("fq")) {
-                    //TODO make NLineInputFormat works on hyracks HDFS reader
-                    //                    if (! (job.getInputFormat() instanceof NLineInputFormat)) {
-                    //                        throw new IllegalStateException("Fastq files require the NLineInputFormat (was " + job.getInputFormat() + " ).");
-                    //                    }
-                    //                    if (job.getInt("mapred.line.input.format.linespermap", -1) % 4 != 0) {
-                    //                        throw new IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was " + job.get("mapred.line.input.format.linespermap") + ").");
-                    //                    }
+                    // TODO make NLineInputFormat works on hyracks HDFS reader
+                    // if (! (job.getInputFormat() instanceof NLineInputFormat))
+                    // {
+                    // throw new
+                    // IllegalStateException("Fastq files require the NLineInputFormat (was "
+                    // + job.getInputFormat() + " ).");
+                    // }
+                    // if (job.getInt("mapred.line.input.format.linespermap",
+                    // -1) % 4 != 0) {
+                    // throw new
+                    // IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was "
+                    // + job.get("mapred.line.input.format.linespermap") +
+                    // ").");
+                    // }
                     fastqFormat = true;
                 }
 
                 long readID = 0;
                 String geneLine;
                 if (fastqFormat) {
-                    //FIXME : this is offset == readid only works on the only one input file, one solution: put the filename into the part of the readid
-                    readID = key.get(); //TODO check: this is actually the offset into the file... will it be the same across all files?? //
+                    // FIXME : this is offset == readid only works on the only
+                    // one input file, one solution: put the filename into the
+                    // part of the readid
+                    readID = key.get(); // TODO check: this is actually the
+                                        // offset into the file... will it be
+                                        // the same across all files?? //
                     geneLine = value.toString().trim();
                 } else {
-                    String[] rawLine = value.toString().split("\\t"); // Read the Real Gene Line
+                    String[] rawLine = value.toString().split("\\t"); // Read
+                                                                      // the
+                                                                      // Real
+                                                                      // Gene
+                                                                      // Line
                     if (rawLine.length != 2) {
                         throw new HyracksDataException("invalid data");
                     }
@@ -119,7 +133,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             }
 
             private void SplitReads(long readID, byte[] readLetters, IFrameWriter writer) {
-                /*first kmer*/
+                /* first kmer */
                 if (Kmer.getKmerLength() >= readLetters.length) {
                     throw new IllegalArgumentException("kmersize (k=" + Kmer.getKmerLength()
                             + ") is larger than the read length (" + readLetters.length + ")");
@@ -140,11 +154,11 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
                 DIR nextNodeDir = DIR.FORWARD;
 
-                /*middle kmer*/
+                /* middle kmer */
+                nextNode.reset();
+                nextNode.setAverageCoverage(1);
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 for (int i = Kmer.getKmerLength(); i < readLetters.length; i++) {
-                    nextNode.reset();
-                    nextNode.setAverageCoverage(1);
                     nextForwardKmer.shiftKmerWithNextChar(readLetters[i]);
                     nextReverseKmer.setReversedFromStringBytes(readLetters, i - Kmer.getKmerLength() + 1);
                     nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
@@ -152,15 +166,16 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode, readIdSet);
                     writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
 
-                    curNode.reset();
-                    curNode.setAverageCoverage(1);
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
+                    curNode.setAsCopy(nextNode);
                     curNodeDir = nextNodeDir;
+                    nextNode.reset();
+                    nextNode.setAverageCoverage(1);
                 }
 
-                /*last kmer*/
-                writeToFrame(nextForwardKmer, nextReverseKmer, nextNodeDir, nextNode, writer);
+                /* last kmer */
+                writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
             }
 
             public void setReadInfo(byte mateId, long readId, int posId) {
@@ -182,7 +197,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             public void setEdgeListForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode,
                     ReadIdSet readIdList) {
-                //TODO simplify this function after Anbang merge the edgeType detect code
+                // TODO simplify this function after Anbang merge the edgeType
+                // detect code
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.FORWARD) {
                     curNode.getEdgeMap(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
                     nextNode.getEdgeMap(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);

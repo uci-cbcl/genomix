@@ -24,19 +24,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
-import org.apache.hadoop.util.ReflectionUtils;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * This test only applied on SequenceInputFormat
