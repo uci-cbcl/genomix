@@ -752,5 +752,16 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         return c.compare(getBlockBytes(), getBlockOffset(), getLength(), other.getBytes(), 0, other.getLength());
     }
+    
+    /**
+     * create a new VKmer from the given id. The VKmer will have a fixed length of 16 letters and
+     * kmer letters equivalent to the given int id's bits
+     */
+    public static VKmer getIdAsVKmer(int id) {
+        byte[] storage = new byte[4 + 4];  // 4 for VKmer header, 4 for int value
+        Marshal.putInt(16, storage, 0);  // write length header
+        Marshal.putInt(id, storage, 4);  // write id
+        return new VKmer(storage, 0);
+    }
 
 }

@@ -127,6 +127,7 @@ public class JobGenerator {
     private static void genSymmetryCheckerGraph() throws IOException {
         generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase + "SymmetryCheckerGraph.xml");
     }
+
     /**
      * Main Function
      */

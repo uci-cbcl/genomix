@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -39,11 +40,11 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public static int maxIteration = -1;
 
     public static Object lock = new Object();
-    public static boolean fakeVertexExist = false;
+    public static boolean tempPartitionExists = false;
     public static VKmer fakeVertex = new VKmer();
 
-    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
-            { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
+    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF },
+            { EDGETYPE.RF, EDGETYPE.FR }, { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
 
     protected M outgoingMsg = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable();
@@ -111,10 +112,10 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      * add fake vertex
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public void addFakeVertex(String fakeKmer) {
+    public void addMapPartitionVertices(String fakeKmer) {
         synchronized (lock) {
             fakeVertex.setFromStringBytes(1, fakeKmer.getBytes(), 0);
-            if (!fakeVertexExist) {
+            if (!tempPartitionExists) {
                 //add a fake vertex
                 Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
 
@@ -125,7 +126,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
                 vertex.setVertexValue(vertexValue);
 
                 addVertex(fakeVertex, vertex);
-                fakeVertexExist = true;
+                tempPartitionExists = true;
             }
         }
     }

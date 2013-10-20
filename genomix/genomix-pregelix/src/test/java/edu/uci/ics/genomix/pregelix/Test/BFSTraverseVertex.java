@@ -154,7 +154,7 @@ public class BFSTraverseVertex extends BasicBFSTraverseVertex {
     public void compute(Iterator<BFSTraverseMessage> msgIterator) {
         if (getSuperstep() == 1) {
             initVertex();
-            addFakeVertex("A");
+            addMapPartitionVertices("A");
             voteToHalt();
         } else if (getSuperstep() == 2) {
             // for test, read srcNode and destNode from jobconf
