@@ -152,8 +152,8 @@ public class BFSTraverseVertex extends BasicBFSTraverseVertex {
 
     @Override
     public void compute(Iterator<BFSTraverseMessage> msgIterator) {
+        initVertex();
         if (getSuperstep() == 1) {
-            initVertex();
             addFakeVertex("A");
             voteToHalt();
         } else if (getSuperstep() == 2) {
