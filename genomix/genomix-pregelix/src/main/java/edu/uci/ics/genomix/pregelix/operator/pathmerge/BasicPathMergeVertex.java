@@ -13,15 +13,14 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
+import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * The super class of different path merge algorithms
  * This maximally compresses linear subgraphs (A->B->C->...->Z) into into individual nodes (ABC...Z).
- * 
  */
 public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
         DeBruijnGraphCleanVertex<V, M> {

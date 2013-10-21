@@ -15,7 +15,7 @@ public class VKmerListTest {
     @Test
     public void TestInitial() {
         VKmerList kmerList = new VKmerList();
-        Assert.assertEquals(kmerList.getCountOfPosition(), 0);
+        Assert.assertEquals(kmerList.size(), 0);
 
         //one kmer in list and reset each time
         VKmer kmer;
@@ -27,7 +27,7 @@ public class VKmerListTest {
             kmerList.reset();
             kmerList.append(kmer);
             Assert.assertEquals(randomString, kmerList.getPosition(0).toString());
-            Assert.assertEquals(1, kmerList.getCountOfPosition());
+            Assert.assertEquals(1, kmerList.size());
         }
 
         kmerList.reset();
@@ -39,14 +39,14 @@ public class VKmerListTest {
             kmer.setFromStringBytes(5, array, 0);
             kmerList.append(kmer);
             Assert.assertEquals(kmerList.getPosition(i).toString(), randomString);
-            Assert.assertEquals(i + 1, kmerList.getCountOfPosition());
+            Assert.assertEquals(i + 1, kmerList.size());
         }
 
         byte[] another = new byte[kmerList.getLength() * 2];
         int start = 20;
         System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start, kmerList.getLength());
         VKmerList plist2 = new VKmerList(another, start);
-        for (int i = 0; i < plist2.getCountOfPosition(); i++) {
+        for (int i = 0; i < plist2.size(); i++) {
             Assert.assertEquals(kmerList.getPosition(i).toString(), plist2.getPosition(i).toString());
         }
     }
@@ -54,7 +54,7 @@ public class VKmerListTest {
     @Test
     public void TestRemove() {
         VKmerList kmerList = new VKmerList();
-        Assert.assertEquals(kmerList.getCountOfPosition(), 0);
+        Assert.assertEquals(kmerList.size(), 0);
 
         int i;
         VKmer kmer;
@@ -65,7 +65,7 @@ public class VKmerListTest {
             kmer.setFromStringBytes(5, array, 0);
             kmerList.append(kmer);
             Assert.assertEquals(randomString, kmerList.getPosition(i).toString());
-            Assert.assertEquals(i + 1, kmerList.getCountOfPosition());
+            Assert.assertEquals(i + 1, kmerList.size());
         }
 
         //delete one element each time
@@ -89,7 +89,7 @@ public class VKmerListTest {
                 }
             }
             Assert.assertTrue(removed);
-            Assert.assertEquals(200 - 1 - j, copyList.getCountOfPosition());
+            Assert.assertEquals(200 - 1 - j, copyList.size());
             while (iterator.hasNext()) {
                 tmpKmer = iterator.next();
                 Assert.assertTrue(!tmpKmer.getBlockBytes().equals(deletePos.getBlockBytes()));
@@ -104,8 +104,7 @@ public class VKmerListTest {
             tmpKmer = iterator.next();
             iterator.remove();
         }
-
-        Assert.assertEquals(0, kmerList.getCountOfPosition());
+        Assert.assertEquals(0, kmerList.size());
 
         VKmerList edgeList = new VKmerList();
         VKmer k = new VKmer(3);

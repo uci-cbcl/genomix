@@ -1,15 +1,19 @@
 package edu.uci.ics.genomix.data.test;
 
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Map.Entry;
+import java.util.List;
 
 import junit.framework.Assert;
+
 import org.junit.Test;
+
+import edu.uci.ics.genomix.type.DIR;
+//import edu.uci.ics.genomix.type.Entry;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.Node.NeighborInfo;
@@ -18,9 +22,10 @@ import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadIdSet;
+//import edu.uci.ics.genomix.type.SimpleEntry;
+//import edu.uci.ics.genomix.type.Entry;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.EDGETYPE;
 
 public class NodeTest {
     
@@ -131,7 +136,7 @@ public class NodeTest {
         sample = new SimpleEntry<VKmer, ReadIdSet>(oldKSample, positionsSample);
         ArrayList<SimpleEntry<VKmer, ReadIdSet>> sampleList = new ArrayList<SimpleEntry<VKmer, ReadIdSet>>();
         sampleList.add(sample);
-        
+
         String sample2Str = "ATGCATGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATCGAT";
         VKmer oldKSample2 = new VKmer(sample2Str);
         SimpleEntry<VKmer, ReadIdSet> sample2;

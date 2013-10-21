@@ -11,23 +11,23 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 
-import edu.uci.ics.pregelix.api.graph.Vertex;
-import edu.uci.ics.pregelix.api.job.PregelixJob;
-import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
-import edu.uci.ics.genomix.pregelix.format.GenericVertexToNodeOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.pregelix.api.graph.Vertex;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
+import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
 
 public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmer, V, NullWritable, M> {
@@ -75,20 +75,22 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     }
 
     public void checkDebug() {
+        debug = getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null;
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmer>();
             if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
-                debug = true;
-                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(","))
+                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(",")) {
                     problemKmers.add(new VKmer(kmer));
+                }
                 Node.problemKmers = problemKmers;
             }
         }
 
         verbose = false;
-        for (VKmer problemKmer : problemKmers)
+        for (VKmer problemKmer : problemKmers) {
             verbose |= debug
                     && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+        }
     }
 
     /**
@@ -163,12 +165,12 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
             job = new PregelixJob(vertexClass.getSimpleName());
         else
             job = new PregelixJob(conf, vertexClass.getSimpleName());
-        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexClass(vertexClass);
+        job.setGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-        job.setVertexOutputFormatClass(GenericVertexToNodeOutputFormat.class);
+        job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setOutputKeyClass(VKmer.class);
-        job.setOutputValueClass(VertexValueWritable.class);
+        job.setOutputValueClass(Node.class);
         job.setDynamicVertexValueSize(true);
         return job;
     }
@@ -234,10 +236,10 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     }
 
     /**
-     * Ex. A and B are bubbles and we want to keep A and delete B. 
-     * B will receive kill msg from majorVertex and then broadcast killself to all the neighbor to delete the edge which points to B. 
-     * Here, pruneDeadEdges() is when one vertex receives msg from B, 
-     * it needs to delete the edge which points to B 
+     * Ex. A and B are bubbles and we want to keep A and delete B.
+     * B will receive kill msg from majorVertex and then broadcast killself to all the neighbor to delete the edge which points to B.
+     * Here, pruneDeadEdges() is when one vertex receives msg from B,
+     * it needs to delete the edge which points to B
      * //TODO use general remove and process update function
      */
     public void pruneDeadEdges(Iterator<M> msgIterator) {
