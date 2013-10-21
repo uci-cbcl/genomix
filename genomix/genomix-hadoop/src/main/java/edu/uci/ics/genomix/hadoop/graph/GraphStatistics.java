@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.hadoop.graph;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -35,8 +34,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -66,12 +65,10 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         reporter.getCounter("coverage-bins", Integer.toString(Math.round(value.getAverageCoverage()))).increment(1);
         reporter.getCounter("totals", "coverage").increment(Math.round(value.getAverageCoverage()));
 
-        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().size())))
-                .increment(1);
+        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().size()))).increment(1);
         reporter.getCounter("totals", "startRead").increment(Math.round(value.getStartReads().size()));
 
-        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().size())))
-                .increment(1);
+        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().size()))).increment(1);
         reporter.getCounter("totals", "endRead").increment(Math.round(value.getEndReads().size()));
 
         long totalEdgeReads = 0;
@@ -152,7 +149,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
      * for example, the coverage counters have the group "coverage-bins", the counter name "5" and the count 10
      * meaning the coverage chart has a bar at X=5 with height Y=10
      */
-    public static void drawStatistics(String outputDir, Counters jobCounters) throws IOException {
+    public static void drawStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
         TreeMap<Integer, Long> curCounts;
 
@@ -187,10 +184,11 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
                     PlotOrientation.VERTICAL, true, true, false);
             // Write the data to the output stream:
-            FileOutputStream chartOut = new FileOutputStream(new File(outputDir + File.separator + graphType
-                    + "-hist.png"));
-            ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
-            chartOut.close();
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + graphType + "-hist.png"),
+                    true);
+            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
+            outstream.close();
         }
     }
 }
