@@ -41,13 +41,13 @@ public class KmerNodePairSequenceWriterFactory implements ITupleWriterFactory {
 
     public KmerNodePairSequenceWriterFactory(JobConf conf) throws HyracksDataException {
         this.confFactory = new ConfFactory(conf);
-        Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
     }
 
     public class TupleWriter implements ITupleWriter {
 
-        public TupleWriter(ConfFactory confFactory) {
+        public TupleWriter(ConfFactory confFactory) throws NumberFormatException, HyracksDataException {
             this.cf = confFactory;
+            GenomixJobConf.setGlobalStaticConstants(cf.getConf());
         }
 
         ConfFactory cf;

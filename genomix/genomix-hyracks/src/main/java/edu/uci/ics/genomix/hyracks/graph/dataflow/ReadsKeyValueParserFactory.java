@@ -17,16 +17,19 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
@@ -40,18 +43,20 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
+import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
-    // private static final Logger LOG =
-    // Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
+    private static final Logger LOG = Logger.getLogger(ReadsKeyValueParserFactory.class.getName());
 
     public static final int OutputKmerField = 0;
     public static final int OutputNodeField = 1;
+    private final ConfFactory confFactory;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
-    public ReadsKeyValueParserFactory() {
+    public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
+            confFactory = new ConfFactory(conf);
     }
 
     @Override
@@ -61,6 +66,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         final ByteBuffer outputBuffer = ctx.allocateFrame();
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());
         outputAppender.reset(outputBuffer, true);
+
+        GenomixJobConf.setGlobalStaticConstants(confFactory.getConf());
 
         return new IKeyValueParser<LongWritable, Text>() {
 

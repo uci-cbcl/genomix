@@ -105,6 +105,7 @@ public class NodeTest {
         //flipNeighbor()
         
     }
+    
  /*   @Test
     public void TestMergeRF_FF() throws IOException {
         Kmer.setGlobalKmerLength(5);

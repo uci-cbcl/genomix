@@ -102,8 +102,9 @@ public class JobGenBuildBrujinGraph extends JobGen {
 
         RecordDescriptor combineKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
-        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields, new AggregateKmerAggregateFactory(),
-                new AggregateKmerAggregateFactory(), new KmerPartitionComputerFactory(),
+        Object[] objs = generateAggeragateDescriptorbyType(jobSpec, keyFields,
+                new AggregateKmerAggregateFactory(hadoopJobConfFactory.getConf()),
+                new AggregateKmerAggregateFactory(hadoopJobConfFactory.getConf()), new KmerPartitionComputerFactory(),
                 new KmerNormarlizedComputerFactory(), KmerPointable.FACTORY, combineKmerOutputRec, combineKmerOutputRec);
         AbstractOperatorDescriptor kmerLocalAggregator = (AbstractOperatorDescriptor) objs[0];
         connectOperators(jobSpec, sorter, ncNodeNames, kmerLocalAggregator, ncNodeNames,
