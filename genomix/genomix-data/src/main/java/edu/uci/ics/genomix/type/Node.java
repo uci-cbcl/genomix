@@ -39,7 +39,7 @@ public class Node implements Writable, Serializable {
     private static boolean DEBUG = true;
     public static List<VKmer> problemKmers = new ArrayList<VKmer>();
 
-    public enum DIR{
+    public enum DIR {
 
         REVERSE((byte) (0b01 << 2)),
         FORWARD((byte) (0b10 << 2));
@@ -112,9 +112,9 @@ public class Node implements Writable, Serializable {
 
     }
 
-    public enum EDGETYPE implements Writable{ 
-    	// TODO implements Writable
-    	// TODO remove EdgeType class
+    public enum EDGETYPE implements Writable {
+        // TODO implements Writable
+        // TODO remove EdgeType class
 
         FF((byte) (0b00 << 0)),
         FR((byte) (0b01 << 0)),
@@ -171,35 +171,35 @@ public class Node implements Writable, Serializable {
                     throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
             }
         }
-        
+
         /**
          * 
          */
-        public static EDGETYPE getEdgeTypeFromDirToDir(DIR dir1, DIR dir2){
-        	switch(dir1){
-        		case FORWARD:
-        			switch(dir2){
-        				case FORWARD:
-        					return FF;
-        				case REVERSE:
-        					return FR;
-        				default:
+        public static EDGETYPE getEdgeTypeFromDirToDir(DIR dir1, DIR dir2) {
+            switch (dir1) {
+                case FORWARD:
+                    switch (dir2) {
+                        case FORWARD:
+                            return FF;
+                        case REVERSE:
+                            return FR;
+                        default:
                             throw new IllegalArgumentException("Invalid direction2 given: " + dir2);
-        			}
-        		case REVERSE:
-        			switch(dir2){
-	    				case FORWARD:
-	    					return RF;
-	    				case REVERSE:
-	    					return RR;
-	    				default:
-	                        throw new IllegalArgumentException("Invalid direction2 given: " + dir2);
-        			}
-        		default:
+                    }
+                case REVERSE:
+                    switch (dir2) {
+                        case FORWARD:
+                            return RF;
+                        case REVERSE:
+                            return RR;
+                        default:
+                            throw new IllegalArgumentException("Invalid direction2 given: " + dir2);
+                    }
+                default:
                     throw new IllegalArgumentException("Invalid direction1 given: " + dir2);
-        	}
+            }
         }
-        
+
         public DIR dir() {
             return dir(this);
         }
@@ -338,11 +338,11 @@ public class Node implements Writable, Serializable {
             fromByte(in.readByte());
         }
     }
-    
+
     public enum READHEAD_ORIENTATION {
         UNFLIPPED((byte) 0),
         FLIPPED((byte) 1);
-        
+
         private final byte val;
 
         private READHEAD_ORIENTATION(byte val) {
@@ -352,16 +352,16 @@ public class Node implements Writable, Serializable {
         public final byte get() {
             return val;
         }
-        
+
         public static READHEAD_ORIENTATION fromByte(byte b) {
-            if(b == UNFLIPPED.val)
+            if (b == UNFLIPPED.val)
                 return UNFLIPPED;
-            else if(b == FLIPPED.val)
+            else if (b == FLIPPED.val)
                 return FLIPPED;
             return null;
         }
     }
-    
+
     public static class NeighborInfo {
         public EDGETYPE et;
         public ReadIdSet readIds;
@@ -400,7 +400,7 @@ public class Node implements Writable, Serializable {
             return new Iterator<NeighborInfo>() {
 
                 private Iterator<Entry<VKmer, ReadIdSet>> it = edges.entrySet().iterator();
-                private NeighborInfo info = new NeighborInfo(null, null);
+                private NeighborInfo info;
 
                 @Override
                 public boolean hasNext() {
@@ -409,7 +409,11 @@ public class Node implements Writable, Serializable {
 
                 @Override
                 public NeighborInfo next() {
-                    info.set(et, it.next());
+                    if (info == null) {
+                        info = new NeighborInfo(et, it.next());
+                    } else {
+                        info.set(et, it.next());
+                    }
                     return info;
                 }
 
@@ -468,8 +472,8 @@ public class Node implements Writable, Serializable {
     }
 
     public Node getNode() { // TODO what is this used for???
-    	Node node = new Node();
-    	node.setAsCopy(this.edges, this.startReads, this.endReads, this.internalKmer, this.averageCoverage);
+        Node node = new Node();
+        node.setAsCopy(this.edges, this.startReads, this.endReads, this.internalKmer, this.averageCoverage);
         return node;
     }
 
@@ -572,7 +576,7 @@ public class Node implements Writable, Serializable {
     public void setAverageCoverage(float averageCoverage) {
         this.averageCoverage = averageCoverage;
     }
-    
+
     /**
      * Update my coverage to be the average of this and other. Used when merging
      * paths.
@@ -682,17 +686,17 @@ public class Node implements Writable, Serializable {
         n.internalKmer.write(out);
         out.writeFloat(n.averageCoverage);
 
-//        if (DEBUG) {
-//            boolean verbose = false;
-//            for (VKmer problemKmer : problemKmers) {
-//                verbose |= n.findEdge(problemKmer) != null;
-//            }
-//            if (verbose) {
-//                LOG.fine("write: " + n.toString());
-//            }
-//        }
+        //        if (DEBUG) {
+        //            boolean verbose = false;
+        //            for (VKmer problemKmer : problemKmers) {
+        //                verbose |= n.findEdge(problemKmer) != null;
+        //            }
+        //            if (verbose) {
+        //                LOG.fine("write: " + n.toString());
+        //            }
+        //        }
     }
-    
+
     @Override
     public void write(DataOutput out) throws IOException {
         write(this, out);

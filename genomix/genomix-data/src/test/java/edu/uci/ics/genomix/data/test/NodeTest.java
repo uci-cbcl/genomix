@@ -1,15 +1,23 @@
 package edu.uci.ics.genomix.data.test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
+
 import junit.framework.Assert;
 import org.junit.Test;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.Node.NeighborInfo;
+import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
+import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.Node.DIR;
 import edu.uci.ics.genomix.type.Node.EDGETYPE;
@@ -106,7 +114,45 @@ public class NodeTest {
     
     @Test
     public void testREADHEAD_ORIENTATION() throws IOException{
+        Assert.assertEquals(READHEAD_ORIENTATION.FLIPPED, READHEAD_ORIENTATION.fromByte((byte)1));
+        Assert.assertEquals(READHEAD_ORIENTATION.UNFLIPPED,READHEAD_ORIENTATION.fromByte((byte)0));
+    }
+    
+    @Test
+    public void testNeighborsInfo() throws IOException{
+        String sample1Str = "ATGCATGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATC";
+        VKmer oldKSample = new VKmer(sample1Str);
+        SimpleEntry<VKmer, ReadIdSet> sample;
+        ReadIdSet positionsSample = new ReadIdSet();
+        long numelements = 10;
+        for (long i = 0; i < numelements; i++) {
+            positionsSample.add(i);
+        }
+        sample = new SimpleEntry<VKmer, ReadIdSet>(oldKSample, positionsSample);
+        ArrayList<SimpleEntry<VKmer, ReadIdSet>> sampleList = new ArrayList<SimpleEntry<VKmer, ReadIdSet>>();
+        sampleList.add(sample);
         
+        String sample2Str = "ATGCATGCGCTAGCTAGCTAGACTACGATGCATGCTAGCTAATCGATCGATCGAT";
+        VKmer oldKSample2 = new VKmer(sample2Str);
+        SimpleEntry<VKmer, ReadIdSet> sample2;
+        ReadIdSet positionsSample2 = new ReadIdSet();
+        long numelements2 = 20;
+        for (long i = 10; i < numelements2; i++) {
+            positionsSample2.add(i);
+        }
+        sample2 = new SimpleEntry<VKmer, ReadIdSet>(oldKSample2, positionsSample2);
+        sampleList.add(sample2);
+        EdgeMap source = new EdgeMap(sampleList);
+        Node.NeighborsInfo neighborsInfor = new Node.NeighborsInfo(EDGETYPE.FF, source);
+        Iterator<NeighborInfo> iterator = neighborsInfor.iterator();
+        long i = 0;
+        Assert.assertEquals(true, iterator.hasNext());
+        NeighborInfo temp = iterator.next();
+        Assert.assertEquals(EDGETYPE.FF, temp.et);
+        Assert.assertEquals(sample1Str, temp.kmer.toString());
+        for(; i < numelements; i++) {
+          Assert.assertEquals((Long)i, temp.readIds.pollFirst());
+      }
     }
  /*   @Test
     public void TestMergeRF_FF() throws IOException {
