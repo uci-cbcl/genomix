@@ -26,7 +26,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.constraints.PartitionConstraintHelper;
 import edu.uci.ics.hyracks.api.dataflow.IConnectorDescriptor;
@@ -94,7 +93,7 @@ public abstract class JobGen implements Serializable {
 
     protected void initGenomixConfiguration() throws HyracksDataException {
         Configuration conf = hadoopJobConfFactory.getConf();
-        Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
+        GenomixJobConf.setGlobalStaticConstants(conf);
         frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
     }
