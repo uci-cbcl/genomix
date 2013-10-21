@@ -13,7 +13,6 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
-import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.Node;
@@ -22,14 +21,6 @@ import edu.uci.ics.genomix.type.VKmer;
 @SuppressWarnings("deprecation")
 public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node, Text, Text> {
     public static final Logger LOG = Logger.getLogger(ConvertToFasta.class.getName());
-    private static class Options {
-        @Option(name = "-inputpath1", usage = "the input path", required = false)
-        public String inputPath1;
-
-        @Option(name = "-outputpath", usage = "the output path", required = false)
-        public String outputPath;
-
-    }
 
     public static Text textKey = new Text();
     public static Text textValue = new Text();
