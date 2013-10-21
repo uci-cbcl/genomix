@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Collections;
 
-public class getScaffoldStats {  
+public class GetScaffoldStats {  
   private static final int GAP_FUDGE_FACTOR = 1000;
   private static final int MIN_SKIP_SIZE = 200;
   private static final char GAP_CHAR = 'N';
@@ -30,7 +30,7 @@ public class getScaffoldStats {
       private HashMap<String, Utils.Pair> tiles = new HashMap<String, Utils.Pair>();
    }
    
-   public getScaffoldStats(String coords) throws Exception {
+   public GetScaffoldStats(String coords) throws Exception {
       BufferedReader bf = Utils.getFile(coords, "coords");
 
       String line = null;
@@ -386,7 +386,7 @@ System.err.println("After processing " + scfID + "_" + index + " the length is "
    public static void main(String[] args) throws Exception {     
       if (args.length < 1) { printUsage(); System.exit(1);}
 
-      getScaffoldStats f = new getScaffoldStats(args[3]);
+      GetScaffoldStats f = new GetScaffoldStats(args[3]);
       f.genomeSize = Integer.parseInt(args[2]);
       f.processFasta(args[0]);
 
