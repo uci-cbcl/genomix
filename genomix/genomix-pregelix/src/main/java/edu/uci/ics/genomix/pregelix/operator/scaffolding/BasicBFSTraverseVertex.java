@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
@@ -27,6 +28,9 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 public class BasicBFSTraverseVertex extends
         DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, BFSTraverseMessage> {
 
+    public static final int SCAFFOLDING_NUMBER_OF_PARTITIONS = 50000;
+    protected static VKmer[] tempPartitionIds = new VKmer[SCAFFOLDING_NUMBER_OF_PARTITIONS];
+
     public enum UPDATELENGTH_TYPE {
         SRC_OFFSET,
         DEST_OFFSET,
@@ -38,22 +42,29 @@ public class BasicBFSTraverseVertex extends
         CONTINUE_SEARCH;
     }
 
-    public void addFakeVertex(String fakeKmer) {
-        synchronized (lock) {
-            fakeVertex.setFromStringBytes(1, fakeKmer.getBytes(), 0);
-            if (!fakeVertexExist) {
-                // add a fake vertex
-                Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
+    public synchronized void addTempPartitionVertices() {
+        // TODO push this logic up into DeBruijn graph clean
+        if (!tempPartitionExists) {
+            for (int i = 0; i < SCAFFOLDING_NUMBER_OF_PARTITIONS; i++) {
+                // TODO it might make sense to only create those vertices that will be used here...
+                tempPartitionIds[i] = VKmer.getIdAsVKmer(i); // FIXME this may collide with existing kmers if the user selects K=16 or shorter
 
-                ScaffoldingVertexValueWritable vertexValue = new ScaffoldingVertexValueWritable();
+                Vertex<VKmer, ScaffoldingVertexValueWritable, NullWritable, BFSTraverseMessage> vertex = BspUtils
+                        .createVertex(getContext().getConfiguration());
+
+                ScaffoldingVertexValueWritable vertexValue;
+                try {
+                    vertexValue = getVertexValue().getClass().newInstance();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    throw new IllegalStateException("Failed to create a new instance of VertexValue!", e);
+                }
                 vertexValue.setFakeVertex(true);
 
-                vertex.setVertexId(fakeVertex);
+                vertex.setVertexId(tempPartitionIds[i]);
                 vertex.setVertexValue(vertexValue);
-
-                addVertex(fakeVertex, vertex);
-                fakeVertexExist = true;
+                addVertex(tempPartitionIds[i], vertex);
             }
+            tempPartitionExists = true;
         }
     }
 

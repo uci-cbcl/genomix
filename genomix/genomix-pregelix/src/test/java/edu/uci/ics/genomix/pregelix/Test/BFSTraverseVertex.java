@@ -75,13 +75,13 @@ public class BFSTraverseVertex extends BasicBFSTraverseVertex {
              * when ambiguous)
              **/
             if (incomingMsg.getTargetVertexId().equals(getVertexId())) {
-                long commonReadId = incomingMsg.getReadId();
+                LongWritable commonReadId = new LongWritable(incomingMsg.getReadId());
                 HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
                 if (pathMap.containsKey(commonReadId)) { // if it's ambiguous
                                                          // path
                     // put empty in value to mark it as ambiguous path
                     pathMap.remove(commonReadId);
-                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(false));
+                    unambiguousReadIds.put(commonReadId, new BooleanWritable(false));
                     continue; // stop BFS search here
                 } else { // if it's unambiguous path, save
                     VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
@@ -89,8 +89,8 @@ public class BFSTraverseVertex extends BasicBFSTraverseVertex {
                     // doesn't need to update edgeTypeList
                     PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList,
                             incomingMsg.getEdgeTypeList());
-                    pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
-                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(true));
+                    pathMap.put(commonReadId, pathAndEdgeTypeList);
+                    unambiguousReadIds.put(commonReadId, new BooleanWritable(true));
                 }
             }
             /**
@@ -154,7 +154,7 @@ public class BFSTraverseVertex extends BasicBFSTraverseVertex {
     public void compute(Iterator<BFSTraverseMessage> msgIterator) {
         if (getSuperstep() == 1) {
             initVertex();
-            addFakeVertex("A");
+            addMapPartitionVertices("A");
             voteToHalt();
         } else if (getSuperstep() == 2) {
             // for test, read srcNode and destNode from jobconf

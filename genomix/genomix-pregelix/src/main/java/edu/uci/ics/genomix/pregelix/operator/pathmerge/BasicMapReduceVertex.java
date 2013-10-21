@@ -84,7 +84,7 @@ public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathM
         reduceKeyByInternalKmer(kmerMapper);
 
         //delele self(fake vertex)
-        fakeVertexExist = false;
+        tempPartitionExists = false;
         deleteVertex(fakeVertex);
     }
 
@@ -92,7 +92,7 @@ public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathM
     public void compute(Iterator<M> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
-            addFakeVertex("A");
+            addMapPartitionVertices("A");
         } else if (getSuperstep() == 2) {
             sendMsgToFakeVertex();
         } else if (getSuperstep() == 3) {

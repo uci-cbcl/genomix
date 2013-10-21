@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -74,19 +75,30 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
         getVertexValue().getCounters().clear();
     }
 
-    public void addReadsToScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap,
+    public void addReadsToScaffoldingMap(
+            ArrayList<HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>> scaffoldingMaps,
             ReadHeadSet readIds, READHEAD_ORIENTATION readHeadType) {
         // searchInfo can be a struct but not a class
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
 
         for (ReadHeadInfo pos : readIds) {
-            long readId = pos.getReadId();
+            LongWritable readId = new LongWritable(pos.getReadId());
+            int partition = (int) (readId.get() % SCAFFOLDING_NUMBER_OF_PARTITIONS);
+
+            HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap;
+            if (scaffoldingMaps.get(partition) == null) {
+                scaffoldingMap = new HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>();
+                scaffoldingMaps.set(partition, scaffoldingMap);
+            } else {
+                scaffoldingMap = scaffoldingMaps.get(partition);
+            }
+
             if (scaffoldingMap.containsKey(readId)) {
                 searchInfoList = scaffoldingMap.get(readId);
             } else {
                 searchInfoList = new ArrayListWritable<SearchInfo>();
-                scaffoldingMap.put(new LongWritable(readId), searchInfoList);
+                scaffoldingMap.put(readId, searchInfoList);
             }
             searchInfo = new SearchInfo(getVertexId(), readHeadType);
             searchInfoList.add(searchInfo);
@@ -97,16 +109,29 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
      * step 1:
      */
     public void generateScaffoldingMap() {
-        // add a fake vertex 
-        addFakeVertex("A");
+        // add many nodes acting as temporary reduce partitions 
+        addTempPartitionVertices();
+
         // grouped by 5'/~5' readId in aggregator
         ScaffoldingVertexValueWritable vertex = getVertexValue();
         if (vertex.isValidScaffoldingSearchNode()) {
-            outgoingMsg.reset();
-            HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> map = outgoingMsg.getScaffoldingMap();
-            addReadsToScaffoldingMap(map, vertex.getStartReads(), READHEAD_ORIENTATION.UNFLIPPED);
-            addReadsToScaffoldingMap(map, vertex.getEndReads(), READHEAD_ORIENTATION.FLIPPED);
-            sendMsg(fakeVertex, outgoingMsg);
+            // prepare a group of messages for each partition
+            ArrayList<HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>> maps = new ArrayList<HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>>>(
+                    SCAFFOLDING_NUMBER_OF_PARTITIONS);
+            for (int i = 0; i < SCAFFOLDING_NUMBER_OF_PARTITIONS; i++) {
+                maps.add(null); // this is a very sparse arraylist 
+            }
+
+            addReadsToScaffoldingMap(maps, vertex.getStartReads(), READHEAD_ORIENTATION.UNFLIPPED);
+            addReadsToScaffoldingMap(maps, vertex.getEndReads(), READHEAD_ORIENTATION.FLIPPED);
+
+            for (int i = 0; i < SCAFFOLDING_NUMBER_OF_PARTITIONS; i++) {
+                if (maps.get(i) != null) {
+                    outgoingMsg.reset();
+                    outgoingMsg.setScaffoldingMap(maps.get(i));
+                    sendMsg(tempPartitionIds[i], outgoingMsg);
+                }
+            }
         }
         voteToHalt();
     }
@@ -170,12 +195,12 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
             incomingMsg = msgIterator.next();
             /** For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous) **/
             if (incomingMsg.getTargetVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)) {
-                long commonReadId = incomingMsg.getReadId();
+                LongWritable commonReadId = new LongWritable(incomingMsg.getReadId());
                 HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
                 if (pathMap.containsKey(commonReadId)) { // if it's ambiguous path
                     // put empty in value to mark it as ambiguous path
                     pathMap.remove(commonReadId);
-                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(false));
+                    unambiguousReadIds.put(commonReadId, new BooleanWritable(false));
                     continue; // stop BFS search here
                 } else { // if it's unambiguous path, save 
                     VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
@@ -183,8 +208,8 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
                     // doesn't need to update edgeTypeList
                     PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList,
                             incomingMsg.getEdgeTypeList());
-                    pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
-                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(true));
+                    pathMap.put(commonReadId, pathAndEdgeTypeList);
+                    unambiguousReadIds.put(commonReadId, new BooleanWritable(true));
                 }
             }
             /** For all nodes -- send messge to all neighbor if there exists valid path **/
