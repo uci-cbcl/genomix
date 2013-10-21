@@ -251,6 +251,13 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>edu.uci.ics.hyracks</groupId>
+			<artifactId>genomix-hyracks</artifactId>
+			<version>0.2.10-SNAPSHOT</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
@@ -311,8 +318,6 @@
 			<artifactId>hadoop-test</artifactId>
 			<version>0.20.2</version>
 		</dependency>
-
-
 		<dependency>
 			<groupId>jfree</groupId>
 			<artifactId>jfreechart</artifactId>

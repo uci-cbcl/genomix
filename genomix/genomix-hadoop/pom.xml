@@ -95,7 +95,6 @@
 								<include>build*</include>
 								<include>log*</include>
 								<include>actual</include>
-								<include>checkingrepository</include>
 								<include>ClusterController*</include>
 							</includes>
 						</fileset>
