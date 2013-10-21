@@ -23,7 +23,9 @@ import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Kmer;
@@ -41,6 +43,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParser;
 import edu.uci.ics.hyracks.hdfs.api.IKeyValueParserFactory;
+import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWritable, Text> {
     private static final long serialVersionUID = 1L;
@@ -48,12 +51,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
     public static final int OutputKmerField = 0;
     public static final int OutputNodeField = 1;
-    private final int kmerLength;
+    private final ConfFactory confFactory;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
-    public ReadsKeyValueParserFactory(int k) {
-        kmerLength = k;
+    public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
+            confFactory = new ConfFactory(conf);
     }
 
     @Override
@@ -64,7 +67,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());
         outputAppender.reset(outputBuffer, true);
 
-        Kmer.setGlobalKmerLength(kmerLength);
+        GenomixJobConf.setGlobalStaticConstants(confFactory.getConf());
 
         return new IKeyValueParser<LongWritable, Text>() {
 

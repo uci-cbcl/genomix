@@ -76,7 +76,7 @@ public class JobGenReadLetterParser extends JobGen {
 
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
                     jobFactory.getConf(), hdfsInputSplits, readSchedule, new ReadsKeyValueParserFactory(
-                            Integer.parseInt(jobFactory.getConf().get(GenomixJobConf.KMER_LENGTH))));
+                            jobFactory.getConf()));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

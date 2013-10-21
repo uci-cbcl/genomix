@@ -47,7 +47,7 @@ public class KmerNodePairSequenceWriterFactory implements ITupleWriterFactory {
 
         public TupleWriter(ConfFactory confFactory) throws NumberFormatException, HyracksDataException {
             this.cf = confFactory;
-            Kmer.setGlobalKmerLength(Integer.parseInt(cf.getConf().get(GenomixJobConf.KMER_LENGTH)));
+            GenomixJobConf.setGlobalStaticConstants(cf.getConf());
         }
 
         ConfFactory cf;
