@@ -146,9 +146,11 @@ public class GenomixDriver {
                 break;
             case STATS:
                 flushPendingJobs(conf);
+                manager.startCluster(ClusterType.HADOOP);
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters);
+                manager.stopCluster(ClusterType.HADOOP);
                 curOutput = prevOutput; // use previous job's output
                 break;
         }
