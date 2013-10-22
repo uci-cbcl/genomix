@@ -6,11 +6,13 @@ jdk:
 
 install:
     - sudo apt-get install graphviz
-    - mvn install -q -DskipTests=true
+    - mvn install -q -am -pl genomix/genomix-driver/ -DskipTests=true # only install driver's prereq's
 
 before_script:
-    - java -classpath genomix/genomix-pregelix/target/genomix-pregelix-0.2.10-SNAPSHOT-jar-with-dependencies.jar:genomix/genomix-pregelix/target/test-classes/ edu.uci.ics.genomix.pregelix.JobGen.JobGenerator
-
+    - cd genomix/genomix-pregelix/
+    - java -classpath target/genomix-pregelix-0.2.10-SNAPSHOT-jar-with-dependencies.jar:target/test-classes/ edu.uci.ics.genomix.pregelix.jobgen.JobGenerator
+    - cd ../..
 script:
-    - mvn package -q -e -am -pl genomix/genomix-driver
-    - ls -t genomix/*/target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran
+    - cd genomix
+    - mvn package -q -e -Djava.util.logging.config.file=genomix-driver/src/main/resources/conf/logging.properties
+    - ls -t */target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran

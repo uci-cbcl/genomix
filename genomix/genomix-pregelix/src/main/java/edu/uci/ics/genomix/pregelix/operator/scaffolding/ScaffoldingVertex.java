@@ -81,12 +81,12 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
         ArrayListWritable<SearchInfo> searchInfoList;
 
         for (ReadHeadInfo pos : readIds) {
-            long readId = pos.getReadId();
+            LongWritable readId = new LongWritable(pos.getReadId());
             if (scaffoldingMap.containsKey(readId)) {
                 searchInfoList = scaffoldingMap.get(readId);
             } else {
                 searchInfoList = new ArrayListWritable<SearchInfo>();
-                scaffoldingMap.put(new LongWritable(readId), searchInfoList);
+                scaffoldingMap.put(readId, searchInfoList);
             }
             searchInfo = new SearchInfo(getVertexId(), readHeadType);
             searchInfoList.add(searchInfo);
@@ -170,12 +170,12 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
             incomingMsg = msgIterator.next();
             /** For dest node -- save PathList and EdgeTypeList if valid (stop when ambiguous) **/
             if (incomingMsg.getTargetVertexId().equals(getVertexId()) && isValidDestination(incomingMsg)) {
-                long commonReadId = incomingMsg.getReadId();
+                LongWritable commonReadId = new LongWritable(incomingMsg.getReadId());
                 HashMapWritable<LongWritable, PathAndEdgeTypeList> pathMap = vertex.getPathMap();
                 if (pathMap.containsKey(commonReadId)) { // if it's ambiguous path
                     // put empty in value to mark it as ambiguous path
                     pathMap.remove(commonReadId);
-                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(false));
+                    unambiguousReadIds.put(commonReadId, new BooleanWritable(false));
                     continue; // stop BFS search here
                 } else { // if it's unambiguous path, save 
                     VKmerList updatedKmerList = new VKmerList(incomingMsg.getPathList());
@@ -183,8 +183,8 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
                     // doesn't need to update edgeTypeList
                     PathAndEdgeTypeList pathAndEdgeTypeList = new PathAndEdgeTypeList(updatedKmerList,
                             incomingMsg.getEdgeTypeList());
-                    pathMap.put(new LongWritable(commonReadId), pathAndEdgeTypeList);
-                    unambiguousReadIds.put(new LongWritable(commonReadId), new BooleanWritable(true));
+                    pathMap.put(commonReadId, pathAndEdgeTypeList);
+                    unambiguousReadIds.put(commonReadId, new BooleanWritable(true));
                 }
             }
             /** For all nodes -- send messge to all neighbor if there exists valid path **/
