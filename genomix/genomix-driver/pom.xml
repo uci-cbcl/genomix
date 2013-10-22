@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>genomix-driver</artifactId>
-  <name>genomix-driver</name>
-  
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>genomix-driver</artifactId>
+	<name>genomix-driver</name>
+
 	<parent>
 		<groupId>edu.uci.ics.hyracks</groupId>
 		<artifactId>genomix</artifactId>
 		<version>0.2.10-SNAPSHOT</version>
 	</parent>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  
-  <build>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -30,6 +31,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>appassembler-maven-plugin</artifactId>
+				<version>1.5</version>
 				<executions>
 					<execution>
 						<configuration>
@@ -53,9 +55,9 @@
 									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
 									<name>pregelixnc</name>
 									<commandLineArguments>
-									  <commandLineArgument>-app-nc-main-class</commandLineArgument>
-									  <commandLineArgument>edu.uci.ics.pregelix.runtime.bootstrap.NCApplicationEntryPoint</commandLineArgument>
-  									</commandLineArguments>
+										<commandLineArgument>-app-nc-main-class</commandLineArgument>
+										<commandLineArgument>edu.uci.ics.pregelix.runtime.bootstrap.NCApplicationEntryPoint</commandLineArgument>
+									</commandLineArguments>
 								</program>
 							</programs>
 							<repositoryLayout>flat</repositoryLayout>
@@ -114,7 +116,9 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.2</version>
 				<configuration>
 					<filesets>
 						<fileset>
@@ -180,15 +184,10 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.6</version>
-			</plugin>
 		</plugins>
 	</build>
-  
-<dependencies>
+
+	<dependencies>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-hdfs-core</artifactId>
@@ -254,11 +253,12 @@
 		</dependency>
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-hdfs-core</artifactId>
+			<artifactId>genomix-hyracks</artifactId>
 			<version>0.2.10-SNAPSHOT</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-hdfs-core</artifactId>
@@ -266,7 +266,7 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>edu.uci.ics.hyracks</groupId>
 			<artifactId>hyracks-data-std</artifactId>
@@ -319,25 +319,9 @@
 			<version>0.20.2</version>
 		</dependency>
 		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>genomix-data</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>edu.uci.ics.hyracks</groupId>
-			<artifactId>hyracks-hdfs-core</artifactId>
-			<version>0.2.10-SNAPSHOT</version>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-
-		
-		<dependency>
 			<groupId>jfree</groupId>
 			<artifactId>jfreechart</artifactId>
 			<version>1.0.13</version>
 		</dependency>
-</dependencies>
+	</dependencies>
 </project>

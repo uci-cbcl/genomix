@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -45,15 +46,8 @@ public class DriverUtils {
      * Get the IP address of the master node using the bin/getip.sh script
      */
     public static String getIP(String hostName) throws IOException, InterruptedException {
-        String getIPCmd = "ssh -n " + hostName + " \"" + System.getProperty("app.home", ".") + File.separator + "bin"
-                + File.separator + "getip.sh\"";
-        Process p = Runtime.getRuntime().exec(getIPCmd);
-        p.waitFor(); // wait for ssh 
-        String stdout = IOUtils.toString(p.getInputStream()).trim();
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to get the ip address of the master node! Script returned exit code: "
-                    + p.exitValue() + "\nstdout: " + stdout + "\nstderr: " + IOUtils.toString(p.getErrorStream()));
-        return stdout;
+        InetAddress address = InetAddress.getByName(hostName);
+        return address.getHostAddress();
     }
 
     /**
@@ -108,7 +102,7 @@ public class DriverUtils {
         for (FileStatus f : files) {
             if (f.getLen() != 0) {
                 try {
-                    
+
                     reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
                     key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                     value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);

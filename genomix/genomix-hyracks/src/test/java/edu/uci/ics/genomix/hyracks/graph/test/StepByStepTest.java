@@ -28,8 +28,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 
@@ -57,7 +57,7 @@ public class StepByStepTest {
     private int numberOfNC = 2;
     private int numPartitionPerMachine = 2;
 
-    private Driver driver;
+    private GenomixHyracksDriver driver;
 
     @Test
     public void TestAll() throws Exception {
@@ -104,7 +104,7 @@ public class StepByStepTest {
         FileInputFormat.setInputPaths(conf, new Path(HDFS_INPUT_PATH));
         FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH));
 
-        driver = new Driver(GenomixClusterManager.LOCAL_HOSTNAME, GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT,
+        driver = new GenomixHyracksDriver(GenomixClusterManager.LOCAL_HOSTNAME, GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT,
                 numPartitionPerMachine);
     }
 

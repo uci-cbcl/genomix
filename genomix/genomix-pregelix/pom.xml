@@ -98,6 +98,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.2</version>
 				<configuration>
 					<filesets>
 						<fileset>
@@ -238,6 +239,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-changelog-plugin</artifactId>
+				<version>1.5</version>
 			</plugin>
 		</plugins>
 	</reporting>

@@ -19,7 +19,7 @@ import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
-public class GenomixDriver {
+public class GenomixHadoopDriver {
 
     private static class Options {
         @Option(name = "-inputpath", usage = "the input path", required = true)
@@ -40,7 +40,7 @@ public class GenomixDriver {
 
     public void run(String inputPath, String outputPath, int numReducers, int sizeKmer, int linesPerMap,
             boolean seqOutput, String defaultConfPath) throws IOException {
-        JobConf conf = new JobConf(GenomixDriver.class);
+        JobConf conf = new JobConf(GenomixHadoopDriver.class);
         if (defaultConfPath != null) {
             conf.addResource(new Path(defaultConfPath));
         }
@@ -58,6 +58,9 @@ public class GenomixDriver {
         conf.setMapOutputValueClass(Node.class);
 
         //InputFormat and OutputFormat for Reducer
+        //        if (linesPerMap % 4 != 0){
+        //            throw new RuntimeException("linesPerMap for Hadoop should be a multiple of 4");
+        //        }
         //        conf.setInputFormat(NLineInputFormat.class);
         //        conf.setInt("mapred.line.input.format.linespermap", linesPerMap);
         //        conf.setInt("io.sort.mb", 150);
@@ -84,7 +87,7 @@ public class GenomixDriver {
         Options options = new Options();
         CmdLineParser parser = new CmdLineParser(options);
         parser.parseArgument(args);
-        GenomixDriver driver = new GenomixDriver();
+        GenomixHadoopDriver driver = new GenomixHadoopDriver();
         driver.run(options.inputPath, options.outputPath, options.numReducers, options.sizeKmer, options.linesPerMap,
                 true, new JobConf());
     }

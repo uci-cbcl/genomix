@@ -28,7 +28,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 
 /**
  * This test only applied on SequenceInputFormat
@@ -106,6 +106,6 @@ public class ResultsCheckingTest {
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR);
         dfs.copyToLocalFile(src, dest);
-        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, "actual/test.txt", true, conf, true, dfs);
+        GenomixClusterManager.copyBinToLocal(conf, RESULT_PATH, ACTUAL_RESULT_DIR);
     }
 }

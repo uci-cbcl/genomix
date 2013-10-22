@@ -29,9 +29,11 @@ import org.kohsuke.args4j.CmdLineException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
+import edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixHadoopDriver;
 import edu.uci.ics.genomix.hadoop.converttofasta.ConvertToFasta;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
@@ -68,7 +70,7 @@ public class GenomixDriver {
     private int numMachines;
 
     private GenomixClusterManager manager;
-    private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
+    private GenomixHyracksDriver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
 
     @SuppressWarnings("deprecation")
@@ -159,7 +161,7 @@ public class GenomixDriver {
 
         String hyracksIP = conf.get(GenomixJobConf.IP_ADDRESS);
         int hyracksPort = Integer.parseInt(conf.get(GenomixJobConf.PORT));
-        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(hyracksIP, hyracksPort, numCoresPerMachine);
+        hyracksDriver = new GenomixHyracksDriver(hyracksIP, hyracksPort, numCoresPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
         manager.stopCluster(ClusterType.HYRACKS);
@@ -171,7 +173,7 @@ public class GenomixDriver {
         manager.startCluster(ClusterType.HADOOP);
         GenomixJobConf.tick("buildGraphWithHadoop");
 
-        edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
+        GenomixHadoopDriver hadoopDriver = new GenomixHadoopDriver();
         hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine * numMachines,
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, conf);
         followingBuild = true;
