@@ -89,8 +89,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
 
     public void createNewVertex(VKmer createdVertexId, NeighborInfo reverseNeighborInfo,
             NeighborInfo forwardNeighborInfo) {
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        Vertex<VKmer, VertexValueWritable, NullWritable, SplitRepeatMessage> newVertex = (Vertex) BspUtils
+        Vertex<VKmer, VertexValueWritable, NullWritable, SplitRepeatMessage> newVertex = BspUtils
                 .createVertex(getContext().getConfiguration());
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
