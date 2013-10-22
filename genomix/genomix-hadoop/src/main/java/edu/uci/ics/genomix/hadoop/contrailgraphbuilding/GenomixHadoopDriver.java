@@ -58,6 +58,9 @@ public class GenomixHadoopDriver {
         conf.setMapOutputValueClass(Node.class);
 
         //InputFormat and OutputFormat for Reducer
+        //        if (linesPerMap % 4 != 0){
+        //            throw new RuntimeException("linesPerMap for Hadoop should be a multiple of 4");
+        //        }
         //        conf.setInputFormat(NLineInputFormat.class);
         //        conf.setInt("mapred.line.input.format.linespermap", linesPerMap);
         //        conf.setInt("io.sort.mb", 150);

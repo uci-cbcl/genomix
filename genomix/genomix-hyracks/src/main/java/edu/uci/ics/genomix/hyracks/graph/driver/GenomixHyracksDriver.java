@@ -45,7 +45,7 @@ import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.hyracks.hdfs.scheduler.Scheduler;
 
-public class Driver {
+public class GenomixHyracksDriver {
     public enum Plan {
         /**
          * Build the deBruijin graph from original readID file to the final graph binary file
@@ -57,7 +57,7 @@ public class Driver {
         BUILD_READ_PARSER,
     }
 
-    private static final Logger LOG = Logger.getLogger(Driver.class.getName());
+    private static final Logger LOG = Logger.getLogger(GenomixHyracksDriver.class.getName());
     private JobGen jobGen;
     private boolean profiling;
 
@@ -66,7 +66,7 @@ public class Driver {
     private IHyracksClientConnection hcc;
     private Scheduler scheduler;
 
-    public Driver(String ipAddress, int port, int numPartitionPerMachine) throws HyracksException {
+    public GenomixHyracksDriver(String ipAddress, int port, int numPartitionPerMachine) throws HyracksException {
         try {
             hcc = new HyracksConnection(ipAddress, port);
             scheduler = new Scheduler(hcc.getNodeControllerInfos());
@@ -191,7 +191,7 @@ public class Driver {
         FileSystem dfs = FileSystem.get(jobConf);
         dfs.delete(new Path(jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR)), true);
 
-        Driver driver = new Driver(ipAddress, port, numOfDuplicate);
+        GenomixHyracksDriver driver = new GenomixHyracksDriver(ipAddress, port, numOfDuplicate);
         driver.runJob(jobConf, Plan.BUILD_DEBRUIJN_GRAPH, bProfiling);
     }
 }

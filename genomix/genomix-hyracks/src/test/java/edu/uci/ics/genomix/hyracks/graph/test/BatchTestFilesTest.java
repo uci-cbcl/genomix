@@ -37,8 +37,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
@@ -83,7 +83,7 @@ public class BatchTestFilesTest {
     private static int numberOfNC = 2;
     private static int numPartitionPerMachine = 2;
 
-    private static Driver driver;
+    private static GenomixHyracksDriver driver;
 
     // Instance member
     private final String testDirName;
@@ -126,7 +126,7 @@ public class BatchTestFilesTest {
         manager.startCluster(ClusterType.HYRACKS);
         manager.startCluster(ClusterType.HADOOP);
 
-        driver = new Driver(GenomixClusterManager.LOCAL_HOSTNAME, GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT,
+        driver = new GenomixHyracksDriver(GenomixClusterManager.LOCAL_HOSTNAME, GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT,
                 numPartitionPerMachine);
     }
 

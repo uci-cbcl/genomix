@@ -21,7 +21,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixHadoopDriver;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.test.GraphBuildingTestSetting;
 import edu.uci.ics.genomix.hyracks.graph.test.TestUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
@@ -68,7 +68,7 @@ public class HyrackVSHadoopTest {
     private static GenomixJobConf conf = new GenomixJobConf(3);
     private static int numberOfNC = 2;
     private static int numPartitionPerMachine = 2;
-    private static Driver hyracksDriver;
+    private static GenomixHyracksDriver hyracksDriver;
     private static GenomixHadoopDriver hadoopDriver;
 
     // Instance member
@@ -107,7 +107,7 @@ public class HyrackVSHadoopTest {
         manager.startCluster(ClusterType.HADOOP);
         manager.startCluster(ClusterType.HYRACKS);
 
-        hyracksDriver = new Driver(GenomixClusterManager.LOCAL_HOSTNAME,
+        hyracksDriver = new GenomixHyracksDriver(GenomixClusterManager.LOCAL_HOSTNAME,
                 GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT, numPartitionPerMachine);
         hadoopDriver = new GenomixHadoopDriver();
     }

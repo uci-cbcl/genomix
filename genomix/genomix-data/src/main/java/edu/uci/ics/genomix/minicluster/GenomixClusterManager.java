@@ -285,8 +285,12 @@ public class GenomixClusterManager {
         LOG.info("Starting NC's");
         String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "startAllNCs.sh " + type;
-        Files.setPosixFilePermissions(FileSystems.getDefault().getPath(startNCCmd),
-                PosixFilePermissions.fromString("rwxr-x---"));
+        try {
+            Files.setPosixFilePermissions(FileSystems.getDefault().getPath(startNCCmd),
+                    PosixFilePermissions.fromString("rwxr-x---"));
+        } catch (SecurityException se) {
+            throw new RuntimeException("Failed to start the" + type + " NC's! Permition deny:" + se.getMessage());
+        }
         Process p = Runtime.getRuntime().exec(startNCCmd);
         p.waitFor(); // wait for ssh
         Thread.sleep(sleepms); // wait for NC -> CC registration
@@ -302,8 +306,12 @@ public class GenomixClusterManager {
         LOG.info("Starting CC");
         String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "startcc.sh";
-        Files.setPosixFilePermissions(FileSystems.getDefault().getPath(startCCCmd),
-                PosixFilePermissions.fromString("rwxr-x---"));
+        try {
+            Files.setPosixFilePermissions(FileSystems.getDefault().getPath(startCCCmd),
+                    PosixFilePermissions.fromString("rwxr-x---"));
+        } catch (SecurityException se) {
+            throw new RuntimeException("Failed to start the genomix CC! Permition deny:" + se.getMessage());
+        }
         Process p = Runtime.getRuntime().exec(startCCCmd);
         p.waitFor(); // wait for cmd execution
         Thread.sleep(sleepms); // wait for CC registration

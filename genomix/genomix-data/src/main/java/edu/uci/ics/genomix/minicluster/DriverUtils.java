@@ -48,15 +48,6 @@ public class DriverUtils {
     public static String getIP(String hostName) throws IOException, InterruptedException {
         InetAddress address = InetAddress.getByName(hostName);
         return address.getHostAddress();
-        //        String getIPCmd = "ssh -n " + hostName + " \"" + System.getProperty("app.home", ".") + File.separator + "bin"
-        //                + File.separator + "getip.sh\"";
-        //        Process p = Runtime.getRuntime().exec(getIPCmd);
-        //        p.waitFor(); // wait for ssh 
-        //        String stdout = IOUtils.toString(p.getInputStream()).trim();
-        //        if (p.exitValue() != 0)
-        //            throw new RuntimeException("Failed to get the ip address of the master node! Script returned exit code: "
-        //                    + p.exitValue() + "\nstdout: " + stdout + "\nstderr: " + IOUtils.toString(p.getErrorStream()));
-        //        return stdout;
     }
 
     /**
