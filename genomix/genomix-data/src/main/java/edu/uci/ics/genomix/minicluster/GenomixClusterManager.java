@@ -19,6 +19,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
@@ -282,6 +285,8 @@ public class GenomixClusterManager {
         LOG.info("Starting NC's");
         String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "startAllNCs.sh " + type;
+        Files.setPosixFilePermissions(FileSystems.getDefault().getPath(startNCCmd),
+                PosixFilePermissions.fromString("rwxr-x---"));
         Process p = Runtime.getRuntime().exec(startNCCmd);
         p.waitFor(); // wait for ssh
         Thread.sleep(sleepms); // wait for NC -> CC registration
@@ -297,6 +302,8 @@ public class GenomixClusterManager {
         LOG.info("Starting CC");
         String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "startcc.sh";
+        Files.setPosixFilePermissions(FileSystems.getDefault().getPath(startCCCmd),
+                PosixFilePermissions.fromString("rwxr-x---"));
         Process p = Runtime.getRuntime().exec(startCCCmd);
         p.waitFor(); // wait for cmd execution
         Thread.sleep(sleepms); // wait for CC registration
@@ -309,6 +316,9 @@ public class GenomixClusterManager {
     private static void shutdownCC() throws IOException, InterruptedException {
         LOG.info("Shutting down any previous CC");
         String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
+
+        Files.setPosixFilePermissions(FileSystems.getDefault().getPath(stopCCCmd),
+                PosixFilePermissions.fromString("rwxr-x---"));
         Process p = Runtime.getRuntime().exec(stopCCCmd);
         p.waitFor(); // wait for cmd execution
     }
@@ -317,6 +327,8 @@ public class GenomixClusterManager {
         LOG.info("Shutting down any previous NC's");
         String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
                 + "stopAllNCs.sh";
+        Files.setPosixFilePermissions(FileSystems.getDefault().getPath(stopNCCmd),
+                PosixFilePermissions.fromString("rwxr-x---"));
         Process p = Runtime.getRuntime().exec(stopNCCmd);
         LOG.info("Waiting for completion");
         p.waitFor(); // wait for ssh

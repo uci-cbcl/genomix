@@ -10,6 +10,8 @@ import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.FileOutputFormat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,7 +20,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.driver.GenomixDriver;
+import edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixHadoopDriver;
+import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
 import edu.uci.ics.genomix.hyracks.graph.test.GraphBuildingTestSetting;
 import edu.uci.ics.genomix.hyracks.graph.test.TestUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
@@ -54,46 +57,59 @@ public class HyrackVSHadoopTest {
     }
 
     private static final String SEQUENCE_FILE_DIR = "src/test/resources/data/sequence";
-    private static final String ACTUAL_RESULT_HYRACKS_DIR = "actual/sequence/hyracks";
-    private static final String ACTUAL_RESULT_HADOOP_DIR = "actual/sequence/hadoop";
+    private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
+    private static final String ACTUAL_RESULT_DIR_HYRACKS = "actual/sequence/hyracks";
+    private static final String ACTUAL_RESULT_DIR_HADOOP = "actual/sequence/hadoop";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH_HYRACKS = "/webmap_result_hyracks";
     private static final String HDFS_OUTPUT_PATH_HADOOP = "/webmap_result_hadoop";
 
     private static GenomixClusterManager manager;
-
-    private static GenomixDriver driver;
+    private static GenomixJobConf conf = new GenomixJobConf(3);
+    private static int numberOfNC = 2;
+    private static int numPartitionPerMachine = 2;
+    private static Driver hyracksDriver;
+    private static GenomixHadoopDriver hadoopDriver;
 
     // Instance member
     private final String testDirName;
     private final File testFile;
     private final String hyracksResultFileName;
     private final String hadoopResultFileName;
-    private final String expectFileName;
+    private final int kmerLength;
 
-    private GenomixJobConf confHyracks;
-    private GenomixJobConf confHadoop;
-
-    public HyrackVSHadoopTest(String subdir, File file) throws IOException {
+    public HyrackVSHadoopTest(String subdir, File file, int kmerLength) throws IOException {
         this.testDirName = subdir;
         this.testFile = file;
+        this.kmerLength = kmerLength;
 
-        this.hyracksResultFileName = ACTUAL_RESULT_HYRACKS_DIR + File.separator + testDirName + File.separator
-                + testFile.getName() + File.separator + "data";
-        this.hadoopResultFileName = ACTUAL_RESULT_HADOOP_DIR + File.separator + testDirName + File.separator
-                + testFile.getName() + File.separator + "data";
-        this.expectFileName = testFile.getAbsolutePath().replaceFirst(GraphBuildingTestSetting.TEST_FILE_EXTENSION,
-                ".expected.txt");
-        System.out.print(expectFileName);
+        this.hyracksResultFileName = ACTUAL_RESULT_DIR_HYRACKS + File.separator + testDirName + File.separator + "data";
+        this.hadoopResultFileName = ACTUAL_RESULT_DIR_HADOOP + File.separator + testDirName + File.separator + "data";
     }
 
     @BeforeClass
     public static void setUp() throws Exception {
+        conf = new GenomixJobConf(3);
+        conf.setBoolean(GenomixJobConf.RUN_LOCAL, true);
+        conf.setInt(GenomixJobConf.FRAME_SIZE, 65535);
+        conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
 
-        FileUtils.forceMkdir(new File(ACTUAL_RESULT_HYRACKS_DIR));
-        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_HYRACKS_DIR));
+        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR_HYRACKS));
+        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR_HYRACKS));
 
-        driver = new GenomixDriver();
+        conf.setInt(GenomixJobConf.FRAME_SIZE, 65535);
+        conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
+
+        manager = new GenomixClusterManager(true, conf);
+        manager.setNumberOfNC(numberOfNC);
+        manager.setNumberOfDataNodesInLocalMiniHDFS(numberOfNC);
+
+        manager.startCluster(ClusterType.HADOOP);
+        manager.startCluster(ClusterType.HYRACKS);
+
+        hyracksDriver = new Driver(GenomixClusterManager.LOCAL_HOSTNAME,
+                GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT, numPartitionPerMachine);
+        hadoopDriver = new GenomixHadoopDriver();
     }
 
     private void waitawhile() throws InterruptedException {
@@ -105,45 +121,47 @@ public class HyrackVSHadoopTest {
     @Test
     public void TestEachFile() throws Exception {
         waitawhile();
-        String cmd = "-kmerLength 55 -localInput " + this.testFile.getAbsolutePath();
-
-        String[] argsHyracks = (cmd + " -pipelineOrder BUILD_HYRACKS").split("\\s+");
-        confHyracks = GenomixJobConf.fromArguments(argsHyracks);
-
-        String[] argsHadoop = (cmd + " -pipelineOrder BUILD_HADOOP").split("\\s+");
-        confHadoop = GenomixJobConf.fromArguments(argsHadoop);
+        conf.setInt(GenomixJobConf.KMER_LENGTH, kmerLength);
+        GenomixJobConf.setGlobalStaticConstants(conf);
 
         prepareData();
-        driver.runGenomix(confHyracks);
-        driver.runGenomix(confHadoop);
+
+        hadoopDriver.run(HDFS_INPUT_PATH + File.separator + testFile.getName(), HDFS_OUTPUT_PATH_HADOOP
+                + File.separator + testFile.getName(), numberOfNC, kmerLength, 4, true, conf);
+
+        FileInputFormat.setInputPaths(conf, HDFS_INPUT_PATH + File.separator + testFile.getName());
+        FileOutputFormat.setOutputPath(conf, new Path(HDFS_OUTPUT_PATH_HYRACKS + File.separator + testFile.getName()));
+
+        hyracksDriver.runJob(conf);
+
         checkResult();
     }
 
     private void prepareData() throws IOException {
-        FileSystem dfs = FileSystem.get(confHadoop);
-        if (dfs.exists(new Path(HDFS_OUTPUT_PATH_HYRACKS))) {
-            dfs.delete(new Path(HDFS_OUTPUT_PATH_HYRACKS), true);
-        }
+        FileSystem dfs = FileSystem.get(conf);
         if (dfs.exists(new Path(HDFS_OUTPUT_PATH_HADOOP))) {
             dfs.delete(new Path(HDFS_OUTPUT_PATH_HADOOP), true);
+        }
+        if (dfs.exists(new Path(HDFS_OUTPUT_PATH_HYRACKS))) {
+            dfs.delete(new Path(HDFS_OUTPUT_PATH_HYRACKS), true);
         }
         if (dfs.exists(new Path(HDFS_INPUT_PATH))) {
             dfs.delete(new Path(HDFS_INPUT_PATH), true);
         }
-        GenomixClusterManager.copyLocalToHDFS(confHadoop, testFile.getAbsolutePath(), HDFS_INPUT_PATH + File.separator
+        GenomixClusterManager.copyLocalToHDFS(conf, testFile.getAbsolutePath(), HDFS_INPUT_PATH + File.separator
                 + testFile.getName());
     }
 
     public void checkResult() throws Exception {
         Path path = new Path(hyracksResultFileName);
-        GenomixClusterManager.copyBinToLocal(confHadoop,
-                HDFS_OUTPUT_PATH_HYRACKS + File.separator + testFile.getName(), path.getParent().toString());
+        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HYRACKS + File.separator + testFile.getName(), path
+                .getParent().toString());
         GenerateGraphViz.convertGraphBuildingOutputToGraphViz(path.getParent().toString() + "/bin", path.getParent()
                 .toString() + "/graphviz");
 
         path = new Path(hadoopResultFileName);
-        GenomixClusterManager.copyBinToLocal(confHadoop, HDFS_OUTPUT_PATH_HADOOP + File.separator + testFile.getName(),
-                path.getParent().toString());
+        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HADOOP + File.separator + testFile.getName(), path
+                .getParent().toString());
         GenerateGraphViz.convertGraphBuildingOutputToGraphViz(path.getParent().toString() + "/bin", path.getParent()
                 .toString() + "/graphviz");
 
@@ -153,8 +171,8 @@ public class HyrackVSHadoopTest {
     @AfterClass
     public static void tearDown() throws Exception {
         if (manager != null) {
-            manager.stopCluster(ClusterType.HADOOP);
             manager.stopCluster(ClusterType.HYRACKS);
+            manager.stopCluster(ClusterType.HADOOP);
         }
     }
 }

@@ -101,7 +101,6 @@ public class BatchTestFilesTest {
                 + File.separator + "data";
         this.expectFileName = testFile.getAbsolutePath().replaceFirst(GraphBuildingTestSetting.TEST_FILE_EXTENSION,
                 ".expected.txt");
-        System.out.print(expectFileName);
     }
 
     @BeforeClass
