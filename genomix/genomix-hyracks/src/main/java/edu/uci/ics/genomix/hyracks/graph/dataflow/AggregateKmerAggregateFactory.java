@@ -20,8 +20,12 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.type.Node;
+import org.apache.hadoop.mapred.JobConf;
+
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -31,6 +35,7 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.std.group.AggregateState;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import edu.uci.ics.hyracks.hdfs.dataflow.ConfFactory;
 
 public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFactory {
 
@@ -41,7 +46,10 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
     private static final Logger LOG = Logger.getLogger(AggregateKmerAggregateFactory.class.getName());
 
-    public AggregateKmerAggregateFactory() {
+    private final ConfFactory confFactory;
+
+    public AggregateKmerAggregateFactory(JobConf conf) throws HyracksDataException {
+        confFactory = new ConfFactory(conf);
     }
 
     @Override
@@ -49,6 +57,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults, IFrameWriter writer)
             throws HyracksDataException {
         final int frameSize = ctx.getFrameSize();
+        GenomixJobConf.setGlobalStaticConstants(confFactory.getConf());
+
         return new IAggregatorDescriptor() {
 
             private Node readNode = new Node();
@@ -78,8 +88,9 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             public void init(ArrayTupleBuilder tupleBuilder, IFrameTupleAccessor accessor, int tIndex,
                     AggregateState state) throws HyracksDataException {
                 Node localUniNode = (Node) state.state;
+
                 localUniNode.reset();
-                readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.
                 //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
@@ -109,7 +120,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
                 Node localUniNode = (Node) state.state;
 
-                readNode.setAsReference(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }

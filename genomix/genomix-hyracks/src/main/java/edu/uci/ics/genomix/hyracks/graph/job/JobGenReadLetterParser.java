@@ -73,8 +73,10 @@ public class JobGenReadLetterParser extends JobGen {
     public static HDFSReadOperatorDescriptor createHDFSReader(JobSpecification jobSpec, ConfFactory jobFactory,
             InputSplit[] hdfsInputSplits, String[] readSchedule) throws HyracksDataException {
         try {
+
             return new HDFSReadOperatorDescriptor(jobSpec, ReadsKeyValueParserFactory.readKmerOutputRec,
-                    jobFactory.getConf(), hdfsInputSplits, readSchedule, new ReadsKeyValueParserFactory());
+                    jobFactory.getConf(), hdfsInputSplits, readSchedule, new ReadsKeyValueParserFactory(
+                            jobFactory.getConf()));
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }
