@@ -11,7 +11,7 @@ public class MessageFlag {
         REPLACE_NODE((byte) (3 << 4)),
         KILL_SELF((byte) (4 << 4)),
         FROM_DEAD((byte) (5 << 4)),
-        ADD_READIDS((byte) (7 << 4));
+        ADD_READIDS((byte) (6 << 4));
 
         public static final byte MASK = (byte) (0b111 << 4);
         public static final byte CLEAR = (byte) (0b0001111);
