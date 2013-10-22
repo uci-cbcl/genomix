@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.AbstractMap.SimpleEntry;
 
 import org.apache.hadoop.io.NullWritable;
 
@@ -19,7 +20,6 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node.NeighborInfo;
 import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.SimpleEntry;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;

@@ -95,6 +95,8 @@ public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathM
     }
 
     @Override
-    public void compute(Iterator<M> msgIterator) {
+    public void compute(Iterator<M> msgIterator) throws Exception {
+        // TODO Auto-generated method stub
+        
     }
 }

@@ -42,6 +42,9 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public static boolean fakeVertexExist = false;
     public static VKmer fakeVertex = new VKmer();
 
+    // validPathsTable: a table representing the set of edge types forming a valid path from
+    //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
+    //                 the second
     public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
             { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
 
