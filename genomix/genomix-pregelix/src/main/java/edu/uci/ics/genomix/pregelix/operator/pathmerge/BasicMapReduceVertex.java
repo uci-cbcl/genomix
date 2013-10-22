@@ -9,7 +9,7 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.genomix.type.VKmer;
 
-public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
+public abstract class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
         BasicPathMergeVertex<V, M> {
 
     protected VKmer forwardKmer = new VKmer();
@@ -94,9 +94,4 @@ public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathM
         fakeVertexExist = false;
     }
 
-    @Override
-    public void compute(Iterator<M> msgIterator) throws Exception {
-        // TODO Auto-generated method stub
-        
-    }
 }
