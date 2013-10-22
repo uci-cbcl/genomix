@@ -14,5 +14,5 @@ before_script:
     - cd ../..
 script:
     - cd genomix
-    - mvn package -q -e
+    - mvn package -q -e -Djava.util.logging.config.file=genomix-driver/src/main/resources/conf/logging.properties
     - ls -t */target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran
