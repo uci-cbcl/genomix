@@ -82,7 +82,7 @@ public class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathM
     /**
      * step 3:
      */
-    public void mapReduceInFakeVertex(Iterator<M> msgIterator) {
+    public void groupByInternalKmer(Iterator<M> msgIterator) {
         // Mapper
         Map<VKmer, VKmerList> kmerMapper = mapKeyByInternalKmer(msgIterator);
 

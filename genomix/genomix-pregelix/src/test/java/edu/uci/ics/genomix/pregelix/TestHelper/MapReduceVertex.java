@@ -16,7 +16,7 @@ public class MapReduceVertex extends BasicMapReduceVertex<VertexValueWritable, P
         } else if (getSuperstep() == 2) {
             sendMsgToFakeVertex();
         } else if (getSuperstep() == 3) {
-            mapReduceInFakeVertex(msgIterator);
+            groupByInternalKmer(msgIterator);
             voteToHalt();
         } else if (getSuperstep() == 4) {
             broadcastKillself();
