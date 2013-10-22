@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.ResultGen;
+package edu.uci.ics.genomix.pregelix.resultgen;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

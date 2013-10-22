@@ -1,6 +1,6 @@
-package edu.uci.ics.genomix.pregelix.JobRun.test;
+package edu.uci.ics.genomix.pregelix.jobrun.generic;
 
-import edu.uci.ics.genomix.pregelix.JobRun.BasicGraphCleanTestSuite;
+import edu.uci.ics.genomix.pregelix.jobrun.BasicGraphCleanTestSuite;
 import junit.framework.Test;
 
 public class TipAddTestSuite extends BasicGraphCleanTestSuite {

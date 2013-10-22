@@ -1,7 +1,7 @@
-package edu.uci.ics.genomix.pregelix.JobRun.main;
+package edu.uci.ics.genomix.pregelix.jobrun.pipeline;
 
 import junit.framework.Test;
-import edu.uci.ics.genomix.pregelix.JobRun.BasicGraphCleanTestSuite;
+import edu.uci.ics.genomix.pregelix.jobrun.BasicGraphCleanTestSuite;
 
 public class BubbleMergeTestSuite extends BasicGraphCleanTestSuite {
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.pregelix.JobRun;
+package edu.uci.ics.genomix.pregelix.jobrun;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.JobGen;
+package edu.uci.ics.genomix.pregelix.jobgen;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -8,11 +8,6 @@ import java.util.Random;
 import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.TestHelper.BFSTraverseVertex;
-import edu.uci.ics.genomix.pregelix.TestHelper.BridgeAddVertex;
-import edu.uci.ics.genomix.pregelix.TestHelper.BubbleAddVertex;
-import edu.uci.ics.genomix.pregelix.TestHelper.MapReduceVertex;
-import edu.uci.ics.genomix.pregelix.TestHelper.TipAddVertex;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
@@ -28,6 +23,11 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
+import edu.uci.ics.genomix.pregelix.testhelper.BFSTraverseVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.BubbleAddVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.MapReduceVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.TipAddVertex;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
