@@ -249,9 +249,8 @@ public class GenomixJobConf extends JobConf {
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphCleanMaxIterations";
-    public static final String PATHMERGE_RANDOM_RANDSEED = "genomix.PathMergeRandom.randSeed";
+    public static final String RANDOM_RANDSEED = "genomix.Random.randSeed";
     public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.PathMergeRandom.probBeingRandomHead";
-    public static final String SPLITREPEAT_RANDOM_RANDSEED = "genomix.SplitRepeatRandom.randSeed";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
     public static final String MAX_READIDS_PER_EDGE = "genomix.max.readids.per.edge";
@@ -352,7 +351,6 @@ public class GenomixJobConf extends JobConf {
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
 
         Patterns.verifyPatterns(Patterns.arrayFromString(conf.get(GenomixJobConf.PIPELINE_ORDER)));
-
         //        // Hyracks/Pregelix Advanced Setup
         //        if (conf.get(IP_ADDRESS) == null)
         //            throw new IllegalArgumentException("ipAddress was not specified!");
@@ -372,11 +370,11 @@ public class GenomixJobConf extends JobConf {
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
 
-        if (getLong(PATHMERGE_RANDOM_RANDSEED, -1) == -1)
-            setLong(PATHMERGE_RANDOM_RANDSEED, System.currentTimeMillis());
+        if (getLong(RANDOM_RANDSEED, -1) == -1)
+            setLong(RANDOM_RANDSEED, System.currentTimeMillis());
         
-        if (getLong(SPLITREPEAT_RANDOM_RANDSEED, -1) == -1)
-            setLong(SPLITREPEAT_RANDOM_RANDSEED, System.currentTimeMillis());
+        if (getLong(RANDOM_RANDSEED, -1) == -1)
+            setLong(RANDOM_RANDSEED, System.currentTimeMillis());
         
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
@@ -460,8 +458,8 @@ public class GenomixJobConf extends JobConf {
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
         setInt(GRAPH_CLEAN_MAX_ITERATIONS, opts.graphCleanMaxIterations);
-        setLong(PATHMERGE_RANDOM_RANDSEED, opts.pathMergeRandom_randSeed);
-        setLong(SPLITREPEAT_RANDOM_RANDSEED, opts.splitRepeatRandom_randSeed);
+        setLong(RANDOM_RANDSEED, opts.pathMergeRandom_randSeed);
+        setLong(RANDOM_RANDSEED, opts.splitRepeatRandom_randSeed);
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
