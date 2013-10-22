@@ -10,7 +10,7 @@ install:
 
 before_script:
     - cd genomix/genomix-pregelix/
-    - java -classpath target/genomix-pregelix-0.2.10-SNAPSHOT-jar-with-dependencies.jar:target/test-classes/ edu.uci.ics.genomix.pregelix.JobGen.JobGenerator
+    - java -classpath target/genomix-pregelix-0.2.10-SNAPSHOT-jar-with-dependencies.jar:target/test-classes/ edu.uci.ics.genomix.pregelix.jobgen.JobGenerator
     - cd ../..
 script:
     - cd genomix
