@@ -223,5 +223,5 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                 return true;
         return false;
     }
-    
+
 }

@@ -6,12 +6,12 @@ public class MessageFlag {
     // 2 bits(4-6) for MESSAGETYPE
     public enum MESSAGETYPE {
 
-        UPDATE((byte) (0b001 << 4)),
-        TO_NEIGHBOR((byte) (0b010 << 4)),
-        REPLACE_NODE((byte) (0b011 << 4)),
-        KILL_SELF((byte) (0b100 << 4)),
-        FROM_DEAD((byte) (0b101 << 4)),
-        ADD_READIDS((byte) (0b111 << 4));
+        UPDATE((byte) (1 << 4)),
+        TO_NEIGHBOR((byte) (2 << 4)),
+        REPLACE_NODE((byte) (3 << 4)),
+        KILL_SELF((byte) (4 << 4)),
+        FROM_DEAD((byte) (5 << 4)),
+        ADD_READIDS((byte) (7 << 4));
 
         public static final byte MASK = (byte) (0b111 << 4);
         public static final byte CLEAR = (byte) (0b0001111);
