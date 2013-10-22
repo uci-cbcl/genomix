@@ -223,5 +223,9 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                 return true;
         return false;
     }
-
+    
+    public static Test suite() throws Exception {
+        return null;
+    }
+    
 }
