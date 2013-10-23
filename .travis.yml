@@ -16,3 +16,6 @@ script:
     - cd genomix
     - mvn package -q -e -Djava.util.logging.config.file=genomix-driver/src/main/resources/conf/logging.properties
     - ls -t */target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran
+    - cd genomix-driver/target/genomix-driver-0.2.10-SNAPSHOT-binary-assembly
+    - bin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/
+
