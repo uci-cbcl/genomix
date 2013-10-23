@@ -60,7 +60,7 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public void addNewMajorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
-        EDGETYPE majorToBubble = getMajorToBubbleEdgetype();
+        EDGETYPE majorToBubble = msg.getMajorToBubbleEdgetype();
         ReadIdSet newReadIds = msg.getNode().getEdgeMap(majorToBubble.mirror()).get(msg.getMajorVertexId());
         node.getEdgeMap(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor()).unionAdd(topKmer, newReadIds);
     }
