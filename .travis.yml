@@ -5,6 +5,9 @@ jdk:
     - openjdk7
 
 install:
+    - ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
+    - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys  # no pw required for ssh'ing locally
+    - ssh localhost -o StrictHostKeyChecking=false -n  # allow us to ssh later w/out typing "yes"
     - sudo apt-get install graphviz
     - mvn install -q -am -pl genomix/genomix-driver/ -DskipTests=true # only install driver's prereq's
 
