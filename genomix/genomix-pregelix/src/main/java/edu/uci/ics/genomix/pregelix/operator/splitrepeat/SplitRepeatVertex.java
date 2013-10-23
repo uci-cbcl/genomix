@@ -62,6 +62,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
+        if (repeatKmer == null)
+            repeatKmer = new VKmer();
     }
 
     /**
@@ -134,7 +136,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         if (verbose) {
             LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue());
         }
-        if (vertex.getDegree() > 2) { // if I may be a repeat which can be split
+        if (vertex.getDegree() > 2 && !isTandemRepeat(vertex)) { // if I may be a repeat which can be split
             Set<NeighborInfo> deletedNeighborsInfo = new HashSet<NeighborInfo>();
             // process validPathsTable
             // validPathsTable: a table representing the set of edge types forming a valid path from
