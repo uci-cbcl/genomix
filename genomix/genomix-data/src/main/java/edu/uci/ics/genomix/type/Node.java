@@ -84,6 +84,14 @@ public class Node implements Writable, Serializable {
             this.kmer = kmer;
             this.readIds = readIds;
         }
+        
+        public String toString(){
+            StringBuilder sbuilder = new StringBuilder();
+            sbuilder.append('{');
+            sbuilder.append(kmer + " " + et);
+            sbuilder.append('}');
+            return sbuilder.toString();
+        }
     }
 
     public static class NeighborsInfo implements Iterable<NeighborInfo> {
