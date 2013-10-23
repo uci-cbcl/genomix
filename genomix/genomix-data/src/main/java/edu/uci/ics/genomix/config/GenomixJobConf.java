@@ -98,7 +98,7 @@ public class GenomixJobConf extends JobConf {
         private String hdfsWorkPath;
 
         @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: true)", required = false)
-        private boolean saveIntermediateResults = true;
+        private boolean saveIntermediateResults = false;
 
         @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
         private boolean followsGraphBuild = false;
