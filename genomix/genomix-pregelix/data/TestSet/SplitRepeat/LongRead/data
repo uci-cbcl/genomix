@@ -1,0 +1,6 @@
+AAA	{FF:{AAT=[1]}	FR:{}	RF:{}	RR:{CAA=[1], GAA=[2]}	5':[], ~5':[]	kmer:	cov:2.0x}
+CAA	{FF:{AAA=[1]}	FR:{}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:	cov:1.0x}
+GAA	{FF:{AAA=[2]}	FR:{}	RF:{}	RR:{}	5':[2-0_0], ~5':[]	kmer:	cov:1.0x}
+ATC	{FF:{}	FR:{}	RF:{}	RR:{AAT=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
+ATG	{FF:{}	FR:{}	RF:{}	RR:{AAT=[3]}	5':[], ~5':[]	kmer:	cov:1.0x}
+AAT	{FF:{ATC=[1], ATG=[3]}	FR:{}	RF:{}	RR:{AAA=[1]}	5':[3-0_0], ~5':[]	kmer:	cov:2.0x}
