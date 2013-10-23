@@ -21,7 +21,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -46,8 +45,18 @@ public class DriverUtils {
      * Get the IP address of the master node using the bin/getip.sh script
      */
     public static String getIP(String hostName) throws IOException, InterruptedException {
-        InetAddress address = InetAddress.getByName(hostName);
-        return address.getHostAddress();
+        String getIPCmd = "ssh -n " + hostName + " \"" + System.getProperty("app.home", ".") + File.separator + "bin"
+                + File.separator + "getip.sh\"";
+        Process p = Runtime.getRuntime().exec(getIPCmd);
+        p.waitFor(); // wait for ssh 
+        String stdout = IOUtils.toString(p.getInputStream()).trim();
+        if (p.exitValue() != 0)
+            throw new RuntimeException("Failed to get the ip address of the master node! Script returned exit code: "
+                    + p.exitValue() + "\nstdout: " + stdout + "\nstderr: " + IOUtils.toString(p.getErrorStream()));
+        return stdout;
+        //      InetAddress address = InetAddress.getByName(hostName);
+        //      System.out.println("inetAddress for " + hostName + address.getHostAddress());
+        //      return address.getHostAddress();
     }
 
     /**
