@@ -9,7 +9,7 @@ public class SplitRepeatTestSuite extends BasicGraphCleanTestSuite {
         String pattern = "SplitRepeat";
         String testSet[] = { "SplitOnce", "SplitTwice", "2to1", "3to1", "3to2", "SimpleSplitManyTimes",
                 "ComplexSplitManyTimes", "AdjSplitRepeat_1to1", "AdjSplitRepeat_2to2", "AdjSplitRepeat_3to3",
-                "MultiTandemRepeat2" };
+                "MultiTandemRepeat2", "LongRead2" };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
         return makeTestSuite(testSuite);
