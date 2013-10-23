@@ -297,8 +297,8 @@ public class Node implements Writable, Serializable {
      * Update my coverage as if all the reads in other became my own
      */
     public void addCoverage(Node other) {
-        float myAdjustedLength = internalKmer.getKmerLetterLength() - Kmer.getKmerLength() - 1;
-        float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - Kmer.getKmerLength() - 1;
+        float myAdjustedLength = internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1;
+        float otherAdjustedLength = other.internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1;
         averageCoverage += other.averageCoverage * (otherAdjustedLength / myAdjustedLength);
     }
 
