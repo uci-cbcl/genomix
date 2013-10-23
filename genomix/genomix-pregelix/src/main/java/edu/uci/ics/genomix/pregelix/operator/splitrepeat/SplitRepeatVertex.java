@@ -1,11 +1,12 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.AbstractMap.SimpleEntry;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.io.NullWritable;
 
@@ -30,12 +31,14 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * reads. The algorithms are similar to scaffolding, but uses individual
  * reads. It is very experimental, with marginal improvements to the graph
  * ex. a -r1-> b -r1-> c
- *     d -r2->   -r2-> e 
- *     after Split Repeat, you can get
- *     a -r1-> b' -r1-> c
- *     d -r2-> b'' -r2-> e         
+ * d -r2-> -r2-> e
+ * after Split Repeat, you can get
+ * a -r1-> b' -r1-> c
+ * d -r2-> b'' -r2-> e
  */
 public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, SplitRepeatMessage> {
+
+    private static final Logger LOG = Logger.getLogger(SplitRepeatVertex.class.getName());
 
     public static final int NUM_LETTERS_TO_APPEND = 3;
     private static long randSeed = 1; //static for save memory
@@ -127,9 +130,12 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
     }
 
     public void detectRepeatAndSplit() {
-        if (getVertexValue().getDegree() > 2) { // if I may be a repeat which can be split
+        VertexValueWritable vertex = getVertexValue();
+        if (verbose) {
+            LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue());
+        }
+        if (vertex.getDegree() > 2) { // if I may be a repeat which can be split
             Set<NeighborInfo> deletedNeighborsInfo = new HashSet<NeighborInfo>();
-            VertexValueWritable vertex = getVertexValue();
             // process validPathsTable
             // validPathsTable: a table representing the set of edge types forming a valid path from
             //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
@@ -175,8 +181,12 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                 }
             }
 
+            if (verbose) {
+                LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue() + "try to delete: ");
+            }
             // process deletedNeighborInfo -- delete extra edges from old vertex
             deleteEdgeFromOldVertex(deletedNeighborsInfo);
+            deletedNeighborsInfo.clear();
 
             // Old vertex delete or voteToHalt 
             if (getVertexValue().getDegree() == 0)//if no any edge, delete
