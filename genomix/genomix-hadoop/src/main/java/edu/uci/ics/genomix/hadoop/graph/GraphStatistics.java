@@ -48,28 +48,20 @@ import edu.uci.ics.genomix.type.VKmer;
 public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node, Text, LongWritable> {
 
     public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
+    private Reporter reporter;
 
     @Override
     public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output, Reporter reporter)
             throws IOException {
-
-        reporter.getCounter("totals", "nodes").increment(1);
-
-        reporter.getCounter("degree-bins", Integer.toString(value.inDegree() + value.outDegree())).increment(1);
-        reporter.getCounter("totals", "degree").increment(value.inDegree() + value.outDegree());
-
-        int kmerLength = value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength();
-        reporter.getCounter("kmerLength-bins", Integer.toString(kmerLength)).increment(1);
-        reporter.getCounter("totals", "kmerLength").increment(kmerLength);
-
-        reporter.getCounter("coverage-bins", Integer.toString(Math.round(value.getAverageCoverage()))).increment(1);
-        reporter.getCounter("totals", "coverage").increment(Math.round(value.getAverageCoverage()));
-
-        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().size()))).increment(1);
-        reporter.getCounter("totals", "startRead").increment(Math.round(value.getStartReads().size()));
-
-        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().size()))).increment(1);
-        reporter.getCounter("totals", "endRead").increment(Math.round(value.getEndReads().size()));
+        this.reporter = reporter;
+        
+        reporter.incrCounter("totals", "nodes", 1);
+        updateStats("degree", value.inDegree() + value.outDegree());
+        updateStats("kmerLength", value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength());
+        updateStats("coverage", Math.round(value.getAverageCoverage()));
+        updateStats("startRead", value.getStartReads().size());
+        updateStats("endRead", value.getEndReads().size());
+        
 
         long totalEdgeReads = 0;
         long totalSelf = 0;
@@ -77,24 +69,36 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
                 totalEdgeReads += e.getValue().size();
                 if (e.getKey().equals(key)) {
-                    reporter.getCounter("totals", "selfEdge-" + et).increment(1);
+                    reporter.incrCounter("totals", "selfEdge-" + et, 1);
                     totalSelf += 1;
                 }
             }
         }
-        reporter.getCounter("edgeRead-bins", Long.toString(totalEdgeReads)).increment(1);
-        reporter.getCounter("totals", "edgeRead").increment(totalEdgeReads);
-        reporter.getCounter("selfEdge-bins", Long.toString(totalSelf)).increment(1);
-
+        updateStats("edgeRead", totalEdgeReads);
+        
         if (value.isPathNode())
-            reporter.getCounter("totals", "pathNode").increment(1);
+            reporter.incrCounter("totals", "pathNode", 1);
 
         for (DIR d : DIR.values())
             if (value.degree(d) == 0)
-                reporter.getCounter("totals", "tips-" + d).increment(1);
+                reporter.incrCounter("totals", "tips-" + d, 1);
 
         if (value.inDegree() == 0 && value.outDegree() == 0)
-            reporter.getCounter("totals", "tips-BOTH").increment(1);
+            reporter.incrCounter("totals", "tips-BOTH", 1);
+        
+        if ((value.inDegree() == 0 && value.outDegree() != 0)
+                || (value.inDegree() != 0 && value.outDegree() == 0))
+            reporter.incrCounter("totals", "tips-ONE", 1);
+    }
+    
+    private void updateStats(String valueName, long value) {
+        reporter.incrCounter(valueName + "-bins", Long.toString(value), 1);
+        reporter.incrCounter("totals", valueName, value);
+        
+        long prevMax = reporter.getCounter("maximum", valueName).getValue();
+        if (prevMax < value) {
+            reporter.incrCounter("maximum", valueName, value - prevMax); // increment by difference to get to new value (no set function!)
+        }
     }
 
     /**
