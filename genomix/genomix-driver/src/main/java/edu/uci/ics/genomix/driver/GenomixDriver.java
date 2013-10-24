@@ -51,7 +51,6 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
-import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -288,19 +287,17 @@ public class GenomixDriver {
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
-        if (conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) != null){
-            String binDir = conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) + File.separator + "bin";
-            String textDir = conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) + File.separator + "text";
-            String graphvizDir = conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) + File.separator + "graphviz";
-            GenomixClusterManager.copyBinToLocal(conf, curOutput, binDir);
-            //covert bin to text
-            GenerateTextFile.convertGraphCleanOutputToText(binDir, textDir);
+        if (conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) != null) {
+            String binaryDir = conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR);
+            //copy bin to local
+            GenomixClusterManager.copyBinToLocal(conf, curOutput, binaryDir);
             //covert bin to graphviz
-            GenerateGraphViz.convertGraphCleanOutputToSimpleNode(textDir, graphvizDir);
+            String graphvizDir = binaryDir + File.separator + "graphviz";
+            GenerateGraphViz.convertGraphCleanOutputToSimpleNode(binaryDir + File.separator + "bin", graphvizDir);
         }
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
-        
+
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }
 
@@ -309,7 +306,7 @@ public class GenomixDriver {
                 //                        "-runLocal", "true", 
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
-                "-localInput", "tail600000",
+                "-localInput", "/home/anbangx/workspace/fullstack_genomix/hyracks/genomix/genomix-pregelix/data/TestSet/PathMerge/8",
                 //                        "-localInput", "/home/wbiesing/code/biggerInput",
                 //                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
                 //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
@@ -319,8 +316,7 @@ public class GenomixDriver {
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
                 //                "-localOutput", "testout",
-                "-pipelineOrder", "MERGE",
-                "localGraphOutput", "graph"
+                "-pipelineOrder", "MERGE", "localGraphOutput", "graph"
         //                "-hyracksBuildOutputText", "true",
         };
         // allow Eclipse to run the maven-generated scripts
