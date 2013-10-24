@@ -149,6 +149,12 @@ public class GenomixJobConf extends JobConf {
         
         @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinLength = -1;
+        
+        @Option(name = "-startSeedToExtractSubgraph", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private String startSeedToExtractSubgraph;
+        
+        @Option(name = "-numHopsToExtractSubgraph", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private int numHopsToExtractSubgraph = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -191,6 +197,7 @@ public class GenomixJobConf extends JobConf {
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,
+        EXTRACT_SUBGRAPH,
         STATS;
 
         /**
@@ -263,6 +270,8 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "scaffolding.max.traveral.length";
     public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "scaffolding.vertex.min.coverage";
     public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
+    public static final String EXTRACT_SUBGRAPH_START_SEEDS = "extract.subgraph.startSeeds";
+    public static final String EXTRACT_SUBGRAPH_NUM_HOPS = "extract.subgraph.num.hops";
     
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
@@ -377,9 +386,6 @@ public class GenomixJobConf extends JobConf {
         if (getLong(RANDOM_RANDSEED, -1) == -1)
             setLong(RANDOM_RANDSEED, System.currentTimeMillis());
         
-        if (getLong(RANDOM_RANDSEED, -1) == -1)
-            setLong(RANDOM_RANDSEED, System.currentTimeMillis());
-        
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
@@ -408,6 +414,13 @@ public class GenomixJobConf extends JobConf {
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
+        
+        if (get(EXTRACT_SUBGRAPH_START_SEEDS) == null)
+            set(EXTRACT_SUBGRAPH_START_SEEDS, "");
+        
+        if (getInt(EXTRACT_SUBGRAPH_NUM_HOPS, -1) == -1)
+            setInt(EXTRACT_SUBGRAPH_NUM_HOPS, 1);
+        
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
@@ -473,6 +486,8 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
+        set(EXTRACT_SUBGRAPH_START_SEEDS, opts.startSeedToExtractSubgraph);
+        setInt(EXTRACT_SUBGRAPH_NUM_HOPS, opts.numHopsToExtractSubgraph);
     }
 
     /**

@@ -10,6 +10,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.pregelix.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
@@ -40,12 +41,12 @@ public class Client {
 
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
-
-        //        @Option(name = "-pseudo-rate", usage = "the rate of pseduHead", required = false)
-        //        public float pseudoRate = -1;
-        //        
-        //        @Option(name = "-max-patitionround", usage = "max rounds in partition phase", required = false)
-        //        public int maxRound = -1;
+        
+        @Option(name = "-startSeeds", usage = "whether to do runtime profifling", required = false)
+        public String startSeeds;
+        
+        @Option(name = "-numOfHops", usage = "whether to do runtime profifling", required = false)
+        public int numOfHops;
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -68,7 +69,9 @@ public class Client {
         if (options.numIteration > 0) {
             job.getConfiguration().setInt(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS, options.numIteration);
         }
-
+        
+        job.getConfiguration().set(ExtractSubgraphVertex.START_SEEDS, options.startSeeds);
+        job.getConfiguration().setInt(ExtractSubgraphVertex.NUM_HOPS, options.numOfHops);
         //        if (options.pseudoRate > 0 && options.pseudoRate <= 1)
         //           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
         //        if (options.maxRound > 0)

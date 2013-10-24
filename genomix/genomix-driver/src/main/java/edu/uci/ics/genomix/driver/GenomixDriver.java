@@ -39,7 +39,9 @@ import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
+import edu.uci.ics.genomix.pregelix.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.ExtractSubgraphOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
@@ -145,6 +147,10 @@ public class GenomixDriver {
                 queuePregelixJob(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
                 curOutput = prevOutput; // use previous job's output
                 break;
+            case EXTRACT_SUBGRAPH:
+                queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
+                curOutput = prevOutput; // use previous job's output
+                break;
             case STATS:
                 flushPendingJobs(conf);
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
@@ -193,6 +199,9 @@ public class GenomixDriver {
         }
         if (job.getClass().equals(SymmetryCheckerVertex.class)) {
             job.setVertexOutputFormatClass(CheckerOutputFormat.class);
+        }
+        if (job.getClass().equals(ExtractSubgraphVertex.class)) {
+            job.setVertexOutputFormatClass(ExtractSubgraphOutputFormat.class);
         }
         pregelixJobs.add(job);
         followingBuild = false;

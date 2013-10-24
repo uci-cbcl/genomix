@@ -42,7 +42,7 @@ public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueW
         }
     }
 
-    public void markSelfAndBoardcast() {
+    public void markSelfAndBroadcast() {
         VertexValueWritable vertex = getVertexValue();
         vertex.setState(State.IS_MARK);
         sendSettledMsgToAllNeighborNodes(vertex);
@@ -52,9 +52,9 @@ public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueW
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
         if (getSuperstep() == 1 && startSeeds.contains(getVertexId())) {
-            markSelfAndBoardcast();
+            markSelfAndBroadcast();
         } else if (getSuperstep() <= numOfHops + 1 && msgIterator.hasNext()) {
-            markSelfAndBoardcast();
+            markSelfAndBroadcast();
         }
         voteToHalt();
     }
