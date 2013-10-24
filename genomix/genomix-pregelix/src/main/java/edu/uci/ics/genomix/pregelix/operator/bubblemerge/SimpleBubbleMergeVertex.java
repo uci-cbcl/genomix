@@ -25,7 +25,7 @@ import edu.uci.ics.genomix.type.VKmer;
  * Graph clean pattern: Simple Bubble Merge
  */
 public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
-    private float dissimilarThreshold = -1;
+    private float DISSIMILAR_THRESHOLD = -1;
 
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
     private ArrayList<BubbleMergeMessage> receivedMsgList = new ArrayList<BubbleMergeMessage>();
@@ -38,8 +38,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
     @Override
     public void initVertex() {
         super.initVertex();
-        if (dissimilarThreshold < 0)
-            dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(
+        if (DISSIMILAR_THRESHOLD < 0)
+            DISSIMILAR_THRESHOLD = Float.parseFloat(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessage();
@@ -129,7 +129,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 //compute the dissimilarity
                 float fractionDissimilar = topMsg.computeDissimilar(curMsg); // TODO change to simmilarity everywhere
 
-                if (fractionDissimilar <= dissimilarThreshold) { //if similar with top node, delete this node
+                if (fractionDissimilar <= DISSIMILAR_THRESHOLD) { //if similar with top node, delete this node
                     topChanged = true;
                     boolean sameOrientation = topMsg.sameOrientation(curMsg);
                     // 1. add coverage to top node -- for unchangedSet
