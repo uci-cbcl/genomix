@@ -158,7 +158,7 @@ public class VertexValueWritable extends Node {
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
-                LOG.fine("VertexValue.readFields: " + toString());
+//                LOG.fine("VertexValue.readFields: " + toString());
             }
         }
     }
