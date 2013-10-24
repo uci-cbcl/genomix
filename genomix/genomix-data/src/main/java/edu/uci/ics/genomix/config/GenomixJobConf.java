@@ -116,11 +116,8 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
         private int graphCleanMaxIterations = -1;
 
-        @Option(name = "-pathMergeRandom_randSeed", usage = "The seed used in the random path-merge algorithm", required = false)
-        private long pathMergeRandom_randSeed = -1;
-        
-        @Option(name = "-splitRepeatRandom_randSeed", usage = "The seed used in the randomly generate append letter in new vertex", required = false)
-        private long splitRepeatRandom_randSeed = -1;
+        @Option(name = "-randSeed", usage = "The seed used in the random path-merge or split-repeat algorithm", required = false)
+        private long randSeed = -1;
         
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
@@ -458,8 +455,7 @@ public class GenomixJobConf extends JobConf {
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
         setInt(GRAPH_CLEAN_MAX_ITERATIONS, opts.graphCleanMaxIterations);
-        setLong(RANDOM_RANDSEED, opts.pathMergeRandom_randSeed);
-        setLong(RANDOM_RANDSEED, opts.splitRepeatRandom_randSeed);
+        setLong(RANDOM_RANDSEED, opts.randSeed);
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
