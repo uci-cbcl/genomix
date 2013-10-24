@@ -173,14 +173,12 @@ public class VertexValueWritable extends Node {
 
         if (DEBUG) {
             boolean verbose = false;
-            if(problemKmers.size() == 0)
-                return;
             for (VKmer problemKmer : problemKmers) {
                 verbose |= this.getInternalKmer().equals(problemKmer);
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
-                LOG.fine("VertexValue.write: " + toString());
+//                LOG.fine("VertexValue.write: " + toString());
             }
         }
     }
