@@ -149,7 +149,7 @@ public class GenomixDriver {
                 break;
             case EXTRACT_SUBGRAPH:
                 queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
-                curOutput = prevOutput; // use previous job's output
+//                curOutput = prevOutput; // use previous job's output
                 break;
             case STATS:
                 flushPendingJobs(conf);
