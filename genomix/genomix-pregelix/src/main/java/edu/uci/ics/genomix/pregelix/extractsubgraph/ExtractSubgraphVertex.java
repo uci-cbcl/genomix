@@ -15,9 +15,6 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
-    public static final String START_SEEDS = "ExtractSubgraphVertex.startSeeds";
-    public static final String NUM_HOPS = "ExtractSubgraphVertex.numOfHops";
-
     private Set<VKmer> startSeeds = null;
     private int numOfHops = -1;
 
@@ -31,14 +28,14 @@ public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueW
             outgoingMsg = new MessageWritable();
         if (startSeeds == null) {
             startSeeds = new HashSet<VKmer>();
-            if (getContext().getConfiguration().get(START_SEEDS) != null) {
-                for (String kmer : getContext().getConfiguration().get(START_SEEDS).split(",")) {
+            if (getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS) != null) {
+                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS).split(",")) {
                     startSeeds.add(new VKmer(kmer));
                 }
             }
         }
         if (numOfHops == -1) {
-            numOfHops = Integer.parseInt(getContext().getConfiguration().get(NUM_HOPS));
+            numOfHops = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_NUM_HOPS));
         }
     }
 
