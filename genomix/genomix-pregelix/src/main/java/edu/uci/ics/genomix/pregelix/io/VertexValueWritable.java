@@ -23,7 +23,8 @@ public class VertexValueWritable extends Node {
 
         public static final byte IS_NON = 0b1 << 6;
         public static final byte IS_ERROR = 0b1 << 6;
-
+        public static final byte IS_MARK = 0b1 << 6;
+        
         public static final byte VERTEX_MASK = 0b1 << 6;
     }
 

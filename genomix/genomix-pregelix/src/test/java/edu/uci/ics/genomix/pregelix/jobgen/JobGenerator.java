@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
+import edu.uci.ics.genomix.pregelix.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
@@ -137,6 +138,17 @@ public class JobGenerator {
         generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase + "SymmetryCheckerGraph.xml");
     }
 
+    private static void generateExtractSubGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = ExtractSubgraphVertex.getConfiguredJob(new GenomixJobConf(3), ExtractSubgraphVertex.class);
+        job.getConfiguration().set(ExtractSubgraphVertex.START_SEEDS, "AAT");
+        job.getConfiguration().setInt(ExtractSubgraphVertex.NUM_HOPS, 1);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genExtractSubGraph() throws IOException {
+        generateExtractSubGraphJob("ExtractSubGraph", outputBase + "ExtractSubGraph.xml");
+    }
+
     /**
      * Main Function
      */
@@ -232,6 +244,7 @@ public class JobGenerator {
         getBFSTraverseGraph();
         genScaffoldingGraph();
         genSymmetryCheckerGraph();
+        genExtractSubGraph();
     }
 
 }
