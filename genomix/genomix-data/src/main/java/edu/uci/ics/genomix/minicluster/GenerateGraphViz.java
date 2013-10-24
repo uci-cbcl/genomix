@@ -154,4 +154,46 @@ public class GenerateGraphViz {
                 throw new IllegalStateException("Invalid input Edge Type!!!");
         }
     }
+    
+    /**
+     * simple version of graphviz, only print the node
+     */
+    public static void convertGraphCleanOutputToSimpleNode(String srcDir, String destDir) throws Exception {
+        GraphViz gv = new GraphViz();
+        gv.addln(gv.start_graph());
+
+        Configuration conf = new Configuration();
+        FileSystem fileSys = FileSystem.getLocal(conf);
+        File srcPath = new File(srcDir);
+
+        String outputNode = "";
+        String outputEdge = "";
+        for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
+            SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
+            VKmer key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+            Node value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+
+            gv.addln("rankdir=LR\n");
+            while (reader.next(key, value)) {
+                outputNode = "";
+                outputEdge = "";
+                if (key == null) {
+                    break;
+                }
+                outputNode += key.toString();
+                /** convert edge to graph **/
+                outputEdge = convertEdgeToGraph(outputNode, value);
+                gv.addln(outputEdge);
+            }
+            reader.close();
+        }
+
+        gv.addln(gv.end_graph());
+
+        String type = "svg";
+        //        File folder = new File(destDir);
+        //        folder.mkdirs();
+        File out = new File(destDir + "." + type); // Linux
+        gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
+    }
 }

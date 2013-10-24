@@ -42,7 +42,7 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 public class BasicSmallTestCase extends TestCase {
     private final PregelixJob job;
-    private final String resultFileDir;
+    private final String binFileDir;
     private final String textFileDir;
     private final String graphvizFileDir;
     private final String statisticsFileDir;
@@ -60,7 +60,7 @@ public class BasicSmallTestCase extends TestCase {
         FileInputFormat.setInputPaths(job, hdfsInput);
         FileOutputFormat.setOutputPath(job, new Path(hdfsInput + "_result"));
         job.setJobName(jobName);
-        this.resultFileDir = resultFile;
+        this.binFileDir = resultFile;
         this.textFileDir = textFile;
         this.graphvizFileDir = graphvizFile;
         this.statisticsFileDir = statisticsFile;
@@ -89,11 +89,11 @@ public class BasicSmallTestCase extends TestCase {
 
     private void compareResults() throws Exception {
         //copy bin to local
-        dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(resultFileDir));
+        dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(binFileDir));
         //covert bin to text
-        GenerateTextFile.convertGraphCleanOutputToText(resultFileDir, textFileDir);
+        GenerateTextFile.convertGraphCleanOutputToText(binFileDir, textFileDir);
         //covert bin to graphviz
-        GenerateGraphViz.convertGraphCleanOutputToGraphViz(resultFileDir, graphvizFileDir);
+        GenerateGraphViz.convertGraphCleanOutputToSimpleNode(binFileDir, graphvizFileDir);
         //generate statistic counters
         //        generateStatisticsResult(statisticsFileDir);
     }
