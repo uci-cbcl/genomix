@@ -294,6 +294,7 @@ public class GenomixDriver {
             //covert bin to graphviz
             String graphvizDir = binaryDir + File.separator + "graphviz";
             GenerateGraphViz.convertGraphCleanOutputToSimpleNode(binaryDir + File.separator + "bin", graphvizDir);
+            LOG.info("Copying graphviz to local: " + graphvizDir);
         }
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
@@ -302,11 +303,14 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-kmerLength", "55",
+        String[] myArgs = {
+                "-kmerLength",
+                "55",
                 //                        "-runLocal", "true", 
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
-                "-localInput", "/home/anbangx/workspace/fullstack_genomix/hyracks/genomix/genomix-pregelix/data/TestSet/PathMerge/8",
+                "-localInput",
+                "/home/anbangx/workspace/fullstack_genomix/hyracks/genomix/genomix-pregelix/data/TestSet/PathMerge/8",
                 //                        "-localInput", "/home/wbiesing/code/biggerInput",
                 //                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
                 //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",

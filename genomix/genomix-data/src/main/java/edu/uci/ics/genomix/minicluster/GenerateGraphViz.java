@@ -182,7 +182,7 @@ public class GenerateGraphViz {
                 }
                 outputNode += key.toString();
                 /** convert edge to graph **/
-                outputEdge = convertEdgeToGraph(outputNode, value);
+                outputEdge = convertEdgeToSimpleGraph(outputNode, value);
                 gv.addln(outputEdge);
             }
             reader.close();
@@ -195,5 +195,21 @@ public class GenerateGraphViz {
         //        folder.mkdirs();
         File out = new File(destDir + "." + type); // Linux
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
+    }
+    
+    /**
+     * Only print out EdgeType in simple graphviz 
+     */
+    public static String convertEdgeToSimpleGraph(String outputNode, Node value) {
+        String outputEdge = "";
+        for (EDGETYPE et : EDGETYPE.values()) {
+            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
+                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + getColor(et)
+                        + "\" label =\"" + et + "\"]\n";
+            }
+        }
+        if (outputEdge == "")
+            outputEdge += outputNode;
+        return outputEdge;
     }
 }
