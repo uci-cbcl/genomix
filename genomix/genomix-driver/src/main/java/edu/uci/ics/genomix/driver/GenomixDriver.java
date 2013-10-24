@@ -35,6 +35,7 @@ import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
@@ -50,6 +51,7 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
+import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
@@ -286,9 +288,19 @@ public class GenomixDriver {
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+        if (conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) != null){
+            String binDir = conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) + File.separator + "bin";
+            String textDir = conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) + File.separator + "text";
+            String graphvizDir = conf.get(GenomixJobConf.LOCAL_GRAPH_OUTPUT_DIR) + File.separator + "graphviz";
+            GenomixClusterManager.copyBinToLocal(conf, curOutput, binDir);
+            //covert bin to text
+            GenerateTextFile.convertGraphCleanOutputToText(binDir, textDir);
+            //covert bin to graphviz
+            GenerateGraphViz.convertGraphCleanOutputToSimpleNode(textDir, graphvizDir);
+        }
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
-
+        
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }
 
