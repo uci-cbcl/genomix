@@ -628,18 +628,18 @@ public class Node implements Writable, Serializable {
                 }
                 break;
             case FR:
-                newOtherOffset = thisLength - K + 1 + otherLength - K;
+                newOtherOffset = thisLength - K + 1 + otherLength;
                 // stream theirs in, offset and flipped
                 for (ReadHeadInfo p : other.startReads) {
-                    endReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
+                    endReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
                 }
                 for (ReadHeadInfo p : other.endReads) {
-                    startReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
+                    startReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
                 }
                 break;
             case RF:
                 newThisOffset = otherLength - K + 1;
-                newOtherOffset = otherLength - K;
+                newOtherOffset = otherLength;
                 // shift my offsets (other is prepended)
                 for (ReadHeadInfo p : startReads) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
@@ -649,10 +649,10 @@ public class Node implements Writable, Serializable {
                 }
                 //stream theirs in, not offset (they are first now) but flipped
                 for (ReadHeadInfo p : other.startReads) {
-                    endReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
+                    endReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
                 }
                 for (ReadHeadInfo p : other.endReads) {
-                    startReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
+                    startReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
                 }
                 break;
             case RR:
