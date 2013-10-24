@@ -486,7 +486,8 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
-        set(EXTRACT_SUBGRAPH_START_SEEDS, opts.startSeedToExtractSubgraph);
+        if (opts.startSeedToExtractSubgraph != null)
+            set(EXTRACT_SUBGRAPH_START_SEEDS, opts.startSeedToExtractSubgraph);
         setInt(EXTRACT_SUBGRAPH_NUM_HOPS, opts.numHopsToExtractSubgraph);
     }
 
