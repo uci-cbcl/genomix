@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -12,6 +13,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -25,6 +27,9 @@ import edu.uci.ics.genomix.type.VKmer;
  * Graph clean pattern: Simple Bubble Merge
  */
 public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
+    
+    private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
+    
     private float dissimilarThreshold = -1;
 
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
@@ -72,6 +77,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             outgoingMsg.setMajorToBubbleEdgetype(reverseNeighbor.et.mirror());
             outgoingMsg.setMinorToBubbleEdgetype(forwardNeighbor.et.mirror());
             minorVertexId = forwardNeighbor.kmer;
+        }
+        if(verbose){
+            LOG.info("Major vertex is: " + outgoingMsg.getMajorVertexId());
         }
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setNode(getVertexValue().getNode());
