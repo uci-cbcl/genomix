@@ -10,7 +10,7 @@ cd "$GENOMIX_HOME"
 MY_NAME=`hostname`
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
-CCHOST=`ssh ${CCHOST_NAME} "cd \"${GENOMIX_HOME}\"; bin/getip.sh"`
+CCHOST=`ssh ${CCHOST_NAME} 'bash -s' < ${GENOMIX_HOME}/bin/getip.sh`
 
 #Import cluster properties
 . conf/cluster.properties
