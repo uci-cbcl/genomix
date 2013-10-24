@@ -443,7 +443,7 @@ public class GenomixJobConf extends JobConf {
             set(FINAL_OUTPUT_DIR, opts.hdfsOutput);
         if (opts.localOutput != null)
             set(LOCAL_OUTPUT_DIR, opts.localOutput);
-        if (opts.localOutput != null)
+        if (opts.localGraphOutput != null)
             set(LOCAL_GRAPH_OUTPUT_DIR, opts.localGraphOutput);
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);

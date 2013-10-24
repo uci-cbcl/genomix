@@ -305,7 +305,8 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = { "-runLocal", "true", "-kmerLength", "55",
+        String[] myArgs = { "-kmerLength", "55",
+                //                        "-runLocal", "true", 
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
                 "-localInput", "tail600000",
@@ -318,7 +319,8 @@ public class GenomixDriver {
                 //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
                 //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
                 //                "-localOutput", "testout",
-                "-pipelineOrder", "BUILD_HYRACKS,MERGE",
+                "-pipelineOrder", "MERGE",
+                "localGraphOutput", "graph"
         //                "-hyracksBuildOutputText", "true",
         };
         // allow Eclipse to run the maven-generated scripts
