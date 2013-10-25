@@ -5,6 +5,7 @@ jdk:
     - openjdk7
 
 install:
+    - ifconfig
     - ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
     - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys  # no pw required for ssh'ing locally
     - ssh localhost -o StrictHostKeyChecking=false -n  # allow us to ssh later w/out typing "yes"
