@@ -10,6 +10,10 @@ if [ $# -ne 4 ]; then
     exit 1
 fi
 
+OUTDIR=$2
+rm -rf $OUTDIR
+mkdir -p $OUTDIR
+
 # cd genomix/genomix-pregelix/
-target/appassembler/bin/genomix -kmerLength 55 -pipelineOrder EXTRACT_SUBGRAPH -hdfsInput $1 -localGraphOutput $2 -hdfsWorkPath /user/anbangx/genomix-out-extract-subgraph -startSeedToExtractSubgraph $3 -numHopsToExtractSubgraph $4
+target/appassembler/bin/genomix -kmerLength 55 -pipelineOrder EXTRACT_SUBGRAPH -hdfsInput $1 -localGraphOutput $OUTDIR -hdfsWorkPath /user/anbangx/genomix-out-extract-subgraph -startSeedToExtractSubgraph $3 -numHopsToExtractSubgraph $4
 # cd ../..
