@@ -1,5 +1,0 @@
-GCA	{FF:{}	FR:{ATG=[1]}	RF:{}	RR:{CGC=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
-CGA	{FF:{}	FR:{ATC=[1]}	RF:{CGC=[1]}	RR:{}	5':[], ~5':[]	kmer:	cov:1.0x}
-CGC	{FF:{GCA=[1]}	FR:{CGC=[1]}	RF:{CGA=[1], CGC=[1]}	RR:{}	5':[], ~5':[]	kmer:	cov:3.0x}
-ATC	{FF:{}	FR:{CGA=[1]}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:	cov:1.0x}
-ATG	{FF:{}	FR:{GCA=[1]}	RF:{}	RR:{}	5':[], ~5':[]	kmer:	cov:1.0x}

@@ -22,3 +22,5 @@ tmp
 dist
 .idea
 genomix/genomix-hadoop/data
+genomix/genomix-pregelix/data/TestSet/*/*/data
+genomix/genomix-pregelix/data/TestSet/*/*/graphviz/

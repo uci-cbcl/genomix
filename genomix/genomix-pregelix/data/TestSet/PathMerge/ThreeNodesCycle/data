@@ -1,3 +1,0 @@
-CAA	{FF:{AAC=[1]}	FR:{}	RF:{}	RR:{ACA=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
-ACA	{FF:{CAA=[1]}	FR:{}	RF:{}	RR:{AAC=[1]}	5':[1-0_0], ~5':[]	kmer:	cov:2.0x}
-AAC	{FF:{ACA=[1]}	FR:{}	RF:{}	RR:{CAA=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
