@@ -11,5 +11,5 @@ if [ $# -ne 4 ]; then
 fi
 
 # cd genomix/genomix-pregelix/
-bin/genomix -kmerLength 55 -pipelineOrder EXTRACT_SUBGRAP -hdfsInput $1 -localGraphOutput $2 -hdfsWorkPath /user/anbangx/genomix-out-extract-subgraph -startSeedToExtractSubgraph $3 -numHopsToExtractSubgraph $4
+target/appassembler/bin/genomix -kmerLength 55 -pipelineOrder EXTRACT_SUBGRAPH -hdfsInput $1 -localGraphOutput $2 -hdfsWorkPath /user/anbangx/genomix-out-extract-subgraph -startSeedToExtractSubgraph $3 -numHopsToExtractSubgraph $4
 # cd ../..
