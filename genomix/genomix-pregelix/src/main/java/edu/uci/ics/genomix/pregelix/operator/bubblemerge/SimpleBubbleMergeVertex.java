@@ -13,7 +13,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -27,9 +26,9 @@ import edu.uci.ics.genomix.type.VKmer;
  * Graph clean pattern: Simple Bubble Merge
  */
 public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
-    
+
     private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
-    
+
     private float dissimilarThreshold = -1;
 
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
@@ -78,7 +77,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             outgoingMsg.setMinorToBubbleEdgetype(forwardNeighbor.et.mirror());
             minorVertexId = forwardNeighbor.kmer;
         }
-        if(verbose){
+        if (verbose) {
             LOG.info("Major vertex is: " + outgoingMsg.getMajorVertexId());
         }
         outgoingMsg.setSourceVertexId(getVertexId());
@@ -112,8 +111,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
 
-    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, 
-            VKmer topKmer) {
+    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
         EdgeMap edgeMap = msg.getMinorToBubbleEdgeMap();
         ReadIdSet newReadIds = edgeMap.get(getVertexId());
         EDGETYPE minorToBubble = msg.getMinorToBubbleEdgetype();
@@ -219,7 +217,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 case ADD_READIDS:
                     for (EDGETYPE et : EDGETYPE.values()) {
                         EdgeMap edgeMap = incomingMsg.getNode().getEdgeMap(et);
-                        if (edgeMap.size() > 0){
+                        if (edgeMap.size() > 0) {
                             getVertexValue().getEdgeMap(et).unionUpdate(edgeMap);
                             activate();
                             break;
