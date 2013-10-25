@@ -315,25 +315,21 @@ public class GenomixDriver {
     }
 
     public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
-        String[] myArgs = {
-                "-kmerLength",
-                "55",
-                //                        "-runLocal", "true", 
-                //                        "-saveIntermediateResults", "true",
-                //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
-                "-localInput",
-                "/home/anbangx/workspace/fullstack_genomix/hyracks/genomix/genomix-pregelix/data/TestSet/PathMerge/8",
-                //                        "-localInput", "/home/wbiesing/code/biggerInput",
-                //                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
-                //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
-                //                "-localInput", "output-build/bin",
-                //                        "-localOutput", "output-skip",
-                //                            "-pipelineOrder", "BUILD,MERGE",
-                //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-                //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
-                //                "-localOutput", "testout",
-                "-pipelineOrder", "MERGE", "localGraphOutput", "graph"
-        //                "-hyracksBuildOutputText", "true",
+        String[] myArgs = { "-runLocal", "true", "-kmerLength", "55",
+                // "-saveIntermediateResults", "true",
+                // "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
+                "-localInput", "tail600000",
+                // "-localInput", "/home/wbiesing/code/biggerInput",
+                // "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
+                // "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
+                // "-localInput", "output-build/bin",
+                // "-localOutput", "output-skip",
+                // "-pipelineOrder", "BUILD,MERGE",
+                // "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+                // "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
+                // "-localOutput", "testout",
+                "-pipelineOrder", "BUILD_HYRACKS,MERGE",
+        // "-hyracksBuildOutputText", "true",
         };
         // allow Eclipse to run the maven-generated scripts
         if (System.getProperty("app.home") == null)
