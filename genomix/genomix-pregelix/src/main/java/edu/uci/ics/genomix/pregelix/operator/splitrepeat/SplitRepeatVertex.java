@@ -248,7 +248,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             // avoid double delete
             // ex. A -r1-> B -r1-> C -r1-> D
             //     E -r2-> B -r1-> C -r3-> F
-            // B splits and delete his edge to A and C(B->A and B->C) in the 1sh iteration
+            // B splits and delete his edge to A and C(B->A and B->C) in the 1st iteration
             // in this iteration B also receives the message from C to delete edge B->C 
             //if(edgeMap.containsKey(deletedEdge.getKey()))
             edgeMap.removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
