@@ -55,7 +55,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         if (outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessage();
         if (RANDOM_SEED == -1)
-            RANDOM_SEED = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
+            RANDOM_SEED = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_SEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if (randGenerator == null)
             randGenerator = new Random(RANDOM_SEED);
         StatisticsAggregator.preGlobalCounters.clear();
