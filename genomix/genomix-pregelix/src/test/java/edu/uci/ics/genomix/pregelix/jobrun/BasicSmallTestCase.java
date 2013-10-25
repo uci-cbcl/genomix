@@ -29,6 +29,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPG_TYPE;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
@@ -93,7 +94,8 @@ public class BasicSmallTestCase extends TestCase {
         //covert bin to text
         GenerateTextFile.convertGraphCleanOutputToText(binFileDir, textFileDir);
         //covert bin to graphviz
-        GenerateGraphViz.convertGraphCleanOutputToSimpleNode(binFileDir, graphvizFileDir);
+        GenerateGraphViz.convertBinToGraphViz(binFileDir, graphvizFileDir,
+                GRAPG_TYPE.DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE);
         //generate statistic counters
         //        generateStatisticsResult(statisticsFileDir);
     }

@@ -41,6 +41,7 @@ import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPG_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 
 @RunWith(value = Parameterized.class)
@@ -164,8 +165,8 @@ public class BatchTestFilesTest {
         Path path = new Path(resultFileName);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH + File.separator + testFile.getName(), path
                 .getParent().toString());
-        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(path.getParent().toString() + "/bin", path.getParent()
-                .toString() + "/graphviz");
+        GenerateGraphViz.convertBinToGraphViz(path.getParent().toString() + "/bin", path.getParent()
+                .toString() + "/graphviz", GRAPG_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
         TestUtils.compareFilesBySortingThemLineByLine(new File(resultFileName), new File(expectFileName));
     }
 

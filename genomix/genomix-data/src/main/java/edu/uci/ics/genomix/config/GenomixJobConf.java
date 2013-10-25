@@ -32,6 +32,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPG_TYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Kmer;
 
@@ -81,7 +82,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         private String pipelineOrder;
-
+        
         @Option(name = "-localInput", usage = "Local directory containing input for the first pipeline step", required = false)
         private String localInput;
 
@@ -90,10 +91,10 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-localOutput", usage = "Local directory where the final step's output will be saved", required = false)
         private String localOutput;
-        
+
         @Option(name = "-localGraphOutput", usage = "Local directory where the final step's graph output will be saved", required = false)
         private String localGraphOutput;
-        
+
         @Option(name = "-hdfsOutput", usage = "HDFS directory where the final step's output will be saved", required = false)
         private String hdfsOutput;
 
@@ -121,10 +122,10 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-pathMergeRandom_randSeed", usage = "The seed used in the random path-merge algorithm", required = false)
         private long pathMergeRandom_randSeed = -1;
-        
+
         @Option(name = "-splitRepeatRandom_randSeed", usage = "The seed used in the randomly generate append letter in new vertex", required = false)
         private long splitRepeatRandom_randSeed = -1;
-        
+
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
 
@@ -136,25 +137,28 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
         private int maxReadIDsPerEdge = -1;
-        
+
         // scaffolding
         @Option(name = "-minScaffoldingTraveralLength", usage = "The minimum length that can be travelled by scaffolding", required = false)
         private int minScaffoldingTraveralLength = -1;
-        
+
         @Option(name = "-maxScaffoldingTraveralLength", usage = "The maximum length that can be travelled by scaffolding", required = false)
         private int maxScaffoldingTraveralLength = -1;
-        
+
         @Option(name = "-minScaffoldingVertexMinCoverage", usage = "The minimum vertex coverage that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinCoverage = -1;
-        
+
         @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinLength = -1;
-        
+
         @Option(name = "-extractSubgraph_startSeed", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private String extractSubgraph_startSeed;
-        
+
         @Option(name = "-extractSubgraph_numHops", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int extractSubgraph_numHops = -1;
+        
+        @Option(name = "-extractSubgraph_graphType", usage = "Specify the order of the graph cleaning process", required = false)
+        private String extractSubgraph_graphType;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -168,7 +172,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-logReadIds", usage = "Log all readIds with the selected edges at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private boolean logReadIds = false;
-        
+
         @Option(name = "-gage", usage = "Do metrics evalution after dumpting the intermediate data.", required = false)
         private boolean gage = false;
 
@@ -272,7 +276,8 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
     public static final String EXTRACT_SUBGRAPH_START_SEEDS = "extract.subgraph.startSeeds";
     public static final String EXTRACT_SUBGRAPH_NUM_HOPS = "extract.subgraph.num.hops";
-    
+    public static final String EXTRACT_SUBGRAPH_GRAPH_TYPE = "extract.subgraph.graph.type";
+
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
     public static final String PORT = "genomix.port";
@@ -292,7 +297,7 @@ public class GenomixJobConf extends JobConf {
 
     // intermediate date evaluation
     public static final String GAGE = "genomix.evaluation.tool.gage";
-    
+
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
@@ -414,6 +419,8 @@ public class GenomixJobConf extends JobConf {
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
+        if (get(EXTRACT_SUBGRAPH_GRAPH_TYPE) == null)
+            set(EXTRACT_SUBGRAPH_GRAPH_TYPE, GRAPG_TYPE.DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE.toString());
         
         if (get(EXTRACT_SUBGRAPH_START_SEEDS) == null)
             set(EXTRACT_SUBGRAPH_START_SEEDS, "");
@@ -421,6 +428,7 @@ public class GenomixJobConf extends JobConf {
         if (getInt(EXTRACT_SUBGRAPH_NUM_HOPS, -1) == -1)
             setInt(EXTRACT_SUBGRAPH_NUM_HOPS, 1);
         
+
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
@@ -443,7 +451,10 @@ public class GenomixJobConf extends JobConf {
         setInt(KMER_LENGTH, opts.kmerLength);
         if (opts.pipelineOrder != null)
             set(PIPELINE_ORDER, opts.pipelineOrder);
-
+        
+        if (opts.extractSubgraph_graphType != null)
+            set(EXTRACT_SUBGRAPH_GRAPH_TYPE, opts.extractSubgraph_graphType);
+        
         if (opts.localInput != null && opts.hdfsInput != null)
             throw new IllegalArgumentException("Please set either -localInput or -hdfsInput, but NOT BOTH!");
         if (opts.localInput == null && opts.hdfsInput == null)

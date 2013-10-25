@@ -25,6 +25,7 @@ import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.test.GraphBuildingTestSetting;
 import edu.uci.ics.genomix.hyracks.graph.test.TestUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPG_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 
@@ -156,14 +157,14 @@ public class HyrackVSHadoopTest {
         Path path = new Path(hyracksResultFileName);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HYRACKS + File.separator + testFile.getName(), path
                 .getParent().toString());
-        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(path.getParent().toString() + "/bin", path.getParent()
-                .toString() + "/graphviz");
+        GenerateGraphViz.convertBinToGraphViz(path.getParent().toString() + "/bin", path.getParent()
+                .toString() + "/graphviz", GRAPG_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
 
         path = new Path(hadoopResultFileName);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HADOOP + File.separator + testFile.getName(), path
                 .getParent().toString());
-        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(path.getParent().toString() + "/bin", path.getParent()
-                .toString() + "/graphviz");
+        GenerateGraphViz.convertBinToGraphViz(path.getParent().toString() + "/bin", path.getParent()
+                .toString() + "/graphviz", GRAPG_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
 
         TestUtils.compareFilesBySortingThemLineByLine(new File(hyracksResultFileName), new File(hadoopResultFileName));
     }
