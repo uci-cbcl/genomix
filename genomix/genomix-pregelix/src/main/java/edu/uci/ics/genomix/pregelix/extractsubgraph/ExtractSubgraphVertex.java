@@ -48,7 +48,7 @@ public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueW
 
     public void markSelfAndBroadcast() {
         VertexValueWritable vertex = getVertexValue();
-        vertex.setState(State.IS_MARK);
+        vertex.setState(State.KEEP_NODE);
         sendSettledMsgToAllNeighborNodes(vertex);
     }
 

@@ -37,7 +37,7 @@ public class ExtractSubgraphOutputFormat extends BinaryVertexOutputFormat<VKmer,
         public void writeVertex(Vertex<VKmer, VertexValueWritable, NullWritable, ?> vertex) throws IOException,
                 InterruptedException {
             byte state = (byte) (vertex.getVertexValue().getState() & State.VERTEX_MASK);
-            if (state == State.IS_MARK)
+            if (state == State.KEEP_NODE)
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().getCopyAsNode());
         }
     }

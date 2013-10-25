@@ -37,7 +37,7 @@ public class CheckerOutputFormat extends BinaryVertexOutputFormat<VKmer, VertexV
         public void writeVertex(Vertex<VKmer, VertexValueWritable, NullWritable, ?> vertex) throws IOException,
                 InterruptedException {
             byte state = (byte) (vertex.getVertexValue().getState() & State.VERTEX_MASK);
-            if (state == State.IS_ERROR)
+            if (state == State.ERROR_NODE)
                 getRecordWriter().write(vertex.getVertexId(), vertex.getVertexValue().getCopyAsNode());
         }
     }

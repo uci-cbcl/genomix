@@ -22,11 +22,11 @@ public class VertexValueWritable extends Node {
     public static class VertexStateFlag {
         
         // general case
-        public static final byte IS_NON = 0b1 << 6; 
+        public static final byte NORMAL_NODE = 0b1 << 6; 
         // IS_ERROR is used in SymmetryChecker, if the vertex exists error, marking it as IS_ERROR
-        public static final byte IS_ERROR = 0b1 << 6; 
+        public static final byte ERROR_NODE = 0b1 << 6; 
         // IS_MARK is used in ExtractSubgraph, if the vertex is extracted, marking it as IS_MARK
-        public static final byte IS_MARK = 0b1 << 6; 
+        public static final byte KEEP_NODE = 0b1 << 6; 
         
         public static final byte VERTEX_MASK = 0b1 << 6;
     }
