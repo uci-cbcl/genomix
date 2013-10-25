@@ -69,12 +69,6 @@ public class Client {
             job.getConfiguration().setInt(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS, options.numIteration);
         }
 
-        //        job.getConfiguration().set(ExtractSubgraphVertex.START_SEEDS, options.startSeeds);
-        //        job.getConfiguration().setInt(ExtractSubgraphVertex.NUM_HOPS, options.numOfHops);
-        //        if (options.pseudoRate > 0 && options.pseudoRate <= 1)
-        //           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
-        //        if (options.maxRound > 0)
-        //            job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
         return options;
 
     }

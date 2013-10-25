@@ -15,6 +15,12 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
+    /**
+     * start from startSeeds to do broadcast(kind of "BFS")
+     * numOfHops means how far you plan to broadcast
+     * ex. A -> B -> C -> D ->E ->F -> G, you specify startSeed is D and numOfHops is 2,
+     * you will extract graph like B -> C -> D ->E ->F
+     */
     private Set<VKmer> startSeeds = null;
     private int numOfHops = -1;
 
@@ -29,7 +35,8 @@ public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueW
         if (startSeeds == null) {
             startSeeds = new HashSet<VKmer>();
             if (getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS) != null) {
-                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS).split(",")) {
+                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS)
+                        .split(",")) {
                     startSeeds.add(new VKmer(kmer));
                 }
             }
@@ -48,9 +55,8 @@ public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueW
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) throws Exception {
         initVertex();
-        if (getSuperstep() == 1 && startSeeds.contains(getVertexId())) {
-            markSelfAndBroadcast();
-        } else if (getSuperstep() <= numOfHops + 1 && msgIterator.hasNext()) {
+        if ((getSuperstep() == 1 && startSeeds.contains(getVertexId()))
+                || (getSuperstep() <= numOfHops + 1 && msgIterator.hasNext())) {
             markSelfAndBroadcast();
         }
         voteToHalt();
