@@ -22,7 +22,7 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.SimpleEntry;
+import java.util.AbstractMap.SimpleEntry;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
