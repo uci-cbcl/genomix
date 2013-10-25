@@ -150,11 +150,11 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinLength = -1;
         
-        @Option(name = "-startSeedToExtractSubgraph", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
-        private String startSeedToExtractSubgraph;
+        @Option(name = "-extractSubgraph_startSeed", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private String extractSubgraph_startSeed;
         
-        @Option(name = "-numHopsToExtractSubgraph", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
-        private int numHopsToExtractSubgraph = -1;
+        @Option(name = "-extractSubgraph_numHops", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private int extractSubgraph_numHops = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -486,9 +486,9 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
-        if (opts.startSeedToExtractSubgraph != null)
-            set(EXTRACT_SUBGRAPH_START_SEEDS, opts.startSeedToExtractSubgraph);
-        setInt(EXTRACT_SUBGRAPH_NUM_HOPS, opts.numHopsToExtractSubgraph);
+        if (opts.extractSubgraph_startSeed != null)
+            set(EXTRACT_SUBGRAPH_START_SEEDS, opts.extractSubgraph_startSeed);
+        setInt(EXTRACT_SUBGRAPH_NUM_HOPS, opts.extractSubgraph_numHops);
     }
 
     /**
