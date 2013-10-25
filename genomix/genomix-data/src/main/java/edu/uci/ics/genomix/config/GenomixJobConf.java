@@ -32,7 +32,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPG_TYPE;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Kmer;
 
@@ -82,7 +82,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-pipelineOrder", usage = "Specify the order of the graph cleaning process", required = false)
         private String pipelineOrder;
-        
+
         @Option(name = "-localInput", usage = "Local directory containing input for the first pipeline step", required = false)
         private String localInput;
 
@@ -151,14 +151,15 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinLength = -1;
 
-        @Option(name = "-extractSubgraph_startSeed", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
-        private String extractSubgraph_startSeed;
+        @Option(name = "-plotSubgraph_startSeed", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private String plotSubgraph_startSeed;
 
-        @Option(name = "-extractSubgraph_numHops", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
-        private int extractSubgraph_numHops = -1;
-        
-        @Option(name = "-extractSubgraph_graphType", usage = "Specify the order of the graph cleaning process", required = false)
-        private String extractSubgraph_graphType;
+        @Option(name = "-plotSubgraph_numHops", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private int plotSubgraph_numHops = -1;
+
+        @Option(name = "-plotSubgraph_verbosity", usage = "Specify the level of details in output graph: 1. UNDIRECTED_GRAPH_WITHOUT_LABELS,"
+                + " 2. DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE, 3. DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE, 4. DIRECTED_GRAPH_WITH_ALLDETAILS", required = false)
+        private int plotSubgraph_verbosity;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -201,7 +202,7 @@ public class GenomixJobConf extends JobConf {
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,
-        EXTRACT_SUBGRAPH,
+        PLOT_SUBGRAPH,
         STATS;
 
         /**
@@ -274,9 +275,9 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "scaffolding.max.traveral.length";
     public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "scaffolding.vertex.min.coverage";
     public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
-    public static final String EXTRACT_SUBGRAPH_START_SEEDS = "extract.subgraph.startSeeds";
-    public static final String EXTRACT_SUBGRAPH_NUM_HOPS = "extract.subgraph.num.hops";
-    public static final String EXTRACT_SUBGRAPH_GRAPH_TYPE = "extract.subgraph.graph.type";
+    public static final String PLOT_SUBGRAPH_START_SEEDS = "plot.subgraph.startSeeds";
+    public static final String PLOT_SUBGRAPH_NUM_HOPS = "plot.subgraph.num.hops";
+    public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "plot.subgraph.graph.verbosity";
 
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
@@ -390,7 +391,7 @@ public class GenomixJobConf extends JobConf {
 
         if (getLong(RANDOM_RANDSEED, -1) == -1)
             setLong(RANDOM_RANDSEED, System.currentTimeMillis());
-        
+
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
@@ -402,32 +403,31 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
-        
+
         // scaffolding
         if (getInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, -1) == -1)
             setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 2);
-        
+
         if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
             setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 15);
-        
+
         if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
             setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 1);
-        
+
         if (getInt(SCAFFOLDING_VERTEX_MIN_LENGTH, -1) == -1)
             setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
-        
+
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
-        if (get(EXTRACT_SUBGRAPH_GRAPH_TYPE) == null)
-            set(EXTRACT_SUBGRAPH_GRAPH_TYPE, GRAPG_TYPE.DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE.toString());
-        
-        if (get(EXTRACT_SUBGRAPH_START_SEEDS) == null)
-            set(EXTRACT_SUBGRAPH_START_SEEDS, "");
-        
-        if (getInt(EXTRACT_SUBGRAPH_NUM_HOPS, -1) == -1)
-            setInt(EXTRACT_SUBGRAPH_NUM_HOPS, 1);
-        
+        if (get(PLOT_SUBGRAPH_GRAPH_VERBOSITY) == null)
+            set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE.toString());
+
+        if (get(PLOT_SUBGRAPH_START_SEEDS) == null)
+            set(PLOT_SUBGRAPH_START_SEEDS, "");
+
+        if (getInt(PLOT_SUBGRAPH_NUM_HOPS, -1) == -1)
+            setInt(PLOT_SUBGRAPH_NUM_HOPS, 1);
 
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
@@ -436,8 +436,8 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
-        
-        if(getBoolean(GAGE, false) == false)
+
+        if (getBoolean(GAGE, false) == false)
             setBoolean(GAGE, false);
         //        if (getBoolean(RUN_LOCAL, false)) {
         //            // override any other settings for HOST and PORT
@@ -452,9 +452,8 @@ public class GenomixJobConf extends JobConf {
         if (opts.pipelineOrder != null)
             set(PIPELINE_ORDER, opts.pipelineOrder);
         
-        if (opts.extractSubgraph_graphType != null)
-            set(EXTRACT_SUBGRAPH_GRAPH_TYPE, opts.extractSubgraph_graphType);
-        
+        setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, opts.plotSubgraph_verbosity);
+
         if (opts.localInput != null && opts.hdfsInput != null)
             throw new IllegalArgumentException("Please set either -localInput or -hdfsInput, but NOT BOTH!");
         if (opts.localInput == null && opts.hdfsInput == null)
@@ -497,9 +496,9 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
-        if (opts.extractSubgraph_startSeed != null)
-            set(EXTRACT_SUBGRAPH_START_SEEDS, opts.extractSubgraph_startSeed);
-        setInt(EXTRACT_SUBGRAPH_NUM_HOPS, opts.extractSubgraph_numHops);
+        if (opts.plotSubgraph_startSeed != null)
+            set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
+        setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
     }
 
     /**

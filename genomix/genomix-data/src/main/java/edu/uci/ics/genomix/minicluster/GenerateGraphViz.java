@@ -23,20 +23,34 @@ public class GenerateGraphViz {
     private static long count = 0;
     private static HashMap<String, Long> map = new HashMap<String, Long>();
 
-    public enum GRAPG_TYPE {
-        
+    public enum GRAPH_TYPE {
+
         UNDIRECTED_GRAPH_WITHOUT_LABELS,
         DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE,
         DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE,
         DIRECTED_GRAPH_WITH_ALLDETAILS;
         
+        public static GRAPH_TYPE getFromInt(int n){
+            switch(n){
+                case 1:
+                    return UNDIRECTED_GRAPH_WITHOUT_LABELS;
+                case 2:
+                    return DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE;
+                case 3:
+                    return DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE;
+                case 4:
+                    return DIRECTED_GRAPH_WITH_ALLDETAILS;
+                default:
+                    throw new IllegalArgumentException("Invalid integer for GRAPH_TYPE given: " + n);
+            }
+        }
     }
 
     /**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
      */
-    public static void convertBinToGraphViz(String srcDir, String destDir, GRAPG_TYPE graphType) throws Exception {
+    public static void convertBinToGraphViz(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
         GraphViz gv = new GraphViz();
         gv.addln(gv.start_graph());
 
@@ -79,7 +93,7 @@ public class GenerateGraphViz {
                 /** convert edge to graph **/
                 outputEdge = convertEdgeToGraph(outputNode, value, graphType);
                 gv.addln(outputEdge);
-                if (graphType == GRAPG_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS) {
+                if (graphType == GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS) {
                     /** add readIdSet **/
                     String fillColor = "";
                     if (value.isStartReadOrEndRead())
@@ -103,7 +117,7 @@ public class GenerateGraphViz {
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
 
-    public static String convertEdgeToGraph(String outputNode, Node value, GRAPG_TYPE graphType) {
+    public static String convertEdgeToGraph(String outputNode, Node value, GRAPH_TYPE graphType) {
         String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values()) {
             for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
@@ -164,61 +178,4 @@ public class GenerateGraphViz {
         }
     }
 
-    //    /**
-    //     * simple version of graphviz, only print the node
-    //     */
-    //    public static void convertGraphCleanOutputToSimpleNode(String srcDir, String destDir) throws Exception {
-    //        GraphViz gv = new GraphViz();
-    //        gv.addln(gv.start_graph());
-    //
-    //        Configuration conf = new Configuration();
-    //        FileSystem fileSys = FileSystem.getLocal(conf);
-    //        File srcPath = new File(srcDir);
-    //
-    //        String outputNode = "";
-    //        String outputEdge = "";
-    //        for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
-    //            SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
-    //            VKmer key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-    //            Node value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-    //
-    //            gv.addln("rankdir=LR\n");
-    //            while (reader.next(key, value)) {
-    //                outputNode = "";
-    //                outputEdge = "";
-    //                if (key == null) {
-    //                    break;
-    //                }
-    //                outputNode += key.toString();
-    //                /** convert edge to graph **/
-    //                outputEdge = convertEdgeToSimpleGraph(outputNode, value);
-    //                gv.addln(outputEdge);
-    //            }
-    //            reader.close();
-    //        }
-    //
-    //        gv.addln(gv.end_graph());
-    //
-    //        String type = "svg";
-    //        //        File folder = new File(destDir);
-    //        //        folder.mkdirs();
-    //        File out = new File(destDir + "." + type); // Linux
-    //        gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
-    //    }
-    //    
-    //    /**
-    //     * Only print out EdgeType in simple graphviz 
-    //     */
-    //    public static String convertEdgeToSimpleGraph(String outputNode, Node value) {
-    //        String outputEdge = "";
-    //        for (EDGETYPE et : EDGETYPE.values()) {
-    //            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
-    //                outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + getColor(et)
-    //                        + "\" label =\"" + et + "\"]\n";
-    //            }
-    //        }
-    //        if (outputEdge == "")
-    //            outputEdge += outputNode;
-    //        return outputEdge;
-    //    }
 }

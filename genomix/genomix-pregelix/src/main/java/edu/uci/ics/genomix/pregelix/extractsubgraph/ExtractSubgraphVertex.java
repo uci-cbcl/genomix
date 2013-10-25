@@ -34,15 +34,15 @@ public class ExtractSubgraphVertex extends DeBruijnGraphCleanVertex<VertexValueW
             outgoingMsg = new MessageWritable();
         if (startSeeds == null) {
             startSeeds = new HashSet<VKmer>();
-            if (getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS) != null) {
-                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS)
+            if (getContext().getConfiguration().get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) != null) {
+                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS)
                         .split(",")) {
                     startSeeds.add(new VKmer(kmer));
                 }
             }
         }
         if (numOfHops == -1) {
-            numOfHops = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.EXTRACT_SUBGRAPH_NUM_HOPS));
+            numOfHops = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.PLOT_SUBGRAPH_NUM_HOPS));
         }
     }
 

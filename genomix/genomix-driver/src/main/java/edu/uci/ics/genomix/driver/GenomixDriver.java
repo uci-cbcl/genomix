@@ -36,7 +36,7 @@ import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
-import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPG_TYPE;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
@@ -148,7 +148,7 @@ public class GenomixDriver {
                 queuePregelixJob(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
                 curOutput = prevOutput; // use previous job's output
                 break;
-            case EXTRACT_SUBGRAPH:
+            case PLOT_SUBGRAPH:
                 queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
                 //                curOutput = prevOutput; // use previous job's output
                 break;
@@ -303,8 +303,9 @@ public class GenomixDriver {
             GenomixClusterManager.copyBinToLocal(conf, curOutput, binaryDir);
             //covert bin to graphviz
             String graphvizDir = binaryDir + File.separator + "graphviz";
-            GenerateGraphViz.convertBinToGraphViz(binaryDir + File.separator + "bin", graphvizDir,
-                    GRAPG_TYPE.valueOf(GenomixJobConf.EXTRACT_SUBGRAPH_GRAPH_TYPE));
+            GRAPH_TYPE graphType = GRAPH_TYPE.getFromInt(Integer.parseInt(conf
+                    .get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
+            GenerateGraphViz.convertBinToGraphViz(binaryDir + File.separator + "bin", graphvizDir, graphType);
             LOG.info("Copying graphviz to local: " + graphvizDir);
         }
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)

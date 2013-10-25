@@ -140,8 +140,8 @@ public class JobGenerator {
 
     private static void generateExtractSubGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = ExtractSubgraphVertex.getConfiguredJob(new GenomixJobConf(3), ExtractSubgraphVertex.class);
-        job.getConfiguration().set(GenomixJobConf.EXTRACT_SUBGRAPH_START_SEEDS, "AAT");
-        job.getConfiguration().setInt(GenomixJobConf.EXTRACT_SUBGRAPH_NUM_HOPS, 1);
+        job.getConfiguration().set(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS, "AAT");
+        job.getConfiguration().setInt(GenomixJobConf.PLOT_SUBGRAPH_NUM_HOPS, 1);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
