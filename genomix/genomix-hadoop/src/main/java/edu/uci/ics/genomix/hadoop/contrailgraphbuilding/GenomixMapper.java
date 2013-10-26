@@ -22,9 +22,8 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.SimpleEntry;
 import edu.uci.ics.genomix.type.VKmer;
-
+import java.util.ab
 /**
  * GenomixMapper the 1st step of graph building
  * 

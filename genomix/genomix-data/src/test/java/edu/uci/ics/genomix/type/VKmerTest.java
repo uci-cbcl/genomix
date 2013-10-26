@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.data.test;
+package edu.uci.ics.genomix.type;
 
 import java.util.HashMap;
 import java.util.HashSet;
