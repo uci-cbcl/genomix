@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,9 +23,7 @@ import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.SimpleEntry;
 import edu.uci.ics.genomix.type.VKmer;
-
 /**
  * GenomixMapper the 1st step of graph building
  * 
@@ -185,6 +184,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         EDGETYPE et = EDGETYPE.getEdgeTypeFromDirToDir(curKmerAndDir.getValue(), neighborKmerAndDir.getValue());
         curNode.getEdgeMap(et).put(neighborKmerAndDir.getKey(), readIdSet);
         nextNode.reset();
+        nextNode.setAverageCoverage(1);
         nextNode.getEdgeMap(et.mirror()).put(new VKmer(curKmerAndDir.getKey()), readIdSet);
     }
 
