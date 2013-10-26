@@ -6,6 +6,7 @@ jdk:
 
 install:
     - ifconfig
+    - ./genomix/genomix-driver/src/main/resources/scripts/getip.sh
     - ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
     - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys  # no pw required for ssh'ing locally
     - ssh localhost -o StrictHostKeyChecking=false -n  # allow us to ssh later w/out typing "yes"
