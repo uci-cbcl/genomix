@@ -92,9 +92,6 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-localOutput", usage = "Local directory where the final step's output will be saved", required = false)
         private String localOutput;
 
-        @Option(name = "-localGraphOutput", usage = "Local directory where the final step's graph output will be saved", required = false)
-        private String localGraphOutput;
-
         @Option(name = "-hdfsOutput", usage = "HDFS directory where the final step's output will be saved", required = false)
         private String hdfsOutput;
 
@@ -122,7 +119,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-randSeed", usage = "The seed used in the random path-merge or split-repeat algorithm", required = false)
         private long randSeed = -1;
-        
+
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
 
@@ -253,7 +250,6 @@ public class GenomixJobConf extends JobConf {
     public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
     public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
-    public static final String LOCAL_GRAPH_OUTPUT_DIR = "genomix.final.local.graph.output.dir";
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
     public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
     public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
@@ -391,10 +387,9 @@ public class GenomixJobConf extends JobConf {
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
 
-
         if (getLong(RANDOM_SEED, -1) == -1)
             setLong(RANDOM_SEED, System.currentTimeMillis());
-        
+
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
@@ -454,7 +449,7 @@ public class GenomixJobConf extends JobConf {
         setInt(KMER_LENGTH, opts.kmerLength);
         if (opts.pipelineOrder != null)
             set(PIPELINE_ORDER, opts.pipelineOrder);
-        
+
         setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, opts.plotSubgraph_verbosity);
 
         if (opts.localInput != null && opts.hdfsInput != null)
@@ -469,8 +464,6 @@ public class GenomixJobConf extends JobConf {
             set(FINAL_OUTPUT_DIR, opts.hdfsOutput);
         if (opts.localOutput != null)
             set(LOCAL_OUTPUT_DIR, opts.localOutput);
-        if (opts.localGraphOutput != null)
-            set(LOCAL_GRAPH_OUTPUT_DIR, opts.localGraphOutput);
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
