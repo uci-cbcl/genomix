@@ -1,4 +1,0 @@
-AAA	{FF:{AAT=[1, 2]}	FR:{}	RF:{}	RR:{GAA=[3], TAA=[1, 2]}	5':[], ~5':[]	kmer:	cov:2.0x}
-GAA	{FF:{AAA=[3]}	FR:{}	RF:{}	RR:{}	5':[3-0_0], ~5':[]	kmer:	cov:1.0x}
-TAA	{FF:{AAA=[1, 2]}	FR:{}	RF:{}	RR:{}	5':[1-0_0,2-0_0], ~5':[]	kmer:	cov:2.0x}
-AAT	{FF:{}	FR:{}	RF:{}	RR:{AAA=[1, 2]}	5':[], ~5':[]	kmer:	cov:0.0x}

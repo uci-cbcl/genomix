@@ -15,6 +15,7 @@ public class SplitRepeatMessage extends MessageWritable {
 
     public SplitRepeatMessage() {
         super();
+        createdEdge = new SimpleEntry<VKmer, ReadIdSet>(new VKmer(), new ReadIdSet());
     }
 
     public Entry<VKmer, ReadIdSet> getCreatedEdge() {

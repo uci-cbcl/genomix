@@ -1,3 +1,0 @@
-GCC	{FF:{CCG=[1]}	FR:{}	RF:{}	RR:{CGC=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
-CGC	{FF:{GCC=[1]}	FR:{CGC=[1]}	RF:{CGC=[1]}	RR:{CCG=[1]}	5':[1-0_0], ~5':[]	kmer:	cov:4.0x}
-CCG	{FF:{CGC=[1]}	FR:{}	RF:{}	RR:{GCC=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
