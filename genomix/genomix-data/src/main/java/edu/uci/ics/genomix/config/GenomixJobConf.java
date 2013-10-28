@@ -130,17 +130,17 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
         private int maxReadIDsPerEdge = -1;
-        
+
         // scaffolding
         @Option(name = "-minScaffoldingTraveralLength", usage = "The minimum length that can be travelled by scaffolding", required = false)
         private int minScaffoldingTraveralLength = -1;
-        
+
         @Option(name = "-maxScaffoldingTraveralLength", usage = "The maximum length that can be travelled by scaffolding", required = false)
         private int maxScaffoldingTraveralLength = -1;
-        
+
         @Option(name = "-minScaffoldingVertexMinCoverage", usage = "The minimum vertex coverage that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinCoverage = -1;
-        
+
         @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinLength = -1;
 
@@ -156,7 +156,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-logReadIds", usage = "Log all readIds with the selected edges at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private boolean logReadIds = false;
-        
+
         @Option(name = "-gage", usage = "Do metrics evalution after dumpting the intermediate data.", required = false)
         private boolean gage = false;
 
@@ -276,7 +276,7 @@ public class GenomixJobConf extends JobConf {
 
     // intermediate date evaluation
     public static final String GAGE = "genomix.evaluation.tool.gage";
-    
+
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
@@ -303,9 +303,14 @@ public class GenomixJobConf extends JobConf {
      * Any command-line options that were unparsed are available via conf.getExtraArguments().
      */
     public static GenomixJobConf fromArguments(String[] args) throws CmdLineException {
+
         Options opts = new Options();
         CmdLineParser parser = new CmdLineParser(opts);
-        parser.parseArgument(args);
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            throw e;
+        }
         GenomixJobConf conf = new GenomixJobConf(opts.kmerLength);
         conf.setFromOpts(opts);
         conf.fillMissingDefaults();
@@ -370,9 +375,6 @@ public class GenomixJobConf extends JobConf {
         if (getLong(RANDOM_SEED, -1) == -1)
             setLong(RANDOM_SEED, System.currentTimeMillis());
         
-        if (getLong(RANDOM_SEED, -1) == -1)
-            setLong(RANDOM_SEED, System.currentTimeMillis());
-        
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
@@ -384,20 +386,20 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
-        
+
         // scaffolding
         if (getInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, -1) == -1)
             setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 2);
-        
+
         if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
             setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 15);
-        
+
         if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
             setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 1);
-        
+
         if (getInt(SCAFFOLDING_VERTEX_MIN_LENGTH, -1) == -1)
             setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
-        
+
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
@@ -408,8 +410,8 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
-        
-        if(getBoolean(GAGE, false) == false)
+
+        if (getBoolean(GAGE, false) == false)
             setBoolean(GAGE, false);
         //        if (getBoolean(RUN_LOCAL, false)) {
         //            // override any other settings for HOST and PORT

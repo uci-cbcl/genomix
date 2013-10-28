@@ -146,9 +146,13 @@ public class GenomixDriver {
                 break;
             case STATS:
                 flushPendingJobs(conf);
+                manager.startCluster(ClusterType.HADOOP);
+                curOutput = prevOutput + "-STATS";
+                stepNum--;
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
-                GraphStatistics.drawStatistics(curOutput, counters);
+                GraphStatistics.drawStatistics(curOutput, counters, conf);
+                manager.stopCluster(ClusterType.HADOOP);
                 curOutput = prevOutput; // use previous job's output
                 break;
         }
@@ -292,7 +296,7 @@ public class GenomixDriver {
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }
 
-    public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
+    public static void main(String[] args) throws NumberFormatException, HyracksException, Exception {
         String[] myArgs = { "-runLocal", "true", "-kmerLength", "55",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
@@ -316,7 +320,20 @@ public class GenomixDriver {
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+        GenomixJobConf conf;
+        try {
+            conf = GenomixJobConf.fromArguments(args);
+        } catch (CmdLineException ex) {
+            System.err.println("Usage: bin/genomix [options]\n");
+            ex.getParser().setUsageWidth(80);
+            ex.getParser().printUsage(System.err);
+            System.err.println("\nExample:");
+            System.err
+                    .println("\tbin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput /path/to/readfiledir/\n");
+            System.err.println(ex.getMessage());
+
+            return;
+        }
         //          GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);
