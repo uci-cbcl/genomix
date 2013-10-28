@@ -36,7 +36,6 @@ import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
-import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
@@ -160,8 +159,7 @@ public class GenomixDriver {
                 GenomixClusterManager.copyBinToLocal(conf, curOutput, binaryDir);
                 //covert bin to graphviz
                 String graphvizDir = binaryDir + File.separator + "graphviz";
-                GRAPH_TYPE graphType = GRAPH_TYPE.getFromInt(Integer.parseInt(conf
-                        .get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
+                int graphType = Integer.parseInt(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY));
                 GenerateGraphViz.convertBinToGraphViz(binaryDir + File.separator + "bin", graphvizDir, graphType);
                 LOG.info("Copying graphviz to local: " + graphvizDir);
                 curOutput = lastJobOutput; // use previous job's output
