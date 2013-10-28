@@ -61,6 +61,6 @@ public class GraphBuildingTestCase extends TestCase {
         //        dfs.copyToLocalFile(src, dest);
         GenomixClusterManager.copyBinToLocal(conf, RESULT_PATH, RESULT_PATH);
         GenerateGraphViz.convertBinToGraphViz(RESULT_PATH + "/bin", RESULT_PATH + "/graphviz",
-                GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
+                GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS.get());
     }
 }

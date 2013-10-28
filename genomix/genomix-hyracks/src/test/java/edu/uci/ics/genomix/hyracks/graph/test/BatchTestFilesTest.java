@@ -166,7 +166,7 @@ public class BatchTestFilesTest {
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH + File.separator + testFile.getName(), path
                 .getParent().toString());
         GenerateGraphViz.convertBinToGraphViz(path.getParent().toString() + "/bin", path.getParent()
-                .toString() + "/graphviz", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
+                .toString() + "/graphviz", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS.get());
         TestUtils.compareFilesBySortingThemLineByLine(new File(resultFileName), new File(expectFileName));
     }
 
