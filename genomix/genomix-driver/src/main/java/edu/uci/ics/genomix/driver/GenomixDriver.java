@@ -154,9 +154,8 @@ public class GenomixDriver {
                 flushPendingJobs(conf);
                 if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null){
                     String binaryDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR);
-                    GenomixClusterManager.copyBinToLocal(conf, curOutput, );
                     //copy bin to local
-                    GenomixClusterManager.copyBinToLocal(conf, prevOutput, binaryDir);
+                    GenomixClusterManager.copyBinToLocal(conf, curOutput, binaryDir);
                     //covert bin to graphviz
                     String graphvizDir = binaryDir + File.separator + "graphviz";
                     int graphType = Integer.parseInt(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY));
