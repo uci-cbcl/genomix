@@ -152,17 +152,18 @@ public class GenomixDriver {
                 queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
                 //                curOutput = prevOutput; // use previous job's output
                 flushPendingJobs(conf);
-                prevOutput = curOutput;
-                curOutput = prevOutput + "-PLOT-SUBGRAPH";
+                if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null){
+                    String binaryDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR);
+                    GenomixClusterManager.copyBinToLocal(conf, curOutput, );
+                    //copy bin to local
+                    GenomixClusterManager.copyBinToLocal(conf, prevOutput, binaryDir);
+                    //covert bin to graphviz
+                    String graphvizDir = binaryDir + File.separator + "graphviz";
+                    int graphType = Integer.parseInt(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY));
+                    GenerateGraphViz.convertBinToGraphViz(binaryDir + File.separator + "bin", graphvizDir, graphType);
+                    LOG.info("Copying graphviz to local: " + graphvizDir);
+                }
                 stepNum--;
-                String binaryDir = prevOutput;
-                //copy bin to local
-                GenomixClusterManager.copyBinToLocal(conf, curOutput, binaryDir);
-                //covert bin to graphviz
-                String graphvizDir = binaryDir + File.separator + "graphviz";
-                int graphType = Integer.parseInt(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY));
-                GenerateGraphViz.convertBinToGraphViz(binaryDir + File.separator + "bin", graphvizDir, graphType);
-                LOG.info("Copying graphviz to local: " + graphvizDir);
                 curOutput = lastJobOutput; // use previous job's output
                 break;
             case STATS:
