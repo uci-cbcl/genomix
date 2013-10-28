@@ -41,7 +41,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
     private static final Logger LOG = Logger.getLogger(SplitRepeatVertex.class.getName());
 
     public static final int NUM_LETTERS_TO_APPEND = 3;
-    private static long randSeed = -1; //static for save memory
+    private static long RANDOM_SEED = -1; //static for save memory
     private Random randGenerator = null;
 
     private HashSet<String> existKmerString = new HashSet<String>();
@@ -54,10 +54,10 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         super.initVertex();
         if (outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessage();
-        if(randSeed == -1)
-            randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
+        if (RANDOM_SEED == -1)
+            RANDOM_SEED = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_SEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if (randGenerator == null)
-            randGenerator = new Random(randSeed);
+            randGenerator = new Random(RANDOM_SEED);
         StatisticsAggregator.preGlobalCounters.clear();
         //        else
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
@@ -131,14 +131,20 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         for (NeighborInfo neighborInfo : neighborsInfo)
             getVertexValue().getEdgeMap(neighborInfo.et).removeReadIdSubset(neighborInfo.kmer, neighborInfo.readIds);
     }
-    
-    public void restrictNeighbor(){
+
+    /**
+     * Currently we implement the relatively simple version of split repeat.
+     * Node can be split only if its neighbors are not split node
+     * This method restrictNeighbor() is that split nodes send out message to mark its neighbors as invalid split node
+     */
+    public void restrictNeighbor() {
         VertexValueWritable vertex = getVertexValue();
         if (vertex.getDegree() > 2 && !isTandemRepeat(vertex)) { // if I may be a repeat which can be split
             // process validPathsTable
             // validPathsTable: a table representing the set of edge types forming a valid path from
             //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
             //                 the second
+            // 4 cases here: RF and FF, RR and FF, RF and FR, RR and FR
             for (int i = 0; i < validPathsTable.length; i++) {
                 // set edgeType and the corresponding edgeList based on connectedTable
                 EDGETYPE reverseEdgeType = validPathsTable[i][0];
@@ -161,7 +167,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             }
         }
     }
-    
+
     public void detectRepeatAndSplit() {
         VertexValueWritable vertex = getVertexValue();
         if (vertex.getDegree() > 2 && !isTandemRepeat(vertex)) { // if I may be a repeat which can be split
@@ -212,7 +218,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             }
 
             if (verbose) {
-                LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue() + "try to delete: " + deletedNeighborsInfo);
+                LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue() + "try to delete: "
+                        + deletedNeighborsInfo);
             }
             // process deletedNeighborInfo -- delete extra edges from old vertex
             deleteEdgeFromOldVertex(deletedNeighborsInfo);
@@ -235,16 +242,16 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             Entry<VKmer, ReadIdSet> createdEdge = incomingMsg.getCreatedEdge();
             Entry<VKmer, ReadIdSet> deletedEdge = new SimpleEntry<VKmer, ReadIdSet>(incomingMsg.getSourceVertexId(),
                     createdEdge.getValue());
-            
+
             EdgeMap edgeMap = getVertexValue().getEdgeMap(meToNeighbor);
             edgeMap.put(createdEdge.getKey(), new ReadIdSet(createdEdge.getValue()));
             // avoid double delete
             // ex. A -r1-> B -r1-> C -r1-> D
             //     E -r2-> B -r1-> C -r3-> F
-            // B splits and delete his edge to A and C(B->A and B->C) in the 1th iteration
+            // B splits and delete his edge to A and C(B->A and B->C) in the 1st iteration
             // in this iteration B also receives the message from C to delete edge B->C 
-            if(edgeMap.containsKey(deletedEdge.getKey()))
-                edgeMap.removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
+            //if(edgeMap.containsKey(deletedEdge.getKey()))
+            edgeMap.removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
         }
     }
 
@@ -253,8 +260,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         initVertex();
         if (getSuperstep() == 1) {
             restrictNeighbor();
-        } else if (getSuperstep() == 2){
-            if(msgIterator.hasNext())
+        } else if (getSuperstep() == 2) {
+            if (msgIterator.hasNext())
                 voteToHalt();
             else
                 detectRepeatAndSplit();
