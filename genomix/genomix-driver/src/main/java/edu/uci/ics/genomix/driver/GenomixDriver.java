@@ -152,7 +152,7 @@ public class GenomixDriver {
                 queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
                 //                curOutput = prevOutput; // use previous job's output
                 flushPendingJobs(conf);
-                curOutput = prevOutput + "-PLOT-SUBGRAPH";
+                curOutput = curOutput + "-PLOT-SUBGRAPH";
                 stepNum--;
                 String binaryDir = prevOutput;
                 //copy bin to local
