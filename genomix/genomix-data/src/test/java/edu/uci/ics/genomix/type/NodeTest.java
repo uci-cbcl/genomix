@@ -307,10 +307,10 @@ public class NodeTest {
         Assert.assertEquals(true, iterator.hasNext());
         NeighborInfo temp = iterator.next();
         Assert.assertEquals(EDGETYPE.FF, temp.et);
-//        System.out.println(temp.kmer.toString());
+        //        System.out.println(temp.kmer.toString());
         Assert.assertEquals(sample1Str, temp.kmer.toString());
         for (; i < numelements; i++) {
-//            System.out.println(temp.readIds.pollFirst().toString());
+            //            System.out.println(temp.readIds.pollFirst().toString());
             Assert.assertEquals((Long) i, temp.readIds.pollFirst());
         }
     }
