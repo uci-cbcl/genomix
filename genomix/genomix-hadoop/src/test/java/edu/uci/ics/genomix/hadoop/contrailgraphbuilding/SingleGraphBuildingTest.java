@@ -4,7 +4,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -14,7 +13,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 
 @SuppressWarnings("deprecation")
 public class SingleGraphBuildingTest {
@@ -24,7 +23,7 @@ public class SingleGraphBuildingTest {
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String DATA_PATH = "data/webmap/RandomWalk_TestSet/SmallGenome/small.test.reads";
     private static final String HDFS_PATH = "/webmap";
-    private static final String RESULT_PATH = "/result";
+    private static final String HDFS_RESULT_PATH = "/result";
 
     private static final int COUNT_REDUCER = 2;
     private static final int SIZE_KMER = 3;
@@ -44,8 +43,8 @@ public class SingleGraphBuildingTest {
     }
 
     public void TestMapKmerToNode() throws Exception {
-        GenomixDriver driver = new GenomixDriver();
-        driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, LINES_PERMAP, true, HADOOP_CONF_PATH);
+        GenomixHadoopDriver driver = new GenomixHadoopDriver();
+        driver.run(HDFS_PATH, HDFS_RESULT_PATH, COUNT_REDUCER, SIZE_KMER, LINES_PERMAP, true, HADOOP_CONF_PATH);
         dumpResult();
     }
 
@@ -74,9 +73,6 @@ public class SingleGraphBuildingTest {
     }
 
     private void dumpResult() throws IOException {
-        Path src = new Path(RESULT_PATH);
-        Path dest = new Path(ACTUAL_RESULT_DIR);
-        dfs.copyToLocalFile(src, dest);
-        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, "actual/test.txt", false, conf, true, dfs);
+        GenomixClusterManager.copyBinToLocal(conf, HDFS_RESULT_PATH, ACTUAL_RESULT_DIR);
     }
 }

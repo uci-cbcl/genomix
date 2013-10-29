@@ -13,6 +13,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class GenerateTextFile {
@@ -27,14 +28,14 @@ public class GenerateTextFile {
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
             SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
             VKmer key = new VKmer();
-            VertexValueWritable value = new VertexValueWritable();
+            Node value = new Node();
 
             while (reader.next(key, value)) {
                 if (key == null) {
                     break;
                 }
                 bw.write(key.toString() + "\t" + value.toString());
-                System.out.println(key.toString());
+//                System.out.println(key.toString());
                 bw.newLine();
             }
             reader.close();

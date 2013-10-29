@@ -1,0 +1,24 @@
+language: java
+
+jdk:
+    - oraclejdk7
+    - openjdk7
+
+install:
+    - ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
+    - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys  # no pw required for ssh'ing locally
+    - ssh localhost -o StrictHostKeyChecking=false -n  # allow us to ssh later w/out typing "yes"
+    - sudo apt-get install graphviz
+    - mvn install -q -am -pl genomix/genomix-driver/ -DskipTests=true # only install driver's prereq's
+
+before_script:
+    - cd genomix/genomix-pregelix/
+    - java -classpath target/genomix-pregelix-0.2.10-SNAPSHOT-jar-with-dependencies.jar:target/test-classes/ edu.uci.ics.genomix.pregelix.jobgen.JobGenerator
+    - cd ../..
+script:
+    - cd genomix
+    - mvn package -q -e -Djava.util.logging.config.file=genomix-driver/src/main/resources/conf/logging.properties
+    - ls -t */target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran
+    - cd genomix-driver/target/genomix-driver-0.2.10-SNAPSHOT-binary-assembly
+    - bin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/
+

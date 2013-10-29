@@ -99,7 +99,7 @@ public class GenomixJobConf extends JobConf {
         private String hdfsWorkPath;
 
         @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: true)", required = false)
-        private boolean saveIntermediateResults = true;
+        private boolean saveIntermediateResults = false;
 
         @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
         private boolean followsGraphBuild = false;
@@ -117,9 +117,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
         private int graphCleanMaxIterations = -1;
 
-        @Option(name = "-pathMergeRandom_randSeed", usage = "The seed used in the random path-merge algorithm", required = false)
-        private long pathMergeRandom_randSeed = -1;
-
+        @Option(name = "-randSeed", usage = "The seed used in the random path-merge or split-repeat algorithm", required = false)
+        private long randSeed = -1;
+        
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
 
@@ -131,17 +131,17 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-maxReadIDsPerEdge", usage = "The maximum number of readids that are recored as spanning a single edge", required = false)
         private int maxReadIDsPerEdge = -1;
-        
+
         // scaffolding
         @Option(name = "-minScaffoldingTraveralLength", usage = "The minimum length that can be travelled by scaffolding", required = false)
         private int minScaffoldingTraveralLength = -1;
-        
+
         @Option(name = "-maxScaffoldingTraveralLength", usage = "The maximum length that can be travelled by scaffolding", required = false)
         private int maxScaffoldingTraveralLength = -1;
-        
+
         @Option(name = "-minScaffoldingVertexMinCoverage", usage = "The minimum vertex coverage that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinCoverage = -1;
-        
+
         @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinLength = -1;
 
@@ -167,16 +167,7 @@ public class GenomixJobConf extends JobConf {
         
         @Option(name = "-stats_minContigLength", usage = "The minimum allowed contig length", required = false)
         private int stats_minContigLength = -1;
-        
-        @Option(name = "-useMUMmer", usage = "use MUMmer to compare the genome.", required = false)
-        private boolean useMUMmer = false;
-        
-        @Option(name = "-homeDirForMUMmer", usage = "the home directory of MUMmer", required = false)
-        private String homeDirForMUMmer = null;
-        
-        @Option(name = "-refGenomePath", usage = "the reference genome path", required = false)
-        private String refGenomePath = null;
-        
+
         @Argument
         private ArrayList<String> arguments = new ArrayList<String>();
     }
@@ -263,7 +254,7 @@ public class GenomixJobConf extends JobConf {
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphCleanMaxIterations";
-    public static final String PATHMERGE_RANDOM_RANDSEED = "genomix.PathMergeRandom.randSeed";
+    public static final String RANDOM_SEED = "genomix.Random.randSeed";
     public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.PathMergeRandom.probBeingRandomHead";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
@@ -281,6 +272,7 @@ public class GenomixJobConf extends JobConf {
     public static final String RUN_LOCAL = "genomix.runLocal";
     public static final String DEBUG_KMERS = "genomix.debugKmers";
     public static final String LOG_READIDS = "genomix.logReadIds";
+    public static final String HYRACKS_GROUPBY_TYPE = "genomix.hyracks.groupby";
 
     //    public static final String FRAME_SIZE = "genomix.framesize";
     public static final String FRAME_SIZE = "pregelix.framesize";
@@ -294,10 +286,8 @@ public class GenomixJobConf extends JobConf {
     public static final String STATS_GAGE_OLDSTYLE = "genomix.evaluation.gage.oldstyle";
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.gage.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.gage.minContigLength";
-    public static final String USE_MUMMER = "genomix.gage.mummer";
-    public static final String HomeDIR_MUMMER = "genomix.gage.mummer.homedir";
-    public static final String REF_GENOME_PATH = "genomix.gage.ref.genome.path";
     
+
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
@@ -324,9 +314,14 @@ public class GenomixJobConf extends JobConf {
      * Any command-line options that were unparsed are available via conf.getExtraArguments().
      */
     public static GenomixJobConf fromArguments(String[] args) throws CmdLineException {
+
         Options opts = new Options();
         CmdLineParser parser = new CmdLineParser(opts);
-        parser.parseArgument(args);
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            throw e;
+        }
         GenomixJobConf conf = new GenomixJobConf(opts.kmerLength);
         conf.setFromOpts(opts);
         conf.fillMissingDefaults();
@@ -369,7 +364,6 @@ public class GenomixJobConf extends JobConf {
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
 
         Patterns.verifyPatterns(Patterns.arrayFromString(conf.get(GenomixJobConf.PIPELINE_ORDER)));
-
         //        // Hyracks/Pregelix Advanced Setup
         //        if (conf.get(IP_ADDRESS) == null)
         //            throw new IllegalArgumentException("ipAddress was not specified!");
@@ -389,34 +383,34 @@ public class GenomixJobConf extends JobConf {
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
 
-        if (getLong(PATHMERGE_RANDOM_RANDSEED, -1) == -1)
-            setLong(PATHMERGE_RANDOM_RANDSEED, System.currentTimeMillis());
-
+        if (getLong(RANDOM_SEED, -1) == -1)
+            setLong(RANDOM_SEED, System.currentTimeMillis());
+        
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
         if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
-            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
+            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 1.0f);
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
 
         if (getInt(MAX_READIDS_PER_EDGE, -1) == -1)
             setInt(MAX_READIDS_PER_EDGE, 250);
-        
+
         // scaffolding
         if (getInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 20);
-        
+            setInt(SCAFFOLDING_MIN_TRAVERSAL_LENGTH, 2);
+
         if (getInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 100);
-        
+            setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, 15);
+
         if (getInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 5);
-        
+            setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, 1);
+
         if (getInt(SCAFFOLDING_VERTEX_MIN_LENGTH, -1) == -1)
-            setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 5);
-        
+            setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
+
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
@@ -427,7 +421,6 @@ public class GenomixJobConf extends JobConf {
         // hyracks-specific
         if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
             setInt(CLUSTER_WAIT_TIME, 6000);
-               
         //        if (getBoolean(RUN_LOCAL, false)) {
         //            // override any other settings for HOST and PORT
         //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
@@ -472,7 +465,7 @@ public class GenomixJobConf extends JobConf {
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
         setInt(GRAPH_CLEAN_MAX_ITERATIONS, opts.graphCleanMaxIterations);
-        setLong(PATHMERGE_RANDOM_RANDSEED, opts.pathMergeRandom_randSeed);
+        setLong(RANDOM_SEED, opts.randSeed);
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
@@ -485,9 +478,7 @@ public class GenomixJobConf extends JobConf {
         setBoolean(STATS_GAGE_OLDSTYLE, opts.stats_gageOldStyle);
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
-        setBoolean(USE_MUMMER, opts.useMUMmer);
-        set(HomeDIR_MUMMER, opts.homeDirForMUMmer);
-        set(REF_GENOME_PATH, opts.refGenomePath);
+
     }
 
     /**

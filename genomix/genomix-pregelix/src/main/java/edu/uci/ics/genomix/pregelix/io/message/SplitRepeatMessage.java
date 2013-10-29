@@ -12,10 +12,10 @@ import edu.uci.ics.genomix.type.VKmer;
 public class SplitRepeatMessage extends MessageWritable {
 
     private Entry<VKmer, ReadIdSet> createdEdge;
-    private Entry<VKmer, ReadIdSet> deletedEdge;
 
     public SplitRepeatMessage() {
         super();
+        createdEdge = new SimpleEntry<VKmer, ReadIdSet>(new VKmer(), new ReadIdSet());
     }
 
     public Entry<VKmer, ReadIdSet> getCreatedEdge() {
@@ -24,14 +24,6 @@ public class SplitRepeatMessage extends MessageWritable {
 
     public void setCreatedEdge(VKmer createdKmer, ReadIdSet createdReadIds) {
         this.createdEdge = new SimpleEntry<VKmer, ReadIdSet>(createdKmer, createdReadIds);
-    }
-
-    public Entry<VKmer, ReadIdSet> getDeletedEdge() {
-        return deletedEdge;
-    }
-
-    public void setDeletedEdge(VKmer deletedKmer, ReadIdSet deletedReadIds) {
-        this.deletedEdge = new SimpleEntry<VKmer, ReadIdSet>(deletedKmer, deletedReadIds);
     }
 
     @Override
@@ -44,12 +36,6 @@ public class SplitRepeatMessage extends MessageWritable {
         ReadIdSet createdReadIds = new ReadIdSet();
         createdReadIds.readFields(in);
         setCreatedEdge(createdKmer, createdReadIds);
-
-        VKmer deletedKmer = new VKmer();
-        deletedKmer.readFields(in);
-        ReadIdSet deletedReadIds = new ReadIdSet();
-        deletedReadIds.readFields(in);
-        setDeletedEdge(deletedKmer, deletedReadIds);
     }
 
     @Override
@@ -57,7 +43,5 @@ public class SplitRepeatMessage extends MessageWritable {
         super.write(out);
         createdEdge.getKey().write(out);
         createdEdge.getValue().write(out);
-        deletedEdge.getKey().write(out);
-        deletedEdge.getValue().write(out);
     }
 }

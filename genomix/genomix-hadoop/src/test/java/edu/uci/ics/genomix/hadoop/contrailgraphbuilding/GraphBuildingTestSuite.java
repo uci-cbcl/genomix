@@ -22,7 +22,7 @@ public class GraphBuildingTestSuite extends TestSuite {
 
     private static int SIZE_KMER = 3;
     private static int LINES_PERMAP = 4 * 100000;
-    public static final String PreFix = "data/webmap/PathMerge_TestSet"; // PathMerge
+    public static final String PreFix = "data/webmap/PathMerge_TestSet";
     public static final String[] TestDir = { PreFix + File.separator + "2", PreFix + File.separator + "3",
             PreFix + File.separator + "4", PreFix + File.separator + "5", PreFix + File.separator + "6",
             PreFix + File.separator + "7", PreFix + File.separator + "8", PreFix + File.separator + "9",
@@ -41,51 +41,6 @@ public class GraphBuildingTestSuite extends TestSuite {
             PreFix + File.separator + "AlreadyInEdgeList", PreFix + File.separator + "Cluster",
             PreFix + File.separator + "SameGeneCodeWithoutEdge", PreFix + File.separator + "SameGeneCodeWithEdge",
             PreFix + File.separator + "synthetic" };
-    // Bubble Merge
-    //    	+ "LtoL", PreFix + File.separator
-    //    	+ "LtoR", PreFix + File.separator
-    //    	+ "RtoL", PreFix + File.separator
-    //    	+ "RtoR"
-    //    	+ "SimpleBubble", PreFix + File.separator
-    //    	+ "BubbleWithTip", PreFix + File.separator
-    //    	+ "SideBubble", PreFix + File.separator
-    //    	+ "OverlapBubble", PreFix + File.separator
-    //    	+ "FRandRF"
-    //                };
-    //    + "InvalidBubble", PreFix + File.separator
-    //                + "SimpleRectangle", PreFix + File.separator
-    //                + "MediumRectangle", PreFix + File.separator
-    //                + "ComplexRectangle", PreFix + File.separator
-    //                + "SimpleBubble", PreFix + File.separator
-    //                + "InvalidBubble", PreFix + File.separator
-    //                + "BubbleWithTip", PreFix + File.separator
-    //                + "SideBubble", PreFix + File.separator
-    //                + "OverlapBubble", PreFix + File.separator
-    //        + "SmallGenome"
-    //        + "SmallCycle"
-    //        + "sameWithEdge"
-
-    //    };
-    //        + "Rectangle", PreFix + File.separator
-    //        + "Grid"};
-    //        + "SimpleSplitManyTimes", PreFix + File.separator
-    //        + "ComplexSplitManyTimes"};
-    //        + "TandemRepeatWithMergeEdge", PreFix + File.separator
-    //        + "TandemRepeatWithUnmergeEdge"};
-    //        + "SimplePath", PreFix + File.separator
-    //        + "BridgePath", PreFix + File.separator
-    //        + "TreePath", PreFix + File.separator
-    //        + "CyclePath", PreFix + File.separator
-    //        + "ThreeDuplicate", PreFix + File.separator
-    //        + "SelfPath", PreFix + File.separator
-    //        + "PairedEndTest" };//, PreFix + File.separator};
-    //        + "HighSplitRepeat", PreFix + File.separator
-    //        + "LowSplitRepeat", PreFix + File.separator
-    //        + "MidSplitRepeat", PreFix + File.separator
-    //        + "Tips1", PreFix + File.separator
-    //        + "Tips2", PreFix + File.separator
-    //        + "Tips3", PreFix + File.separator
-    //        + "Tips4"};
 
     private static JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";
@@ -137,7 +92,7 @@ public class GraphBuildingTestSuite extends TestSuite {
     public static Test suite() throws Exception {
         GraphBuildingTestSuite testSuite = new GraphBuildingTestSuite();
         testSuite.setUp();
-        //        FileSystem dfs = FileSystem.get(testSuite.conf);
+        // FileSystem dfs = FileSystem.get(testSuite.conf);
         for (String testPathStr : TestDir) {
             File testDir = new File(testPathStr);
             String resultFileName = ACTUAL_RESULT_DIR + File.separator + "bin" + File.separator + testDir.getName();

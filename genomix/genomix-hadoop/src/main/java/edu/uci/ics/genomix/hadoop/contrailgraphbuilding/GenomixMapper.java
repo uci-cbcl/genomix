@@ -15,11 +15,11 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;

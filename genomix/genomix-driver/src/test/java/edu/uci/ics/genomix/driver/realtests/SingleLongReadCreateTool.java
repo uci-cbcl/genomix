@@ -11,7 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import edu.uci.ics.genomix.driver.GenomixDriver;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.type.Kmer;
 
 public class SingleLongReadCreateTool {
@@ -21,7 +21,7 @@ public class SingleLongReadCreateTool {
      * target path: relative path: longreadfortest
      */
     private static final char[] symbols = new char[4];
-    private static final Logger LOG = Logger.getLogger(Driver.class.getName());
+    private static final Logger LOG = Logger.getLogger(GenomixHyracksDriver.class.getName());
     static {
         symbols[0] = 'A';
         symbols[1] = 'C';

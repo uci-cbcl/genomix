@@ -12,7 +12,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -63,7 +63,6 @@ public class GenerateGraphViz {
         }
 
         gv.addln(gv.end_graph());
-        System.out.println(gv.getDotSource());
 
         String type = "svg";
         File folder = new File(destDir);
@@ -112,7 +111,6 @@ public class GenerateGraphViz {
         }
 
         gv.addln(gv.end_graph());
-        System.out.println(gv.getDotSource());
 
         String type = "svg";
         //        File folder = new File(destDir);

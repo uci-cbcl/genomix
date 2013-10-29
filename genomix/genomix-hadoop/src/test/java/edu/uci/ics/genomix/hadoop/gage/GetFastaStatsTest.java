@@ -34,12 +34,14 @@ import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
+import org.junit.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hadoop.graphbuilding.checkingtool.ResultsCheckingDriver;
-import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+//import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -51,6 +53,7 @@ public class GetFastaStatsTest {
     private static final String HDFS_PATH = "/gage";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String RESULT_PATH = "/gageresult";
+    private static final String GAGESOURCE = "data/gage/expected/gagesrcfortestcase";
 
     private static final int COUNT_REDUCER = 4;
     private MiniDFSCluster dfsCluster;
@@ -78,15 +81,15 @@ public class GetFastaStatsTest {
         }
         writer.close();
 
-        String textTargetFileName = TXTSOURCE_PATH;
-        BufferedWriter txtWriter = new BufferedWriter(new FileWriter(textTargetFileName));
-        for (int i = 0; i < keyList.length; i++) {
-            txtWriter.write(">node_" + keyList[i]);
-            txtWriter.newLine();
-            txtWriter.write(valueList[i]);
-            txtWriter.newLine();
-        }
-        txtWriter.close();
+        //        String textTargetFileName = TXTSOURCE_PATH;
+        //        BufferedWriter txtWriter = new BufferedWriter(new FileWriter(textTargetFileName));
+        //        for (int i = 0; i < keyList.length; i++) {
+        //            txtWriter.write(">node_" + keyList[i]);
+        //            txtWriter.newLine();
+        //            txtWriter.write(valueList[i]);
+        //            txtWriter.newLine();
+        //        }
+        //        txtWriter.close();
     }
 
     @SuppressWarnings("deprecation")
@@ -96,80 +99,34 @@ public class GetFastaStatsTest {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
-//        GetFastaStatsJob driver = new GetFastaStatsJob();
         JobConf conf = new JobConf(HADOOP_CONF_PATH);
         conf.setInt(GenomixJobConf.STATS_MIN_CONTIGLENGTH, 25);
         conf.setInt(GenomixJobConf.STATS_EXPECTED_GENOMESIZE, 150);
         conf.setBoolean(GenomixJobConf.STATS_GAGE_OLDSTYLE, true);
+
         Counters counters = GraphStatistics.run(HDFS_PATH, RESULT_PATH, conf);
         GraphStatistics.getFastaStatsForGage(RESULT_PATH, counters, conf);
-//        driver.run(HDFS_PATH, RESULT_PATH, COUNT_REDUCER, conf);
-        dumpResult();
         cleanupHadoop();
-        if (!compareWithGageSourceCodeResults("actual/metrics.txt"))
-            throw new Exception("the results are not same!");
-        else
-            System.out.println("the results are consistent!");
+        compareWithGageSourceCodeResults(ACTUAL_RESULT_DIR + File.separator + RESULT_PATH + "/gagestatsFasta.txt");
     }
 
-    public boolean compareWithGageSourceCodeResults(String mapreducePath) throws Exception {
-        String[] args = { "-o", "-min", "25", "-genomeSize", "150", TXTSOURCE_PATH };
-        String src = gageDriver(args);
-        BufferedReader br = new BufferedReader(new FileReader(new File(mapreducePath)));
-        StringBuffer target = new StringBuffer();
+    public void compareWithGageSourceCodeResults(String mapreducePath) throws Exception {
+        BufferedReader brMR = new BufferedReader(new FileReader(new File(mapreducePath)));
+        BufferedReader brGageSrc = new BufferedReader(new FileReader(GAGESOURCE));
+        StringBuffer etMR = new StringBuffer();
+        StringBuffer etGageSrc = new StringBuffer();
         String line;
-        while ((line = br.readLine()) != null) {
-            target.append(line);
+        while ((line = brMR.readLine()) != null) {
+            etMR.append(line);
         }
-        String pureTarget = target.toString().replaceAll("\\n", "");
-        String pureSrc = src.replaceAll("\\n", "");
-        if (pureTarget.equals(pureSrc))
-            return true;
-        else
-            return false;
-    }
-
-    public static String gageDriver(String[] args) throws Exception {
-        if (args.length < 1) {
-            //            printUsage();
-            System.exit(1);
+        while ((line = brGageSrc.readLine()) != null) {
+            etGageSrc.append(line);
         }
-
-        boolean useBaylorFormat = false;
-        boolean oldStyle = false;
-        long genomeSize = 0;
-        int initialVal = 0;
-        while (args[initialVal].startsWith("-")) {
-            if (args[initialVal].trim().equalsIgnoreCase("-b")) {
-                useBaylorFormat = true;
-            } else if (args[initialVal].trim().equalsIgnoreCase("-min")) {
-                GageSrcCodeGetFastaStats.MIN_LENGTH = Integer.parseInt(args[++initialVal]);
-            } else if (args[initialVal].trim().equalsIgnoreCase("-o")) {
-                oldStyle = true;
-            } else if (args[initialVal].trim().equalsIgnoreCase("-genomeSize")) {
-                initialVal++;
-                genomeSize = Long.parseLong(args[initialVal]);
-                System.err.println("Found genome size at position " + initialVal + " with value " + args[initialVal]
-                        + " aka " + genomeSize);
-            } else {
-                System.err.println("Unknown parameter " + args[initialVal]
-                        + " specified, please specify -b for Baylor-style output.");
-                System.exit(1);
-            }
-            initialVal++;
-        }
-
-        //        for (int i = initialVal; i < args.length; i++) {
-        String assemblyTitle = args[initialVal].trim().split("/")[0];
-        GageSrcCodeGetFastaStats f = new GageSrcCodeGetFastaStats(useBaylorFormat, oldStyle, genomeSize);
-        String[] splitLine = args[initialVal].trim().split(",");
-
-        for (int j = 0; j < splitLine.length; j++) {
-            f.processFile(splitLine[j]);
-        }
-        return (f.toString(true, assemblyTitle));
-        //        }
-
+        brMR.close();
+        brGageSrc.close();
+        String pureTarget = etMR.toString().replaceAll("\\n", "");
+        String pureSrc = etGageSrc.toString().replaceAll("\\n", "");
+        Assert.assertEquals(pureSrc, pureTarget);
     }
 
     public void startHadoop() throws IOException {
@@ -194,12 +151,5 @@ public class GetFastaStatsTest {
     public void cleanupHadoop() throws IOException {
         mrCluster.shutdown();
         dfsCluster.shutdown();
-    }
-
-    private void dumpResult() throws IOException {
-        Path src = new Path(RESULT_PATH);
-        Path dest = new Path(ACTUAL_RESULT_DIR);
-        dfs.copyToLocalFile(src, dest);
-        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, "actual/metrics.txt", true, conf, true, dfs);
     }
 }

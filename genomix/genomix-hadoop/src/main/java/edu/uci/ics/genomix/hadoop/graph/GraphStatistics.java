@@ -1,7 +1,6 @@
 package edu.uci.ics.genomix.hadoop.graph;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
@@ -14,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -41,9 +41,9 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.Node.DIR;
-import edu.uci.ics.genomix.type.Node.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -56,28 +56,19 @@ import edu.uci.ics.genomix.type.VKmer;
 public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node, Text, LongWritable> {
 
     public static final Logger LOG = Logger.getLogger(GraphStatistics.class.getName());
+    private Reporter reporter;
 
     @Override
     public void map(VKmer key, Node value, OutputCollector<Text, LongWritable> output, Reporter reporter)
             throws IOException {
 
-        reporter.getCounter("totals", "nodes").increment(1);
-
-        reporter.getCounter("degree-bins", Integer.toString(value.inDegree() + value.outDegree())).increment(1);
-        reporter.getCounter("totals", "degree").increment(value.inDegree() + value.outDegree());
-
-        int kmerLength = value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength();
-        reporter.getCounter("kmerLength-bins", Integer.toString(kmerLength)).increment(1);
-        reporter.getCounter("totals", "kmerLength").increment(kmerLength);
-
-        reporter.getCounter("coverage-bins", Integer.toString(Math.round(value.getAverageCoverage()))).increment(1);
-        reporter.getCounter("totals", "coverage").increment(Math.round(value.getAverageCoverage()));
-
-        reporter.getCounter("startRead-bins", Integer.toString(Math.round(value.getStartReads().size()))).increment(1);
-        reporter.getCounter("totals", "startRead").increment(Math.round(value.getStartReads().size()));
-
-        reporter.getCounter("endRead-bins", Integer.toString(Math.round(value.getEndReads().size()))).increment(1);
-        reporter.getCounter("totals", "endRead").increment(Math.round(value.getEndReads().size()));
+        this.reporter = reporter;
+        reporter.incrCounter("totals", "nodes", 1);
+        updateStats("degree", value.inDegree() + value.outDegree());
+        updateStats("kmerLength", value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength());
+        updateStats("coverage", Math.round(value.getAverageCoverage()));
+        updateStats("startRead", value.getStartReads().size());
+        updateStats("endRead", value.getEndReads().size());
 
         long totalEdgeReads = 0;
         long totalSelf = 0;
@@ -85,24 +76,35 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
                 totalEdgeReads += e.getValue().size();
                 if (e.getKey().equals(key)) {
-                    reporter.getCounter("totals", "selfEdge-" + et).increment(1);
+                    reporter.incrCounter("totals", "selfEdge-" + et, 1);
                     totalSelf += 1;
                 }
             }
         }
-        reporter.getCounter("edgeRead-bins", Long.toString(totalEdgeReads)).increment(1);
-        reporter.getCounter("totals", "edgeRead").increment(totalEdgeReads);
-        reporter.getCounter("selfEdge-bins", Long.toString(totalSelf)).increment(1);
+        updateStats("edgeRead", totalEdgeReads);
 
         if (value.isPathNode())
-            reporter.getCounter("totals", "pathNode").increment(1);
+            reporter.incrCounter("totals", "pathNode", 1);
 
         for (DIR d : DIR.values())
             if (value.degree(d) == 0)
-                reporter.getCounter("totals", "tips-" + d).increment(1);
+                reporter.incrCounter("totals", "tips-" + d, 1);
 
         if (value.inDegree() == 0 && value.outDegree() == 0)
-            reporter.getCounter("totals", "tips-BOTH").increment(1);
+            reporter.incrCounter("totals", "tips-BOTH", 1);
+
+        if ((value.inDegree() == 0 && value.outDegree() != 0) || (value.inDegree() != 0 && value.outDegree() == 0))
+            reporter.incrCounter("totals", "tips-ONE", 1);
+    }
+
+    private void updateStats(String valueName, long value) {
+        reporter.incrCounter(valueName + "-bins", Long.toString(value), 1);
+        reporter.incrCounter("totals", valueName, value);
+
+        long prevMax = reporter.getCounter("maximum", valueName).getValue();
+        if (prevMax < value) {
+            reporter.incrCounter("maximum", valueName, value - prevMax); // increment by difference to get to new value (no set function!)
+        }
     }
 
     /**
@@ -157,7 +159,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
      * for example, the coverage counters have the group "coverage-bins", the counter name "5" and the count 10
      * meaning the coverage chart has a bar at X=5 with height Y=10
      */
-    public static void drawStatistics(String outputDir, Counters jobCounters) throws IOException {
+    public static void drawStatistics(String outputDir, Counters jobCounters, GenomixJobConf conf) throws IOException {
         HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
         TreeMap<Integer, Long> curCounts;
 
@@ -192,10 +194,11 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
                     PlotOrientation.VERTICAL, true, true, false);
             // Write the data to the output stream:
-            FileOutputStream chartOut = new FileOutputStream(new File(outputDir + File.separator + graphType
-                    + "-hist.png"));
-            ChartUtilities.writeChartAsPNG(chartOut, chart, 800, 600);
-            chartOut.close();
+            FileSystem dfs = FileSystem.get(conf);
+            FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + graphType + "-hist.png"),
+                    true);
+            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
+            outstream.close();
         }
     }
 
@@ -222,15 +225,12 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     private static int minContig = Integer.MAX_VALUE;
     private static long total = 0;
     private static int count = 0;
-
     private static int totalOverLength = 0;
     private static long totalBPOverLength = 0;
     private static double eSize;
 
     private static final int CONTIG_AT_INITIAL_STEP = 1000000;
     private static final NumberFormat nf = new DecimalFormat("############.##");
-    private static double[] nxThresholds = { 0.1, 0.25, 0.5, 0.75, 0.95 };
-    private static int[] nxValueAndCount = new int[10];
 
     private static class ContigAt {
         ContigAt(long currentBases) {
@@ -238,23 +238,61 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             this.totalBP = 0;
             this.goal = currentBases;
         }
+
         public int count;
         public long totalBP;
         public int len;
         public long goal;
     }
 
+    private static class NXValueAndCountPair {
+        private int nxValue;
+        private int nxCount;
+
+        public NXValueAndCountPair() {
+            nxValue = 0;
+            nxCount = 0;
+        }
+
+        public int getNxValue() {
+            return this.nxValue;
+        }
+
+        public int getNxCount() {
+            return this.nxCount;
+        }
+
+        public void setNxValue(int nxValue) {
+            this.nxValue = nxValue;
+        }
+
+        public void setNxCount(int nxCount) {
+            this.nxCount = nxCount;
+        }
+    }
+
+    private static void initializeNxMap(HashMap<Double, NXValueAndCountPair> nxMap) {
+        double[] nxThresholds = { 0.1, 0.25, 0.5, 0.75, 0.95 };
+        for (int i = 0; i < 5; i++) {
+            nxMap.put(nxThresholds[i], new NXValueAndCountPair());
+        }
+    }
 
     public static void getFastaStatsForGage(String outputDir, Counters jobCounters, JobConf job) throws IOException {
         HashMap<Integer, Long> ctgSizeCounts = new HashMap<Integer, Long>();
         loadDataFromCounters(ctgSizeCounts, jobCounters);
+        HashMap<Double, NXValueAndCountPair> nxMap = new HashMap<Double, NXValueAndCountPair>();
+        initializeNxMap(nxMap);
+
         MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.STATS_MIN_CONTIGLENGTH));
         EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.STATS_EXPECTED_GENOMESIZE));
         OLD_STYLE = Boolean.parseBoolean(job.get(GenomixJobConf.STATS_GAGE_OLDSTYLE));
+
         for (Integer s : ctgSizeCounts.keySet()) {
             for (int i = 0; i < ctgSizeCounts.get(s); i++)
                 contigLengthList.add(s);
         }
+
         for (Integer curLength : contigLengthList) {
             if (curLength <= MIN_CONTIG_LENGTH) {
                 continue;
@@ -293,21 +331,13 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         /*----------------------------------------------------------------*/
         Collections.sort(contigLengthList);
         long sum = 0;
-        double median = 0;
-        int medianCount = 0;
+        double median = contigLengthList.get(contigLengthList.size() / 2);
+        int medianCount = 1;
         int numberContigsSeen = 1;
         int currentValPoint = 0;
+
         for (int i = contigLengthList.size() - 1; i >= 0; i--) {
-            if (((int) (count / 2)) == i) {
-                median += contigLengthList.get(i);
-                medianCount++;
-            } else if (count % 2 == 0 && ((((int) (count / 2)) + 1) == i)) {
-                median += contigLengthList.get(i);
-                medianCount++;
-            }
-
             sum += contigLengthList.get(i);
-
             // calculate the bases at
             /*----------------------------------------------------------------*/
             while (currentValPoint < contigAtVals.length && sum >= contigAtVals[currentValPoint].goal
@@ -320,10 +350,10 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
                 currentValPoint++;
             }
             /*----------------------------------------------------------------*/
-            for (int j = 0; j < 5; j++) {
-                if (sum / (double) total >= nxThresholds[j] && nxValueAndCount[j + 5] == 0) {
-                    nxValueAndCount[j] = contigLengthList.get(i);
-                    nxValueAndCount[j + 5] = contigLengthList.size() - i;
+            for (Map.Entry<Double, NXValueAndCountPair> entry : nxMap.entrySet()) {
+                if (sum / (double) total >= entry.getKey() && entry.getValue().getNxCount() == 0) {
+                    entry.getValue().setNxValue(contigLengthList.get(i));
+                    entry.getValue().setNxCount(contigLengthList.size() - i);
                 }
             }
             numberContigsSeen++;
@@ -336,10 +366,14 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             outputStr.append("BasesInFasta: " + totalBPOverLength + "\n");
             outputStr.append("Min: " + minContig + "\n");
             outputStr.append("Max: " + maxContig + "\n");
-            outputStr.append("N10: " + nxValueAndCount[0] + " COUNT: " + nxValueAndCount[0 + 5] + "\n");
-            outputStr.append("N25: " + nxValueAndCount[1] + " COUNT: " + nxValueAndCount[1 + 5] + "\n");
-            outputStr.append("N50: " + nxValueAndCount[2] + " COUNT: " + nxValueAndCount[2 + 5] + "\n");
-            outputStr.append("N75: " + nxValueAndCount[3] + " COUNT: " + nxValueAndCount[3 + 5] + "\n");
+            outputStr.append("N10: " + nxMap.get(Double.valueOf(0.1)).getNxValue() + " COUNT: "
+                    + nxMap.get(Double.valueOf(0.1)).getNxCount() + "\n");
+            outputStr.append("N25: " + nxMap.get(Double.valueOf(0.25)).getNxValue() + " COUNT: "
+                    + nxMap.get(Double.valueOf(0.25)).getNxCount() + "\n");
+            outputStr.append("N50: " + nxMap.get(Double.valueOf(0.5)).getNxValue() + " COUNT: "
+                    + nxMap.get(Double.valueOf(0.5)).getNxCount() + "\n");
+            outputStr.append("N75: " + nxMap.get(Double.valueOf(0.75)).getNxValue() + " COUNT: "
+                    + nxMap.get(Double.valueOf(0.75)).getNxCount() + "\n");
             outputStr.append("E-size:" + nf.format(eSize) + "\n");
         } else {
             //                if (outputHeader) {
@@ -378,9 +412,11 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
                 }
             }
         }
-        FileSystem dfs = FileSystem.get(job);
+        FileSystem dfs = FileSystem.getLocal(new Configuration());
+
         dfs.mkdirs(new Path(outputDir));
-        FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "gagestatsFasta.txt"), true);
+        FSDataOutputStream outstream = dfs.create(new Path("actual" + File.separator + outputDir
+                + "/gagestatsFasta.txt"), true);
         PrintWriter writer = new PrintWriter(outstream);
         writer.println(outputStr.toString());
         writer.close();
