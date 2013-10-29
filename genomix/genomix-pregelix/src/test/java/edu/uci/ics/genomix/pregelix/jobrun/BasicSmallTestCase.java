@@ -95,7 +95,7 @@ public class BasicSmallTestCase extends TestCase {
         GenerateTextFile.convertGraphCleanOutputToText(binFileDir, textFileDir);
         //covert bin to graphviz
         GenerateGraphViz.convertBinToGraphViz(binFileDir, graphvizFileDir,
-                GRAPH_TYPE.DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE.get());
+                GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS.get());
         //generate statistic counters
         //        generateStatisticsResult(statisticsFileDir);
     }
