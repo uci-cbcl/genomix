@@ -57,14 +57,14 @@ public class VertexValueWritable extends Node {
     }
 
     public boolean isValidScaffoldingSearchNode() {
-        return (this.getStartReads().size() > 0 || this.getEndReads().size() > 0)
+        return (this.getUnflippedReadIds().size() > 0 || this.getFlippedReadIds().size() > 0)
                 && (getAverageCoverage() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_COVERAGE && getInternalKmer()
                         .getLength() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_LENGTH);
     }
 
     public void setNode(Node node) {
         // TODO invertigate... does this need to be a copy?
-        super.setAsCopy(node.getEdges(), node.getStartReads(), node.getEndReads(), node.getInternalKmer(),
+        super.setAsCopy(node.getEdges(), node.getUnflippedReadIds(), node.getFlippedReadIds(), node.getInternalKmer(),
                 node.getAverageCoverage());
     }
 
