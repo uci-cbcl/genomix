@@ -295,7 +295,9 @@ public class GenomixJobConf extends JobConf {
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
-
+    
+    private static final GRAPH_TYPE DEFAULT_GRAPH_TYPE = GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE;
+    
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
     public GenomixJobConf(int kmerLength) {
@@ -419,7 +421,7 @@ public class GenomixJobConf extends JobConf {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
         if (get(PLOT_SUBGRAPH_GRAPH_VERBOSITY) == null)
-            setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, 2); //default value: 2, which means DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE
+            setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, DEFAULT_GRAPH_TYPE.get()); 
 
         if (get(PLOT_SUBGRAPH_START_SEEDS) == null)
             set(PLOT_SUBGRAPH_START_SEEDS, "");
