@@ -51,7 +51,9 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
             //broadcase kill self
             broadcastKillself();
             vertex.setState(State.DEAD_NODE);
-        }
+	    activate();
+        } else
+            voteToHalt();
     }
 
     public void cleanupDeadVertex() {
@@ -84,8 +86,8 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
             } else {
                 responseToDeadVertex(msgIterator);
             }
+	    voteToHalt();
         }
-        voteToHalt();
     }
 
     public static void main(String[] args) throws Exception {
