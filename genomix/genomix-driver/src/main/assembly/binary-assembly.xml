@@ -13,6 +13,16 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
+      <directory>target/appassembler/hyracks/bin</directory>
+      <outputDirectory>hyracks/bin</outputDirectory>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <directory>target/appassembler/pregelix/bin</directory>
+      <outputDirectory>pregelix/bin</outputDirectory>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <directory>target/appassembler/lib</directory>
       <outputDirectory>lib</outputDirectory>
     </fileSet>
