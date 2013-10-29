@@ -1,19 +1,13 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-
 import junit.framework.TestCase;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
-import org.junit.Before;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
-import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 
 @SuppressWarnings({ "deprecation", "unused" })
 public class GraphBuildingTestCase extends TestCase {
@@ -55,7 +49,7 @@ public class GraphBuildingTestCase extends TestCase {
     }
 
     public void TestMapKmerToNode() throws Exception {
-        GenomixDriver driver = new GenomixDriver();
+        GenomixHadoopDriver driver = new GenomixHadoopDriver();
         driver.run(HDFS_INPUTPATH, RESULT_PATH, COUNT_REDUCER, SIZE_KMER, LINES_PERMAP, true, HADOOP_CONF_PATH);
         dumpResult();
     }
@@ -64,7 +58,7 @@ public class GraphBuildingTestCase extends TestCase {
         //        Path src = new Path(RESULT_PATH);
         //        Path dest = new Path(RESULT_PATH);
         //        dfs.copyToLocalFile(src, dest);
-        HadoopMiniClusterTest.copyResultsToLocal(RESULT_PATH, RESULT_PATH + "/", false, conf, true, dfs);
+        GenomixClusterManager.copyBinToLocal(conf, RESULT_PATH, RESULT_PATH);
         GenerateGraphViz.convertGraphBuildingOutputToGraphViz(RESULT_PATH + "/bin", RESULT_PATH + "/graphviz");
     }
 }

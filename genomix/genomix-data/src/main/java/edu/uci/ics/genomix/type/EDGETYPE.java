@@ -212,7 +212,7 @@ public enum EDGETYPE implements Writable{
     }
 
     public static boolean sameOrientation(EDGETYPE et1, EDGETYPE et2) {
-        return et1.causesFlip() != et2.causesFlip();
+        return et1.causesFlip() == et2.causesFlip();
     }
 
     public static boolean sameOrientation(byte b1, byte b2) {

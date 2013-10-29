@@ -185,6 +185,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         EDGETYPE et = EDGETYPE.getEdgeTypeFromDirToDir(curKmerAndDir.getValue(), neighborKmerAndDir.getValue());
         curNode.getEdgeMap(et).put(neighborKmerAndDir.getKey(), readIdSet);
         nextNode.reset();
+        nextNode.setAverageCoverage(1);
         nextNode.getEdgeMap(et.mirror()).put(new VKmer(curKmerAndDir.getKey()), readIdSet);
     }
 

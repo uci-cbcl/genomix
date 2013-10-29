@@ -29,9 +29,11 @@ import org.kohsuke.args4j.CmdLineException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.config.GenomixJobConf.Patterns;
+import edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixHadoopDriver;
 import edu.uci.ics.genomix.hadoop.converttofasta.ConvertToFasta;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
-import edu.uci.ics.genomix.hyracks.graph.driver.Driver.Plan;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
+import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
@@ -68,7 +70,7 @@ public class GenomixDriver {
     private int numMachines;
 
     private GenomixClusterManager manager;
-    private edu.uci.ics.genomix.hyracks.graph.driver.Driver hyracksDriver;
+    private GenomixHyracksDriver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
 
     @SuppressWarnings("deprecation")
@@ -144,9 +146,13 @@ public class GenomixDriver {
                 break;
             case STATS:
                 flushPendingJobs(conf);
+                manager.startCluster(ClusterType.HADOOP);
+                curOutput = prevOutput + "-STATS";
+                stepNum--;
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
-                GraphStatistics.drawStatistics(curOutput, counters);
+                GraphStatistics.drawStatistics(curOutput, counters, conf);
+                manager.stopCluster(ClusterType.HADOOP);
                 curOutput = prevOutput; // use previous job's output
                 break;
         }
@@ -159,7 +165,7 @@ public class GenomixDriver {
 
         String hyracksIP = conf.get(GenomixJobConf.IP_ADDRESS);
         int hyracksPort = Integer.parseInt(conf.get(GenomixJobConf.PORT));
-        hyracksDriver = new edu.uci.ics.genomix.hyracks.graph.driver.Driver(hyracksIP, hyracksPort, numCoresPerMachine);
+        hyracksDriver = new GenomixHyracksDriver(hyracksIP, hyracksPort, numCoresPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         followingBuild = true;
         manager.stopCluster(ClusterType.HYRACKS);
@@ -171,7 +177,7 @@ public class GenomixDriver {
         manager.startCluster(ClusterType.HADOOP);
         GenomixJobConf.tick("buildGraphWithHadoop");
 
-        edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver hadoopDriver = new edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixDriver();
+        GenomixHadoopDriver hadoopDriver = new GenomixHadoopDriver();
         hadoopDriver.run(prevOutput, curOutput, numCoresPerMachine * numMachines,
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, conf);
         followingBuild = true;
@@ -290,7 +296,7 @@ public class GenomixDriver {
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }
 
-    public static void main(String[] args) throws CmdLineException, NumberFormatException, HyracksException, Exception {
+    public static void main(String[] args) throws NumberFormatException, HyracksException, Exception {
         String[] myArgs = { "-runLocal", "true", "-kmerLength", "55",
                 //                        "-saveIntermediateResults", "true",
                 //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
@@ -314,7 +320,20 @@ public class GenomixDriver {
         //        Patterns.BUILD, Patterns.MERGE, 
         //        Patterns.TIP_REMOVE, Patterns.MERGE,
         //        Patterns.BUBBLE, Patterns.MERGE,
-        GenomixJobConf conf = GenomixJobConf.fromArguments(args);
+        GenomixJobConf conf;
+        try {
+            conf = GenomixJobConf.fromArguments(args);
+        } catch (CmdLineException ex) {
+            System.err.println("Usage: bin/genomix [options]\n");
+            ex.getParser().setUsageWidth(80);
+            ex.getParser().printUsage(System.err);
+            System.err.println("\nExample:");
+            System.err
+                    .println("\tbin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput /path/to/readfiledir/\n");
+            System.err.println(ex.getMessage());
+
+            return;
+        }
         //          GenomixJobConf conf = GenomixJobConf.fromArguments(myArgs);
         GenomixDriver driver = new GenomixDriver();
         driver.runGenomix(conf);

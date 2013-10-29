@@ -54,6 +54,9 @@ public class DriverUtils {
             throw new RuntimeException("Failed to get the ip address of the master node! Script returned exit code: "
                     + p.exitValue() + "\nstdout: " + stdout + "\nstderr: " + IOUtils.toString(p.getErrorStream()));
         return stdout;
+        //      InetAddress address = InetAddress.getByName(hostName);
+        //      System.out.println("inetAddress for " + hostName + address.getHostAddress());
+        //      return address.getHostAddress();
     }
 
     /**
@@ -108,7 +111,7 @@ public class DriverUtils {
         for (FileStatus f : files) {
             if (f.getLen() != 0) {
                 try {
-                    
+
                     reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
                     key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                     value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);

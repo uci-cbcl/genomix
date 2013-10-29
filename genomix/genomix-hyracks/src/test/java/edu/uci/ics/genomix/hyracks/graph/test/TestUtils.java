@@ -19,228 +19,158 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Set;
 
 public class TestUtils {
+
     /**
-     * Compare with the sorted expected file.
-     * The actual file may not be sorted;
+     * Compare the two files line by line.
      * 
      * @param expectedFile
      * @param actualFile
+     * @throws Exception
      */
-    @SuppressWarnings("finally")
-    public static boolean compareWithSortedResult(File expectedFile, File actualFile) throws Exception {
-        BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
-        BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-        ArrayList<String> actualLines = new ArrayList<String>();
-        ArrayList<String> expectedLines = new ArrayList<String>();
-
-        String lineExpected, lineActual;
-        boolean flag = true;
-        try {
-            while ((lineActual = readerActual.readLine()) != null) {
-                actualLines.add(lineActual);
-            }
-            Collections.sort(actualLines);
-
-            while ((lineExpected = readerExpected.readLine()) != null) {
-                expectedLines.add(lineExpected);
-            }
-            Collections.sort(expectedLines);
-
-            int num = 0;
-            for (String actualLine : actualLines) {
-                lineExpected = expectedLines.get(num);
-                if (lineExpected == null) {
-                    flag = false;
-                }
-//                System.out.println(actualLine);
-//                System.out.println(lineExpected);
-                if (!equalStrings(lineExpected, actualLine)) {
-                    flag = false;
-                    System.out.println(lineExpected);
-                    System.out.println(actualLine);
-                }
-                ++num;
-            }
-            lineExpected = expectedLines.get(num);
-            if (lineExpected != null) {
-                flag = false;
-            }
-        } finally {
-            readerActual.close();
-            readerExpected.close();
-            return flag;
-        }
+    public static void compareFiles(File expectedFile, File actualFile) throws Exception {
+        compareFilesWithUnOrderedFields(expectedFile, actualFile, false, null);
     }
 
-    public static void compareWithUnSortedPosition(File expectedFile, File actualFile, int[] poslistField)
-            throws Exception {
+    /**
+     * Compare with two files line by line.
+     * This function will sort the lines inside both file by default String.compare() and then compare if every line is the same.
+     * 
+     * @param expectedFile
+     * @param actualFile
+     * @throws Exception
+     */
+    public static void compareFilesBySortingThemLineByLine(File expectedFile, File actualFile) throws Exception {
+        compareFilesWithUnOrderedFields(expectedFile, actualFile, true, null);
+    }
+
+    /**
+     * Compare two files line by line. Each line is composed by a few fields that was separated by "\t".
+     * And it can contain some unordered fields which are separated by space (" "),
+     * The unordered fields will be split by space and sorted later to compare with the expected answer.
+     * This test utility is useful while we have a result file contains a merged line,
+     * which could be generated in any order due to the multiple thread.
+     * 
+     * @param expectedFile
+     * @param actualFile
+     * @param tobeSorted
+     *            : specify this compare need to be sorted or not.
+     * @param unorderedField
+     *            : specify the unordered fields list.
+     * @throws Exception
+     */
+    public static void compareFilesWithUnOrderedFields(File expectedFile, File actualFile, boolean tobeSorted,
+            final Set<Integer> unorderedField) throws Exception {
+        ArrayList<String> actualLines = new ArrayList<String>();
+        ArrayList<String> expectedLines = new ArrayList<String>();
         BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
         BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-        ArrayList<String> actualLines = new ArrayList<String>();
-        String lineExpected, lineActual;
-        try {
-            while ((lineActual = readerActual.readLine()) != null) {
-                actualLines.add(lineActual);
+
+        Comparator<String> fieldCompartor = new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                if (unorderedField == null || unorderedField.size() == 0) {
+                    return o1.compareTo(o2);
+                }
+                String[] parts1 = o1.split("\\t");
+                String[] parts2 = o2.split("\\t");
+                for (int i = 0; i < parts1.length; i++) {
+                    if (!unorderedField.contains(i)) {
+                        int compareResult = parts1[i].compareTo(parts2[i]);
+                        if (compareResult != 0) {
+                            return compareResult;
+                        }
+                    }
+                }
+                return 0;
             }
-            Collections.sort(actualLines);
-            int num = 1;
+        };
+        String lineExpected, lineActual;
+        while ((lineActual = readerActual.readLine()) != null) {
+            actualLines.add(lineActual);
+        }
+        if (tobeSorted) {
+            Collections.sort(actualLines, fieldCompartor);
+        }
+
+        while ((lineExpected = readerExpected.readLine()) != null) {
+            expectedLines.add(lineExpected);
+        }
+        if (tobeSorted) {
+            Collections.sort(expectedLines, fieldCompartor);
+        }
+
+        try {
+            int num = 0;
             for (String actualLine : actualLines) {
-                lineExpected = readerExpected.readLine();
+                lineExpected = expectedLines.get(num++);
                 if (lineExpected == null) {
                     throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
                 }
-                if (!containStrings(lineExpected, actualLine, poslistField)) {
-                    throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
-                            + actualLine);
-                }
-                ++num;
-            }
-            lineExpected = readerExpected.readLine();
-            if (lineExpected != null) {
-                throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineExpected);
-            }
-        } finally {
-            readerActual.close();
-            readerExpected.close();
-        }
-    }
-
-    public static void compareWithResult(File expectedFile, File actualFile) throws Exception {
-        BufferedReader readerExpected = new BufferedReader(new FileReader(expectedFile));
-        BufferedReader readerActual = new BufferedReader(new FileReader(actualFile));
-        String lineExpected, lineActual;
-        int num = 1;
-
-        try {
-            while ((lineExpected = readerExpected.readLine()) != null) {
-                lineActual = readerActual.readLine();
-                // Assert.assertEquals(lineExpected, lineActual);
-                if (lineActual == null) {
-                    throw new Exception("Actual result changed at line " + num + ":\n< " + lineExpected + "\n> ");
-                }
-                if (lineExpected.equalsIgnoreCase(lineActual)) {
-                    throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
-                            + lineActual);
-                }
-                ++num;
-            }
-            lineActual = readerActual.readLine();
-            if (lineActual != null) {
-                throw new Exception("Actual result changed at line " + num + ":\n< \n> " + lineActual);
-            }
-        } finally {
-            readerExpected.close();
-            readerActual.close();
-        }
-    }
-
-    private static boolean equalStrings(String s1, String s2) {
-        String[] rowsOne = s1.split("\n");
-        String[] rowsTwo = s2.split("\n");
-
-        if (rowsOne.length != rowsTwo.length)
-            return false;
-
-        for (int i = 0; i < rowsOne.length; i++) {
-            String row1 = rowsOne[i];
-            String row2 = rowsTwo[i];
-
-            if (row1.equals(row2))
-                continue;
-
-            String[] fields1 = row1.split(",");
-            String[] fields2 = row2.split(",");
-
-            for (int j = 0; j < fields1.length; j++) {
-                if (fields1[j].equals(fields2[j])) {
-                    continue;
-                } else if (fields1[j].indexOf('.') < 0) {
-                    return false;
+                if (unorderedField == null || unorderedField.size() == 0) {
+                    if (!lineExpected.equals(actualLine)) {
+                        throw new Exception("Compare two files not equal, Actual:" + actualLine + " Expected:"
+                                + lineExpected);
+                    }
                 } else {
-                    fields1[j] = fields1[j].split("=")[1];
-                    fields2[j] = fields2[j].split("=")[1];
-                    Double double1 = Double.parseDouble(fields1[j]);
-                    Double double2 = Double.parseDouble(fields2[j]);
-                    float float1 = (float) double1.doubleValue();
-                    float float2 = (float) double2.doubleValue();
-
-                    if (Math.abs(float1 - float2) == 0)
-                        continue;
-                    else {
-                        return false;
+                    if (!compareStringByFields(lineExpected, actualLine, unorderedField)) {
+                        throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
+                                + actualLine);
                     }
                 }
             }
+            if (num < expectedLines.size()) {
+                throw new Exception("Compare two files not equal, expected file have more lines");
+            }
+        } finally {
+            readerActual.close();
+            readerExpected.close();
         }
-        return true;
     }
 
-    private static boolean containStrings(String lineExpected, String actualLine, int[] poslistField) {
+    private static boolean compareStringByFields(String lineExpected, String actualLine,
+            final Set<Integer> unorderedField) {
         if (lineExpected.equals(actualLine)) {
             return true;
         }
-        String[] fieldsExp = lineExpected.split("\\\t");
-        String[] fieldsAct = actualLine.split("\\\t");
+        String[] fieldsExp = lineExpected.split("\\t");
+        String[] fieldsAct = actualLine.split("\\t");
         if (fieldsAct.length != fieldsExp.length) {
             return false;
         }
+
+        ArrayList<String> unorderedFieldsExp = new ArrayList<String>();
+        ArrayList<String> unorderedFieldsAct = new ArrayList<String>();
+
+        //Compare the ordered field first.
         for (int i = 0; i < fieldsAct.length; i++) {
-            boolean cont = false;
-            for (int x : poslistField) {
-                if (i == x) {
-                    cont = true;
-                    break;
+            if (unorderedField.contains(i)) {
+                unorderedFieldsExp.add(fieldsExp[i]);
+                unorderedFieldsAct.add(fieldsAct[i]);
+            } else {
+                if (!fieldsAct[i].equals(fieldsExp[i])) {
+                    return false;
                 }
-            }
-            if (cont) {
-                continue;
-            }
-            if (!fieldsAct[i].equals(fieldsExp[i])) {
-                return false;
             }
         }
 
-        ArrayList<String> posExp = new ArrayList<String>();
-        ArrayList<String> posAct = new ArrayList<String>();
+        for (int i = 0; i < unorderedFieldsAct.size(); i++) {
+            ArrayList<String> subfieldsAct = new ArrayList<String>(Arrays.asList(unorderedFieldsAct.get(i)
+                    .split("\\s+")));
+            ArrayList<String> subfieldsExp = new ArrayList<String>(Arrays.asList(unorderedFieldsExp.get(i)
+                    .split("\\s+")));
 
-        for (int x : poslistField) {
-            String valueExp = lineExpected.split("\\\t")[x];
-            for (int i = 1; i < valueExp.length() - 1;) {
-                if (valueExp.charAt(i) == '(') {
-                    String str = "";
-                    i++;
-                    while (i < valueExp.length() - 1 && valueExp.charAt(i) != ')') {
-                        str += valueExp.charAt(i);
-                        i++;
-                    }
-                    posExp.add(str);
-                }
-                i++;
-            }
-            String valueAct = actualLine.split("\\\t")[x];
-            for (int i = 1; i < valueAct.length() - 1;) {
-                if (valueAct.charAt(i) == '(') {
-                    String str = "";
-                    i++;
-                    while (i < valueAct.length() - 1 && valueAct.charAt(i) != ')') {
-                        str += valueAct.charAt(i);
-                        i++;
-                    }
-                    posAct.add(str);
-                }
-                i++;
-            }
+            Collections.sort(subfieldsAct);
+            Collections.sort(subfieldsExp);
 
-            if (posExp.size() != posAct.size()) {
-                return false;
-            }
-            Collections.sort(posExp);
-            Collections.sort(posAct);
-            for (int i = 0; i < posExp.size(); i++) {
-                if (!posExp.get(i).equals(posAct.get(i))) {
+            //Compare the unordered fields
+            for (int j = 0; j < unorderedFieldsExp.size(); j++) {
+                if (!unorderedFieldsExp.get(j).equals(unorderedFieldsAct.get(j))) {
                     return false;
                 }
             }

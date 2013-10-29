@@ -42,7 +42,10 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public static boolean fakeVertexExist = false;
     public static VKmer fakeVertex = new VKmer();
 
-    public EDGETYPE[][] connectedTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
+    // validPathsTable: a table representing the set of edge types forming a valid path from
+    //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
+    //                 the second
+    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
             { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
 
     protected M outgoingMsg = null;
@@ -96,7 +99,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     /**
      * Generate random string from [ACGT]
      */
-    public String generaterRandomString(int n) {
+    public String generaterRandomDNAString(int n) {
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
         Random random = new Random();

@@ -36,6 +36,6 @@ public class ResultsCheckingReducer extends MapReduceBase implements Reducer<Tex
         textvalue.set(values.next());
         if (values.hasNext() == false) {
             output.collect(textkey, textvalue);
-        }
+        } 
     }
 }

@@ -1,12 +1,14 @@
 package edu.uci.ics.genomix.pregelix.operator.splitrepeat;
 
-import java.util.Collections;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Logger;
+
+import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -28,15 +30,21 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * Details: This component identifies small repeats that are spanned by sets of
  * reads. The algorithms are similar to scaffolding, but uses individual
  * reads. It is very experimental, with marginal improvements to the graph
- * 
+ * ex. a -r1-> b -r1-> c
+ * d -r2-> -r2-> e
+ * after Split Repeat, you can get
+ * a -r1-> b' -r1-> c
+ * d -r2-> b'' -r2-> e
  */
 public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, SplitRepeatMessage> {
+
+    private static final Logger LOG = Logger.getLogger(SplitRepeatVertex.class.getName());
 
     public static final int NUM_LETTERS_TO_APPEND = 3;
     private static long randSeed = 1; //static for save memory
     private Random randGenerator = null;
 
-    private static Set<String> existKmerString = Collections.synchronizedSet(new HashSet<String>());
+    private HashSet<String> existKmerString = new HashSet<String>();
 
     /**
      * initiate kmerSize, maxIteration
@@ -46,7 +54,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         super.initVertex();
         if (outgoingMsg == null)
             outgoingMsg = new SplitRepeatMessage();
-        randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.PATHMERGE_RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
+        randSeed = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_RANDSEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if (randGenerator == null)
             randGenerator = new Random(randSeed);
         StatisticsAggregator.preGlobalCounters.clear();
@@ -59,36 +67,33 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
     /**
      * Generate random string from [ACGT]
      */
-    public String generaterRandomString(int n) {
+    public String generaterRandomDNAString(int n, String vertexId) {
         char[] chars = "ACGT".toCharArray();
         StringBuilder sb = new StringBuilder();
-        synchronized (existKmerString) { // make local(not static) and remove synchronized
-            while (true) { // TODO what if the len(existing) > num_letters added ? (infinite loop) 
-                for (int i = 0; i < n; i++) {
-                    char c = chars[randGenerator.nextInt(chars.length)];
-                    sb.append(c);
-                }
-                if (!existKmerString.contains(sb.toString()))
-                    break;
+        // The maximum edge number of one vertex is 8, so 4**num_letters is always bigger than len(existing)
+        while (true) { // impossible infinite loop
+            for (int i = 0; i < n; i++) {
+                char c = chars[randGenerator.nextInt(chars.length)];
+                sb.append(c);
             }
-            existKmerString.add(sb.toString());
+            if (!existKmerString.contains(vertexId + sb.toString()))
+                break;
         }
+        existKmerString.add(vertexId + sb.toString());
         return sb.toString();
     }
 
     public VKmer randomGenerateVertexId(int numOfSuffix) {
-        String newVertexId = getVertexId().toString() + generaterRandomString(numOfSuffix);
+        String newVertexId = getVertexId().toString() + generaterRandomDNAString(numOfSuffix);
         VKmer createdVertexId = new VKmer();
         createdVertexId.setFromStringBytes(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
         return createdVertexId;
     }
 
-    // TODO LATER implement EdgeListWritbale's array of long to TreeMap(sorted)
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void createNewVertex(VKmer createdVertexId, NeighborInfo reverseNeighborInfo,
             NeighborInfo forwardNeighborInfo) {
-        Vertex newVertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
-        VKmer vertexId = new VKmer();
+        Vertex<VKmer, VertexValueWritable, NullWritable, SplitRepeatMessage> newVertex = BspUtils
+                .createVertex(getContext().getConfiguration());
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
         vertexValue.getEdgeMap(reverseNeighborInfo.et).put(reverseNeighborInfo.kmer,
@@ -98,11 +103,10 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
 
         vertexValue.setInternalKmer(getVertexId());
 
-        vertexId.setAsCopy(createdVertexId);
-        newVertex.setVertexId(vertexId);
+        newVertex.setVertexId(createdVertexId);
         newVertex.setVertexValue(vertexValue);
 
-        addVertex(vertexId, newVertex);
+        addVertex(createdVertexId, newVertex);
     }
 
     public void updateNeighbors(VKmer createdVertexId, ReadIdSet edgeIntersection, NeighborInfo newReverseNeighborInfo,
@@ -126,14 +130,20 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
     }
 
     public void detectRepeatAndSplit() {
-        if (getVertexValue().getDegree() > 2) { // if I may be a repeat which can be split
+        VertexValueWritable vertex = getVertexValue();
+        if (verbose) {
+            LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue());
+        }
+        if (vertex.getDegree() > 2) { // if I may be a repeat which can be split
             Set<NeighborInfo> deletedNeighborsInfo = new HashSet<NeighborInfo>();
-            VertexValueWritable vertex = getVertexValue();
-            // process connectedTable
-            for (int i = 0; i < connectedTable.length; i++) {
+            // process validPathsTable
+            // validPathsTable: a table representing the set of edge types forming a valid path from
+            //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
+            //                 the second
+            for (int i = 0; i < validPathsTable.length; i++) {
                 // set edgeType and the corresponding edgeList based on connectedTable
-                EDGETYPE reverseEdgeType = connectedTable[i][0];
-                EDGETYPE forwardEdgeType = connectedTable[i][1];
+                EDGETYPE reverseEdgeType = validPathsTable[i][0];
+                EDGETYPE forwardEdgeType = validPathsTable[i][1];
                 EdgeMap reverseEdgeList = vertex.getEdgeMap(reverseEdgeType);
                 EdgeMap forwardEdgeList = vertex.getEdgeMap(forwardEdgeType);
 
@@ -171,8 +181,12 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                 }
             }
 
+            if (verbose) {
+                LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue() + "try to delete: ");
+            }
             // process deletedNeighborInfo -- delete extra edges from old vertex
             deleteEdgeFromOldVertex(deletedNeighborsInfo);
+            deletedNeighborsInfo.clear();
 
             // Old vertex delete or voteToHalt 
             if (getVertexValue().getDegree() == 0)//if no any edge, delete
