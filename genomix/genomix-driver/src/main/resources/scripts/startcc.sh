@@ -1,28 +1,52 @@
 #!/bin/bash
+#------------------------------------------------------------------------
+# Copyright 2009-2013 by The Regents of the University of California
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# you may obtain a copy of the License from
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ------------------------------------------------------------------------
 set -e
 set -o pipefail
-set -x
 
 GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
 cd "$GENOMIX_HOME"
 
-if [ -e "$GENOMIX_HOME"/conf/cc.pid ] ; then
-  echo "existing CC pid found... Not starting a new CC!"
+if [[ $# != 1 || ( "$1" != "HYRACKS" && "$1" != "PREGELIX" ) ]]; then
+    echo "please provide a cluster type as HYRACKS or PREGELIX! (saw $1)" 1>&2
+    exit 1
+fi
+if [ $1 == "HYRACKS" ]; then
+    MY_HOME="$GENOMIX_HOME/hyracks"
+    CMD="\"${MY_HOME}/bin/hyrackscc\""
+else 
+    MY_HOME="$GENOMIX_HOME/pregelix"
+    CMD="\"${MY_HOME}/bin/pregelixcc\""
+fi
+
+if [ -e "$MY_HOME"/cc.pid ] ; then
+  echo "existing CC pid found in $MY_HOME/cc.pid... Not starting a new CC!"
   exit 1
 fi
-  
-#Import cluster properties
-. conf/cluster.properties
+
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
 CCHOST=`ssh -n ${CCHOST_NAME} "${GENOMIX_HOME}/bin/getip.sh"`
 
-#Remove the temp dir
-#rm -rf $CCTMP_DIR
-mkdir -p $CCTMP_DIR
+# import cluster properties
+. "$MY_HOME/conf/cluster.properties"
 
-#Remove the logs dir
-#rm -rf $CCLOGS_DIR
+#Clean the tmp and logs dirs
+shopt -s extglob
+rm -rf $CCTMP_DIR/\(!logs\)  # remove all except default log dir
+mkdir -p $CCTMP_DIR
 mkdir -p $CCLOGS_DIR
 
 #Export JAVA_HOME and JAVA_OPTS
@@ -31,7 +55,7 @@ export JAVA_OPTS=$CCJAVA_OPTS
 
 cd $CCTMP_DIR
 #Prepare cc script
-CMD="\"${GENOMIX_HOME}/bin/genomixcc\" -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST"
+CMD+=" -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST"
 
 if [ -n "$CC_CLIENTPORT" ]; then
   CMD="$CMD -client-net-port $CC_CLIENTPORT"
@@ -51,9 +75,21 @@ fi
 
 #Launch cc script
 printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "$CMD" >> "$CCLOGS_DIR"/cc.log
-eval "$CMD >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
+#eval "$CMD >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
 
-# save the PID of the process we just launched
+# start the cc process and make sure it exists after 1 second
+eval "$CMD >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
 PID=$!
-echo "master: "`hostname`$'\t'$PID
-echo $PID > "$GENOMIX_HOME/conf/cc.pid"
+sleep 1
+MISSING=false
+kill -0 $PID || MISSING=true  # check if the nc process is still running
+
+if [ "$MISSING" == "true" ]; then
+    echo "Failure detected when starting CC!" 1>&2
+    tail -15 "$CCLOGS_DIR/cc.log" 1>&2
+    exit 1
+else
+    echo "master: "`hostname`$'\t'$PID
+    echo $PID > "$MY_HOME/cc.pid"
+fi
+
