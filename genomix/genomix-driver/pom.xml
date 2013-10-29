@@ -34,6 +34,7 @@
 				<version>1.5</version>
 				<executions>
 					<execution>
+						<id>genomix-scripts</id>
 						<configuration>
 							<platforms>
 								<platform>unix</platform>
@@ -43,13 +44,57 @@
 									<mainClass>edu.uci.ics.genomix.driver.GenomixDriver</mainClass>
 									<name>genomix</name>
 								</program>
+							</programs>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<useWildcardClassPath>true</useWildcardClassPath>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>hyracks-scripts</id>
+						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
+							<useWildcardClassPath>true</useWildcardClassPath>
+							<programs>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
-									<name>genomixcc</name>
+									<name>hyrackscc</name>
 								</program>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
 									<name>hyracksnc</name>
+								</program>
+							</programs>
+							<binFolder>hyracks/bin</binFolder>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>../lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>pregelix-scripts</id>
+						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
+							<useWildcardClassPath>true</useWildcardClassPath>
+							<programs>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+									<name>pregelixcc</name>
 								</program>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
@@ -60,9 +105,11 @@
 									</commandLineArguments>
 								</program>
 							</programs>
+							<binFolder>pregelix/bin</binFolder>
 							<repositoryLayout>flat</repositoryLayout>
-							<repositoryName>lib</repositoryName>
+							<repositoryName>../lib</repositoryName>
 							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
 						</configuration>
 						<phase>package</phase>
 						<goals>
