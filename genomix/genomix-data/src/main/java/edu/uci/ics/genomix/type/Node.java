@@ -109,10 +109,8 @@ public class Node implements Writable, Serializable {
 
                 @Override
                 public NeighborInfo next() {
-                    if(info == null){
+                    if (info == null) {
                         info = new NeighborInfo(et, it.next());
-                    }else{
-                        
                     }
                     info.set(et, it.next());
                     return info;
@@ -536,7 +534,7 @@ public class Node implements Writable, Serializable {
             // stream theirs in, offset and flipped
             int newPOffset;
             for (ReadHeadInfo p : other.startReads) {
-                 newPOffset = otherLength - 1 - p.getOffset();
+                newPOffset = otherLength - 1 - p.getOffset();
                 endReads.add(p.getMateId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor));
             }
             for (ReadHeadInfo p : other.endReads) {
