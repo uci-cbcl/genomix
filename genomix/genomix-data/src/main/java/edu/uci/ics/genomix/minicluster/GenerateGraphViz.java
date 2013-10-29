@@ -60,7 +60,7 @@ public class GenerateGraphViz {
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
      */
-    public static void convertBinToGraphViz(String srcDir, String destDir, int graphType) throws Exception {
+    public static void convertBinToGraphViz(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
         GraphViz gv = new GraphViz();  
         gv.addln(gv.start_graph());
 
@@ -82,7 +82,7 @@ public class GenerateGraphViz {
                 if (key == null) {
                     break;
                 }
-                switch (GRAPH_TYPE.getFromInt(graphType)) {
+                switch (graphType) {
                     case UNDIRECTED_GRAPH_WITHOUT_LABELS:
                     case DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE:
                         if (map.containsKey(key.toString()))
@@ -103,7 +103,7 @@ public class GenerateGraphViz {
                 /** convert edge to graph **/
                 outputEdge = convertEdgeToGraph(outputNode, value, graphType);
                 gv.addln(outputEdge);
-                if (GRAPH_TYPE.getFromInt(graphType) == GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS) {
+                if (graphType == GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS) {
                     /** add readIdSet **/
                     String fillColor = "";
                     if (value.isStartReadOrEndRead())
@@ -127,12 +127,12 @@ public class GenerateGraphViz {
         gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
     }
 
-    public static String convertEdgeToGraph(String outputNode, Node value, int graphType) {
+    public static String convertEdgeToGraph(String outputNode, Node value, GRAPH_TYPE graphType) {
         String outputEdge = ""; 
         for (EDGETYPE et : EDGETYPE.values()) {
             for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
                 String destNode = "";
-                switch (GRAPH_TYPE.getFromInt(graphType)) {
+                switch (graphType) {
                     case UNDIRECTED_GRAPH_WITHOUT_LABELS:
                         if (map.containsKey(e.getKey().toString()))
                             destNode += map.get(e.getKey().toString());

@@ -419,7 +419,7 @@ public class GenomixJobConf extends JobConf {
             set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
         }
         if (get(PLOT_SUBGRAPH_GRAPH_VERBOSITY) == null)
-            setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, 2);
+            setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, 2); //default value: 2, which means DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE
 
         if (get(PLOT_SUBGRAPH_START_SEEDS) == null)
             set(PLOT_SUBGRAPH_START_SEEDS, "");
