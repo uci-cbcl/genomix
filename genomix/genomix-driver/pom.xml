@@ -50,6 +50,7 @@
 							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
 							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
 							<useWildcardClassPath>true</useWildcardClassPath>
+							<extraJvmArguments>-Djava.util.logging.config.file=@BASEDIR@/conf/driver.logging.properties</extraJvmArguments>
 						</configuration>
 						<phase>package</phase>
 						<goals>
@@ -78,6 +79,7 @@
 							<repositoryName>../lib</repositoryName>
 							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
 							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<extraJvmArguments>-Djava.util.logging.config.file=@BASEDIR@/../conf/driver.logging.properties</extraJvmArguments>
 						</configuration>
 						<phase>package</phase>
 						<goals>
@@ -110,6 +112,7 @@
 							<repositoryName>../lib</repositoryName>
 							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
 							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<extraJvmArguments>-Djava.util.logging.config.file=@BASEDIR@/../conf/driver.logging.properties</extraJvmArguments>
 						</configuration>
 						<phase>package</phase>
 						<goals>
