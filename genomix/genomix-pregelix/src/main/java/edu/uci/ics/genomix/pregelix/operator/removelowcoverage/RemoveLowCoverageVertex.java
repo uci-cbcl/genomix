@@ -8,6 +8,7 @@ import java.util.Set;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
@@ -24,8 +25,6 @@ import edu.uci.ics.genomix.type.VKmer;
  */
 public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     private static float minAverageCoverage = -1;
-
-    private static Set<VKmer> deadNodeSet = Collections.synchronizedSet(new HashSet<VKmer>());
 
     /**
      * initiate kmerSize, length
@@ -47,11 +46,14 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
     }
 
     public void detectLowCoverageVertex() {
-        if (getVertexValue().getAverageCoverage() <= minAverageCoverage) {
+        VertexValueWritable vertex = getVertexValue();
+        if (vertex.getAverageCoverage() <= minAverageCoverage) {
             //broadcase kill self
             broadcastKillself();
-            deadNodeSet.add(new VKmer(getVertexId()));
-        }
+            vertex.setState(State.DEAD_NODE);
+	    activate();
+        } else
+            voteToHalt();
     }
 
     public void cleanupDeadVertex() {
@@ -73,17 +75,19 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     @Override
     public void compute(Iterator<MessageWritable> msgIterator) {
+        initVertex();
+        if (verbose)
+            LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
         if (getSuperstep() == 1) {
-            initVertex();
             detectLowCoverageVertex();
         } else if (getSuperstep() == 2) {
-            if (deadNodeSet.contains(getVertexId())) {
+            if (getVertexValue().getState() == State.DEAD_NODE) {
                 cleanupDeadVertex();
             } else {
                 responseToDeadVertex(msgIterator);
             }
+	    voteToHalt();
         }
-        voteToHalt();
     }
 
     public static void main(String[] args) throws Exception {

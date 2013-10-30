@@ -88,7 +88,7 @@ public class Node implements Writable, Serializable {
         public String toString(){
             StringBuilder sbuilder = new StringBuilder();
             sbuilder.append('{');
-            sbuilder.append(kmer + " " + et);
+            sbuilder.append(kmer).append(" ").append(et);
             sbuilder.append('}');
             return sbuilder.toString();
         }

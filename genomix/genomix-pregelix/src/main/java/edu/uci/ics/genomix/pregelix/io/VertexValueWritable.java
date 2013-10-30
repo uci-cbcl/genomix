@@ -20,10 +20,16 @@ public class VertexValueWritable extends Node {
     private static final long serialVersionUID = 1L;
 
     public static class VertexStateFlag {
-
-        public static final byte IS_NON = 0b1 << 6;
-        public static final byte IS_ERROR = 0b1 << 6;
-
+        
+        // general case, marking it as NORMAL_NODE
+        public static final byte NORMAL_NODE = 0b1 << 6; 
+        // ERROR_NODE is used in SymmetryChecker, if the vertex exists error, marking it as ERROR_NODE
+        public static final byte ERROR_NODE = 0b1 << 6; 
+        // KEEP_NODE is used in ExtractSubgraph, if the vertex is extracted, marking it as KEEP_NODE
+        public static final byte KEEP_NODE = 0b1 << 6; 
+        // DEAD_NODE is used in RemoveLowcoverage, if the vertex is deleted, marking it as DEAD_NODE
+        public static final byte DEAD_NODE = 0b1 << 6; 
+        
         public static final byte VERTEX_MASK = 0b1 << 6;
     }
 
@@ -157,7 +163,7 @@ public class VertexValueWritable extends Node {
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
-                LOG.fine("VertexValue.readFields: " + toString());
+//                LOG.fine("VertexValue.readFields: " + toString());
             }
         }
     }
@@ -177,7 +183,7 @@ public class VertexValueWritable extends Node {
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
-                LOG.fine("VertexValue.write: " + toString());
+//                LOG.fine("VertexValue.write: " + toString());
             }
         }
     }
