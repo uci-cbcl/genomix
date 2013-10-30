@@ -16,35 +16,35 @@
 set -e
 set -o pipefail
 
-GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
-cd "$GENOMIX_HOME"
+genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$genomix_home"
 
 if [[ $# != 1 || ("$1" != "HYRACKS" && "$1" != "PREGELIX") ]]; then
     echo "please provide a cluster type as HYRACKS or PREGELIX! (saw $1)" 1>&2
     exit 1
 fi
 if [ $1 == "HYRACKS" ]; then
-    MY_HOME="$GENOMIX_HOME/hyracks"
-    CMD="\"${MY_HOME}/bin/hyracksnc\""
+    my_home="$genomix_home/hyracks"
+    cmd=( "${my_home}/bin/hyracksnc" )
 else 
-    MY_HOME="$GENOMIX_HOME/pregelix"
-    CMD="\"${MY_HOME}/bin/pregelixnc\""
+    my_home="$genomix_home/pregelix"
+    cmd=( "${my_home}/bin/pregelixnc" )
 
     # cleanup temporary stores dirs
-    . "$MY_HOME/conf/stores.properties"
+    . "$my_home/conf/stores.properties"
     for store_dir in $(echo $store | tr "," "\n"); do
         rm -rf $store_dir
         mkdir -p $store_dir
     done
 fi
 
-MY_NAME=`hostname`
+my_name=`hostname`
 #Get the IP address of the cc
-CCHOST_NAME=`cat conf/master`
-CCHOST=`ssh -n ${CCHOST_NAME} "${GENOMIX_HOME}/bin/getip.sh"`
+cchost_name=`cat conf/master`
+cchost=`ssh -n ${cchost_name} "${genomix_home}/bin/getip.sh"`
 
 # import cluster properties
-. "$MY_HOME/conf/cluster.properties"
+. "$my_home/conf/cluster.properties"
 
 #Clean up temp dirs
 shopt -s extglob
@@ -58,33 +58,39 @@ for io_dir in $(echo $IO_DIRS | tr "," "\n"); do
 	mkdir -p $io_dir
 done
 
-IPADDR=`bin/getip.sh`
-#echo $IPADDR
+ipaddr=`bin/getip.sh`
 
 #Get node ID
-NODEID=`hostname | cut -d '.' -f 1`
+nodeid=`hostname`
 
 export JAVA_HOME=$JAVA_HOME
 export JAVA_OPTS=$NCJAVA_OPTS
 
 #Enter the temp dir
 cd $NCTMP_DIR
+cmd+=( -cc-host $cchost -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $ipaddr
+       -data-ip-address $ipaddr -result-ip-address $ipaddr -node-id $nodeid 
+       -iodevices "${IO_DIRS}" );
 
-CMD+=" -cc-host $CCHOST -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $IPADDR  -data-ip-address $IPADDR -result-ip-address $IPADDR -node-id $NODEID -iodevices \"${IO_DIRS}\""
-
-printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "$CMD" >> "$NCLOGS_DIR"/$NODEID.log
+printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "$cmd" >> "$NCLOGS_DIR"/$nodeid.log
 
 #Launch nc
-eval "$CMD >> \"$NCLOGS_DIR/$NODEID.log\" 2>&1  &"
-PID=$!
-sleep 1
-MISSING=false
-kill -0 $PID || MISSING=true  # check if the nc process is still running
 
-if [ "$MISSING" == "true" ]; then
-    echo "Failure detected when starting NC!" 1>&2
-    tail -15 "$NCLOGS_DIR/$NODEID.loglog" 1>&2
-    exit 1
+
+# start the nc process and make sure it exists after a few seconds
+timeout=1
+coproc start_fd { "${cmd[@]}" >> "$NCLOGS_DIR/$nodeid.log" 2>&1 ; }
+server_pid=$!
+set +e
+read -t $timeout -u "${start_fd[0]}"
+read_result=$?
+set -e
+if (($read_result > 128)); then
+    # timeout => server is up and running
+    echo $server_pid
 else
-    echo $PID
+    echo >&2 "Failure detected starting NC! (should have PID $server_pid)"
+    tail >&2 -15 "$NCLOGS_DIR/$nodeid.log"
+    exit 1
 fi
+exit 0

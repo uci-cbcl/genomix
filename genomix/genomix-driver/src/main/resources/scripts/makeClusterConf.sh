@@ -15,76 +15,76 @@
 # ------------------------------------------------------------------------
 set -e
 set -o pipefail
-#set -x
+set -x
 
 # args are cluster type and number of partitions per machine
 if [ $# != 2 ]; then
-    echo "Please specify exactly 2 arguments, (HYRACKS | PREGELIX) THREADS_PER_MACHINE " 1>&2
+    echo "Please specify exactly 2 arguments, (HYRACKS | PREGELIX) threads_per_machine " 1>&2
     exit 1;
 fi
 if [ "$1" == "HYRACKS" ]; then
-    CLUSTER_TYPE="hyracks"
+    cluster_type="hyracks"
 elif [ "$1" == "PREGELIX" ]; then
-    CLUSTER_TYPE="pregelix"
+    cluster_type="pregelix"
 else
     echo "unknown cluster type $1" 1>&2
     exit 1
 fi
-THREADS_PER_MACHINE="$2"
+threads_per_machine="$2"
 
-GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
-cd "$GENOMIX_HOME"
+genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$genomix_home"
 
 
 # get generic cluster properties to templatize
 . conf/cluster.properties
 
-# make lengths of $IO_DIRS and $store equal to THREADS_PER_MACHINE but
+# make lengths of $IO_DIRS and $store equal to threads_per_machine but
 # distribute to all the available $DISKS by round-robinning them
 IO_DIRS=""
 store=""
 delim=""
-IFS=',' read -ra DEV_ARRAY <<< "$DISKS"  # separate $DISKS into an array
-for i in `seq 1 $THREADS_PER_MACHINE`; do
-    dev_index=$(( ($i - 1) % ${#DEV_ARRAY[@]} ))
-    device=${DEV_ARRAY[$dev_index]}
-    IO_DIRS+="$delim""$device/$CLUSTER_TYPE/io_dir-"$i
-    store+="$delim""$device/$CLUSTER_TYPE/store-"$i
+IFS=',' read -ra disk_array <<< "$DISKS"  # separate $DISKS into an array
+for i in `seq $threads_per_machine`; do
+    disk_index=$(( ($i - 1) % ${#disk_array[@]} ))
+    device=${disk_array[$disk_index]}
+    IO_DIRS+="$delim""$device/$cluster_type/io_dir-"$i
+    store+="$delim""$device/$cluster_type/store-"$i
     delim=","
 done
 
 # write the generated conf file to (hyracks|pregelix)/conf/cluster.properties
-CONF_HOME="$GENOMIX_HOME/$CLUSTER_TYPE/conf"
-mkdir -p $CONF_HOME
+conf_home="$genomix_home/$cluster_type/conf"
+mkdir -p $conf_home
 
-cat > "$CONF_HOME/cluster.properties" <<EOF
-CCTMP_DIR="$WORKPATH/$CLUSTER_TYPE/cc"
-CCLOGS_DIR="$WORKPATH/$CLUSTER_TYPE/cc/logs"
-NCTMP_DIR="$WORKPATH/$CLUSTER_TYPE/nc"
-NCLOGS_DIR="$WORKPATH/$CLUSTER_TYPE/nc/logs"
+cat > "$conf_home/cluster.properties" <<EOF
+CCTMP_DIR="$WORKPATH/$cluster_type/cc"
+CCLOGS_DIR="$WORKPATH/$cluster_type/cc/logs"
+NCTMP_DIR="$WORKPATH/$cluster_type/nc"
+NCLOGS_DIR="$WORKPATH/$cluster_type/nc/logs"
 IO_DIRS="$IO_DIRS"
 EOF
 
-if [ "$CLUSTER_TYPE" == "hyracks" ]; then
-    cat >> "$CONF_HOME/cluster.properties" <<EOF
+if [ "$cluster_type" == "hyracks" ]; then
+    cat >> "$conf_home/cluster.properties" <<EOF
 CC_CLIENTPORT=$HYRACKS_CC_CLIENTPORT
 CC_CLUSTERPORT=$HYRACKS_CC_CLUSTERPORT
 CC_HTTPPORT=$HYRACKS_CC_HTTPPORT
 CC_DEBUG_PORT=$HYRACKS_CC_DEBUG_PORT
 NC_DEBUG_PORT=$HYRACKS_NC_DEBUG_PORT
 EOF
-elif [ "$CLUSTER_TYPE" == "pregelix" ]; then
-    cat >> "$CONF_HOME/cluster.properties" <<EOF
+elif [ "$cluster_type" == "pregelix" ]; then
+    cat >> "$conf_home/cluster.properties" <<EOF
 CC_CLIENTPORT=$PREGELIX_CC_CLIENTPORT
 CC_CLUSTERPORT=$PREGELIX_CC_CLUSTERPORT
 CC_HTTPPORT=$PREGELIX_CC_HTTPPORT
 CC_DEBUG_PORT=$PREGELIX_CC_DEBUG_PORT
 NC_DEBUG_PORT=$PREGELIX_NC_DEBUG_PORT
 EOF
-    cat > "$CONF_HOME/stores.properties" <<EOF
+    cat > "$conf_home/stores.properties" <<EOF
 store="$store"
 EOF
 else
-    echo "unrecognized cluster-type $CLUSTER_TYPE" 1>&2 
+    echo "unrecognized cluster-type $cluster_type" 1>&2 
     exit 1
 fi

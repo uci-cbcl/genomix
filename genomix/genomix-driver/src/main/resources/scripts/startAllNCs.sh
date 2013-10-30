@@ -13,36 +13,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------
-#set -x
+set -x
 
-GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
-cd "$GENOMIX_HOME"
+genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$genomix_home"
 
 if [[ $# != 1 || ("$1" != "HYRACKS" && "$1" != "PREGELIX") ]]; then
     echo "please provide a cluster type as HYRACKS or PREGELIX! (saw $1)" 1>&2
     exit 1
 fi
 if [ $1 == "HYRACKS" ]; then
-    MY_HOME="$GENOMIX_HOME/hyracks"
+    my_home="$genomix_home/hyracks"
 else 
-    MY_HOME="$GENOMIX_HOME/pregelix"
+    my_home="$genomix_home/pregelix"
 fi
 
-PID_FILE="$MY_HOME/ncs.pid"
-if [ -e $PID_FILE ]; then
-    echo "NC's are already running (seen in $PID_FILE)" 1&>2
+pid_file="$my_home/ncs.pid"
+if [ -e $pid_file ]; then
+    echo >&2 "NC's are already running (seen in $pid_file)"
     exit 1
 fi
 
 pid_re="^[0-9]+$"
-for slave in `cat conf/slaves`
-do
-   # ssh to the slave machine, starting the NC and capturing its hostname and PID
-   SLAVE_PID=$( ssh -n $slave "export JAVA_HOME=${JAVA_HOME} &>/dev/null && export NCJAVA_OPTS="$NCJAVA_OPTS" &>/dev/null && \"${GENOMIX_HOME}/bin/startnc.sh\" $1" )
-   if [[ "$SLAVE_PID" =~ $pid_re ]] ; then
-     printf "slave: %s\t%s\n"  "$slave" "$SLAVE_PID"
-     printf "%s\t%s\n"  "$slave" "$SLAVE_PID" >> $PID_FILE
-   else
-     echo "failed to start $slave : expected PID, got $SLAVE_PID"
-   fi
+for slave in `cat conf/slaves`; do
+    # ssh to the slave machine, starting the NC and capturing its hostname and PID
+    slave_pid=$( ssh -n $slave "export JAVA_HOME=${JAVA_HOME} &>/dev/null && export NCJAVA_OPTS="$NCJAVA_OPTS" &>/dev/null && \"${genomix_home}/bin/startnc.sh\" $1" )
+    if [[ "$slave_pid" =~ $pid_re ]] ; then
+        printf "slave: %s\t%s\n"  "$slave" "$slave_pid"
+        printf "%s\t%s\n"  "$slave" "$slave_pid" >> $pid_file
+    else
+        echo >&2 "failed to start $slave : expected PID, got $slave_pid"
+    fi
 done

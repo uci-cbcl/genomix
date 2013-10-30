@@ -15,10 +15,12 @@
 # ------------------------------------------------------------------------
 set +e  # DON'T stop if subcommand fails
 set +o pipefail
-#set -x
+set -x
 
-GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
-cd "$GENOMIX_HOME"
+genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$genomix_home"
 
-bin/stopAllNCs.sh "$1"
-bin/stopcc.sh "$1"
+for type in HYRACKS PREGELIX; do
+	bin/stopAllNCs.sh $type
+	bin/stopcc.sh $type
+done

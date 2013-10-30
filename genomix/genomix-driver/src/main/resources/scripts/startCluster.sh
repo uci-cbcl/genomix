@@ -15,12 +15,18 @@
 # ------------------------------------------------------------------------
 set -e
 set -o pipefail
-#set -x
+set -x
 
-GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
-cd "$GENOMIX_HOME"
+genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$genomix_home"
 
-bin/makeClusterConf.sh "$1" "$2"
-bin/startcc.sh "$1"
+for type in HYRACKS PREGELIX; do
+	bin/makeClusterConf.sh $type "$1"
+	bin/startcc.sh $type
+done
+
 sleep 5
-bin/startAllNCs.sh "$1"
+
+for type in HYRACKS PREGELIX; do
+	bin/startAllNCs.sh $type
+done

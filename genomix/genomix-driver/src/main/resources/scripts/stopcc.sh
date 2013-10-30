@@ -13,29 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ------------------------------------------------------------------------
-#set -x
+set -x
 
-GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
-cd "$GENOMIX_HOME"
+genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$genomix_home"
 
 if [[ $# != 1 || ("$1" != "HYRACKS" && "$1" != "PREGELIX") ]]; then
     echo "please provide a cluster type as HYRACKS or PREGELIX! (saw $1)" 1>&2
     exit 1
 fi
 if [ $1 == "HYRACKS" ]; then
-    MY_HOME="$GENOMIX_HOME/hyracks"
+    my_home="$genomix_home/hyracks"
 else 
-    MY_HOME="$GENOMIX_HOME/pregelix"
+    my_home="$genomix_home/pregelix"
 fi
 
-PID_FILE="$MY_HOME/cc.pid"
+pid_file="$my_home/cc.pid"
 
-if [ ! -e $PID_FILE ] ; then
-  echo "No pid file for CC! (expected $PID_FILE)" 
-  exit 1
+if [ ! -e $pid_file ] ; then
+    echo "No pid file for CC! (expected $pid_file)" 
+    exit 1
 else
-  PID=`cat $PID_FILE`
-  kill -9 $PID
-  rm $PID_FILE
-  echo "Stopped CC on master: "`hostname`$'\t'$PID
+    pid=`cat $pid_file`
+    kill -9 $pid
+    rm $pid_file
+    echo "Stopped CC on master: "`hostname`$'\t'$pid
 fi

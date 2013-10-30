@@ -15,33 +15,34 @@
 # ------------------------------------------------------------------------
 set -e
 set -o pipefail
+set -x
 
-GENOMIX_HOME="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
-cd "$GENOMIX_HOME"
+genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
+cd "$genomix_home"
 
 if [[ $# != 1 || ( "$1" != "HYRACKS" && "$1" != "PREGELIX" ) ]]; then
     echo "please provide a cluster type as HYRACKS or PREGELIX! (saw $1)" 1>&2
     exit 1
 fi
 if [ $1 == "HYRACKS" ]; then
-    MY_HOME="$GENOMIX_HOME/hyracks"
-    CMD="\"${MY_HOME}/bin/hyrackscc\""
+    my_home="$genomix_home/hyracks"
+    cmd=( "${my_home}/bin/hyrackscc" )
 else 
-    MY_HOME="$GENOMIX_HOME/pregelix"
-    CMD="\"${MY_HOME}/bin/pregelixcc\""
+    my_home="$genomix_home/pregelix"
+    cmd=( "${my_home}/bin/pregelixcc" )
 fi
 
-if [ -e "$MY_HOME"/cc.pid ] ; then
-  echo "existing CC pid found in $MY_HOME/cc.pid... Not starting a new CC!"
+if [ -e "$my_home/cc.pid" ] ; then
+  echo "existing CC pid found in $my_home/cc.pid... Not starting a new CC!"
   exit 1
 fi
 
 #Get the IP address of the cc
-CCHOST_NAME=`cat conf/master`
-CCHOST=`ssh -n ${CCHOST_NAME} "${GENOMIX_HOME}/bin/getip.sh"`
+cchost_name=`cat conf/master`
+cchost=`ssh -n ${cchost_name} "${genomix_home}/bin/getip.sh"`
 
 # import cluster properties
-. "$MY_HOME/conf/cluster.properties"
+. "$my_home/conf/cluster.properties"
 
 #Clean the tmp and logs dirs
 shopt -s extglob
@@ -55,41 +56,43 @@ export JAVA_OPTS=$CCJAVA_OPTS
 
 cd $CCTMP_DIR
 #Prepare cc script
-CMD+=" -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 -client-net-ip-address $CCHOST -cluster-net-ip-address $CCHOST"
+cmd+=( -max-heartbeat-lapse-periods 999999 -default-max-job-attempts 0 
+       -client-net-ip-address $cchost -cluster-net-ip-address $cchost )
 
 if [ -n "$CC_CLIENTPORT" ]; then
-  CMD="$CMD -client-net-port $CC_CLIENTPORT"
+    cmd+=( -client-net-port $CC_CLIENTPORT )
 fi
 if [ -n "$CC_CLUSTERPORT" ]; then
-  CMD="$CMD -cluster-net-port $CC_CLUSTERPORT"
+    cmd+=( -cluster-net-port $CC_CLUSTERPORT )
 fi
 if [ -n "$CC_HTTPPORT" ]; then
-  CMD="$CMD -http-port $CC_HTTPPORT"
+    cmd+=( -http-port $CC_HTTPPORT )
 fi
 if [ -n "$JOB_HISTORY_SIZE" ]; then
-  CMD="$CMD -job-history-size $JOB_HISTORY_SIZE"
+    cmd+=( -job-history-size $JOB_HISTORY_SIZE )
 fi
-if [ -f "${GENOMIX_HOME}/conf/topology.xml"  ]; then
-CMD="$CMD -cluster-topology \"${GENOMIX_HOME}/conf/topology.xml\""
+if [ -f "${genomix_home}/conf/topology.xml"  ]; then
+    cmd+=( -cluster-topology "${genomix_home}/conf/topology.xml" )
 fi
 
 #Launch cc script
-printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "$CMD" >> "$CCLOGS_DIR"/cc.log
-#eval "$CMD >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
+printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "$cmd" >> "$CCLOGS_DIR"/cc.log
+#eval "$cmd >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
 
-# start the cc process and make sure it exists after 1 second
-eval "$CMD >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
-PID=$!
-sleep 1
-MISSING=false
-kill -0 $PID || MISSING=true  # check if the nc process is still running
-
-if [ "$MISSING" == "true" ]; then
-    echo "Failure detected when starting CC!" 1>&2
-    tail -15 "$CCLOGS_DIR/cc.log" 1>&2
-    exit 1
+# start the cc process and make sure it exists after a few seconds
+timeout=1
+coproc start_fd { "${cmd[@]}" >> "$CCLOGS_DIR/cc.log" 2>&1 ; }
+server_pid=$!
+set +e
+read -t $timeout -u "${start_fd[0]}"
+read_result=$?
+set -e
+if (($read_result > 128)); then
+    echo "master: $cchost_name"$'\t'$server_pid
+    echo $server_pid > "$my_home/cc.pid"
 else
-    echo "master: "`hostname`$'\t'$PID
-    echo $PID > "$MY_HOME/cc.pid"
+    echo >&2 "Failure detected when starting CC! (should have PID $server_pid)"
+    tail >&2 -15 "$CCLOGS_DIR/cc.log"
+    exit 1
 fi
-
+exit 0
