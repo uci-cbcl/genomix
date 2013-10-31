@@ -233,8 +233,11 @@ public class GenomixDriver {
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
 
         manager = new GenomixClusterManager(runLocal, conf);
-        manager.stopCluster(); // shut down any existing NCs and CCs
-        manager.startCluster();
+        if (!Boolean.parseBoolean(GenomixJobConf.USE_EXISTING_CLUSTER)) {
+            manager.stopCluster(); // shut down any existing NCs and CCs
+            manager.startCluster();
+        }
+        
         ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home", ".")
                 + "/pregelix/conf/cluster.properties");
         ClusterConfig.setStorePath(System.getProperty("app.home", ".") + "/pregelix/conf/stores.properties");
@@ -268,6 +271,10 @@ public class GenomixDriver {
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
 
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
+        
+        if (!Boolean.parseBoolean(GenomixJobConf.USE_EXISTING_CLUSTER)) {
+            manager.stopCluster(); // shut down any existing NCs and CCs
+        }
     }
 
     public static void main(String[] args) throws NumberFormatException, HyracksException, Exception {

@@ -116,6 +116,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster.", required = false)
         private boolean runLocal = false;
+        
+        @Option(name = "-useExistingCluster", usage = "Don't start or stop a cluster (use one that's already running)", required = false)
+        private boolean useExistingCluster = false;
 
         @Option(name = "-debugKmers", usage = "Log all interactions with the given comma-separated list of kmers at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private String debugKmers = null;
@@ -225,6 +228,7 @@ public class GenomixJobConf extends JobConf {
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.profile";
     public static final String RUN_LOCAL = "genomix.runLocal";
+    public static final String USE_EXISTING_CLUSTER = "genomix.useExistingCluster";
     public static final String DEBUG_KMERS = "genomix.debugKmers";
     public static final String LOG_READIDS = "genomix.logReadIds";
     public static final String HYRACKS_GROUPBY_TYPE = "genomix.hyracks.groupby";
@@ -404,6 +408,7 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
+        setBoolean(USE_EXISTING_CLUSTER, opts.useExistingCluster);
         setBoolean(GAGE, opts.gage);
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
