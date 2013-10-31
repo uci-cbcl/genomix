@@ -159,9 +159,6 @@ public class GenomixJobConf extends JobConf {
         private boolean logReadIds = false;
         
         //Metrics Parameters for Our Mapreduce Gage Job
-        @Option(name = "-stats_gage_oldStyle", usage = "choose the stats input format.", required = false)
-        private boolean stats_gageOldStyle = true;
-        
         @Option(name = "-stats_expectedGenomeSize", usage = "The expected length for this whole genome data", required = false)
         private int stats_expectedGenomeSize = -1;
         
