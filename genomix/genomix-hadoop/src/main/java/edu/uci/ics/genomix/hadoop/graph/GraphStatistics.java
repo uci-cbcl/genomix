@@ -358,7 +358,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             numberContigsSeen++;
         }
 
-        StringBuffer outputStr = new StringBuffer();
+        StringBuilder outputStr = new StringBuilder();
         outputStr.append("Total units: " + count + "\n");
         outputStr.append("Reference: " + total + "\n");
         outputStr.append("BasesInFasta: " + totalBPOverLength + "\n");
