@@ -280,7 +280,6 @@ public class GenomixJobConf extends JobConf {
     public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
 
     // GAGE Metrics Evaluation 
-    public static final String STATS_GAGE_OLDSTYLE = "genomix.evaluation.gage.oldstyle";
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.gage.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.gage.minContigLength";
     
@@ -472,7 +471,6 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
         
         //Gage Evaluation
-        setBoolean(STATS_GAGE_OLDSTYLE, opts.stats_gageOldStyle);
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
 

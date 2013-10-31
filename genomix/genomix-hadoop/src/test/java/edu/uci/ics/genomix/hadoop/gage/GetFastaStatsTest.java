@@ -102,7 +102,6 @@ public class GetFastaStatsTest {
         JobConf conf = new JobConf(HADOOP_CONF_PATH);
         conf.setInt(GenomixJobConf.STATS_MIN_CONTIGLENGTH, 25);
         conf.setInt(GenomixJobConf.STATS_EXPECTED_GENOMESIZE, 150);
-        conf.setBoolean(GenomixJobConf.STATS_GAGE_OLDSTYLE, true);
 
         Counters counters = GraphStatistics.run(HDFS_PATH, RESULT_PATH, conf);
         GraphStatistics.getFastaStatsForGage(RESULT_PATH, counters, conf);

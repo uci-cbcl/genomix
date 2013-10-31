@@ -286,32 +286,29 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
 
         MIN_CONTIG_LENGTH = Integer.parseInt(job.get(GenomixJobConf.STATS_MIN_CONTIGLENGTH));
         EXPECTED_GENOME_SIZE = Integer.parseInt(job.get(GenomixJobConf.STATS_EXPECTED_GENOMESIZE));
-        OLD_STYLE = Boolean.parseBoolean(job.get(GenomixJobConf.STATS_GAGE_OLDSTYLE));
 
-        for (Integer s : ctgSizeCounts.keySet()) {
-            for (int i = 0; i < ctgSizeCounts.get(s); i++)
-                contigLengthList.add(s);
-        }
-
-        for (Integer curLength : contigLengthList) {
-            if (curLength <= MIN_CONTIG_LENGTH) {
-                continue;
+        for (Integer curLength : ctgSizeCounts.keySet()) {
+            for (int i = 0; i < ctgSizeCounts.get(curLength); i++) {
+                contigLengthList.add(curLength);
+                if (curLength <= MIN_CONTIG_LENGTH) {
+                    continue;
+                }
+                if (curLength > maxContig) {
+                    maxContig = curLength;
+                }
+                if (curLength < minContig) {
+                    minContig = curLength;
+                }
+                if (EXPECTED_GENOME_SIZE == 0) {
+                    total += curLength;
+                } else {
+                    total = EXPECTED_GENOME_SIZE;
+                }
+                count++;
+                eSize += Math.pow(curLength, 2);
+                totalOverLength++;
+                totalBPOverLength += curLength;
             }
-            if (curLength > maxContig) {
-                maxContig = curLength;
-            }
-            if (curLength < minContig) {
-                minContig = curLength;
-            }
-            if (EXPECTED_GENOME_SIZE == 0) {
-                total += curLength;
-            } else {
-                total = EXPECTED_GENOME_SIZE;
-            }
-            count++;
-            eSize += Math.pow(curLength, 2);
-            totalOverLength++;
-            totalBPOverLength += curLength;
         }
         eSize /= EXPECTED_GENOME_SIZE;
 
