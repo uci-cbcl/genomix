@@ -292,12 +292,6 @@ public class GenomixJobConf extends JobConf {
     // intermediate date evaluation
     public static final String GAGE = "genomix.evaluation.tool.gage";
 
-    private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
-            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
-            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
-    
-    private static final GRAPH_TYPE DEFAULT_GRAPH_TYPE = GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE;
-    
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
     public GenomixJobConf(int kmerLength) {
@@ -376,6 +370,13 @@ public class GenomixJobConf extends JobConf {
     }
 
     private void fillMissingDefaults() {
+        
+        Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
+            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
+            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
+    
+        GRAPH_TYPE DEFAULT_GRAPH_TYPE = GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE;
+        
         // Global config
         int kmerLength = getInt(KMER_LENGTH, -1);
 
