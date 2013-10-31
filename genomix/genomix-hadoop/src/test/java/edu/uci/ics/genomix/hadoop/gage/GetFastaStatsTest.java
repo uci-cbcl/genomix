@@ -16,50 +16,37 @@
 package edu.uci.ics.genomix.hadoop.gage;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.Counters;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
-import edu.uci.ics.genomix.hadoop.graphbuilding.checkingtool.ResultsCheckingDriver;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
-//import edu.uci.ics.genomix.hadoop.pmcommon.HadoopMiniClusterTest;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
+@SuppressWarnings("deprecation")
 public class GetFastaStatsTest {
-    private JobConf conf = new JobConf();
+    
     private static final String ACTUAL_RESULT_DIR = "actual";
     private static final String BINSOURCE_PATH = "GAGETest.fasta";
-    private static final String TXTSOURCE_PATH = "gageTxt.fasta";
     private static final String HDFS_PATH = "/gage";
-    private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
     private static final String RESULT_PATH = "/gageresult";
     private static final String GAGESOURCE = "data/gage/expected/gagesrcfortestcase";
-
-    private static final int COUNT_REDUCER = 4;
-    private MiniDFSCluster dfsCluster;
-    private MiniMRCluster mrCluster;
     private FileSystem dfs;
-
+    private static GenomixClusterManager manager;
+    private static GenomixJobConf conf = new GenomixJobConf(3);
+    
     public void writeTestCaseToFile() throws IOException {
         dfs = FileSystem.getLocal(conf);
         Path targetPath = new Path(BINSOURCE_PATH);
@@ -81,18 +68,13 @@ public class GetFastaStatsTest {
         writer.close();
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void Test() throws Exception {
         writeTestCaseToFile();
-        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
-        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         startHadoop();
-        JobConf conf = new JobConf(HADOOP_CONF_PATH);
-        conf.setInt(GenomixJobConf.STATS_MIN_CONTIGLENGTH, 25);
-        conf.setInt(GenomixJobConf.STATS_EXPECTED_GENOMESIZE, 150);
-
-        Counters counters = GraphStatistics.run(HDFS_PATH, RESULT_PATH, conf);
+        prepareData();
+        GenomixJobConf.setGlobalStaticConstants(conf);
+        Counters counters = GraphStatistics.run(HDFS_PATH + File.separator + BINSOURCE_PATH, RESULT_PATH, conf);
         GraphStatistics.getFastaStatsForGage(RESULT_PATH, counters, conf);
         cleanupHadoop();
         compareWithGageSourceCodeResults(ACTUAL_RESULT_DIR + File.separator + RESULT_PATH + "/gagestatsFasta.txt");
@@ -117,27 +99,30 @@ public class GetFastaStatsTest {
         Assert.assertEquals(pureSrc, pureTarget);
     }
 
-    public void startHadoop() throws IOException {
-        FileSystem lfs = FileSystem.getLocal(new Configuration());
-        lfs.delete(new Path("build"), true);
-        System.setProperty("hadoop.log.dir", "logs");
-        dfsCluster = new MiniDFSCluster(conf, 1, true, null);
-        dfs = dfsCluster.getFileSystem();
-        mrCluster = new MiniMRCluster(1, dfs.getUri().toString(), 1);
-
-        Path src = new Path(BINSOURCE_PATH);
-        Path dest = new Path(HDFS_PATH + "/");
-        dfs.mkdirs(dest);
-        dfs.copyFromLocalFile(src, dest);
-
-        DataOutputStream confOutput = new DataOutputStream(new FileOutputStream(new File(HADOOP_CONF_PATH)));
-        conf.writeXml(confOutput);
-        confOutput.flush();
-        confOutput.close();
+    public void startHadoop() throws Exception {
+        conf = new GenomixJobConf(3);
+        conf.setBoolean(GenomixJobConf.RUN_LOCAL, true);
+        conf.setInt(GenomixJobConf.STATS_MIN_CONTIGLENGTH, 25);
+        conf.setInt(GenomixJobConf.STATS_EXPECTED_GENOMESIZE, 150);
+        FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR));
+        FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
+        manager = new GenomixClusterManager(true, conf);
+        manager.setNumberOfDataNodesInLocalMiniHDFS(1);
+        manager.startCluster(ClusterType.HADOOP);
     }
 
-    public void cleanupHadoop() throws IOException {
-        mrCluster.shutdown();
-        dfsCluster.shutdown();
+    private void prepareData() throws IOException {
+        FileSystem dfs = FileSystem.get(conf);
+        if (dfs.exists(new Path(HDFS_PATH))) {
+            dfs.delete(new Path(HDFS_PATH), true);
+        }
+        if (dfs.exists(new Path(HDFS_PATH + "/"))) {
+            dfs.delete(new Path(HDFS_PATH + "/"), true);
+        }
+        GenomixClusterManager.copyLocalToHDFS(conf, BINSOURCE_PATH, HDFS_PATH);
+    }
+    
+    public void cleanupHadoop() throws Exception {
+        manager.stopCluster(ClusterType.HADOOP);
     }
 }

@@ -119,7 +119,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-randSeed", usage = "The seed used in the random path-merge or split-repeat algorithm", required = false)
         private long randSeed = -1;
-        
+
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
 
@@ -157,11 +157,11 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-logReadIds", usage = "Log all readIds with the selected edges at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private boolean logReadIds = false;
-        
+
         //Metrics Parameters for Our Mapreduce Gage Job
         @Option(name = "-stats_expectedGenomeSize", usage = "The expected length for this whole genome data", required = false)
         private int stats_expectedGenomeSize = -1;
-        
+
         @Option(name = "-stats_minContigLength", usage = "the minimum contig length included in statistics calculations", required = false)
         private int stats_minContigLength = -1;
 
@@ -282,7 +282,6 @@ public class GenomixJobConf extends JobConf {
     // GAGE Metrics Evaluation 
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.gage.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.gage.minContigLength";
-    
 
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
@@ -381,7 +380,7 @@ public class GenomixJobConf extends JobConf {
 
         if (getLong(RANDOM_SEED, -1) == -1)
             setLong(RANDOM_SEED, System.currentTimeMillis());
-        
+
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
@@ -449,7 +448,7 @@ public class GenomixJobConf extends JobConf {
         setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
-        
+
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
         setBoolean(LOG_READIDS, opts.logReadIds);
@@ -469,7 +468,7 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
-        
+
         //Gage Evaluation
         setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
         setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
