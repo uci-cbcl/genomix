@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------
 set +e  # do NOT stop if a subshell fails
 set +o pipefail
-set -x
+# set -x
 
 genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
 cd "$genomix_home"

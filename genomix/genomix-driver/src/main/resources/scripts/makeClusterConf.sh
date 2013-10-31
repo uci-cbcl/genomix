@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------
 set -e
 set -o pipefail
-set -x
+# set -x
 
 # args are cluster type and number of partitions per machine
 if [ $# != 2 ]; then
@@ -63,6 +63,9 @@ CCLOGS_DIR="$WORKPATH/$cluster_type/cc/logs"
 NCTMP_DIR="$WORKPATH/$cluster_type/nc"
 NCLOGS_DIR="$WORKPATH/$cluster_type/nc/logs"
 IO_DIRS="$IO_DIRS"
+FRAME_SIZE=$FRAME_SIZE
+FRAME_LIMIT=$FRAME_LIMIT
+JOB_HISTORY_SIZE=$JOB_HISTORY_SIZE
 EOF
 
 if [ "$cluster_type" == "hyracks" ]; then

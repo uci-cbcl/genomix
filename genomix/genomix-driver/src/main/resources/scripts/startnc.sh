@@ -72,20 +72,20 @@ cmd+=( -cc-host $cchost -cc-port $CC_CLUSTERPORT -cluster-net-ip-address $ipaddr
        -data-ip-address $ipaddr -result-ip-address $ipaddr -node-id $nodeid 
        -iodevices "${IO_DIRS}" );
 
-printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "$cmd" >> "$NCLOGS_DIR"/$nodeid.log
+printf "\n\n\n********************************************\nStarting NC with command %s\n\n" "${cmd[*]}" >> "$NCLOGS_DIR"/$nodeid.log
 
 #Launch nc
 
 
 # start the nc process and make sure it exists after a few seconds
-timeout=1
-coproc start_fd { "${cmd[@]}" >> "$NCLOGS_DIR/$nodeid.log" 2>&1 ; }
+eval "${cmd[@]} >> \"$NCLOGS_DIR/$nodeid.log\" 2>&1 &"
 server_pid=$!
+sleep 1
 set +e
-read -t $timeout -u "${start_fd[0]}"
-read_result=$?
+kill -0 $server_pid
+is_alive=$?
 set -e
-if (($read_result > 128)); then
+if (($is_alive == 0)); then
     # timeout => server is up and running
     echo $server_pid
 else

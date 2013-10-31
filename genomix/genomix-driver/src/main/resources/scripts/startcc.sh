@@ -15,7 +15,7 @@
 # ------------------------------------------------------------------------
 set -e
 set -o pipefail
-set -x
+# set -x
 
 genomix_home="$( dirname "$( cd "$(dirname "$0")" ; pwd -P )" )"  # script's parent dir's parent
 cd "$genomix_home"
@@ -76,18 +76,18 @@ if [ -f "${genomix_home}/conf/topology.xml"  ]; then
 fi
 
 #Launch cc script
-printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "$cmd" >> "$CCLOGS_DIR"/cc.log
+printf "\n\n\n********************************************\nStarting CC with command %s\n\n" "${cmd[*]}" >> "$CCLOGS_DIR/cc.log"
 #eval "$cmd >>\"$CCLOGS_DIR/cc.log\" 2>&1 &"
 
 # start the cc process and make sure it exists after a few seconds
-timeout=1
-coproc start_fd { "${cmd[@]}" >> "$CCLOGS_DIR/cc.log" 2>&1 ; }
+eval "${cmd[@]} >> \"$CCLOGS_DIR/cc.log\" 2>&1 &"
 server_pid=$!
+sleep 1
 set +e
-read -t $timeout -u "${start_fd[0]}"
-read_result=$?
+kill -0 $server_pid
+is_alive=$?
 set -e
-if (($read_result > 128)); then
+if (($is_alive == 0)); then
     echo "master: $cchost_name"$'\t'$server_pid
     echo $server_pid > "$my_home/cc.pid"
 else
