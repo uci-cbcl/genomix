@@ -158,8 +158,8 @@ public class GenomixDriver {
         LOG.info("Building Graph using Hyracks...");
         GenomixJobConf.tick("buildGraphWithHyracks");
 
-        String masterIP = DriverUtils.getIP(conf.get(GenomixJobConf.MASTER));
-        int hyracksPort = Integer.parseInt(conf.get(GenomixJobConf.HYRACKS_CC_CLIENTPORT));
+        String masterIP = runLocal ? GenomixClusterManager.LOCAL_IP : DriverUtils.getIP(conf.get(GenomixJobConf.MASTER));
+        int hyracksPort = runLocal ? GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.HYRACKS_CC_CLIENTPORT));
         hyracksDriver = new GenomixHyracksDriver(masterIP, hyracksPort, threadsPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
@@ -183,8 +183,8 @@ public class GenomixDriver {
     private void flushPendingJobs(GenomixJobConf conf) throws Exception {
         if (pregelixJobs.size() > 0) {
             pregelixDriver = new edu.uci.ics.pregelix.core.driver.Driver(this.getClass());
-            String masterIP = DriverUtils.getIP(conf.get(GenomixJobConf.MASTER));
-            int pregelixPort = Integer.parseInt(conf.get(GenomixJobConf.PREGELIX_CC_CLIENTPORT));
+            String masterIP = runLocal ? GenomixClusterManager.LOCAL_IP : DriverUtils.getIP(conf.get(GenomixJobConf.MASTER));
+            int pregelixPort = runLocal ? GenomixClusterManager.LOCAL_PREGELIX_CLIENT_PORT : Integer.parseInt(conf.get(GenomixJobConf.PREGELIX_CC_CLIENTPORT));
 
             // if the user wants to, we can save the intermediate results to HDFS (running each job individually)
             // this would let them resume at arbitrary points of the pipeline
@@ -236,6 +236,9 @@ public class GenomixDriver {
         if (!Boolean.parseBoolean(conf.get(GenomixJobConf.USE_EXISTING_CLUSTER))) {
             manager.stopCluster(); // shut down any existing NCs and CCs
             manager.startCluster();
+        }
+        if (runLocal) {
+            manager.renderLocalClusterProperties(); // just create the conf without starting a cluster
         }
         
         ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home", ".")

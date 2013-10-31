@@ -53,8 +53,10 @@ public class GenomixClusterManager {
     public static final String LOCAL_IP = "127.0.0.1";
     public static final int LOCAL_HYRACKS_CLIENT_PORT = 3099;
     public static final int LOCAL_HYRACKS_CC_PORT = 1099;
+    public static final int LOCAL_HYRACKS_HTTP_PORT = 16001;
     public static final int LOCAL_PREGELIX_CLIENT_PORT = 3097;
     public static final int LOCAL_PREGELIX_CC_PORT = 1097;
+    public static final int LOCAL_PREGELIX_HTTP_PORT = 16002;
 
     private ClusterControllerService localHyracksCC;
     private NodeControllerService localHyracksNC;
@@ -99,6 +101,23 @@ public class GenomixClusterManager {
         } else {
             startRemoteCluster();
             deployJarsToHadoop();
+        }
+    }
+
+    public void renderLocalClusterProperties() throws IOException, InterruptedException {
+        LOG.info("Creating configuration file for hyracks and pregelix");
+        int threadsPerMachine = Integer.parseInt(conf.get(GenomixJobConf.THREADS_PER_MACHINE));
+        for (String clusterType : new String[] { "HYRACKS", "PREGELIX" }) {
+            String cmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
+                    + "makeClusterConf.sh " + clusterType + " " + threadsPerMachine;
+            Process p = Runtime.getRuntime().exec(cmd);
+            p.waitFor(); // wait for cmd execution
+            if (p.exitValue() != 0) {
+                throw new RuntimeException(
+                        "Failed to create a configuration file for the genomix cluster! Script returned exit code: "
+                                + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                                + IOUtils.toString(p.getErrorStream()));
+            }
         }
     }
 
@@ -173,11 +192,13 @@ public class GenomixClusterManager {
 
         ccConfig.clusterNetPort = LOCAL_HYRACKS_CC_PORT;
         ccConfig.clientNetPort = LOCAL_HYRACKS_CLIENT_PORT;
+        ccConfig.httpPort = LOCAL_HYRACKS_HTTP_PORT;
         localHyracksCC = new ClusterControllerService(ccConfig);
         localHyracksCC.start();
 
         ccConfig.clusterNetPort = LOCAL_PREGELIX_CC_PORT;
         ccConfig.clientNetPort = LOCAL_PREGELIX_CLIENT_PORT;
+        ccConfig.httpPort = LOCAL_PREGELIX_HTTP_PORT;
         localPregelixCC = new ClusterControllerService(ccConfig);
         localPregelixCC.start();
     }
