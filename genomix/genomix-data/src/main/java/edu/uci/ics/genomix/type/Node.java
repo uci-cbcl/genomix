@@ -108,7 +108,7 @@ public class Node implements Writable, Serializable {
             return new Iterator<NeighborInfo>() {
 
                 private Iterator<Entry<VKmer, ReadIdSet>> it = edges.entrySet().iterator();
-                private NeighborInfo info = new NeighborInfo(null, null);
+                private NeighborInfo info = null;
 
                 @Override
                 public boolean hasNext() {
@@ -117,6 +117,9 @@ public class Node implements Writable, Serializable {
 
                 @Override
                 public NeighborInfo next() {
+                    if (info == null) {
+                        info = new NeighborInfo(et, it.next());
+                    }
                     info.set(et, it.next());
                     return info;
                 }
@@ -524,7 +527,7 @@ public class Node implements Writable, Serializable {
      * differences in length will lead to relative offsets, where the incoming readids will be found in the
      * new sequence at the same relative position (e.g., 10% of the total length from 5' start).
      */
-    private void addUnflippedAndFlippedReadIds(boolean flip, final Node other) {
+    protected void addUnflippedAndFlippedReadIds(boolean flip, final Node other) {
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
         float lengthFactor = (float) thisLength / (float) otherLength;
@@ -613,7 +616,7 @@ public class Node implements Writable, Serializable {
         }
     }
 
-    private void addEdges(boolean flip, Node other) {
+    protected void addEdges(boolean flip, Node other) {
         if (!flip) {
             for (EDGETYPE e : EDGETYPE.values()) {
                 edges[e.get()].unionUpdate(other.edges[e.get()]);
@@ -626,7 +629,7 @@ public class Node implements Writable, Serializable {
         }
     }
 
-    private void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other) {
+    protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other) {
         int K = Kmer.lettersInKmer;
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
