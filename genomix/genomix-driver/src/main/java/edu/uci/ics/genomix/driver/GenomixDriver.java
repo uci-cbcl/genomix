@@ -35,10 +35,14 @@ import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
+import edu.uci.ics.genomix.pregelix.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.ExtractSubgraphOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
@@ -144,6 +148,25 @@ public class GenomixDriver {
                 queuePregelixJob(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
                 curOutput = prevOutput; // use previous job's output
                 break;
+            case PLOT_SUBGRAPH:
+                String lastJobOutput = prevOutput;
+                queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
+                //                curOutput = prevOutput; // use previous job's output
+                flushPendingJobs(conf);
+                if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
+                    String binaryDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR);
+                    //copy bin to local
+                    GenomixClusterManager.copyBinToLocal(conf, curOutput, binaryDir);
+                    //covert bin to graphviz
+                    String graphvizDir = binaryDir + File.separator + "graphviz";
+                    GRAPH_TYPE graphType = GRAPH_TYPE.getFromInt(Integer.parseInt(conf
+                            .get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
+                    GenerateGraphViz.convertBinToGraphViz(binaryDir + File.separator + "bin", graphvizDir, graphType);
+                    LOG.info("Copying graphviz to local: " + graphvizDir);
+                }
+                stepNum--;
+                curOutput = lastJobOutput; // use previous job's output
+                break;
             case STATS:
                 flushPendingJobs(conf);
                 manager.startCluster(ClusterType.HADOOP);
@@ -196,6 +219,9 @@ public class GenomixDriver {
         }
         if (job.getClass().equals(SymmetryCheckerVertex.class)) {
             job.setVertexOutputFormatClass(CheckerOutputFormat.class);
+        }
+        if (job.getClass().equals(ExtractSubgraphVertex.class)) {
+            job.setVertexOutputFormatClass(ExtractSubgraphOutputFormat.class);
         }
         pregelixJobs.add(job);
         followingBuild = false;
@@ -290,6 +316,7 @@ public class GenomixDriver {
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+
         if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
 
@@ -298,20 +325,20 @@ public class GenomixDriver {
 
     public static void main(String[] args) throws NumberFormatException, HyracksException, Exception {
         String[] myArgs = { "-runLocal", "true", "-kmerLength", "55",
-                //                        "-saveIntermediateResults", "true",
-                //                        "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
+                // "-saveIntermediateResults", "true",
+                // "-localInput", "../genomix-pregelix/data/input/reads/synthetic/",
                 "-localInput", "tail600000",
-                //                        "-localInput", "/home/wbiesing/code/biggerInput",
-                //                        "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
-                //                "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
-                //                "-localInput", "output-build/bin",
-                //                        "-localOutput", "output-skip",
-                //                            "-pipelineOrder", "BUILD,MERGE",
-                //                            "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
-                //                "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
-                //                "-localOutput", "testout",
+                // "-localInput", "/home/wbiesing/code/biggerInput",
+                // "-hdfsInput", "/home/wbiesing/code/hyracks/genomix/genomix-driver/genomix_out/01-BUILD_HADOOP",
+                // "-localInput", "/home/wbiesing/code/hyracks/genomix/genomix-pregelix/data/input/reads/test",
+                // "-localInput", "output-build/bin",
+                // "-localOutput", "output-skip",
+                // "-pipelineOrder", "BUILD,MERGE",
+                // "-inputDir", "/home/wbiesing/code/hyracks/genomix/genomix-driver/graphbuild.binmerge",
+                // "-localInput", "../genomix-pregelix/data/TestSet/PathMerge/CyclePath/bin/part-00000",
+                // "-localOutput", "testout",
                 "-pipelineOrder", "BUILD_HYRACKS,MERGE",
-        //                "-hyracksBuildOutputText", "true",
+        // "-hyracksBuildOutputText", "true",
         };
         // allow Eclipse to run the maven-generated scripts
         if (System.getProperty("app.home") == null)

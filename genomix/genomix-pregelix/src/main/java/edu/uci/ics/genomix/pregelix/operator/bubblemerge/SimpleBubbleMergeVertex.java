@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -25,6 +26,9 @@ import edu.uci.ics.genomix.type.VKmer;
  * Graph clean pattern: Simple Bubble Merge
  */
 public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
+
+    private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
+
     private float DISSIMILAR_THRESHOLD = -1;
 
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
@@ -73,6 +77,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             outgoingMsg.setMinorToBubbleEdgetype(forwardNeighbor.et.mirror());
             minorVertexId = forwardNeighbor.kmer;
         }
+        if (verbose) {
+            LOG.info("Major vertex is: " + outgoingMsg.getMajorVertexId());
+        }
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setNode(getVertexValue().getNode());
         sendMsg(minorVertexId, outgoingMsg);
@@ -104,8 +111,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
 
-    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, 
-            VKmer topKmer) {
+    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
         EdgeMap edgeMap = msg.getMinorToBubbleEdgeMap();
         ReadIdSet newReadIds = edgeMap.get(getVertexId());
         EDGETYPE minorToBubble = msg.getMinorToBubbleEdgetype();
@@ -211,7 +217,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 case ADD_READIDS:
                     for (EDGETYPE et : EDGETYPE.values()) {
                         EdgeMap edgeMap = incomingMsg.getNode().getEdgeMap(et);
-                        if (edgeMap.size() > 0){
+                        if (edgeMap.size() > 0) {
                             getVertexValue().getEdgeMap(et).unionUpdate(edgeMap);
                             activate();
                             break;

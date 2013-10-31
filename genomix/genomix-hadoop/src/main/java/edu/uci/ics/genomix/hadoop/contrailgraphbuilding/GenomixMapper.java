@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
 
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,16 +16,15 @@ import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
-import java.util.AbstractMap.SimpleEntry;
-import edu.uci.ics.genomix.type.VKmer;
 
+import edu.uci.ics.genomix.type.VKmer;
 /**
  * GenomixMapper the 1st step of graph building
  * 
@@ -194,9 +194,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         readHeadSet.clear();
         readHeadSet.add(readHeadInfo);
         if (curKmerAndDir.getValue() == DIR.FORWARD)
-            curNode.setStartReads(readHeadSet);
+            curNode.setUnflippedReadIds(readHeadSet);
         else
-            curNode.setEndReads(readHeadSet);
+            curNode.setFlippedReadIds(readHeadSet);
     }
 
 }
