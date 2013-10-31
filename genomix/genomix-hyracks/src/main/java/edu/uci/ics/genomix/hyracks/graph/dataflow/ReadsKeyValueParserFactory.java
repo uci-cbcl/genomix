@@ -154,9 +154,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
 
                 if (curNodeDir == DIR.FORWARD) {
-                    curNode.getStartReads().add(readHeadInfo);
+                    curNode.getUnflippedReadIds().add(readHeadInfo);
                 } else {
-                    curNode.getEndReads().add(readHeadInfo);
+                    curNode.getFlippedReadIds().add(readHeadInfo);
                 }
 
                 DIR nextNodeDir = DIR.FORWARD;

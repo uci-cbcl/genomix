@@ -62,19 +62,19 @@ public class PathMergeMessage extends MessageWritable {
     }
 
     public ReadHeadSet getStartReads() {
-        return this.node.getStartReads();
+        return this.node.getUnflippedReadIds();
     }
 
     public void setStartReads(ReadHeadSet startReads) {
-        this.node.setStartReads(startReads);
+        this.node.setUnflippedReadIds(startReads);
     }
 
     public ReadHeadSet getEndReads() {
-        return this.node.getEndReads();
+        return this.node.getFlippedReadIds();
     }
 
     public void setEndReads(ReadHeadSet endReads) {
-        this.node.setEndReads(endReads);
+        this.node.setFlippedReadIds(endReads);
     }
 
     public void setAverageCoverage(float coverage) {

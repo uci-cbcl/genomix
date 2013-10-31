@@ -104,8 +104,8 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
         if (vertex.isValidScaffoldingSearchNode()) {
             outgoingMsg.reset();
             HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> map = outgoingMsg.getScaffoldingMap();
-            addReadsToScaffoldingMap(map, vertex.getStartReads(), READHEAD_ORIENTATION.UNFLIPPED);
-            addReadsToScaffoldingMap(map, vertex.getEndReads(), READHEAD_ORIENTATION.FLIPPED);
+            addReadsToScaffoldingMap(map, vertex.getUnflippedReadIds(), READHEAD_ORIENTATION.UNFLIPPED);
+            addReadsToScaffoldingMap(map, vertex.getFlippedReadIds(), READHEAD_ORIENTATION.FLIPPED);
             sendMsg(fakeVertex, outgoingMsg);
         }
         voteToHalt();

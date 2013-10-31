@@ -69,8 +69,8 @@ public class NodeTest {
             startReads.add((byte) 1, (long) orderNum + i, i);
             endReads.add((byte) 0, (long) orderNum + i, i);
         }
-        targetNode.setStartReads(startReads);
-        targetNode.setEndReads(endReads);
+        targetNode.setUnflippedReadIds(startReads);
+        targetNode.setFlippedReadIds(endReads);
         targetNode.setInternalKmer(srcInternalKmer);
         targetNode.setAverageCoverage((float) (orderNum * (min + (int) (Math.random() * ((max - min) + 1)))));
     }
@@ -88,11 +88,11 @@ public class NodeTest {
             System.out.println("-------------------------------------");
         }
         System.out.println("StartReads");
-        for (ReadHeadInfo startIter : srcNode.getStartReads())
+        for (ReadHeadInfo startIter : srcNode.getUnflippedReadIds())
             System.out.println(startIter.toString() + "---");
         System.out.println("");
         System.out.println("EndsReads");
-        for (ReadHeadInfo startIter : srcNode.getEndReads())
+        for (ReadHeadInfo startIter : srcNode.getFlippedReadIds())
             System.out.println(startIter.toString() + "---");
         System.out.println("");
         System.out.println("Coverage: " + srcNode.getAverageCoverage());
@@ -112,12 +112,12 @@ public class NodeTest {
                 }
             }
         }
-        for (ReadHeadInfo startIter1 : et1.getStartReads()) {
-            ReadHeadInfo startIter2 = et2.getStartReads().pollFirst();
+        for (ReadHeadInfo startIter1 : et1.getUnflippedReadIds()) {
+            ReadHeadInfo startIter2 = et2.getUnflippedReadIds().pollFirst();
             Assert.assertEquals(startIter1.toString(), startIter2.toString());
         }
-        for (ReadHeadInfo endIter1 : et1.getEndReads()) {
-            ReadHeadInfo endIter2 = et2.getEndReads().pollFirst();
+        for (ReadHeadInfo endIter1 : et1.getFlippedReadIds()) {
+            ReadHeadInfo endIter2 = et2.getFlippedReadIds().pollFirst();
             Assert.assertEquals(endIter1.toString(), endIter2.toString());
         }
     }
@@ -156,7 +156,7 @@ public class NodeTest {
         }
     }
 
-    public static void getStartReadsAndEndReadsRandomly(ReadHeadSet readSet, int orderNum) {
+    public static void getUnflippedReadIdsAndEndReadsRandomly(ReadHeadSet readSet, int orderNum) {
         int min = 3;
         int max = 5;
         for (int i = 0; i < min + (int) (Math.random() * ((max - min) + 1)); i++) {
@@ -355,14 +355,14 @@ public class NodeTest {
         node.setInternalKmer(internalSample);
         node.setEdgeMap(EDGETYPE.RF, edge);
         node.setAverageCoverage((float) 54.6);
-        node.setStartReads(startReads);
-        node.setEndReads(endReads);
+        node.setUnflippedReadIds(startReads);
+        node.setFlippedReadIds(endReads);
         node.reset();
         Assert.assertEquals((float) 0, node.getAverageCoverage());
         Assert.assertEquals(true, node.getEdgeMap(EDGETYPE.RF).isEmpty());
         Assert.assertEquals(4, node.getInternalKmer().getLength()); //only left the bytes which contain the header
-        Assert.assertEquals(true, node.getStartReads().isEmpty());
-        Assert.assertEquals(true, node.getEndReads().isEmpty());
+        Assert.assertEquals(true, node.getUnflippedReadIds().isEmpty());
+        Assert.assertEquals(true, node.getFlippedReadIds().isEmpty());
     }
 
     @Test
@@ -497,14 +497,14 @@ public class NodeTest {
         ReadHeadSet[] startAndEndArray = new ReadHeadSet[2];
         for (int i = 0; i < 2; i++)
             startAndEndArray[i] = new ReadHeadSet();
-        NodeTest.getStartReadsAndEndReadsRandomly(startAndEndArray[0], 17);
-        NodeTest.getStartReadsAndEndReadsRandomly(startAndEndArray[1], 26);
+        NodeTest.getUnflippedReadIdsAndEndReadsRandomly(startAndEndArray[0], 17);
+        NodeTest.getUnflippedReadIdsAndEndReadsRandomly(startAndEndArray[1], 26);
         Node testNode = new Node();
         NodeTest.assembleNodeRandomly(testNode, 35);
-        testNode.setStartReads(startAndEndArray[0]);
-        testNode.setEndReads(startAndEndArray[1]);
-        NodeTest.compareStartReadsAndEndReads(startAndEndArray[0], testNode.getStartReads());
-        NodeTest.compareStartReadsAndEndReads(startAndEndArray[1], testNode.getEndReads());
+        testNode.setUnflippedReadIds(startAndEndArray[0]);
+        testNode.setFlippedReadIds(startAndEndArray[1]);
+        NodeTest.compareStartReadsAndEndReads(startAndEndArray[0], testNode.getUnflippedReadIds());
+        NodeTest.compareStartReadsAndEndReads(startAndEndArray[1], testNode.getFlippedReadIds());
     }
 
     @Test
@@ -631,18 +631,18 @@ public class NodeTest {
         NodeTest.assembleNodeRandomly(minorNode, 20);
         Kmer fixedKmer = new Kmer();
         fixedKmer.setGlobalKmerLength(13);
-        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getStartReads());
-        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getEndReads());
+        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getUnflippedReadIds());
+        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getFlippedReadIds());
         int newOtherOffset = majorNode.getKmerLength() - fixedKmer.getKmerLength() + 1;
-        for (ReadHeadInfo p : minorNode.getStartReads()) {
+        for (ReadHeadInfo p : minorNode.getUnflippedReadIds()) {
             expectedStartReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
         }
-        for (ReadHeadInfo p : minorNode.getEndReads()) {
+        for (ReadHeadInfo p : minorNode.getFlippedReadIds()) {
             expectedEndReads.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
         }
-        majorNode.mergeStartAndEndReadIDs(EDGETYPE.FF, minorNode);
-        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getStartReads());
-        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getEndReads());
+        majorNode.mergeUnflippedAndFlippedReadIDs(EDGETYPE.FF, minorNode);
+        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
+        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
     }
 
     @Test
@@ -653,18 +653,18 @@ public class NodeTest {
         NodeTest.assembleNodeRandomly(minorNode, 20);
         Kmer fixedKmer = new Kmer();
         fixedKmer.setGlobalKmerLength(13);
-        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getStartReads());
-        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getEndReads());
+        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getUnflippedReadIds());
+        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getFlippedReadIds());
         int newOtherOffset = majorNode.getKmerLength() - fixedKmer.getKmerLength() + minorNode.getKmerLength();
-        for (ReadHeadInfo p : minorNode.getEndReads()) {
+        for (ReadHeadInfo p : minorNode.getFlippedReadIds()) {
             expectedStartReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
         }
-        for (ReadHeadInfo p : minorNode.getStartReads()) {
+        for (ReadHeadInfo p : minorNode.getUnflippedReadIds()) {
             expectedEndReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
         }
-        majorNode.mergeStartAndEndReadIDs(EDGETYPE.FR, minorNode);
-        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getStartReads());
-        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getEndReads());
+        majorNode.mergeUnflippedAndFlippedReadIDs(EDGETYPE.FR, minorNode);
+        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
+        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
     }
 
     @Test
@@ -679,21 +679,21 @@ public class NodeTest {
         ReadHeadSet expectedEndReads = new ReadHeadSet();
         int newThisOffset = minorNode.getKmerLength() - fixedKmer.getKmerLength() + 1;
         int newOtherOffset = minorNode.getKmerLength() - 1;
-        for (ReadHeadInfo p : majorNode.getStartReads()) {
+        for (ReadHeadInfo p : majorNode.getUnflippedReadIds()) {
             expectedStartReads.add(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
         }
-        for (ReadHeadInfo p : majorNode.getEndReads()) {
+        for (ReadHeadInfo p : majorNode.getFlippedReadIds()) {
             expectedEndReads.add(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
         }
-        for (ReadHeadInfo p : minorNode.getStartReads()) {
+        for (ReadHeadInfo p : minorNode.getUnflippedReadIds()) {
             expectedEndReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
         }
-        for (ReadHeadInfo p : minorNode.getEndReads()) {
+        for (ReadHeadInfo p : minorNode.getFlippedReadIds()) {
             expectedStartReads.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
         }
-        majorNode.mergeStartAndEndReadIDs(EDGETYPE.RF, minorNode);
-        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getStartReads());
-        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getEndReads());
+        majorNode.mergeUnflippedAndFlippedReadIDs(EDGETYPE.RF, minorNode);
+        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
+        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
     }
 
     @Test
@@ -708,21 +708,21 @@ public class NodeTest {
         ReadHeadSet expectedStartReads = new ReadHeadSet();
         ReadHeadSet expectedEndReads = new ReadHeadSet();
         int newThisOffset = minorNode.getKmerLength() - fixedKmer.getKmerLength() + 1;
-        for (ReadHeadInfo p : majorNode.getStartReads()) {
+        for (ReadHeadInfo p : majorNode.getUnflippedReadIds()) {
             expectedStartReads.add(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
         }
-        for (ReadHeadInfo p : majorNode.getEndReads()) {
+        for (ReadHeadInfo p : majorNode.getFlippedReadIds()) {
             expectedEndReads.add(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
         }
-        for (ReadHeadInfo p : minorNode.getStartReads()) {
+        for (ReadHeadInfo p : minorNode.getUnflippedReadIds()) {
             expectedStartReads.add(p.getMateId(), p.getReadId(), p.getOffset());
         }
-        for (ReadHeadInfo p : minorNode.getEndReads()) {
+        for (ReadHeadInfo p : minorNode.getFlippedReadIds()) {
             expectedEndReads.add(p.getMateId(), p.getReadId(), p.getOffset());
         }
-        majorNode.mergeStartAndEndReadIDs(EDGETYPE.RR, minorNode);
-        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getStartReads());
-        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getEndReads());
+        majorNode.mergeUnflippedAndFlippedReadIDs(EDGETYPE.RR, minorNode);
+        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
+        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
     }
 
     @Test
@@ -777,19 +777,19 @@ public class NodeTest {
         Kmer fixedKmer = new Kmer();
         fixedKmer.setGlobalKmerLength(13);
 
-        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getStartReads());
-        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getEndReads());
+        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getUnflippedReadIds());
+        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getFlippedReadIds());
         float lengthFactor = (float) majorNode.getInternalKmer().getKmerLetterLength()
                 / (float) minorNode.getInternalKmer().getKmerLetterLength();
-        for (ReadHeadInfo p : minorNode.getStartReads()) {
+        for (ReadHeadInfo p : minorNode.getUnflippedReadIds()) {
             expectedStartReads.add(p.getMateId(), p.getReadId(), (int) (p.getOffset() * lengthFactor));
         }
-        for (ReadHeadInfo p : minorNode.getEndReads()) {
+        for (ReadHeadInfo p : minorNode.getFlippedReadIds()) {
             expectedEndReads.add(p.getMateId(), p.getReadId(), (int) (p.getOffset() * lengthFactor));
         }
-        majorNode.addStartAndEndReadIDs(false, minorNode);
-        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getStartReads());
-        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getEndReads());
+        majorNode.addUnflippedAndFlippedReadIds(false, minorNode);
+        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
+        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
     }
 
     @Test
@@ -801,22 +801,22 @@ public class NodeTest {
         Kmer fixedKmer = new Kmer();
         fixedKmer.setGlobalKmerLength(13);
 
-        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getStartReads());
-        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getEndReads());
+        ReadHeadSet expectedStartReads = new ReadHeadSet(majorNode.getUnflippedReadIds());
+        ReadHeadSet expectedEndReads = new ReadHeadSet(majorNode.getFlippedReadIds());
         float lengthFactor = (float) majorNode.getInternalKmer().getKmerLetterLength()
                 / (float) minorNode.getInternalKmer().getKmerLetterLength();
         int newPOffset;
-        for (ReadHeadInfo p : minorNode.getStartReads()) {
+        for (ReadHeadInfo p : minorNode.getUnflippedReadIds()) {
             newPOffset = minorNode.getInternalKmer().getKmerLetterLength() - 1 - p.getOffset();
             expectedEndReads.add(p.getMateId(), p.getReadId(), (int) (newPOffset * lengthFactor));
         }
-        for (ReadHeadInfo p : minorNode.getEndReads()) {
+        for (ReadHeadInfo p : minorNode.getFlippedReadIds()) {
             newPOffset = minorNode.getInternalKmer().getKmerLetterLength() - 1 - p.getOffset();
             expectedStartReads.add(p.getMateId(), p.getReadId(), (int) (newPOffset * lengthFactor));
         }
-        majorNode.addStartAndEndReadIDs(true, minorNode);
-        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getStartReads());
-        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getEndReads());
+        majorNode.addUnflippedAndFlippedReadIds(true, minorNode);
+        NodeTest.compareStartReadsAndEndReads(expectedStartReads, majorNode.getUnflippedReadIds());
+        NodeTest.compareStartReadsAndEndReads(expectedEndReads, majorNode.getFlippedReadIds());
     }
 
     @Test

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -25,7 +26,10 @@ import edu.uci.ics.genomix.type.VKmer;
  * Graph clean pattern: Simple Bubble Merge
  */
 public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
-    private float dissimilarThreshold = -1;
+
+    private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
+
+    private float DISSIMILAR_THRESHOLD = -1;
 
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
     private ArrayList<BubbleMergeMessage> receivedMsgList = new ArrayList<BubbleMergeMessage>();
@@ -38,8 +42,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
     @Override
     public void initVertex() {
         super.initVertex();
-        if (dissimilarThreshold < 0)
-            dissimilarThreshold = Float.parseFloat(getContext().getConfiguration().get(
+        if (DISSIMILAR_THRESHOLD < 0)
+            DISSIMILAR_THRESHOLD = Float.parseFloat(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessage();
@@ -73,6 +77,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             outgoingMsg.setMinorToBubbleEdgetype(forwardNeighbor.et.mirror());
             minorVertexId = forwardNeighbor.kmer;
         }
+        if (verbose) {
+            LOG.info("Major vertex is: " + outgoingMsg.getMajorVertexId());
+        }
         outgoingMsg.setSourceVertexId(getVertexId());
         outgoingMsg.setNode(getVertexValue().getNode());
         sendMsg(minorVertexId, outgoingMsg);
@@ -104,8 +111,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 && topMinorToBubbleEdgetype.dir() == curMinorToBubbleEdgetype.dir();
     }
 
-    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, 
-            VKmer topKmer) {
+    public void addNewMinorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
         EdgeMap edgeMap = msg.getMinorToBubbleEdgeMap();
         ReadIdSet newReadIds = edgeMap.get(getVertexId());
         EDGETYPE minorToBubble = msg.getMinorToBubbleEdgetype();
@@ -129,7 +135,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 //compute the dissimilarity
                 float fractionDissimilar = topMsg.computeDissimilar(curMsg); // TODO change to simmilarity everywhere
 
-                if (fractionDissimilar <= dissimilarThreshold) { //if similar with top node, delete this node
+                if (fractionDissimilar <= DISSIMILAR_THRESHOLD) { //if similar with top node, delete this node
                     topChanged = true;
                     boolean sameOrientation = topMsg.sameOrientation(curMsg);
                     // 1. add coverage to top node -- for unchangedSet
@@ -211,7 +217,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 case ADD_READIDS:
                     for (EDGETYPE et : EDGETYPE.values()) {
                         EdgeMap edgeMap = incomingMsg.getNode().getEdgeMap(et);
-                        if (edgeMap.size() > 0){
+                        if (edgeMap.size() > 0) {
                             getVertexValue().getEdgeMap(et).unionUpdate(edgeMap);
                             activate();
                             break;
