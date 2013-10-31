@@ -64,7 +64,7 @@ ipaddr=`bin/getip.sh`
 nodeid=`hostname`
 
 export JAVA_HOME=$JAVA_HOME
-export JAVA_OPTS=$NCJAVA_OPTS
+export JAVA_OPTS="-Xrunjdwp:transport=dt_socket,address=$NC_DEBUG_PORT,server=y,suspend=n -Xmx$NC_MAX_MEMORY $NCJAVA_OPTS"
 
 #Enter the temp dir
 cd $NCTMP_DIR

@@ -52,7 +52,7 @@ mkdir -p $CCLOGS_DIR
 
 #Export JAVA_HOME and JAVA_OPTS
 export JAVA_HOME=$JAVA_HOME
-export JAVA_OPTS=$CCJAVA_OPTS
+export JAVA_OPTS="-Xrunjdwp:transport=dt_socket,address=$CC_DEBUG_PORT,server=y,suspend=n -Xmx1g $CCJAVA_OPTS"
 
 cd $CCTMP_DIR
 #Prepare cc script
