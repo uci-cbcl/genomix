@@ -15,7 +15,7 @@ fi
 . conf/cluster.properties
 #Get the IP address of the cc
 CCHOST_NAME=`cat conf/master`
-CCHOST=`ssh -n ${CCHOST_NAME} "${GENOMIX_HOME}/bin/getip.sh"`
+CCHOST=`ssh ${CCHOST_NAME} 'bash -s' < ${GENOMIX_HOME}/bin/getip.sh`
 
 #Remove the temp dir
 #rm -rf $CCTMP_DIR
