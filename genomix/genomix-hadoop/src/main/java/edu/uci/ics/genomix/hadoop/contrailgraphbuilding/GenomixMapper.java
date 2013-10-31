@@ -194,9 +194,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         readHeadSet.clear();
         readHeadSet.add(readHeadInfo);
         if (curKmerAndDir.getValue() == DIR.FORWARD)
-            curNode.setStartReads(readHeadSet);
+            curNode.setUnflippedReadIds(readHeadSet);
         else
-            curNode.setEndReads(readHeadSet);
+            curNode.setFlippedReadIds(readHeadSet);
     }
 
 }
