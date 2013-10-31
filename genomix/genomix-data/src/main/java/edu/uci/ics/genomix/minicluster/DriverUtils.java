@@ -83,8 +83,7 @@ public class DriverUtils {
         }
     }
 
-    public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
-            throws IOException {
+    public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta) throws IOException {
         LOG.info("Dumping graph to fasta...");
         GenomixJobConf.tick("dumpGraph");
         FileSystem dfs = FileSystem.get(conf);
@@ -108,7 +107,7 @@ public class DriverUtils {
                         if (key == null || value == null)
                             break;
                         bw.write(">node_" + key.toString() + "\n");
-                        bw.write(followingBuild ? key.toString() : value.getInternalKmer().toString());
+                        bw.write(key.toString().length() > 0 ? key.toString() : value.getInternalKmer().toString());
                         bw.newLine();
                     }
                 } catch (Exception e) {

@@ -37,8 +37,6 @@ import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
-import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.ComplexBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex;
@@ -64,7 +62,6 @@ public class GenomixDriver {
     private String curOutput;
     private int stepNum;
     private List<PregelixJob> pregelixJobs;
-    private boolean followingBuild = false; // need to adapt the graph immediately after building
     private boolean runLocal = false;
     private int threadsPerMachine;
     private int numMachines;
@@ -94,54 +91,54 @@ public class GenomixDriver {
                 buildGraphWithHadoop(conf);
                 break;
             case MERGE_P1:
-                queuePregelixJob(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
+                pregelixJobs.add(P1ForPathMergeVertex.getConfiguredJob(conf, P1ForPathMergeVertex.class));
                 break;
             case MERGE_P2:
                 //                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
                 break;
             case MERGE:
             case MERGE_P4:
-                queuePregelixJob(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
+                pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
                 break;
             case UNROLL_TANDEM:
-                queuePregelixJob(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
+                pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
                 break;
             case TIP_REMOVE:
-                queuePregelixJob(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
+                pregelixJobs.add(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
                 break;
             case BUBBLE:
-                queuePregelixJob(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
+                pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
                 break;
             case BUBBLE_COMPLEX:
-                queuePregelixJob(ComplexBubbleMergeVertex.getConfiguredJob(conf, ComplexBubbleMergeVertex.class));
+                pregelixJobs.add(ComplexBubbleMergeVertex.getConfiguredJob(conf, ComplexBubbleMergeVertex.class));
                 break;
             case LOW_COVERAGE:
-                queuePregelixJob(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
+                pregelixJobs.add(RemoveLowCoverageVertex.getConfiguredJob(conf, RemoveLowCoverageVertex.class));
                 break;
             case BRIDGE:
-                queuePregelixJob(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
+                pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
                 break;
             case SPLIT_REPEAT:
-                queuePregelixJob(SplitRepeatVertex.getConfiguredJob(conf, SplitRepeatVertex.class));
+                pregelixJobs.add(SplitRepeatVertex.getConfiguredJob(conf, SplitRepeatVertex.class));
                 break;
             case SCAFFOLD:
-                queuePregelixJob(ScaffoldingVertex.getConfiguredJob(conf, ScaffoldingVertex.class));
+                pregelixJobs.add(ScaffoldingVertex.getConfiguredJob(conf, ScaffoldingVertex.class));
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
                 if (runLocal) {
-                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild); //?? why curOutput TODO
+                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta"); //?? why curOutput TODO
                     curOutput = prevOutput; // use previous job's output 
                 } else {
                     dumpGraphWithHadoop(conf, curOutput, threadsPerMachine * numMachines);
                     if (Boolean.parseBoolean(conf.get(GenomixJobConf.GAGE)) == true) {
-                        DriverUtils.dumpGraph(conf, curOutput, "genome.fasta", followingBuild);
+                        DriverUtils.dumpGraph(conf, curOutput, "genome.fasta");
                     }
                     curOutput = prevOutput;
                 }
                 break;
             case CHECK_SYMMETRY:
-                queuePregelixJob(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
+                pregelixJobs.add(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
                 curOutput = prevOutput; // use previous job's output
                 break;
             case STATS:
@@ -165,7 +162,6 @@ public class GenomixDriver {
         int hyracksPort = Integer.parseInt(conf.get(GenomixJobConf.HYRACKS_CC_CLIENTPORT));
         hyracksDriver = new GenomixHyracksDriver(masterIP, hyracksPort, threadsPerMachine);
         hyracksDriver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, Boolean.parseBoolean(conf.get(GenomixJobConf.PROFILE)));
-        followingBuild = true;
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHyracks") + "ms");
     }
 
@@ -176,24 +172,8 @@ public class GenomixDriver {
         GenomixHadoopDriver hadoopDriver = new GenomixHadoopDriver();
         hadoopDriver.run(prevOutput, curOutput, threadsPerMachine * numMachines,
                 Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)), 4 * 100000, true, conf);
-        followingBuild = true;
 
         LOG.info("Building the graph took " + GenomixJobConf.tock("buildGraphWithHadoop") + "ms");
-    }
-
-    private void queuePregelixJob(PregelixJob job) {
-        if (followingBuild) {
-            //            if (P2ForPathMergeVertex.class.equals(BspUtils.getVertexClass(job.getConfiguration()))) {
-            //                job.setVertexInputFormatClass(P2InitialGraphCleanInputFormat.class);
-            //            } else {
-            job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
-            //            }
-        }
-        if (job.getClass().equals(SymmetryCheckerVertex.class)) {
-            job.setVertexOutputFormatClass(CheckerOutputFormat.class);
-        }
-        pregelixJobs.add(job);
-        followingBuild = false;
     }
 
     /**
@@ -248,15 +228,15 @@ public class GenomixDriver {
         DriverUtils.loadClusterProperties(conf);
         threadsPerMachine = Integer.parseInt(conf.get(GenomixJobConf.THREADS_PER_MACHINE));
         numMachines = DriverUtils.getSlaveList(conf).length;
-        followingBuild = Boolean.parseBoolean(conf.get(GenomixJobConf.FOLLOWS_GRAPH_BUILD));
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
-        
+
         manager = new GenomixClusterManager(runLocal, conf);
         manager.stopCluster(); // shut down any existing NCs and CCs
         manager.startCluster();
-        ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home", ".") + "/pregelix/conf/cluster.properties");
+        ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home", ".")
+                + "/pregelix/conf/cluster.properties");
         ClusterConfig.setStorePath(System.getProperty("app.home", ".") + "/pregelix/conf/stores.properties");
     }
 

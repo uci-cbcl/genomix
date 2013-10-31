@@ -15,19 +15,14 @@
 
 package edu.uci.ics.genomix.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.LogManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -73,9 +68,6 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: true)", required = false)
         private boolean saveIntermediateResults = false;
-
-        @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
-        private boolean followsGraphBuild = false;
 
         @Option(name = "-clusterWaitTime", usage = "the amount of time (in ms) to wait between starting/stopping CC/NC", required = false)
         private int clusterWaitTime = -1;
@@ -213,7 +205,6 @@ public class GenomixJobConf extends JobConf {
     public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
-    public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
 
     // Graph cleaning   
@@ -237,9 +228,9 @@ public class GenomixJobConf extends JobConf {
     public static final String DEBUG_KMERS = "genomix.debugKmers";
     public static final String LOG_READIDS = "genomix.logReadIds";
     public static final String HYRACKS_GROUPBY_TYPE = "genomix.hyracks.groupby";
-    
+
     // specified by cluster.properties... hence the different naming convention :(
-    public static final String HYRACKS_CC_CLIENTPORT = "HYRACKS_CC_CLIENTPORT"; 
+    public static final String HYRACKS_CC_CLIENTPORT = "HYRACKS_CC_CLIENTPORT";
     public static final String PREGELIX_CC_CLIENTPORT = "PREGELIX_CC_CLIENTPORT";
     public static final String HYRACKS_CC_CLUSTERPORT = "HYRACKS_CC_CLUSTERPORT";
     public static final String PREGELIX_CC_CLUSTERPORT = "PREGELIX_CC_CLUSTERPORT";
@@ -256,7 +247,6 @@ public class GenomixJobConf extends JobConf {
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
-    
 
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
@@ -412,7 +402,6 @@ public class GenomixJobConf extends JobConf {
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
-        setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
         setBoolean(GAGE, opts.gage);
