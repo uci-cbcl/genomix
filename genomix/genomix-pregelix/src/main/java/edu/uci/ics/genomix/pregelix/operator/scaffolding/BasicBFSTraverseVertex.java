@@ -70,12 +70,12 @@ public class BasicBFSTraverseVertex extends
         // updateLength += kmerLength - offset
             case SRC_OFFSET:
                 boolean srcIsFlip = incomingMsg.getSrcReadHeadOrientation() == READHEAD_ORIENTATION.FLIPPED;
-                readHeadSet = srcIsFlip ? vertex.getEndReads() : vertex.getStartReads();
+                readHeadSet = srcIsFlip ? vertex.getFlippedReadIds() : vertex.getUnflippedReadIds();
                 offset = readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
                 return srcIsFlip ? offset : internalKmerLength - offset;
             case DEST_OFFSET:
                 boolean destIsFlip = incomingMsg.getDestReadHeadOrientation() == READHEAD_ORIENTATION.FLIPPED;
-                readHeadSet = destIsFlip ? vertex.getEndReads() : vertex.getStartReads();
+                readHeadSet = destIsFlip ? vertex.getFlippedReadIds() : vertex.getUnflippedReadIds();
                 offset = readHeadSet.getOffsetFromReadId(incomingMsg.getReadId());
                 return destIsFlip ? totalBFSLength + offset - kmerSize + 1 : totalBFSLength + internalKmerLength
                         - offset - kmerSize + 1;

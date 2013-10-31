@@ -109,8 +109,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeMap(e).unionUpdate((readNode.getEdgeMap(e)));
                 }
-                localUniNode.getStartReads().addAll(readNode.getStartReads());
-                localUniNode.getEndReads().addAll(readNode.getEndReads());
+                localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
+                localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
                 localUniNode.addCoverage(readNode);
             }
 
@@ -124,8 +124,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
                     localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
-                localUniNode.getStartReads().addAll(readNode.getStartReads());
-                localUniNode.getEndReads().addAll(readNode.getEndReads());
+                localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
+                localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
                 localUniNode.addCoverage(readNode);
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.

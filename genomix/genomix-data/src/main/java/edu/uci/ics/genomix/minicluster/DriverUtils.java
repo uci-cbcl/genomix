@@ -96,7 +96,7 @@ public class DriverUtils {
         }
     }
 
-    public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
+    public static void dumpGraphLocally(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
             throws IOException {
         LOG.info("Dumping graph to fasta...");
         GenomixJobConf.tick("dumpGraph");

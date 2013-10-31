@@ -39,10 +39,10 @@ import edu.uci.ics.genomix.type.VKmer;
 public class GetFastaStatsTest {
     
     private static final String ACTUAL_RESULT_DIR = "actual";
-    private static final String BINSOURCE_PATH = "GAGETest.fasta";
+    private static final String BINSOURCE_PATH = "src/test/resources/gagedata/GAGETest.fasta";
     private static final String HDFS_PATH = "/gage";
     private static final String RESULT_PATH = "/gageresult";
-    private static final String GAGESOURCE = "data/gage/expected/gagesrcfortestcase";
+    private static final String GAGESOURCE = "src/test/resources/expected/gage/gagesrcfortestcase";
     private FileSystem dfs;
     private static GenomixClusterManager manager;
     private static GenomixJobConf conf = new GenomixJobConf(3);
@@ -74,7 +74,7 @@ public class GetFastaStatsTest {
         startHadoop();
         prepareData();
         GenomixJobConf.setGlobalStaticConstants(conf);
-        Counters counters = GraphStatistics.run(HDFS_PATH + File.separator + BINSOURCE_PATH, RESULT_PATH, conf);
+        Counters counters = GraphStatistics.run(HDFS_PATH, RESULT_PATH, conf);
         GraphStatistics.getFastaStatsForGage(RESULT_PATH, counters, conf);
         cleanupHadoop();
         compareWithGageSourceCodeResults(ACTUAL_RESULT_DIR + File.separator + RESULT_PATH + "/gagestatsFasta.txt");

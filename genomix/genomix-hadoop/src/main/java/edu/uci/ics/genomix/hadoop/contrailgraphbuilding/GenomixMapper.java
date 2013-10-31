@@ -16,10 +16,10 @@ import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.DIR;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.GeneCode;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.ReadIdSet;
@@ -193,9 +193,9 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         readHeadSet.clear();
         readHeadSet.add(readHeadInfo);
         if (curKmerAndDir.getValue() == DIR.FORWARD)
-            curNode.setStartReads(readHeadSet);
+            curNode.setUnflippedReadIds(readHeadSet);
         else
-            curNode.setEndReads(readHeadSet);
+            curNode.setFlippedReadIds(readHeadSet);
     }
 
 }
