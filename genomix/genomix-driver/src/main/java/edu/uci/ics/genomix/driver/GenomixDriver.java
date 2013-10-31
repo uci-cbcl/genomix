@@ -299,11 +299,11 @@ public class GenomixDriver {
         initGenomix(conf);
         String localInput = conf.get(GenomixJobConf.LOCAL_INPUT_DIR);
         if (localInput != null) {
-            conf.set(GenomixJobConf.INITIAL_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
+            conf.set(GenomixJobConf.INITIAL_HDFS_INPUT_DIR, conf.get(GenomixJobConf.HDFS_WORK_PATH) + File.separator
                     + "00-initial-input-from-genomix-driver");
-            GenomixClusterManager.copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_INPUT_DIR));
+            GenomixClusterManager.copyLocalToHDFS(conf, localInput, conf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR));
         }
-        curOutput = conf.get(GenomixJobConf.INITIAL_INPUT_DIR);
+        curOutput = conf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR);
 
         // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
         String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
@@ -317,8 +317,8 @@ public class GenomixDriver {
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
             GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
 
-        if (conf.get(GenomixJobConf.FINAL_OUTPUT_DIR) != null)
-            FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_OUTPUT_DIR));
+        if (conf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR) != null)
+            FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR));
 
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
     }

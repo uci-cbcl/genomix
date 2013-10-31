@@ -243,49 +243,48 @@ public class GenomixJobConf extends JobConf {
     }
 
     // Global config
-    public static final String KMER_LENGTH = "genomix.kmerlength";
-    public static final String LINES_PERMAP = "genomix.linespermap";
-    public static final String PIPELINE_ORDER = "genomix.pipelineOrder";
-    public static final String INITIAL_INPUT_DIR = "genomix.initial.input.dir";
-    public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
-    public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
-    public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
-    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
+    public static final String KMER_LENGTH = "genomix.conf.kmerLength";
+    public static final String LINES_PERMAP = "genomix.conf.linesPerMap";
+    public static final String PIPELINE_ORDER = "genomix.conf.pipelineOrder";
+    public static final String INITIAL_HDFS_INPUT_DIR = "genomix.conf.initialHDFSInputDir";
+    public static final String FINAL_HDFS_OUTPUT_DIR = "genomix.conf.finalHDFSOutputDir";
+    public static final String LOCAL_INPUT_DIR = "genomix.conf.initialLocalInputDir";
+    public static final String LOCAL_OUTPUT_DIR = "genomix.conf.finalLocalOutputDir";
+    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.conf.saveIntermediateResults";
+    public static final String RANDOM_SEED = "genomix.conf.randomSeed";
     public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
     public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
-    public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphCleanMaxIterations";
-    public static final String RANDOM_SEED = "genomix.Random.randSeed";
-    public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.PathMergeRandom.probBeingRandomHead";
+    public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
+    public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.pathMerge.probBeingRandomHead";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
-    public static final String MAX_READIDS_PER_EDGE = "genomix.max.readids.per.edge";
-    public static final String P4_RANDOM_SEED = "genomix.p4.random.seed";
-    public static final String SCAFFOLDING_MIN_TRAVERSAL_LENGTH = "scaffolding.min.traveral.length";
-    public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "scaffolding.max.traveral.length";
-    public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "scaffolding.vertex.min.coverage";
-    public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
-    public static final String PLOT_SUBGRAPH_START_SEEDS = "plot.subgraph.startSeeds";
-    public static final String PLOT_SUBGRAPH_NUM_HOPS = "plot.subgraph.num.hops";
-    public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "plot.subgraph.graph.verbosity";
+    public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
+    public static final String SCAFFOLDING_MIN_TRAVERSAL_LENGTH = "genomix.scaffolding.minTraversalLength";
+    public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "genomix.scaffolding.maxTraversalLength";
+    public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "genomix.scaffolding.vertexMinCoverage";
+    public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "genomix.scaffolding.vertexMinLength";
+    public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
+    public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
+    public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
 
     // Hyracks/Pregelix Setup
     public static final String IP_ADDRESS = "genomix.ipAddress";
     public static final String PORT = "genomix.port";
-    public static final String PROFILE = "genomix.profile";
-    public static final String RUN_LOCAL = "genomix.runLocal";
-    public static final String DEBUG_KMERS = "genomix.debugKmers";
-    public static final String LOG_READIDS = "genomix.logReadIds";
-    public static final String HYRACKS_GROUPBY_TYPE = "genomix.hyracks.groupby";
+    public static final String PROFILE = "genomix.conf.profile";
+    public static final String RUN_LOCAL = "genomix.conf.runLocal";
+    public static final String DEBUG_KMERS = "genomix.conf.debugKmers";
+    public static final String LOG_READIDS = "genomix.conf.logReadIds";
+    public static final String HYRACKS_GROUPBY_TYPE = "genomix.conf.hyracksGroupby";
 
     //    public static final String FRAME_SIZE = "genomix.framesize";
-    public static final String FRAME_SIZE = "pregelix.framesize";
-    public static final String FRAME_LIMIT = "genomix.framelimit";
+    public static final String FRAME_SIZE = "pregelix.conf.frameSize";
+    public static final String FRAME_LIMIT = "genomix.conf.frameLimit";
 
-    public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
+    public static final String HDFS_WORK_PATH = "genomix.conf.hdfsWorkPath";
     public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
     public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
 
@@ -459,11 +458,11 @@ public class GenomixJobConf extends JobConf {
         if (opts.localInput == null && opts.hdfsInput == null)
             throw new IllegalArgumentException("Please specify an input via -localInput or -hdfsInput!");
         if (opts.hdfsInput != null)
-            set(INITIAL_INPUT_DIR, opts.hdfsInput);
+            set(INITIAL_HDFS_INPUT_DIR, opts.hdfsInput);
         if (opts.localInput != null)
             set(LOCAL_INPUT_DIR, opts.localInput);
         if (opts.hdfsOutput != null)
-            set(FINAL_OUTPUT_DIR, opts.hdfsOutput);
+            set(FINAL_HDFS_OUTPUT_DIR, opts.hdfsOutput);
         if (opts.localOutput != null)
             set(LOCAL_OUTPUT_DIR, opts.localOutput);
         if (opts.hdfsWorkPath != null)

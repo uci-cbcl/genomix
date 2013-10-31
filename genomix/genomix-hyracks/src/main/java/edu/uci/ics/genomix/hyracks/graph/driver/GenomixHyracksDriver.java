@@ -176,20 +176,20 @@ public class GenomixHyracksDriver {
         int numOfDuplicate = IODirs != null ? IODirs.split(",").length : 4;
         boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
 
-        Log.info("Input dir:" + GenomixJobConf.INITIAL_INPUT_DIR);
-        Log.info("Output dir:" + GenomixJobConf.FINAL_OUTPUT_DIR);
-        FileInputFormat.setInputPaths(jobConf, new Path(jobConf.get(GenomixJobConf.INITIAL_INPUT_DIR)));
+        Log.info("Input dir:" + GenomixJobConf.INITIAL_HDFS_INPUT_DIR);
+        Log.info("Output dir:" + GenomixJobConf.FINAL_HDFS_OUTPUT_DIR);
+        FileInputFormat.setInputPaths(jobConf, new Path(jobConf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR)));
         {
-            Path path = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.INITIAL_INPUT_DIR));
+            Path path = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR));
             jobConf.set("mapred.input.dir", path.toString());
 
-            Path outputDir = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR));
+            Path outputDir = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR));
             jobConf.set("mapred.output.dir", outputDir.toString());
         }
 
-        FileOutputFormat.setOutputPath(jobConf, new Path(jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR)));
+        FileOutputFormat.setOutputPath(jobConf, new Path(jobConf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR)));
         FileSystem dfs = FileSystem.get(jobConf);
-        dfs.delete(new Path(jobConf.get(GenomixJobConf.FINAL_OUTPUT_DIR)), true);
+        dfs.delete(new Path(jobConf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR)), true);
 
         GenomixHyracksDriver driver = new GenomixHyracksDriver(ipAddress, port, numOfDuplicate);
         driver.runJob(jobConf, Plan.BUILD_DEBRUIJN_GRAPH, bProfiling);
