@@ -26,7 +26,6 @@ import edu.uci.ics.genomix.hyracks.graph.test.GraphBuildingTestSetting;
 import edu.uci.ics.genomix.hyracks.graph.test.TestUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 
 @RunWith(value = Parameterized.class)
 public class HyrackVSHadoopTest {
@@ -104,8 +103,7 @@ public class HyrackVSHadoopTest {
         manager.setNumberOfNC(numberOfNC);
         manager.setNumberOfDataNodesInLocalMiniHDFS(numberOfNC);
 
-        manager.startCluster(ClusterType.HADOOP);
-        manager.startCluster(ClusterType.HYRACKS);
+        manager.startCluster();
 
         hyracksDriver = new GenomixHyracksDriver(GenomixClusterManager.LOCAL_HOSTNAME,
                 GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT, numPartitionPerMachine);
@@ -171,8 +169,7 @@ public class HyrackVSHadoopTest {
     @AfterClass
     public static void tearDown() throws Exception {
         if (manager != null) {
-            manager.stopCluster(ClusterType.HYRACKS);
-            manager.stopCluster(ClusterType.HADOOP);
+            manager.stopCluster();
         }
     }
 }

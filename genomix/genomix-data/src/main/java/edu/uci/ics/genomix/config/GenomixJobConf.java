@@ -92,7 +92,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-randSeed", usage = "The seed used in the random path-merge or split-repeat algorithm", required = false)
         private long randSeed = -1;
-        
+
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
 
@@ -134,8 +134,8 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-gage", usage = "Do metrics evalution after dumpting the intermediate data.", required = false)
         private boolean gage = false;
 
-        @Argument
-        private ArrayList<String> arguments = new ArrayList<String>();
+        @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
+        private int threadsPerMachine = 1;
     }
 
     /**
@@ -214,7 +214,7 @@ public class GenomixJobConf extends JobConf {
     public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
     public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
-    public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
+    public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -232,21 +232,23 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
 
     // Hyracks/Pregelix Setup
-    public static final String IP_ADDRESS = "genomix.ipAddress";
-    public static final String PORT = "genomix.port";
     public static final String PROFILE = "genomix.profile";
     public static final String RUN_LOCAL = "genomix.runLocal";
     public static final String DEBUG_KMERS = "genomix.debugKmers";
     public static final String LOG_READIDS = "genomix.logReadIds";
     public static final String HYRACKS_GROUPBY_TYPE = "genomix.hyracks.groupby";
+    
+    // specified by cluster.properties... hence the different naming convention :(
+    public static final String HYRACKS_CC_CLIENTPORT = "HYRACKS_CC_CLIENTPORT"; 
+    public static final String PREGELIX_CC_CLIENTPORT = "PREGELIX_CC_CLIENTPORT";
+    public static final String HYRACKS_CC_CLUSTERPORT = "HYRACKS_CC_CLUSTERPORT";
+    public static final String PREGELIX_CC_CLUSTERPORT = "PREGELIX_CC_CLUSTERPORT";
+    public static final String FRAME_SIZE = "FRAME_SIZE";
+    public static final String FRAME_LIMIT = "FRAME_LIMIT";
 
-    //    public static final String FRAME_SIZE = "genomix.framesize";
-    public static final String FRAME_SIZE = "pregelix.framesize";
-    public static final String FRAME_LIMIT = "genomix.framelimit";
-
-    public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
-    public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
-    public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
+    public static final String MASTER = "genomix.master.node";
+    public static final String SLAVES = "genomix.slaves.list";
+    public static final String THREADS_PER_MACHINE = "genomix.threadsPerMachine";
 
     // intermediate date evaluation
     public static final String GAGE = "genomix.evaluation.tool.gage";
@@ -254,6 +256,7 @@ public class GenomixJobConf extends JobConf {
     private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
             Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
+    
 
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
@@ -327,9 +330,6 @@ public class GenomixJobConf extends JobConf {
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
 
         Patterns.verifyPatterns(Patterns.arrayFromString(conf.get(GenomixJobConf.PIPELINE_ORDER)));
-        //        // Hyracks/Pregelix Advanced Setup
-        //        if (conf.get(IP_ADDRESS) == null)
-        //            throw new IllegalArgumentException("ipAddress was not specified!");
     }
 
     private void fillMissingDefaults() {
@@ -348,7 +348,7 @@ public class GenomixJobConf extends JobConf {
 
         if (getLong(RANDOM_SEED, -1) == -1)
             setLong(RANDOM_SEED, System.currentTimeMillis());
-        
+
         if (getFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, -1) == -1)
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
@@ -382,9 +382,6 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
 
         // hyracks-specific
-        if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
-            setInt(CLUSTER_WAIT_TIME, 6000);
-
         if (getBoolean(GAGE, false) == false)
             setBoolean(GAGE, false);
         //        if (getBoolean(RUN_LOCAL, false)) {
@@ -416,7 +413,6 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
         setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
-        setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
         setBoolean(GAGE, opts.gage);
@@ -439,6 +435,7 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
+        setInt(THREADS_PER_MACHINE, opts.threadsPerMachine);
     }
 
     /**

@@ -62,37 +62,24 @@ public class DriverUtils {
     /**
      * set the CC's IP address and port from the cluster.properties and `getip.sh` script
      */
-    public static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException,
+    public static void loadClusterProperties(GenomixJobConf conf) throws FileNotFoundException, IOException,
             InterruptedException {
-        Properties CCProperties = new Properties();
-        CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
+        Properties clusterProperties = new Properties();
+        clusterProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
                 + File.separator + "cluster.properties"));
-        if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
-            if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
-                conf.set(GenomixJobConf.IP_ADDRESS, GenomixClusterManager.LOCAL_IP);
-            }
-            if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
-                conf.setInt(GenomixJobConf.PORT, GenomixClusterManager.LOCAL_HYRACKS_CC_PORT);
-            }
-        } else {
-            if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
-                conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
-            }
-            if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
-                conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
-            }
-        }
 
-        if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
-            conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE"));
-        if (conf.get(GenomixJobConf.FRAME_LIMIT) == null)
-            conf.set(GenomixJobConf.FRAME_LIMIT, CCProperties.getProperty("FRAME_LIMIT"));
-        if (conf.get(GenomixJobConf.HYRACKS_IO_DIRS) == null)
-            conf.set(GenomixJobConf.HYRACKS_IO_DIRS, CCProperties.getProperty("IO_DIRS"));
-        if (conf.get(GenomixJobConf.HYRACKS_SLAVES) == null) {
+        for (String prop : clusterProperties.stringPropertyNames()) {
+            conf.set(prop, clusterProperties.getProperty(prop));
+        }
+        if (conf.get(GenomixJobConf.MASTER) == null) {
+            String master = FileUtils.readFileToString(new File(System.getProperty("app.home", ".") + File.separator
+                    + "conf" + File.separator + "master"));
+            conf.set(GenomixJobConf.MASTER, master);
+        }
+        if (conf.get(GenomixJobConf.SLAVES) == null) {
             String slaves = FileUtils.readFileToString(new File(System.getProperty("app.home", ".") + File.separator
                     + "conf" + File.separator + "slaves"));
-            conf.set(GenomixJobConf.HYRACKS_SLAVES, slaves);
+            conf.set(GenomixJobConf.SLAVES, slaves);
         }
     }
 
@@ -137,12 +124,8 @@ public class DriverUtils {
         LOG.info("Dump graph to fasta took " + GenomixJobConf.tock("dumpGraph") + "ms");
     }
 
-    public static int getNumCoresPerMachine(GenomixJobConf conf) {
-        return conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
-    }
-
     public static String[] getSlaveList(GenomixJobConf conf) {
-        return conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r"); // split on newlines
+        return conf.get(GenomixJobConf.SLAVES).split("\r?\n|\r"); // split on newlines
     }
 
 }

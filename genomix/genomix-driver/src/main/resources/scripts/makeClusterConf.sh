@@ -58,11 +58,11 @@ conf_home="$genomix_home/$cluster_type/conf"
 mkdir -p $conf_home
 
 cat > "$conf_home/cluster.properties" <<EOF
-CCTMP_DIR="$WORKPATH/$cluster_type/cc"
-CCLOGS_DIR="$WORKPATH/$cluster_type/cc/logs"
-NCTMP_DIR="$WORKPATH/$cluster_type/nc"
-NCLOGS_DIR="$WORKPATH/$cluster_type/nc/logs"
-IO_DIRS="$IO_DIRS"
+CCTMP_DIR=$WORKPATH/$cluster_type/cc
+CCLOGS_DIR=$WORKPATH/$cluster_type/cc/logs
+NCTMP_DIR=$WORKPATH/$cluster_type/nc
+NCLOGS_DIR=$WORKPATH/$cluster_type/nc/logs
+IO_DIRS=$IO_DIRS
 FRAME_SIZE=$FRAME_SIZE
 FRAME_LIMIT=$FRAME_LIMIT
 JOB_HISTORY_SIZE=$JOB_HISTORY_SIZE
@@ -85,7 +85,7 @@ CC_DEBUG_PORT=$PREGELIX_CC_DEBUG_PORT
 NC_DEBUG_PORT=$PREGELIX_NC_DEBUG_PORT
 EOF
     cat > "$conf_home/stores.properties" <<EOF
-store="$store"
+store=$store
 EOF
 else
     echo "unrecognized cluster-type $cluster_type" 1>&2 
