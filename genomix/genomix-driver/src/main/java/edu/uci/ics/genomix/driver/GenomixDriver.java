@@ -233,7 +233,7 @@ public class GenomixDriver {
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
 
         manager = new GenomixClusterManager(runLocal, conf);
-        if (!Boolean.parseBoolean(GenomixJobConf.USE_EXISTING_CLUSTER)) {
+        if (!Boolean.parseBoolean(conf.get(GenomixJobConf.USE_EXISTING_CLUSTER))) {
             manager.stopCluster(); // shut down any existing NCs and CCs
             manager.startCluster();
         }
@@ -272,7 +272,7 @@ public class GenomixDriver {
 
         LOG.info("Finished the Genomix Assembler Pipeline in " + GenomixJobConf.tock("runGenomix") + "ms!");
         
-        if (!Boolean.parseBoolean(GenomixJobConf.USE_EXISTING_CLUSTER)) {
+        if (!Boolean.parseBoolean(conf.get(GenomixJobConf.USE_EXISTING_CLUSTER))) {
             manager.stopCluster(); // shut down any existing NCs and CCs
         }
     }
