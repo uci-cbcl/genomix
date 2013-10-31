@@ -162,7 +162,7 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-stats_expectedGenomeSize", usage = "The expected length for this whole genome data", required = false)
         private int stats_expectedGenomeSize = -1;
         
-        @Option(name = "-stats_minContigLength", usage = "The minimum allowed contig length", required = false)
+        @Option(name = "-stats_minContigLength", usage = "the minimum contig length included in statistics calculations", required = false)
         private int stats_minContigLength = -1;
 
         @Argument
