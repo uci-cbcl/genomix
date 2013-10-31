@@ -329,7 +329,6 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         Collections.sort(contigLengthList);
         long sum = 0;
         double median = contigLengthList.get(contigLengthList.size() / 2);
-        int medianCount = 1;
         int numberContigsSeen = 1;
         int currentValPoint = 0;
 
@@ -357,60 +356,22 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         }
 
         StringBuffer outputStr = new StringBuffer();
-        if (OLD_STYLE == true) {
-            outputStr.append("Total units: " + count + "\n");
-            outputStr.append("Reference: " + total + "\n");
-            outputStr.append("BasesInFasta: " + totalBPOverLength + "\n");
-            outputStr.append("Min: " + minContig + "\n");
-            outputStr.append("Max: " + maxContig + "\n");
-            outputStr.append("N10: " + nxMap.get(Double.valueOf(0.1)).getNxValue() + " COUNT: "
-                    + nxMap.get(Double.valueOf(0.1)).getNxCount() + "\n");
-            outputStr.append("N25: " + nxMap.get(Double.valueOf(0.25)).getNxValue() + " COUNT: "
-                    + nxMap.get(Double.valueOf(0.25)).getNxCount() + "\n");
-            outputStr.append("N50: " + nxMap.get(Double.valueOf(0.5)).getNxValue() + " COUNT: "
-                    + nxMap.get(Double.valueOf(0.5)).getNxCount() + "\n");
-            outputStr.append("N75: " + nxMap.get(Double.valueOf(0.75)).getNxValue() + " COUNT: "
-                    + nxMap.get(Double.valueOf(0.75)).getNxCount() + "\n");
-            outputStr.append("E-size:" + nf.format(eSize) + "\n");
-        } else {
-            //                if (outputHeader) {
-            outputStr.append("Assembly");
-            outputStr.append(",Unit Number");
-            outputStr.append(",Unit Total BP");
-            outputStr.append(",Number Units > " + MIN_CONTIG_LENGTH);
-            outputStr.append(",Total BP in Units > " + MIN_CONTIG_LENGTH);
-            outputStr.append(",Min");
-            outputStr.append(",Max");
-            outputStr.append(",Average");
-            outputStr.append(",Median");
+        outputStr.append("Total units: " + count + "\n");
+        outputStr.append("Reference: " + total + "\n");
+        outputStr.append("BasesInFasta: " + totalBPOverLength + "\n");
+        outputStr.append("Min: " + minContig + "\n");
+        outputStr.append("Max: " + maxContig + "\n");
+        outputStr.append("N10: " + nxMap.get(Double.valueOf(0.1)).getNxValue() + " COUNT: "
+                + nxMap.get(Double.valueOf(0.1)).getNxCount() + "\n");
+        outputStr.append("N25: " + nxMap.get(Double.valueOf(0.25)).getNxValue() + " COUNT: "
+                + nxMap.get(Double.valueOf(0.25)).getNxCount() + "\n");
+        outputStr.append("N50: " + nxMap.get(Double.valueOf(0.5)).getNxValue() + " COUNT: "
+                + nxMap.get(Double.valueOf(0.5)).getNxCount() + "\n");
+        outputStr.append("N75: " + nxMap.get(Double.valueOf(0.75)).getNxValue() + " COUNT: "
+                + nxMap.get(Double.valueOf(0.75)).getNxCount() + "\n");
+        outputStr.append("E-size:" + nf.format(eSize) + "\n");
 
-            for (int i = 0; i < contigAtVals.length; i++) {
-                if (contigAtVals[i].count != 0) {
-                    outputStr.append(",Unit At " + nf.format(contigAtVals[i].goal) + " Unit Count,"
-                            + /*"Total Length," + */" Actual Unit Length");
-                }
-            }
-            outputStr.append("\n");
-            //            }
-            //            outputStr.append(title);
-            outputStr.append("," + nf.format(count));
-            outputStr.append("," + nf.format(total));
-            outputStr.append("," + nf.format(totalOverLength));
-            outputStr.append("," + nf.format(totalBPOverLength));
-            outputStr.append("," + nf.format(minContig));
-            outputStr.append("," + nf.format(maxContig));
-            outputStr.append("," + nf.format((double) total / count));
-            outputStr.append("," + nf.format((double) median / medianCount));
-
-            for (int i = 0; i < contigAtVals.length; i++) {
-                if (contigAtVals[i].count != 0) {
-                    outputStr.append("," + contigAtVals[i].count + ","
-                            + /*contigAtVals[i].totalBP + "," +*/contigAtVals[i].len);
-                }
-            }
-        }
         FileSystem dfs = FileSystem.getLocal(new Configuration());
-
         dfs.mkdirs(new Path(outputDir));
         FSDataOutputStream outstream = dfs.create(new Path("actual" + File.separator + outputDir
                 + "/gagestatsFasta.txt"), true);

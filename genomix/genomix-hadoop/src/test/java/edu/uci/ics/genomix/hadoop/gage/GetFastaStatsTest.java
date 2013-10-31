@@ -62,7 +62,6 @@ public class GetFastaStatsTest {
 
     public void writeTestCaseToFile() throws IOException {
         dfs = FileSystem.getLocal(conf);
-        //        String targetFileName = "gageTest";
         Path targetPath = new Path(BINSOURCE_PATH);
 
         SequenceFile.Writer writer = new SequenceFile.Writer(dfs, conf, targetPath, VKmer.class, Node.class);
@@ -80,16 +79,6 @@ public class GetFastaStatsTest {
             writer.append(outputKey, outputValue);
         }
         writer.close();
-
-        //        String textTargetFileName = TXTSOURCE_PATH;
-        //        BufferedWriter txtWriter = new BufferedWriter(new FileWriter(textTargetFileName));
-        //        for (int i = 0; i < keyList.length; i++) {
-        //            txtWriter.write(">node_" + keyList[i]);
-        //            txtWriter.newLine();
-        //            txtWriter.write(valueList[i]);
-        //            txtWriter.newLine();
-        //        }
-        //        txtWriter.close();
     }
 
     @SuppressWarnings("deprecation")
