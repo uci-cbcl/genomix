@@ -7,6 +7,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 
 @SuppressWarnings({ "deprecation", "unused" })
@@ -59,6 +60,7 @@ public class GraphBuildingTestCase extends TestCase {
         //        Path dest = new Path(RESULT_PATH);
         //        dfs.copyToLocalFile(src, dest);
         GenomixClusterManager.copyBinToLocal(conf, RESULT_PATH, RESULT_PATH);
-        GenerateGraphViz.convertGraphBuildingOutputToGraphViz(RESULT_PATH + "/bin", RESULT_PATH + "/graphviz");
+        GenerateGraphViz.convertBinToGraphViz(RESULT_PATH + "/bin", RESULT_PATH + "/graphviz",
+                GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
     }
 }

@@ -1,7 +1,7 @@
 package edu.uci.ics.genomix.pregelix.jobrun.pipeline;
 
-import edu.uci.ics.genomix.pregelix.jobrun.BasicGraphCleanTestSuite;
 import junit.framework.Test;
+import edu.uci.ics.genomix.pregelix.jobrun.BasicGraphCleanTestSuite;
 
 public class PathMergeTestSuite extends BasicGraphCleanTestSuite {
 

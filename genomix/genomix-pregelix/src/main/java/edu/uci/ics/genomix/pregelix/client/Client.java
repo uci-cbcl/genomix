@@ -41,11 +41,11 @@ public class Client {
         @Option(name = "-runtime-profiling", usage = "whether to do runtime profifling", required = false)
         public String profiling = "false";
 
-        //        @Option(name = "-pseudo-rate", usage = "the rate of pseduHead", required = false)
-        //        public float pseudoRate = -1;
-        //        
-        //        @Option(name = "-max-patitionround", usage = "max rounds in partition phase", required = false)
-        //        public int maxRound = -1;
+        @Option(name = "-startSeeds", usage = "whether to do runtime profifling", required = false)
+        public String startSeeds;
+
+        @Option(name = "-numOfHops", usage = "whether to do runtime profifling", required = false)
+        public int numOfHops;
     }
 
     public static void run(String[] args, PregelixJob job) throws Exception {
@@ -69,10 +69,6 @@ public class Client {
             job.getConfiguration().setInt(GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS, options.numIteration);
         }
 
-        //        if (options.pseudoRate > 0 && options.pseudoRate <= 1)
-        //           job.getConfiguration().setFloat(P3ForPathMergeVertex.PSEUDORATE, options.pseudoRate);
-        //        if (options.maxRound > 0)
-        //            job.getConfiguration().setInt(P3ForPathMergeVertex.MAXROUND, options.maxRound);
         return options;
 
     }
