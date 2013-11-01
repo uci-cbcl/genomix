@@ -124,7 +124,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         outgoingMsg.setFlag(neighborToRepeat.get());
         if (verbose)
             LOG.fine("Step4. \n Send update msg to neighbor: " + newReverseNeighborInfo.kmer 
-                    + "\n The outgoingMsg is: " + outgoingMsg);
+                    + "\n The outgoingMsg is: " + outgoingMsg
+                    + "EdgeIntersection: " + edgeIntersection.toString());
         sendMsg(newReverseNeighborInfo.kmer, outgoingMsg);
 
         neighborToRepeat = newForwardNeighborInfo.et.mirror();
@@ -200,7 +201,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                             if (verbose)
                                 LOG.fine("Step1. \n Key " + getVertexId() + ", "  
                                         + "ReverseEdge: " + reverseEdge.toString() + "has EdgeIntersection with "
-                                        + "ForwardEdge: " + forwardEdge.toString());
+                                        + "ForwardEdge: " + forwardEdge.toString()
+                                        + "EdgeIntersection: " + edgeIntersection.toString());
                             // random generate vertexId of new vertex // TODO create new vertex when add letters, the #letter depends on the time, which can't cause collision
                             VKmer createdVertexId = randomGenerateVertexId(NUM_LETTERS_TO_APPEND);
                             if (verbose)
