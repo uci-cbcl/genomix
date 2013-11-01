@@ -108,7 +108,9 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
 
         newVertex.setVertexId(createdVertexId);
         newVertex.setVertexValue(vertexValue);
-
+        
+        if (verbose)
+            LOG.fine("Step3. \n Update the value of the new vertex: " + vertexValue.toString());
         addVertex(createdVertexId, newVertex);
     }
 
@@ -120,10 +122,16 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
 
         EDGETYPE neighborToRepeat = newReverseNeighborInfo.et.mirror();
         outgoingMsg.setFlag(neighborToRepeat.get());
+        if (verbose)
+            LOG.fine("Step4. \n Send update msg to neighbor: " + newReverseNeighborInfo.kmer 
+                    + "\n The outgoingMsg is: " + outgoingMsg);
         sendMsg(newReverseNeighborInfo.kmer, outgoingMsg);
 
         neighborToRepeat = newForwardNeighborInfo.et.mirror();
         outgoingMsg.setFlag(neighborToRepeat.get());
+        if (verbose)
+            LOG.fine("Step4. \n Send update msg to neighbor: " + newForwardNeighborInfo.kmer 
+                    + "\n The outgoingMsg is: " + outgoingMsg);
         sendMsg(newForwardNeighborInfo.kmer, outgoingMsg);
     }
 
@@ -189,9 +197,15 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                         ReadIdSet edgeIntersection = reverseEdge.getValue().getIntersection(forwardEdge.getValue());
 
                         if (!edgeIntersection.isEmpty()) {
+                            if (verbose)
+                                LOG.fine("Step1. \n Key " + getVertexId() + ", "  
+                                        + "ReverseEdge: " + reverseEdge.toString() + "has EdgeIntersection with "
+                                        + "ForwardEdge: " + forwardEdge.toString());
                             // random generate vertexId of new vertex // TODO create new vertex when add letters, the #letter depends on the time, which can't cause collision
                             VKmer createdVertexId = randomGenerateVertexId(NUM_LETTERS_TO_APPEND);
-
+                            if (verbose)
+                                LOG.fine("Step2. \n Create a new vertex: " + createdVertexId.toString());
+                            
                             // change new incomingEdge/outgoingEdge's edgeList to commondReadIdSet
                             NeighborInfo newReverseNeighborInfo = new NeighborInfo(reverseEdgeType,
                                     reverseEdge.getKey(), edgeIntersection);
@@ -218,7 +232,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             }
 
             if (verbose) {
-                LOG.fine("Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue() + "try to delete: "
+                LOG.fine("Step5. \n Vertex Id: " + getVertexId() + "Vertex Value: " + getVertexValue() + "try to delete: "
                         + deletedNeighborsInfo);
             }
             // process deletedNeighborInfo -- delete extra edges from old vertex
@@ -244,6 +258,12 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                     createdEdge.getValue());
 
             EdgeMap edgeMap = getVertexValue().getEdgeMap(meToNeighbor);
+            if (verbose) {
+                LOG.info("ResponseToRepeat: \n" +
+                        getVertexId() + " receive msg from " + incomingMsg.getSourceVertexId().toString()
+                        + "\n add edge: " + createdEdge.getValue().toString()
+                        + "\n on " + createdEdge.getKey());
+            }
             edgeMap.put(createdEdge.getKey(), new ReadIdSet(createdEdge.getValue()));
             // avoid double delete
             // ex. A -r1-> B -r1-> C -r1-> D
@@ -251,6 +271,12 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             // B splits and delete his edge to A and C(B->A and B->C) in the 1st iteration
             // in this iteration B also receives the message from C to delete edge B->C 
             //if(edgeMap.containsKey(deletedEdge.getKey()))
+            if (verbose) {
+                LOG.info("ResponseToRepeat: \n" +
+                        getVertexId() + " receive msg from " + incomingMsg.getSourceVertexId().toString()
+                        + "\n remove edge: " + deletedEdge.getValue().toString()
+                        + "\n on " + deletedEdge.getKey());
+            }
             edgeMap.removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
         }
     }
@@ -258,6 +284,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
     @Override
     public void compute(Iterator<SplitRepeatMessage> msgIterator) {
         initVertex();
+        if (verbose)
+            LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
         if (getSuperstep() == 1) {
             restrictNeighbor();
         } else if (getSuperstep() == 2) {
