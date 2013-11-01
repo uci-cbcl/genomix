@@ -163,7 +163,7 @@ public class JobGenerator {
 
     private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = P4ForPathMergeVertex.getConfiguredJob(new GenomixJobConf(3), P4ForPathMergeVertex.class);
-        job.getConfiguration().setLong(GenomixJobConf.P4_RANDOM_SEED, new Random().nextLong());
+        job.getConfiguration().setLong(GenomixJobConf.P4_RANDOM_SEED, 500);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
@@ -210,7 +210,7 @@ public class JobGenerator {
     }
 
     private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = SplitRepeatVertex.getConfiguredJob(new GenomixJobConf(3), SplitRepeatVertex.class);
+        PregelixJob job = SplitRepeatVertex.getConfiguredJob(new GenomixJobConf(21), SplitRepeatVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
