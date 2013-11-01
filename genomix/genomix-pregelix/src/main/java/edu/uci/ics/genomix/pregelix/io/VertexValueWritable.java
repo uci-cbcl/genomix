@@ -156,16 +156,16 @@ public class VertexValueWritable extends Node {
         //        this.counters.readFields(in);
         //        scaffoldingMap.readFields(in);
 
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
-                verbose |= this.getInternalKmer().equals(problemKmer);
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-//                LOG.fine("VertexValue.readFields: " + toString());
-            }
-        }
+//        if (DEBUG) {
+//            boolean verbose = false;
+//            for (VKmer problemKmer : problemKmers) {
+//                verbose |= this.getInternalKmer().equals(problemKmer);
+//                verbose |= findEdge(problemKmer) != null;
+//            }
+//            if (verbose) {
+////                LOG.fine("VertexValue.readFields: " + toString());
+//            }
+//        }
     }
 
     @Override
@@ -176,16 +176,16 @@ public class VertexValueWritable extends Node {
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
 
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
-                verbose |= this.getInternalKmer().equals(problemKmer);
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-//                LOG.fine("VertexValue.write: " + toString());
-            }
-        }
+//        if (DEBUG) {
+//            boolean verbose = false;
+//            for (VKmer problemKmer : problemKmers) {
+//                verbose |= this.getInternalKmer().equals(problemKmer);
+//                verbose |= findEdge(problemKmer) != null;
+//            }
+//            if (verbose) {
+////                LOG.fine("VertexValue.write: " + toString());
+//            }
+//        }
     }
 
     public int getDegree() {
