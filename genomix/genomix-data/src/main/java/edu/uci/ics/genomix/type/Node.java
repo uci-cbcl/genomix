@@ -421,15 +421,15 @@ public class Node implements Writable, Serializable {
         this.internalKmer.readFields(in);
         averageCoverage = in.readFloat();
 
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-                LOG.fine("readFields: " + toString());
-            }
-        }
+//        if (DEBUG) {
+//            boolean verbose = false;
+//            for (VKmer problemKmer : problemKmers) {
+//                verbose |= findEdge(problemKmer) != null;
+//            }
+//            if (verbose) {
+//                LOG.fine("readFields: " + toString());
+//            }
+//        }
     }
 
     public class SortByCoverage implements Comparator<Node> {
