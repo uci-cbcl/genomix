@@ -125,14 +125,15 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         if (verbose)
             LOG.fine("Step4. \n Send update msg to neighbor: " + newReverseNeighborInfo.kmer 
                     + "\n The outgoingMsg is: " + outgoingMsg
-                    + "EdgeIntersection: " + edgeIntersection.toString());
+                    + "\n EdgeIntersection: " + edgeIntersection.toString());
         sendMsg(newReverseNeighborInfo.kmer, outgoingMsg);
 
         neighborToRepeat = newForwardNeighborInfo.et.mirror();
         outgoingMsg.setFlag(neighborToRepeat.get());
         if (verbose)
             LOG.fine("Step4. \n Send update msg to neighbor: " + newForwardNeighborInfo.kmer 
-                    + "\n The outgoingMsg is: " + outgoingMsg);
+                    + "\n The outgoingMsg is: " + outgoingMsg
+                    + "\n EdgeIntersection: " + edgeIntersection.toString());
         sendMsg(newForwardNeighborInfo.kmer, outgoingMsg);
     }
 
@@ -255,6 +256,10 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
     }
 
     public void responseToRepeat(Iterator<SplitRepeatMessage> msgIterator) {
+        if (verbose) {
+            LOG.info("ResponseToRepeat: 0. \n Before update: Vertex Id: " + getVertexId()
+                    + "\n VertexValue: " + getVertexValue() + "\n");
+        }
         while (msgIterator.hasNext()) {
             SplitRepeatMessage incomingMsg = msgIterator.next();
 
