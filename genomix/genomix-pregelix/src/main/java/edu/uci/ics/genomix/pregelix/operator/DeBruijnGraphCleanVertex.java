@@ -78,6 +78,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     }
 
     public void checkDebug() {
+        if(getVertexId().toString().equals("AGACCCATGCAGCGGGTCAGG"))
+            System.out.println("stop");
         debug = getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null;
         if (problemKmers == null) {
             problemKmers = new ArrayList<VKmer>();
