@@ -238,7 +238,12 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             // process deletedNeighborInfo -- delete extra edges from old vertex
             deleteEdgeFromOldVertex(deletedNeighborsInfo);
             deletedNeighborsInfo.clear();
-
+            
+            if (verbose) {
+                LOG.fine("Step6. \n After update: Vertex Id: " + getVertexId() + 
+                        "\n Vertex Value: " + getVertexValue());
+            }
+            
             // Old vertex delete or voteToHalt 
             if (getVertexValue().getDegree() == 0)//if no any edge, delete
                 deleteVertex(getVertexId());
@@ -259,7 +264,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
 
             EdgeMap edgeMap = getVertexValue().getEdgeMap(meToNeighbor);
             if (verbose) {
-                LOG.info("ResponseToRepeat: \n" +
+                LOG.info("ResponseToRepeat: 1. \n" +
                         getVertexId() + " receive msg from " + incomingMsg.getSourceVertexId().toString()
                         + "\n add edge: " + createdEdge.getValue().toString()
                         + "\n on " + createdEdge.getKey());
@@ -272,12 +277,17 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             // in this iteration B also receives the message from C to delete edge B->C 
             //if(edgeMap.containsKey(deletedEdge.getKey()))
             if (verbose) {
-                LOG.info("ResponseToRepeat: \n" +
+                LOG.info("ResponseToRepeat:2. \n" +
                         getVertexId() + " receive msg from " + incomingMsg.getSourceVertexId().toString()
                         + "\n remove edge: " + deletedEdge.getValue().toString()
                         + "\n on " + deletedEdge.getKey());
             }
             edgeMap.removeReadIdSubset(deletedEdge.getKey(), deletedEdge.getValue());
+            
+            if (verbose) {
+                LOG.fine("ResponseToRepeat:3. \n After update: Vertex Id: " + getVertexId() + 
+                        "\n Vertex Value: " + getVertexValue());
+            }
         }
     }
 
