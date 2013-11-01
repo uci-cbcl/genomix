@@ -156,9 +156,9 @@
 				<version>2.7.2</version>
 				<configuration>
 					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx512m -XX:MaxPermSize=300m
+					<argLine>-enableassertions -Xmx1024m -XX:MaxPermSize=300m
 						-Dfile.encoding=UTF-8
-						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
+					</argLine>
 					<includes>
 						<include>**/*TestSuite.java</include>
 						<include>**/*Test.java</include>
