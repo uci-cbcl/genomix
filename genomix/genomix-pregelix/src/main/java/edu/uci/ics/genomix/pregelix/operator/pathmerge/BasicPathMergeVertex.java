@@ -126,8 +126,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outFlag = 0;
             outFlag |= MESSAGETYPE.UPDATE.get() | updateEdge.mirror().get(); // neighbor's edge to me (so he can remove me)
             outgoingMsg.setFlag(outFlag);
-//            EDGETYPE newEdgetype = null;
-//            VKmer newVkmer = null;
             for (EDGETYPE mergeEdge : mergeEdges) {
                 EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);
                 for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
@@ -143,19 +141,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     }
                 }
             }
-
-//            // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
-//            for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
-//                if (verbose)
-//                    LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
-//                            + " to " + dest + ": " + outgoingMsg);
-////                if(newEdgetype == null || newVkmer == null)
-////                    throw new IllegalStateException("new Edgetype or new VKmer is null !!!");
-////                EdgeMap edgeMap = new EdgeMap();
-////                edgeMap.put(newVkmer, vertex.getEdgeMap(updateEdge).get(dest));
-////                outgoingMsg.getNode().setEdgeMap(newEdgetype, edgeMap); // copy into outgoingMsg
-//                sendMsg(dest, outgoingMsg);
-//            }
         }
     }
 
