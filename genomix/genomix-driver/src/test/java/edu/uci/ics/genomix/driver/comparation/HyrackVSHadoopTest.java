@@ -88,16 +88,12 @@ public class HyrackVSHadoopTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        conf = new GenomixJobConf(3);
         conf.setBoolean(GenomixJobConf.RUN_LOCAL, true);
         conf.setInt(GenomixJobConf.FRAME_SIZE, 65535);
         conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
 
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR_HYRACKS));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR_HYRACKS));
-
-        conf.setInt(GenomixJobConf.FRAME_SIZE, 65535);
-        conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
 
         manager = new GenomixClusterManager(true, conf);
         manager.setNumberOfNC(numberOfNC);
@@ -120,6 +116,7 @@ public class HyrackVSHadoopTest {
     public void TestEachFile() throws Exception {
         waitawhile();
         conf.setInt(GenomixJobConf.KMER_LENGTH, kmerLength);
+
         GenomixJobConf.setGlobalStaticConstants(conf);
 
         prepareData();
