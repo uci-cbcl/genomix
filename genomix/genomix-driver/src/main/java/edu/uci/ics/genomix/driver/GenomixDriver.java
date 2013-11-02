@@ -150,7 +150,8 @@ public class GenomixDriver {
                 break;
             case PLOT_SUBGRAPH:
                 String lastJobOutput = prevOutput;
-                queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
+                if(conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) != "")
+                    queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
                 //                curOutput = prevOutput; // use previous job's output
                 flushPendingJobs(conf);
                 if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
