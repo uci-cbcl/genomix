@@ -149,24 +149,29 @@ public class GenomixDriver {
                 curOutput = prevOutput; // use previous job's output
                 break;
             case PLOT_SUBGRAPH:
-                String lastJobOutput = prevOutput;
-                if(conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) != "")
+                if (conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) == "") {
+                    // no seed specified-- plot the entire graph
+                    LOG.warning("No starting seed was specified for PLOT_SUBGRAPH.  Plotting the entire graph!!");
+                    curOutput = prevOutput; // use previous job's output
+                } else {
+                    curOutput = prevOutput + "-SUBGRAPH"; // use previous job's output
+                    FileOutputFormat.setOutputPath(conf, new Path(curOutput));
                     queuePregelixJob(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
-                //                curOutput = prevOutput; // use previous job's output
+                }
                 flushPendingJobs(conf);
                 if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
-                    String binaryDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR);
-                    //copy bin to local
-                    GenomixClusterManager.copyBinToLocal(conf, curOutput, binaryDir);
+                    String localOutputDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) + File.separator
+                            + new File(curOutput).getName() + "-PLOT";
+                    //copy bin to local and append "-PLOT" to the name
+                    GenomixClusterManager.copyBinToLocal(conf, curOutput, localOutputDir);
                     //covert bin to graphviz
-                    String graphvizDir = binaryDir + File.separator + "graphviz";
-                    GRAPH_TYPE graphType = GRAPH_TYPE.getFromInt(Integer.parseInt(conf
-                            .get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
-                    GenerateGraphViz.convertBinToGraphViz(binaryDir + File.separator + "bin", graphvizDir, graphType);
+                    String graphvizDir = localOutputDir + File.separator + "graphviz";
+                    GenerateGraphViz.convertBinToGraphViz(localOutputDir + File.separator + "bin", graphvizDir,
+                            GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
                     LOG.info("Copying graphviz to local: " + graphvizDir);
                 }
+                curOutput = prevOutput; // next job shouldn't use the truncated graph or plots
                 stepNum--;
-                curOutput = lastJobOutput; // use previous job's output
                 break;
             case STATS:
                 flushPendingJobs(conf);
