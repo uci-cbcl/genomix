@@ -65,7 +65,7 @@ public class BubbleMergeMessage extends MessageWritable {
         ReadIdSet newReadIds = msg.getNode().getEdgeMap(majorToBubble.mirror()).get(msg.getMajorVertexId());
         node.getEdgeMap(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor()).unionAdd(topKmer, newReadIds);
     }
-    
+
     public VKmer getMajorVertexId() {
         return majorVertexId;
     }
@@ -131,11 +131,11 @@ public class BubbleMergeMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        if ((validMessageFlag & VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE) > 0) {
             majorVertexId.readFields(in);
             majorToBubbleEdgetype = EDGETYPE.fromByte(in.readByte());
         }
-        if ((validMessageFlag & VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE) > 0) {
             minorVertexId.readFields(in);
             minorToBubbleEdgetype = EDGETYPE.fromByte(in.readByte());
         }
@@ -148,11 +148,11 @@ public class BubbleMergeMessage extends MessageWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        if ((validMessageFlag & VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE) > 0) {
             majorVertexId.write(out);
             out.writeByte(majorToBubbleEdgetype.get());
         }
-        if ((validMessageFlag & VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE) > 0) {
             minorVertexId.write(out);
             out.writeByte(minorToBubbleEdgetype.get());
         }
