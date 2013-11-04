@@ -60,6 +60,7 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public void addNewMajorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
+        validMessageFlag |= VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE;
         EDGETYPE majorToBubble = msg.getMajorToBubbleEdgetype();
         ReadIdSet newReadIds = msg.getNode().getEdgeMap(majorToBubble.mirror()).get(msg.getMajorVertexId());
         node.getEdgeMap(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor()).unionAdd(topKmer, newReadIds);
@@ -70,6 +71,7 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public void setMajorVertexId(VKmer majorVertexId) {
+        validMessageFlag |= VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE;
         if (this.majorVertexId == null)
             this.majorVertexId = new VKmer();
         this.majorVertexId.setAsCopy(majorVertexId);
@@ -80,6 +82,7 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public void setMinorVertexId(VKmer minorVertexId) {
+        validMessageFlag |= VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE;
         if (this.minorVertexId == null)
             this.minorVertexId = new VKmer();
         this.minorVertexId.setAsCopy(minorVertexId);
@@ -90,6 +93,7 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public void setTopCoverageVertexId(VKmer topCoverageVertexId) {
+        validMessageFlag |= VALID_MESSAGE.TOP_COVERAGE_VERTEX_ID;
         if (this.topCoverageVertexId == null)
             this.topCoverageVertexId = new VKmer();
         this.topCoverageVertexId.setAsCopy(topCoverageVertexId);
@@ -110,6 +114,7 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public void setMajorToBubbleEdgetype(EDGETYPE majorToBubbleEdgetype) {
+        validMessageFlag |= VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE;
         this.majorToBubbleEdgetype = majorToBubbleEdgetype;
     }
 
@@ -118,6 +123,7 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public void setMinorToBubbleEdgetype(EDGETYPE minorToBubbleEdgetype) {
+        validMessageFlag |= VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE;
         this.minorToBubbleEdgetype = minorToBubbleEdgetype;
     }
 
@@ -125,23 +131,35 @@ public class BubbleMergeMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        majorVertexId.readFields(in);
-        minorVertexId.readFields(in);
-        node.readFields(in);
-        majorToBubbleEdgetype = EDGETYPE.fromByte(in.readByte());
-        minorToBubbleEdgetype = EDGETYPE.fromByte(in.readByte());
-        topCoverageVertexId.readFields(in);
+        if ((validMessageFlag & VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE) > 0){
+            majorVertexId.readFields(in);
+            majorToBubbleEdgetype = EDGETYPE.fromByte(in.readByte());
+        }
+        if ((validMessageFlag & VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE) > 0){
+            minorVertexId.readFields(in);
+            minorToBubbleEdgetype = EDGETYPE.fromByte(in.readByte());
+        }
+        if ((validMessageFlag & VALID_MESSAGE.NODE) > 0)
+            node.readFields(in);
+        if ((validMessageFlag & VALID_MESSAGE.TOP_COVERAGE_VERTEX_ID) > 0)
+            topCoverageVertexId.readFields(in);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        majorVertexId.write(out);
-        minorVertexId.write(out);
-        node.write(out);
-        out.writeByte(majorToBubbleEdgetype.get());
-        out.writeByte(minorToBubbleEdgetype.get());
-        topCoverageVertexId.write(out);
+        if ((validMessageFlag & VALID_MESSAGE.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE) > 0){
+            majorVertexId.write(out);
+            out.writeByte(majorToBubbleEdgetype.get());
+        }
+        if ((validMessageFlag & VALID_MESSAGE.MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE) > 0){
+            minorVertexId.write(out);
+            out.writeByte(minorToBubbleEdgetype.get());
+        }
+        if ((validMessageFlag & VALID_MESSAGE.NODE) > 0)
+            node.write(out);
+        if ((validMessageFlag & VALID_MESSAGE.TOP_COVERAGE_VERTEX_ID) > 0)
+            topCoverageVertexId.write(out);
     }
 
     public static class SortByCoverage implements Comparator<BubbleMergeMessage> {

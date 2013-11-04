@@ -8,12 +8,10 @@ public class VALID_MESSAGE {
     public static final byte NODE = 1 << 2; // used in subclass: PathMergeMessage
     // reuse 2st bit
     public static final byte CREATED_EDGE = 1 << 2; // used in subclass: SplitRepeatMessage
-    // reuse 2st bit
-    public static final byte MAJOR_VERTEX_ID = 1 << 2; // used in subclass: BubbleMergeMessage
-    public static final byte MINOR_VERTEX_ID = 1 << 3; // used in subclass: BubbleMergeMessage
-    public static final byte MAJOR_TO_BUBBLE_EDGETYPE = 1 << 4; // used in subclass: BubbleMergeMessage
-    public static final byte MINOR_TO_BUBBLE_EDGETYPE = 1 << 5; // used in subclass: BubbleMergeMessage
-    public static final byte TOP_COVERAGE_VERTEX_ID = 1 << 6; // used in subclass: BubbleMergeMessage
+    // reuse 2st bit - for NODE
+    public static final byte MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE = 1 << 3; // used in subclass: BubbleMergeMessage
+    public static final byte MINOR_VERTEX_ID_AND_MINOR_TO_BUBBLE_EDGETYPE = 1 << 4; // used in subclass: BubbleMergeMessage
+    public static final byte TOP_COVERAGE_VERTEX_ID = 1 << 5; // used in subclass: BubbleMergeMessage
     // reuse 2st bit
     public static final byte PATH_LIST = 1 << 2; // used in subclass: BFSTraverseMessage
     public static final byte EDGETYPE_LIST = 1 << 3; // used in subclass: BFSTraverseMessage
