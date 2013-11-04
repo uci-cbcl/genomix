@@ -149,6 +149,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 curNode.reset();
                 curNode.setAverageCoverage(1);
                 curForwardKmer.setFromStringBytes(readLetters, 0);
+                
                 curReverseKmer.setReversedFromStringBytes(readLetters, 0);
 
                 DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
