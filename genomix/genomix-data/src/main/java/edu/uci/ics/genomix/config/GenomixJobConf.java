@@ -27,6 +27,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Kmer;
 
@@ -110,6 +111,17 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-minScaffoldingVertexMinLength", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
         private int minScaffoldingVertexMinLength = -1;
 
+        @Option(name = "-plotSubgraph_startSeed", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private String plotSubgraph_startSeed;
+
+        @Option(name = "-plotSubgraph_numHops", usage = "The minimum vertex length that can be the head of scaffolding", required = false)
+        private int plotSubgraph_numHops = -1;
+
+        @Option(name = "-plotSubgraph_verbosity", usage = "Specify the level of details in output graph: 1. UNDIRECTED_GRAPH_WITHOUT_LABELS,"
+                + " 2. DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE, 3. DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE, 4. DIRECTED_GRAPH_WITH_ALLDETAILS"
+                + "Default is 1.", required = false)
+        private int plotSubgraph_verbosity = -1;
+
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
         private boolean profile = false;
@@ -154,6 +166,7 @@ public class GenomixJobConf extends JobConf {
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,
+        PLOT_SUBGRAPH,
         STATS;
 
         /**
@@ -224,6 +237,9 @@ public class GenomixJobConf extends JobConf {
     public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "scaffolding.max.traveral.length";
     public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "scaffolding.vertex.min.coverage";
     public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
+    public static final String PLOT_SUBGRAPH_START_SEEDS = "plot.subgraph.startSeeds";
+    public static final String PLOT_SUBGRAPH_NUM_HOPS = "plot.subgraph.num.hops";
+    public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "plot.subgraph.graph.verbosity";
 
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.profile";
@@ -247,10 +263,6 @@ public class GenomixJobConf extends JobConf {
 
     // intermediate date evaluation
     public static final String GAGE = "genomix.evaluation.tool.gage";
-
-    private static final Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
-            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
-            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
 
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
@@ -369,8 +381,21 @@ public class GenomixJobConf extends JobConf {
             setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
 
         if (get(PIPELINE_ORDER) == null) {
-            set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
+            set(PIPELINE_ORDER,
+                    Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
+                            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
+                            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE }));
         }
+
+        if (get(PLOT_SUBGRAPH_GRAPH_VERBOSITY) == null)
+            set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE.toString());
+
+        if (get(PLOT_SUBGRAPH_START_SEEDS) == null)
+            set(PLOT_SUBGRAPH_START_SEEDS, "");
+
+        if (getInt(PLOT_SUBGRAPH_NUM_HOPS, -1) == -1)
+            setInt(PLOT_SUBGRAPH_NUM_HOPS, 1);
+
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
@@ -390,6 +415,9 @@ public class GenomixJobConf extends JobConf {
         setInt(KMER_LENGTH, opts.kmerLength);
         if (opts.pipelineOrder != null)
             set(PIPELINE_ORDER, opts.pipelineOrder);
+        
+        if (opts.plotSubgraph_verbosity != -1)
+            set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.getFromInt(opts.plotSubgraph_verbosity).toString());
 
         if (opts.localInput != null && opts.hdfsInput != null)
             throw new IllegalArgumentException("Please set either -localInput or -hdfsInput, but NOT BOTH!");
@@ -430,6 +458,9 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
         setInt(THREADS_PER_MACHINE, opts.threadsPerMachine);
+        if (opts.plotSubgraph_startSeed != null)
+            set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
+        setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
     }
 
     /**

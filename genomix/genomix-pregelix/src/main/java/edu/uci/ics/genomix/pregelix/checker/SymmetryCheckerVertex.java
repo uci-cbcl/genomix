@@ -41,7 +41,7 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
             EDGETYPE neighborToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
             boolean exist = getVertexValue().getEdgeMap(neighborToMe).containsKey(incomingMsg.getSourceVertexId());
             if (!exist) {
-                getVertexValue().setState(State.IS_ERROR);
+                getVertexValue().setState(State.ERROR_NODE);
             }
         }
     }

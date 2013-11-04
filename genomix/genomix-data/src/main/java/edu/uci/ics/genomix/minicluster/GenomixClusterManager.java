@@ -346,7 +346,7 @@ public class GenomixClusterManager {
         LOG.info("Copying HDFS directory " + hdfsSrcDir + " to local: " + localDestDir);
         GenomixJobConf.tick("copyBinToLocal");
         FileSystem dfs = FileSystem.get(conf);
-        FileUtils.deleteQuietly(new File(localDestDir));
+//        FileUtils.deleteQuietly(new File(localDestDir));
 
         // save original binary to output/bin
         dfs.copyToLocalFile(new Path(hdfsSrcDir), new Path(localDestDir + File.separator + "bin"));

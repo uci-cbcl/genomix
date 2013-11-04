@@ -9,8 +9,8 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
@@ -40,8 +40,8 @@ public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node
             for (EDGETYPE e : EDGETYPE.values()) {
                 outputNode.getEdgeMap(e).unionUpdate(curNode.getEdgeMap(e));
             }
-            outputNode.getStartReads().addAll(curNode.getStartReads());
-            outputNode.getEndReads().addAll(curNode.getEndReads());
+            outputNode.getUnflippedReadIds().addAll(curNode.getUnflippedReadIds());
+            outputNode.getFlippedReadIds().addAll(curNode.getFlippedReadIds());
             averageCoverage += curNode.getAverageCoverage();
         }
         outputNode.setAverageCoverage(averageCoverage);
