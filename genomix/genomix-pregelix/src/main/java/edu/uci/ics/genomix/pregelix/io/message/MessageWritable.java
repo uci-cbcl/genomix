@@ -11,7 +11,7 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {
     
-    abstract class MESSAGE_FIELDS {
+    class MESSAGE_FIELDS {
         public static final byte SOURCE_VERTEX_ID = 1 << 0; // used in superclass: MessageWritable
     }
     
