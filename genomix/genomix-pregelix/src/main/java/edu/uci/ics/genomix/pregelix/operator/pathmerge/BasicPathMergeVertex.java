@@ -15,6 +15,7 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -125,15 +126,18 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag(outFlag);
             for (EDGETYPE mergeEdge : mergeEdges) {
                 EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);
-                outgoingMsg.getNode().setEdgeMap(newEdgetype, getVertexValue().getEdgeMap(mergeEdge)); // copy into outgoingMsg
-            }
-
-            // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
-            for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
-                if (verbose)
-                    LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
-                            + " to " + dest + ": " + outgoingMsg);
-                sendMsg(dest, outgoingMsg);
+                for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
+                    if (verbose)
+                        LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
+                                + " to " + dest + ": " + outgoingMsg);
+                    Iterator<VKmer> iter = vertex.getEdgeMap(mergeEdge).keySet().iterator();
+                    if (iter.hasNext()) {
+                        EdgeMap edgeMap = new EdgeMap();
+                        edgeMap.put(iter.next(), vertex.getEdgeMap(updateEdge).get(dest));
+                        outgoingMsg.getNode().setEdgeMap(newEdgetype, edgeMap); // copy into outgoingMsg
+                        sendMsg(dest, outgoingMsg);
+                    }
+                }
             }
         }
     }

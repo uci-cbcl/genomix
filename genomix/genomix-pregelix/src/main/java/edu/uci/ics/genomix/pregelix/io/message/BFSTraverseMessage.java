@@ -16,10 +16,19 @@ import edu.uci.ics.genomix.type.VKmerList;
 
 public class BFSTraverseMessage extends MessageWritable {
 
-    private long readId; //use for BFSTravese
+    class BFS_MESSAGE_FIELDS extends MESSAGE_FIELDS {
+        public static final byte PATH_LIST_AND_EDGETYPE_LIST = 1 << 1; // used in BFSTraverseMessage
+        public static final byte SRC_AND_DEST_READ_HEAD_ORIENTATION = 1 << 2; // used in BFSTraverseMessage
+        public static final byte TARGET_VERTEX_ID = 1 << 3; // used in BFSTraverseMessage
+        public static final byte READ_ID = 1 << 4;
+        public static final byte TOTAL_BFS_LENGTH = 1 << 5; // used in BFSTraverseMessage
+        public static final byte SCAFFOLDING_MAP = 1 << 6; // used in BFSTraverseMessage
+    }
+
     private VKmerList pathList; //use for BFSTravese
     private EdgeTypeList edgeTypeList; //use for BFSTravese
     private VKmer targetVertexId; //use for BFSTravese
+    private long readId; //use for BFSTravese
     private READHEAD_ORIENTATION srcReadHeadOrientation; //use for BFSTravese
     private READHEAD_ORIENTATION destReadHeadOrientation; //use for BFSTravese
     private int totalBFSLength;
@@ -54,6 +63,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setPathList(VKmerList pathList) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.PATH_LIST_AND_EDGETYPE_LIST;
         this.pathList = pathList;
     }
 
@@ -62,6 +72,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setEdgeTypeList(EdgeTypeList edgeDirsList) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.PATH_LIST_AND_EDGETYPE_LIST;
         this.edgeTypeList.clear();
         this.edgeTypeList.addAll(edgeDirsList);
     }
@@ -71,6 +82,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setTargetVertexId(VKmer targetVertexId) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.TARGET_VERTEX_ID;
         this.targetVertexId.setAsCopy(targetVertexId);
     }
 
@@ -79,6 +91,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setReadId(long readId) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.READ_ID;
         this.readId = readId;
     }
 
@@ -87,6 +100,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setSrcReadHeadOrientation(READHEAD_ORIENTATION srcReadHeadOrientation) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.SRC_AND_DEST_READ_HEAD_ORIENTATION;
         this.srcReadHeadOrientation = srcReadHeadOrientation;
     }
 
@@ -95,6 +109,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setDestReadHeadOrientation(READHEAD_ORIENTATION destReadHeadOrientation) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.SRC_AND_DEST_READ_HEAD_ORIENTATION;
         this.destReadHeadOrientation = destReadHeadOrientation;
     }
 
@@ -103,14 +118,16 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setTotalBFSLength(int totalBFSLength) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.TOTAL_BFS_LENGTH;
         this.totalBFSLength = totalBFSLength;
     }
-    
+
     public HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> getScaffoldingMap() {
         return scaffoldingMap;
     }
 
     public void setScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap) {
+        validMessageFlag |= BFS_MESSAGE_FIELDS.SCAFFOLDING_MAP;
         this.scaffoldingMap.clear();
         this.scaffoldingMap.putAll(scaffoldingMap);
     }
@@ -119,26 +136,42 @@ public class BFSTraverseMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        pathList.readFields(in);
-        edgeTypeList.readFields(in);
-        targetVertexId.readFields(in);
-        readId = in.readLong();
-        srcReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
-        destReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
-        totalBFSLength = in.readInt();
-        scaffoldingMap.readFields(in);
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.READ_ID) > 0)
+            readId = in.readLong();
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.PATH_LIST_AND_EDGETYPE_LIST) > 0) {
+            pathList.readFields(in);
+            edgeTypeList.readFields(in);
+        }
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.TARGET_VERTEX_ID) > 0)
+            targetVertexId.readFields(in);
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.SRC_AND_DEST_READ_HEAD_ORIENTATION) > 0) {
+            srcReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
+            destReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
+        }
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.TOTAL_BFS_LENGTH) > 0)
+            totalBFSLength = in.readInt();
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.SCAFFOLDING_MAP) > 0)
+            scaffoldingMap.readFields(in);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        pathList.write(out);
-        edgeTypeList.write(out);
-        targetVertexId.write(out);
-        out.writeLong(readId);
-        out.writeByte(srcReadHeadOrientation.get());
-        out.writeByte(destReadHeadOrientation.get());
-        out.writeInt(totalBFSLength);
-        scaffoldingMap.write(out);
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.READ_ID) > 0)
+            out.writeLong(readId);
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.PATH_LIST_AND_EDGETYPE_LIST) > 0) {
+            pathList.write(out);
+            edgeTypeList.write(out);
+        }
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.TARGET_VERTEX_ID) > 0)
+            targetVertexId.write(out);
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.SRC_AND_DEST_READ_HEAD_ORIENTATION) > 0) {
+            out.writeByte(srcReadHeadOrientation.get());
+            out.writeByte(destReadHeadOrientation.get());
+        }
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.TOTAL_BFS_LENGTH) > 0)
+            out.writeInt(totalBFSLength);
+        if ((validMessageFlag & BFS_MESSAGE_FIELDS.SCAFFOLDING_MAP) > 0)
+            scaffoldingMap.write(out);
     }
 }

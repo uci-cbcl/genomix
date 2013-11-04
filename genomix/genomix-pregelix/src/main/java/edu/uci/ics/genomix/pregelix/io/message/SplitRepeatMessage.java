@@ -11,6 +11,10 @@ import edu.uci.ics.genomix.type.VKmer;
 
 public class SplitRepeatMessage extends MessageWritable {
 
+    class SPLITREPEAT_MESSAGE_FIELDS extends MESSAGE_FIELDS {
+        public static final byte CREATED_EDGE = 1 << 1; // used in subclass: SplitRepeatMessage
+    }
+
     private Entry<VKmer, ReadIdSet> createdEdge;
 
     public SplitRepeatMessage() {
@@ -23,6 +27,7 @@ public class SplitRepeatMessage extends MessageWritable {
     }
 
     public void setCreatedEdge(VKmer createdKmer, ReadIdSet createdReadIds) {
+        validMessageFlag |= SPLITREPEAT_MESSAGE_FIELDS.CREATED_EDGE;
         this.createdEdge = new SimpleEntry<VKmer, ReadIdSet>(createdKmer, createdReadIds);
     }
 
@@ -30,18 +35,21 @@ public class SplitRepeatMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-
-        VKmer createdKmer = new VKmer();
-        createdKmer.readFields(in);
-        ReadIdSet createdReadIds = new ReadIdSet();
-        createdReadIds.readFields(in);
-        setCreatedEdge(createdKmer, createdReadIds);
+        if ((validMessageFlag & SPLITREPEAT_MESSAGE_FIELDS.CREATED_EDGE) > 0) {
+            VKmer createdKmer = new VKmer();
+            createdKmer.readFields(in);
+            ReadIdSet createdReadIds = new ReadIdSet();
+            createdReadIds.readFields(in);
+            setCreatedEdge(createdKmer, createdReadIds);
+        }
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        createdEdge.getKey().write(out);
-        createdEdge.getValue().write(out);
+        if ((validMessageFlag & SPLITREPEAT_MESSAGE_FIELDS.CREATED_EDGE) > 0) {
+            createdEdge.getKey().write(out);
+            createdEdge.getValue().write(out);
+        }
     }
 }
