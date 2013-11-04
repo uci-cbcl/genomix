@@ -14,17 +14,18 @@ public class SymmetryCheckerMessage extends MessageWritable {
         super();
         edgeMap = new EdgeMap();
     }
-    
-    public void reset(){
+
+    public void reset() {
         super.reset();
         edgeMap.clear();
     }
-    
+
     public EdgeMap getEdgeMap() {
         return edgeMap;
     }
 
     public void setEdgeMap(EdgeMap edgeMap) {
+        validMessageFlag |= VALID_MESSAGE.EDGE_MAP;
         this.edgeMap.clear();
         this.edgeMap.putAll(edgeMap);
     }
@@ -33,12 +34,14 @@ public class SymmetryCheckerMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        edgeMap.readFields(in);
+        if ((validMessageFlag & VALID_MESSAGE.EDGE_MAP) > 0)
+            edgeMap.readFields(in);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        edgeMap.write(out);
+        if ((validMessageFlag & VALID_MESSAGE.CREATED_EDGE) > 0)
+            edgeMap.write(out);
     }
 }
