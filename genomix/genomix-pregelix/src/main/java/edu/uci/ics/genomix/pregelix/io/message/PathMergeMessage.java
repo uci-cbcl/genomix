@@ -11,6 +11,10 @@ import edu.uci.ics.genomix.type.VKmer;
 
 public class PathMergeMessage extends MessageWritable {
 
+    class PATHMERGE_MESSAGE_FIELDS extends MESSAGE_FIELDS {
+        public static final byte NODE = 1 << 1; // used in subclass: PathMergeMessage
+    }
+
     private Node node;
 
     public PathMergeMessage() {
@@ -50,7 +54,7 @@ public class PathMergeMessage extends MessageWritable {
     }
 
     public void setNode(Node node) {
-        this.validMessageFlag |= VALID_MESSAGE.NODE;
+        this.validMessageFlag |= PATHMERGE_MESSAGE_FIELDS.NODE;
         this.node.setAsCopy(node);
     }
 
@@ -58,14 +62,14 @@ public class PathMergeMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        if ((validMessageFlag & VALID_MESSAGE.NODE) > 0)
+        if ((validMessageFlag & PATHMERGE_MESSAGE_FIELDS.NODE) > 0)
             node.readFields(in);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        if ((validMessageFlag & VALID_MESSAGE.NODE) > 0)
+        if ((validMessageFlag & PATHMERGE_MESSAGE_FIELDS.NODE) > 0)
             node.write(out);
     }
 

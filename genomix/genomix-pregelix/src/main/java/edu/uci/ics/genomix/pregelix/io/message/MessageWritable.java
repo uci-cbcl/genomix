@@ -10,7 +10,11 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {
-
+    
+    abstract class MESSAGE_FIELDS {
+        public static final byte SOURCE_VERTEX_ID = 1 << 0; // used in superclass: MessageWritable
+    }
+    
     private VKmer sourceVertexId; // stores srcNode id
     private short flag; // stores message type
     protected byte validMessageFlag;
@@ -47,7 +51,7 @@ public class MessageWritable implements Writable, WritableSizable {
     }
 
     public void setSourceVertexId(VKmer sourceVertexId) {
-        validMessageFlag |= VALID_MESSAGE.SOURCE_VERTEX_ID;
+        validMessageFlag |= MESSAGE_FIELDS.SOURCE_VERTEX_ID;
         this.sourceVertexId.setAsCopy(sourceVertexId);
     }
 
@@ -63,7 +67,7 @@ public class MessageWritable implements Writable, WritableSizable {
     public void readFields(DataInput in) throws IOException {
         reset();
         validMessageFlag = in.readByte();
-        if ((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
+        if ((validMessageFlag & MESSAGE_FIELDS.SOURCE_VERTEX_ID) > 0)
             sourceVertexId.readFields(in);
         flag = in.readShort();
     }
@@ -71,7 +75,7 @@ public class MessageWritable implements Writable, WritableSizable {
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeByte(validMessageFlag);
-        if ((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
+        if ((validMessageFlag & MESSAGE_FIELDS.SOURCE_VERTEX_ID) > 0)
             sourceVertexId.write(out);
         out.writeShort(flag);
     }
