@@ -106,11 +106,11 @@ public class GenerateGraphViz {
                 if (graphType == GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS) {
                     /** add readIdSet **/
                     String fillColor = "";
-                    if (value.isStartReadOrEndRead())
+                    if (value.isUnflippedOrFlippedReadIds())
                         fillColor = "fillcolor=\"grey\", style=\"filled\",";
                     outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
-                            + "5':" + value.getStartReads().toReadIdString() + "|<f2> " + "~5':"
-                            + value.getEndReads().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "|<f4> "
+                            + "5':" + value.getUnflippedReadIds().toReadIdString() + "|<f2> " + "~5':"
+                            + value.getFlippedReadIds().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "|<f4> "
                             + value.getInternalKmer() + "\"]\n";
                 }
                 gv.addln(outputNode);

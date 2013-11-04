@@ -35,6 +35,7 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenBuildBrujinGraph;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenReadLetterParser;
+import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
@@ -163,35 +164,5 @@ public class GenomixHyracksDriver {
         JobId jobId = hcc.startJob(deployId, job,
                 profiling ? EnumSet.of(JobFlag.PROFILE_RUNTIME) : EnumSet.noneOf(JobFlag.class));
         hcc.waitForCompletion(jobId);
-    }
-
-    // Keep this main function for debug or test usage.
-    public static void main(String[] args) throws Exception {
-        //String[] myArgs = { "-hdfsInput", "/home/nanz1/TestData", "-hdfsOutput", "/home/hadoop/pairoutput",  
-        // "-kmerLength", "55", "-ip", "128.195.14.113", "-port", "3099", "-hyracksBuildOutputText", "true"};
-        GenomixJobConf jobConf = GenomixJobConf.fromArguments(args);
-        String ipAddress = jobConf.get(GenomixJobConf.IP_ADDRESS);
-        int port = Integer.parseInt(jobConf.get(GenomixJobConf.PORT));
-        String IODirs = jobConf.get(GenomixJobConf.HYRACKS_IO_DIRS, null);
-        int numOfDuplicate = IODirs != null ? IODirs.split(",").length : 4;
-        boolean bProfiling = jobConf.getBoolean(GenomixJobConf.PROFILE, true);
-
-        Log.info("Input dir:" + GenomixJobConf.INITIAL_HDFS_INPUT_DIR);
-        Log.info("Output dir:" + GenomixJobConf.FINAL_HDFS_OUTPUT_DIR);
-        FileInputFormat.setInputPaths(jobConf, new Path(jobConf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR)));
-        {
-            Path path = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.INITIAL_HDFS_INPUT_DIR));
-            jobConf.set("mapred.input.dir", path.toString());
-
-            Path outputDir = new Path(jobConf.getWorkingDirectory(), jobConf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR));
-            jobConf.set("mapred.output.dir", outputDir.toString());
-        }
-
-        FileOutputFormat.setOutputPath(jobConf, new Path(jobConf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR)));
-        FileSystem dfs = FileSystem.get(jobConf);
-        dfs.delete(new Path(jobConf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR)), true);
-
-        GenomixHyracksDriver driver = new GenomixHyracksDriver(ipAddress, port, numOfDuplicate);
-        driver.runJob(jobConf, Plan.BUILD_DEBRUIJN_GRAPH, bProfiling);
     }
 }

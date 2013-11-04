@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.data.test;
+package edu.uci.ics.genomix.type;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;

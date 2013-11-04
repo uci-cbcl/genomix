@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.data.test;
+package edu.uci.ics.genomix.type;
 
 import org.junit.Assert;
 import org.junit.Test;
