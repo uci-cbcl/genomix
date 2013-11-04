@@ -108,6 +108,7 @@ public class Node implements Writable, Serializable {
             return new Iterator<NeighborInfo>() {
 
                 private Iterator<Entry<VKmer, ReadIdSet>> it = edges.entrySet().iterator();
+
                 private NeighborInfo info = null;
 
                 @Override
@@ -177,6 +178,7 @@ public class Node implements Writable, Serializable {
         this();
         setAsReference(data, offset);
     }
+
 
     public Node getNode() {
         return this;
@@ -542,6 +544,7 @@ public class Node implements Writable, Serializable {
                         (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor));
             }
         } else {
+//            int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
             // stream theirs in, offset and flipped
             int newPOffset;
             for (ReadHeadInfo p : other.unflippedReadIds) {
@@ -628,7 +631,6 @@ public class Node implements Writable, Serializable {
             edges[EDGETYPE.RR.get()].unionUpdate(other.edges[EDGETYPE.FR.get()]);
         }
     }
-
     protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other) {
         int K = Kmer.lettersInKmer;
         int otherLength = other.internalKmer.lettersInKmer;
@@ -646,7 +648,7 @@ public class Node implements Writable, Serializable {
                 }
                 break;
             case FR:
-                newOtherOffset = thisLength - K + otherLength;
+                newOtherOffset = thisLength - K  + otherLength;
                 // stream theirs in, offset and flipped
                 for (ReadHeadInfo p : other.unflippedReadIds) {
                     flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
@@ -665,6 +667,8 @@ public class Node implements Writable, Serializable {
                 for (ReadHeadInfo p : flippedReadIds) {
                     p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
                 }
+//                System.out.println(startReads.size());
+//                System.out.println(endReads.size());
                 //stream theirs in, not offset (they are first now) but flipped
                 for (ReadHeadInfo p : other.unflippedReadIds) {
                     flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
