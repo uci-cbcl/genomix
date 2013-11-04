@@ -13,8 +13,8 @@ public class MessageWritable implements Writable, WritableSizable {
 
     private VKmer sourceVertexId; // stores srcNode id
     private short flag; // stores message type
-    protected byte validMessageFlag; 
-    
+    protected byte validMessageFlag;
+
     public MessageWritable() {
         sourceVertexId = new VKmer();
         flag = 0;
@@ -58,12 +58,12 @@ public class MessageWritable implements Writable, WritableSizable {
     public void setFlag(short flag) {
         this.flag = flag;
     }
-    
+
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
         validMessageFlag = in.readByte();
-        if((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
+        if ((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
             sourceVertexId.readFields(in);
         flag = in.readShort();
     }
@@ -71,7 +71,7 @@ public class MessageWritable implements Writable, WritableSizable {
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeByte(validMessageFlag);
-        if((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
+        if ((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
             sourceVertexId.write(out);
         out.writeShort(flag);
     }

@@ -31,7 +31,7 @@ public class SplitRepeatMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        if((validMessageFlag & VALID_MESSAGE.CREATED_EDGE) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.CREATED_EDGE) > 0) {
             VKmer createdKmer = new VKmer();
             createdKmer.readFields(in);
             ReadIdSet createdReadIds = new ReadIdSet();
@@ -43,7 +43,7 @@ public class SplitRepeatMessage extends MessageWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        if((validMessageFlag & VALID_MESSAGE.CREATED_EDGE) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.CREATED_EDGE) > 0) {
             createdEdge.getKey().write(out);
             createdEdge.getValue().write(out);
         }

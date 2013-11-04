@@ -16,10 +16,10 @@ import edu.uci.ics.genomix.type.VKmerList;
 
 public class BFSTraverseMessage extends MessageWritable {
 
-    private long readId; //use for BFSTravese
     private VKmerList pathList; //use for BFSTravese
     private EdgeTypeList edgeTypeList; //use for BFSTravese
     private VKmer targetVertexId; //use for BFSTravese
+    private long readId; //use for BFSTravese
     private READHEAD_ORIENTATION srcReadHeadOrientation; //use for BFSTravese
     private READHEAD_ORIENTATION destReadHeadOrientation; //use for BFSTravese
     private int totalBFSLength;
@@ -82,6 +82,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setReadId(long readId) {
+        validMessageFlag |= VALID_MESSAGE.READ_ID;
         this.readId = readId;
     }
 
@@ -111,7 +112,7 @@ public class BFSTraverseMessage extends MessageWritable {
         validMessageFlag |= VALID_MESSAGE.TOTAL_BFS_LENGTH;
         this.totalBFSLength = totalBFSLength;
     }
-    
+
     public HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> getScaffoldingMap() {
         return scaffoldingMap;
     }
@@ -126,14 +127,15 @@ public class BFSTraverseMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        readId = in.readLong();
-        if ((validMessageFlag & VALID_MESSAGE.PATH_LIST_AND_EDGETYPE_LIST) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.READ_ID) > 0) 
+            readId = in.readLong();
+        if ((validMessageFlag & VALID_MESSAGE.PATH_LIST_AND_EDGETYPE_LIST) > 0) {
             pathList.readFields(in);
             edgeTypeList.readFields(in);
         }
         if ((validMessageFlag & VALID_MESSAGE.TARGET_VERTEX_ID) > 0)
             targetVertexId.readFields(in);
-        if ((validMessageFlag & VALID_MESSAGE.SRC_AND_DEST_READ_HEAD_ORIENTATION) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.SRC_AND_DEST_READ_HEAD_ORIENTATION) > 0) {
             srcReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
             destReadHeadOrientation = READHEAD_ORIENTATION.fromByte(in.readByte());
         }
@@ -146,14 +148,15 @@ public class BFSTraverseMessage extends MessageWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        out.writeLong(readId);
-        if ((validMessageFlag & VALID_MESSAGE.PATH_LIST_AND_EDGETYPE_LIST) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.READ_ID) > 0) 
+            out.writeLong(readId);
+        if ((validMessageFlag & VALID_MESSAGE.PATH_LIST_AND_EDGETYPE_LIST) > 0) {
             pathList.write(out);
             edgeTypeList.write(out);
         }
         if ((validMessageFlag & VALID_MESSAGE.TARGET_VERTEX_ID) > 0)
             targetVertexId.write(out);
-        if ((validMessageFlag & VALID_MESSAGE.SRC_AND_DEST_READ_HEAD_ORIENTATION) > 0){
+        if ((validMessageFlag & VALID_MESSAGE.SRC_AND_DEST_READ_HEAD_ORIENTATION) > 0) {
             out.writeByte(srcReadHeadOrientation.get());
             out.writeByte(destReadHeadOrientation.get());
         }
