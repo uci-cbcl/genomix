@@ -31,7 +31,6 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 
 /**
  * this StepByStepTestCase only applied on OutputTextFormt
@@ -96,8 +95,7 @@ public class StepByStepTest {
         manager = new GenomixClusterManager(true, conf);
         manager.setNumberOfNC(numberOfNC);
         manager.setNumberOfDataNodesInLocalMiniHDFS(numberOfNC);
-        manager.startCluster(ClusterType.HYRACKS);
-        manager.startCluster(ClusterType.HADOOP);
+        manager.startCluster();
 
         GenomixClusterManager.copyLocalToHDFS(conf, LOCAL_INPUT_PATH, HDFS_INPUT_PATH);
 
@@ -122,8 +120,7 @@ public class StepByStepTest {
     @After
     public void tearDown() throws Exception {
         if (manager != null) {
-            manager.stopCluster(ClusterType.HADOOP);
-            manager.stopCluster(ClusterType.HYRACKS);
+            manager.stopCluster();
         }
     }
 

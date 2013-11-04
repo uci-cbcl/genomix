@@ -34,6 +34,7 @@
 				<version>1.5</version>
 				<executions>
 					<execution>
+						<id>genomix-scripts</id>
 						<configuration>
 							<platforms>
 								<platform>unix</platform>
@@ -43,13 +44,59 @@
 									<mainClass>edu.uci.ics.genomix.driver.GenomixDriver</mainClass>
 									<name>genomix</name>
 								</program>
+							</programs>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<useWildcardClassPath>true</useWildcardClassPath>
+							<extraJvmArguments>-Djava.util.logging.config.file=@BASEDIR@/conf/driver.logging.properties</extraJvmArguments>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>hyracks-scripts</id>
+						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
+							<useWildcardClassPath>true</useWildcardClassPath>
+							<programs>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
-									<name>genomixcc</name>
+									<name>hyrackscc</name>
 								</program>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
 									<name>hyracksnc</name>
+								</program>
+							</programs>
+							<binFolder>hyracks/bin</binFolder>
+							<repositoryLayout>flat</repositoryLayout>
+							<repositoryName>../lib</repositoryName>
+							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<extraJvmArguments>-Djava.util.logging.config.file=@BASEDIR@/../conf/driver.logging.properties</extraJvmArguments>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>assemble</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>pregelix-scripts</id>
+						<configuration>
+							<platforms>
+								<platform>unix</platform>
+							</platforms>
+							<useWildcardClassPath>true</useWildcardClassPath>
+							<programs>
+								<program>
+									<mainClass>edu.uci.ics.hyracks.control.cc.CCDriver</mainClass>
+									<name>pregelixcc</name>
 								</program>
 								<program>
 									<mainClass>edu.uci.ics.hyracks.control.nc.NCDriver</mainClass>
@@ -60,9 +107,12 @@
 									</commandLineArguments>
 								</program>
 							</programs>
+							<binFolder>pregelix/bin</binFolder>
 							<repositoryLayout>flat</repositoryLayout>
-							<repositoryName>lib</repositoryName>
+							<repositoryName>../lib</repositoryName>
 							<configurationDirectory>etc:"$HADOOP_HOME"/conf:/etc/hadoop/conf</configurationDirectory>
+							<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+							<extraJvmArguments>-Djava.util.logging.config.file=@BASEDIR@/../conf/driver.logging.properties</extraJvmArguments>
 						</configuration>
 						<phase>package</phase>
 						<goals>
@@ -106,9 +156,9 @@
 				<version>2.7.2</version>
 				<configuration>
 					<forkMode>pertest</forkMode>
-					<argLine>-enableassertions -Xmx512m -XX:MaxPermSize=300m
+					<argLine>-enableassertions -Xmx1024m -XX:MaxPermSize=300m
 						-Dfile.encoding=UTF-8
-						-Djava.util.logging.config.file=src/test/resources/logging.properties</argLine>
+					</argLine>
 					<includes>
 						<include>**/*TestSuite.java</include>
 						<include>**/*Test.java</include>
@@ -143,44 +193,6 @@
 						<goals>
 							<goal>test-jar</goal>
 						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.5</version>
-				<executions>
-					<execution>
-						<id>copy-scripts</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/bin</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/scripts</directory>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-conf</id>
-						<!-- here the phase you need -->
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/appassembler/conf</outputDirectory>
-							<resources>
-								<resource>
-									<directory>src/main/resources/conf</directory>
-								</resource>
-							</resources>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
