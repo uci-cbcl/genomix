@@ -303,9 +303,6 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         initVertex();
         if (verbose)
             LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
-        if(getVertexId().toString().equals("AGACCCATGCAGCGGGTCAGG") 
-                || getVertexId().toString().equals("GGAGACCCATGCAGCGGGTCA"))
-            System.out.println("stop"); 
         if (getSuperstep() == 1) {
             restrictNeighbor();
         } else if (getSuperstep() == 2) {
