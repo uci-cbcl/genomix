@@ -1,9 +1,19 @@
+# configuration
 language: java
+cache:
+    - apt
+    - $HOME/.m2
 
+# build matrix
 jdk:
     - oraclejdk7
     - openjdk7
+env:
+    - UNIT_TESTS=true PIPELINE_TESTS=false RUN_LOCAL=""
+    - UNIT_TESTS=false PIPELINE_TESTS=true RUN_LOCAL=""
+    - UNIT_TESTS=false PIPELINE_TESTS=true RUN_LOCAL="-runLocal"
 
+# run steps
 install:
     - ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
     - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys  # no pw required for ssh'ing locally
@@ -17,15 +27,4 @@ before_script:
     - cd ../..
 script:
     - cd genomix
-    - mvn package -q -e -Djava.util.logging.config.file=genomix-driver/src/main/resources/conf/logging.properties
-    - ls -t */target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran
-    - cd genomix-driver/target/genomix-driver-0.2.10-SNAPSHOT
-
-    # simplified pipeline
-    - bin/genomix -kmerLength 55 -pipelineOrder BUILD_HYRACKS,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/
-
-    # default pipeline
-    - bin/genomix -kmerLength 55 -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/  
-
-    # pipeline that repeats steps
-    - bin/genomix -kmerLength 55 -pipelineOrder BUILD_HADOOP,LOW_COVERAGE,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,TIP_REMOVE,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE,BUBBLE,MERGE,SPLIT_REPEAT,MERGE -localInput ../../src/test/resources/data/sequence/pathmerge/hg19.chr18.skip12K.first1K.1Kreads/
+    - ./run_tests.sh
