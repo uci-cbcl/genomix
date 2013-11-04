@@ -152,8 +152,9 @@ public class GenomixJobConf extends JobConf {
         private int plotSubgraph_numHops = -1;
 
         @Option(name = "-plotSubgraph_verbosity", usage = "Specify the level of details in output graph: 1. UNDIRECTED_GRAPH_WITHOUT_LABELS,"
-                + " 2. DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE, 3. DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE, 4. DIRECTED_GRAPH_WITH_ALLDETAILS", required = false)
-        private int plotSubgraph_verbosity;
+                + " 2. DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE, 3. DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE, 4. DIRECTED_GRAPH_WITH_ALLDETAILS"
+                + "Default is 1.", required = false)
+        private int plotSubgraph_verbosity = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -370,13 +371,6 @@ public class GenomixJobConf extends JobConf {
     }
 
     private void fillMissingDefaults() {
-        
-        Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
-            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
-            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
-    
-        GRAPH_TYPE DEFAULT_GRAPH_TYPE = GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE;
-        
         // Global config
         int kmerLength = getInt(KMER_LENGTH, -1);
 
@@ -419,10 +413,14 @@ public class GenomixJobConf extends JobConf {
             setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
 
         if (get(PIPELINE_ORDER) == null) {
-            set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
+            set(PIPELINE_ORDER,
+                    Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
+                            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
+                            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE }));
         }
+
         if (get(PLOT_SUBGRAPH_GRAPH_VERBOSITY) == null)
-            setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, DEFAULT_GRAPH_TYPE.get()); 
+            set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE.toString());
 
         if (get(PLOT_SUBGRAPH_START_SEEDS) == null)
             set(PLOT_SUBGRAPH_START_SEEDS, "");
@@ -452,8 +450,9 @@ public class GenomixJobConf extends JobConf {
         setInt(KMER_LENGTH, opts.kmerLength);
         if (opts.pipelineOrder != null)
             set(PIPELINE_ORDER, opts.pipelineOrder);
-
-        setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, opts.plotSubgraph_verbosity);
+        
+        if (opts.plotSubgraph_verbosity != -1)
+            set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.getFromInt(opts.plotSubgraph_verbosity).toString());
 
         if (opts.localInput != null && opts.hdfsInput != null)
             throw new IllegalArgumentException("Please set either -localInput or -hdfsInput, but NOT BOTH!");
