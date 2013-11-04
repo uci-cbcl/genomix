@@ -163,7 +163,7 @@ public class JobGenerator {
 
     private static void generateP4ForMergeGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = P4ForPathMergeVertex.getConfiguredJob(new GenomixJobConf(3), P4ForPathMergeVertex.class);
-        job.getConfiguration().setLong(GenomixJobConf.P4_RANDOM_SEED, 500);
+        job.getConfiguration().setLong(GenomixJobConf.RANDOM_SEED, new Random().nextLong());
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
