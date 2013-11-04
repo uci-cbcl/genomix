@@ -3,13 +3,10 @@ package edu.uci.ics.genomix.pregelix.io.message;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadHeadSet;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class PathMergeMessage extends MessageWritable {
@@ -48,48 +45,12 @@ public class PathMergeMessage extends MessageWritable {
         return node.getEdgeMap(edgeType);
     }
 
-    public Entry<VKmer, ReadIdSet> getNeighborEdge() {
-        for (EDGETYPE e : EDGETYPE.values()) {
-            if (!getEdgeList(e).isEmpty()) {
-                return getEdgeList(e).firstEntry();
-            }
-        }
-        return null;
-    }
-
-    public void setEdgeList(EDGETYPE edgeType, EdgeMap edgeList) {
-        this.node.setEdgeMap(edgeType, edgeList);
-    }
-
-    public ReadHeadSet getStartReads() {
-        return this.node.getUnflippedReadIds();
-    }
-
-    public void setStartReads(ReadHeadSet startReads) {
-        this.node.setUnflippedReadIds(startReads);
-    }
-
-    public ReadHeadSet getEndReads() {
-        return this.node.getFlippedReadIds();
-    }
-
-    public void setEndReads(ReadHeadSet endReads) {
-        this.node.setFlippedReadIds(endReads);
-    }
-
-    public void setAverageCoverage(float coverage) {
-        this.node.setAverageCoverage(coverage);
-    }
-
-    public float getAvgCoverage() {
-        return this.node.getAverageCoverage();
-    }
-
     public Node getNode() {
         return node;
     }
 
     public void setNode(Node node) {
+        this.validMessageFlag |= VALID_MESSAGE.NODE;
         this.node.setAsCopy(node);
     }
 
@@ -97,13 +58,15 @@ public class PathMergeMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-        node.readFields(in);
+        if ((validMessageFlag & VALID_MESSAGE.NODE) > 0)
+            node.readFields(in);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        node.write(out);
+        if ((validMessageFlag & VALID_MESSAGE.NODE) > 0)
+            node.write(out);
     }
 
     @Override

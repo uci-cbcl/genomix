@@ -13,20 +13,24 @@ public class MessageWritable implements Writable, WritableSizable {
 
     private VKmer sourceVertexId; // stores srcNode id
     private short flag; // stores message type
-
+    protected byte validMessageFlag; 
+    
     public MessageWritable() {
         sourceVertexId = new VKmer();
         flag = 0;
+        validMessageFlag = 0;
     }
 
     public void setAsCopy(MessageWritable other) {
         setSourceVertexId(other.getSourceVertexId());
         flag = other.getFlag();
+        validMessageFlag = other.getValidMessageFlag();
     }
 
     public void reset() {
         sourceVertexId.reset(0);
         flag = 0;
+        validMessageFlag = 0;
     }
 
     @Override
@@ -43,6 +47,7 @@ public class MessageWritable implements Writable, WritableSizable {
     }
 
     public void setSourceVertexId(VKmer sourceVertexId) {
+        validMessageFlag |= VALID_MESSAGE.SOURCE_VERTEX_ID;
         this.sourceVertexId.setAsCopy(sourceVertexId);
     }
 
@@ -53,17 +58,21 @@ public class MessageWritable implements Writable, WritableSizable {
     public void setFlag(short flag) {
         this.flag = flag;
     }
-
+    
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
-        sourceVertexId.readFields(in);
+        validMessageFlag = in.readByte();
+        if((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
+            sourceVertexId.readFields(in);
         flag = in.readShort();
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-        sourceVertexId.write(out);
+        out.writeByte(validMessageFlag);
+        if((validMessageFlag & VALID_MESSAGE.SOURCE_VERTEX_ID) > 0)
+            sourceVertexId.write(out);
         out.writeShort(flag);
     }
 
@@ -71,6 +80,10 @@ public class MessageWritable implements Writable, WritableSizable {
     public int sizeInBytes() {
         // TODO Auto-generated method stub
         return 0;
+    }
+
+    public byte getValidMessageFlag() {
+        return validMessageFlag;
     }
 
 }

@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +17,6 @@ import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
@@ -133,7 +131,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                         LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
                                 + " to " + dest + ": " + outgoingMsg);
                     Iterator<VKmer> iter = vertex.getEdgeMap(mergeEdge).keySet().iterator();
-                    if(iter.hasNext()){
+                    if (iter.hasNext()) {
                         EdgeMap edgeMap = new EdgeMap();
                         edgeMap.put(iter.next(), vertex.getEdgeMap(updateEdge).get(dest));
                         outgoingMsg.getNode().setEdgeMap(newEdgetype, edgeMap); // copy into outgoingMsg
