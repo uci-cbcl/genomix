@@ -23,6 +23,7 @@ public class SplitRepeatMessage extends MessageWritable {
     }
 
     public void setCreatedEdge(VKmer createdKmer, ReadIdSet createdReadIds) {
+        validMessageFlag |= VALID_MESSAGE.CREATED_EDGE;
         this.createdEdge = new SimpleEntry<VKmer, ReadIdSet>(createdKmer, createdReadIds);
     }
 
@@ -30,18 +31,21 @@ public class SplitRepeatMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         reset();
         super.readFields(in);
-
-        VKmer createdKmer = new VKmer();
-        createdKmer.readFields(in);
-        ReadIdSet createdReadIds = new ReadIdSet();
-        createdReadIds.readFields(in);
-        setCreatedEdge(createdKmer, createdReadIds);
+        if((validMessageFlag & VALID_MESSAGE.CREATED_EDGE) > 0){
+            VKmer createdKmer = new VKmer();
+            createdKmer.readFields(in);
+            ReadIdSet createdReadIds = new ReadIdSet();
+            createdReadIds.readFields(in);
+            setCreatedEdge(createdKmer, createdReadIds);
+        }
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        createdEdge.getKey().write(out);
-        createdEdge.getValue().write(out);
+        if((validMessageFlag & VALID_MESSAGE.CREATED_EDGE) > 0){
+            createdEdge.getKey().write(out);
+            createdEdge.getValue().write(out);
+        }
     }
 }
