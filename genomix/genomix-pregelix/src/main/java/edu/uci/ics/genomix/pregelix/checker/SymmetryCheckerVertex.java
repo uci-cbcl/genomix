@@ -38,7 +38,7 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
-                //                outgoingMsg.reset();
+                outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
