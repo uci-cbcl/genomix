@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
+import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage.PATHMERGE_MESSAGE_FIELDS;
 import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
@@ -135,6 +136,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                         EdgeMap edgeMap = new EdgeMap();
                         edgeMap.put(iter.next(), vertex.getEdgeMap(updateEdge).get(dest));
                         outgoingMsg.getNode().setEdgeMap(newEdgetype, edgeMap); // copy into outgoingMsg
+                        outgoingMsg.validMessageFlag |= PATHMERGE_MESSAGE_FIELDS.NODE; // silly command to indicate that node has changed.
                         sendMsg(dest, outgoingMsg);
                     }
                 }
