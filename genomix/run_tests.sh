@@ -1,8 +1,11 @@
 #!/bin/bash
 
-if [ -z "$UNIT_TESTS" ]; then UNIT_TESTS=true; fi
-if [ -z "$PIPELINE_TESTS" ]; then PIPELINE_TESTS=true; fi
-if [ -z "$RUN_LOCAL" ]; then RUN_LOCAL=""; fi
+# if the user didn't specify any specific tests to run, then run them all
+if [[ -z "$UNIT_TESTS" && -z "$PIPELINE_TESTS" && -z "$RUN_LOCAL" ]]; then
+    UNIT_TESTS=true
+    PIPELINE_TESTS=true
+    RUN_LOCAL=""
+fi
 
 echo "UNIT_TESTS: $UNIT_TESTS"
 echo "PIPELINE_TESTS: $PIPELINE_TESTS"

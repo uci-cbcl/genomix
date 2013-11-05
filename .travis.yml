@@ -9,9 +9,9 @@ jdk:
     - oraclejdk7
     - openjdk7
 env:
-    - UNIT_TESTS=true PIPELINE_TESTS=false RUN_LOCAL=""
-    - UNIT_TESTS=false PIPELINE_TESTS=true RUN_LOCAL=""
-    - UNIT_TESTS=false PIPELINE_TESTS=true RUN_LOCAL="-runLocal"
+    - UNIT_TESTS=true
+    - PIPELINE_TESTS=true
+    - PIPELINE_TESTS=true RUN_LOCAL="-runLocal"
 
 # run steps
 install:
