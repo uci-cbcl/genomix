@@ -333,7 +333,17 @@ public class GenomixDriver {
             return;
         }
         GenomixDriver driver = new GenomixDriver();
-        driver.runGenomix(conf);
+        try {
+            driver.runGenomix(conf);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
+                // force the in-memory pregelix NC to shut down
+                System.exit(0);
+            }
+        }
     }
 
 }
