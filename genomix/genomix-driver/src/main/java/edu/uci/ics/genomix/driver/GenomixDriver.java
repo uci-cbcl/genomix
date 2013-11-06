@@ -130,16 +130,16 @@ public class GenomixDriver {
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
+                curOutput = prevOutput + "-DUMP_FASTA";
                 if (runLocal) {
-                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta"); //?? why curOutput TODO
-                    curOutput = prevOutput; // use previous job's output 
+                    DriverUtils.dumpGraph(conf, prevOutput, curOutput + File.separator + "genomix-assembled-genome.fasta"); 
                 } else {
-                    dumpGraphWithHadoop(conf, curOutput, threadsPerMachine * numMachines);
+                    dumpGraphWithHadoop(conf, prevOutput, curOutput, threadsPerMachine * numMachines);
                     if (Boolean.parseBoolean(conf.get(GenomixJobConf.GAGE)) == true) {
                         DriverUtils.dumpGraph(conf, curOutput, "genome.fasta");
                     }
-                    curOutput = prevOutput;
                 }
+                curOutput = prevOutput; // next job shouldn't use the fasta file
                 break;
             case CHECK_SYMMETRY:
                 pregelixJobs.add(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
@@ -237,11 +237,11 @@ public class GenomixDriver {
         }
     }
 
-    private void dumpGraphWithHadoop(GenomixJobConf conf, String outputPath, int numReducers) throws Exception {
+    private void dumpGraphWithHadoop(GenomixJobConf conf, String inputPath, String outputPath, int numReducers) throws Exception {
         LOG.info("Building dump Graph using Hadoop...");
         GenomixJobConf.tick("dumpGraphWithHadoop");
 
-        ConvertToFasta.run(outputPath, numReducers, conf);
+        ConvertToFasta.run(inputPath, outputPath, numReducers, conf);
 
         System.out.println("Finished dumping Graph");
         LOG.info("Dumping the graph took " + GenomixJobConf.tock("dumpGraphWithHadoop") + "ms");
