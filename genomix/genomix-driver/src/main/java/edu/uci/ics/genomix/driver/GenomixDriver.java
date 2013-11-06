@@ -98,7 +98,8 @@ public class GenomixDriver {
                 break;
             case MERGE_P2:
                 //                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
-                break;
+                //                break;
+                throw new UnsupportedOperationException("MERGE_P2 has errors!");
             case MERGE:
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
@@ -155,23 +156,14 @@ public class GenomixDriver {
                     pregelixJobs.add(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
                 }
                 flushPendingJobs(conf);
-                if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
-                    String localOutputDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) + File.separator
-                            + new File(curOutput).getName() + "-PLOT";
-                    //copy bin to local and append "-PLOT" to the name
-                    GenomixClusterManager.copyBinToLocal(conf, curOutput, localOutputDir);
-                    //covert bin to graphviz
-                    String graphvizDir = localOutputDir + File.separator + "graphviz";
-                    GenerateGraphViz.convertBinToGraphViz(localOutputDir + File.separator + "bin", graphvizDir,
-                            GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
-                    LOG.info("Copying graphviz to local: " + graphvizDir);
-                }
+                //copy bin to local and append "-PLOT" to the name);
+                GenerateGraphViz.convertBinToGraphViz(conf, curOutput, curOutput + "-PLOT",
+                        GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
                 curOutput = prevOutput; // next job shouldn't use the truncated graph or plots
                 stepNum--;
                 break;
             case STATS:
                 flushPendingJobs(conf);
-
                 curOutput = prevOutput + "-STATS";
                 stepNum--;
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);

@@ -10,6 +10,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -56,22 +57,25 @@ public class GenerateGraphViz {
         }
     }
 
+    public static void convertBinToGraphViz(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
+        convertBinToGraphViz(new JobConf(), srcDir, destDir, graphType);
+    }
+    
     /**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
      */
-    public static void convertBinToGraphViz(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
+        public static void convertBinToGraphViz(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
         GraphViz gv = new GraphViz();  
         gv.addln(gv.start_graph());
 
-        Configuration conf = new Configuration();
-        FileSystem fileSys = FileSystem.getLocal(conf);
+        FileSystem dfs = FileSystem.get(conf);
         File srcPath = new File(srcDir);
 
         String outputNode = "";
         String outputEdge = "";
         for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
-            SequenceFile.Reader reader = new SequenceFile.Reader(fileSys, new Path(f.getAbsolutePath()), conf);
+            SequenceFile.Reader reader = new SequenceFile.Reader(dfs, new Path(f.getAbsolutePath()), conf);
             VKmer key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             Node value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
 
