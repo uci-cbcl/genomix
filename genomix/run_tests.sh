@@ -19,7 +19,7 @@ function run_and_save_exit_code {
 }
 
 if [ "$UNIT_TESTS" == "true" ]; then
-    cmd=( mvn package -q -e -Djava.util.logging.config.file=genomix-driver/src/main/resources/conf/worker.logging.properties )
+    cmd=( mvn package -e -Djava.util.logging.config.file=genomix-driver/src/main/resources/conf/worker.logging.properties )
     run_and_save_exit_code
     
     ls -t */target/surefire-reports/*.txt | xargs tail -n +1  # show test reports in the order they ran
