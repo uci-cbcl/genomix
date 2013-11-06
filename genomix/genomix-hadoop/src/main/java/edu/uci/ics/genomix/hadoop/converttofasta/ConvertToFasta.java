@@ -43,6 +43,8 @@ public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node,
     }
 
     private static class FastaOutputFormat<K, V> extends FileOutputFormat<K, V> {
+        
+        private static final String OUTPUT_FILENAME = "genomix-scaffolds.fasta";
 
         protected static class FastaRecordWriter<K, V> implements RecordWriter<K, V> {
             private DataOutputStream out;
@@ -77,7 +79,7 @@ public class ConvertToFasta extends MapReduceBase implements Mapper<VKmer, Node,
 
         public RecordWriter<K, V> getRecordWriter(FileSystem ignored, JobConf job, String name, Progressable progress)
                 throws IOException {
-            Path file = FileOutputFormat.getTaskOutputPath(job, name);
+            Path file = new Path(FileOutputFormat.getTaskOutputPath(job, name), OUTPUT_FILENAME);
             FileSystem fs = file.getFileSystem(job);
             FSDataOutputStream fileOut = fs.create(file, progress);
             return new FastaRecordWriter<K, V>(fileOut);
