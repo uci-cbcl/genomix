@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -30,9 +32,9 @@ public class GenerateGraphViz {
         DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE((int) 2),
         DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE((int) 3),
         DIRECTED_GRAPH_WITH_ALLDETAILS((int) 4);
-        
+
         private final int val;
-        
+
         private GRAPH_TYPE(int val) {
             this.val = val;
         }
@@ -40,9 +42,9 @@ public class GenerateGraphViz {
         public final int get() {
             return val;
         }
-        
-        public static GRAPH_TYPE getFromInt(int n){
-            switch(n){
+
+        public static GRAPH_TYPE getFromInt(int n) {
+            switch (n) {
                 case 1:
                     return UNDIRECTED_GRAPH_WITHOUT_LABELS;
                 case 2:
@@ -57,25 +59,42 @@ public class GenerateGraphViz {
         }
     }
 
-    public static void convertBinToGraphViz(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
-        convertBinToGraphViz(new JobConf(), srcDir, destDir, graphType);
+    public static void writeLocalBinToLocalSvg(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
+        byte[] img = convertGraphToImg(new JobConf(), srcDir, destDir, graphType, "svg");
+        File out = new File(destDir + File.separator + "graphviz.svg");
+        GraphViz.writeGraphToFile(img, out);
     }
     
+    public static void writeHDFSBinToHDFSSvg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
+        byte[] img = convertGraphToImg(conf, srcDir, destDir, graphType, "svg");
+        FileSystem dfs = FileSystem.get(conf);
+        dfs.delete(new Path(destDir), true);
+        dfs.mkdirs(new Path(destDir));
+        FSDataOutputStream outVis = dfs.create(new Path(destDir + File.separator + "graphviz.svg"));
+        outVis.write(img);
+        outVis.close();
+    }
+
     /**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
+     * 
+     * outputFormat may be svg, png, pdf, or any other graphviz-accepted format 
      */
-        public static void convertBinToGraphViz(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
-        GraphViz gv = new GraphViz();  
+    public static byte[] convertGraphToImg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType,
+            String outputFormat) throws Exception {
+        GraphViz gv = new GraphViz();
         gv.addln(gv.start_graph());
-
-        FileSystem dfs = FileSystem.get(conf);
-        File srcPath = new File(srcDir);
-
         String outputNode = "";
         String outputEdge = "";
-        for (File f : srcPath.listFiles((FilenameFilter) (new WildcardFileFilter("part*")))) {
-            SequenceFile.Reader reader = new SequenceFile.Reader(dfs, new Path(f.getAbsolutePath()), conf);
+
+        FileSystem dfs = FileSystem.get(conf);
+        FileStatus[] files = dfs.globStatus(new Path(srcDir + File.separator + "part*"));
+        for (FileStatus f : files) {
+            if (f.getLen() == 0)
+                continue;
+
+            SequenceFile.Reader reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
             VKmer key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
             Node value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
 
@@ -114,8 +133,8 @@ public class GenerateGraphViz {
                         fillColor = "fillcolor=\"grey\", style=\"filled\",";
                     outputNode += " [shape=record, " + fillColor + " label = \"<f0> " + key.toString() + "|<f1> "
                             + "5':" + value.getUnflippedReadIds().toReadIdString() + "|<f2> " + "~5':"
-                            + value.getFlippedReadIds().toReadIdString() + "|<f3> " + value.getAverageCoverage() + "|<f4> "
-                            + value.getInternalKmer() + "\"]\n";
+                            + value.getFlippedReadIds().toReadIdString() + "|<f3> " + value.getAverageCoverage()
+                            + "|<f4> " + value.getInternalKmer() + "\"]\n";
                 }
                 gv.addln(outputNode);
             }
@@ -124,15 +143,11 @@ public class GenerateGraphViz {
 
         gv.addln(gv.end_graph());
 
-        String type = "svg";
-        //        File folder = new File(destDir);
-        //        folder.mkdirs();
-        File out = new File(destDir + "." + type); // Linux
-        gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type), out);
+        return gv.getGraph(gv.getDotSource(), outputFormat);
     }
 
     public static String convertEdgeToGraph(String outputNode, Node value, GRAPH_TYPE graphType) {
-        String outputEdge = ""; 
+        String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values()) {
             for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
                 String destNode = "";

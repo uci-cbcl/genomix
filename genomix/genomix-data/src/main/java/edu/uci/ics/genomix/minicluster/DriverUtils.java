@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -83,16 +84,20 @@ public class DriverUtils {
         }
     }
 
-    public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta) throws IOException {
+    public static void dumpGraph(JobConf conf, String inputGraph, String outputDir) throws IOException {
         LOG.info("Dumping graph to fasta...");
         GenomixJobConf.tick("dumpGraph");
         FileSystem dfs = FileSystem.get(conf);
+        
+        dfs.delete(new Path(outputDir), true);
+        dfs.mkdirs(new Path(outputDir));
+        String outputFasta = outputDir + File.separator + "genomix-scaffolds.fasta";
 
         // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
         SequenceFile.Reader reader = null;
         VKmer key = null;
         Node value = null;
-        BufferedWriter bw = null;
+        FSDataOutputStream fastaOut = null;
         FileStatus[] files = dfs.globStatus(new Path(inputGraph + File.separator + "*"));
         for (FileStatus f : files) {
             if (f.getLen() != 0) {
@@ -101,14 +106,14 @@ public class DriverUtils {
                     reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
                     key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                     value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-                    if (bw == null)
-                        bw = new BufferedWriter(new FileWriter(outputFasta));
+                    if (fastaOut == null)
+                        fastaOut = dfs.create(new Path(outputFasta));
                     while (reader.next(key, value)) {
                         if (key == null || value == null)
                             break;
-                        bw.write(">node_" + key.toString() + "\n");
-                        bw.write(key.toString().length() > 0 ? key.toString() : value.getInternalKmer().toString());
-                        bw.newLine();
+                        fastaOut.writeBytes(">node_" + key.toString() + "\n");
+                        fastaOut.writeBytes(key.toString().length() > 0 ? key.toString() : value.getInternalKmer().toString());
+                        fastaOut.writeBytes("\n");
                     }
                 } catch (Exception e) {
                     System.out.println("Encountered an error getting stats for " + f + ":\n" + e);
@@ -118,8 +123,8 @@ public class DriverUtils {
                 }
             }
         }
-        if (bw != null)
-            bw.close();
+        if (fastaOut != null)
+            fastaOut.close();
         LOG.info("Dump graph to fasta took " + GenomixJobConf.tock("dumpGraph") + "ms");
     }
 
