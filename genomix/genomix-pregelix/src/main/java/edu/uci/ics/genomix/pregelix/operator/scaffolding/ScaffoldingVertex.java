@@ -196,10 +196,12 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
                 // setup ougoingMsg and prepare to sendMsg
                 outgoingMsg.reset();
 
-                // copy targetVertex
+                // copy unchanged details from incomingMsg
+                outgoingMsg.setSourceVertexId(incomingMsg.getSourceVertexId());
                 outgoingMsg.setTargetVertexId(incomingMsg.getTargetVertexId());
-                // copy commonReadId
                 outgoingMsg.setReadId(incomingMsg.getReadId());
+                outgoingMsg.setSrcReadHeadOrientation(incomingMsg.getSrcReadHeadOrientation());
+                outgoingMsg.setDestReadHeadOrientation(incomingMsg.getDestReadHeadOrientation());
                 // update totalBFSLength 
                 outgoingMsg.setTotalBFSLength(totalBFSLength);
 
