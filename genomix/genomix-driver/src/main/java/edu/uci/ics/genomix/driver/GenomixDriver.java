@@ -16,6 +16,7 @@
 package edu.uci.ics.genomix.driver;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -25,6 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.codehaus.plexus.util.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -98,7 +100,8 @@ public class GenomixDriver {
                 break;
             case MERGE_P2:
                 //                queuePregelixJob(P2ForPathMergeVertex.getConfiguredJob(conf, P2ForPathMergeVertex.class));
-                break;
+                //                break;
+                throw new UnsupportedOperationException("MERGE_P2 has errors!");
             case MERGE:
             case MERGE_P4:
                 pregelixJobs.add(P4ForPathMergeVertex.getConfiguredJob(conf, P4ForPathMergeVertex.class));
@@ -129,20 +132,21 @@ public class GenomixDriver {
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);
+                curOutput = prevOutput + "-DUMP_FASTA";
                 if (runLocal) {
-                    DriverUtils.dumpGraph(conf, curOutput, "genome.fasta"); //?? why curOutput TODO
-                    curOutput = prevOutput; // use previous job's output 
+                    DriverUtils.dumpGraph(conf, prevOutput, curOutput);
                 } else {
-                    dumpGraphWithHadoop(conf, curOutput, threadsPerMachine * numMachines);
-                    if (Boolean.parseBoolean(conf.get(GenomixJobConf.GAGE)) == true) {
-                        DriverUtils.dumpGraph(conf, curOutput, "genome.fasta");
-                    }
-                    curOutput = prevOutput;
+                    ConvertToFasta.run(prevOutput, curOutput, threadsPerMachine * numMachines, conf);
                 }
+                copyToLocalOutputDir(curOutput, conf);
+                curOutput = prevOutput; // next job shouldn't use the fasta file
+                stepNum--;
                 break;
             case CHECK_SYMMETRY:
                 pregelixJobs.add(SymmetryCheckerVertex.getConfiguredJob(conf, SymmetryCheckerVertex.class));
+                copyToLocalOutputDir(curOutput, conf);
                 curOutput = prevOutput; // use previous job's output
+                stepNum--;
                 break;
             case PLOT_SUBGRAPH:
                 if (conf.get(GenomixJobConf.PLOT_SUBGRAPH_START_SEEDS) == "") {
@@ -155,30 +159,40 @@ public class GenomixDriver {
                     pregelixJobs.add(ExtractSubgraphVertex.getConfiguredJob(conf, ExtractSubgraphVertex.class));
                 }
                 flushPendingJobs(conf);
-                if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
-                    String localOutputDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) + File.separator
-                            + new File(curOutput).getName() + "-PLOT";
-                    //copy bin to local and append "-PLOT" to the name
-                    GenomixClusterManager.copyBinToLocal(conf, curOutput, localOutputDir);
-                    //covert bin to graphviz
-                    String graphvizDir = localOutputDir + File.separator + "graphviz";
-                    GenerateGraphViz.convertBinToGraphViz(localOutputDir + File.separator + "bin", graphvizDir,
-                            GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
-                    LOG.info("Copying graphviz to local: " + graphvizDir);
-                }
+                //copy bin to local and append "-PLOT" to the name);
+                GenerateGraphViz.writeHDFSBinToHDFSSvg(conf, curOutput, curOutput + "-PLOT",
+                        GRAPH_TYPE.valueOf(conf.get(GenomixJobConf.PLOT_SUBGRAPH_GRAPH_VERBOSITY)));
+                copyToLocalOutputDir(curOutput + "-PLOT", conf);
                 curOutput = prevOutput; // next job shouldn't use the truncated graph or plots
                 stepNum--;
                 break;
             case STATS:
                 flushPendingJobs(conf);
-
                 curOutput = prevOutput + "-STATS";
-                stepNum--;
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters, conf);
+                copyToLocalOutputDir(curOutput, conf);
                 curOutput = prevOutput; // use previous job's output
+                stepNum--;
                 break;
+        }
+    }
+
+    /**
+     * Copy a directory from HDFS into the local output directory
+     * 
+     * @throws IOException
+     */
+    private void copyToLocalOutputDir(String hdfsSrc, GenomixJobConf conf) throws IOException {
+        String localOutputDir = conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR);
+        if (localOutputDir != null) {
+            if (!FileUtils.fileExists(localOutputDir)) {
+                FileUtils.mkdir(localOutputDir);
+            }
+            FileSystem dfs = FileSystem.get(conf);
+            dfs.delete(new Path(localOutputDir + File.separator + new Path(hdfsSrc).getName()), true);
+            dfs.copyToLocalFile(new Path(hdfsSrc), new Path(localOutputDir));
         }
     }
 
@@ -243,16 +257,6 @@ public class GenomixDriver {
             }
             pregelixJobs.clear();
         }
-    }
-
-    private void dumpGraphWithHadoop(GenomixJobConf conf, String outputPath, int numReducers) throws Exception {
-        LOG.info("Building dump Graph using Hadoop...");
-        GenomixJobConf.tick("dumpGraphWithHadoop");
-
-        ConvertToFasta.run(outputPath, numReducers, conf);
-
-        System.out.println("Finished dumping Graph");
-        LOG.info("Dumping the graph took " + GenomixJobConf.tock("dumpGraphWithHadoop") + "ms");
     }
 
     private void initGenomix(GenomixJobConf conf) throws Exception {
@@ -329,7 +333,17 @@ public class GenomixDriver {
             return;
         }
         GenomixDriver driver = new GenomixDriver();
-        driver.runGenomix(conf);
+        try {
+            driver.runGenomix(conf);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
+                // force the in-memory pregelix NC to shut down
+                System.exit(0);
+            }
+        }
     }
 
 }

@@ -9,9 +9,9 @@ jdk:
     - oraclejdk7
     - openjdk7
 env:
-    - UNIT_TESTS=true PIPELINE_TESTS=false RUN_LOCAL=""
-    - UNIT_TESTS=false PIPELINE_TESTS=true RUN_LOCAL=""
-    - UNIT_TESTS=false PIPELINE_TESTS=true RUN_LOCAL="-runLocal"
+    - UNIT_TESTS=true
+    - PIPELINE_TESTS=true
+    - PIPELINE_TESTS=true RUN_LOCAL="-runLocal"
 
 # run steps
 install:
@@ -19,7 +19,7 @@ install:
     - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys  # no pw required for ssh'ing locally
     - ssh localhost -o StrictHostKeyChecking=false -n  # allow us to ssh later w/out typing "yes"
     - sudo apt-get install graphviz
-    - mvn install -q -am -pl genomix/genomix-driver/ -DskipTests=true # only install driver's prereq's
+    - mvn install -am -pl genomix/genomix-driver/ -DskipTests=true # only install driver's prereq's
 
 before_script:
     - cd genomix/genomix-pregelix/
