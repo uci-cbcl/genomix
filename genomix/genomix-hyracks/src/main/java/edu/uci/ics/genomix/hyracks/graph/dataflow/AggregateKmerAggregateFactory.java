@@ -111,7 +111,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
                 localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
-                localUniNode.addCoverage(readNode);
+                localUniNode.setAverageCoverage(readNode.getAverageCoverage());
             }
 
             @Override
@@ -126,7 +126,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
                 localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
-                localUniNode.addCoverage(readNode);
+                localUniNode.setAverageCoverage(localUniNode.getAverageCoverage() + readNode.getAverageCoverage());
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.
                 //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {

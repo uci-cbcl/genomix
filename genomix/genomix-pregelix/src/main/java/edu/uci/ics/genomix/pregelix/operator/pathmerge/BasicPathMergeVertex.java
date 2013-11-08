@@ -185,7 +185,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 
             outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(vertex);
+            outgoingMsg.setNode(vertex); // TODO reduce amount sent in this Node (only internalKmer and 1/2 of edges)
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);

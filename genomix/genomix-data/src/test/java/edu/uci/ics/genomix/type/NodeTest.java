@@ -358,6 +358,7 @@ public class NodeTest {
         node.setUnflippedReadIds(startReads);
         node.setFlippedReadIds(endReads);
         node.reset();
+        node.setAverageCoverage(0);
         Assert.assertEquals((float) 0, node.getAverageCoverage());
         Assert.assertEquals(true, node.getEdgeMap(EDGETYPE.RF).isEmpty());
         Assert.assertEquals(4, node.getInternalKmer().getLength()); //only left the bytes which contain the header
