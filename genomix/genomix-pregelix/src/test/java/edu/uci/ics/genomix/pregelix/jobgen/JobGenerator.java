@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.jobgen;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 
@@ -210,7 +209,8 @@ public class JobGenerator {
     }
 
     private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = SplitRepeatVertex.getConfiguredJob(new GenomixJobConf(21), SplitRepeatVertex.class);
+        PregelixJob job = SplitRepeatVertex.getConfiguredJob(new GenomixJobConf(3), SplitRepeatVertex.class);
+        job.getConfiguration().setLong(GenomixJobConf.RANDOM_SEED, 500);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
