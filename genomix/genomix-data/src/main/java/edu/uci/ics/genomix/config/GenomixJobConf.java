@@ -269,7 +269,6 @@ public class GenomixJobConf extends JobConf {
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.conf.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
     // intermediate date evaluation
-    public static final String GAGE = "genomix.conf.evaluationToolGage";
 
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
@@ -409,8 +408,6 @@ public class GenomixJobConf extends JobConf {
 
         // hyracks-specific
 
-//        if (getBoolean(GAGE, false) == false)
-//            setBoolean(GAGE, false);
         //        if (getBoolean(RUN_LOCAL, false)) {
         //            // override any other settings for HOST and PORT
         //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
@@ -446,8 +443,6 @@ public class GenomixJobConf extends JobConf {
         setBoolean(RUN_LOCAL, opts.runLocal);
 
         setBoolean(USE_EXISTING_CLUSTER, opts.useExistingCluster);
-//        setBoolean(GAGE, opts.gage);
-//>>>>>>> genomix/fullstack_genomix
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
         setBoolean(LOG_READIDS, opts.logReadIds);
