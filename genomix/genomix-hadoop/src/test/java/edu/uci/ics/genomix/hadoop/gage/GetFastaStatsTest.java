@@ -31,7 +31,6 @@ import org.junit.Test;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -108,7 +107,7 @@ public class GetFastaStatsTest {
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR));
         manager = new GenomixClusterManager(true, conf);
         manager.setNumberOfDataNodesInLocalMiniHDFS(1);
-        manager.startCluster(ClusterType.HADOOP);
+        manager.startCluster();
     }
 
     private void prepareData() throws IOException {
@@ -123,6 +122,6 @@ public class GetFastaStatsTest {
     }
     
     public void cleanupHadoop() throws Exception {
-        manager.stopCluster(ClusterType.HADOOP);
+        manager.stopCluster();
     }
 }

@@ -219,7 +219,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     }
 
     private static ArrayList<Integer> contigLengthList = new ArrayList<Integer>();
-    static boolean OLD_STYLE = true;
+//    static boolean OLD_STYLE = true;
     private static int MIN_CONTIG_LENGTH;
     private static int EXPECTED_GENOME_SIZE;
     private static int maxContig = Integer.MIN_VALUE;
@@ -254,22 +254,6 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             nxValue = 0;
             nxCount = 0;
         }
-
-//        public int getNxValue() {
-//            return this.nxValue;
-//        }
-//
-//        public int getNxCount() {
-//            return this.nxCount;
-//        }
-//
-//        public void setNxValue(int nxValue) {
-//            this.nxValue = nxValue;
-//        }
-//
-//        public void setNxCount(int nxCount) {
-//            this.nxCount = nxCount;
-//        }
     }
 
     private static void initializeNxMap(HashMap<Double, NXValueAndCountPair> nxMap) {
@@ -349,8 +333,6 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
             /*----------------------------------------------------------------*/
             for (Map.Entry<Double, NXValueAndCountPair> entry : nxMap.entrySet()) {
                 if (sum / (double) total >= entry.getKey() && entry.getValue().nxCount == 0) {
-//                    entry.getValue().setNxValue(contigLengthList.get(i));
-//                    entry.getValue().setNxCount(contigLengthList.size() - i);
                     entry.getValue().nxValue = contigLengthList.get(i);
                     entry.getValue().nxCount = contigLengthList.size() - i;
                 }

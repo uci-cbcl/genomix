@@ -27,7 +27,6 @@ import edu.uci.ics.genomix.hyracks.graph.test.TestUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
 
 @RunWith(value = Parameterized.class)
 public class HyrackVSHadoopTest {
@@ -90,7 +89,6 @@ public class HyrackVSHadoopTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        conf = new GenomixJobConf(3);
         conf.setBoolean(GenomixJobConf.RUN_LOCAL, true);
         conf.setInt(GenomixJobConf.FRAME_SIZE, 65535);
         conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
@@ -98,15 +96,11 @@ public class HyrackVSHadoopTest {
         FileUtils.forceMkdir(new File(ACTUAL_RESULT_DIR_HYRACKS));
         FileUtils.cleanDirectory(new File(ACTUAL_RESULT_DIR_HYRACKS));
 
-        conf.setInt(GenomixJobConf.FRAME_SIZE, 65535);
-        conf.setInt(GenomixJobConf.FRAME_LIMIT, 4096);
-
         manager = new GenomixClusterManager(true, conf);
         manager.setNumberOfNC(numberOfNC);
         manager.setNumberOfDataNodesInLocalMiniHDFS(numberOfNC);
 
-        manager.startCluster(ClusterType.HADOOP);
-        manager.startCluster(ClusterType.HYRACKS);
+        manager.startCluster();
 
         hyracksDriver = new GenomixHyracksDriver(GenomixClusterManager.LOCAL_HOSTNAME,
                 GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT, numPartitionPerMachine);
@@ -123,6 +117,7 @@ public class HyrackVSHadoopTest {
     public void TestEachFile() throws Exception {
         waitawhile();
         conf.setInt(GenomixJobConf.KMER_LENGTH, kmerLength);
+
         GenomixJobConf.setGlobalStaticConstants(conf);
 
         prepareData();
@@ -157,13 +152,13 @@ public class HyrackVSHadoopTest {
         Path path = new Path(hyracksResultFileName);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HYRACKS + File.separator + testFile.getName(), path
                 .getParent().toString());
-        GenerateGraphViz.convertBinToGraphViz(path.getParent().toString() + "/bin", path.getParent()
+        GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent()
                 .toString() + "/graphviz", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
 
         path = new Path(hadoopResultFileName);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HADOOP + File.separator + testFile.getName(), path
                 .getParent().toString());
-        GenerateGraphViz.convertBinToGraphViz(path.getParent().toString() + "/bin", path.getParent()
+        GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent()
                 .toString() + "/graphviz", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
 
         TestUtils.compareFilesBySortingThemLineByLine(new File(hyracksResultFileName), new File(hadoopResultFileName));
@@ -172,8 +167,7 @@ public class HyrackVSHadoopTest {
     @AfterClass
     public static void tearDown() throws Exception {
         if (manager != null) {
-            manager.stopCluster(ClusterType.HYRACKS);
-            manager.stopCluster(ClusterType.HADOOP);
+            manager.stopCluster();
         }
     }
 }

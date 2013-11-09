@@ -20,7 +20,6 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
@@ -92,7 +91,7 @@ public abstract class JobGen implements Serializable {
     }
 
     protected void initGenomixConfiguration() throws HyracksDataException {
-        Configuration conf = hadoopJobConfFactory.getConf();
+        GenomixJobConf conf = new GenomixJobConf(hadoopJobConfFactory.getConf());
         GenomixJobConf.setGlobalStaticConstants(conf);
         frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));

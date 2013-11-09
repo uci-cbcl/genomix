@@ -163,7 +163,7 @@ public class VertexValueWritable extends Node {
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
-//                LOG.fine("VertexValue.readFields: " + toString());
+                LOG.fine("VertexValue.readFields: " + toString());
             }
         }
     }
@@ -176,16 +176,16 @@ public class VertexValueWritable extends Node {
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
 
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
-                verbose |= this.getInternalKmer().equals(problemKmer);
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-//                LOG.fine("VertexValue.write: " + toString());
-            }
-        }
+//        if (DEBUG) {
+//            boolean verbose = false;
+//            for (VKmer problemKmer : problemKmers) {
+//                verbose |= this.getInternalKmer().equals(problemKmer);
+//                verbose |= findEdge(problemKmer) != null;
+//            }
+//            if (verbose) {
+////                LOG.fine("VertexValue.write: " + toString());
+//            }
+//        }
     }
 
     public int getDegree() {
