@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -138,8 +139,12 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-logReadIds", usage = "Log all readIds with the selected edges at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private boolean logReadIds = false;
 
-        @Option(name = "-gage", usage = "Do metrics evalution after dumpting the intermediate data.", required = false)
-        private boolean gage = false;
+        //Metrics Parameters for Our Mapreduce Gage Job
+        @Option(name = "-stats_expectedGenomeSize", usage = "The expected length for this whole genome data", required = false)
+        private int stats_expectedGenomeSize = -1;
+
+        @Option(name = "-stats_minContigLength", usage = "the minimum contig length included in statistics calculations", required = false)
+        private int stats_minContigLength = -1;
 
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
@@ -260,6 +265,9 @@ public class GenomixJobConf extends JobConf {
     public static final String SLAVES = "genomix.conf.slavesList";
     public static final String THREADS_PER_MACHINE = "genomix.threadsPerMachine";
 
+    // GAGE Metrics Evaluation 
+    public static final String STATS_EXPECTED_GENOMESIZE = "genomix.conf.expectedGenomeSize";
+    public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
     // intermediate date evaluation
     public static final String GAGE = "genomix.conf.evaluationToolGage";
 
@@ -400,8 +408,9 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
 
         // hyracks-specific
-        if (getBoolean(GAGE, false) == false)
-            setBoolean(GAGE, false);
+
+//        if (getBoolean(GAGE, false) == false)
+//            setBoolean(GAGE, false);
         //        if (getBoolean(RUN_LOCAL, false)) {
         //            // override any other settings for HOST and PORT
         //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
@@ -435,8 +444,10 @@ public class GenomixJobConf extends JobConf {
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
+
         setBoolean(USE_EXISTING_CLUSTER, opts.useExistingCluster);
-        setBoolean(GAGE, opts.gage);
+//        setBoolean(GAGE, opts.gage);
+//>>>>>>> genomix/fullstack_genomix
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
         setBoolean(LOG_READIDS, opts.logReadIds);
@@ -456,6 +467,9 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
+
+        setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
+        setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
         setInt(THREADS_PER_MACHINE, opts.threadsPerMachine);
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
@@ -74,6 +75,8 @@ public class GenomixDriver {
     private GenomixClusterManager manager;
     private GenomixHyracksDriver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
+
+    private static String fastaOuputPath;
 
     @SuppressWarnings("deprecation")
     private void setOutput(GenomixJobConf conf, Patterns step) {
@@ -172,6 +175,7 @@ public class GenomixDriver {
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters, conf);
+                GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
                 copyToLocalOutputDir(curOutput, conf);
                 curOutput = prevOutput; // use previous job's output
                 stepNum--;
