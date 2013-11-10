@@ -33,12 +33,12 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         super(s);
     }
 
-    public void add(byte mateId, long readId, int offset) {
-        add(new ReadHeadInfo(mateId, readId, offset));
+    public void add(byte mateId, long readId, int offset, VKmer mate0ReadSequence, VKmer mate1ReadSequence) {
+        add(new ReadHeadInfo(mateId, readId, offset, mate0ReadSequence, mate1ReadSequence));
     }
 
     public ReadHeadInfo getReadHeadInfoFromReadId(long readId) {
-        ReadHeadInfo info = super.floor(new ReadHeadInfo(readId));
+        ReadHeadInfo info = super.floor(new ReadHeadInfo(readId, null, null)); //TODO need check
         if (info != null && info.getReadId() == readId) {
             return info;
         }
@@ -46,20 +46,28 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     }
 
     public int getOffsetFromReadId(long readId) {
-        for(ReadHeadInfo readHeadInfo : this){
-            if(readHeadInfo.getReadId() == readId)
+        for (ReadHeadInfo readHeadInfo : this) {
+            if (readHeadInfo.getReadId() == readId)
                 return readHeadInfo.getOffset();
         }
-        throw new IllegalArgumentException("The input parameter readId " + readId + " should exist in this ReadHeadSet, but not here!");
+        throw new IllegalArgumentException("The input parameter readId " + readId
+                + " should exist in this ReadHeadSet, but not here!");
     }
 
     public void setAsCopy(byte[] data, int offset) {
         clear();
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
+        VKmer mate0ReadSequence = new VKmer();
+        VKmer mate1ReadSequence = new VKmer();
         for (int i = 0; i < count; i++) {
-            add(new ReadHeadInfo(Marshal.getLong(data, offset)));
+            long uuid = Marshal.getLong(data, offset);
             offset += ReadHeadInfo.ITEM_SIZE;
+            mate0ReadSequence.setAsCopy(data, offset);
+            offset += mate0ReadSequence.getLength();
+            mate1ReadSequence.setAsCopy(data, offset);
+            offset += mate1ReadSequence.getLength();
+            add(new ReadHeadInfo(uuid, mate0ReadSequence, mate1ReadSequence));
         }
     }
 
@@ -67,7 +75,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     public void write(DataOutput out) throws IOException {
         out.writeInt(size());
         for (ReadHeadInfo head : this) {
-            out.writeLong(head.asLong());
+            head.write(out);
         }
     }
 
@@ -76,7 +84,9 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         clear();
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
-            add(new ReadHeadInfo(in.readLong()));
+            ReadHeadInfo temp = new ReadHeadInfo();
+            temp.readFields(in);
+            add(temp);
         }
     }
 
@@ -112,6 +122,6 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     }
 
     public int getLengthInBytes() {
-        return HEADER_SIZE + ReadHeadInfo.ITEM_SIZE * size();
+        return HEADER_SIZE + first().getLengthInBytes() * size();
     }
 }
