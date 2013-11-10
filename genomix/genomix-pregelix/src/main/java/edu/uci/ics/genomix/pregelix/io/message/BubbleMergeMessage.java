@@ -63,15 +63,15 @@ public class BubbleMergeMessage extends MessageWritable {
     }
 
     public EdgeMap getMinorToBubbleEdgeMap() {
-        return node.getEdgeMap(getMinorToBubbleEdgetype().mirror());
+        return node.getEdgeList(getMinorToBubbleEdgetype().mirror());
     }
 
     public void addNewMajorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
         validMessageFlag |= BUBBLEMERGE_MESSAGE_FIELDS.MAJOR_VERTEX_ID_AND_MAJOR_TO_BUBBLE_EDGETYPE;
         EDGETYPE majorToBubble = msg.getMajorToBubbleEdgetype();
-        ReadIdSet newReadIds = msg.getNode().getEdgeMap(majorToBubble.mirror())
+        ReadIdSet newReadIds = msg.getNode().getEdgeList(majorToBubble.mirror())
                 .get(msg.getMajorVertexId());
-        node.getEdgeMap(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor()).unionAdd(topKmer, newReadIds);
+        node.getEdgeList(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor()).unionAdd(topKmer, newReadIds);
     }
 
     public VKmer getMajorVertexId() {

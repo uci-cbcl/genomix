@@ -77,7 +77,7 @@ public class BridgeAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
     }
 
     public void addEdgeToInsertedBridge(EDGETYPE dir, VKmer insertedBridge) {
-        getVertexValue().getEdgeMap(dir).put(insertedBridge, new ReadIdSet(Arrays.asList(new Long(0))));
+        getVertexValue().getEdgeList(dir).put(insertedBridge, new ReadIdSet(Arrays.asList(new Long(0))));
     }
 
     @Override

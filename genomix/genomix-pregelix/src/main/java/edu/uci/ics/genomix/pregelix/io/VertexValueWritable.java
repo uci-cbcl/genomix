@@ -75,19 +75,19 @@ public class VertexValueWritable extends Node {
     }
 
     public EdgeMap getFFList() {
-        return getEdgeMap(EDGETYPE.FF);
+        return getEdgeList(EDGETYPE.FF);
     }
 
     public EdgeMap getFRList() {
-        return getEdgeMap(EDGETYPE.FR);
+        return getEdgeList(EDGETYPE.FR);
     }
 
     public EdgeMap getRFList() {
-        return getEdgeMap(EDGETYPE.RF);
+        return getEdgeList(EDGETYPE.RF);
     }
 
     public EdgeMap getRRList() {
-        return getEdgeMap(EDGETYPE.RR);
+        return getEdgeList(EDGETYPE.RR);
     }
 
     public void setFFList(EdgeMap forwardForwardList) {
@@ -207,7 +207,7 @@ public class VertexValueWritable extends Node {
      * Delete the corresponding edge
      */
     public void processDelete(EDGETYPE neighborToDeleteEdgetype, VKmer keyToDelete) {
-        ReadIdSet prevList = this.getEdgeMap(neighborToDeleteEdgetype).remove(keyToDelete);
+        ReadIdSet prevList = this.getEdgeList(neighborToDeleteEdgetype).remove(keyToDelete);
         if (prevList == null) {
             throw new IllegalArgumentException("processDelete tried to remove an edge that didn't exist: "
                     + keyToDelete + " but I am " + this);

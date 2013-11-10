@@ -46,7 +46,7 @@ public class PathMergeMessage extends MessageWritable {
     }
 
     public EdgeMap getEdgeList(EDGETYPE edgeType) {
-        return node.getEdgeMap(edgeType);
+        return node.getEdgeList(edgeType);
     }
 
     public Node getNode() {

@@ -119,7 +119,7 @@ public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWrit
 
     public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmer insertedBubble) {
         EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror();
-        getVertexValue().getEdgeMap(newBubbleToMeDir).put(insertedBubble,
+        getVertexValue().getEdgeList(newBubbleToMeDir).put(insertedBubble,
                 new ReadIdSet(Arrays.asList(new Long(readId))));
     }
 

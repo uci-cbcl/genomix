@@ -74,7 +74,7 @@ public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
             outgoingMsg.reset();
             outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            EdgeMap edgeList = getVertexValue().getEdgeMap(tipToNeighborEdgetype);
+            EdgeMap edgeList = getVertexValue().getEdgeList(tipToNeighborEdgetype);
             if (edgeList.size() != 1)
                 throw new IllegalArgumentException("In this edgeType, the size of edges has to be 1!");
             VKmer destVertexId = edgeList.firstKey();
