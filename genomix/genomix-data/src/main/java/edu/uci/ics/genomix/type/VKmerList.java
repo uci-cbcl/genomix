@@ -36,7 +36,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     }
 
     public VKmerList(byte[] data, int offset) {
-        setNewReference(data, offset);
+        setAsReference(data, offset);
     }
 
     public VKmerList(VKmerList kmerList){
@@ -53,7 +53,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
     }
 
-    public void setNewReference(byte[] data, int offset) {
+    public void setAsReference(byte[] data, int offset) {
         valueCount = Marshal.getInt(data, offset);
         this.storage = data;
         this.offset = offset;
@@ -171,14 +171,14 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return posOffset;
     }
 
-    public void setCopy(VKmerList otherList) {
-        setCopy(otherList.storage, otherList.offset);
+    public void setAsCopy(VKmerList otherList) {
+        setAsCopy(otherList.storage, otherList.offset);
     }
 
     /**
      * read a KmerListWritable from newData, which should include the header
      */
-    public void setCopy(byte[] newData, int newOffset) {
+    public void setAsCopy(byte[] newData, int newOffset) {
         int newValueCount = Marshal.getInt(newData, newOffset);
         int newLength = getLength(newData, newOffset);
         setSize(newLength);
@@ -234,7 +234,16 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return it;
     }
 
-    public boolean contains(VKmerList kmer) {
+    public boolean contains(Kmer kmer) {
+        Iterator<VKmer> posIterator = this.iterator();
+        while (posIterator.hasNext()) {
+            if (kmer.equals(posIterator.next()))
+                return true;
+        }
+        return false;
+    }
+    
+    public boolean contains(VKmer kmer) {
         Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
             if (kmer.equals(posIterator.next()))
