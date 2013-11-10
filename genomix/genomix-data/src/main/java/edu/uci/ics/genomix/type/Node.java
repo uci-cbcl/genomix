@@ -67,22 +67,22 @@ public class Node implements Writable, Serializable {
         public ReadIdSet readIds;
         public VKmer kmer;
 
-        public NeighborInfo(EDGETYPE edgeType, VKmer kmer, ReadIdSet readIds) {
-            set(edgeType, kmer, readIds);
+        public NeighborInfo(EDGETYPE edgeType, VKmer kmer) {
+            set(edgeType, kmer);
         }
 
-        public NeighborInfo(EDGETYPE edgeType, Entry<VKmer, ReadIdSet> edge) {
-            set(edgeType, edge.getKey(), edge.getValue());
-        }
+//        public NeighborInfo(EDGETYPE edgeType, VKmer edge) {
+//            set(edgeType, edge.getKey(), edge.getValue());
+//        }
 
-        public void set(EDGETYPE edgeType, Entry<VKmer, ReadIdSet> edge) {
-            set(edgeType, edge.getKey(), edge.getValue());
-        }
+//        public void set(EDGETYPE edgeType, Entry<VKmer, ReadIdSet> edge) {
+//            set(edgeType, edge.getKey(), edge.getValue());
+//        }
 
-        public void set(EDGETYPE edgeType, VKmer kmer, ReadIdSet readIds) {
+        public void set(EDGETYPE edgeType, VKmer kmer) {
             this.et = edgeType;
             this.kmer = kmer;
-            this.readIds = readIds;
+//            this.readIds = readIds;
         }
 
         public String toString() {
@@ -96,9 +96,9 @@ public class Node implements Writable, Serializable {
 
     public static class NeighborsInfo implements Iterable<NeighborInfo> {
         public final EDGETYPE et;
-        public final EdgeMap edges;
+        public final VKmerList edges;
 
-        public NeighborsInfo(EDGETYPE edgeType, EdgeMap edgeList) {
+        public NeighborsInfo(EDGETYPE edgeType, VKmerList edgeList) {
             et = edgeType;
             edges = edgeList;
         }
@@ -107,7 +107,7 @@ public class Node implements Writable, Serializable {
         public Iterator<NeighborInfo> iterator() {
             return new Iterator<NeighborInfo>() {
 
-                private Iterator<Entry<VKmer, ReadIdSet>> it = edges.entrySet().iterator();
+                private Iterator<VKmer> it = edges.iterator();
 
                 private NeighborInfo info = null;
 
@@ -138,7 +138,7 @@ public class Node implements Writable, Serializable {
 
     private static final int SIZE_FLOAT = 4;
 
-    private EdgeMap[] edges = { null, null, null, null };
+    private VKmerList[] edges = { null, null, null, null };
 
     private ReadHeadSet unflippedReadIds; // first internalKmer in read
     private ReadHeadSet flippedReadIds; // first internalKmer in read (but
@@ -156,7 +156,7 @@ public class Node implements Writable, Serializable {
     public Node() {
 
         for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()] = new EdgeMap();
+            edges[e.get()] = new VKmerList();
         }
         unflippedReadIds = new ReadHeadSet();
         flippedReadIds = new ReadHeadSet();
@@ -169,7 +169,7 @@ public class Node implements Writable, Serializable {
         //        this.stepCount = 0;
     }
 
-    public Node(EdgeMap[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer, float coverage) {
+    public Node(VKmerList[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer, float coverage) {
         this();
         setAsCopy(edges, unflippedReadIds, flippedReadIds, kmer, coverage);
     }
@@ -194,7 +194,7 @@ public class Node implements Writable, Serializable {
         setAsCopy(node.edges, node.unflippedReadIds, node.flippedReadIds, node.internalKmer, node.averageCoverage);
     }
 
-    public void setAsCopy(EdgeMap[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer,
+    public void setAsCopy(VKmerList[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer,
             float coverage) {
         for (EDGETYPE e : EDGETYPE.values()) {
             this.edges[e.get()].setAsCopy(edges[e.get()]);
@@ -209,7 +209,7 @@ public class Node implements Writable, Serializable {
 
     public void reset() {
         for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()].clear();
+            edges[e.get()].reset();
         }
         unflippedReadIds.clear();
         flippedReadIds.clear();
@@ -236,7 +236,7 @@ public class Node implements Writable, Serializable {
                     "getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
         EnumSet<EDGETYPE> ets = direction.edgeTypes();
         for (EDGETYPE et : ets) {
-            if (getEdgeMap(et).size() > 0)
+            if (getEdgeList(et).size() > 0)
                 return et;
         }
         throw new IllegalStateException("Programmer error: we shouldn't get here... Degree is 1 in " + direction
@@ -251,8 +251,8 @@ public class Node implements Writable, Serializable {
             return null;
         }
         for (EDGETYPE et : direction.edgeTypes()) {
-            if (getEdgeMap(et).size() > 0) {
-                return new NeighborInfo(et, getEdgeMap(et).firstEntry());
+            if (getEdgeList(et).size() > 0) {
+                return new NeighborInfo(et, getEdgeList(et).getPosition(0));
             }
         }
         throw new IllegalStateException("Programmer error!!!");
@@ -262,24 +262,24 @@ public class Node implements Writable, Serializable {
      * Get this node's edgeType and edgeList in this given edgeType. Return null if there is no neighbor
      */
     public NeighborsInfo getNeighborsInfo(EDGETYPE et) {
-        if (getEdgeMap(et).size() == 0)
+        if (getEdgeList(et).size() == 0)
             return null;
-        return new NeighborsInfo(et, getEdgeMap(et));
+        return new NeighborsInfo(et, getEdgeList(et));
     }
 
-    public EdgeMap getEdgeMap(EDGETYPE edgeType) {
+    public VKmerList getEdgeList(EDGETYPE edgeType) {
         return edges[edgeType.get()];
     }
 
-    public void setEdgeMap(EDGETYPE edgeType, EdgeMap edgeMap) {
+    public void setEdgeMap(EDGETYPE edgeType, VKmerList edgeMap) {
         this.edges[edgeType.get()].setAsCopy(edgeMap);
     }
 
-    public EdgeMap[] getEdges() {
+    public VKmerList[] getEdges() {
         return edges;
     }
 
-    public void setEdges(EdgeMap[] edges) {
+    public void setEdges(VKmerList[] edges) {
         this.edges = edges;
     }
 
@@ -341,7 +341,7 @@ public class Node implements Writable, Serializable {
     public int getSerializedLength() {
         int length = 0;
         for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-            length += edges[e.get()].getLengthInBytes();
+            length += edges[e.get()].getLength();
         }
         length += unflippedReadIds.getLengthInBytes();
         length += flippedReadIds.getLengthInBytes();
@@ -364,7 +364,7 @@ public class Node implements Writable, Serializable {
         int curOffset = offset;
         for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
             edges[e.get()].setAsCopy(data, curOffset);
-            curOffset += edges[e.get()].getLengthInBytes();
+            curOffset += edges[e.get()].getLength();
         }
         unflippedReadIds.setAsCopy(data, curOffset);
         curOffset += unflippedReadIds.getLengthInBytes();
@@ -379,7 +379,7 @@ public class Node implements Writable, Serializable {
         int curOffset = offset;
         for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
             edges[e.get()].setAsReference(data, curOffset);
-            curOffset += edges[e.get()].getLengthInBytes();
+            curOffset += edges[e.get()].getLength();
         }
         unflippedReadIds.setAsCopy(data, curOffset);
         curOffset += unflippedReadIds.getLengthInBytes();
@@ -537,11 +537,11 @@ public class Node implements Writable, Serializable {
             // stream theirs in, adjusting to the new total length
             for (ReadHeadInfo p : other.unflippedReadIds) {
                 unflippedReadIds.add(p.getMateId(), p.getReadId(),
-                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor));
+                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
             }
             for (ReadHeadInfo p : other.flippedReadIds) {
                 flippedReadIds.add(p.getMateId(), p.getReadId(),
-                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor));
+                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
             }
         } else {
 //            int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
@@ -550,12 +550,12 @@ public class Node implements Writable, Serializable {
             for (ReadHeadInfo p : other.unflippedReadIds) {
                 newPOffset = otherLength - 1 - p.getOffset();
                 flippedReadIds
-                        .add(p.getMateId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor));
+                        .add(p.getMateId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
             }
             for (ReadHeadInfo p : other.flippedReadIds) {
                 newPOffset = otherLength - 1 - p.getOffset();
                 unflippedReadIds.add(p.getMateId(), p.getReadId(),
-                        (int) ((newPOffset + 1) * lengthFactor - lengthFactor));
+                        (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
             }
         }
     }
@@ -641,20 +641,20 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = thisLength - K + 1;
                 // stream theirs in with my offset
                 for (ReadHeadInfo p : other.unflippedReadIds) {
-                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
+                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 for (ReadHeadInfo p : other.flippedReadIds) {
-                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset());
+                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 break;
             case FR:
                 newOtherOffset = thisLength - K  + otherLength;
                 // stream theirs in, offset and flipped
                 for (ReadHeadInfo p : other.unflippedReadIds) {
-                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
+                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 for (ReadHeadInfo p : other.flippedReadIds) {
-                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
+                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 break;
             case RF:
@@ -662,29 +662,29 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = otherLength - 1;
                 // shift my offsets (other is prepended)
                 for (ReadHeadInfo p : unflippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 for (ReadHeadInfo p : flippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
 //                System.out.println(startReads.size());
 //                System.out.println(endReads.size());
                 //stream theirs in, not offset (they are first now) but flipped
                 for (ReadHeadInfo p : other.unflippedReadIds) {
-                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
+                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 for (ReadHeadInfo p : other.flippedReadIds) {
-                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset());
+                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 break;
             case RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
                 for (ReadHeadInfo p : unflippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 for (ReadHeadInfo p : flippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getReadSequenceSameWithMateId(), p.getReadSequenceDiffWithMateId());
                 }
                 for (ReadHeadInfo p : other.unflippedReadIds) {
                     unflippedReadIds.add(p);
@@ -701,8 +701,8 @@ public class Node implements Writable, Serializable {
      */
     public NeighborInfo findEdge(final VKmer kmer) {
         for (EDGETYPE et : EDGETYPE.values()) {
-            if (edges[et.get()].containsKey(kmer)) {
-                return new NeighborInfo(et, kmer, edges[et.get()].get(kmer));
+            if (edges[et.get()].contains(kmer)) {
+                return new NeighborInfo(et, kmer);
             }
         }
         return null;
