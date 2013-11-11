@@ -11,7 +11,7 @@ import edu.uci.ics.genomix.type.VKmer;
 
 public class PathMergeMessage extends MessageWritable {
 
-    class PATHMERGE_MESSAGE_FIELDS extends MESSAGE_FIELDS {
+    public static class PATHMERGE_MESSAGE_FIELDS extends MESSAGE_FIELDS {
         public static final byte NODE = 1 << 1; // used in subclass: PathMergeMessage
     }
 

@@ -11,13 +11,13 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {
     
-    class MESSAGE_FIELDS {
+    public static class MESSAGE_FIELDS {
         public static final byte SOURCE_VERTEX_ID = 1 << 0; // used in superclass: MessageWritable
     }
     
     private VKmer sourceVertexId; // stores srcNode id
     private short flag; // stores message type
-    protected byte validMessageFlag;
+    public byte validMessageFlag;
 
     public MessageWritable() {
         sourceVertexId = new VKmer();
