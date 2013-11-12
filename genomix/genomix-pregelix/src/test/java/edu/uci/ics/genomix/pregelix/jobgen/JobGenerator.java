@@ -39,7 +39,7 @@ public class JobGenerator {
     public static String outputBase = "src/test/resources/jobs/";
 
     private static void configureJob(PregelixJob job) {
-        job.setGlobalAggregatorClass(StatisticsAggregator.class);
+        job.addGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
