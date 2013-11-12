@@ -123,6 +123,7 @@ public class BasicBFSTraverseVertex extends
             outgoingMsg.setDestReadHeadOrientation(firstReadHeadType);
         }
         outgoingMsg.setReadId(readId); // commonReadId
+        outgoingMsg.setTotalBFSLength(0); // this is the beginning of the search
 
         return srcNode;
     }
