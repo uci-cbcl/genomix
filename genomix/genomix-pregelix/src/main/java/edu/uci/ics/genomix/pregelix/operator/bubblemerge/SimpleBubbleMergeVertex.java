@@ -64,6 +64,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer))
             throw new IllegalStateException("majorVertexId is equal to minorVertexId, this is not allowed!");
 
+        outgoingMsg.reset();
         VKmer minorVertexId;
         boolean forwardIsMajor = forwardNeighbor.kmer.compareTo(reverseNeighbor.kmer) >= 0;
         if (forwardIsMajor) {
