@@ -170,7 +170,8 @@ public class GenomixJobConf extends JobConf {
         STATS,
         TIP_ADD,
         BRIDGE_ADD,
-        BUBBLE_ADD;
+        BUBBLE_ADD,
+        BFS;
 
         /**
          * Get a comma-separated pipeline from the given array of Patterns
@@ -242,7 +243,7 @@ public class GenomixJobConf extends JobConf {
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
-
+    
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.conf.profile";
     public static final String RUN_LOCAL = "genomix.conf.runLocal";
@@ -361,7 +362,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
         if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
-            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 1.0f);
+            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);

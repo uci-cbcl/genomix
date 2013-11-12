@@ -50,6 +50,10 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
+import edu.uci.ics.genomix.pregelix.testhelper.BFSTraverseVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.BubbleAddVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.TipAddVertex;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
@@ -178,6 +182,18 @@ public class GenomixDriver {
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters, conf);
                 curOutput = prevOutput; // use previous job's output
+                break;
+            case TIP_ADD:
+                pregelixJobs.add(TipAddVertex.getConfiguredJob(conf, TipAddVertex.class));
+                break;
+            case BRIDGE_ADD:
+                pregelixJobs.add(BridgeAddVertex.getConfiguredJob(conf, BridgeAddVertex.class));
+                break;
+            case BUBBLE_ADD:
+                pregelixJobs.add(BubbleAddVertex.getConfiguredJob(conf, BubbleAddVertex.class));
+                break;
+            case BFS:
+                pregelixJobs.add(BFSTraverseVertex.getConfiguredJob(conf, BFSTraverseVertex.class));
                 break;
         }
     }
