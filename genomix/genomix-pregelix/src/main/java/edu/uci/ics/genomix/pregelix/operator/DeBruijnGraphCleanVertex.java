@@ -150,7 +150,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public static HashMapWritable<ByteWritable, VLongWritable> readStatisticsCounterResult(Configuration conf) {
         try {
             VertexValueWritable value = (VertexValueWritable) IterationUtils.readGlobalAggregateValue(conf,
-                    BspUtils.getJobId(conf));
+                    BspUtils.getJobId(conf), StatisticsAggregator.class.getName());
             return value.getCounters();
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -169,7 +169,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         else
             job = new PregelixJob(conf, vertexClass.getSimpleName());
         job.setVertexClass(vertexClass);
-        job.setGlobalAggregatorClass(StatisticsAggregator.class);
+        job.addGlobalAggregatorClass(StatisticsAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setOutputKeyClass(VKmer.class);
