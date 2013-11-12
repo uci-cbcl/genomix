@@ -4,14 +4,13 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.NullWritable;
-
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.ReadIdSet;
@@ -26,7 +25,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
  * 
  * @author anbangx
  */
-public class BubbleAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
+public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     public static int kmerSize = -1;
     public static final String MAJOR_VERTEXID = "BubbleAddVertex.majorVertexId";
     public static final String MIDDLE_VERTEXID = "BubbleAddVertex.middleVertexId";

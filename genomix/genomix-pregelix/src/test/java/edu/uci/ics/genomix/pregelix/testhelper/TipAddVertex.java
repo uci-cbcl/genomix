@@ -3,14 +3,13 @@ package edu.uci.ics.genomix.pregelix.testhelper;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.NullWritable;
-
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.ReadIdSet;
@@ -22,7 +21,7 @@ import edu.uci.ics.pregelix.api.util.BspUtils;
 /**
  * Add tip
  */
-public class TipAddVertex extends Vertex<VKmer, VertexValueWritable, NullWritable, MessageWritable> {
+public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     public static int kmerSize = -1;
     public static final String SPLIT_NODE = "TipAddVertex.splitNode";
     public static final String INSERTED_TIP = "TipAddVertex.insertedTip";
