@@ -167,7 +167,10 @@ public class GenomixJobConf extends JobConf {
         DUMP_FASTA,
         CHECK_SYMMETRY,
         PLOT_SUBGRAPH,
-        STATS;
+        STATS,
+        TIP_ADD,
+        BRIDGE_ADD,
+        BUBBLE_ADD;
 
         /**
          * Get a comma-separated pipeline from the given array of Patterns
