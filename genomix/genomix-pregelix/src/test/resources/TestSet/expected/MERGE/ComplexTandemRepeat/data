@@ -1,0 +1,5 @@
+GAA	{FF:{}	FR:{}	RF:{}	RR:{CGA=[1], GGA=[3]}	5':[], ~5':[]	kmer:GAAA	cov:1.5x}
+TCA	{FF:{}	FR:{}	RF:{}	RR:{AAT=[2]}	5':[], ~5':[]	kmer:TCA	cov:1.0x}
+CGA	{FF:{GAA=[1]}	FR:{AAT=[1]}	RF:{CGA=[1]}	RR:{}	5':[], ~5':[]	kmer:CGA	cov:2.0x}
+GGA	{FF:{GAA=[3]}	FR:{}	RF:{}	RR:{}	5':[3-0_0], ~5':[]	kmer:GGA	cov:1.0x}
+AAT	{FF:{TCA=[2]}	FR:{CGA=[1]}	RF:{}	RR:{}	5':[1-0_0,2-1_0], ~5':[]	kmer:AATC	cov:1.5x}
