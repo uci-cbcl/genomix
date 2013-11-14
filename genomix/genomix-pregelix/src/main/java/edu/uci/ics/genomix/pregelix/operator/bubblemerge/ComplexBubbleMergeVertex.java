@@ -122,7 +122,7 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
                     // setup outgoingMsg
                     outgoingMsg.setMajorVertexId(majorVertexId);
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    outgoingMsg.setNode(getVertexValue().getNode());
+                    outgoingMsg.setNode(getVertexValue());
                     outgoingMsg.setMajorToBubbleEdgetype(meToMajorEdgetype);
                     outgoingMsg.setMinorToBubbleEdgetype(meToMinorEdgetype);
                     sendMsg(minorVertexId, outgoingMsg);

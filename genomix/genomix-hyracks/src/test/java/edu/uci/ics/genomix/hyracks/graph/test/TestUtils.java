@@ -110,22 +110,22 @@ public class TestUtils {
             for (String actualLine : actualLines) {
                 lineExpected = expectedLines.get(num++);
                 if (lineExpected == null) {
-                    throw new Exception("Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
+                    throw new Exception("Comparing " + expectedFile + " and " + actualFile + ":  Actual result changed at line " + num + ":\n< " + actualLine + "\n> ");
                 }
                 if (unorderedField == null || unorderedField.size() == 0) {
                     if (!lineExpected.equals(actualLine)) {
-                        throw new Exception("Compare two files not equal, Actual:" + actualLine + " Expected:"
+                        throw new Exception("Comparing " + expectedFile + " and " + actualFile + ":  Compare two files not equal, Actual:" + actualLine + " Expected:"
                                 + lineExpected);
                     }
                 } else {
                     if (!compareStringByFields(lineExpected, actualLine, unorderedField)) {
-                        throw new Exception("Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
+                        throw new Exception("Comparing " + expectedFile + " and " + actualFile + ":  Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
                                 + actualLine);
                     }
                 }
             }
             if (num < expectedLines.size()) {
-                throw new Exception("Compare two files not equal, expected file have more lines");
+                throw new Exception("Comparing " + expectedFile + " and " + actualFile + ":  Compare two files not equal, expected file have more lines");
             }
         } finally {
             readerActual.close();
