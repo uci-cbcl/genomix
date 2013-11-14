@@ -234,7 +234,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return it;
     }
 
-    public boolean contains(Kmer kmer) {
+    public boolean contains(VKmerList kmer) {
         Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
             if (kmer.equals(posIterator.next()))
