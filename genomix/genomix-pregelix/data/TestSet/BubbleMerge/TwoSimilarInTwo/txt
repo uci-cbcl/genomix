@@ -1,4 +1,0 @@
-AAA	{FF:{}	FR:{CTA=[0]}	RF:{}	RR:{AAT=[0]}	5':[], ~5':[]	kmer:AAA	cov:2.0x}
-ATA	{FF:{}	FR:{CTA=[1]}	RF:{}	RR:{AAT=[1]}	5':[], ~5':[]	kmer:ATA	cov:1.0x}
-AAT	{FF:{AAA=[0], ATA=[1]}	FR:{}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:AAT	cov:1.0x}
-CTA	{FF:{}	FR:{AAA=[0], ATA=[1]}	RF:{}	RR:{}	5':[], ~5':[]	kmer:CTA	cov:1.0x}

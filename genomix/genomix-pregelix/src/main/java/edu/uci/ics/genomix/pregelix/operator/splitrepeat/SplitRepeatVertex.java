@@ -87,7 +87,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
     }
 
     public VKmer randomGenerateVertexId(int numOfSuffix) {
-        String newVertexId = getVertexId().toString() + generaterRandomDNAString(numOfSuffix);
+        String newVertexId =  generaterRandomDNAString(numOfSuffix, getVertexId().toString());
         VKmer createdVertexId = new VKmer();
         createdVertexId.setFromStringBytes(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
         return createdVertexId;

@@ -1,4 +1,0 @@
-AAA	{FF:{ACG=[1]}	FR:{}	RF:{}	RR:{ATA=[1]}	5':[], ~5':[]	kmer:TAAAC	cov:1.0x}
-AGA	{FF:{ACG=[2]}	FR:{}	RF:{}	RR:{ATA=[2]}	5':[], ~5':[]	kmer:TAGAC	cov:1.0x}
-ATA	{FF:{AAA=[1], AGA=[2]}	FR:{}	RF:{}	RR:{}	5':[1-0_0,2-0_0], ~5':[]	kmer:ATA	cov:2.0x}
-ACG	{FF:{}	FR:{}	RF:{}	RR:{AAA=[1], AGA=[2]}	5':[], ~5':[]	kmer:ACG	cov:2.0x}

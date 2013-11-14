@@ -1,9 +1,0 @@
-TAA	{FF:{AAC=[2]}	FR:{}	RF:{}	RR:{ATA=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
-ACA	{FF:{CAC=[2]}	FR:{}	RF:{}	RR:{AAC=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
-GCA	{FF:{CAC=[1]}	FR:{}	RF:{}	RR:{AGC=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
-ATA	{FF:{TAA=[2]}	FR:{CTA=[1]}	RF:{}	RR:{AAT=[1, 2]}	5':[], ~5':[]	kmer:	cov:2.0x}
-CTA	{FF:{}	FR:{ATA=[1]}	RF:{AGC=[1]}	RR:{}	5':[], ~5':[]	kmer:	cov:1.0x}
-AAC	{FF:{ACA=[2]}	FR:{}	RF:{}	RR:{TAA=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
-CAC	{FF:{}	FR:{}	RF:{}	RR:{ACA=[2], GCA=[1]}	5':[], ~5':[]	kmer:	cov:2.0x}
-AGC	{FF:{GCA=[1]}	FR:{}	RF:{CTA=[1]}	RR:{}	5':[], ~5':[]	kmer:	cov:1.0x}
-AAT	{FF:{ATA=[1, 2]}	FR:{}	RF:{}	RR:{}	5':[1-0_0,2-0_0], ~5':[]	kmer:	cov:2.0x}
