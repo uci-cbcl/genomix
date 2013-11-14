@@ -103,6 +103,11 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                 new ReadIdSet(reverseNeighborInfo.readIds));
         vertexValue.getEdgeMap(forwardNeighborInfo.et).put(forwardNeighborInfo.kmer,
                 new ReadIdSet(forwardNeighborInfo.readIds));
+        
+        
+        float oldCoverage = getVertexValue().getAverageCoverage();
+        getVertexValue().setAverageCoverage(oldCoverage / 2); // TODO make this proportional to the # of readids
+        vertexValue.setAverageCoverage(oldCoverage / 2);
 
         vertexValue.setInternalKmer(getVertexId());
 

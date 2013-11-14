@@ -65,7 +65,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         this.reporter = reporter;
         reporter.incrCounter("totals", "nodes", 1);
         updateStats("degree", value.inDegree() + value.outDegree());
-        updateStats("kmerLength", value.getKmerLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength());
+        updateStats("kmerLength", value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength());
         updateStats("coverage", Math.round(value.getAverageCoverage()));
         updateStats("unflippedReadIds", value.getUnflippedReadIds().size());
         updateStats("flippedReadIds", value.getFlippedReadIds().size());

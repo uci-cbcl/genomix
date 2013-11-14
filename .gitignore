@@ -23,4 +23,5 @@ tmp
 dist
 .idea
 bin
+genomix/fullstack_genomix
 graphviz

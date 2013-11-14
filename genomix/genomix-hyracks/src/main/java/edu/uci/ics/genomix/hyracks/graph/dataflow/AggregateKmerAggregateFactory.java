@@ -106,12 +106,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
 
-                for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+                for (EDGETYPE e : EDGETYPE.values()) {
                     localUniNode.getEdgeMap(e).unionUpdate((readNode.getEdgeMap(e)));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
                 localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
-                localUniNode.addCoverage(readNode);
+                localUniNode.setAverageCoverage(readNode.getAverageCoverage());
             }
 
             @Override
@@ -121,12 +121,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 Node localUniNode = (Node) state.state;
 
                 readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
+                for (EDGETYPE e : EDGETYPE.values()) {
                     localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
                 localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
-                localUniNode.addCoverage(readNode);
+                localUniNode.setAverageCoverage(localUniNode.getAverageCoverage() + readNode.getAverageCoverage());
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.
                 //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {

@@ -92,7 +92,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         verbose = false;
         for (VKmer problemKmer : problemKmers) {
             verbose |= debug
-                    && (getVertexValue().getNode().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+                    && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
         }
     }
 
