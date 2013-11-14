@@ -1,0 +1,5 @@
+GCA	{FF:[]	FR:[ATG]	RF:[]	RR:[CGC]	kmer:GCA	
+ATC	{FF:[]	FR:[CGA]	RF:[]	RR:[]	kmer:ATC	
+ATG	{FF:[]	FR:[GCA]	RF:[]	RR:[]	kmer:ATG	
+CGA	{FF:[]	FR:[ATC]	RF:[CGC]	RR:[]	kmer:CGA	
+CGC	{FF:[GCA]	FR:[CGC]	RF:[CGA, CGC]	RR:[]	kmer:CGC	

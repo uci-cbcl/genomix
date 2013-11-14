@@ -1,0 +1,9 @@
+AAA	{FF:[AAC, AAT]	FR:[]	RF:[]	RR:[GAA, TAA]	kmer:	
+GAA	{FF:[AAA]	FR:[]	RF:[]	RR:[GGA]	kmer:	
+TAA	{FF:[AAA]	FR:[]	RF:[]	RR:[]	kmer:	
+GGA	{FF:[GAA]	FR:[]	RF:[CCC]	RR:[]	kmer:	
+AAC	{FF:[ACG]	FR:[]	RF:[]	RR:[AAA]	kmer:	
+CCC	{FF:[CCG]	FR:[]	RF:[GGA]	RR:[]	kmer:	
+ACG	{FF:[]	FR:[CCG]	RF:[]	RR:[AAC]	kmer:	
+CCG	{FF:[]	FR:[ACG]	RF:[]	RR:[CCC]	kmer:	
+AAT	{FF:[]	FR:[]	RF:[]	RR:[AAA]	kmer:	
