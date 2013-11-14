@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -83,7 +84,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      */
     public void receiveMerges(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        Node node = vertex.getNode();
+        Node node = vertex;
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
@@ -124,7 +125,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             VKmer me = getVertexId();
             VKmer other = msg.getSourceVertexId();
             // determine if merge. if head msg meets head and #receiveMsg = 1
-            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class))) {
+            if (DIR.enumSetFromByte(state).containsAll(Arrays.asList(DIR.values()))) {
                 if (me.compareTo(other) < 0) {
                     node.mergeWithNode(senderEdgetype, msg.getNode());
                     numMerged++;
