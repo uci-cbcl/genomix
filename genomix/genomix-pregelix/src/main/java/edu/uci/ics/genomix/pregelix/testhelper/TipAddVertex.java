@@ -36,16 +36,16 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
      */
     public void initVertex() {
         if (kmerSize == -1)
-            kmerSize = 3; // Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
+            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         if (splitNode == null) {
-            splitNode = new VKmer("CTA"); // getContext().getConfiguration().get(SPLIT_NODE)
+            splitNode = new VKmer(getContext().getConfiguration().get(SPLIT_NODE)); 
         }
         if (insertedTip == null) {
-            insertedTip = new VKmer("AGC"); // getContext().getConfiguration().get(INSERTED_TIP)
+            insertedTip = new VKmer(getContext().getConfiguration().get(INSERTED_TIP)); 
         }
         if (tipToSplitEdgetype == null) {
-            tipToSplitEdgetype = EDGETYPE.fromByte(EDGETYPE.RF.get()); // Byte.parseByte(getContext().getConfiguration().get(TIP_TO_SPLIT_EDGETYPE))
+            tipToSplitEdgetype = EDGETYPE.fromByte(Byte.parseByte(getContext().getConfiguration().get(TIP_TO_SPLIT_EDGETYPE))); 
         }
     }
 

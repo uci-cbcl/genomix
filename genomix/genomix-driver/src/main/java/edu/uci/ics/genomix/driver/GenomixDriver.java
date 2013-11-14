@@ -343,7 +343,7 @@ public class GenomixDriver {
             conf = GenomixJobConf.fromArguments(args);
             String pathToConf = conf.get(GenomixJobConf.CONF_INPUT);
             if(pathToConf != ""){
-                LOG.warning("Read job config from " + pathToConf);
+                LOG.info("Read job config from " + pathToConf);
                 conf.addResource(new Path(pathToConf));
             }
         } catch (CmdLineException ex) {
