@@ -341,6 +341,11 @@ public class GenomixDriver {
         GenomixJobConf conf;
         try {
             conf = GenomixJobConf.fromArguments(args);
+            String pathToConf = conf.get(GenomixJobConf.CONF_INPUT);
+            if(pathToConf != ""){
+                LOG.warning("Read job config from " + pathToConf);
+                conf.addResource(new Path(pathToConf));
+            }
         } catch (CmdLineException ex) {
             System.err.println("Usage: bin/genomix [options]\n");
             ex.getParser().setUsageWidth(80);

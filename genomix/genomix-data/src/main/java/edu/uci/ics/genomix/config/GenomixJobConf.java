@@ -23,7 +23,6 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
-
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -148,6 +147,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
+        
+        @Option(name = "-confInput", usage = "Read job conf from the specified file", required = false)
+        private String confInput;
     }
 
     /**
@@ -232,6 +234,7 @@ public class GenomixJobConf extends JobConf {
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.conf.saveIntermediateResults";
     public static final String RANDOM_SEED = "genomix.conf.randomSeed";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
+    public static final String CONF_INPUT = "genomix.conf.path";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -248,7 +251,7 @@ public class GenomixJobConf extends JobConf {
     public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
     public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
     public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
-    
+
     // Hyracks/Pregelix Setup
     public static final String PROFILE = "genomix.conf.profile";
     public static final String RUN_LOCAL = "genomix.conf.runLocal";
@@ -409,7 +412,11 @@ public class GenomixJobConf extends JobConf {
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
-
+        
+        // default conf setup
+        if (get(CONF_INPUT) == null)
+            set(CONF_INPUT, "");
+        
         // hyracks-specific
 
         //        if (getBoolean(RUN_LOCAL, false)) {
@@ -473,6 +480,10 @@ public class GenomixJobConf extends JobConf {
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
+        
+        // read conf.xml
+        if (opts.confInput != null)
+            set(CONF_INPUT, opts.confInput);
     }
 
     /**
