@@ -19,8 +19,9 @@ cd "$input"
 for pattern in MERGE LOW_COVERAGE SPLIT_REPEAT SCAFFOLD UNROLL_TANDEM CHECK_SYMMETRY PLOT_SUBGRAPH TIP_ADD BRIDGE_ADD; do
         echo "Patern: $pattern"
 	pushd $pattern
+	conf="$genomix_home/../../../genomix-pregelix/src/test/resources/jobs/$pattern.xml"
 	for file in *; do
-		cmd="$genomix_home/bin/genomix -kmerLength 3 -localInput $file -pipelineOrder BUILD,$pattern -localOutput $output/$pattern/$file -randomSeed 500 -plotSubgraph_startSeed "AAT" -plotSubgraph_numHops 1 2>&1 | tee $output/$pattern/$file.log"
+		cmd="$genomix_home/bin/genomix -kmerLength 3 -localInput $file -localOutput $output/$pattern/$file -confInput $conf -pipelineOrder BUILD,$pattern 2>&1 | tee $output/$pattern/$file.log"
 		echo "Running cmd = ($cmd)"
 		eval "$cmd"
 		#sleep 30
@@ -34,8 +35,9 @@ done
 pattern="TIP_REMOVE"
 echo "Patern: $pattern"
 pushd $pattern
+conf="$genomix_home/../../../genomix-pregelix/src/test/resources/jobs/TIP_ADD.xml,$genomix_home/../../../genomix-pregelix/src/test/resources/jobs/$pattern.xml"
 for file in *; do
-	cmd="$genomix_home/bin/genomix -kmerLength 3 -localInput $file -pipelineOrder BUILD,TIP_ADD,$pattern -localOutput $output/$pattern/$file -randomSeed 500"
+	cmd="$genomix_home/bin/genomix -kmerLength 3 -localInput $file -localOutput $output/$pattern/$file -confInput $conf -pipelineOrder BUILD,TIP_ADD,$pattern"
 	echo "Running cmd = ($cmd)"
         eval "$cmd" 
 done
@@ -46,8 +48,9 @@ popd
 pattern="BRIDGE"
 echo "Patern: $pattern"
 pushd $pattern
+conf="$genomix_home/../../../genomix-pregelix/src/test/resources/jobs/BRIDGE_ADD.xml,$genomix_home/../../../genomix-pregelix/src/test/resources/jobs/$pattern.xml"
 for file in *; do
-	cmd="$genomix_home/bin/genomix -kmerLength 3 -localInput $file -pipelineOrder BUILD,BRIDGE_ADD,$pattern -localOutput $output/$pattern/$file -randomSeed 500"	
+	cmd="$genomix_home/bin/genomix -kmerLength 3 -localInput $file -localOutput $output/$pattern/$file -confInput $conf -pipelineOrder BUILD,BRIDGE_ADD,$pattern"	
 	echo "Running cmd = ($cmd)"
         eval "$cmd"
 done
