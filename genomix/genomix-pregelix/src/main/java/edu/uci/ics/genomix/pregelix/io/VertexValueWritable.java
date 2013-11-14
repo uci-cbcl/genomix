@@ -55,7 +55,7 @@ public class VertexValueWritable extends Node {
     }
 
     public void setAsCopy(VertexValueWritable other) {
-        setNode(other.getNode());
+        setNode(other);
         state = other.getState();
         isFakeVertex = other.isFakeVertex();
         counters.clear();
@@ -75,19 +75,19 @@ public class VertexValueWritable extends Node {
     }
 
     public EdgeMap getFFList() {
-        return getEdgeList(EDGETYPE.FF);
+        return getEdgeMap(EDGETYPE.FF);
     }
 
     public EdgeMap getFRList() {
-        return getEdgeList(EDGETYPE.FR);
+        return getEdgeMap(EDGETYPE.FR);
     }
 
     public EdgeMap getRFList() {
-        return getEdgeList(EDGETYPE.RF);
+        return getEdgeMap(EDGETYPE.RF);
     }
 
     public EdgeMap getRRList() {
-        return getEdgeList(EDGETYPE.RR);
+        return getEdgeMap(EDGETYPE.RR);
     }
 
     public void setFFList(EdgeMap forwardForwardList) {
@@ -216,14 +216,14 @@ public class VertexValueWritable extends Node {
 
     public void processFinalUpdates(EDGETYPE deleteDir, EDGETYPE updateDir, Node other) {
         EDGETYPE replaceDir = deleteDir.mirror();
-        this.getNode().updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
+        updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
     }
 
     /**
      * Process any changes to value. This is for merging. nodeToAdd should be only edge
      */
     public void processMerges(EDGETYPE mergeDir, Node node, int kmerSize) {
-        super.getNode().mergeWithNode(mergeDir, node);
+        mergeWithNode(mergeDir, node);
     }
 
     @Override

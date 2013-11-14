@@ -99,10 +99,15 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                 .createVertex(getContext().getConfiguration());
         VertexValueWritable vertexValue = new VertexValueWritable();
         //add the corresponding edge to new vertex
-        vertexValue.getEdgeList(reverseNeighborInfo.et).put(reverseNeighborInfo.kmer,
+        vertexValue.getEdgemap(reverseNeighborInfo.et).put(reverseNeighborInfo.kmer,
                 new ReadIdSet(reverseNeighborInfo.readIds));
-        vertexValue.getEdgeList(forwardNeighborInfo.et).put(forwardNeighborInfo.kmer,
+        vertexValue.getEdgemap(forwardNeighborInfo.et).put(forwardNeighborInfo.kmer,
                 new ReadIdSet(forwardNeighborInfo.readIds));
+        
+        
+        float oldCoverage = getVertexValue().getAverageCoverage();
+        getVertexValue().setAverageCoverage(oldCoverage / 2); // TODO make this proportional to the # of readids
+        vertexValue.setAverageCoverage(oldCoverage / 2);
 
         vertexValue.setInternalKmer(getVertexId());
 
@@ -139,7 +144,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
 
     public void deleteEdgeFromOldVertex(Set<NeighborInfo> neighborsInfo) {
         for (NeighborInfo neighborInfo : neighborsInfo)
-            getVertexValue().getEdgeList(neighborInfo.et).removeReadIdSubset(neighborInfo.kmer, neighborInfo.readIds);
+            getVertexValue().getEdgemap(neighborInfo.et).removeReadIdSubset(neighborInfo.kmer, neighborInfo.readIds);
     }
 
     /**
@@ -159,8 +164,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                 // set edgeType and the corresponding edgeList based on connectedTable
                 EDGETYPE reverseEdgeType = validPathsTable[i][0];
                 EDGETYPE forwardEdgeType = validPathsTable[i][1];
-                EdgeMap reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
-                EdgeMap forwardEdgeList = vertex.getEdgeList(forwardEdgeType);
+                EdgeMap reverseEdgeList = vertex.getEdgemap(reverseEdgeType);
+                EdgeMap forwardEdgeList = vertex.getEdgemap(forwardEdgeType);
 
                 for (Entry<VKmer, ReadIdSet> reverseEdge : reverseEdgeList.entrySet()) {
                     for (Entry<VKmer, ReadIdSet> forwardEdge : forwardEdgeList.entrySet()) {
@@ -190,8 +195,8 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                 // set edgeType and the corresponding edgeList based on connectedTable
                 EDGETYPE reverseEdgeType = validPathsTable[i][0];
                 EDGETYPE forwardEdgeType = validPathsTable[i][1];
-                EdgeMap reverseEdgeList = vertex.getEdgeList(reverseEdgeType);
-                EdgeMap forwardEdgeList = vertex.getEdgeList(forwardEdgeType);
+                EdgeMap reverseEdgeList = vertex.getEdgemap(reverseEdgeType);
+                EdgeMap forwardEdgeList = vertex.getEdgemap(forwardEdgeType);
 
                 for (Entry<VKmer, ReadIdSet> reverseEdge : reverseEdgeList.entrySet()) {
                     for (Entry<VKmer, ReadIdSet> forwardEdge : forwardEdgeList.entrySet()) {
@@ -269,7 +274,7 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
             Entry<VKmer, ReadIdSet> deletedEdge = new SimpleEntry<VKmer, ReadIdSet>(incomingMsg.getSourceVertexId(),
                     createdEdge.getValue());
 
-            EdgeMap edgeMap = getVertexValue().getEdgeList(meToNeighbor);
+            EdgeMap edgeMap = getVertexValue().getEdgemap(meToNeighbor);
             if (verbose) {
                 LOG.info("ResponseToRepeat: 1. \n" +
                         getVertexId() + " receive msg from " + incomingMsg.getSourceVertexId().toString()

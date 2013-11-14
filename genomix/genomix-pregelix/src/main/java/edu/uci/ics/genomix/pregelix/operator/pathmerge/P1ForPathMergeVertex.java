@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -83,7 +84,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      */
     public void receiveMerges(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        Node node = vertex.getNode();
+        Node node = vertex;
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
@@ -124,7 +125,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             VKmer me = getVertexId();
             VKmer other = msg.getSourceVertexId();
             // determine if merge. if head msg meets head and #receiveMsg = 1
-            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class))) {
+            if (DIR.enumSetFromByte(state).containsAll(Arrays.asList(DIR.values()))) {
                 if (me.compareTo(other) < 0) {
                     node.mergeWithNode(senderEdgetype, msg.getNode());
                     numMerged++;
@@ -138,7 +139,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                     outFlag = 0;
                     outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
                     for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
-                        for (VKmer dest : vertex.getEdgeList(et).keySet()) {
+                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor()
                                     : meToNeighbor;
@@ -212,11 +213,11 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             EDGETYPE aliveToMe = EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
 
             VKmer deletedKmer = incomingMsg.getSourceVertexId();
-            if (value.getEdgeList(deleteToMe).containsKey(deletedKmer)) {
-                ReadIdSet deletedReadIds = value.getEdgeList(deleteToMe).get(deletedKmer);
-                value.getEdgeList(deleteToMe).remove(deletedKmer);
+            if (value.getEdgeMap(deleteToMe).containsKey(deletedKmer)) {
+                ReadIdSet deletedReadIds = value.getEdgeMap(deleteToMe).get(deletedKmer);
+                value.getEdgeMap(deleteToMe).remove(deletedKmer);
 
-                value.getEdgeList(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);
+                value.getEdgeMap(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);
             }
             voteToHalt();
         }

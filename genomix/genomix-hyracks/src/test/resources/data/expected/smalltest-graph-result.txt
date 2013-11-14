@@ -1,7 +1,7 @@
-ACG	{FF:{}	FR:{CCG=[2]}	RF:{GTA=[2]}	RR:{}	5':[], ~5':[]	kmer:	cov:1.0x}
-AGC	{FF:{GCC=[1]}	FR:{}	RF:{}	RR:{CAG=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
-CAG	{FF:{AGC=[1]}	FR:{}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:	cov:1.0x}
-CCA	{FF:{}	FR:{}	RF:{}	RR:{GCC=[1]}	5':[], ~5':[]	kmer:	cov:1.0x}
-CCG	{FF:{}	FR:{ACG=[2]}	RF:{}	RR:{GCC=[2]}	5':[], ~5':[]	kmer:	cov:1.0x}
-GCC	{FF:{CCA=[1], CCG=[2]}	FR:{}	RF:{}	RR:{AGC=[1]}	5':[2-0_0], ~5':[]	kmer:	cov:2.0x}
-GTA	{FF:{}	FR:{}	RF:{ACG=[2]}	RR:{}	5':[], ~5':[]	kmer:	cov:1.0x}
+ACG	{FF:null	FR:{CCG=[2]}	RF:{GTA=[2]}	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
+AGC	{FF:{GCC=[1]}	FR:null	RF:null	RR:{CAG=[1]}	5':null, ~5':null	kmer:null	cov:1.0x}
+CAG	{FF:{AGC=[1]}	FR:null	RF:null	RR:null	5':[1-0_0], ~5':null	kmer:null	cov:1.0x}
+CCA	{FF:null	FR:null	RF:null	RR:{GCC=[1]}	5':null, ~5':null	kmer:null	cov:1.0x}
+CCG	{FF:null	FR:{ACG=[2]}	RF:null	RR:{GCC=[2]}	5':null, ~5':null	kmer:null	cov:1.0x}
+GCC	{FF:{CCA=[1], CCG=[2]}	FR:null	RF:null	RR:{AGC=[1]}	5':[2-0_0], ~5':null	kmer:null	cov:2.0x}
+GTA	{FF:null	FR:null	RF:{ACG=[2]}	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}

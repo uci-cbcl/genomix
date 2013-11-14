@@ -37,13 +37,13 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
     public void sendEdgeMap(DIR direction) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeList(et).keySet()) {
+            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setEdgeMap(vertex.getEdgeList(et));
+                outgoingMsg.setEdgeMap(vertex.getEdgeMap(et));
                 sendMsg(dest, outgoingMsg);
             }
         }
@@ -62,12 +62,12 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
         while (msgIterator.hasNext()) {
             SymmetryCheckerMessage incomingMsg = msgIterator.next();
             EDGETYPE neighborToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
-            boolean exist = getVertexValue().getEdgeList(neighborToMe).containsKey(incomingMsg.getSourceVertexId());
+            boolean exist = getVertexValue().getEdgeMap(neighborToMe).containsKey(incomingMsg.getSourceVertexId());
             if (!exist) {
                 getVertexValue().setState(State.ERROR_NODE);
                 return;
             }
-            boolean edgeMapIsSame = getVertexValue().getEdgeList(neighborToMe).get(incomingMsg.getSourceVertexId())
+            boolean edgeMapIsSame = getVertexValue().getEdgeMap(neighborToMe).get(incomingMsg.getSourceVertexId())
                     .equals(incomingMsg.getEdgeMap().get(getVertexId()));
             if (!edgeMapIsSame)
                 getVertexValue().setState(State.ERROR_NODE);

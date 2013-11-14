@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Random;
@@ -99,8 +100,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             hasNext = false;
         } else {
             hasNext = true;
-            nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdgeList(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
-            nextKmer = vertex.getEdgeList(nextEdgetype).firstKey();
+            nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdgeMap(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
+            nextKmer = vertex.getEdgeMap(nextEdgetype).firstKey();
             nextHead = isNodeRandomHead(nextKmer);
         }
 
@@ -109,8 +110,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             hasPrev = false;
         } else {
             hasPrev = true;
-            prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdgeList(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
-            prevKmer = vertex.getEdgeList(prevEdgetype).firstKey();
+            prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdgeMap(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
+            prevKmer = vertex.getEdgeMap(prevEdgetype).firstKey();
             prevHead = isNodeRandomHead(prevKmer);
         }
     }
@@ -194,7 +195,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      */
     public void receiveMerges(Iterator<PathMergeMessage> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        Node node = vertex.getNode();
+        Node node = vertex;
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
@@ -227,7 +228,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         //      getVertexValue().setCounters(counters);
         if (updated) {
             vertex.setState(state);
-            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class)))
+            if (DIR.enumSetFromByte(state).containsAll(Arrays.asList(DIR.values())))
                 voteToHalt();
             else
                 activate();

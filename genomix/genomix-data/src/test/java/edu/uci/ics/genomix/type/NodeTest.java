@@ -944,4 +944,5 @@ public class NodeTest {
 //            node.getEdgeMap(EDGETYPE.RF).pollFirstEntry();
 //        Assert.assertEquals(true, node.isSimpleOrTerminalPath());
 //    }
-}
+
+    }

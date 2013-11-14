@@ -15,8 +15,10 @@
 
 package edu.uci.ics.genomix.type;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -125,31 +127,20 @@ public class Node implements Writable, Serializable {
     }
 
     private static final long serialVersionUID = 1L;
-    public static final Node EMPTY_NODE = new Node();
 
-    private static final int SIZE_FLOAT = 4;
-
-    private VKmerList[] edges = { null, null, null, null };
-
-    private ReadHeadSet unflippedReadIds; // first internalKmer in read
-    private ReadHeadSet flippedReadIds; // first internalKmer in read (but
-    // internalKmer was flipped)
-
+    private VKmerList[] edges;
+    private ReadHeadSet unflippedReadIds; // first Kmer in read
+    private ReadHeadSet flippedReadIds; // first Kmer in read (but kmer was flipped)
     private VKmer internalKmer;
 
-    private float averageCoverage;
+    private Float averageCoverage;
 
     public Node() {
-
-        for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()] = new VKmerList();
-        }
-        unflippedReadIds = new ReadHeadSet();
-        flippedReadIds = new ReadHeadSet();
-        internalKmer = new VKmer(); // in graph construction - not
-                                    // set kmerlength
-                                    // Optimization: VKmer
-        averageCoverage = 0;
+        edges = new VKmerList[] { null, null, null, null };
+        unflippedReadIds = null;
+        flippedReadIds = null;
+        internalKmer = null;
+        averageCoverage = null;
     }
 
     public Node(VKmerList[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer, float coverage) {
@@ -160,11 +151,6 @@ public class Node implements Writable, Serializable {
     public Node(byte[] data, int offset) {
         this();
         setAsReference(data, offset);
-    }
-
-
-    public Node getNode() {
-        return this;
     }
 
     public Node getCopyAsNode() {
@@ -178,49 +164,51 @@ public class Node implements Writable, Serializable {
     }
 
     public void setAsCopy(VKmerList[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer,
-            float coverage) {
-        for (EDGETYPE e : EDGETYPE.values()) {
-            this.edges[e.get()].setAsCopy(edges[e.get()]);
-        }
-        this.unflippedReadIds.clear();
-        this.unflippedReadIds.addAll(unflippedReadIds);
-        this.flippedReadIds.clear();
-        this.flippedReadIds.addAll(flippedReadIds);
-        this.internalKmer.setAsCopy(kmer);
+            Float coverage) {
+        setEdges(edges);
+        setUnflippedReadIds(unflippedReadIds);
+        setFlippedReadIds(flippedReadIds);
+        setInternalKmer(kmer);
         this.averageCoverage = coverage;
     }
 
     public void reset() {
-        for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()].reset();
-        }
-        unflippedReadIds.clear();
-        flippedReadIds.clear();
-        internalKmer.reset(0);
-        averageCoverage = 0;
+        edges = new VKmerList[] { null, null, null, null };
+        unflippedReadIds = null;
+        flippedReadIds = null;
+        internalKmer = null;
+        averageCoverage = null;
     }
 
     public VKmer getInternalKmer() {
+        if (internalKmer == null) {
+            internalKmer = new VKmer();
+        }
         return internalKmer;
     }
 
-    public void setInternalKmer(VKmer internalKmer) {
-        this.internalKmer.setAsCopy(internalKmer);
+    public void setInternalKmer(VKmer kmer) {
+        if (kmer == null) {
+            this.internalKmer = null;
+        } else {
+            getInternalKmer().setAsCopy(kmer);
+        }
     }
 
     public int getKmerLength() {
         return internalKmer.getKmerLetterLength();
     }
 
-    //This function works on only this case: in this DIR, vertex has and only has one EDGETYPE
+    // This function works on only this case: in this DIR, vertex has and only has one EDGETYPE
     public EDGETYPE getNeighborEdgeType(DIR direction) {
         if (degree(direction) != 1)
             throw new IllegalArgumentException(
                     "getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
         EnumSet<EDGETYPE> ets = direction.edgeTypes();
         for (EDGETYPE et : ets) {
-            if (getEdgeList(et).size() > 0)
+            if (edges[et.get()] != null && getEdgeMap(et).size() > 0) {
                 return et;
+            }
         }
         throw new IllegalStateException("Programmer error: we shouldn't get here... Degree is 1 in " + direction
                 + " but didn't find a an edge list > 1");
@@ -234,8 +222,8 @@ public class Node implements Writable, Serializable {
             return null;
         }
         for (EDGETYPE et : direction.edgeTypes()) {
-            if (getEdgeList(et).size() > 0) {
-                return new NeighborInfo(et, getEdgeList(et).getPosition(0));
+            if (edges[et.get()] != null && getEdgeMap(et).size() > 0) {
+                return new NeighborInfo(et, getEdgeMap(et).getPosition(0));
             }
         }
         throw new IllegalStateException("Programmer error!!!");
@@ -245,17 +233,26 @@ public class Node implements Writable, Serializable {
      * Get this node's edgeType and edgeList in this given edgeType. Return null if there is no neighbor
      */
     public NeighborsInfo getNeighborsInfo(EDGETYPE et) {
-        if (getEdgeList(et).size() == 0)
+        if (edges[et.get()] == null || getEdgeMap(et).size() == 0) {
             return null;
-        return new NeighborsInfo(et, getEdgeList(et));
+        }
+        return new NeighborsInfo(et, getEdgeMap(et));
     }
 
-    public VKmerList getEdgeList(EDGETYPE edgeType) {
+    public VKmerList getEdgeMap(EDGETYPE edgeType) {
+        if (edges[edgeType.get()] == null) {
+            edges[edgeType.get()] = new VKmerList();
+        }
         return edges[edgeType.get()];
     }
 
     public void setEdgeMap(EDGETYPE edgeType, VKmerList edgeMap) {
-        this.edges[edgeType.get()].setAsCopy(edgeMap);
+        if (edgeMap == null) {
+            edges[edgeType.get()] = null;
+        } else {
+            getEdgeMap(edgeType).clear();
+            getEdgeMap(edgeType).setAsCopy(edgeMap);
+        }
     }
 
     public VKmerList[] getEdges() {
@@ -263,7 +260,9 @@ public class Node implements Writable, Serializable {
     }
 
     public void setEdges(VKmerList[] edges) {
-        this.edges = edges;
+        for (EDGETYPE et : EDGETYPE.values()) {
+            setEdgeMap(et, edges[et.get()]);
+        }
     }
 
     public float getAverageCoverage() {
@@ -300,36 +299,59 @@ public class Node implements Writable, Serializable {
     }
 
     public ReadHeadSet getUnflippedReadIds() {
+        if (unflippedReadIds == null) {
+            unflippedReadIds = new ReadHeadSet();
+        }
         return unflippedReadIds;
     }
 
-    // TODO rename the function
     public void setUnflippedReadIds(ReadHeadSet unflippedReadIds) {
-        this.unflippedReadIds.clear();
-        this.unflippedReadIds.addAll(unflippedReadIds);
+        if (unflippedReadIds == null) {
+            this.unflippedReadIds = null;
+        } else {
+            getUnflippedReadIds().clear();
+            getUnflippedReadIds().addAll(unflippedReadIds);
+        }
     }
 
     public ReadHeadSet getFlippedReadIds() {
+        if (flippedReadIds == null) {
+            flippedReadIds = new ReadHeadSet();
+        }
         return flippedReadIds;
     }
 
     public void setFlippedReadIds(ReadHeadSet flippedReadIds) {
-        this.flippedReadIds.clear();
-        this.flippedReadIds.addAll(flippedReadIds);
+        if (flippedReadIds == null) {
+            this.flippedReadIds = null;
+        } else {
+            getFlippedReadIds().clear();
+            getFlippedReadIds().addAll(flippedReadIds);
+        }
     }
 
     /**
      * Returns the length of the byte-array version of this node
      */
     public int getSerializedLength() {
-        int length = 0;
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-            length += edges[e.get()].getLength();
+        int length = Byte.SIZE / 8; // byte header
+        for (EDGETYPE e : EDGETYPE.values()) {
+            if (edges[e.get()] != null && edges[e.get()].size() > 0) {
+                length += edges[e.get()].getLengthInBytes();
+            }
         }
-        length += unflippedReadIds.getLengthInBytes();
-        length += flippedReadIds.getLengthInBytes();
-        length += internalKmer.getLength();
-        length += SIZE_FLOAT; // avgCoverage
+        if (unflippedReadIds != null && unflippedReadIds.size() > 0) {
+            length += unflippedReadIds.getLengthInBytes();
+        }
+        if (flippedReadIds != null && flippedReadIds.size() > 0) {
+            length += flippedReadIds.getLengthInBytes();
+        }
+        if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
+            length += internalKmer.getLength();
+        }
+        if (averageCoverage != null) {
+            length += Float.SIZE / 8;
+        }
         return length;
     }
 
@@ -344,54 +366,82 @@ public class Node implements Writable, Serializable {
     }
 
     public void setAsCopy(byte[] data, int offset) {
-        int curOffset = offset;
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-            edges[e.get()].setAsCopy(data, curOffset);
-            curOffset += edges[e.get()].getLength();
+        reset();
+        byte activeFields = data[offset];
+        offset += 1;
+        for (EDGETYPE et : EDGETYPE.values()) {
+            // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
+            if ((activeFields & (1 << et.get())) != 0) {
+                getEdgeMap(et).setAsCopy(data, offset);
+                offset += edges[et.get()].getLengthInBytes();
+            }
         }
-        unflippedReadIds.setAsCopy(data, curOffset);
-        curOffset += unflippedReadIds.getLengthInBytes();
-        flippedReadIds.setAsCopy(data, curOffset);
-        curOffset += flippedReadIds.getLengthInBytes();
-        internalKmer.setAsCopy(data, curOffset);
-        curOffset += internalKmer.getLength();
-        averageCoverage = Marshal.getFloat(data, curOffset);
+        if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
+            getUnflippedReadIds().setAsCopy(data, offset);
+            offset += unflippedReadIds.getLengthInBytes();
+        }
+        if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
+            getFlippedReadIds().setAsCopy(data, offset);
+            offset += flippedReadIds.getLengthInBytes();
+        }
+        if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
+            getInternalKmer().setAsCopy(data, offset);
+            offset += internalKmer.getLength();
+        }
+        if ((activeFields & NODE_FIELDS.AVERAGE_COVERAGE) != 0) {
+            averageCoverage = Marshal.getFloat(data, offset);
+            offset += Float.SIZE / 8;
+        }
     }
 
     public void setAsReference(byte[] data, int offset) {
-        int curOffset = offset;
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-            edges[e.get()].setAsReference(data, curOffset);
-            curOffset += edges[e.get()].getLength();
+        reset();
+        byte activeFields = data[offset];
+        offset += 1;
+        for (EDGETYPE et : EDGETYPE.values()) {
+            // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
+            if ((activeFields & (1 << et.get())) != 0) {
+                getEdgeMap(et).setAsReference(data, offset);
+                offset += edges[et.get()].getLengthInBytes();
+            }
         }
-        unflippedReadIds.setAsCopy(data, curOffset);
-        curOffset += unflippedReadIds.getLengthInBytes();
-        flippedReadIds.setAsCopy(data, curOffset);
-        curOffset += flippedReadIds.getLengthInBytes();
-
-        internalKmer.setAsReference(data, curOffset);
-        curOffset += internalKmer.getLength();
-        averageCoverage = Marshal.getFloat(data, curOffset);
+        if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
+            getUnflippedReadIds().setAsCopy(data, offset);
+            offset += unflippedReadIds.getLengthInBytes();
+        }
+        if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
+            getFlippedReadIds().setAsCopy(data, offset);
+            offset += flippedReadIds.getLengthInBytes();
+        }
+        if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
+            getInternalKmer().setAsReference(data, offset);
+            offset += internalKmer.getLength();
+        }
+        if ((activeFields & NODE_FIELDS.AVERAGE_COVERAGE) != 0) {
+            averageCoverage = Marshal.getFloat(data, offset);
+            offset += Float.SIZE / 8;
+        }
     }
 
     public static void write(Node n, DataOutput out) throws IOException {
+        out.writeByte(n.getActiveFields());
         for (EDGETYPE e : EDGETYPE.values()) {
-            n.edges[e.get()].write(out);
+            if (n.edges[e.get()] != null && n.edges[e.get()].size() > 0) {
+                n.edges[e.get()].write(out);
+            }
         }
-        n.unflippedReadIds.write(out);
-        n.flippedReadIds.write(out);
-        n.internalKmer.write(out);
-        out.writeFloat(n.averageCoverage);
-
-        //        if (DEBUG) {
-        //            boolean verbose = false;
-        //            for (VKmer problemKmer : problemKmers) {
-        //                verbose |= n.findEdge(problemKmer) != null;
-        //            }
-        //            if (verbose) {
-        //                LOG.fine("write: " + n.toString());
-        //            }
-        //        }
+        if (n.unflippedReadIds != null && n.unflippedReadIds.size() > 0) {
+            n.unflippedReadIds.write(out);
+        }
+        if (n.flippedReadIds != null && n.flippedReadIds.size() > 0) {
+            n.flippedReadIds.write(out);
+        }
+        if (n.internalKmer != null && n.internalKmer.getKmerLetterLength() > 0) {
+            n.internalKmer.write(out);
+        }
+        if (n.averageCoverage != null) {
+            out.writeFloat(n.averageCoverage);
+        }
     }
 
     @Override
@@ -402,23 +452,56 @@ public class Node implements Writable, Serializable {
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
-        for (EDGETYPE e : EDGETYPE.values()) {
-            edges[e.get()].readFields(in);
+        byte activeFields = in.readByte();
+        for (EDGETYPE et : EDGETYPE.values()) {
+            // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
+            if ((activeFields & (1 << et.get())) != 0) {
+                getEdgeMap(et).readFields(in);
+            }
         }
-        unflippedReadIds.readFields(in);
-        flippedReadIds.readFields(in);
-        this.internalKmer.readFields(in);
-        averageCoverage = in.readFloat();
+        if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
+            getUnflippedReadIds().readFields(in);
+        }
+        if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
+            getFlippedReadIds().readFields(in);
+        }
+        if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
+            getInternalKmer().readFields(in);
+        }
+        if ((activeFields & NODE_FIELDS.AVERAGE_COVERAGE) != 0) {
+            averageCoverage = in.readFloat();
+        }
+    }
 
-//        if (DEBUG) {
-//            boolean verbose = false;
-//            for (VKmer problemKmer : problemKmers) {
-//                verbose |= findEdge(problemKmer) != null;
-//            }
-//            if (verbose) {
-//                LOG.fine("readFields: " + toString());
-//            }
-//        }
+    protected static class NODE_FIELDS {
+        // bits 0-3 are for edge presence
+        public static final int UNFLIPPED_READ_IDS = 1 << 4;
+        public static final int FLIPPED_READ_IDS = 1 << 5;
+        public static final int INTERNAL_KMER = 1 << 6;
+        public static final int AVERAGE_COVERAGE = 1 << 7;
+    }
+
+    protected byte getActiveFields() {
+        byte fields = 0;
+        // bits 0-3 are for presence of edges
+        for (EDGETYPE et : EDGETYPE.values()) {
+            if (edges[et.get()] != null && edges[et.get()].size() > 0) {
+                fields |= 1 << et.get();
+            }
+        }
+        if (unflippedReadIds != null && unflippedReadIds.size() > 0) {
+            fields |= NODE_FIELDS.UNFLIPPED_READ_IDS;
+        }
+        if (flippedReadIds != null && flippedReadIds.size() > 0) {
+            fields |= NODE_FIELDS.FLIPPED_READ_IDS;
+        }
+        if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
+            fields |= NODE_FIELDS.INTERNAL_KMER;
+        }
+        if (averageCoverage != null) {
+            fields |= NODE_FIELDS.AVERAGE_COVERAGE;
+        }
+        return fields;
     }
 
     public class SortByCoverage implements Comparator<Node> {
@@ -439,25 +522,34 @@ public class Node implements Writable, Serializable {
             return false;
 
         Node nw = (Node) o;
-        for (EDGETYPE e : EnumSet.allOf(EDGETYPE.class)) {
-            if (!edges[e.get()].equals(nw.edges[e.get()]))
+        for (EDGETYPE et : EDGETYPE.values()) {
+            // If I'm null, return false if he's not null; otherwise, do a regular .equals
+            if (edges[et.get()] == null ? nw.edges[et.get()] != null : edges[et.get()].equals(nw.edges[et.get()])) {
                 return false;
+            }
         }
 
-        return (averageCoverage == nw.averageCoverage && unflippedReadIds.equals(nw.unflippedReadIds)
-                && flippedReadIds.equals(nw.flippedReadIds) && internalKmer.equals(nw.internalKmer));
+        // in each case, if I'm null, he must also be null; otherwise, do regular .equals comparsion
+        return ((averageCoverage == null ? nw.averageCoverage == null : averageCoverage == nw.averageCoverage) // coverage equality
+                && (unflippedReadIds == null ? nw.unflippedReadIds == null : unflippedReadIds
+                        .equals(nw.unflippedReadIds)) // unflipped equality
+                && (flippedReadIds == null ? nw.flippedReadIds == null : flippedReadIds.equals(nw.flippedReadIds)) // flipped equality
+        && (internalKmer == null ? nw.internalKmer == null : internalKmer.equals(nw.internalKmer) // internal kmer equality
+        ));
     }
 
     @Override
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        for (EDGETYPE e : EDGETYPE.values()) {
-            sbuilder.append(e + ":").append(edges[e.get()].toString()).append('\t');
+        for (EDGETYPE et : EDGETYPE.values()) {
+            sbuilder.append(et + ":").append(edges[et.get()] == null ? "null" : edges[et.get()].toString())
+                    .append('\t');
         }
-        sbuilder.append("5':" + unflippedReadIds.toString() + ", ~5':" + flippedReadIds.toString()).append('\t');
-        sbuilder.append("kmer:" + internalKmer.toString()).append('\t');
-        sbuilder.append("cov:" + averageCoverage).append('x').append('}');
+        sbuilder.append("5':").append(unflippedReadIds == null ? "null" : unflippedReadIds.toString());
+        sbuilder.append(", ~5':").append(flippedReadIds == null ? "null" : flippedReadIds.toString()).append('\t');
+        sbuilder.append("kmer:").append(internalKmer == null ? "null" : internalKmer.toString()).append('\t');
+        sbuilder.append("cov:").append(averageCoverage == null ? "null" : (averageCoverage + "x")).append('}');
         return sbuilder.toString();
     }
 
@@ -481,17 +573,10 @@ public class Node implements Writable, Serializable {
         mergeEdges(edgeType, other);
         mergeUnflippedAndFlippedReadIDs(edgeType, other);
         mergeCoverage(other);
-        internalKmer.mergeWithKmerInDir(edgeType, Kmer.lettersInKmer, other.internalKmer);
+        internalKmer.mergeWithKmerInDir(edgeType, Kmer.getKmerLength(), other.internalKmer);
     }
 
     public void mergeWithNodeWithoutKmer(EDGETYPE edgeType, final Node other) {
-        mergeEdges(edgeType, other);
-        mergeUnflippedAndFlippedReadIDs(edgeType, other);
-        mergeCoverage(other);
-    }
-
-    public void mergeWithNodeWithoutKmer(final Node other) {
-        EDGETYPE edgeType = EDGETYPE.FF;
         mergeEdges(edgeType, other);
         mergeUnflippedAndFlippedReadIDs(edgeType, other);
         mergeCoverage(other);
@@ -518,27 +603,36 @@ public class Node implements Writable, Serializable {
         float lengthFactor = (float) thisLength / (float) otherLength;
         if (!flip) {
             // stream theirs in, adjusting to the new total length
-            for (ReadHeadInfo p : other.unflippedReadIds) {
-                unflippedReadIds.add(p.getMateId(), p.getReadId(),
-                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+
+            if (other.unflippedReadIds != null) {
+                for (ReadHeadInfo p : other.unflippedReadIds) {
+                    getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
+                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                }
             }
-            for (ReadHeadInfo p : other.flippedReadIds) {
-                flippedReadIds.add(p.getMateId(), p.getReadId(),
-                        (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+            if (other.flippedReadIds != null) {
+                for (ReadHeadInfo p : other.flippedReadIds) {
+                    getFlippedReadIds().add(p.getMateId(), p.getReadId(),
+                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                }
             }
         } else {
-//            int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
+            //            int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
             // stream theirs in, offset and flipped
             int newPOffset;
-            for (ReadHeadInfo p : other.unflippedReadIds) {
-                newPOffset = otherLength - 1 - p.getOffset();
-                flippedReadIds
-                        .add(p.getMateId(), p.getReadId(), (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+            if (other.unflippedReadIds != null) {
+                for (ReadHeadInfo p : other.unflippedReadIds) {
+                    newPOffset = otherLength - 1 - p.getOffset();
+                    getFlippedReadIds().add(p.getMateId(), p.getReadId(),
+                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                }
             }
-            for (ReadHeadInfo p : other.flippedReadIds) {
-                newPOffset = otherLength - 1 - p.getOffset();
-                unflippedReadIds.add(p.getMateId(), p.getReadId(),
-                        (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+            if (other.flippedReadIds != null) {
+                for (ReadHeadInfo p : other.flippedReadIds) {
+                    newPOffset = otherLength - 1 - p.getOffset();
+                    getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
+                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                }
             }
         }
     }
@@ -548,9 +642,12 @@ public class Node implements Writable, Serializable {
      */
     public void updateEdges(EDGETYPE deleteDir, VKmer toDelete, EDGETYPE updateDir, EDGETYPE replaceDir, Node other,
             boolean applyDelete) {
-        if (applyDelete)
+        if (applyDelete) {
             edges[deleteDir.get()].remove(toDelete);
-        edges[updateDir.get()].unionUpdate(other.edges[replaceDir.get()]);
+        }
+        if (other.edges[replaceDir.get()] != null) {
+            getEdgeMap(updateDir).unionUpdate(other.edges[replaceDir.get()]);
+        }
     }
 
     /**
@@ -565,8 +662,16 @@ public class Node implements Writable, Serializable {
                 if (other.inDegree() > 1)
                     throw new IllegalArgumentException("Illegal FF merge attempted! Other incoming degree is "
                             + other.inDegree() + " in " + other.toString());
-                edges[EDGETYPE.FF.get()].setAsCopy(other.edges[EDGETYPE.FF.get()]);
-                edges[EDGETYPE.FR.get()].setAsCopy(other.edges[EDGETYPE.FR.get()]);
+                if (other.edges[EDGETYPE.FF.get()] != null) {
+                    getEdgeMap(EDGETYPE.FF).setAsCopy(other.getEdgeMap(EDGETYPE.FF));
+                } else {
+                    edges[EDGETYPE.FF.get()] = null;
+                }
+                if (other.edges[EDGETYPE.FR.get()] != null) {
+                    getEdgeMap(EDGETYPE.FR).setAsCopy(other.getEdgeMap(EDGETYPE.FR));
+                } else {
+                    edges[EDGETYPE.FR.get()] = null;
+                }
                 break;
             case FR:
                 if (outDegree() > 1)
@@ -575,8 +680,16 @@ public class Node implements Writable, Serializable {
                 if (other.outDegree() > 1)
                     throw new IllegalArgumentException("Illegal FR merge attempted! Other outgoing degree is "
                             + other.outDegree() + " in " + other.toString());
-                edges[EDGETYPE.FF.get()].setAsCopy(other.edges[EDGETYPE.RF.get()]);
-                edges[EDGETYPE.FR.get()].setAsCopy(other.edges[EDGETYPE.RR.get()]);
+                if (other.edges[EDGETYPE.RF.get()] != null) {
+                    getEdgeMap(EDGETYPE.FF).setAsCopy(other.getEdgeMap(EDGETYPE.RF));
+                } else {
+                    edges[EDGETYPE.FF.get()] = null;
+                }
+                if (other.edges[EDGETYPE.RR.get()] != null) {
+                    getEdgeMap(EDGETYPE.FR).setAsCopy(other.getEdgeMap(EDGETYPE.RR));
+                } else {
+                    edges[EDGETYPE.FR.get()] = null;
+                }
                 break;
             case RF:
                 if (inDegree() > 1)
@@ -585,8 +698,16 @@ public class Node implements Writable, Serializable {
                 if (other.inDegree() > 1)
                     throw new IllegalArgumentException("Illegal RF merge attempted! Other incoming degree is "
                             + other.inDegree() + " in " + other.toString());
-                edges[EDGETYPE.RF.get()].setAsCopy(other.edges[EDGETYPE.FF.get()]);
-                edges[EDGETYPE.RR.get()].setAsCopy(other.edges[EDGETYPE.FR.get()]);
+                if (other.edges[EDGETYPE.FF.get()] != null) {
+                    getEdgeMap(EDGETYPE.RF).setAsCopy(other.getEdgeMap(EDGETYPE.FF));
+                } else {
+                    edges[EDGETYPE.RF.get()] = null;
+                }
+                if (other.edges[EDGETYPE.FR.get()] != null) {
+                    getEdgeMap(EDGETYPE.RR).setAsCopy(other.getEdgeMap(EDGETYPE.FR));
+                } else {
+                    edges[EDGETYPE.RR.get()] = null;
+                }
                 break;
             case RR:
                 if (inDegree() > 1)
@@ -595,26 +716,41 @@ public class Node implements Writable, Serializable {
                 if (other.outDegree() > 1)
                     throw new IllegalArgumentException("Illegal RR merge attempted! Other outgoing degree is "
                             + other.outDegree() + " in " + other.toString());
-                edges[EDGETYPE.RF.get()].setAsCopy(other.edges[EDGETYPE.RF.get()]);
-                edges[EDGETYPE.RR.get()].setAsCopy(other.edges[EDGETYPE.RR.get()]);
+                if (other.edges[EDGETYPE.RF.get()] != null) {
+                    getEdgeMap(EDGETYPE.RF).setAsCopy(other.getEdgeMap(EDGETYPE.RF));
+                } else {
+                    edges[EDGETYPE.RF.get()] = null;
+                }
+                if (other.edges[EDGETYPE.RR.get()] != null) {
+                    getEdgeMap(EDGETYPE.RR).setAsCopy(other.getEdgeMap(EDGETYPE.RR));
+                } else {
+                    edges[EDGETYPE.RR.get()] = null;
+                }
                 break;
         }
     }
 
     protected void addEdges(boolean flip, Node other) {
         if (!flip) {
-            for (EDGETYPE e : EDGETYPE.values()) {
-                edges[e.get()].unionUpdate(other.edges[e.get()]);
+            for (EDGETYPE et : EDGETYPE.values()) {
+                unionUpdateEdgeMap(et, et, other.edges);
             }
         } else {
-            edges[EDGETYPE.FF.get()].unionUpdate(other.edges[EDGETYPE.RF.get()]);
-            edges[EDGETYPE.FR.get()].unionUpdate(other.edges[EDGETYPE.RR.get()]);
-            edges[EDGETYPE.RF.get()].unionUpdate(other.edges[EDGETYPE.FF.get()]);
-            edges[EDGETYPE.RR.get()].unionUpdate(other.edges[EDGETYPE.FR.get()]);
+            unionUpdateEdgeMap(EDGETYPE.FF, EDGETYPE.RF, other.edges);
+            unionUpdateEdgeMap(EDGETYPE.FR, EDGETYPE.RR, other.edges);
+            unionUpdateEdgeMap(EDGETYPE.RF, EDGETYPE.FF, other.edges);
+            unionUpdateEdgeMap(EDGETYPE.RR, EDGETYPE.FR, other.edges);
         }
     }
+
+    private void unionUpdateEdgeMap(EDGETYPE myET, EDGETYPE otherET, VKmerList[] otherEdges) {
+        if (otherEdges[otherET.get()] != null) {
+            getEdgeMap(myET).unionUpdate(otherEdges[otherET.get()]);
+        }
+    }
+
     protected void mergeUnflippedAndFlippedReadIDs(EDGETYPE edgeType, Node other) {
-        int K = Kmer.lettersInKmer;
+        int K = Kmer.getKmerLength();
         int otherLength = other.internalKmer.lettersInKmer;
         int thisLength = internalKmer.lettersInKmer;
         int newOtherOffset, newThisOffset;
@@ -622,57 +758,79 @@ public class Node implements Writable, Serializable {
             case FF:
                 newOtherOffset = thisLength - K + 1;
                 // stream theirs in with my offset
-                for (ReadHeadInfo p : other.unflippedReadIds) {
-                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (other.unflippedReadIds != null) {
+                    for (ReadHeadInfo p : other.unflippedReadIds) {
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                    }
                 }
-                for (ReadHeadInfo p : other.flippedReadIds) {
-                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (other.flippedReadIds != null) {
+                    for (ReadHeadInfo p : other.flippedReadIds) {
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                    }
                 }
                 break;
             case FR:
-                newOtherOffset = thisLength - K  + otherLength;
+                newOtherOffset = thisLength - K + otherLength;
                 // stream theirs in, offset and flipped
-                for (ReadHeadInfo p : other.unflippedReadIds) {
-                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (other.unflippedReadIds != null) {
+                    for (ReadHeadInfo p : other.unflippedReadIds) {
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                    }
                 }
-                for (ReadHeadInfo p : other.flippedReadIds) {
-                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (other.flippedReadIds != null) {
+                    for (ReadHeadInfo p : other.flippedReadIds) {
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                    }
                 }
                 break;
             case RF:
                 newThisOffset = otherLength - K + 1;
                 newOtherOffset = otherLength - 1;
                 // shift my offsets (other is prepended)
-                for (ReadHeadInfo p : unflippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+
+                if (unflippedReadIds != null) {
+                    for (ReadHeadInfo p : unflippedReadIds) {
+                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    }
                 }
-                for (ReadHeadInfo p : flippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (flippedReadIds != null) {
+                    for (ReadHeadInfo p : flippedReadIds) {
+                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    }
                 }
-//                System.out.println(startReads.size());
-//                System.out.println(endReads.size());
-                //stream theirs in, not offset (they are first now) but flipped
-                for (ReadHeadInfo p : other.unflippedReadIds) {
-                    flippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (other.unflippedReadIds != null) {
+                    for (ReadHeadInfo p : other.unflippedReadIds) {
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                    }
                 }
-                for (ReadHeadInfo p : other.flippedReadIds) {
-                    unflippedReadIds.add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (other.flippedReadIds != null) {
+                    for (ReadHeadInfo p : other.flippedReadIds) {
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                    }
                 }
                 break;
             case RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
-                for (ReadHeadInfo p : unflippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (unflippedReadIds != null) {
+                    for (ReadHeadInfo p : unflippedReadIds) {
+                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    }
                 }
-                for (ReadHeadInfo p : flippedReadIds) {
-                    p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                if (flippedReadIds != null) {
+                    for (ReadHeadInfo p : flippedReadIds) {
+                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
+                    }
                 }
-                for (ReadHeadInfo p : other.unflippedReadIds) {
-                    unflippedReadIds.add(p);
+                if (other.unflippedReadIds != null) {
+                    for (ReadHeadInfo p : other.unflippedReadIds) {
+                        getUnflippedReadIds().add(p);
+                    }
                 }
-                for (ReadHeadInfo p : other.flippedReadIds) {
-                    flippedReadIds.add(p);
+                if (other.flippedReadIds != null) {
+                    for (ReadHeadInfo p : other.flippedReadIds) {
+                        getFlippedReadIds().add(p);
+                    }
                 }
                 break;
         }
@@ -683,7 +841,7 @@ public class Node implements Writable, Serializable {
      */
     public NeighborInfo findEdge(final VKmer kmer) {
         for (EDGETYPE et : EDGETYPE.values()) {
-            if (edges[et.get()].contains(kmer)) {
+            if (edges[et.get()] != null && edges[et.get()].containsKey(kmer)) {
                 return new NeighborInfo(et, kmer);
             }
         }
@@ -693,7 +851,9 @@ public class Node implements Writable, Serializable {
     public int degree(DIR direction) {
         int totalDegree = 0;
         for (EDGETYPE et : DIR.edgeTypesInDir(direction)) {
-            totalDegree += edges[et.get()].size();
+            if (edges[et.get()] != null) {
+                totalDegree += edges[et.get()].size();
+            }
         }
         return totalDegree;
     }
@@ -723,7 +883,7 @@ public class Node implements Writable, Serializable {
     }
 
     public boolean isUnflippedOrFlippedReadIds() {
-        return unflippedReadIds.size() > 0 || flippedReadIds.size() > 0;
+        return (unflippedReadIds != null && unflippedReadIds.size() > 0)
+                || (flippedReadIds != null && flippedReadIds.size() > 0);
     }
-
 }

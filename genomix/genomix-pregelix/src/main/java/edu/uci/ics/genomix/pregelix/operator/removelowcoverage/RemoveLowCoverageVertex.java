@@ -69,7 +69,7 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
             incomingMsg = msgIterator.next();
             //response to dead node
             EDGETYPE deadToMeEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdgeList(deadToMeEdgetype).remove(incomingMsg.getSourceVertexId());
+            getVertexValue().getEdgeMap(deadToMeEdgetype).remove(incomingMsg.getSourceVertexId());
         }
     }
 

@@ -90,7 +90,7 @@ public class BasicBFSTraverseVertex extends
     public void sendMsgToNeighbors(EdgeTypeList edgeTypeList, DIR direction) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeList(et).keySet()) {
+            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
@@ -167,7 +167,7 @@ public class BasicBFSTraverseVertex extends
             VKmerList pathList = outgoingMsg.getPathList();
             // msg.pathList and msg.edgeTypeList store neighbor information
             for (int i = 0; i < pathAndEdgeTypeList.size() - 1; i++) {
-                pathList.reset();
+                pathList.clear();
                 // set next edgeType
                 outputEdgeTypeList.clear();
                 outputEdgeTypeList.add(edgeTypeList.get(i)); // msg.edgeTypeList[0]
@@ -194,7 +194,7 @@ public class BasicBFSTraverseVertex extends
             EDGETYPE prevToMe = edgeTypeList.get(pathAndEdgeTypeList.size() - 2);
             VKmer preKmer = kmerList.getPosition(pathAndEdgeTypeList.size() - 2);
 
-            vertex.getEdgeList(prevToMe.mirror()).get(preKmer).add(commonReadId.get()); // Option: put 2 for test
+            vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(commonReadId.get()); // Option: put 2 for test
         }
     }
 
@@ -212,7 +212,7 @@ public class BasicBFSTraverseVertex extends
                 throw new IllegalStateException("When path node receives message to append common readId,"
                         + "PathList should only have one(next) or two(prev and next) elements!");
             for (int i = 0; i < pathList.size(); i++) {
-                vertex.getEdgeList(edgeTypeList.get(i)).get(pathList.getPosition(i)).add(commonReadId);
+                vertex.getEdgeMap(edgeTypeList.get(i)).get(pathList.getPosition(i)).add(commonReadId);
             }
         }
     }

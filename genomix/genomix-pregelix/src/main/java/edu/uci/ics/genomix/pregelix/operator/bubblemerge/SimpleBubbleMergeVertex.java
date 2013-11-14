@@ -82,7 +82,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             LOG.info("Major vertex is: " + outgoingMsg.getMajorVertexId());
         }
         outgoingMsg.setSourceVertexId(getVertexId());
-        outgoingMsg.setNode(getVertexValue().getNode());
+        outgoingMsg.setNode(getVertexValue());
         sendMsg(minorVertexId, outgoingMsg);
     }
 

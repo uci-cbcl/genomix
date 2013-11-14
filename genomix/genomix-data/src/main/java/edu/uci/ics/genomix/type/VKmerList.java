@@ -57,29 +57,29 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         valueCount = Marshal.getInt(data, offset);
         this.storage = data;
         this.offset = offset;
-        this.storageMaxSize = getLength();
+        this.storageMaxSize = getLengthInBytes();
     }
 
     public void append(VKmer kmer) {
-        setSize(getLength() + kmer.getLength());
-        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmer.HEADER_SIZE, storage, offset + getLength(),
+        setSize(getLengthInBytes() + kmer.getLength());
+        System.arraycopy(kmer.getBlockBytes(), kmer.kmerStartOffset - VKmer.HEADER_SIZE, storage, offset + getLengthInBytes(),
                 kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
 
     public void append(int k, Kmer kmer) {
-        setSize(getLength() + HEADER_SIZE + kmer.getLength());
-        Marshal.putInt(k, storage, offset + getLength());
-        System.arraycopy(kmer.getBytes(), kmer.getOffset(), storage, offset + getLength() + HEADER_SIZE,
+        setSize(getLengthInBytes() + HEADER_SIZE + kmer.getLength());
+        Marshal.putInt(k, storage, offset + getLengthInBytes());
+        System.arraycopy(kmer.getBytes(), kmer.getOffset(), storage, offset + getLengthInBytes() + HEADER_SIZE,
                 kmer.getLength());
         valueCount += 1;
         Marshal.putInt(valueCount, storage, offset);
     }
 
     public void append(Kmer kmer) { // TODO optimize this into two separate containers...
-        setSize(getLength() + kmer.getLength() + VKmer.HEADER_SIZE);
-        int myLength = getLength();
+        setSize(getLengthInBytes() + kmer.getLength() + VKmer.HEADER_SIZE);
+        int myLength = getLengthInBytes();
         Marshal.putInt(Kmer.getKmerLength(), storage, offset + myLength); // write a new VKmer header
         System.arraycopy(kmer.getBytes(), kmer.offset, storage, offset + myLength + VKmer.HEADER_SIZE, kmer.getLength());
         valueCount += 1;
@@ -91,12 +91,12 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
      */
     public void appendList(VKmerList otherList) {
         if (otherList.valueCount > 0) {
-            setSize(getLength() + otherList.getLength() - HEADER_SIZE); // one of the headers is redundant
+            setSize(getLengthInBytes() + otherList.getLengthInBytes() - HEADER_SIZE); // one of the headers is redundant
 
             // copy contents of otherList into the end of my storage
             System.arraycopy(otherList.storage, otherList.offset + HEADER_SIZE, // skip other header
-                    storage, offset + getLength(), // add to end
-                    otherList.getLength() - HEADER_SIZE);
+                    storage, offset + getLengthInBytes(), // add to end
+                    otherList.getLengthInBytes() - HEADER_SIZE);
             valueCount += otherList.valueCount;
             Marshal.putInt(valueCount, storage, offset);
         }
@@ -116,7 +116,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         for (VKmer kmer : otherList) {
             uniqueElements.add(kmer); // references okay
         }
-        setSize(getLength() + otherList.getLength()); // upper bound on memory usage
+        setSize(getLengthInBytes() + otherList.getLengthInBytes()); // upper bound on memory usage
         valueCount = 0;
         for (VKmer kmer : uniqueElements) {
             append(kmer);
@@ -138,7 +138,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         if (new_cap > getCapacity()) {
             byte[] new_data = new byte[new_cap];
             if (valueCount > 0) {
-                System.arraycopy(storage, offset, new_data, 0, getLength());
+                System.arraycopy(storage, offset, new_data, 0, getLengthInBytes());
             }
             storage = new_data;
             offset = 0;
@@ -146,7 +146,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
     }
 
-    public void reset() {
+    public void clear() {
         valueCount = 0;
         Marshal.putInt(valueCount, storage, offset);
     }
@@ -223,7 +223,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
                 if (currentIndex < valueCount) { // if it's the last element, don't have to do any copying
                     System.arraycopy(storage, currentOffset, // from the "next" element
                             storage, prevOffset, // to the one just returned (overwriting it)
-                            getLength() - currentOffset + offset); // remaining bytes except current element
+                            getLengthInBytes() - currentOffset + offset); // remaining bytes except current element
                 }
                 valueCount--;
                 currentIndex--;
@@ -243,7 +243,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return false;
     }
     
-    public boolean contains(VKmer kmer) {
+    public boolean containsKey(VKmer kmer) {
         Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
             if (kmer.equals(posIterator.next()))
@@ -277,12 +277,12 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        reset();
+        clear();
         int newValueCount = in.readInt();
         int curOffset = offset + HEADER_SIZE;
         int elemBytes = 0;
         int elemLetters = 0;
-        int curLength = getLength();
+        int curLength = getLengthInBytes();
         for (int i = 0; i < newValueCount; i++) {
             elemLetters = in.readInt();
             elemBytes = KmerUtil.getByteNumFromK(elemLetters) + VKmer.HEADER_SIZE;
@@ -299,7 +299,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.write(storage, offset, getLength());
+        out.write(storage, offset, getLengthInBytes());
     }
 
     public int size() {
@@ -314,7 +314,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return offset;
     }
 
-    public int getLength() {
+    public int getLengthInBytes() {
         int totalSize = HEADER_SIZE;
         for (int curCount = 0; curCount < valueCount; curCount++) {
             totalSize += KmerUtil.getByteNumFromK(Marshal.getInt(storage, offset + totalSize)) + VKmer.HEADER_SIZE;
@@ -350,6 +350,6 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
 
     @Override
     public int hashCode() {
-        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLength());
+        return Marshal.hashBytes(getByteArray(), getStartOffset(), getLengthInBytes());
     }
 }
