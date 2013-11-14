@@ -56,4 +56,5 @@ popd
 
 # clean out output
 find $output/*/*/bin/ -name "*.crc" | xargs rm -f
+find $output/*/*/ -name "*.crc" | xargs rm -f
 find $output/*/*/bin/ -name "_temporary" | xargs rm -rf
