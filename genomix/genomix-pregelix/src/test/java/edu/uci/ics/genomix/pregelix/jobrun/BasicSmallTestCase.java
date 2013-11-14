@@ -98,11 +98,12 @@ public class BasicSmallTestCase extends TestCase {
         //covert bin to text
         GenerateTextFile.convertGraphCleanOutputToText(binFileDir, textFileDir);
         //covert bin to graphviz
-        GenerateGraphViz.convertBinToGraphViz(binFileDir, graphvizFileDir, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
-        //generate statistic counters
-        //        generateStatisticsResult(statisticsFileDir);
+        GenerateGraphViz
+                .writeLocalBinToLocalSvg(binFileDir, graphvizFileDir, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
         // compare results
         TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(textFileDir));
+        //generate statistic counters
+        //        generateStatisticsResult(statisticsFileDir);
     }
 
     public void generateStatisticsResult(String outPutDir) throws IOException {

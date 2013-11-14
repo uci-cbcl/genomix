@@ -175,7 +175,7 @@ public class GraphViz {
      *            A File object to where we want to write.
      * @return Success: 1, Failure: -1
      */
-    public int writeGraphToFile(byte[] img, File to) {
+    public static int writeGraphToFile(byte[] img, File to) {
         try {
             FileOutputStream fos = new FileOutputStream(to);
             fos.write(img);
