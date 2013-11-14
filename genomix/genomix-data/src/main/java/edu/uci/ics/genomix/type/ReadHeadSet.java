@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.io.Writable;
 
+import edu.uci.ics.genomix.type.ReadHeadInfo.READHEADINFO_FIELDS;
 import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Serializable {
@@ -33,17 +34,17 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         super(s);
     }
 
-    public void add(byte mateId, long readId, int offset, VKmer mate0ReadSequence, VKmer mate1ReadSequence) {
-        add(new ReadHeadInfo(mateId, readId, offset, mate0ReadSequence, mate1ReadSequence));
+    public void add(byte mateId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
+        add(new ReadHeadInfo(mateId, readId, offset, thisReadSequence, thatReadSequence));
     }
 
-    public ReadHeadInfo getReadHeadInfoFromReadId(long readId) {
-        ReadHeadInfo info = super.floor(new ReadHeadInfo(readId, null, null)); //TODO need check
-        if (info != null && info.getReadId() == readId) {
-            return info;
-        }
-        return null;
-    }
+//    public ReadHeadInfo getReadHeadInfoFromReadId(long readId) {
+//        ReadHeadInfo info = super.floor(new ReadHeadInfo(readId, null, null)); //TODO need check
+//        if (info != null && info.getReadId() == readId) {
+//            return info;
+//        }
+//        return null;
+//    }
 
     public int getOffsetFromReadId(long readId) {
         for (ReadHeadInfo readHeadInfo : this) {
@@ -58,16 +59,25 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         clear();
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
-        VKmer mate0ReadSequence = new VKmer();
-        VKmer mate1ReadSequence = new VKmer();
+        VKmer thisReadSequence = new VKmer();
+        VKmer thatReadSequence = new VKmer();
         for (int i = 0; i < count; i++) {
+            thisReadSequence.reset(0);
+            thatReadSequence.reset(0);
+            byte activeFields = data[offset];
+            offset++;
             long uuid = Marshal.getLong(data, offset);
             offset += ReadHeadInfo.ITEM_SIZE;
-            mate0ReadSequence.setAsCopy(data, offset);
-            offset += mate0ReadSequence.getLength();
-            mate1ReadSequence.setAsCopy(data, offset);
-            offset += mate1ReadSequence.getLength();
-            add(new ReadHeadInfo(uuid, mate0ReadSequence, mate1ReadSequence));
+            if ((activeFields & READHEADINFO_FIELDS.THIS_READSEQUENCE) != 0) {
+                thisReadSequence.setAsCopy(data, offset);
+                offset += thisReadSequence.getLength();
+                
+            }
+            if ((activeFields & READHEADINFO_FIELDS.THAT_READSEQUENCE) != 0) {
+                thatReadSequence.setAsCopy(data, offset);
+                offset += thatReadSequence.getLength();
+            }
+            add(new ReadHeadInfo(uuid, thisReadSequence, thatReadSequence));
         }
     }
 
@@ -122,6 +132,9 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     }
 
     public int getLengthInBytes() {
-        return HEADER_SIZE + first().getLengthInBytes() * size();
+        int totalBytes = HEADER_SIZE;
+        for(ReadHeadInfo iter : this)
+            totalBytes += iter.getLengthInBytes();
+        return totalBytes;
     }
 }
