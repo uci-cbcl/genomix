@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hyracks.graph.test;
+package edu.uci.ics.genomix.util;
 
 import java.io.BufferedReader;
 import java.io.File;

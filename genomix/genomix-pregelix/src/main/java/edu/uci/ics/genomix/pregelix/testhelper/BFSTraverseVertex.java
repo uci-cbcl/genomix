@@ -40,19 +40,19 @@ public class BFSTraverseVertex extends BasicBFSTraverseVertex {
     public void initVertex() {
         super.initVertex();
         if (maxBFSIteration == -1) {
-            maxBFSIteration = 10; // Integer.parseInt(getContext().getConfiguration().get(NUM_STEP_SIMULATION_END_BFS));
+            maxBFSIteration = Integer.parseInt(getContext().getConfiguration().get(NUM_STEP_SIMULATION_END_BFS));
         }
         if (maxTraversalLength == -1) {
-            maxTraversalLength = 10; // Integer.parseInt(getContext().getConfiguration().get(MAX_TRAVERSAL_LENGTH));
+            maxTraversalLength = Integer.parseInt(getContext().getConfiguration().get(MAX_TRAVERSAL_LENGTH));
         }
         if (source == "") {
-            source = "AAT"; // getContext().getConfiguration().get(SOURCE);
+            source = getContext().getConfiguration().get(SOURCE);
         }
         if (destination == "") {
-            destination = "AGA"; // getContext().getConfiguration().get(DESTINATION);
+            destination = getContext().getConfiguration().get(DESTINATION);
         }
         if (commonReadId == -1) {
-            commonReadId = 1; // Long.parseLong(getContext().getConfiguration().get(COMMOND_READID));
+            commonReadId = Long.parseLong(getContext().getConfiguration().get(COMMOND_READID));
         }
         if (outgoingMsg == null)
             outgoingMsg = new BFSTraverseMessage();
