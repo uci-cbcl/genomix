@@ -37,6 +37,7 @@ import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.util.TestUtils;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
