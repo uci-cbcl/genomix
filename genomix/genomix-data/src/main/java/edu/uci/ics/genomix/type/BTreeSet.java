@@ -68,7 +68,7 @@ public class BTreeSet implements Serializable {
 
     protected FileReference fileReference;
 
-    public static volatile BTreeStorageManager manager;
+    protected static volatile BTreeStorageManager manager;
 
     private BTreeStorageManager getBTreeManager() {
         if (manager == null) {
@@ -109,7 +109,14 @@ public class BTreeSet implements Serializable {
     public void active() throws HyracksDataException {
         btree.activate();
     }
-    
+
+    /**
+     * Deactive make current BTree disconnected with buffercache.
+     * It will not be able to do the other operations.
+     * If will wake up by calling {@code active};
+     * 
+     * @throws HyracksDataException
+     */
     public void deactive() throws HyracksDataException {
         btree.deactivate();
     }
@@ -117,8 +124,10 @@ public class BTreeSet implements Serializable {
     public void load(long numElementsHint, IFrameReader frameReader) throws HyracksDataException, IndexException {
 
         totalTupleCount = 0;
+
         BTreeBulkLoader loader = (BTreeBulkLoader) btree.createBulkLoader(0.9f, false, numElementsHint, false);
         frameReader.open();
+        btree.clear();
         ByteBuffer buffer = manager.allocateFrame();
         while (frameReader.nextFrame(buffer)) {
             frameTupleAccessor.reset(buffer);
@@ -134,10 +143,9 @@ public class BTreeSet implements Serializable {
         loader.end();
     }
 
-    public void write(IFrameWriter writer) throws HyracksDataException {
-        TreeIndexDiskOrderScanCursor scanCursor = (TreeIndexDiskOrderScanCursor) btreeAccessor
-                .createDiskOrderScanCursor();
-        btreeAccessor.diskOrderScan(scanCursor);
+    public void save(IFrameWriter writer) throws HyracksDataException, IndexException {
+        ITreeIndexCursor scanCursor = btreeAccessor.createSearchCursor();
+        btreeAccessor.search(scanCursor, new RangePredicate(null, null, true, true, null, null));
         ByteBuffer outputBuffer = getBTreeManager().allocateFrame();
         FrameTupleAppender outputAppender = new FrameTupleAppender(getBTreeManager().getFrameSize());
         outputAppender.reset(outputBuffer, true);
@@ -168,34 +176,6 @@ public class BTreeSet implements Serializable {
             writer.close();
         }
     }
-
-    //    @Override
-    //    public void readFields(DataInput in) throws IOException {
-    //        totalTupleCount = in.readLong();
-    //        if (totalTupleCount > 0) {
-    //            ID = in.readUTF();
-    //            fileReference = getBTreeManager().getFileReference(ID);
-    //            totalSize = in.readLong();
-    //            RunFileReader reader = new RunFileReader(fileReference, getBTreeManager().getIOManager(), totalSize);
-    //
-    //            try {
-    //                load(totalTupleCount, reader);
-    //            } catch (IndexException e) {
-    //                throw new IOException(e);
-    //            }
-    //
-    //        }
-    //    }
-    //
-    //    @Override
-    //    public void write(DataOutput out) throws IOException {
-    //        out.writeLong(totalTupleCount);
-    //        if (totalTupleCount > 0) {
-    //            out.writeUTF(ID);
-    //            out.writeLong(fileReference.getFile().length());
-    //
-    //        }
-    //    }
 
     public void insert(ITupleReference tuple) throws HyracksDataException, TreeIndexException {
         btreeAccessor.insert(tuple);
@@ -285,6 +265,12 @@ public class BTreeSet implements Serializable {
         this.load(count, new RunFileReader(writer.getFileReference(), manager.getIOManager(), writer.getFileSize()));
     }
 
+    public ITreeIndexCursor createSortedOrderCursor() throws HyracksDataException, TreeIndexException {
+        ITreeIndexCursor scanCursor = btreeAccessor.createSearchCursor();
+        btreeAccessor.search(scanCursor, new RangePredicate(null, null, true, true, null, null));
+        return scanCursor;
+    }
+
     public void destroy() throws HyracksDataException {
         btree.destroy();
     }
@@ -354,12 +340,6 @@ public class BTreeSet implements Serializable {
         public void close() throws HyracksDataException {
             bufferCache.close();
         }
-    }
-
-    public ITreeIndexCursor createScanCursor() throws HyracksDataException {
-        ITreeIndexCursor scanCursor = btreeAccessor.createDiskOrderScanCursor();
-        btreeAccessor.diskOrderScan(scanCursor);
-        return scanCursor;
     }
 
 }
