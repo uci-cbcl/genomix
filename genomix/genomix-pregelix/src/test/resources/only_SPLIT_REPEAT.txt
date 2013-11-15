@@ -1,1 +1,1 @@
-SplitRepeatGraph.xml
+SPLIT_REPEAT.xml

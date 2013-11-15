@@ -1,1 +1,1 @@
-ScaffoldingGraph.xml
+SCAFFOLD.xml

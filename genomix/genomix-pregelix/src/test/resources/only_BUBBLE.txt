@@ -1,1 +1,1 @@
-BubbleMergeGraph.xml
+BUBBLE.xml

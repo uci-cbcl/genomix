@@ -1,1 +1,1 @@
-TipRemoveGraph.xml
+TIP_REMOVE.xml

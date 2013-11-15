@@ -1,1 +1,1 @@
-SymmetryCheckerGraph.xml
+CHECK_SYMMETRY.xml

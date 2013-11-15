@@ -1,1 +1,1 @@
-RemoveLowCoverageGraph.xml
+LOW_COVERAGE.xml

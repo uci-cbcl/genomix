@@ -1,1 +1,1 @@
-BFSTraverseGraph.xml
+BFS.xml
