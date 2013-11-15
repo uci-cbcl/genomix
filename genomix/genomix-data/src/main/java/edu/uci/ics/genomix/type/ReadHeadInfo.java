@@ -170,8 +170,9 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
      */
     @Override
     public String toString() {
-        return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + "thisSeq: "
-                + this.readSequence.toString() + "thatSeq: " + this.mateReadSequence.toString();
+        return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + "readSeq: "
+                + (this.readSequence != null ? this.readSequence.toString() : "") + "mateReadSeq: "
+                + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "");
     }
 
     /**
