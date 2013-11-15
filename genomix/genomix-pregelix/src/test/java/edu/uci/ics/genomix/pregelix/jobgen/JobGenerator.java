@@ -60,7 +60,7 @@ public class JobGenerator {
     }
 
     private static void genTipAddGraph() throws IOException {
-        generateTipAddGraphJob("TipAddGraph", outputBase + "TipAddGraph.xml");
+        generateTipAddGraphJob("TipAddGraph", outputBase + "TIP_ADD.xml");
     }
 
     private static void generateBridgeAddGraphJob(String jobName, String outputPath) throws IOException {
@@ -71,7 +71,7 @@ public class JobGenerator {
     }
 
     private static void genBridgeAddGraph() throws IOException {
-        generateBridgeAddGraphJob("BridgeAddGraph", outputBase + "BridgeAddGraph.xml");
+        generateBridgeAddGraphJob("BridgeAddGraph", outputBase + "BRIDGE_ADD.xml");
     }
 
     private static void generateBubbleAddGraphJob(String jobName, String outputPath) throws IOException {
@@ -91,7 +91,7 @@ public class JobGenerator {
     }
 
     private static void genBubbleAddGraph() throws IOException {
-        generateBubbleAddGraphJob("BubbleAddGraph", outputBase + "BubbleAddGraph.xml");
+        generateBubbleAddGraphJob("BubbleAddGraph", outputBase + "BUBBLE_ADD.xml");
     }
 
     private static void generateUnrollTandemRepeatGraphJob(String jobName, String outputPath) throws IOException {
@@ -100,7 +100,7 @@ public class JobGenerator {
     }
 
     private static void genUnrollTandemRepeatGraph() throws IOException {
-        generateUnrollTandemRepeatGraphJob("UnrollTandemRepeatGraph", outputBase + "UnrollTandemRepeatGraph.xml");
+        generateUnrollTandemRepeatGraphJob("UnrollTandemRepeatGraph", outputBase + "UNROLL_TANDEM.xml");
     }
 
     private static void generateMapReduceGraphJob(String jobName, String outputPath) throws IOException {
@@ -109,7 +109,7 @@ public class JobGenerator {
     }
 
     private static void genMapReduceGraph() throws IOException {
-        generateMapReduceGraphJob("MapReduceGraph", outputBase + "MapReduceGraph.xml");
+        generateMapReduceGraphJob("MapReduceGraph", outputBase + "MAP_REDUCE.xml");
     }
 
     private static void generateBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
@@ -125,7 +125,7 @@ public class JobGenerator {
     }
 
     private static void getBFSTraverseGraph() throws IOException {
-        generateBFSTraverseGraphJob("BFSTraversegGraph", outputBase + "BFSTraverseGraph.xml");
+        generateBFSTraverseGraphJob("BFSTraversegGraph", outputBase + "BFS.xml");
     }
 
     private static void generateSymmetryCheckerGraphJob(String jobName, String outputPath) throws IOException {
@@ -134,7 +134,7 @@ public class JobGenerator {
     }
 
     private static void genSymmetryCheckerGraph() throws IOException {
-        generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase + "SymmetryCheckerGraph.xml");
+        generateSymmetryCheckerGraphJob("SymmetryCheckerGraph", outputBase + "CHECK_SYMMETRY.xml");
     }
 
     private static void generateExtractSubGraphJob(String jobName, String outputPath) throws IOException {
@@ -145,7 +145,7 @@ public class JobGenerator {
     }
 
     private static void genExtractSubGraph() throws IOException {
-        generateExtractSubGraphJob("ExtractSubGraph", outputBase + "ExtractSubGraph.xml");
+        generateExtractSubGraphJob("ExtractSubGraph", outputBase + "PLOT_SUBGRAPH.xml");
     }
 
     /**
@@ -167,7 +167,7 @@ public class JobGenerator {
     }
 
     private static void genP4ForMergeGraph() throws IOException {
-        generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase + "P4ForMergeGraph.xml");
+        generateP4ForMergeGraphJob("P4ForMergeGraph", outputBase + "MERGE.xml");
     }
 
     private static void generateRemoveLowCoverageGraphJob(String jobName, String outputPath) throws IOException {
@@ -177,7 +177,7 @@ public class JobGenerator {
     }
 
     private static void genRemoveLowCoverageGraph() throws IOException {
-        generateRemoveLowCoverageGraphJob("RemoveLowCoverageGraph", outputBase + "RemoveLowCoverageGraph.xml");
+        generateRemoveLowCoverageGraphJob("RemoveLowCoverageGraph", outputBase + "LOW_COVERAGE.xml");
     }
 
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
@@ -186,7 +186,7 @@ public class JobGenerator {
     }
 
     private static void genTipRemoveGraph() throws IOException {
-        generateTipRemoveGraphJob("TipRemoveGraph", outputBase + "TipRemoveGraph.xml");
+        generateTipRemoveGraphJob("TipRemoveGraph", outputBase + "TIP_REMOVE.xml");
     }
 
     private static void generateBridgeRemoveGraphJob(String jobName, String outputPath) throws IOException {
@@ -195,7 +195,7 @@ public class JobGenerator {
     }
 
     private static void genBridgeRemoveGraph() throws IOException {
-        generateBridgeRemoveGraphJob("BridgeRemoveGraph", outputBase + "BridgeRemoveGraph.xml");
+        generateBridgeRemoveGraphJob("BridgeRemoveGraph", outputBase + "BRIDGE.xml");
     }
 
     private static void generateBubbleMergeGraphJob(String jobName, String outputPath) throws IOException {
@@ -205,7 +205,7 @@ public class JobGenerator {
     }
 
     private static void genBubbleMergeGraph() throws IOException {
-        generateBubbleMergeGraphJob("BubbleMergeGraph", outputBase + "BubbleMergeGraph.xml");
+        generateBubbleMergeGraphJob("BubbleMergeGraph", outputBase + "BUBBLE.xml");
     }
 
     private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
@@ -215,7 +215,7 @@ public class JobGenerator {
     }
 
     private static void genSplitRepeatGraph() throws IOException {
-        generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SplitRepeatGraph.xml");
+        generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SPLIT_REPEAT.xml");
     }
 
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
@@ -224,7 +224,7 @@ public class JobGenerator {
     }
 
     private static void genScaffoldingGraph() throws IOException {
-        generateScaffoldingGraphJob("ScaffoldingGraph", outputBase + "ScaffoldingGraph.xml");
+        generateScaffoldingGraphJob("ScaffoldingGraph", outputBase + "SCAFFOLD.xml");
     }
 
     public static void main(String[] args) throws IOException {
