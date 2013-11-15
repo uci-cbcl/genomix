@@ -226,24 +226,24 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 // TODO simplify this function after Anbang merge the edgeType
                 // detect code
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeList(EDGETYPE.FF).append(new VKmer(nextForwardKmer));
-                    nextNode.getEdgeList(EDGETYPE.RR).append(new VKmer(curForwardKmer));
+                    curNode.getEdgeMap(EDGETYPE.FF).append(new VKmer(nextForwardKmer));
+                    nextNode.getEdgeMap(EDGETYPE.RR).append(new VKmer(curForwardKmer));
 
                     return;
                 }
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.FR).append(new VKmer(nextReverseKmer));
-                    nextNode.getEdgeList(EDGETYPE.FR).append(new VKmer(curForwardKmer));
+                    curNode.getEdgeMap(EDGETYPE.FR).append(new VKmer(nextReverseKmer));
+                    nextNode.getEdgeMap(EDGETYPE.FR).append(new VKmer(curForwardKmer));
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeList(EDGETYPE.RF).append(new VKmer(nextForwardKmer));
-                    nextNode.getEdgeList(EDGETYPE.RF).append(new VKmer(curReverseKmer));
+                    curNode.getEdgeMap(EDGETYPE.RF).append(new VKmer(nextForwardKmer));
+                    nextNode.getEdgeMap(EDGETYPE.RF).append(new VKmer(curReverseKmer));
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeList(EDGETYPE.RR).append(new VKmer(nextReverseKmer));
-                    nextNode.getEdgeList(EDGETYPE.FF).append(new VKmer(curReverseKmer));
+                    curNode.getEdgeMap(EDGETYPE.RR).append(new VKmer(nextReverseKmer));
+                    nextNode.getEdgeMap(EDGETYPE.FF).append(new VKmer(curReverseKmer));
                     return;
                 }
             }

@@ -189,5 +189,4 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         return Long.compare(this.getReadId(), o.getReadId());
         //TODO do we need to compare the read sequence? I don't think so. Nan.
     }
-
 }
