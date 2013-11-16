@@ -23,6 +23,7 @@ public class VKmerListTest {
         return sb.toString();
     }
     
+    @Test
     public void TestInitial() {
         VKmerList kmerList = new VKmerList();
         Assert.assertEquals(kmerList.size(), 0);
