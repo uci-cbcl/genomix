@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadFactory;
 
 import edu.uci.ics.hyracks.api.comm.IFrameReader;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
+import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparator;
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ITypeTraits;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
@@ -27,7 +28,6 @@ import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
 import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
@@ -40,7 +40,7 @@ import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
 import edu.uci.ics.hyracks.storage.am.common.impls.NoOpOperationCallback;
-import edu.uci.ics.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
+import edu.uci.ics.hyracks.storage.am.common.ophelpers.MultiComparator;
 import edu.uci.ics.hyracks.storage.common.buffercache.BufferCache;
 import edu.uci.ics.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
 import edu.uci.ics.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
@@ -64,9 +64,9 @@ public class BTreeSet implements Serializable {
     private FrameTupleReference frameTupleReference;
     private ArrayTupleBuilder tupleBuilder;
 
-    private long totalTupleCount = 0;
+    private MultiComparator comparator;
 
-    protected FileReference fileReference;
+    private long totalTupleCount = 0;
 
     protected static volatile BTreeStorageManager manager;
 
@@ -90,13 +90,14 @@ public class BTreeSet implements Serializable {
     public BTreeSet(RecordDescriptor recordDescriptor, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws BTreeException, IOException {
         getBTreeManager();
-
-        this.fileReference = manager.newFileReference();
-        if (fileReference.getFile().exists()) {
-            throw new IOException("Given ID file already exsit:" + fileReference.getFile().getName());
+        IBinaryComparator[] comparators = new IBinaryComparator[cmpFactories.length];
+        for (int i = 0; i < cmpFactories.length; i++) {
+            comparators[i] = cmpFactories[i].createBinaryComparator();
         }
+        this.comparator = new MultiComparator(comparators);
+
         this.btree = BTreeUtils.createBTree(manager.getBufferCache(), manager.getFileMapProvider(), typeTraits,
-                cmpFactories, BTreeLeafFrameType.REGULAR_NSM, this.fileReference);
+                cmpFactories, BTreeLeafFrameType.REGULAR_NSM, manager.newFileReference());
         this.btree.create();
         this.btreeAccessor = (BTreeAccessor) btree.createAccessor(NoOpOperationCallback.INSTANCE,
                 NoOpOperationCallback.INSTANCE);
@@ -125,9 +126,13 @@ public class BTreeSet implements Serializable {
 
         totalTupleCount = 0;
 
+        //btree.clear(); // This clear() doesn't work well, use the following 4 steps to clean it.
+        btree.deactivate();
+        btree.destroy();
+        btree.create();
+        btree.activate();
         BTreeBulkLoader loader = (BTreeBulkLoader) btree.createBulkLoader(0.9f, false, numElementsHint, false);
         frameReader.open();
-        btree.clear();
         ByteBuffer buffer = manager.allocateFrame();
         while (frameReader.nextFrame(buffer)) {
             frameTupleAccessor.reset(buffer);
@@ -154,21 +159,7 @@ public class BTreeSet implements Serializable {
             writer.open();
             while (scanCursor.hasNext()) {
                 scanCursor.next();
-                ITupleReference tuple = scanCursor.getTuple();
-                tupleBuilder.reset();
-                for (int i = 0; i < tuple.getFieldCount(); i++) {
-                    tupleBuilder.addField(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
-                }
-                if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                        tupleBuilder.getSize())) {
-                    FrameUtils.flushFrame(outputBuffer, writer);
-                    outputAppender.reset(outputBuffer, true);
-                    if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                            tupleBuilder.getSize())) {
-                        throw new IllegalStateException(
-                                "Failed to copy an record into a frame: the record kmerByteSize is too large.");
-                    }
-                }
+                writeTuple(writer, scanCursor.getTuple(), outputBuffer, outputAppender);
             }
             FrameUtils.flushFrame(outputBuffer, writer);
         } finally {
@@ -205,64 +196,160 @@ public class BTreeSet implements Serializable {
         return null;
     }
 
-    public void unionWith(BTreeSet otherSet) throws HyracksDataException, TreeIndexException {
-        BTreeAccessor otherAccessor = otherSet.btreeAccessor;
-        TreeIndexDiskOrderScanCursor scanCursor = (TreeIndexDiskOrderScanCursor) otherAccessor
-                .createDiskOrderScanCursor();
-        while (scanCursor.hasNext()) {
-            scanCursor.next();
-            this.btreeAccessor.insert(scanCursor.getTuple());
+    public void unionWith(BTreeSet rightSet) throws HyracksException, IndexException {
+        if (this == rightSet) { // self union 
+            return;
         }
-    }
+        BTreeAccessor leftAccessor = this.btreeAccessor;
+        ITreeIndexCursor leftCursor = leftAccessor.createSearchCursor();
+        leftAccessor.search(leftCursor, new RangePredicate(null, null, true, true, null, null));
 
-    public void intersectWith(BTreeSet otherSet) throws TreeIndexException, IndexException, HyracksException {
+        BTreeAccessor rightAccessor = rightSet.btreeAccessor;
+        ITreeIndexCursor rightCursor = rightAccessor.createSearchCursor();
+        rightAccessor.search(rightCursor, new RangePredicate(null, null, true, true, null, null));
+
         RunFileWriter writer = new RunFileWriter(manager.newFileReference(), manager.getIOManager());
+        writer.open();
 
-        BTreeAccessor smallerAccessor = otherSet.totalTupleCount < this.totalTupleCount ? otherSet.btreeAccessor
-                : this.btreeAccessor;
-        BTreeAccessor biggerAccessor = otherSet.totalTupleCount >= this.totalTupleCount ? otherSet.btreeAccessor
-                : this.btreeAccessor;
-        ITreeIndexCursor scanCursor = smallerAccessor.createDiskOrderScanCursor();
-        ITreeIndexCursor searchCursor = biggerAccessor.createSearchCursor();
+        if (!rightCursor.hasNext()) { // right one is empty;
+            return;
+        }
+
+        if (!leftCursor.hasNext()) { // myself is empty, make it point to rightSet;
+            this.deactive();
+            this.destroy();
+            this.btree = rightSet.btree;
+            this.btreeAccessor = rightSet.btreeAccessor;
+            this.totalTupleCount = rightSet.totalTupleCount;
+            return;
+        }
 
         ByteBuffer outputBuffer = getBTreeManager().allocateFrame();
         FrameTupleAppender outputAppender = new FrameTupleAppender(getBTreeManager().getFrameSize());
         outputAppender.reset(outputBuffer, true);
 
-        writer.open();
-        long count = 0;
-        while (scanCursor.hasNext()) {
-            scanCursor.next();
-            RangePredicate searchRange = new RangePredicate();
-            searchRange.setLowKey(scanCursor.getTuple(), true);
-            searchRange.setHighKey(scanCursor.getTuple(), true);
-
-            searchCursor.reset();
-            biggerAccessor.search(searchCursor, searchRange);
-            if (searchCursor.hasNext()) {
-                ITupleReference tuple = scanCursor.getTuple();
-                count++;
-                tupleBuilder.reset();
-                for (int i = 0; i < tuple.getFieldCount(); i++) {
-                    tupleBuilder.addField(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+        leftCursor.next();
+        rightCursor.next();
+        boolean leftFinished = false;
+        boolean rightFinished = false;
+        int count = 0;
+        while (!leftFinished && !rightFinished) {
+            int cmp = comparator.compare(leftCursor.getTuple(), rightCursor.getTuple());
+            if (cmp < 0) {
+                writeTuple(writer, leftCursor.getTuple(), outputBuffer, outputAppender);
+                if (leftCursor.hasNext()) {
+                    leftCursor.next();
+                } else {
+                    leftFinished = true;
                 }
-                if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                        tupleBuilder.getSize())) {
-                    FrameUtils.flushFrame(outputBuffer, writer);
-                    outputAppender.reset(outputBuffer, true);
-                    if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
-                            tupleBuilder.getSize())) {
-                        throw new IllegalStateException(
-                                "Failed to copy an record into a frame: the record kmerByteSize is too large.");
-                    }
+            } else if (cmp == 0) {
+                writeTuple(writer, rightCursor.getTuple(), outputBuffer, outputAppender);
+                if (leftCursor.hasNext()) {
+                    leftCursor.next();
+                } else {
+                    leftFinished = true;
                 }
-                FrameUtils.flushFrame(outputBuffer, writer);
+                if (rightCursor.hasNext()) {
+                    rightCursor.next();
+                } else {
+                    rightFinished = true;
+                }
+            } else {// (cmp > 0)
+                writeTuple(writer, rightCursor.getTuple(), outputBuffer, outputAppender);
+                if (rightCursor.hasNext()) {
+                    rightCursor.next();
+                } else {
+                    rightFinished = true;
+                }
+            }
+            count++;
+        }
+        while (!leftFinished) {
+            writeTuple(writer, leftCursor.getTuple(), outputBuffer, outputAppender);
+            count++;
+            if (leftCursor.hasNext()) {
+                leftCursor.next();
+            } else {
+                break;
             }
         }
+        while (!rightFinished) {
+            writeTuple(writer, rightCursor.getTuple(), outputBuffer, outputAppender);
+            count++;
+            if (rightCursor.hasNext()) {
+                rightCursor.next();
+            } else {
+                break;
+            }
+        }
+        FrameUtils.flushFrame(outputBuffer, writer);
         writer.close();
 
-        this.destroy();
-        this.load(count, new RunFileReader(writer.getFileReference(), manager.getIOManager(), writer.getFileSize()));
+        this.load(count, writer.createReader());
+        writer.getFileReference().delete();
+    }
+
+    public void intersectWith(BTreeSet otherSet) throws TreeIndexException, IndexException, HyracksException {
+        if (this == otherSet) { // self union 
+            return;
+        }
+        RunFileWriter writer = new RunFileWriter(manager.newFileReference(), manager.getIOManager());
+
+        BTreeAccessor smallerAccessor = otherSet.totalTupleCount < this.totalTupleCount ? otherSet.btreeAccessor
+                : this.btreeAccessor;
+        BTreeAccessor larggerAccessor = otherSet.totalTupleCount >= this.totalTupleCount ? otherSet.btreeAccessor
+                : this.btreeAccessor;
+        ITreeIndexCursor scanCursor = smallerAccessor.createDiskOrderScanCursor();
+        smallerAccessor.diskOrderScan(scanCursor);
+
+        ITreeIndexCursor searchCursor = larggerAccessor.createSearchCursor();
+
+        writer.open();
+        long count = 0;
+
+        ByteBuffer outputBuffer = getBTreeManager().allocateFrame();
+        FrameTupleAppender outputAppender = new FrameTupleAppender(getBTreeManager().getFrameSize());
+        outputAppender.reset(outputBuffer, true);
+
+        RangePredicate searchRange = new RangePredicate();
+        while (scanCursor.hasNext()) {
+            scanCursor.next();
+            searchRange.setLowKey(scanCursor.getTuple(), true);
+            searchRange.setHighKey(scanCursor.getTuple(), true);
+            searchRange.setLowKeyComparator(comparator);
+            searchRange.setHighKeyComparator(comparator);
+
+            searchCursor.reset();
+            larggerAccessor.search(searchCursor, searchRange);
+            if (searchCursor.hasNext()) {
+                ITupleReference tuple = scanCursor.getTuple();
+                writeTuple(writer, tuple, outputBuffer, outputAppender);
+                count++;
+            }
+        }
+        FrameUtils.flushFrame(outputBuffer, writer);
+        writer.close();
+
+        this.load(count, writer.createReader());
+        writer.getFileReference().delete();
+    }
+
+    private void writeTuple(IFrameWriter writer, ITupleReference tuple, ByteBuffer outputBuffer,
+            FrameTupleAppender outputAppender) throws HyracksDataException {
+        tupleBuilder.reset();
+        for (int i = 0; i < tuple.getFieldCount(); i++) {
+            tupleBuilder.addField(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+        }
+        if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                tupleBuilder.getSize())) {
+            FrameUtils.flushFrame(outputBuffer, writer);
+            outputAppender.reset(outputBuffer, true);
+            if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
+                    tupleBuilder.getSize())) {
+                throw new IllegalStateException(
+                        "Failed to copy an record into a frame: the record kmerByteSize is too large.");
+            }
+        }
     }
 
     public ITreeIndexCursor createSortedOrderCursor() throws HyracksDataException, TreeIndexException {
@@ -284,7 +371,7 @@ public class BTreeSet implements Serializable {
     protected class BTreeStorageManager {
 
         private static final int PAGE_SIZE = 4096;
-        private static final int PAGE_NUM = 1000;
+        private static final int PAGE_NUM = 10240;
         private static final int MAX_FILE_NUM = 10;
         private static final int FRAME_SIZE = 65535;
 

@@ -3,6 +3,7 @@ package edu.uci.ics.genomix.type;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
 
 import junit.framework.Assert;
@@ -18,6 +19,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
+import edu.uci.ics.hyracks.storage.am.btree.exceptions.BTreeException;
 import edu.uci.ics.hyracks.storage.am.common.api.ITreeIndexCursor;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
 import edu.uci.ics.hyracks.storage.am.common.api.TreeIndexException;
@@ -59,7 +61,7 @@ public class BTreeSetTest {
     int[] fieldlengths = { 4 };
 
     @Test
-    public void TestAll() throws IOException, IndexException {
+    public void TestInsert() throws IOException, IndexException {
 
         BTreeSet set = new BTreeSet(recordDescriptor, traits, comparaterFactory);
         ArrayList<Integer> testData = createRandomTestSetAndFeedBTree(20, set);
@@ -88,9 +90,49 @@ public class BTreeSetTest {
 
         setSave.deactive();
         setSave.destroy();
-        
+
         setLoad.deactive();
         setLoad.destroy();
+    }
+
+    @Test
+    public void TestUnion() throws IOException, IndexException {
+        BTreeSet setLeft = new BTreeSet(recordDescriptor, traits, comparaterFactory);
+        int count = 256;
+        ArrayList<Integer> leftData = createRandomTestSetAndFeedBTree(count, setLeft);
+        setLeft.active();
+
+        BTreeSet setRight = new BTreeSet(recordDescriptor, traits, comparaterFactory);
+        ArrayList<Integer> rightData = createRandomTestSetAndFeedBTree(count, setRight);
+        setRight.active();
+
+        setLeft.unionWith(setRight);
+
+        HashSet<Integer> set = new HashSet<Integer>();
+        set.addAll(leftData);
+        set.addAll(rightData);
+        verifyBTreeData(new ArrayList<Integer>(set), setLeft, false);
+    }
+
+    @Test
+    public void TestIntersect() throws IOException, IndexException {
+        BTreeSet setLeft = new BTreeSet(recordDescriptor, traits, comparaterFactory);
+        int count = 256;
+        ArrayList<Integer> leftData = createRandomTestSetAndFeedBTree(count, setLeft);
+        setLeft.active();
+
+        BTreeSet setRight = new BTreeSet(recordDescriptor, traits, comparaterFactory);
+        ArrayTupleReference tuple = new ArrayTupleReference();
+        byte[] intBytes = new byte[4];
+        for (int num : leftData) {
+            Marshal.putInt(num, intBytes, 0);
+            tuple.reset(fieldlengths, intBytes);
+            setRight.insert(tuple);
+        }
+
+        setLeft.intersectWith(setRight);
+
+        verifyBTreeData(leftData, setLeft, false);
     }
 
     public ArrayList<Integer> createRandomTestSetAndFeedBTree(int count, BTreeSet btree) throws HyracksDataException,
