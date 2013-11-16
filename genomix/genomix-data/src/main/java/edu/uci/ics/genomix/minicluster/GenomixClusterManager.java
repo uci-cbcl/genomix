@@ -213,14 +213,14 @@ public class GenomixClusterManager {
 
         ncConfig.ccPort = LOCAL_HYRACKS_CC_PORT;
         ncConfig.nodeId = "nc-HYRACKS-id-" + id;
-        ncConfig.ioDevices = "tmp" + File.separator + "t3" + File.separator + "HYRACKS";
+        ncConfig.ioDevices = "tmp" + File.separator + "HYRACKS" + File.separator + "io_dir-" + id;
         localHyracksNC = new NodeControllerService(ncConfig);
         localHyracksNC.start();
 
         ncConfig.ccPort = LOCAL_PREGELIX_CC_PORT;
         ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
         ncConfig.nodeId = "nc-PREGELIX-id-" + id;
-        ncConfig.ioDevices = "tmp" + File.separator + "t3" + File.separator + "PREGELIX";
+        ncConfig.ioDevices = "tmp" + File.separator + "PREGELIX" + File.separator + "io_dir-" + id;
         localPregelixNC = new NodeControllerService(ncConfig);
         localPregelixNC.start();
     }
@@ -346,9 +346,9 @@ public class GenomixClusterManager {
         LOG.info("Copying HDFS directory " + hdfsSrcDir + " to local: " + localDestDir);
         GenomixJobConf.tick("copyBinToLocal");
         FileSystem dfs = FileSystem.get(conf);
-//        FileUtils.deleteQuietly(new File(localDestDir));
 
         // save original binary to output/bin
+        FileUtils.deleteQuietly(new File(localDestDir));
         dfs.copyToLocalFile(new Path(hdfsSrcDir), new Path(localDestDir + File.separator + "bin"));
 
         // convert hdfs sequence files to text as output/data
@@ -372,7 +372,8 @@ public class GenomixClusterManager {
                         bw.newLine();
                     }
                 } catch (Exception e) {
-                    System.err.println("Encountered an error copying " + f + " to local:\n" + e);
+                    System.err.println("Encountered an error copying " + f + " to local:\n");
+                    e.printStackTrace();
                 } finally {
                     if (reader != null)
                         reader.close();
