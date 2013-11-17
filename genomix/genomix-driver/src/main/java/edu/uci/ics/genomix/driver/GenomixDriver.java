@@ -270,6 +270,12 @@ public class GenomixDriver {
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        
+        // clear anything in our HDFS work path and local output directory
+        FileSystem.get(conf).delete(new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH)), true);
+        if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
+            FileUtils.deleteDirectory(conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+        }
 
         manager = new GenomixClusterManager(runLocal, conf);
         if (!Boolean.parseBoolean(conf.get(GenomixJobConf.USE_EXISTING_CLUSTER))) {
@@ -283,12 +289,6 @@ public class GenomixDriver {
         ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home", ".")
                 + "/pregelix/conf/cluster.properties");
         ClusterConfig.setStorePath(System.getProperty("app.home", ".") + "/pregelix/conf/stores.properties");
-
-        // clear anything in our work path or local output directory
-        FileSystem.get(conf).delete(new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH)), true);
-        if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
-            FileUtils.deleteDirectory(conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
-        }
     }
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
