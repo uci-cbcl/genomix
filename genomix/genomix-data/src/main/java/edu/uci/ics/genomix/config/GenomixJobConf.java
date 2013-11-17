@@ -148,7 +148,7 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
         
-        @Option(name = "-confInput", usage = "Read job conf from the specified file", required = false)
+        @Option(name = "-confInput", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
         private String confInput;
     }
 
