@@ -148,8 +148,8 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
         
-        @Option(name = "-confInput", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
-        private String confInput;
+        @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
+        private String extraConfFiles;
     }
 
     /**
@@ -234,7 +234,7 @@ public class GenomixJobConf extends JobConf {
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.conf.saveIntermediateResults";
     public static final String RANDOM_SEED = "genomix.conf.randomSeed";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
-    public static final String CONF_INPUT = "genomix.conf.path";
+    public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -414,8 +414,8 @@ public class GenomixJobConf extends JobConf {
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
         
         // default conf setup
-        if (get(CONF_INPUT) == null)
-            set(CONF_INPUT, "");
+        if (get(EXTRA_CONF_FILES) == null)
+            set(EXTRA_CONF_FILES, "");
         
         // hyracks-specific
 
@@ -482,8 +482,8 @@ public class GenomixJobConf extends JobConf {
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
         
         // read conf.xml
-        if (opts.confInput != null)
-            set(CONF_INPUT, opts.confInput);
+        if (opts.extraConfFiles != null)
+            set(EXTRA_CONF_FILES, opts.extraConfFiles);
     }
 
     /**

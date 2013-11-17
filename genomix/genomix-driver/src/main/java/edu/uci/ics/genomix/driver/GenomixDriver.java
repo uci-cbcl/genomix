@@ -341,9 +341,9 @@ public class GenomixDriver {
         GenomixJobConf conf;
         try {
             conf = GenomixJobConf.fromArguments(args);
-            String pathToConf = conf.get(GenomixJobConf.CONF_INPUT);
-            if(pathToConf != ""){
-                for (String singleConf : pathToConf.split(",")) {
+            String pathToExtraConfFiles = conf.get(GenomixJobConf.EXTRA_CONF_FILES);
+            if(pathToExtraConfFiles != ""){
+                for (String singleConf : pathToExtraConfFiles.split(",")) {
                     LOG.info("Read job config from " + singleConf);
                     conf.addResource(new Path(singleConf));
                 }
