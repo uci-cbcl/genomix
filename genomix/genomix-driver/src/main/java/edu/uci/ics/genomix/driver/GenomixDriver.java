@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobConf;
 import org.codehaus.plexus.util.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -343,11 +344,9 @@ public class GenomixDriver {
             conf = GenomixJobConf.fromArguments(args);
             String pathToExtraConfFiles = conf.get(GenomixJobConf.EXTRA_CONF_FILES);
             if (pathToExtraConfFiles != "") {
-                GenomixJobConf extraConf;
-                for (String singleConf : pathToExtraConfFiles.split(",")) {
-                    LOG.info("Read job config from " + singleConf);
-                    extraConf = new GenomixJobConf(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
-                    for (Map.Entry<String, String> entry : extraConf) {
+                for (String extraConf : pathToExtraConfFiles.split(",")) {
+                    LOG.info("Read job config from " + extraConf);
+                    for (Map.Entry<String, String> entry : new JobConf(extraConf)) {
                         conf.setIfUnset(entry.getKey(), entry.getValue());
                     }
                 }
