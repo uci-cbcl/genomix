@@ -112,7 +112,7 @@ public class DriverUtils {
                         if (key == null || value == null)
                             break;
                         fastaOut.writeBytes(">node_" + key.toString() + "\n");
-                        fastaOut.writeBytes(key.toString().length() > 0 ? key.toString() : value.getInternalKmer().toString());
+                        fastaOut.writeBytes(value.getInternalKmer().getKmerLetterLength() > 0 ? value.getInternalKmer().toString() : key.toString());
                         fastaOut.writeBytes("\n");
                     }
                 } catch (Exception e) {

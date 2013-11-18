@@ -81,8 +81,6 @@ public class GenomixDriver {
     private GenomixHyracksDriver hyracksDriver;
     private edu.uci.ics.pregelix.core.driver.Driver pregelixDriver;
 
-    private static String fastaOuputPath;
-
     @SuppressWarnings("deprecation")
     private void setOutput(GenomixJobConf conf, Patterns step) {
         prevOutput = curOutput;
@@ -212,7 +210,8 @@ public class GenomixDriver {
                 FileUtils.mkdir(localOutputDir);
             }
             FileSystem dfs = FileSystem.get(conf);
-            dfs.delete(new Path(localOutputDir + File.separator + new Path(hdfsSrc).getName()), true);
+            FileSystem.getLocal(conf).delete(new Path(localOutputDir + File.separator + new Path(hdfsSrc).getName()),
+                    true);
             dfs.copyToLocalFile(new Path(hdfsSrc), new Path(localOutputDir));
         }
     }
@@ -288,6 +287,12 @@ public class GenomixDriver {
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        
+        // clear anything in our HDFS work path and local output directory
+        FileSystem.get(conf).delete(new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH)), true);
+        if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
+            FileUtils.deleteDirectory(conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+        }
 
         manager = new GenomixClusterManager(runLocal, conf);
         if (!Boolean.parseBoolean(conf.get(GenomixJobConf.USE_EXISTING_CLUSTER))) {
@@ -326,7 +331,8 @@ public class GenomixDriver {
         flushPendingJobs(conf);
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
-            GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+            GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR)
+                    + File.separator + "FINAL-" + new File(curOutput).getName());
 
         if (conf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR) != null)
             FileSystem.get(conf).rename(new Path(curOutput), new Path(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR));
