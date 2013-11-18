@@ -6,7 +6,7 @@ import junit.framework.Test;
 public class TipAddTestSuite extends BasicGraphCleanTestSuite {
 
     public static Test suite() throws Exception {
-        String pattern = "TipAdd";
+        String pattern = "TIP_ADD";
         String testSet[] = { "5" };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();

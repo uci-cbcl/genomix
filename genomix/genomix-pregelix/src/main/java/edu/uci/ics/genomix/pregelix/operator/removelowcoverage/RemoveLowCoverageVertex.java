@@ -1,9 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.client.Client;
@@ -14,14 +11,12 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Remove Lowcoverage
  * Detais: Chimeric reads and other sequencing artifacts create edges that are
- * 		  only supported by a small number of reads. These edges are identified
- *		  and removed. This is then followed by recompressing the graph.
- * 
+ * only supported by a small number of reads. These edges are identified
+ * and removed. This is then followed by recompressing the graph.
  */
 public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
     private static float minAverageCoverage = -1;
@@ -51,7 +46,7 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
             //broadcase kill self
             broadcastKillself();
             vertex.setState(State.DEAD_NODE);
-	    activate();
+            activate();
         } else
             voteToHalt();
     }
@@ -86,7 +81,7 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
             } else {
                 responseToDeadVertex(msgIterator);
             }
-	    voteToHalt();
+            voteToHalt();
         }
     }
 

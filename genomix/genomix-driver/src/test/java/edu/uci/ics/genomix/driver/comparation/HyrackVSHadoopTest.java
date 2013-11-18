@@ -23,10 +23,10 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixHadoopDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.test.GraphBuildingTestSetting;
-import edu.uci.ics.genomix.hyracks.graph.test.TestUtils;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.util.TestUtils;
 
 @RunWith(value = Parameterized.class)
 public class HyrackVSHadoopTest {

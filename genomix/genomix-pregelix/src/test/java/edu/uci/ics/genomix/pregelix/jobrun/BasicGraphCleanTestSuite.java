@@ -48,6 +48,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
     protected static ArrayList<String> TestDir = new ArrayList<String>(); //parameter
     protected static String PATH_TO_ONLY; //parameter
     protected static String ACTUAL_RESULT_DIR; //parameter
+    protected static String EXPECTED_RESULT_DIR; //parameter
     protected static String HADOOP_CONF_PATH; //initiated by ACTUAL_RESULT_DIR
 
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
@@ -129,6 +130,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
         SufFix = "bin";
         PATH_TO_ONLY = "src/test/resources/only_" + pattern + ".txt";
         ACTUAL_RESULT_DIR = "data/actual/" + pattern;
+        EXPECTED_RESULT_DIR = "src/test/resources/TestSet/expected/" + pattern;
         HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
         /** Multiple Tests **/
         TestDir.clear();
@@ -157,16 +159,19 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                         String resultFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
                                 + File.separator + getTestCaseName(testPathStr) + File.separator + "bin";
                         String textFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) + File.separator + "txt";
+                                + File.separator + getTestCaseName(testPathStr) + File.separator + "data";
                         String graphvizFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
                                 + File.separator + getTestCaseName(testPathStr) + File.separator + "graphviz";
                         String statisticsFileName = ACTUAL_RESULT_DIR + File.separator
                                 + jobExtToResExt(qFile.getName()) + File.separator + getTestCaseName(testPathStr)
                                 + File.separator + "statistics";
+                        String expectedFileName = EXPECTED_RESULT_DIR + File.separator
+                                + getTestCaseName(testPathStr) 
+                                + File.separator + "data"; // + jobExtToResExt(qFile.getName()) + File.separator
                         testSuite.addTest(new BasicSmallTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile
                                 .getAbsolutePath().toString(), dfs, HDFS_INPUTPATH + File.separator
                                 + getTestCaseName(testPathStr), resultFileName, textFileName, graphvizFileName,
-                                statisticsFileName));
+                                statisticsFileName, expectedFileName));
                     }
                 }
             }

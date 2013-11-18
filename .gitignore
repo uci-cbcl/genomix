@@ -22,4 +22,5 @@ output
 tmp
 dist
 .idea
+bin
 graphviz

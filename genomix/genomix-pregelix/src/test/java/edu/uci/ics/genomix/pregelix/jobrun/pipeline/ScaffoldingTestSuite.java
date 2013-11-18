@@ -6,7 +6,7 @@ import junit.framework.Test;
 public class ScaffoldingTestSuite extends BasicGraphCleanTestSuite {
 
     public static Test suite() throws Exception {
-        String pattern = "Scaffolding";
+        String pattern = "SCAFFOLD";
         String testSet[] = { "PairedEnd" };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();

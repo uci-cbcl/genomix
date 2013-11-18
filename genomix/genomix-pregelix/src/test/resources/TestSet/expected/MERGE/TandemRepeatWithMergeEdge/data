@@ -1,0 +1,3 @@
+CCA	{FF:{}	FR:{}	RF:{}	RR:{GCC=[1]}	5':[], ~5':[]	kmer:CCCA	cov:1.0x}
+GCC	{FF:{CCA=[1]}	FR:{AGG=[1]}	RF:{GCC=[1]}	RR:{}	5':[], ~5':[]	kmer:GCC	cov:2.0x}
+AGG	{FF:{}	FR:{GCC=[1]}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:AAGG	cov:1.0x}

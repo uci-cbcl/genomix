@@ -19,14 +19,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.JobConf;
 import org.codehaus.plexus.util.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -53,6 +54,10 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
+import edu.uci.ics.genomix.pregelix.testhelper.BFSTraverseVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.BubbleAddVertex;
+import edu.uci.ics.genomix.pregelix.testhelper.TipAddVertex;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
@@ -178,6 +183,18 @@ public class GenomixDriver {
                 curOutput = prevOutput; // use previous job's output
                 stepNum--;
                 break;
+            case TIP_ADD:
+                pregelixJobs.add(TipAddVertex.getConfiguredJob(conf, TipAddVertex.class));
+                break;
+            case BRIDGE_ADD:
+                pregelixJobs.add(BridgeAddVertex.getConfiguredJob(conf, BridgeAddVertex.class));
+                break;
+            case BUBBLE_ADD:
+                pregelixJobs.add(BubbleAddVertex.getConfiguredJob(conf, BubbleAddVertex.class));
+                break;
+            case BFS:
+                pregelixJobs.add(BFSTraverseVertex.getConfiguredJob(conf, BFSTraverseVertex.class));
+                break;
         }
     }
 
@@ -270,6 +287,12 @@ public class GenomixDriver {
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
+        
+        // clear anything in our HDFS work path and local output directory
+        FileSystem.get(conf).delete(new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH)), true);
+        if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
+            FileUtils.deleteDirectory(conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
+        }
 
         manager = new GenomixClusterManager(runLocal, conf);
         if (!Boolean.parseBoolean(conf.get(GenomixJobConf.USE_EXISTING_CLUSTER))) {
@@ -283,12 +306,6 @@ public class GenomixDriver {
         ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home", ".")
                 + "/pregelix/conf/cluster.properties");
         ClusterConfig.setStorePath(System.getProperty("app.home", ".") + "/pregelix/conf/stores.properties");
-
-        // clear anything in our work path or local output directory
-        FileSystem.get(conf).delete(new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH)), true);
-        if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
-            FileUtils.deleteDirectory(conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR));
-        }
     }
 
     public void runGenomix(GenomixJobConf conf) throws NumberFormatException, HyracksException, Exception {
@@ -331,6 +348,15 @@ public class GenomixDriver {
         GenomixJobConf conf;
         try {
             conf = GenomixJobConf.fromArguments(args);
+            String pathToExtraConfFiles = conf.get(GenomixJobConf.EXTRA_CONF_FILES);
+            if (pathToExtraConfFiles != "") {
+                for (String extraConf : pathToExtraConfFiles.split(",")) {
+                    LOG.info("Read job config from " + extraConf);
+                    for (Map.Entry<String, String> entry : new JobConf(extraConf)) {
+                        conf.setIfUnset(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
         } catch (CmdLineException ex) {
             System.err.println("Usage: bin/genomix [options]\n");
             ex.getParser().setUsageWidth(80);
