@@ -19,9 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.Counters;
@@ -342,10 +342,14 @@ public class GenomixDriver {
         try {
             conf = GenomixJobConf.fromArguments(args);
             String pathToExtraConfFiles = conf.get(GenomixJobConf.EXTRA_CONF_FILES);
-            if(pathToExtraConfFiles != ""){
+            if (pathToExtraConfFiles != "") {
+                GenomixJobConf extraConf;
                 for (String singleConf : pathToExtraConfFiles.split(",")) {
                     LOG.info("Read job config from " + singleConf);
-                    conf.addResource(new Path(singleConf));
+                    extraConf = new GenomixJobConf(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
+                    for (Map.Entry<String, String> entry : extraConf) {
+                        conf.setIfUnset(entry.getKey(), entry.getValue());
+                    }
                 }
             }
         } catch (CmdLineException ex) {
