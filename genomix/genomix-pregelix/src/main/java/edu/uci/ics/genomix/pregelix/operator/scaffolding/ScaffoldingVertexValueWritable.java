@@ -14,13 +14,12 @@ public class ScaffoldingVertexValueWritable extends VertexValueWritable{
 	int index;
 	VKmer neighborKmer, lastKmer;
 	ArrayList<VKmer> walk;
-	
 	boolean previsitedFlag;
+	boolean doneFlag;
 
 	public ScaffoldingVertexValueWritable(){
         super();
     }
-	
-	
 
+	
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
@@ -11,11 +12,13 @@ import edu.uci.ics.genomix.type.VKmerList;
 public class RayScaffoldingMessage extends MessageWritable{
 	private ArrayList<VKmer> walk;
 	private boolean startFlag, computeFlag, previsitedFlag, neighborFlag,computeRulesFlag;
+	private boolean doneFlag, removeEdgesFlag;
 	private VKmer kmer, lastVertex;
 	private int walkSize;
 	private int index;
 	private int offset;
 	private int ruleA, ruleB, ruleC;
+	private EDGETYPE edgeType;
 	
 	public RayScaffoldingMessage() {
         super();
@@ -132,6 +135,29 @@ public class RayScaffoldingMessage extends MessageWritable{
 	
 	public boolean getComputeRulesFlag(){
 		return this.computeRulesFlag;
+	}
+	public void setDoneFlag(){
+		this.doneFlag = true;
+	}
+	
+	public boolean getDoneFlag(){
+		return this.doneFlag;
+	}
+	
+	public void setRemoveEdgesFlag(){
+		this.removeEdgesFlag = true;
+	}
+	
+	public boolean getRemoveEdgesFlag(){
+		return this.removeEdgesFlag;
+	}
+	
+	public void setEdgeType(EDGETYPE et){
+		this.edgeType = et;
+	}
+	
+	public EDGETYPE getEdgeType(){
+		return this.edgeType;
 	}
 }
 
