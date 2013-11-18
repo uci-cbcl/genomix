@@ -1,0 +1,5 @@
+AAA	{FF:[AAC, AAT]	FR:[]	RF:[]	RR:[GAA, TAA]	kmer:	
+GAA	{FF:[AAA]	FR:[]	RF:[]	RR:[]	kmer:	
+TAA	{FF:[AAA]	FR:[]	RF:[]	RR:[]	kmer:	
+AAC	{FF:[]	FR:[]	RF:[]	RR:[AAA]	kmer:	
+AAT	{FF:[]	FR:[]	RF:[]	RR:[AAA]	kmer:	

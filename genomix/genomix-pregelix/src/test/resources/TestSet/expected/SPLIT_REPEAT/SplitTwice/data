@@ -1,0 +1,6 @@
+CTA	{FF:{}	FR:{AAAACG=[1]}	RF:{}	RR:{}	5':[], ~5':[]	kmer:CTA	cov:1.0x}
+GTA	{FF:{}	FR:{AAAATA=[2]}	RF:{}	RR:{}	5':[], ~5':[]	kmer:GTA	cov:1.0x}
+ATG	{FF:{}	FR:{}	RF:{AAAATA=[2]}	RR:{}	5':[], ~5':[2-0_0]	kmer:ATG	cov:1.0x}
+AAT	{FF:{AAAACG=[1]}	FR:{}	RF:{}	RR:{}	5':[1-0_0], ~5':[]	kmer:AAT	cov:1.0x}
+AAAACG	{FF:{}	FR:{CTA=[1]}	RF:{}	RR:{AAT=[1]}	5':[], ~5':[]	kmer:ATA	cov:0.0x}
+AAAATA	{FF:{}	FR:{GTA=[2]}	RF:{ATG=[2]}	RR:{}	5':[], ~5':[]	kmer:ATA	cov:0.0x}

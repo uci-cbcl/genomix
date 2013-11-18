@@ -6,7 +6,7 @@ import junit.framework.Test;
 public class BFSTraverseTestSuite extends BasicGraphCleanTestSuite {
 
     public static Test suite() throws Exception {
-        String pattern = "BFSTraverse";
+        String pattern = "BFS";
         String testSet[] = { "4" };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();

@@ -6,7 +6,7 @@ import edu.uci.ics.genomix.pregelix.jobrun.BasicGraphCleanTestSuite;
 public class BubbleMergeTestSuite extends BasicGraphCleanTestSuite {
 
     public static Test suite() throws Exception {
-        String pattern = "BubbleMerge";
+        String pattern = "BUBBLE";
         String testSet[] = { "TwoSimilarInTwo", "ThreeSimilarInThree", "TwoSimilarInThree", "TwoSimilarInFour",
                 "SimpleLongReads", "SimpleLongReads3" };
         init(pattern, testSet);

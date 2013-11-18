@@ -23,7 +23,6 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
-
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -148,6 +147,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
+        
+        @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
+        private String extraConfFiles;
     }
 
     /**
@@ -172,7 +174,11 @@ public class GenomixJobConf extends JobConf {
         DUMP_FASTA,
         CHECK_SYMMETRY,
         PLOT_SUBGRAPH,
-        STATS;
+        STATS,
+        TIP_ADD,
+        BRIDGE_ADD,
+        BUBBLE_ADD,
+        BFS;
 
         /**
          * Get a comma-separated pipeline from the given array of Patterns
@@ -228,6 +234,7 @@ public class GenomixJobConf extends JobConf {
     public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.conf.saveIntermediateResults";
     public static final String RANDOM_SEED = "genomix.conf.randomSeed";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
+    public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -365,7 +372,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
         if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
-            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 1.0f);
+            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
@@ -405,7 +412,11 @@ public class GenomixJobConf extends JobConf {
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
-
+        
+        // default conf setup
+        if (get(EXTRA_CONF_FILES) == null)
+            set(EXTRA_CONF_FILES, "");
+        
         // hyracks-specific
 
         //        if (getBoolean(RUN_LOCAL, false)) {
@@ -469,6 +480,10 @@ public class GenomixJobConf extends JobConf {
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
+        
+        // read conf.xml
+        if (opts.extraConfFiles != null)
+            set(EXTRA_CONF_FILES, opts.extraConfFiles);
     }
 
     /**

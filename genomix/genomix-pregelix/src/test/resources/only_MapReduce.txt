@@ -1,1 +1,1 @@
-MapReduceGraph.xml
+MAP_REDUCE.xml
