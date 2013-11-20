@@ -228,8 +228,12 @@ public class GenomixClusterManager {
     private void startLocalMRCluster() throws IOException {
         LOG.info("Starting local DFS and MR cluster...");
         System.setProperty("hadoop.log.dir", "logs");
-        localDFSCluster = new MiniDFSCluster(conf, numberDataNodes, true, null);
-        localMRCluster = new MiniMRCluster(1, localDFSCluster.getFileSystem().getUri().toString(), 1);
+        // override default hadoop.tmp.dir with pwd
+        JobConf hadoopConf = new JobConf(conf);
+        hadoopConf.set("hadoop.tmp.dir", "build/hadoop-tmp-dir");
+        localDFSCluster = new MiniDFSCluster(hadoopConf, numberDataNodes, true, null);
+        localMRCluster = new MiniMRCluster(1, localDFSCluster.getFileSystem().getUri().toString(), 1, null, null,
+                hadoopConf);
     }
 
     /**
