@@ -344,7 +344,7 @@ public class Node implements Writable, Serializable {
     public int getSerializedLength() {
         int length = Byte.SIZE / 8; // byte header
         for (EDGETYPE e : EDGETYPE.values()) {
-            if (edges[e.get()] != null && edges[e.get()].size() > 0) {
+            if (edges[e.get()] != null && edges[e.get()].size() > 0) { 
                 length += edges[e.get()].getLengthInBytes();
             }
         }
