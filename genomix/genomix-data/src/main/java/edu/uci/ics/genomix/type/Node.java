@@ -607,13 +607,13 @@ public class Node implements Writable, Serializable {
             if (other.unflippedReadIds != null) {
                 for (ReadHeadInfo p : other.unflippedReadIds) {
                     getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
                 }
             }
             if (other.flippedReadIds != null) {
                 for (ReadHeadInfo p : other.flippedReadIds) {
                     getFlippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
                 }
             }
         } else {
@@ -624,14 +624,14 @@ public class Node implements Writable, Serializable {
                 for (ReadHeadInfo p : other.unflippedReadIds) {
                     newPOffset = otherLength - 1 - p.getOffset();
                     getFlippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
                 }
             }
             if (other.flippedReadIds != null) {
                 for (ReadHeadInfo p : other.flippedReadIds) {
                     newPOffset = otherLength - 1 - p.getOffset();
                     getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getThatReadSequence());
+                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
                 }
             }
         }
@@ -760,12 +760,12 @@ public class Node implements Writable, Serializable {
                 // stream theirs in with my offset
                 if (other.unflippedReadIds != null) {
                     for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 if (other.flippedReadIds != null) {
                     for (ReadHeadInfo p : other.flippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 break;
@@ -774,12 +774,12 @@ public class Node implements Writable, Serializable {
                 // stream theirs in, offset and flipped
                 if (other.unflippedReadIds != null) {
                     for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 if (other.flippedReadIds != null) {
                     for (ReadHeadInfo p : other.flippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 break;
@@ -800,12 +800,12 @@ public class Node implements Writable, Serializable {
                 }
                 if (other.unflippedReadIds != null) {
                     for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 if (other.flippedReadIds != null) {
                     for (ReadHeadInfo p : other.flippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getThatReadSequence());
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 break;
