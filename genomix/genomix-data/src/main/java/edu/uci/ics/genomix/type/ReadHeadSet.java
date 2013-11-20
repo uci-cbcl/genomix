@@ -70,7 +70,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
                 offset += curInfo.getThisReadSequence().getLength();
             }
             if ((activeFields & READHEADINFO_FIELDS.THAT_READSEQUENCE) != 0) {
-                curInfo.getThisReadSequence().setAsCopy(data, offset);
+                curInfo.getThatReadSequence().setAsCopy(data, offset);
                 offset += curInfo.getThatReadSequence().getLength();
             }
             add(curInfo);
@@ -80,6 +80,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(size());
+        System.out.println(size());
         for (ReadHeadInfo head : this) {
             head.write(out);
         }
