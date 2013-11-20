@@ -212,12 +212,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
             }
 
-            //            public void setReadInfo(byte mateId, long readId, int posId, VKmer read0readSequence, VKmer read1readSequence) {
-            //                readIdSet.clear();
-            //                readIdSet.add(readId);
-            //                readHeadInfo.set(mateId, readId, posId, read0readSequence, read1readSequence);
-            //            }
-
             public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, DIR curNodeDir, Node node, IFrameWriter writer) {
                 switch (curNodeDir) {
                     case FORWARD:
