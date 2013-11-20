@@ -47,7 +47,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
             this.readSequence.setAsCopy(thisReadSequence);
         }
         if (thatReadSequence == null) {
-            this.readSequence = null;
+            this.mateReadSequence = null;
         } else {
             this.mateReadSequence.setAsCopy(thatReadSequence);
         }
@@ -88,7 +88,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         return this.readSequence;
     }
 
-    public VKmer getThatReadSequence() {
+    public VKmer getMateReadSequence() {
         if (this.mateReadSequence == null) {
             this.mateReadSequence = new VKmer();
         }
@@ -121,7 +121,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
             getThisReadSequence().readFields(in);
         }
         if ((activeFields & READHEADINFO_FIELDS.THAT_READSEQUENCE) != 0) {
-            getThisReadSequence().readFields(in);
+            getMateReadSequence().readFields(in);
         }
     }
 
@@ -174,8 +174,8 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
      */
     @Override
     public String toString() {
-        return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + "readSeq: "
-                + (this.readSequence != null ? this.readSequence.toString() : "") + "mateReadSeq: "
+        return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + " " + "readSeq: "
+                + (this.readSequence != null ? this.readSequence.toString() : "") + " " + "mateReadSeq: "
                 + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "");
     }
 
