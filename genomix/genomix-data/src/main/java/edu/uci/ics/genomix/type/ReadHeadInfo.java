@@ -27,29 +27,29 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         this.mateReadSequence = new VKmer();
     }
 
-    public ReadHeadInfo(byte mateId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
-        set(mateId, readId, offset, thisReadSequence, thatReadSequence);
+    public ReadHeadInfo(byte mateId, long readId, int offset, VKmer thisReadSequence, VKmer mateReadSequence) {
+        set(mateId, readId, offset, thisReadSequence, mateReadSequence);
     }
 
     public ReadHeadInfo(ReadHeadInfo other) {
         set(other);
     }
 
-    public ReadHeadInfo(long uuid, VKmer thisReadSequence, VKmer thatReadSequence) {
-        set(uuid, thisReadSequence, thatReadSequence);
+    public ReadHeadInfo(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
+        set(uuid, thisReadSequence, mateReadSequence);
     }
 
-    public void set(long uuid, VKmer thisReadSequence, VKmer thatReadSequence) {
+    public void set(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
         value = uuid;
         if (thisReadSequence == null) {
             this.readSequence = null;
         } else {
             this.readSequence.setAsCopy(thisReadSequence);
         }
-        if (thatReadSequence == null) {
+        if (mateReadSequence == null) {
             this.mateReadSequence = null;
         } else {
-            this.mateReadSequence.setAsCopy(thatReadSequence);
+            this.mateReadSequence.setAsCopy(mateReadSequence);
         }
     }
 
