@@ -41,7 +41,7 @@ public class StepByStepTest {
 
     private static final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
 
-    private static final String LOCAL_INPUT_PATH = "src/test/resources/data/input/smalltest2.txt";
+    private static final String LOCAL_INPUT_PATH = "src/test/resources/data/input/smalltest.txt";
     private static final String HDFS_INPUT_PATH = "/webmap";
     private static final String HDFS_OUTPUT_PATH = "/webmap_result";
 
@@ -61,15 +61,15 @@ public class StepByStepTest {
 
     @Test
     public void TestAll() throws Exception {
-        TestReader();
-//        TestGroupby();
+       // TestReader();
+        TestGroupby();
     }
 
     public void TestReader() throws Exception {
         cleanUpDirectory();
         driver.runJob(conf, Plan.BUILD_READ_PARSER, true);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
-//        TestUtils.compareFilesBySortingThemLineByLine(new File(EXPECTED_READ_PARSER_RESULT), new File(ACTUAL_RESULT));
+        TestUtils.compareFilesBySortingThemLineByLine(new File(EXPECTED_READ_PARSER_RESULT), new File(ACTUAL_RESULT));
     }
 
     public void TestGroupby() throws Exception {
