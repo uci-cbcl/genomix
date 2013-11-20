@@ -16,6 +16,7 @@
 package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -81,11 +82,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private Kmer nextReverseKmer = new Kmer();
 
             private VKmer thisReadSequence = new VKmer();
-            private VKmer thatReadSequence = new VKmer();
+            private VKmer mateReadSequence = new VKmer();
 
             @Override
-            public void parse(LongWritable key, Text value, IFrameWriter writer, String filename)
-                    throws HyracksDataException {
+            public void parse(LongWritable key, Text value, IFrameWriter writer, String filename) {
 
                 String basename = filename.substring(filename.lastIndexOf(File.separator) + 1);
                 String extension = basename.substring(basename.lastIndexOf('.') + 1);
@@ -111,7 +111,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
 
                 long readID = 0;
-                //                String geneLine;
                 String mate0GeneLine = null;
                 String mate1GeneLine = null;
                 if (fastqFormat) {
@@ -135,24 +134,32 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                         readID = Long.parseLong(rawLine[0]);
                         mate0GeneLine = rawLine[1];
                         mate1GeneLine = rawLine[2];
+                    } else {
+                        throw new IllegalStateException(
+                                "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
                     }
 
                 }
-
                 Pattern genePattern = Pattern.compile("[AGCT]+");
-                Matcher geneMatcher = genePattern.matcher(mate0GeneLine);
-                if (geneMatcher.matches()) {
-                    thisReadSequence.setAsCopy(mate0GeneLine);
-                    thatReadSequence.setAsCopy(mate1GeneLine);
-                    readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, thatReadSequence);
-                    SplitReads(readID, mate0GeneLine.getBytes(), writer);
+                if (mate0GeneLine != null) {
+                    Matcher geneMatcher = genePattern.matcher(mate0GeneLine);
+                    if (geneMatcher.matches()) {
+                        thisReadSequence.setAsCopy(mate0GeneLine);
+                        if (mate1GeneLine != null) {
+                            mateReadSequence.setAsCopy(mate1GeneLine);
+                            readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, mateReadSequence);
+                        } else {
+                            readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, null);
+                        }
+                        SplitReads(readID, mate0GeneLine.getBytes(), writer);
+                    }
                 }
                 if (mate1GeneLine != null) {
-                    geneMatcher = genePattern.matcher(mate1GeneLine);
+                    Matcher geneMatcher = genePattern.matcher(mate1GeneLine);
                     if (geneMatcher.matches()) {
                         thisReadSequence.setAsCopy(mate1GeneLine);
-                        thatReadSequence.setAsCopy(mate0GeneLine);
-                        readHeadInfo.set((byte) 1, readID, 0, thisReadSequence, thatReadSequence);
+                        mateReadSequence.setAsCopy(mate0GeneLine);
+                        readHeadInfo.set((byte) 1, readID, 0, thisReadSequence, mateReadSequence);
                         SplitReads(readID, mate1GeneLine.getBytes(), writer);
                     }
                 }
@@ -253,7 +260,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
                     tupleBuilder.addField(node.marshalToByteArray(), 0, node.getSerializedLength());
-
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {
                         FrameUtils.flushFrame(outputBuffer, writer);
