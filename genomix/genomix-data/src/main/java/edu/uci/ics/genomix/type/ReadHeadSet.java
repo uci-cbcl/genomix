@@ -38,14 +38,6 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         add(new ReadHeadInfo(mateId, readId, offset, thisReadSequence, thatReadSequence));
     }
 
-//    public ReadHeadInfo getReadHeadInfoFromReadId(long readId) {
-//        ReadHeadInfo info = super.floor(new ReadHeadInfo(readId, null, null)); //TODO need check
-//        if (info != null && info.getReadId() == readId) {
-//            return info;
-//        }
-//        return null;
-//    }
-
     public int getOffsetFromReadId(long readId) {
         for (ReadHeadInfo readHeadInfo : this) {
             if (readHeadInfo.getReadId() == readId)
@@ -70,8 +62,8 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
                 offset += curInfo.getThisReadSequence().getLength();
             }
             if ((activeFields & READHEADINFO_FIELDS.THAT_READSEQUENCE) != 0) {
-                curInfo.getThatReadSequence().setAsCopy(data, offset);
-                offset += curInfo.getThatReadSequence().getLength();
+                curInfo.getMateReadSequence().setAsCopy(data, offset);
+                offset += curInfo.getMateReadSequence().getLength();
             }
             add(curInfo);
         }
