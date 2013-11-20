@@ -82,17 +82,17 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     }
 
     public VKmer getThisReadSequence() {
-        if (this.readSequence == null)
-            return new VKmer();
-        else
-            return this.mateReadSequence;
+        if (this.readSequence == null) {
+            this.readSequence = new VKmer();
+        }
+        return this.readSequence;
     }
 
     public VKmer getThatReadSequence() {
-        if (this.mateReadSequence == null)
-            return new VKmer();
-        else
-            return this.mateReadSequence;
+        if (this.mateReadSequence == null) {
+            this.mateReadSequence = new VKmer();
+        }
+        return this.mateReadSequence;
     }
 
     public byte getMateId() {
@@ -138,11 +138,15 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     public void write(ReadHeadInfo headInfo, DataOutput out) throws IOException {
         out.writeByte(headInfo.getActiveFields());
+        System.out.println();
         out.writeLong(headInfo.value);
+        System.out.println();
         if (this.readSequence != null && this.readSequence.getKmerLetterLength() > 0) {
+            System.out.println(headInfo.readSequence.toString());
             headInfo.readSequence.write(out);
         }
         if (this.mateReadSequence != null && this.mateReadSequence.getKmerLetterLength() > 0) {
+            System.out.println(headInfo.mateReadSequence.toString());
             headInfo.mateReadSequence.write(out);
         }
     }
