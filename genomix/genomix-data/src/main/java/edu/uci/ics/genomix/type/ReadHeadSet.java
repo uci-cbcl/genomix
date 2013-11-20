@@ -72,7 +72,6 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(size());
-        System.out.println(size());
         for (ReadHeadInfo head : this) {
             head.write(out);
         }
