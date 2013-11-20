@@ -72,9 +72,10 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
      */
     public String generaterRandomDNAString(int n, String vertexId) {
         char[] chars = "ACGT".toCharArray();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb;
         // The maximum edge number of one vertex is 8, so 4**num_letters is always bigger than len(existing)
         while (true) { // impossible infinite loop
+            sb = new StringBuilder();
             for (int i = 0; i < n; i++) {
                 char c = chars[randGenerator.nextInt(chars.length)];
                 sb.append(c);
@@ -83,14 +84,12 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
                 break;
         }
         existKmerString.add(vertexId + sb.toString());
-        return sb.toString();
+        return vertexId + sb.toString();
     }
 
     public VKmer randomGenerateVertexId(int numOfSuffix) {
         String newVertexId =  generaterRandomDNAString(numOfSuffix, getVertexId().toString());
-        VKmer createdVertexId = new VKmer();
-        createdVertexId.setFromStringBytes(kmerSize + numOfSuffix, newVertexId.getBytes(), 0);
-        return createdVertexId;
+        return new VKmer(newVertexId);
     }
 
     public void createNewVertex(VKmer createdVertexId, NeighborInfo reverseNeighborInfo,
