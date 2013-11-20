@@ -533,6 +533,12 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         mergeWithFFKmer(kmerSize, new VKmer(kmer.toString()));
     }
 
+    public void mergeWithFRKmer(int initialKmerSize, VKmer kmer) {
+        VKmer revcomp = new VKmer();
+        revcomp.setReversedFromStringBytes(kmer.getKmerLetterLength(), kmer.toString().getBytes(), 0);
+        mergeWithFFKmer(initialKmerSize, revcomp);
+    }
+    
     /**
      * Merge Kmer with the next connected Kmer, when that Kmer needs to be
      * reverse-complemented e.g. AAGCTAA merge with GGTTGTT, if the initial
@@ -543,7 +549,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      * @param kmer
      *            : the next kmer
      */
-    public void mergeWithFRKmer(int initialKmerSize, VKmer kmer) {
+    public void mergeWithFRKmerOLD(int initialKmerSize, VKmer kmer) {
         if (lettersInKmer < initialKmerSize - 1 || kmer.lettersInKmer < initialKmerSize - 1) {
             throw new IllegalArgumentException("Not enough letters in the kmers to perform a merge! Tried K="
                     + initialKmerSize + ", merge '" + this + "' with '" + kmer + "'.");

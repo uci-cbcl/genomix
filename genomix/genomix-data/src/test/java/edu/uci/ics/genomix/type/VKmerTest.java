@@ -574,5 +574,40 @@ public class VKmerTest {
         Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
 
     }
+    
+    @Test
+    public void TestLargeKmerMergeFF() {
+        VKmer kmer1 = new VKmer("GCGTACGCAGGATAGT");
+        VKmer kmer2 = new VKmer("AGGATAGTATGTGAA");        
+        kmer1.mergeWithKmerInDir(EDGETYPE.FF, 9, kmer2);
+        Assert.assertEquals("Invalid FF merge!!!", "GCGTACGCAGGATAGTATGTGAA", kmer1.toString());
+    }
+    
+    @Test
+    public void TestLargeKmerMergeFR() {
+        VKmer kmer1 = new VKmer("GCGTACGCAGGATAGT");
+        VKmer kmer2 = new VKmer("TTCACATACTATCCT");
+        
+        kmer1.mergeWithKmerInDir(EDGETYPE.FR, 9, kmer2);
+        Assert.assertEquals("Invalid FR merge!!!", "GCGTACGCAGGATAGTATGTGAA", kmer1.toString());
+    }
+    
+    @Test
+    public void TestLargeKmerMergeRF() {
+        VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
+        VKmer kmer2 = new VKmer("AGGATAGTATGTGAA");
+        
+        kmer1.mergeWithKmerInDir(EDGETYPE.RF, 9, kmer2);
+        Assert.assertEquals("Invalid RF merge!!!", "TTCACATACTATCCTGCGTACGC", kmer1.toString());
+    }
+    
+    @Test
+    public void TestLargeKmerMergeRR() {
+        VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
+        VKmer kmer2 = new VKmer("TTCACATACTATCCT");
+        
+        kmer1.mergeWithKmerInDir(EDGETYPE.RR, 9, kmer2);
+        Assert.assertEquals("Invalid RR merge!!!", "TTCACATACTATCCTGCGTACGC", kmer1.toString());
+    }
 
 }
