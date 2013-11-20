@@ -126,7 +126,8 @@ public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Seri
         out.writeInt(size());
         for (Entry<VKmer, ReadIdSet> e : entrySet()) {
             e.getKey().write(out);
-            e.getValue().write(out);
+            ReadIdSet ids = new ReadIdSet();
+            ids.write(out);
         }
     }
 
