@@ -61,7 +61,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
                 curInfo.getThisReadSequence().setAsCopy(data, offset);
                 offset += curInfo.getThisReadSequence().getLength();
             }
-            if ((activeFields & READHEADINFO_FIELDS.THAT_READSEQUENCE) != 0) {
+            if ((activeFields & READHEADINFO_FIELDS.MATE_READSEQUENCE) != 0) {
                 curInfo.getMateReadSequence().setAsCopy(data, offset);
                 offset += curInfo.getMateReadSequence().getLength();
             }
