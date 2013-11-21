@@ -189,7 +189,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
                             + getVertexValue().toString());
 
         if (degree == 1) {
-            EnumSet<EDGETYPE> edgeTypes = direction.edgeTypes();
+            EDGETYPE[] edgeTypes = direction.edgeTypes();
             for (EDGETYPE et : edgeTypes) {
                 if (getVertexValue().getEdgeMap(et).size() > 0)
                     return getVertexValue().getEdgeMap(et).firstKey();
@@ -205,7 +205,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      * check if I am a tandemRepeat
      */
     public boolean isTandemRepeat(VertexValueWritable value) {
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             for (VKmer kmerToCheck : value.getEdgeMap(et).keySet()) {
                 if (kmerToCheck.equals(getVertexId())) {
                     repeatEdgetype = et;
@@ -222,7 +222,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      */
     public void broadcastKillself() {
         VertexValueWritable vertex = getVertexValue();
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;

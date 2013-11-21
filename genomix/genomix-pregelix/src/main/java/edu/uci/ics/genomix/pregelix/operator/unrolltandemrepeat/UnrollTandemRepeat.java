@@ -47,7 +47,7 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         tmpValue.getEdgeMap(repeatEdgetype).remove(repeatKmer);
         boolean hasFlip = false;
         // pick one edge and flip 
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             for (Entry<VKmer, ReadIdSet> edge : tmpValue.getEdgeMap(et).entrySet()) {
                 EDGETYPE flipEt = et.flipNeighbor();
                 tmpValue.getEdgeMap(flipEt).put(edge.getKey(), edge.getValue());
@@ -75,7 +75,7 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         getVertexValue().getEdgeMap(repeatEdgetype).remove(getVertexId());
         boolean hasFlip = false;
         /** pick one edge and flip **/
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             for (Entry<VKmer, ReadIdSet> edge : getVertexValue().getEdgeMap(et).entrySet()) {
                 EDGETYPE flipDir = et.flipNeighbor();
                 getVertexValue().getEdgeMap(flipDir).put(edge.getKey(), edge.getValue());

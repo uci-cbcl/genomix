@@ -212,7 +212,7 @@ public class Node implements Writable, Serializable {
         if (degree(direction) != 1)
             throw new IllegalArgumentException(
                     "getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
-        EnumSet<EDGETYPE> ets = direction.edgeTypes();
+        EDGETYPE[] ets = direction.edgeTypes();
         for (EDGETYPE et : ets) {
             if (edges[et.get()] != null && getEdgeMap(et).size() > 0) {
                 return et;
@@ -268,7 +268,7 @@ public class Node implements Writable, Serializable {
     }
 
     public void setEdges(EdgeMap[] edges) {
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             setEdgeMap(et, edges[et.get()]);
         }
     }
@@ -343,7 +343,7 @@ public class Node implements Writable, Serializable {
      */
     public int getSerializedLength() {
         int length = Byte.SIZE / 8; // byte header
-        for (EDGETYPE e : EDGETYPE.values()) {
+        for (EDGETYPE e : EDGETYPE.values) {
             if (edges[e.get()] != null && edges[e.get()].size() > 0) {
                 length += edges[e.get()].getLengthInBytes();
             }
@@ -377,7 +377,7 @@ public class Node implements Writable, Serializable {
         reset();
         byte activeFields = data[offset];
         offset += 1;
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
                 getEdgeMap(et).setAsCopy(data, offset);
@@ -406,7 +406,7 @@ public class Node implements Writable, Serializable {
         reset();
         byte activeFields = data[offset];
         offset += 1;
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
                 getEdgeMap(et).setAsReference(data, offset);
@@ -433,7 +433,7 @@ public class Node implements Writable, Serializable {
 
     public static void write(Node n, DataOutput out) throws IOException {
         out.writeByte(n.getActiveFields());
-        for (EDGETYPE e : EDGETYPE.values()) {
+        for (EDGETYPE e : EDGETYPE.values) {
             if (n.edges[e.get()] != null && n.edges[e.get()].size() > 0) {
                 n.edges[e.get()].write(out);
             }
@@ -461,7 +461,7 @@ public class Node implements Writable, Serializable {
     public void readFields(DataInput in) throws IOException {
         reset();
         byte activeFields = in.readByte();
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
                 getEdgeMap(et).readFields(in);
@@ -492,7 +492,7 @@ public class Node implements Writable, Serializable {
     protected byte getActiveFields() {
         byte fields = 0;
         // bits 0-3 are for presence of edges
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             if (edges[et.get()] != null && edges[et.get()].size() > 0) {
                 fields |= 1 << et.get();
             }
@@ -530,7 +530,7 @@ public class Node implements Writable, Serializable {
             return false;
 
         Node nw = (Node) o;
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // If I'm null, return false if he's not null; otherwise, do a regular .equals
             if (edges[et.get()] == null ? nw.edges[et.get()] != null : edges[et.get()].equals(nw.edges[et.get()])) {
                 return false;
@@ -550,7 +550,7 @@ public class Node implements Writable, Serializable {
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             sbuilder.append(et + ":").append(edges[et.get()] == null ? "null" : edges[et.get()].toString())
                     .append('\t');
         }
@@ -740,7 +740,7 @@ public class Node implements Writable, Serializable {
 
     protected void addEdges(boolean flip, Node other) {
         if (!flip) {
-            for (EDGETYPE et : EDGETYPE.values()) {
+            for (EDGETYPE et : EDGETYPE.values) {
                 unionUpdateEdgeMap(et, et, other.edges);
             }
         } else {
@@ -848,7 +848,7 @@ public class Node implements Writable, Serializable {
      * Debug helper function to find the edge associated with the given kmer, checking all directions. If the edge doesn't exist in any direction, returns null
      */
     public NeighborInfo findEdge(final VKmer kmer) {
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             if (edges[et.get()] != null && edges[et.get()].containsKey(kmer)) {
                 return new NeighborInfo(et, kmer, edges[et.get()].get(kmer));
             }

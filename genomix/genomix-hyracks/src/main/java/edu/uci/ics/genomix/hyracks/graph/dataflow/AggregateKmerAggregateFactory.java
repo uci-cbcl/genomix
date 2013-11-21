@@ -106,7 +106,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
 
-                for (EDGETYPE e : EDGETYPE.values()) {
+                for (EDGETYPE e : EDGETYPE.values) {
                     localUniNode.getEdgeMap(e).unionUpdate((readNode.getEdgeMap(e)));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
@@ -121,7 +121,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 Node localUniNode = (Node) state.state;
 
                 readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                for (EDGETYPE e : EDGETYPE.values()) {
+                for (EDGETYPE e : EDGETYPE.values) {
                     localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());

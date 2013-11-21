@@ -112,10 +112,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
 
         DIR mergeDir = edgeType.dir();
-        EnumSet<EDGETYPE> mergeEdges = mergeDir.edgeTypes();
+        EDGETYPE[] mergeEdges = mergeDir.edgeTypes();
 
         DIR updateDir = mergeDir.mirror();
-        EnumSet<EDGETYPE> updateEdges = updateDir.edgeTypes();
+        EDGETYPE[] updateEdges = updateDir.edgeTypes();
 
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
@@ -154,7 +154,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // remove the edge to the node that will merge elsewhere
             vertex.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
-            for (EDGETYPE edgeType : EDGETYPE.values()) {
+            for (EDGETYPE edgeType : EDGETYPE.values) {
                 vertex.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
             }
             updated = true;
