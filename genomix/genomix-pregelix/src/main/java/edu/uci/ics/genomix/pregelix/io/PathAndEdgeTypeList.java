@@ -32,7 +32,7 @@ public class PathAndEdgeTypeList implements Writable {
     }
 
     public void reset() {
-        kmerList.reset();
+        kmerList.clear();
         edgeTypeList.clear();
     }
 

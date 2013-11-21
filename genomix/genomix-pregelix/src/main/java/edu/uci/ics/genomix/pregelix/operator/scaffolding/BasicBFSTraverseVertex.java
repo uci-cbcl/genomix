@@ -167,7 +167,7 @@ public class BasicBFSTraverseVertex extends
             VKmerList pathList = outgoingMsg.getPathList();
             // msg.pathList and msg.edgeTypeList store neighbor information
             for (int i = 0; i < pathAndEdgeTypeList.size() - 1; i++) {
-                pathList.reset();
+                pathList.clear();
                 // set next edgeType
                 outputEdgeTypeList.clear();
                 outputEdgeTypeList.add(edgeTypeList.get(i)); // msg.edgeTypeList[0]

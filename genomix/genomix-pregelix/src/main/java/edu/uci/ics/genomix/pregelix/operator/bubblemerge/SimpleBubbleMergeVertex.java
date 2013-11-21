@@ -121,7 +121,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         EdgeMap edgeMap = msg.getMinorToBubbleEdgeMap();
         ReadIdSet newReadIds = edgeMap.get(getVertexId());
         EDGETYPE minorToBubble = msg.getMinorToBubbleEdgetype();
-        getVertexValue().getEdgeMap(sameOrientation ? minorToBubble : minorToBubble.flipNeighbor()).get(topKmer)
+        getVertexValue().getEdgeList(sameOrientation ? minorToBubble : minorToBubble.flipNeighbor()).get(topKmer)
                 .addAll(newReadIds);
     }
 
@@ -222,9 +222,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     break;
                 case ADD_READIDS:
                     for (EDGETYPE et : EDGETYPE.values()) {
-                        EdgeMap edgeMap = incomingMsg.getNode().getEdgeMap(et);
+                        EdgeMap edgeMap = incomingMsg.getNode().getEdgeList(et);
                         if (edgeMap.size() > 0) {
-                            getVertexValue().getEdgeMap(et).unionUpdate(edgeMap);
+                            getVertexValue().getEdgeList(et).unionUpdate(edgeMap);
                             activate();
                             break;
                         }

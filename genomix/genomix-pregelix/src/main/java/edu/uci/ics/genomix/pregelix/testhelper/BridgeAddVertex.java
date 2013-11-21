@@ -66,7 +66,7 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         addVertex(insertedBridge, vertex);
     }
 
-    public EdgeMap getEdgeListFromKmer(VKmer kmer) {
+    public EdgeMap getEdgeMapFromKmer(VKmer kmer) {
         EdgeMap edgeList = new EdgeMap();
         edgeList.put(kmer, new ReadIdSet(Arrays.asList(new Long(0))));
         return edgeList;
@@ -86,8 +86,8 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
                 addEdgeToInsertedBridge(upToBridgeDir, insertedBridge);
 
                 /** insert bridge **/
-                insertBridge(bridgeToUpDir, getEdgeListFromKmer(upBridge), bridgeToDownDir,
-                        getEdgeListFromKmer(downBridge), insertedBridge);
+                insertBridge(bridgeToUpDir, getEdgeMapFromKmer(upBridge), bridgeToDownDir,
+                        getEdgeMapFromKmer(downBridge), insertedBridge);
             } else if (getVertexId().toString().equals("ACG")) {
                 /** add edge pointing to new bridge **/
                 EDGETYPE downToBridgeDir = bridgeToDownDir.mirror();

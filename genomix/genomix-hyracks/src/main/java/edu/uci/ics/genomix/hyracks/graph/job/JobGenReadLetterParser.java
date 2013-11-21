@@ -125,6 +125,7 @@ public class JobGenReadLetterParser extends JobGen {
                                             tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
                                     writer.append(outputKmer, outputNode);
+                                    
                                 } catch (IOException e) {
                                     throw new HyracksDataException(e);
                                 }

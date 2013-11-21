@@ -73,9 +73,9 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         long totalEdgeReads = 0;
         long totalSelf = 0;
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
-                totalEdgeReads += e.getValue().size();
-                if (e.getKey().equals(key)) {
+            for (VKmer e : value.getEdgeMap(et)) {
+//                totalEdgeReads += e.getValue().size();
+                if (e.equals(key)) {
                     reporter.incrCounter("totals", "selfEdge-" + et, 1);
                     totalSelf += 1;
                 }

@@ -100,7 +100,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             hasNext = false;
         } else {
             hasNext = true;
-            nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdgeList(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
+            nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdgeMap(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
             nextKmer = vertex.getEdgeMap(nextEdgetype).firstKey();
             nextHead = isNodeRandomHead(nextKmer);
         }
@@ -110,7 +110,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             hasPrev = false;
         } else {
             hasPrev = true;
-            prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdgeList(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
+            prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdgeMap(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
             prevKmer = vertex.getEdgeMap(prevEdgetype).firstKey();
             prevHead = isNodeRandomHead(prevKmer);
         }

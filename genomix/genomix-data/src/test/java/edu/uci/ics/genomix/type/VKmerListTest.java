@@ -12,6 +12,17 @@ import edu.uci.ics.genomix.type.VKmerList;
 
 public class VKmerListTest {
 
+    public static String generaterRandomString(int n) {
+        char[] chars = "ACGT".toCharArray();
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < n; i++) {
+            char c = chars[random.nextInt(chars.length)];
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+    
     @Test
     public void TestInitial() {
         VKmerList kmerList = new VKmerList();
@@ -24,13 +35,13 @@ public class VKmerListTest {
             String randomString = generaterRandomString(i);
             byte[] array = randomString.getBytes();
             kmer.setFromStringBytes(i, array, 0);
-            kmerList.reset();
+            kmerList.clear();
             kmerList.append(kmer);
             Assert.assertEquals(randomString, kmerList.getPosition(0).toString());
             Assert.assertEquals(1, kmerList.size());
         }
 
-        kmerList.reset();
+        kmerList.clear();
         //add one more kmer each time and fix kmerSize
         for (int i = 0; i < 200; i++) {
             kmer = new VKmer(5);
@@ -42,9 +53,9 @@ public class VKmerListTest {
             Assert.assertEquals(i + 1, kmerList.size());
         }
 
-        byte[] another = new byte[kmerList.getLength() * 2];
+        byte[] another = new byte[kmerList.getLengthInBytes() * 2];
         int start = 20;
-        System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start, kmerList.getLength());
+        System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start, kmerList.getLengthInBytes());
         VKmerList plist2 = new VKmerList(another, start);
         for (int i = 0; i < plist2.size(); i++) {
             Assert.assertEquals(kmerList.getPosition(i).toString(), plist2.getPosition(i).toString());
@@ -72,7 +83,7 @@ public class VKmerListTest {
         VKmer tmpKmer = new VKmer(5);
         i = 0;
         VKmerList copyList = new VKmerList();
-        copyList.setCopy(kmerList);
+        copyList.setAsCopy(kmerList);
         Iterator<VKmer> iterator;
         for (int j = 0; j < 5; j++) {
             iterator = copyList.iterator();
@@ -116,14 +127,5 @@ public class VKmerListTest {
         Assert.assertEquals("CCC", edgeList.getPosition(1).toString());
     }
 
-    public String generaterRandomString(int n) {
-        char[] chars = "ACGT".toCharArray();
-        StringBuilder sb = new StringBuilder();
-        Random random = new Random();
-        for (int i = 0; i < n; i++) {
-            char c = chars[random.nextInt(chars.length)];
-            sb.append(c);
-        }
-        return sb.toString();
-    }
+    
 }

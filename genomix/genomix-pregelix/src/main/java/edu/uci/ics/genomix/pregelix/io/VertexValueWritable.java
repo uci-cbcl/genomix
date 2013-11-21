@@ -207,7 +207,7 @@ public class VertexValueWritable extends Node {
      * Delete the corresponding edge
      */
     public void processDelete(EDGETYPE neighborToDeleteEdgetype, VKmer keyToDelete) {
-        ReadIdSet prevList = this.getEdgeMap(neighborToDeleteEdgetype).remove(keyToDelete);
+        ReadIdSet prevList = this.getEdgeList(neighborToDeleteEdgetype).remove(keyToDelete);
         if (prevList == null) {
             throw new IllegalArgumentException("processDelete tried to remove an edge that didn't exist: "
                     + keyToDelete + " but I am " + this);

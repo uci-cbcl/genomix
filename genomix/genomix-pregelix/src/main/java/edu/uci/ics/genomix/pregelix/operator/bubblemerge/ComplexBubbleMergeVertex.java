@@ -253,8 +253,8 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     //        EDGETYPE majorToMeDir = meToMajorDir.mirror();
     //        EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorEdgetype());
     //        EDGETYPE minorToMeDir = meToMinorDir.mirror();
-    //        getVertexValue().getEdgeList(majorToMeDir).remove(incomingMsg.getMajorVertexId());
-    //        getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
+    //        getVertexValue().getEdgeMap(majorToMeDir).remove(incomingMsg.getMajorVertexId());
+    //        getVertexValue().getEdgeMap(minorToMeDir).remove(incomingMsg.getSourceVertexId());
     //    }
 
     public void broadcaseUpdateEdges(BubbleMergeMessage incomingMsg) {

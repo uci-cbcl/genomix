@@ -69,7 +69,7 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
         addVertex(insertedTip, vertex);
     }
 
-    public EdgeMap getEdgeListFromKmer(VKmer kmer) {
+    public EdgeMap getEdgeMapFromKmer(VKmer kmer) {
         EdgeMap edgeList = new EdgeMap();
         edgeList.put(kmer, new ReadIdSet(Arrays.asList(new Long(0))));
         return edgeList;
@@ -91,7 +91,7 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
                 addEdgeToInsertedTip(tipToSplitEdgetype, insertedTip);
                 /** insert tip **/
                 EDGETYPE splitToTipDir = tipToSplitEdgetype.mirror();
-                insertTip(splitToTipDir, getEdgeListFromKmer(splitNode), insertedTip);
+                insertTip(splitToTipDir, getEdgeMapFromKmer(splitNode), insertedTip);
             }
         }
         voteToHalt();

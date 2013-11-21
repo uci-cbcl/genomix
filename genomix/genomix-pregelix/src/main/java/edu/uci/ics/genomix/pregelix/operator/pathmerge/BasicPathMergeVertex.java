@@ -152,10 +152,17 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
+<<<<<<< HEAD
+            node.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
+            // add the node this neighbor will merge into
+            for (EDGETYPE edgeType : EnumSet.allOf(EDGETYPE.class)) {
+                node.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeMap(edgeType));
+=======
             vertex.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
             for (EDGETYPE edgeType : EDGETYPE.values()) {
-                vertex.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
+                vertex.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeMap(edgeType));
+>>>>>>> genomix/fullstack_genomix
             }
             updated = true;
             if (verbose) {
