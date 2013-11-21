@@ -38,7 +38,7 @@ public class GenomixReducer extends MapReduceBase implements Reducer<VKmer, Node
         while (values.hasNext()) {
             curNode = values.next();
             for (EDGETYPE e : EDGETYPE.values()) {
-                outputNode.getEdgeList(e).unionUpdate(curNode.getEdgeList(e));
+                outputNode.getEdgeMap(e).unionUpdate(curNode.getEdgeMap(e));
             }
             outputNode.getUnflippedReadIds().addAll(curNode.getUnflippedReadIds());
             outputNode.getFlippedReadIds().addAll(curNode.getFlippedReadIds());
