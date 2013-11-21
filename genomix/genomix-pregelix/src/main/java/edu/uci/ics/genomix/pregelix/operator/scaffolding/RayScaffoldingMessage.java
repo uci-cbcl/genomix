@@ -12,7 +12,11 @@ import edu.uci.ics.genomix.type.VKmerList;
 public class RayScaffoldingMessage extends MessageWritable{
 	private ArrayList<VKmer> walk;
 	private boolean startFlag, computeFlag, previsitedFlag, neighborFlag,computeRulesFlag;
+<<<<<<< HEAD
 	private boolean doneFlag, removeEdgesFlag, flipFlag;
+=======
+	private boolean doneFlag, removeEdgesFlag;
+>>>>>>> 9e811bd7dd411531254df89d8ef755146993e28b
 	private VKmer kmer, lastVertex;
 	private int walkSize;
 	private int index;
@@ -159,6 +163,7 @@ public class RayScaffoldingMessage extends MessageWritable{
 	public EDGETYPE getEdgeType(){
 		return this.edgeType;
 	}
+<<<<<<< HEAD
 	
 	public void setFlipFlag(){
 		this.flipFlag = true;
@@ -167,6 +172,8 @@ public class RayScaffoldingMessage extends MessageWritable{
 	public boolean getFlipFlag(){
 		return this.flipFlag;
 	}
+=======
+>>>>>>> 9e811bd7dd411531254df89d8ef755146993e28b
 }
 
 
