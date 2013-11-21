@@ -201,8 +201,8 @@ public class NodeTest {
         edgeExample2.add(EDGETYPE.RR);
         Assert.assertEquals(edgeExample2, edgeTypes2);
 
-        Assert.assertEquals(edgeExample1, DIR.edgeTypesInDir(testDir1));
-        Assert.assertEquals(edgeExample2, DIR.edgeTypesInDir(testDir2));
+        Assert.assertEquals(edgeExample1, EnumSet.copyOf(Arrays.asList(DIR.edgeTypesInDir(testDir1))));
+        Assert.assertEquals(edgeExample2, EnumSet.copyOf(Arrays.asList(DIR.edgeTypesInDir(testDir2))));
 
         EnumSet<DIR> dirExample = EnumSet.noneOf(DIR.class);
         dirExample.add(DIR.FORWARD);
@@ -386,7 +386,7 @@ public class NodeTest {
 
         for (int i = 10; i < 15; i++) {
             NodeTest.assembleNodeRandomly(dataNodes[i - 10], i);
-            nodeOffset[i - 10] = dataNodes[i - 10].getSerializedLength();
+            nodeOffset[i - 10] = dataNodes[i - 10].marshalToByteArray().length;
             outputStream.write(dataNodes[i - 10].marshalToByteArray());
         }
         byte[] dataArray = outputStream.toByteArray();
@@ -513,7 +513,7 @@ public class NodeTest {
     public void testWriteAndReadFields() throws IOException {
         Node srcNode = new Node();
         NodeTest.assembleNodeRandomly(srcNode, 17);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(srcNode.getSerializedLength());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(srcNode.marshalToByteArray().length);
         DataOutputStream out = new DataOutputStream(baos);
         srcNode.write(out);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(baos.toByteArray());

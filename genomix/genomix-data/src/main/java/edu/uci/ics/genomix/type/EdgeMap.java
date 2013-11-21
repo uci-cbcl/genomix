@@ -33,6 +33,7 @@ public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Seri
 
     private static final long serialVersionUID = 1L;
     private static final int SIZE_INT = 4;
+    private static final int INITIAL_BYTE_ARRAY_SIZE = 30;
     public static boolean logReadIds; // FIXME regression in usage of this (I broke it)
 
     public EdgeMap() {
@@ -67,58 +68,62 @@ public class EdgeMap extends TreeMap<VKmer, ReadIdSet> implements Writable, Seri
         }
     }
 
-    public int getLengthInBytes() {
-        int total = SIZE_INT;
-        for (Entry<VKmer, ReadIdSet> e : entrySet()) {
-            total += e.getKey().getLength() + e.getValue().getLengthInBytes();
-        }
-        return total;
-    }
-
     /**
      * Return this Edge's representation as a new byte array
      */
     public byte[] marshalToByteArray() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(getLengthInBytes());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(INITIAL_BYTE_ARRAY_SIZE);
         DataOutputStream out = new DataOutputStream(baos);
         write(out);
         return baos.toByteArray();
     }
 
-    public void setAsCopy(byte[] data, int offset) {
+    /**
+     * Populates this map from the given byte array
+     * 
+     * @param data
+     * @param offset
+     * @return the offset pointing just beyond this EdgeMap in the byte array, that is, `offset + len(this)`
+     */
+    public int setAsCopy(byte[] data, int offset) {
         int curOffset = offset;
         int count = Marshal.getInt(data, offset);
         curOffset += SIZE_INT;
         clear();
         for (int i = 0; i < count; i++) {
             VKmer kmer = new VKmer();
-            kmer.setAsCopy(data, curOffset);
-            curOffset += kmer.getLength();
+            curOffset = kmer.setAsCopy(data, curOffset);
 
             ReadIdSet ids = new ReadIdSet();
-            ids.setAsCopy(data, curOffset);
-            curOffset += ids.getLengthInBytes();
+            curOffset = ids.setAsCopy(data, curOffset);
 
             put(kmer, ids);
         }
+        return curOffset;
     }
 
-    public void setAsReference(byte[] data, int offset) {
+    /**
+     * Populates this map from the given byte array, keeping references where possible
+     * 
+     * @param data
+     * @param offset
+     * @return the offset pointing just beyond this EdgeMap in the byte array, that is, `offset + len(this)`
+     */
+    public int setAsReference(byte[] data, int offset) {
         int curOffset = offset;
         int count = Marshal.getInt(data, offset);
         curOffset += SIZE_INT;
         clear();
         for (int i = 0; i < count; i++) {
             VKmer kmer = new VKmer();
-            kmer.setAsReference(data, curOffset);
-            curOffset += kmer.getLength();
+            curOffset = kmer.setAsReference(data, curOffset);
 
             ReadIdSet ids = new ReadIdSet();
-            ids.setAsCopy(data, curOffset);
-            curOffset += ids.getLengthInBytes();
+            curOffset = ids.setAsCopy(data, curOffset);
 
             put(kmer, ids);
         }
+        return curOffset;
     }
 
     @Override

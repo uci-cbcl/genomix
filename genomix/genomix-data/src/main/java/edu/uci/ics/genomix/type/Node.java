@@ -15,17 +15,14 @@
 
 package edu.uci.ics.genomix.type;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -136,6 +133,7 @@ public class Node implements Writable, Serializable {
     }
 
     private static final long serialVersionUID = 1L;
+    private static final int INITIAL_BYTE_ARRAY_SIZE = 150;
 
     private EdgeMap[] edges;
     private ReadHeadSet unflippedReadIds; // first Kmer in read
@@ -339,96 +337,65 @@ public class Node implements Writable, Serializable {
     }
 
     /**
-     * Returns the length of the byte-array version of this node
-     */
-    public int getSerializedLength() {
-        int length = Byte.SIZE / 8; // byte header
-        for (EDGETYPE e : EDGETYPE.values) {
-            if (edges[e.get()] != null && edges[e.get()].size() > 0) {
-                length += edges[e.get()].getLengthInBytes();
-            }
-        }
-        if (unflippedReadIds != null && unflippedReadIds.size() > 0) {
-            length += unflippedReadIds.getLengthInBytes();
-        }
-        if (flippedReadIds != null && flippedReadIds.size() > 0) {
-            length += flippedReadIds.getLengthInBytes();
-        }
-        if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
-            length += internalKmer.getLength();
-        }
-        if (averageCoverage != null) {
-            length += Float.SIZE / 8;
-        }
-        return length;
-    }
-
-    /**
      * Return this Node's representation as a new byte array
      */
     public byte[] marshalToByteArray() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(getSerializedLength());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(INITIAL_BYTE_ARRAY_SIZE);
         DataOutputStream out = new DataOutputStream(baos);
         write(out);
         return baos.toByteArray();
     }
 
-    public void setAsCopy(byte[] data, int offset) {
+    public int setAsCopy(byte[] data, int offset) {
         reset();
         byte activeFields = data[offset];
         offset += 1;
         for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
-                getEdgeMap(et).setAsCopy(data, offset);
-                offset += edges[et.get()].getLengthInBytes();
+                offset = getEdgeMap(et).setAsCopy(data, offset);
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            getUnflippedReadIds().setAsCopy(data, offset);
-            offset += unflippedReadIds.getLengthInBytes();
+            offset = getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            getFlippedReadIds().setAsCopy(data, offset);
-            offset += flippedReadIds.getLengthInBytes();
+            offset = getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
-            getInternalKmer().setAsCopy(data, offset);
-            offset += internalKmer.getLength();
+            offset = getInternalKmer().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.AVERAGE_COVERAGE) != 0) {
             averageCoverage = Marshal.getFloat(data, offset);
             offset += Float.SIZE / 8;
         }
+        return offset;
     }
 
-    public void setAsReference(byte[] data, int offset) {
+    public int setAsReference(byte[] data, int offset) {
         reset();
         byte activeFields = data[offset];
         offset += 1;
         for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
-                getEdgeMap(et).setAsReference(data, offset);
-                offset += edges[et.get()].getLengthInBytes();
+                offset = getEdgeMap(et).setAsReference(data, offset);
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            getUnflippedReadIds().setAsCopy(data, offset);
-            offset += unflippedReadIds.getLengthInBytes();
+            offset = getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            getFlippedReadIds().setAsCopy(data, offset);
-            offset += flippedReadIds.getLengthInBytes();
+            offset = getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
-            getInternalKmer().setAsReference(data, offset);
-            offset += internalKmer.getLength();
+            offset = getInternalKmer().setAsReference(data, offset);
         }
         if ((activeFields & NODE_FIELDS.AVERAGE_COVERAGE) != 0) {
             averageCoverage = Marshal.getFloat(data, offset);
             offset += Float.SIZE / 8;
         }
+        return offset;
     }
 
     public static void write(Node n, DataOutput out) throws IOException {

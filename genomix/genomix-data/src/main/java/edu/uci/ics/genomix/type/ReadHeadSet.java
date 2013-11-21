@@ -54,7 +54,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
                 + " should exist in this ReadHeadSet, but not here!");
     }
 
-    public void setAsCopy(byte[] data, int offset) {
+    public int setAsCopy(byte[] data, int offset) {
         clear();
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
@@ -62,6 +62,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
             add(new ReadHeadInfo(Marshal.getLong(data, offset)));
             offset += ReadHeadInfo.ITEM_SIZE;
         }
+        return offset;
     }
 
     @Override
@@ -110,9 +111,5 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         ReadHeadSet intersection = new ReadHeadSet(list1);
         intersection.retainAll(list2);
         return intersection;
-    }
-
-    public int getLengthInBytes() {
-        return HEADER_SIZE + ReadHeadInfo.ITEM_SIZE * size();
     }
 }

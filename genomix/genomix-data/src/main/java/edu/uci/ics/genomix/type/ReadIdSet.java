@@ -64,11 +64,7 @@ public class ReadIdSet extends TreeSet<Long> implements Writable, Serializable {
         }
     }
 
-    public int getLengthInBytes() {
-        return HEADER_SIZE + ITEM_SIZE * size();
-    }
-
-    public void setAsCopy(byte[] data, int offset) {
+    public int setAsCopy(byte[] data, int offset) {
         clear();
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
@@ -76,5 +72,6 @@ public class ReadIdSet extends TreeSet<Long> implements Writable, Serializable {
             add(Marshal.getLong(data, offset));
             offset += ITEM_SIZE;
         }
+        return offset;
     }
 }

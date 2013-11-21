@@ -25,7 +25,6 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
-import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.util.KmerUtil;
 import edu.uci.ics.genomix.util.Marshal;
 
@@ -148,10 +147,11 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      *            : byte array to copy (should have a header)
      * @param offset
      */
-    public void setAsCopy(byte[] newData, int offset) {
+    public int setAsCopy(byte[] newData, int offset) {
         int k = Marshal.getInt(newData, offset);
         reset(k);
         System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.kmerStartOffset, bytesUsed);
+        return offset + HEADER_SIZE + bytesUsed;
     }
 
     /**
@@ -162,7 +162,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      *            : byte array to copy (should have a header)
      * @param blockOffset
      */
-    public void setAsReference(byte[] newData, int blockOffset) {
+    public int setAsReference(byte[] newData, int blockOffset) {
         bytes = newData;
         kmerStartOffset = blockOffset + HEADER_SIZE;
         int kRequested = Marshal.getInt(newData, blockOffset);
@@ -173,6 +173,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         storageMaxSize = bytesRequested; // since we are a reference, store our max capacity
         setKmerLength(kRequested);
+        return blockOffset + bytesRequested;
     }
 
     /**
@@ -538,7 +539,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         revcomp.setReversedFromStringBytes(kmer.getKmerLetterLength(), kmer.toString().getBytes(), 0);
         mergeWithFFKmer(initialKmerSize, revcomp);
     }
-    
+
     /**
      * Merge Kmer with the next connected Kmer, when that Kmer needs to be
      * reverse-complemented e.g. AAGCTAA merge with GGTTGTT, if the initial
