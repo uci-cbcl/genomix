@@ -54,6 +54,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private final ConfFactory confFactory;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
+    
+    private static final Pattern genePattern = Pattern.compile("[AGCT]+");
 
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
             confFactory = new ConfFactory(conf);
@@ -131,7 +133,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     geneLine = rawLine[1];
                 }
 
-                Pattern genePattern = Pattern.compile("[AGCT]+");
                 Matcher geneMatcher = genePattern.matcher(geneLine);
                 if (geneMatcher.matches()) {
                     setReadInfo(mateId, readID, 0);
