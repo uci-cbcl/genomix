@@ -46,11 +46,12 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     }
 
     public int getOffsetFromReadId(long readId) {
-        for(ReadHeadInfo readHeadInfo : this){
-            if(readHeadInfo.getReadId() == readId)
+        for (ReadHeadInfo readHeadInfo : this) {
+            if (readHeadInfo.getReadId() == readId)
                 return readHeadInfo.getOffset();
         }
-        throw new IllegalArgumentException("The input parameter readId " + readId + " should exist in this ReadHeadSet, but not here!");
+        throw new IllegalArgumentException("The input parameter readId " + readId
+                + " should exist in this ReadHeadSet, but not here!");
     }
 
     public void setAsCopy(byte[] data, int offset) {

@@ -54,11 +54,11 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private final ConfFactory confFactory;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
-    
+
     private static final Pattern genePattern = Pattern.compile("[AGCT]+");
 
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
-            confFactory = new ConfFactory(conf);
+        confFactory = new ConfFactory(conf);
     }
 
     @Override
@@ -150,7 +150,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 curNode.reset();
                 curNode.setAverageCoverage(1);
                 curForwardKmer.setFromStringBytes(readLetters, 0);
-                
+
                 curReverseKmer.setReversedFromStringBytes(readLetters, 0);
 
                 DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
