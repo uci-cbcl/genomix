@@ -9,7 +9,14 @@ public class KMPMatch {
     private int[] failure;
     private int matchPoint;
 
-    public  static void computeFailure(String pattern, int[] failure) {
+    public KMPMatch(String string, String pattern) {
+        this.string = string;
+        this.pattern = pattern;
+        failure = new int[pattern.length()];
+        computeFailure();
+    }
+
+    private void computeFailure() {
         int i = 0;
         failure[0] = -1;
         for (int j = 1; j < pattern.length(); j++) {
@@ -23,13 +30,33 @@ public class KMPMatch {
                 failure[j] = -1;
         }
     }
-    
-    
-    public static void main(String[] args){
-        KMPMatch kmpMatch = new KMPMatch();
+
+    public int fastFind() {
+        int p = 0;
+        int s = 0;
+        int patternSize = this.pattern.length();
+        int strSize = this.string.length();
+        while (p < patternSize && s < strSize) {
+            if (this.pattern.charAt(p) == this.string.charAt(s)) {
+                p++;
+                s++;
+            } else if (p == 0) {
+                s++;
+            } else {
+                p = failure[p - 1] + 1;
+            }
+        }
+        if (p < patternSize) {
+            return -1;
+        } else {
+            return s - patternSize;
+        }
+
+    }
+
+    public static void main(String[] args) {
         String test = "abacacaba";
-        int[] failure = new int[test.length()];
-        computeFailure(test, failure);
-        System.out.println(Arrays.toString(failure));
+        KMPMatch kmpMatch = new KMPMatch("abcaaaabbbabacacaba", test);
+        System.out.println(kmpMatch.fastFind());
     }
 }
