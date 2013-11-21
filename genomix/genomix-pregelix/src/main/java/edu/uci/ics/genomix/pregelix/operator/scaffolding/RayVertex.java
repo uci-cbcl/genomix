@@ -12,6 +12,7 @@ import edu.uci.ics.genomix.pregelix.operator.scaffolding.BasicBFSTraverseVertex.
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
+import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, RayScaffoldingMessage>{
@@ -52,11 +53,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	}
 
 	//We're finding the neighbors and send the walk to them
-	public void sendMsgToBranches(DIR direction, Iterator<RayScaffoldingMessage> msgIterator) {
-		///need a method for this:
-		getVertexValue().previsitedFlag = true;
-		readWalk(msgIterator);
-		getVertexValue().walk.add(getVertexId());
+	public void sendMsgToBranches() {
+		DIR direction;
+		if (getVertexValue().flipFalg){
+			direction = DIR.REVERSE;
+		} else {
+			direction = DIR.FORWARD;
+		}
 		//if there is just one neighbor?
 		for (EDGETYPE et : direction.edgeTypes()){
 			for (VKmer neighbor : getVertexValue().getEdgeMap(et).keySet()) {
@@ -65,6 +68,9 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 			}
 		}
 	}
+	
+
+	
 	//tell neighbor about the walk
 	public void sendMsgToNeighbor(VKmer neighbor, EDGETYPE et){
 		outgoingMsg.setEdgeType(et);
@@ -81,7 +87,13 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	// for each Kmer in the walk and each BranchKmer finds the offset
 	public int offset(VKmer neighbor){
 		int offset = 0;
-		for (ReadHeadInfo read : getVertexValue().getStartReads()){
+		ReadHeadSet readIds;
+		if (getVertexValue().flipFalg){
+			readIds = getVertexValue().getFlippedReadIds();
+		} else {
+			readIds = getVertexValue().getUnflippedReadIds();
+		}
+		for (ReadHeadInfo read : readIds){
 			if (checkedDistance (read, neighbor)){
 				offset++;
 			}
@@ -93,6 +105,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 		//if neighbor exist in read table
 		//How to work with a read?
 		read.getReadId();
+		read.getOffset();
 		int neighborPositionOnRead = getVertexValue().walkSize - getVertexValue().index + read.indexOf(getVertexId().toString()) + 1;
 		///I know!!
 		if(read.indexOf(neighbor.toString()) == neighborPositionOnread ){
@@ -115,11 +128,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	}
 	
 	
-	public void readWalk(Iterator<RayScaffoldingMessage> msgIterator){
+	public void prepareTheWinnerAndTheLoser(Iterator<RayScaffoldingMessage> msgIterator){
 		RayScaffoldingMessage incomingMsg;
-        if (msgIterator.hasNext()) {
+        while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
-            getVertexValue().walk = incomingMsg.getWalk();
+            if(incomingMsg.getStartFlag()){
+            	getVertexValue().walk = incomingMsg.getWalk();
+            	getVertexValue().flipFalg = incomingMsg.getFlipFlag();
+            	getVertexValue().startFlag = incomingMsg.getStartFlag();
+            }
+            else if (incomingMsg.getRemoveEdgesFlag()){
+            	getVertexValue().getEdgeMap(incomingMsg.getEdgeType().mirror()).remove(incomingMsg.getKmer());
+            }
         }
 	}
 	
@@ -228,7 +248,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 			
 		} else {
 			outgoingMsg.reset();
+			if ((edge == EDGETYPE.RR) || (edge == EDGETYPE.FR)){
+				outgoingMsg.setFlipFlag();
+			}
 			outgoingMsg.setWalk(getVertexValue().walk);
+			outgoingMsg.setStartFlag();
 			sendMsg(winner, outgoingMsg);
 			//return winner;
 		}
@@ -252,7 +276,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
             }	//getVertexValue().processDelete(neighborToDeleteEdgetype, keyToDelete);
         }
 	}
-	
+		
 	public double getM(){
 		double m = 0;
 		float coverage = getVertexValue().getAverageCoverage();
