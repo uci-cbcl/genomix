@@ -1,8 +1,8 @@
-CAG	{FF:[AGC]	FR:null	RF:null	RR:null	5':[1-0_0 readSeq: CAGCCA mateReadSeq: CGTCGA], ~5':null	kmer:null	cov:6.2145303E34x}
+CAG	{FF:[AGC]	FR:null	RF:null	RR:null	5':[1-0_0 readSeq: CAGCCA mateReadSeq: CGTCGA], ~5':null	kmer:null	cov:1.0x}
 AGC	{FF:[GCC]	FR:null	RF:null	RR:[CAG]	5':null, ~5':null	kmer:null	cov:1.0x}
 GCC	{FF:[CCA]	FR:null	RF:null	RR:[AGC]	5':null, ~5':null	kmer:null	cov:1.0x}
 CCA	{FF:null	FR:null	RF:null	RR:[GCC]	5':null, ~5':null	kmer:null	cov:1.0x}
-ACG	{FF:null	FR:null	RF:null	RR:[GAC]	5':null, ~5':[1-0_1 readSeq: CGTCGA mateReadSeq: CAGCCA]	kmer:null	cov:2.2078447E20x}
+ACG	{FF:null	FR:null	RF:null	RR:[GAC]	5':null, ~5':[1-0_1 readSeq: CGTCGA mateReadSeq: CAGCCA]	kmer:null	cov:1.0x}
 GAC	{FF:[ACG]	FR:null	RF:null	RR:[CGA]	5':null, ~5':null	kmer:null	cov:1.0x}
 CGA	{FF:[GAC]	FR:null	RF:[CGA]	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
 CGA	{FF:null	FR:null	RF:[CGA]	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
