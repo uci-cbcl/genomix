@@ -15,6 +15,9 @@
 
 package edu.uci.ics.genomix.type;
 
+import java.io.IOException;
+import java.util.Arrays;
+
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -27,12 +30,19 @@ public class KmerTest {
     static int k = 7;
 
     @Test
-    public void TestCompressKmer() {
+    public void TestCompressKmer() throws IOException {
         Kmer.setGlobalKmerLength(k);
         Kmer kmer = new Kmer();
         kmer.setFromStringBytes(array, 0);
+//        byte[] test = kmer.getBytes();
+//        for (int i = 0; i < test.length; i++) {
+//            String s1 = String.format("%8s", Integer.toBinaryString(test[i] & 0xFF)).replace(' ', '0');
+//            System.out.print(s1 + "\t");
+//        }
+//        System.out.println();
+//        System.out.println(Arrays.toString(test));
+//        System.out.println(kmer.toString());
         Assert.assertEquals(kmer.toString(), "AATAGAA");
-
         kmer.setFromStringBytes(array, 1);
         Assert.assertEquals(kmer.toString(), "ATAGAAG");
     }
@@ -101,5 +111,5 @@ public class KmerTest {
             }
             Assert.assertEquals(kmer.toString(), kmerAppend.toString());
         }
-    }    
+    }
 }
