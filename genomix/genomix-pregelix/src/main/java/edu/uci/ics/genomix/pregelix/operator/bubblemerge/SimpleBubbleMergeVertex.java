@@ -62,10 +62,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
         if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer)) {
-            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n"
-                    + "forwardKmer is " + forwardNeighbor.kmer + "\n"
-                    + "reverseKmer is " + reverseNeighbor.kmer + "\n"
-                    + "this vertex is " + getVertexId() + ", value: " + getVertexValue());
+            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n" + "forwardKmer is "
+                    + forwardNeighbor.kmer + "\n" + "reverseKmer is " + reverseNeighbor.kmer + "\n" + "this vertex is "
+                    + getVertexId() + ", value: " + getVertexValue());
             return;
         }
 
@@ -146,7 +145,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     boolean sameOrientation = topMsg.sameOrientation(curMsg);
                     // 1. add coverage to top node -- for unchangedSet
                     topNode.addFromNode(!sameOrientation, curMsg.getNode());
-
+                    if (verbose)
+                        LOG.fine("topNode: " + topNode.toString() + " add node: " + curMsg.getNode().toString());
                     // 2. add curMsg.edge in minToBubbleEdgetype to minorVertex
                     addNewMinorToBubbleEdges(sameOrientation, curMsg, topMsg.getSourceVertexId());
 
@@ -194,6 +194,11 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         for (VKmer majorVertexId : receivedMsgMap.keySet()) {
             receivedMsgList = receivedMsgMap.get(majorVertexId);
             if (receivedMsgList.size() > 1) { // filter simple paths
+                // log
+                if (verbose) {
+                    LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId() + ", I am MinorVertex\n"
+                            + "MajorVertexId" + majorVertexId);
+                }
                 // for each majorVertex, sort the node by decreasing order of coverage
                 Collections.sort(receivedMsgList, new BubbleMergeMessage.SortByCoverage());
 
