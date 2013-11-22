@@ -45,7 +45,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         byte activeFields = data[offset];
         offset++;
         long uuid = Marshal.getLong(data, offset);
-        set(uuid, null, null);
+        setUUID(uuid);
         offset += ReadHeadInfo.ITEM_SIZE;
         getThisReadSequence().setAsCopy(data, offset);
         offset += getThisReadSequence().getLength();
@@ -57,12 +57,19 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     public void set(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
         value = uuid;
+        if (thisReadSequence == null) {
+            throw new IllegalArgumentException("thisReadSequence can not be null!");
+        }
         getThisReadSequence().setAsCopy(thisReadSequence);
         if (mateReadSequence == null) {
             this.mateReadSequence = null;
         } else {
             getMateReadSequence().setAsCopy(mateReadSequence);
         }
+    }
+
+    public void setUUID(long uuid) {
+        value = uuid;
     }
 
     public static long makeUUID(byte mateId, long readId, int posId) {
