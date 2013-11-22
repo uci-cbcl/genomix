@@ -52,19 +52,8 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
         for (int i = 0; i < count; i++) {
-            byte activeFields = data[offset];
-            offset++;
-            long uuid = Marshal.getLong(data, offset);
-            ReadHeadInfo curInfo = new ReadHeadInfo(uuid, null, null);
-            offset += ReadHeadInfo.ITEM_SIZE;
-            if ((activeFields & READHEADINFO_FIELDS.THIS_READSEQUENCE) != 0) {
-                curInfo.getThisReadSequence().setAsCopy(data, offset);
-                offset += curInfo.getThisReadSequence().getLength();
-            }
-            if ((activeFields & READHEADINFO_FIELDS.MATE_READSEQUENCE) != 0) {
-                curInfo.getMateReadSequence().setAsCopy(data, offset);
-                offset += curInfo.getMateReadSequence().getLength();
-            }
+            ReadHeadInfo curInfo = new ReadHeadInfo(data, offset);
+            offset += curInfo.getLengthInBytes();
             add(curInfo);
         }
     }
