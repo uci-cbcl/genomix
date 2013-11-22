@@ -7,6 +7,8 @@ import java.io.Serializable;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import edu.uci.ics.genomix.util.Marshal;
+
 public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializable {
     private static final long serialVersionUID = 1L;
     public static final int ITEM_SIZE = 8;
@@ -39,6 +41,22 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         set(uuid, thisReadSequence, mateReadSequence);
     }
 
+    public ReadHeadInfo(byte[] data, int offset){
+        byte activeFields = data[offset];
+        offset++;
+        long uuid = Marshal.getLong(data, offset);
+        set(uuid, null, null);
+        offset += ReadHeadInfo.ITEM_SIZE;
+        if ((activeFields & READHEADINFO_FIELDS.THIS_READSEQUENCE) != 0) {
+            getThisReadSequence().setAsCopy(data, offset);
+            offset += getThisReadSequence().getLength();
+        }
+        if ((activeFields & READHEADINFO_FIELDS.MATE_READSEQUENCE) != 0) {
+            getMateReadSequence().setAsCopy(data, offset);
+            offset += getMateReadSequence().getLength();
+        }
+    }
+    
     public void set(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
         value = uuid;
         if (thisReadSequence == null) {
@@ -77,10 +95,6 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         totalBytes += thisReadSequence != null ? thisReadSequence.getLength() : 0;
         totalBytes += mateReadSequence != null ? mateReadSequence.getLength() : 0;
         return totalBytes;
-    }
-
-    public long asLong() {
-        return value;
     }
 
     public VKmer getThisReadSequence() {
@@ -138,13 +152,13 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         return fields;
     }
 
-    public void write(ReadHeadInfo headInfo, DataOutput out) throws IOException {
+    public static void write(ReadHeadInfo headInfo, DataOutput out) throws IOException {
         out.writeByte(headInfo.getActiveFields());
         out.writeLong(headInfo.value);
-        if (this.thisReadSequence != null && this.thisReadSequence.getKmerLetterLength() > 0) {
+        if (headInfo.thisReadSequence != null && headInfo.thisReadSequence.getKmerLetterLength() > 0) {
             headInfo.thisReadSequence.write(out);
         }
-        if (this.mateReadSequence != null && this.mateReadSequence.getKmerLetterLength() > 0) {
+        if (headInfo.mateReadSequence != null && headInfo.mateReadSequence.getKmerLetterLength() > 0) {
             headInfo.mateReadSequence.write(out);
         }
     }
@@ -156,7 +170,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     @Override
     public int hashCode() {
-        return Long.valueOf(value).hashCode(); //TODO I don't think need add readSequence's hashcode; Nan.
+        return Long.valueOf(value).hashCode();
     }
 
     @Override
@@ -173,8 +187,8 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     @Override
     public String toString() {
         return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + " " + "readSeq: "
-                + (this.thisReadSequence != null ? this.thisReadSequence.toString() : "") + " " + "mateReadSeq: "
-                + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "");
+                + (this.thisReadSequence != null ? this.thisReadSequence.toString() : "null") + " " + "mateReadSeq: "
+                + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "null");
     }
 
     /**
