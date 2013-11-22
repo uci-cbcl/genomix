@@ -35,8 +35,6 @@ import edu.uci.ics.genomix.util.Marshal;
 public class Node implements Writable, Serializable {
 
     public static final Logger LOG = Logger.getLogger(Node.class.getName());
-    protected static boolean DEBUG = true;
-    public static List<VKmer> problemKmers = new ArrayList<VKmer>();
 
     public enum READHEAD_ORIENTATION {
         UNFLIPPED((byte) 0),
@@ -396,6 +394,25 @@ public class Node implements Writable, Serializable {
             offset += Float.SIZE / 8;
         }
         return offset;
+    }
+    
+    /**
+     * Make a shallow copy of node.
+     * 
+     * WARNING: future changes in `node`'s averageCoverage won't be reflected in `this.averageCoverage`
+     * @param node
+     */
+    public void setAsReference(Node node) {
+        setAsReference(node.edges, node.unflippedReadIds, node.flippedReadIds, node.internalKmer, node.averageCoverage);
+    }
+
+    public void setAsReference(EdgeMap[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer,
+            Float coverage) {
+        this.edges = edges;
+        this.unflippedReadIds = unflippedReadIds;
+        this.flippedReadIds = flippedReadIds;
+        this.internalKmer = kmer;
+        this.averageCoverage = coverage;
     }
 
     public static void write(Node n, DataOutput out) throws IOException {

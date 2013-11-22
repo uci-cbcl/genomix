@@ -175,6 +175,20 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         setKmerLength(kRequested);
         return blockOffset + bytesRequested;
     }
+    
+    /**
+     * Shallow copy of the given kmer (s.t. we are backed by the same bytes)
+     * 
+     * WARNING: Changes in the kmerLength after using setAsReference may not always 
+     *          be reflected in either `other` or `this`! 
+     */
+    public void setAsReference(VKmer other) {
+        this.bytes = other.bytes;
+        this.bytesUsed = other.bytesUsed;
+        this.kmerStartOffset = other.kmerStartOffset;
+        this.lettersInKmer = other.lettersInKmer;
+        this.storageMaxSize = other.storageMaxSize;
+    }
 
     /**
      * Reset array by kmerlength
