@@ -57,11 +57,11 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     public void set(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
         value = uuid;
-        this.thisReadSequence.setAsCopy(thisReadSequence);
+        getThisReadSequence().setAsCopy(thisReadSequence);
         if (mateReadSequence == null) {
             this.mateReadSequence = null;
         } else {
-            this.mateReadSequence.setAsCopy(mateReadSequence);
+            getMateReadSequence().setAsCopy(mateReadSequence);
         }
     }
 
