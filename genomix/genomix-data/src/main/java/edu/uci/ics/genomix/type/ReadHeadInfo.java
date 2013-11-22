@@ -26,7 +26,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public ReadHeadInfo() {
         this.value = 0;
         this.thisReadSequence = new VKmer();
-        this.mateReadSequence = new VKmer();
+        this.mateReadSequence = null;
     }
 
     public ReadHeadInfo(byte mateId, long readId, int offset, VKmer thisReadSequence, VKmer mateReadSequence) {
@@ -41,25 +41,23 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         set(uuid, thisReadSequence, mateReadSequence);
     }
 
-    public ReadHeadInfo(byte[] data, int offset){
+    public ReadHeadInfo(byte[] data, int offset) {
         byte activeFields = data[offset];
         offset++;
         long uuid = Marshal.getLong(data, offset);
         set(uuid, null, null);
         offset += ReadHeadInfo.ITEM_SIZE;
+        getThisReadSequence().setAsCopy(data, offset);
+        offset += getThisReadSequence().getLength();
         if ((activeFields & READHEADINFO_FIELDS.MATE_READSEQUENCE) != 0) {
             getMateReadSequence().setAsCopy(data, offset);
             offset += getMateReadSequence().getLength();
         }
     }
-    
+
     public void set(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
         value = uuid;
-        if (thisReadSequence == null) {
-            this.thisReadSequence = null;
-        } else {
-            this.thisReadSequence.setAsCopy(thisReadSequence);
-        }
+        this.thisReadSequence.setAsCopy(thisReadSequence);
         if (mateReadSequence == null) {
             this.mateReadSequence = null;
         } else {
@@ -88,15 +86,12 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         int totalBytes = 0;
         totalBytes += 1; // for the activeField
         totalBytes += ReadHeadInfo.ITEM_SIZE;
-        totalBytes += thisReadSequence != null ? thisReadSequence.getLength() : 0;
+        totalBytes += thisReadSequence.getLength();
         totalBytes += mateReadSequence != null ? mateReadSequence.getLength() : 0;
         return totalBytes;
     }
 
     public VKmer getThisReadSequence() {
-        if (this.thisReadSequence == null) {
-            this.thisReadSequence = new VKmer();
-        }
         return this.thisReadSequence;
     }
 
@@ -128,6 +123,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public void readFields(DataInput in) throws IOException {
         byte activeFields = in.readByte();
         value = in.readLong();
+        getThisReadSequence().readFields(in);
         if ((activeFields & READHEADINFO_FIELDS.MATE_READSEQUENCE) != 0) {
             getMateReadSequence().readFields(in);
         }
@@ -144,9 +140,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public static void write(ReadHeadInfo headInfo, DataOutput out) throws IOException {
         out.writeByte(headInfo.getActiveFields());
         out.writeLong(headInfo.value);
-        if (headInfo.thisReadSequence != null && headInfo.thisReadSequence.getKmerLetterLength() > 0) {
-            headInfo.thisReadSequence.write(out);
-        }
+        headInfo.thisReadSequence.write(out);
         if (headInfo.mateReadSequence != null && headInfo.mateReadSequence.getKmerLetterLength() > 0) {
             headInfo.mateReadSequence.write(out);
         }
@@ -166,7 +160,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public boolean equals(Object o) {
         if (!(o instanceof ReadHeadInfo))
             return false;
-        return ((ReadHeadInfo) o).value == this.value; //TODO I don't think need to compare readSequence, otherwise it's hard to find readHeadInfo in the treeSet
+        return ((ReadHeadInfo) o).value == this.value;
 
     }
 
@@ -176,7 +170,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     @Override
     public String toString() {
         return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + " " + "readSeq: "
-                + (this.thisReadSequence != null ? this.thisReadSequence.toString() : "null") + " " + "mateReadSeq: "
+                + this.thisReadSequence.toString() + " " + "mateReadSeq: "
                 + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "null");
     }
 
@@ -192,6 +186,5 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
             return this.getMateId() - o.getMateId();
         }
         return Long.compare(this.getReadId(), o.getReadId());
-        //TODO do we need to compare the read sequence? I don't think so. Nan.
     }
 }
