@@ -70,7 +70,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         updateStats("unflippedReadIds", value.getUnflippedReadIds().size());
         updateStats("flippedReadIds", value.getFlippedReadIds().size());
         
-        long totalEdgeReads = 0;
+//        long totalEdgeReads = 0;
         long totalSelf = 0;
         for (EDGETYPE et : EDGETYPE.values()) {
             for (VKmer e : value.getEdgeMap(et)) {
@@ -81,7 +81,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
                 }
             }
         }
-        updateStats("edgeRead", totalEdgeReads);
+//        updateStats("edgeRead", totalEdgeReads);
 
         if (value.isPathNode())
             reporter.incrCounter("totals", "pathNode", 1);
