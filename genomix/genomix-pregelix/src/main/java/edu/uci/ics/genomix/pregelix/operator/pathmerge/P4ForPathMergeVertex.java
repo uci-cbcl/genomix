@@ -16,7 +16,7 @@ import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.genomix.util.HashedSeedRandom;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge
@@ -43,6 +43,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     /**
      * initiate kmerSize, maxIteration
      */
+
     @Override
     public void initVertex() {
         super.initVertex();
@@ -52,8 +53,9 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             outgoingMsg.reset();
         if (RANDOM_SEED < 0)
             RANDOM_SEED = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_SEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
-        if (randGenerator == null)
-            randGenerator = new Random(RANDOM_SEED);
+        if (randGenerator == null) {
+            randGenerator = new HashedSeedRandom();
+        }
         if (probBeingRandomHead < 0)
             probBeingRandomHead = Float.parseFloat(getContext().getConfiguration().get(
                     GenomixJobConf.PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD));
@@ -71,10 +73,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
 
     protected boolean isNodeRandomHead(VKmer nodeKmer) {
         // "deterministically random", based on node id
-        randGenerator.setSeed((RANDOM_SEED ^ nodeKmer.hashCode()) * 10000 * getSuperstep());//randSeed + nodeID.hashCode()
-        for (int i = 0; i < 500; i++)
-            // destroy initial correlation between similar seeds 
-            randGenerator.nextFloat();
+        randGenerator.setSeed((RANDOM_SEED ^ nodeKmer.hashCode()) + getSuperstep());
         boolean isHead = randGenerator.nextFloat() < probBeingRandomHead;
         return isHead;
     }
@@ -236,7 +235,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     }
 
     @Override
-    public void compute(Iterator<PathMergeMessage> msgIterator) throws HyracksDataException {
+    public void compute(Iterator<PathMergeMessage> msgIterator) {
         initVertex();
         if (verbose)
             LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
