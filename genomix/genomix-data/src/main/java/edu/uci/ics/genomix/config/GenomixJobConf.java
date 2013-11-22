@@ -18,6 +18,7 @@ package edu.uci.ics.genomix.config;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,9 +31,17 @@ import org.kohsuke.args4j.Option;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.Node;
+import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
+    
+    public static boolean debug = false;
+    public static ArrayList<VKmer> debugKmers;
+    
+    private static Map<String, Long> tickTimes = new HashMap<String, Long>();
+    
     /* The following section ties together command-line options with a global JobConf
      * Each variable has an annotated, command-line Option which is private here but 
      * is accessible through JobConf.get(GenomixConfigOld.VARIABLE).
@@ -277,8 +286,6 @@ public class GenomixJobConf extends JobConf {
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
     // intermediate date evaluation
 
-    private static Map<String, Long> tickTimes = new HashMap<String, Long>();
-
     public GenomixJobConf(int kmerLength) {
         super(new Configuration());
         setInt(KMER_LENGTH, kmerLength);
@@ -512,7 +519,13 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
-
         EdgeMap.logReadIds = Boolean.parseBoolean(conf.get(GenomixJobConf.LOG_READIDS));
+        debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
+        debugKmers = new ArrayList<VKmer>();
+        if (conf.get(GenomixJobConf.DEBUG_KMERS) != null) {
+            for (String kmer : conf.get(GenomixJobConf.DEBUG_KMERS).split(",")) {
+                debugKmers.add(new VKmer(kmer));
+            }
+        }
     }
 }

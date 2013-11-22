@@ -25,7 +25,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
 
     private static final Logger LOG = Logger.getLogger(P4ForPathMergeVertex.class.getName());
 
-    private static long RANDOM_SEED = 1; //static for save memory
+    private static long RANDOM_SEED = -1; //static for save memory
     private float probBeingRandomHead = -1;
     private Random randGenerator = null;
 
@@ -50,7 +50,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             outgoingMsg = new PathMergeMessage();
         else
             outgoingMsg.reset();
-        RANDOM_SEED = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_SEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
+        if (RANDOM_SEED < 0)
+            RANDOM_SEED = Long.parseLong(getContext().getConfiguration().get(GenomixJobConf.RANDOM_SEED)); // also can use getSuperstep(), because it is better to debug under deterministically random
         if (randGenerator == null)
             randGenerator = new Random(RANDOM_SEED);
         if (probBeingRandomHead < 0)

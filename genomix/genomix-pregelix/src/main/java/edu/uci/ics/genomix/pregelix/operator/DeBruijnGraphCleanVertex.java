@@ -45,7 +45,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     // validPathsTable: a table representing the set of edge types forming a valid path from
     //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
     //                 the second
-    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
+    public static final EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
             { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
 
     protected M outgoingMsg = null;
@@ -55,8 +55,6 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     protected short outFlag;
     protected short selfFlag;
 
-    protected List<VKmer> problemKmers = null;
-    protected boolean debug = false;
     protected boolean verbose = false;
     protected boolean logReadIds = false;
 
@@ -66,33 +64,22 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(
-                    GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
-
-        checkDebug();
-        //TODO fix globalAggregator
-    }
-
-    public void checkDebug() {
-        debug = getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null;
-        if (problemKmers == null) {
-            problemKmers = new ArrayList<VKmer>();
-            if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
-                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(",")) {
-                    problemKmers.add(new VKmer(kmer));
-                }
-                Node.problemKmers = problemKmers;
+        if (getSuperstep() == 1) {
+            if (kmerSize == -1) {
+                kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
             }
+            if (maxIteration < 0) {
+                maxIteration = Integer.parseInt(getContext().getConfiguration().get(
+                        GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+            }
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         }
-
+        
         verbose = false;
-        for (VKmer problemKmer : problemKmers) {
-            verbose |= debug
-                    && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+        if (GenomixJobConf.debug) {
+            for (VKmer debugKmer : GenomixJobConf.debugKmers) {
+                verbose |= (getVertexValue().findEdge(debugKmer) != null || getVertexId().equals(debugKmer));
+            }
         }
     }
 
