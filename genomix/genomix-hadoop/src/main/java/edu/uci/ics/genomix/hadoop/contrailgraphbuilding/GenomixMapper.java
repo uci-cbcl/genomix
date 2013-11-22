@@ -135,6 +135,8 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 }
                 SplitReads(readID, mate0GeneLine.getBytes(), output);
             }
+        } else {
+            throw new IllegalStateException("thisReadSequence doesn't exist which is not allowed!");
         }
         if (mate1GeneLine != null) {
             Matcher geneMatcher = genePattern.matcher(mate1GeneLine);
