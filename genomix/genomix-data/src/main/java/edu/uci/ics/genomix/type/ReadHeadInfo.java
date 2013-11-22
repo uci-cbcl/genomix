@@ -47,10 +47,6 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         long uuid = Marshal.getLong(data, offset);
         set(uuid, null, null);
         offset += ReadHeadInfo.ITEM_SIZE;
-        if ((activeFields & READHEADINFO_FIELDS.THIS_READSEQUENCE) != 0) {
-            getThisReadSequence().setAsCopy(data, offset);
-            offset += getThisReadSequence().getLength();
-        }
         if ((activeFields & READHEADINFO_FIELDS.MATE_READSEQUENCE) != 0) {
             getMateReadSequence().setAsCopy(data, offset);
             offset += getMateReadSequence().getLength();
@@ -125,17 +121,13 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     protected static class READHEADINFO_FIELDS {
         // thisReadSequence and thatReadSequence
-        public static final int THIS_READSEQUENCE = 1 << 0;
-        public static final int MATE_READSEQUENCE = 1 << 1;
+        public static final int MATE_READSEQUENCE = 1 << 0;
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         byte activeFields = in.readByte();
         value = in.readLong();
-        if ((activeFields & READHEADINFO_FIELDS.THIS_READSEQUENCE) != 0) {
-            getThisReadSequence().readFields(in);
-        }
         if ((activeFields & READHEADINFO_FIELDS.MATE_READSEQUENCE) != 0) {
             getMateReadSequence().readFields(in);
         }
@@ -143,9 +135,6 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     protected byte getActiveFields() {
         byte fields = 0;
-        if (this.thisReadSequence != null && this.thisReadSequence.getKmerLetterLength() > 0) {
-            fields |= READHEADINFO_FIELDS.THIS_READSEQUENCE;
-        }
         if (this.mateReadSequence != null && this.mateReadSequence.getKmerLetterLength() > 0) {
             fields |= READHEADINFO_FIELDS.MATE_READSEQUENCE;
         }
