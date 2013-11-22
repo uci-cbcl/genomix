@@ -25,7 +25,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     public ReadHeadInfo() {
         this.value = 0;
-        this.thisReadSequence = new VKmer();
+        this.thisReadSequence = null;
         this.mateReadSequence = null;
     }
 
@@ -93,12 +93,15 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         int totalBytes = 0;
         totalBytes += 1; // for the activeField
         totalBytes += ReadHeadInfo.ITEM_SIZE;
-        totalBytes += thisReadSequence.getLength();
+        totalBytes += thisReadSequence != null ? thisReadSequence.getLength() : 0;
         totalBytes += mateReadSequence != null ? mateReadSequence.getLength() : 0;
         return totalBytes;
     }
 
     public VKmer getThisReadSequence() {
+        if(this.thisReadSequence == null){
+            this.thisReadSequence = new VKmer();
+        }
         return this.thisReadSequence;
     }
 
@@ -147,7 +150,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     public static void write(ReadHeadInfo headInfo, DataOutput out) throws IOException {
         out.writeByte(headInfo.getActiveFields());
         out.writeLong(headInfo.value);
-        headInfo.thisReadSequence.write(out);
+        headInfo.getThisReadSequence().write(out);
         if (headInfo.mateReadSequence != null && headInfo.mateReadSequence.getKmerLetterLength() > 0) {
             headInfo.mateReadSequence.write(out);
         }
@@ -177,7 +180,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     @Override
     public String toString() {
         return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId()) + " " + "readSeq: "
-                + this.thisReadSequence.toString() + " " + "mateReadSeq: "
+                + (this.thisReadSequence != null ? this.thisReadSequence.toString() : "null") + " " + "mateReadSeq: "
                 + (this.mateReadSequence != null ? this.mateReadSequence.toString() : "null");
     }
 
