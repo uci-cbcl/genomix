@@ -726,62 +726,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     public int editDistance(VKmer other) {
         return editDistance(this, other);
     }
-
-    public int contain(VKmer pattern){
-        return findSubVkmer(this, pattern);
-    }
     
-    /**
-     * use KMP to fast detect whether master Vkmer contain pattern; if true return index, otherwise return -1;
-     * @param master
-     * @param pattern
-     * @return
-     */
-    public static int findSubVkmer(VKmer master, VKmer pattern){
-        int patternSize = pattern.getKmerLetterLength();
-        int strSize = master.getKmerLetterLength();
-        int[] failureSet = new int[patternSize];
-        failureSet = computeFailureSet(failureSet, pattern);
-        int p = 0;
-        int m = 0;
-        while (p < patternSize && m < strSize) {
-            if (pattern.getGeneCodeAtPosition(p) == master.getGeneCodeAtPosition(m)) {
-                p++;
-                m++;
-            } else if (p == 0) {
-                m++;
-            } else {
-                p = failureSet[p - 1] + 1;
-            }
-        }
-        if (p < patternSize) {
-            return -1;
-        } else {
-            return m - patternSize;
-        }
-    }
-    
-    /**
-     * compute the failure function of KMP algorithm
-     * @param failureSet
-     * @param pattern
-     * @return
-     */
-    protected static int[] computeFailureSet(int[] failureSet, VKmer pattern){
-        int i = 0;
-        failureSet[0] = -1;
-        for (int j = 1; j < pattern.getKmerLetterLength(); j++) {
-            i = failureSet[j - 1];
-            while (i > 0 && pattern.getGeneCodeAtPosition(j) != pattern.getGeneCodeAtPosition(i + 1)) {
-                i = failureSet[i];
-            }
-            if (pattern.getGeneCodeAtPosition(j) == pattern.getGeneCodeAtPosition(i + 1)) {
-                failureSet[j] = i + 1;
-            } else
-                failureSet[j] = -1;
-        }
-        return failureSet;
-    }
     /**
      * return the fractional difference between the given kmers. This is the edit distance divided by the smaller length.
      * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)

@@ -608,22 +608,6 @@ public class VKmerTest {
         
         kmer1.mergeWithKmerInDir(EDGETYPE.RR, 9, kmer2);
         Assert.assertEquals("Invalid RR merge!!!", "TTCACATACTATCCTGCGTACGC", kmer1.toString());
-    }
-    
-    @Test
-    public void TestContain(){
-        VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
-        VKmer kmer2 = new VKmer("TGCGT");
-        Assert.assertEquals(7, kmer1.contain(kmer2));
-        VKmer kmer3 = new VKmer("ACTATCCTGCGTACGC");
-        VKmer kmer4 = new VKmer("TGCGA");
-        Assert.assertEquals(-1, kmer3.contain(kmer4));
-        VKmer kmer5 = new VKmer("ACTATCCTGCGTACGC");
-        VKmer kmer6 = new VKmer("ACGC");
-        Assert.assertEquals(12, kmer5.contain(kmer6));
-        VKmer kmer7 = new VKmer("ACTATCCTGCGTACGC");
-        VKmer kmer8 = new VKmer("ACTAC");
-        Assert.assertEquals(-1, kmer7.contain(kmer8));
-    }
+    } 
 
 }
