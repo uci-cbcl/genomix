@@ -62,31 +62,6 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
     public void configure(JobConf job) {
         KMER_SIZE = Integer.parseInt(job.get(GenomixJobConf.KMER_LENGTH));
         Kmer.setGlobalKmerLength(KMER_SIZE);
-        lineCount = 0;
-
-        // paired-end reads should be named something like dsm3757.01-31-2011.ln6_1.fastq
-        // when we have a proper driver, we will set a config field instead of reading in the filename
-        String filename = job.get("map.input.file");
-        String[] tokens = filename.split("\\.(?=[^\\.]+$)"); // split on the last "." to get the basename and the extension
-        if (tokens.length > 2)
-            throw new IllegalStateException("Parse error trying to parse filename... split extension tokens are: "
-                    + tokens.toString());
-        String basename = tokens[0];
-        String extension = tokens.length == 2 ? tokens[1] : "";
-
-        if (extension.equals("fastq") || extension.equals("fq")) {
-            if (!(job.getInputFormat() instanceof NLineInputFormat)) {
-                throw new IllegalStateException("Fastq files require the NLineInputFormat (was " + job.getInputFormat()
-                        + " ).");
-            }
-            if (job.getInt("mapred.line.input.format.linespermap", -1) % 4 != 0) {
-                throw new IllegalStateException(
-                        "Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was "
-                                + job.get("mapred.line.input.format.linespermap") + ").");
-            }
-            fastqFormat = true;
-        }
-
     }
 
     @Override
@@ -97,29 +72,17 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         String mate0GeneLine = null;
         String mate1GeneLine = null;
 
-        // TODO remember to set NLineInputFormat 
-        // TODO relax the input file name restrict
-        // TODO current lineCount is incorrect, if we have multiple input files
-        if (fastqFormat) {
-            //            if ((lineCount - 1) % 4 == 1) {
-            //                readID = key.get(); // this is actually the offset into the file... will it be the same across all files?? //TODO test this
-            //                                geneLine = value.toString().trim();
-            //            } else {
-            //                return; //skip all other lines
-            //            }
+        String[] rawLine = value.toString().split("\\t"); // Read
+        if (rawLine.length == 2) {
+            readID = Long.parseLong(rawLine[0]);
+            mate0GeneLine = rawLine[1];
+        } else if (rawLine.length == 3) {
+            readID = Long.parseLong(rawLine[0]);
+            mate0GeneLine = rawLine[1];
+            mate1GeneLine = rawLine[2];
         } else {
-            String[] rawLine = value.toString().split("\\t"); // Read
-            if (rawLine.length == 2) {
-                readID = Long.parseLong(rawLine[0]);
-                mate0GeneLine = rawLine[1];
-            } else if (rawLine.length == 3) {
-                readID = Long.parseLong(rawLine[0]);
-                mate0GeneLine = rawLine[1];
-                mate1GeneLine = rawLine[2];
-            } else {
-                throw new IllegalStateException(
-                        "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
-            }
+            throw new IllegalStateException(
+                    "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
         }
 
         Pattern genePattern = Pattern.compile("[AGCT]+");
