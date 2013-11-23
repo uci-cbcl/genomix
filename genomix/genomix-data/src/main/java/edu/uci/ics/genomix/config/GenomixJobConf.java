@@ -28,7 +28,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Kmer;
 
 @SuppressWarnings("deprecation")
@@ -513,6 +512,5 @@ public class GenomixJobConf extends JobConf {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
 
-        EdgeMap.logReadIds = Boolean.parseBoolean(conf.get(GenomixJobConf.LOG_READIDS));
     }
 }

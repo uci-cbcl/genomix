@@ -149,7 +149,7 @@ public class GenerateGraphViz {
     public static String convertEdgeToGraph(String outputNode, Node value, GRAPH_TYPE graphType) {
         String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (VKmer e : value.getEdgeMap(et)) {
+            for (VKmer e : value.getEdges(et)) {
                 String destNode = "";
                 switch (graphType) {
                     case UNDIRECTED_GRAPH_WITHOUT_LABELS:

@@ -200,10 +200,10 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
 
     public void setCurAndNextEdgeMap(SimpleEntry<VKmer, DIR> curKmerAndDir, SimpleEntry<VKmer, DIR> neighborKmerAndDir) {
         EDGETYPE et = EDGETYPE.getEdgeTypeFromDirToDir(curKmerAndDir.getValue(), neighborKmerAndDir.getValue());
-        curNode.getEdgeMap(et).append(neighborKmerAndDir.getKey());
+        curNode.getEdges(et).append(neighborKmerAndDir.getKey());
         nextNode.reset();
         nextNode.setAverageCoverage(1);
-        nextNode.getEdgeMap(et.mirror()).append(new VKmer(curKmerAndDir.getKey()));
+        nextNode.getEdges(et.mirror()).append(new VKmer(curKmerAndDir.getKey()));
     }
 
     public void setReadHeadInfo() {

@@ -37,13 +37,13 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
     public void sendEdgeMap(DIR direction) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+            for (VKmer dest : vertex.getEdges(et)) {
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setEdgeMap(vertex.getEdgeMap(et));
+                outgoingMsg.setEdges(vertex.getEdges(et));
                 sendMsg(dest, outgoingMsg);
             }
         }
@@ -62,14 +62,20 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
         while (msgIterator.hasNext()) {
             SymmetryCheckerMessage incomingMsg = msgIterator.next();
             EDGETYPE neighborToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
-            boolean exist = getVertexValue().getEdgeMap(neighborToMe).containsKey(incomingMsg.getSourceVertexId());
+            boolean exist = getVertexValue().getEdges(neighborToMe).contains(incomingMsg.getSourceVertexId());
             if (!exist) {
                 getVertexValue().setState(State.ERROR_NODE);
                 return;
             }
-            boolean edgeMapIsSame = getVertexValue().getEdgeMap(neighborToMe).get(incomingMsg.getSourceVertexId())
-                    .equals(incomingMsg.getEdgeMap().get(getVertexId()));
-            if (!edgeMapIsSame)
+            
+            boolean edgesAreSame = true;
+            for (VKmer kmer : incomingMsg.getEdges()) {
+                if (!getVertexValue().getEdges(neighborToMe).contains(kmer)) {
+                    edgesAreSame = false;
+                    break;
+                }
+            }
+            if (!edgesAreSame)
                 getVertexValue().setState(State.ERROR_NODE);
         }
     }

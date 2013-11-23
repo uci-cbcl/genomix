@@ -12,9 +12,9 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -43,11 +43,10 @@ public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
     private VKmer insertedBubble = null;
     private VKmer internalKmerInNewBubble = null;
     private float coverageOfInsertedBubble = -1;
-    private long readId = -1;
     private EDGETYPE newBubbleToMajorEdgetype = null;
     private EDGETYPE newBubbleToMinorEdgeType = null;
 
-    private EdgeMap[] edges = new EdgeMap[4];
+    private VKmerList[] edges = new VKmerList[4];
 
     /**
      * initiate kmerSize, length
@@ -75,9 +74,6 @@ public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
             coverageOfInsertedBubble = Float.parseFloat(getContext().getConfiguration()
                     .get(COVERAGE_OF_INSERTED_BUBBLE));
         }
-        if (readId < 0) {
-            readId = Long.parseLong(getContext().getConfiguration().get(READID));
-        }
         if (newBubbleToMajorEdgetype == null) {
             newBubbleToMajorEdgetype = EDGETYPE.fromByte(Byte.parseByte(getContext().getConfiguration().get(
                     NEWBUBBLE_TO_MAJOR_EDGETYPE)));
@@ -92,7 +88,7 @@ public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
      * add a bubble
      */
     @SuppressWarnings("unchecked")
-    public void insertBubble(EdgeMap[] edges, VKmer insertedBubble, VKmer internalKmer) {
+    public void insertBubble(VKmerList[] edges, VKmer insertedBubble, VKmer internalKmer) {
         //add bubble vertex
         @SuppressWarnings("rawtypes")
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
@@ -106,7 +102,7 @@ public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         /**
          * set the vertex value
          */
-        vertexValue.setEdges(edges);
+        vertexValue.setAllEdges(edges);
         vertexValue.setInternalKmer(internalKmer);
         vertexValue.setAverageCoverage(coverageOfInsertedBubble);
         vertexValue.setInternalKmer(internalKmerInNewBubble);
@@ -118,16 +114,15 @@ public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
 
     public void addEdgeToInsertedBubble(EDGETYPE meToNewBubbleDir, VKmer insertedBubble) {
         EDGETYPE newBubbleToMeDir = meToNewBubbleDir.mirror();
-        getVertexValue().getEdgeMap(newBubbleToMeDir).put(insertedBubble,
-                new ReadIdSet(Arrays.asList(new Long(readId))));
+        getVertexValue().getEdges(newBubbleToMeDir).append(insertedBubble);
     }
 
     public void setupEdgeForInsertedBubble() {
         for (EDGETYPE et : EDGETYPE.values()) {
-            edges[et.get()] = new EdgeMap();
+            edges[et.get()] = new VKmerList();
         }
-        edges[newBubbleToMajorEdgetype.get()].put(majorVertexId, new ReadIdSet(Arrays.asList(new Long(readId))));
-        edges[newBubbleToMinorEdgeType.get()].put(minorVertexId, new ReadIdSet(Arrays.asList(new Long(readId))));
+        edges[newBubbleToMajorEdgetype.get()].append(majorVertexId);
+        edges[newBubbleToMinorEdgeType.get()].append(minorVertexId);
     }
 
     @Override

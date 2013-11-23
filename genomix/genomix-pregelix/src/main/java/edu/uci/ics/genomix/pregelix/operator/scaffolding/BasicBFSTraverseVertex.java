@@ -90,7 +90,7 @@ public class BasicBFSTraverseVertex extends
     public void sendMsgToNeighbors(EdgeTypeList edgeTypeList, DIR direction) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+            for (VKmer dest : vertex.getEdges(et)) {
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
@@ -191,10 +191,10 @@ public class BasicBFSTraverseVertex extends
                 }
             }
             // only last element in pathAndEdgeTypeList updates self
-            EDGETYPE prevToMe = edgeTypeList.get(pathAndEdgeTypeList.size() - 2);
-            VKmer preKmer = kmerList.getPosition(pathAndEdgeTypeList.size() - 2);
-
-            vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(commonReadId.get()); // Option: put 2 for test
+//            EDGETYPE prevToMe = edgeTypeList.get(pathAndEdgeTypeList.size() - 2);
+//            VKmer preKmer = kmerList.getPosition(pathAndEdgeTypeList.size() - 2);
+//
+//            vertex.getEdgeMap(prevToMe.mirror()).get(preKmer).add(commonReadId.get()); // Option: put 2 for test
         }
     }
 
@@ -212,7 +212,7 @@ public class BasicBFSTraverseVertex extends
                 throw new IllegalStateException("When path node receives message to append common readId,"
                         + "PathList should only have one(next) or two(prev and next) elements!");
             for (int i = 0; i < pathList.size(); i++) {
-                vertex.getEdgeMap(edgeTypeList.get(i)).get(pathList.getPosition(i)).add(commonReadId);
+//                vertex.getEdgeMap(edgeTypeList.get(i)).get(pathList.getPosition(i)).add(commonReadId);
             }
         }
     }

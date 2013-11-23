@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import junit.framework.Assert;
 import org.junit.Test;
-import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.util.Marshal;
@@ -16,7 +16,7 @@ public class ReadIdSetTest {
      */
     @Test
     public void Test1() {
-        EdgeMap elist = new EdgeMap();
+        VKmerList elist = new VKmerList();
         Assert.assertEquals(0, elist.size());
         Assert.assertEquals(4, elist.getLengthInBytes());
 

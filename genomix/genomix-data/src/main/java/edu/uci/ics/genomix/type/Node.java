@@ -15,21 +15,17 @@
 
 package edu.uci.ics.genomix.type;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.io.Writable;
@@ -166,7 +162,7 @@ public class Node implements Writable, Serializable {
 
     public void setAsCopy(VKmerList[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer,
             Float coverage) {
-        setEdges(edges);
+        setAllEdges(edges);
         setUnflippedReadIds(unflippedReadIds);
         setFlippedReadIds(flippedReadIds);
         setInternalKmer(kmer);
@@ -207,7 +203,7 @@ public class Node implements Writable, Serializable {
                     "getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
         EnumSet<EDGETYPE> ets = direction.edgeTypes();
         for (EDGETYPE et : ets) {
-            if (edges[et.get()] != null && getEdgeMap(et).size() > 0) {
+            if (edges[et.get()] != null && getEdges(et).size() > 0) {
                 return et;
             }
         }
@@ -223,8 +219,8 @@ public class Node implements Writable, Serializable {
             return null;
         }
         for (EDGETYPE et : direction.edgeTypes()) {
-            if (edges[et.get()] != null && getEdgeMap(et).size() > 0) {
-                return new NeighborInfo(et, getEdgeMap(et).getPosition(0));
+            if (edges[et.get()] != null && getEdges(et).size() > 0) {
+                return new NeighborInfo(et, getEdges(et).getPosition(0));
             }
         }
         throw new IllegalStateException("Programmer error!!!");
@@ -234,35 +230,35 @@ public class Node implements Writable, Serializable {
      * Get this node's edgeType and edgeList in this given edgeType. Return null if there is no neighbor
      */
     public NeighborsInfo getNeighborsInfo(EDGETYPE et) {
-        if (edges[et.get()] == null || getEdgeMap(et).size() == 0) {
+        if (edges[et.get()] == null || getEdges(et).size() == 0) {
             return null;
         }
-        return new NeighborsInfo(et, getEdgeMap(et));
+        return new NeighborsInfo(et, getEdges(et));
     }
 
-    public VKmerList getEdgeMap(EDGETYPE edgeType) {
+    public VKmerList getEdges(EDGETYPE edgeType) {
         if (edges[edgeType.get()] == null) {
             edges[edgeType.get()] = new VKmerList();
         }
         return edges[edgeType.get()];
     }
 
-    public void setEdgeMap(EDGETYPE edgeType, VKmerList edgeMap) {
+    public void setEdges(EDGETYPE edgeType, VKmerList edgeMap) {
         if (edgeMap == null) {
             edges[edgeType.get()] = null;
         } else {
-            getEdgeMap(edgeType).clear();
-            getEdgeMap(edgeType).setAsCopy(edgeMap);
+            getEdges(edgeType).clear();
+            getEdges(edgeType).setAsCopy(edgeMap);
         }
     }
 
-    public VKmerList[] getEdges() {
+    public VKmerList[] getAllEdges() {
         return edges;
     }
 
-    public void setEdges(VKmerList[] edges) {
+    public void setAllEdges(VKmerList[] edges) {
         for (EDGETYPE et : EDGETYPE.values()) {
-            setEdgeMap(et, edges[et.get()]);
+            setEdges(et, edges[et.get()]);
         }
     }
 
@@ -373,7 +369,7 @@ public class Node implements Writable, Serializable {
         for (EDGETYPE et : EDGETYPE.values()) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
-                getEdgeMap(et).setAsCopy(data, offset);
+                getEdges(et).setAsCopy(data, offset);
                 offset += edges[et.get()].getLengthInBytes();
             }
         }
@@ -402,7 +398,7 @@ public class Node implements Writable, Serializable {
         for (EDGETYPE et : EDGETYPE.values()) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
-                getEdgeMap(et).setAsReference(data, offset);
+                getEdges(et).setAsReference(data, offset);
                 offset += edges[et.get()].getLengthInBytes();
             }
         }
@@ -457,7 +453,7 @@ public class Node implements Writable, Serializable {
         for (EDGETYPE et : EDGETYPE.values()) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
-                getEdgeMap(et).readFields(in);
+                getEdges(et).readFields(in);
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
@@ -608,13 +604,15 @@ public class Node implements Writable, Serializable {
             if (other.unflippedReadIds != null) {
                 for (ReadHeadInfo p : other.unflippedReadIds) {
                     getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
+                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                            p.getMateReadSequence());
                 }
             }
             if (other.flippedReadIds != null) {
                 for (ReadHeadInfo p : other.flippedReadIds) {
                     getFlippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
+                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                            p.getMateReadSequence());
                 }
             }
         } else {
@@ -625,14 +623,16 @@ public class Node implements Writable, Serializable {
                 for (ReadHeadInfo p : other.unflippedReadIds) {
                     newPOffset = otherLength - 1 - p.getOffset();
                     getFlippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
+                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                            p.getMateReadSequence());
                 }
             }
             if (other.flippedReadIds != null) {
                 for (ReadHeadInfo p : other.flippedReadIds) {
                     newPOffset = otherLength - 1 - p.getOffset();
                     getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(), p.getMateReadSequence());
+                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
+                            p.getMateReadSequence());
                 }
             }
         }
@@ -647,7 +647,7 @@ public class Node implements Writable, Serializable {
             edges[deleteDir.get()].remove(toDelete);
         }
         if (other.edges[replaceDir.get()] != null) {
-            getEdgeMap(updateDir).unionUpdate(other.edges[replaceDir.get()]);
+            getEdges(updateDir).unionUpdate(other.edges[replaceDir.get()]);
         }
     }
 
@@ -664,12 +664,12 @@ public class Node implements Writable, Serializable {
                     throw new IllegalArgumentException("Illegal FF merge attempted! Other incoming degree is "
                             + other.inDegree() + " in " + other.toString());
                 if (other.edges[EDGETYPE.FF.get()] != null) {
-                    getEdgeMap(EDGETYPE.FF).setAsCopy(other.getEdgeMap(EDGETYPE.FF));
+                    getEdges(EDGETYPE.FF).setAsCopy(other.getEdges(EDGETYPE.FF));
                 } else {
                     edges[EDGETYPE.FF.get()] = null;
                 }
                 if (other.edges[EDGETYPE.FR.get()] != null) {
-                    getEdgeMap(EDGETYPE.FR).setAsCopy(other.getEdgeMap(EDGETYPE.FR));
+                    getEdges(EDGETYPE.FR).setAsCopy(other.getEdges(EDGETYPE.FR));
                 } else {
                     edges[EDGETYPE.FR.get()] = null;
                 }
@@ -682,12 +682,12 @@ public class Node implements Writable, Serializable {
                     throw new IllegalArgumentException("Illegal FR merge attempted! Other outgoing degree is "
                             + other.outDegree() + " in " + other.toString());
                 if (other.edges[EDGETYPE.RF.get()] != null) {
-                    getEdgeMap(EDGETYPE.FF).setAsCopy(other.getEdgeMap(EDGETYPE.RF));
+                    getEdges(EDGETYPE.FF).setAsCopy(other.getEdges(EDGETYPE.RF));
                 } else {
                     edges[EDGETYPE.FF.get()] = null;
                 }
                 if (other.edges[EDGETYPE.RR.get()] != null) {
-                    getEdgeMap(EDGETYPE.FR).setAsCopy(other.getEdgeMap(EDGETYPE.RR));
+                    getEdges(EDGETYPE.FR).setAsCopy(other.getEdges(EDGETYPE.RR));
                 } else {
                     edges[EDGETYPE.FR.get()] = null;
                 }
@@ -700,12 +700,12 @@ public class Node implements Writable, Serializable {
                     throw new IllegalArgumentException("Illegal RF merge attempted! Other incoming degree is "
                             + other.inDegree() + " in " + other.toString());
                 if (other.edges[EDGETYPE.FF.get()] != null) {
-                    getEdgeMap(EDGETYPE.RF).setAsCopy(other.getEdgeMap(EDGETYPE.FF));
+                    getEdges(EDGETYPE.RF).setAsCopy(other.getEdges(EDGETYPE.FF));
                 } else {
                     edges[EDGETYPE.RF.get()] = null;
                 }
                 if (other.edges[EDGETYPE.FR.get()] != null) {
-                    getEdgeMap(EDGETYPE.RR).setAsCopy(other.getEdgeMap(EDGETYPE.FR));
+                    getEdges(EDGETYPE.RR).setAsCopy(other.getEdges(EDGETYPE.FR));
                 } else {
                     edges[EDGETYPE.RR.get()] = null;
                 }
@@ -718,12 +718,12 @@ public class Node implements Writable, Serializable {
                     throw new IllegalArgumentException("Illegal RR merge attempted! Other outgoing degree is "
                             + other.outDegree() + " in " + other.toString());
                 if (other.edges[EDGETYPE.RF.get()] != null) {
-                    getEdgeMap(EDGETYPE.RF).setAsCopy(other.getEdgeMap(EDGETYPE.RF));
+                    getEdges(EDGETYPE.RF).setAsCopy(other.getEdges(EDGETYPE.RF));
                 } else {
                     edges[EDGETYPE.RF.get()] = null;
                 }
                 if (other.edges[EDGETYPE.RR.get()] != null) {
-                    getEdgeMap(EDGETYPE.RR).setAsCopy(other.getEdgeMap(EDGETYPE.RR));
+                    getEdges(EDGETYPE.RR).setAsCopy(other.getEdges(EDGETYPE.RR));
                 } else {
                     edges[EDGETYPE.RR.get()] = null;
                 }
@@ -746,7 +746,7 @@ public class Node implements Writable, Serializable {
 
     private void unionUpdateEdgeMap(EDGETYPE myET, EDGETYPE otherET, VKmerList[] otherEdges) {
         if (otherEdges[otherET.get()] != null) {
-            getEdgeMap(myET).unionUpdate(otherEdges[otherET.get()]);
+            getEdges(myET).unionUpdate(otherEdges[otherET.get()]);
         }
     }
 
@@ -761,12 +761,14 @@ public class Node implements Writable, Serializable {
                 // stream theirs in with my offset
                 if (other.unflippedReadIds != null) {
                     for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(),
+                                p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 if (other.flippedReadIds != null) {
                     for (ReadHeadInfo p : other.flippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(),
+                                p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 break;
@@ -775,12 +777,14 @@ public class Node implements Writable, Serializable {
                 // stream theirs in, offset and flipped
                 if (other.unflippedReadIds != null) {
                     for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
+                                p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 if (other.flippedReadIds != null) {
                     for (ReadHeadInfo p : other.flippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
+                                p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 break;
@@ -801,12 +805,14 @@ public class Node implements Writable, Serializable {
                 }
                 if (other.unflippedReadIds != null) {
                     for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
+                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
+                                p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 if (other.flippedReadIds != null) {
                     for (ReadHeadInfo p : other.flippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(), p.getThisReadSequence(), p.getMateReadSequence());
+                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
+                                p.getThisReadSequence(), p.getMateReadSequence());
                     }
                 }
                 break;
@@ -842,7 +848,7 @@ public class Node implements Writable, Serializable {
      */
     public NeighborInfo findEdge(final VKmer kmer) {
         for (EDGETYPE et : EDGETYPE.values()) {
-            if (edges[et.get()] != null && edges[et.get()].containsKey(kmer)) {
+            if (edges[et.get()] != null && edges[et.get()].contains(kmer)) {
                 return new NeighborInfo(et, kmer);
             }
         }

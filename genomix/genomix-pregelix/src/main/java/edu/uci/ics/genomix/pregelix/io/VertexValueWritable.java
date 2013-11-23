@@ -10,10 +10,10 @@ import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class VertexValueWritable extends Node {
 
@@ -70,40 +70,40 @@ public class VertexValueWritable extends Node {
 
     public void setNode(Node node) {
         // TODO invertigate... does this need to be a copy?
-        super.setAsCopy(node.getEdges(), node.getUnflippedReadIds(), node.getFlippedReadIds(), node.getInternalKmer(),
+        super.setAsCopy(node.getAllEdges(), node.getUnflippedReadIds(), node.getFlippedReadIds(), node.getInternalKmer(),
                 node.getAverageCoverage());
     }
 
-    public EdgeMap getFFList() {
-        return getEdgeMap(EDGETYPE.FF);
+    public VKmerList getFFList() {
+        return getEdges(EDGETYPE.FF);
     }
 
-    public EdgeMap getFRList() {
-        return getEdgeMap(EDGETYPE.FR);
+    public VKmerList getFRList() {
+        return getEdges(EDGETYPE.FR);
     }
 
-    public EdgeMap getRFList() {
-        return getEdgeMap(EDGETYPE.RF);
+    public VKmerList getRFList() {
+        return getEdges(EDGETYPE.RF);
     }
 
-    public EdgeMap getRRList() {
-        return getEdgeMap(EDGETYPE.RR);
+    public VKmerList getRRList() {
+        return getEdges(EDGETYPE.RR);
     }
 
-    public void setFFList(EdgeMap forwardForwardList) {
-        setEdgeMap(EDGETYPE.FF, forwardForwardList);
+    public void setFFList(VKmerList forwardForwardList) {
+        setEdges(EDGETYPE.FF, forwardForwardList);
     }
 
-    public void setFRList(EdgeMap forwardReverseList) {
-        setEdgeMap(EDGETYPE.FR, forwardReverseList);
+    public void setFRList(VKmerList forwardReverseList) {
+        setEdges(EDGETYPE.FR, forwardReverseList);
     }
 
-    public void setRFList(EdgeMap reverseForwardList) {
-        setEdgeMap(EDGETYPE.RF, reverseForwardList);
+    public void setRFList(VKmerList reverseForwardList) {
+        setEdges(EDGETYPE.RF, reverseForwardList);
     }
 
-    public void setRRList(EdgeMap reverseReverseList) {
-        setEdgeMap(EDGETYPE.RR, reverseReverseList);
+    public void setRRList(VKmerList reverseReverseList) {
+        setEdges(EDGETYPE.RR, reverseReverseList);
     }
 
     public short getState() {
@@ -190,33 +190,6 @@ public class VertexValueWritable extends Node {
 
     public int getDegree() {
         return inDegree() + outDegree();
-    }
-
-    /**
-     * check if prev/next destination exists
-     */
-    public boolean hasPrevDest() {
-        return !getRFList().isEmpty() || !getRRList().isEmpty();
-    }
-
-    public boolean hasNextDest() {
-        return !getFFList().isEmpty() || !getFRList().isEmpty();
-    }
-
-    /**
-     * Delete the corresponding edge
-     */
-    public void processDelete(EDGETYPE neighborToDeleteEdgetype, VKmer keyToDelete) {
-        ReadIdSet prevList = this.getEdgeList(neighborToDeleteEdgetype).remove(keyToDelete);
-        if (prevList == null) {
-            throw new IllegalArgumentException("processDelete tried to remove an edge that didn't exist: "
-                    + keyToDelete + " but I am " + this);
-        }
-    }
-
-    public void processFinalUpdates(EDGETYPE deleteDir, EDGETYPE updateDir, Node other) {
-        EDGETYPE replaceDir = deleteDir.mirror();
-        updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
     }
 
     /**
