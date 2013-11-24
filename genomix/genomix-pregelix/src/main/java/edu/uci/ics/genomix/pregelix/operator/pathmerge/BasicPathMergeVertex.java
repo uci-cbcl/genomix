@@ -17,6 +17,7 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -192,7 +193,13 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outNode.setUnflippedReadIds(vertex.getUnflippedReadIds());
             outNode.setFlippedReadIds(vertex.getFlippedReadIds());
             outNode.setAverageCoverage(vertex.getAverageCoverage());
-            outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer());
+            // only send non-overlapping letters // TODO do something more efficient than toString?
+            if (mergeEdgetype.mirror().neighborDir() == DIR.FORWARD) {
+                outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer().toString().substring(Kmer.getKmerLength() - 1));
+            } else {
+                outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer().toString().substring(0, vertex.getInternalKmer().getKmerLetterLength() - Kmer.getKmerLength() + 1));
+            }
+
 
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype

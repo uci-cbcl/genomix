@@ -205,7 +205,9 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                 LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             }
             senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
+            node.mergeWithNodeWithoutKmer(senderEdgetype, incomingMsg.getNode());
+            // only the non-overlapping portions of the kmer are sent
+            node.getInternalKmer().mergeWithKmerInDir(senderEdgetype, 1, incomingMsg.getNode().getInternalKmer());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
             //            numMerged++;
             updated = true;
