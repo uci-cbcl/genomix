@@ -28,7 +28,8 @@ import edu.uci.ics.genomix.type.VKmer;
 public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, BubbleMergeMessage> {
 
     private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
-
+    
+    private static int count = 0;
     private float DISSIMILAR_THRESHOLD = -1;
 
     private Map<VKmer, ArrayList<BubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<BubbleMergeMessage>>();
@@ -145,8 +146,11 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     boolean sameOrientation = topMsg.sameOrientation(curMsg);
                     // 1. add coverage to top node -- for unchangedSet
                     topNode.addFromNode(!sameOrientation, curMsg.getNode());
-                    if (debug)
+                    if (debug){
                         LOG.fine("topNode: " + topNode.toString() + " add node: " + curMsg.getNode().toString());
+                        count++;
+                        LOG.fine("Count: " + count);
+                    }
                     // 2. add curMsg.edge in minToBubbleEdgetype to minorVertex
                     addNewMinorToBubbleEdges(sameOrientation, curMsg, topMsg.getSourceVertexId());
 
