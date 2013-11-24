@@ -109,6 +109,23 @@ public enum EDGETYPE implements Writable {
                 throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
         }
     }
+    
+    public DIR neighborDir() {
+        return neighborDir(this);
+    }
+    
+    public static DIR neighborDir(EDGETYPE et) {
+        switch (et) {
+            case FF:
+            case RF:
+                return DIR.FORWARD;
+            case FR:
+            case RR:
+                return DIR.REVERSE;
+            default:
+                throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + et);
+        }
+    }
 
     /**
      * return the edgetype corresponding to moving across edge1 and edge2.

@@ -254,7 +254,6 @@ public class Node implements Writable, Serializable {
         if (edgeMap == null) {
             edges[edgeType.get()] = null;
         } else {
-            getEdgeMap(edgeType).clear();
             getEdgeMap(edgeType).setAsCopy(edgeMap);
         }
     }

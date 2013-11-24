@@ -17,6 +17,7 @@ import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
@@ -183,8 +184,16 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     .enumSetFromByte(state));
 
             outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(vertex); // TODO reduce amount sent in this Node (only internalKmer and 1/2 of edges)
+            Node outNode = outgoingMsg.getNode();
+            // set only relevant edges
+            for (EDGETYPE et : mergeEdgetype.mirror().neighborDir().edgeTypes()) {
+                outNode.setEdgeMap(et, vertex.getEdgeMap(et));
+            }
+            outNode.setUnflippedReadIds(vertex.getUnflippedReadIds());
+            outNode.setFlippedReadIds(vertex.getFlippedReadIds());
+            outNode.setAverageCoverage(vertex.getAverageCoverage());
+            outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer());
+
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);
