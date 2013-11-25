@@ -75,6 +75,12 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
                     break;
                 }
             }
+            for (VKmer kmer : getVertexValue().getEdges(neighborToMe)) {
+                if (!incomingMsg.getEdges().contains(kmer)) {
+                    edgesAreSame = false;
+                    break;
+                }
+            }
             if (!edgesAreSame)
                 getVertexValue().setState(State.ERROR_NODE);
         }
