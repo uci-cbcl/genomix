@@ -740,8 +740,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
     public static int indexOf(VKmer master, VKmer pattern){
         int patternSize = pattern.getKmerLetterLength();
         int strSize = master.getKmerLetterLength();
-        int[] failureSet = new int[patternSize];
-        failureSet = computeFailureSet(failureSet, pattern);
+        int[] failureSet = computeFailureSet(pattern, patternSize);
         int p = 0;
         int m = 0;
         while (p < patternSize && m < strSize) {
@@ -767,7 +766,8 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      * @param pattern
      * @return
      */
-    protected static int[] computeFailureSet(int[] failureSet, VKmer pattern){
+    protected static int[] computeFailureSet(VKmer pattern, int patternSize){
+        int[] failureSet = new int[patternSize];
         int i = 0;
         failureSet[0] = -1;
         for (int j = 1; j < pattern.getKmerLetterLength(); j++) {
