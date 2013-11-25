@@ -73,18 +73,6 @@ public class BubbleMergeMessage extends MessageWritable {
         return node.getEdges(getMinorToBubbleEdgetype().mirror());
     }
 
-    public void addNewMajorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
-        EDGETYPE majorToBubble = msg.getMajorToBubbleEdgetype();
-//        ReadIdSet newReadIds = msg.getNode().getEdgeMap(majorToBubble.mirror()).get(msg.getMajorVertexId());
-//        getNode().getEdgeMap(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor()).unionAdd(topKmer,
-//                newReadIds);
-        VKmerList edges = getNode().getEdges(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor());
-        if (!edges.contains(topKmer)) {
-            edges.append(topKmer);
-        }
-        // FIXME run test case for bubble merge to make sure this is right behavior-- worried about orientation since these edges should already exist
-    }
-
     public VKmer getMajorVertexId() {
         if (majorVertexId == null) {
             majorVertexId = new VKmer();

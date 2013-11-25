@@ -138,7 +138,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     // 1. add coverage to top node -- for unchangedSet
                     topNode.addFromNode(!sameOrientation, curMsg.getNode());
 
-                    // 4. send message to delete vertices -- for deletedSet
+                    // 2. send message to delete vertices -- for deletedSet
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(MESSAGETYPE.KILL_SELF.get());
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);

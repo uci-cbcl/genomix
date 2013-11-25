@@ -217,6 +217,9 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                 value.getEdges(deleteToMe).remove(deletedKmer);
                 if (!value.getEdges(aliveToMe).contains(incomingMsg.getInternalKmer()))
                     value.getEdges(aliveToMe).append(incomingMsg.getInternalKmer());
+            } else {
+                throw new IllegalStateException("Couldn't find the requested edge to delete! I am " + value.toString()
+                        + "; incomingMsg was " + incomingMsg.toString());
             }
             voteToHalt();
         }

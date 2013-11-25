@@ -290,6 +290,9 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
 
         if (vertex.getEdges(neighborToMeDir).contains(incomingMsg.getSourceVertexId())) {
             vertex.getEdges(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
+        } else {
+            throw new IllegalStateException("Tried to remove an edge that doesn't exist! I am " + vertex
+                    + " incomingMsg is " + incomingMsg);
         }
         //        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
         //        getVertexValue().getEdgeMap(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);
