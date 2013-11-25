@@ -68,7 +68,7 @@ public class RuntimeContext implements IWorkspaceFileFactory {
         fileMapManager = new TransientFileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy();
-        int pageSize = 64 * 1024 * 4;
+        int pageSize = 64 * 1024 * 4 * 4 * 4;
         long memSize = Runtime.getRuntime().maxMemory();
         long bufferSize = memSize / 4;
         int numPages = (int) (bufferSize / pageSize);
