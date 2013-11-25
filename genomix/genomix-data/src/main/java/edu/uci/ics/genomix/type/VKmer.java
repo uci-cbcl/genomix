@@ -538,7 +538,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         revcomp.setReversedFromStringBytes(kmer.getKmerLetterLength(), kmer.toString().getBytes(), 0);
         mergeWithFFKmer(initialKmerSize, revcomp);
     }
-    
+
     /**
      * Merge Kmer with the next connected Kmer, when that Kmer needs to be
      * reverse-complemented e.g. AAGCTAA merge with GGTTGTT, if the initial
@@ -727,17 +727,18 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return editDistance(this, other);
     }
 
-    public int indexOf(VKmer pattern){
+    public int indexOf(VKmer pattern) {
         return indexOf(this, pattern);
     }
-    
+
     /**
-     * use KMP to fast detect whether master Vkmer contain pattern; if true return index, otherwise return -1;
+     * use KMP to fast detect whether master Vkmer contain pattern (only detect the first position which pattern match); 
+     * if true return index, otherwise return -1;
      * @param master
      * @param pattern
      * @return
      */
-    public static int indexOf(VKmer master, VKmer pattern){
+    public static int indexOf(VKmer master, VKmer pattern) {
         int patternSize = pattern.getKmerLetterLength();
         int strSize = master.getKmerLetterLength();
         int[] failureSet = computeFailureSet(pattern, patternSize);
@@ -759,14 +760,15 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             return m - patternSize;
         }
     }
-    
+
     /**
      * compute the failure function of KMP algorithm
+     * 
      * @param failureSet
      * @param pattern
      * @return
      */
-    protected static int[] computeFailureSet(VKmer pattern, int patternSize){
+    protected static int[] computeFailureSet(VKmer pattern, int patternSize) {
         int[] failureSet = new int[patternSize];
         int i = 0;
         failureSet[0] = -1;
@@ -782,7 +784,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         return failureSet;
     }
-    
+
     /**
      * return the fractional difference between the given kmers. This is the edit distance divided by the smaller length.
      * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)
