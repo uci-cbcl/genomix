@@ -156,8 +156,8 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
         //set readId once per line
         curKmerAndDir = getKmerAndDir(curForwardKmer, curReverseKmer, readLetters, 0);
         nextKmerAndDir = getKmerAndDir(nextForwardKmer, nextReverseKmer, readLetters, 1);
-        //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
-        setCurAndNextEdgeMap(curKmerAndDir, nextKmerAndDir);
+        //set node.Edges in meToNext dir of curNode and preToMe dir of nextNode
+        setCurAndNextEdges(curKmerAndDir, nextKmerAndDir);
         //set value.coverage = 1
         curNode.setAverageCoverage(1);
         //only set node.ReadHeadInfo for the first kmer
@@ -169,8 +169,8 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             curNode.setAsCopy(nextNode);
             curKmerAndDir = getKmerAndDir(curForwardKmer, curReverseKmer, readLetters[i]);
             nextKmerAndDir = getKmerAndDir(nextForwardKmer, nextReverseKmer, readLetters[i + 1]);
-            //set node.EdgeMap in meToNext dir of curNode and preToMe dir of nextNode
-            setCurAndNextEdgeMap(curKmerAndDir, nextKmerAndDir);
+            //set node.Edges in meToNext dir of curNode and preToMe dir of nextNode
+            setCurAndNextEdges(curKmerAndDir, nextKmerAndDir);
             //set value.coverage = 1
             curNode.setAverageCoverage(1);
             //output mapper result
@@ -198,7 +198,7 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
                 : DIR.REVERSE);
     }
 
-    public void setCurAndNextEdgeMap(SimpleEntry<VKmer, DIR> curKmerAndDir, SimpleEntry<VKmer, DIR> neighborKmerAndDir) {
+    public void setCurAndNextEdges(SimpleEntry<VKmer, DIR> curKmerAndDir, SimpleEntry<VKmer, DIR> neighborKmerAndDir) {
         EDGETYPE et = EDGETYPE.getEdgeTypeFromDirToDir(curKmerAndDir.getValue(), neighborKmerAndDir.getValue());
         curNode.getEdges(et).append(neighborKmerAndDir.getKey());
         nextNode.reset();

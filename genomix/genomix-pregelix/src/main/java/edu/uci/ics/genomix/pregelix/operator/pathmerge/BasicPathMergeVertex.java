@@ -154,7 +154,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             vertex.getEdges(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
             for (EDGETYPE edgeType : EDGETYPE.values()) {
-                vertex.getEdges(edgeType).unionUpdate(incomingMsg.getEdgeMap(edgeType));
+                vertex.getEdges(edgeType).unionUpdate(incomingMsg.getEdges(edgeType));
             }
             updated = true;
             if (verbose) {

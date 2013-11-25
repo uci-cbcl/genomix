@@ -50,7 +50,7 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertTip(EDGETYPE dir, VKmerList edgeList, VKmer insertedTip) {
+    public void insertTip(EDGETYPE dir, VKmerList edges, VKmer insertedTip) {
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
@@ -63,16 +63,16 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
         /**
          * set the vertex value
          */
-        vertexValue.setEdges(dir, edgeList);
+        vertexValue.setEdges(dir, edges);
         vertex.setVertexValue(vertexValue);
 
         addVertex(insertedTip, vertex);
     }
 
-    public VKmerList getEdgeMapFromKmer(VKmer kmer) {
-        VKmerList edgeList = new VKmerList();
-        edgeList.append(kmer);
-        return edgeList;
+    public VKmerList getEdgesFromKmer(VKmer kmer) {
+        VKmerList edges = new VKmerList();
+        edges.append(kmer);
+        return edges;
     }
 
     public void addEdgeToInsertedTip(EDGETYPE dir, VKmer insertedTip) {
@@ -91,7 +91,7 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
                 addEdgeToInsertedTip(tipToSplitEdgetype, insertedTip);
                 /** insert tip **/
                 EDGETYPE splitToTipDir = tipToSplitEdgetype.mirror();
-                insertTip(splitToTipDir, getEdgeMapFromKmer(splitNode), insertedTip);
+                insertTip(splitToTipDir, getEdgesFromKmer(splitNode), insertedTip);
             }
         }
         voteToHalt();

@@ -45,7 +45,7 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertBridge(EDGETYPE dirToUp, VKmerList edgeListToUp, EDGETYPE dirToDown, VKmerList edgeListToDown,
+    public void insertBridge(EDGETYPE dirToUp, VKmerList edgesToUp, EDGETYPE dirToDown, VKmerList edgesToDown,
             VKmer insertedBridge) {
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
@@ -59,17 +59,17 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         /**
          * set the vertex value
          */
-        vertexValue.setEdges(dirToUp, edgeListToUp);
-        vertexValue.setEdges(dirToDown, edgeListToDown);
+        vertexValue.setEdges(dirToUp, edgesToUp);
+        vertexValue.setEdges(dirToDown, edgesToDown);
         vertex.setVertexValue(vertexValue);
 
         addVertex(insertedBridge, vertex);
     }
 
-    public VKmerList getEdgeMapFromKmer(VKmer kmer) {
-        VKmerList edgeList = new VKmerList();
-        edgeList.append(kmer);
-        return edgeList;
+    public VKmerList getEdgesFromKmer(VKmer kmer) {
+        VKmerList edges = new VKmerList();
+        edges.append(kmer);
+        return edges;
     }
 
     public void addEdgeToInsertedBridge(EDGETYPE dir, VKmer insertedBridge) {
@@ -87,8 +87,8 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
                 addEdgeToInsertedBridge(upToBridgeDir, insertedBridge);
 
                 /** insert bridge **/
-                insertBridge(bridgeToUpDir, getEdgeMapFromKmer(upBridge), bridgeToDownDir,
-                        getEdgeMapFromKmer(downBridge), insertedBridge);
+                insertBridge(bridgeToUpDir, getEdgesFromKmer(upBridge), bridgeToDownDir,
+                        getEdgesFromKmer(downBridge), insertedBridge);
             } else if (getVertexId().toString().equals("ACG")) {
                 /** add edge pointing to new bridge **/
                 EDGETYPE downToBridgeDir = bridgeToDownDir.mirror();

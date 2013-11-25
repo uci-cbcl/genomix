@@ -66,7 +66,7 @@ public class BubbleMergeMessage extends MessageWritable {
         topCoverageVertexId = null;
     }
 
-    public VKmerList getMinorToBubbleEdgeMap() {
+    public VKmerList getMinorToBubbleEdges() {
         if (node == null) {
             node = new Node();
         }

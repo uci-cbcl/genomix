@@ -34,7 +34,7 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
         outFlag = 0;
     }
 
-    public void sendEdgeMap(DIR direction) {
+    public void sendEdges(DIR direction) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
             for (VKmer dest : vertex.getEdges(et)) {
@@ -49,13 +49,13 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
         }
     }
 
-    public void sendEdgeMapToAllNeighborNodes() {
-        sendEdgeMap(DIR.REVERSE);
-        sendEdgeMap(DIR.FORWARD);
+    public void sendEdgesToAllNeighborNodes() {
+        sendEdges(DIR.REVERSE);
+        sendEdges(DIR.FORWARD);
     }
 
     /**
-     * check symmetry: A -> B, A'edgeMap should have B and B's corresponding edgeMap should have A
+     * check symmetry: A -> B, A'edges should have B and B's corresponding edges should have A
      * otherwise, output error vertices
      */
     public void checkSymmetry(Iterator<SymmetryCheckerMessage> msgIterator) {
@@ -90,9 +90,9 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
     public void compute(Iterator<SymmetryCheckerMessage> msgIterator) throws Exception {
         initVertex();
         if (getSuperstep() == 1) {
-            sendEdgeMapToAllNeighborNodes();
+            sendEdgesToAllNeighborNodes();
         } else if (getSuperstep() == 2) {
-            //check if the corresponding edge and edgeMap exists
+            //check if the corresponding edge and edges exist
             checkSymmetry(msgIterator);
         }
         voteToHalt();

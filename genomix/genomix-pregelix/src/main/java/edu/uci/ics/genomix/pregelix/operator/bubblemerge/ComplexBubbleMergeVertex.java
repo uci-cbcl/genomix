@@ -39,8 +39,8 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     //    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
     private static Set<VKmer> allDeletedSet = Collections.synchronizedSet(new HashSet<VKmer>());
 
-    private VKmerList incomingEdgeList = null;
-    private VKmerList outgoingEdgeList = null;
+    private VKmerList incomingEdges = null;
+    private VKmerList outgoingEdges = null;
     private EDGETYPE incomingEdgeType;
     private EDGETYPE outgoingEdgeType;
 
@@ -49,11 +49,11 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     //    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
     //    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
 
-    public void setEdgeListAndEdgeType(int i) {
-        incomingEdgeList.setAsCopy(getVertexValue().getEdges(validPathsTable[i][0]));
+    public void setEdgesAndEdgeType(int i) {
+        incomingEdges.setAsCopy(getVertexValue().getEdges(validPathsTable[i][0]));
         incomingEdgeType = validPathsTable[i][0];
 
-        outgoingEdgeList.setAsCopy(getVertexValue().getEdges(validPathsTable[i][1]));
+        outgoingEdges.setAsCopy(getVertexValue().getEdges(validPathsTable[i][1]));
         outgoingEdgeType = validPathsTable[i][1];
     }
 
@@ -70,10 +70,10 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
             outgoingMsg = new BubbleMergeMessage();
         else
             outgoingMsg.reset();
-        if (incomingEdgeList == null)
-            incomingEdgeList = new VKmerList();
-        if (outgoingEdgeList == null)
-            outgoingEdgeList = new VKmerList();
+        if (incomingEdges == null)
+            incomingEdges = new VKmerList();
+        if (outgoingEdges == null)
+            outgoingEdges = new VKmerList();
         outFlag = 0;
         if (fakeVertex == null) {
             fakeVertex = new VKmer();
@@ -91,10 +91,10 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     public void sendBubbleAndMajorVertexMsgToMinorVertex() {
         for (int i = 0; i < 4; i++) {
             // set edgeList and edgeDir based on connectedTable 
-            setEdgeListAndEdgeType(i);
+            setEdgesAndEdgeType(i);
 
-            for (VKmer incomingKmer : incomingEdgeList) {
-                for (VKmer outgoingKmer : outgoingEdgeList) {
+            for (VKmer incomingKmer : incomingEdges) {
+                for (VKmer outgoingKmer : outgoingEdges) {
                     // get majorVertex and minorVertex and meToMajorDir and meToMinorDir
                     VKmer majorVertexId = null;
                     EDGETYPE majorToMeEdgetype = null;

@@ -46,7 +46,7 @@ public class PathMergeMessage extends MessageWritable {
         getNode().setInternalKmer(internalKmer);
     }
 
-    public VKmerList getEdgeMap(EDGETYPE edgeType) {
+    public VKmerList getEdges(EDGETYPE edgeType) {
         return getNode().getEdges(edgeType);
     }
 

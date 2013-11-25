@@ -197,7 +197,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextReverseKmer.setReversedFromStringBytes(readLetters, i - Kmer.getKmerLength() + 1);
                     nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
 
-                    setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode);
+                    setEdgesForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode);
                     writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
 
                     curForwardKmer.setAsCopy(nextForwardKmer);
@@ -223,7 +223,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
             }
 
-            public void setEdgeListForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode) {
+            public void setEdgesForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode) {
                 // TODO simplify this function after Anbang merge the edgeType
                 // detect code
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.FORWARD) {
