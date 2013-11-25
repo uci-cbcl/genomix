@@ -18,6 +18,7 @@ package edu.uci.ics.genomix.type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import junit.framework.Assert;
@@ -608,6 +609,23 @@ public class VKmerTest {
         
         kmer1.mergeWithKmerInDir(EDGETYPE.RR, 9, kmer2);
         Assert.assertEquals("Invalid RR merge!!!", "TTCACATACTATCCTGCGTACGC", kmer1.toString());
+    }
+    
+    private static final char[] symbols = new char[4];
+    static {
+        symbols[0] = 'A';
+        symbols[1] = 'C';
+        symbols[2] = 'G';
+        symbols[3] = 'T';
+    }
+
+    public static String generateString(int length) {
+        Random random = new Random();
+        char[] buf = new char[length];
+        for (int idx = 0; idx < buf.length; idx++) {
+            buf[idx] = symbols[random.nextInt(4)];
+        }
+        return new String(buf);
     }
     
     @Test
