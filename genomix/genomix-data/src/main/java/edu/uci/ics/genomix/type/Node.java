@@ -281,14 +281,17 @@ public class Node implements Writable, Serializable {
      * paths.
      */
     public void mergeCoverage(Node other) {
+        mergeCoverage(other, other.internalKmer.getKmerLetterLength());
+    }
+
+    public void mergeCoverage(Node other, int otherOriginalLength) {
         // sequence considered in the average doesn't include anything
         // overlapping with other kmers
-        float adjustedLength = internalKmer.getKmerLetterLength() + other.internalKmer.getKmerLetterLength()
-                - (Kmer.getKmerLength() - 1) * 2;
+        float adjustedLength = internalKmer.getKmerLetterLength() + otherOriginalLength - (Kmer.getKmerLength() - 1)
+                * 2;
 
         float myCount = (internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1) * averageCoverage;
-        float otherCount = (other.internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1)
-                * other.averageCoverage;
+        float otherCount = (otherOriginalLength - Kmer.getKmerLength() + 1) * other.averageCoverage;
         averageCoverage = (myCount + otherCount) / adjustedLength;
     }
 
