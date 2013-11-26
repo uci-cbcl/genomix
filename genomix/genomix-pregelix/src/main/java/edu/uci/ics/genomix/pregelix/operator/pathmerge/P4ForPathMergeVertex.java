@@ -11,7 +11,9 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
+import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
@@ -60,10 +62,11 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         if (repeatKmer == null)
             repeatKmer = new VKmer();
         tmpValue.reset();
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
+//        if (getSuperstep() == 1)
+//            StatisticsAggregator.preGlobalCounters.clear();
+//        else
+//            StatisticsAggregator.preGlobalCounters = DeBruijnGraphCleanVertex.readStatisticsCounterResult(getContext()
+//                    .getConfiguration());
         counters.clear();
         getVertexValue().getCounters().clear();
     }
@@ -124,9 +127,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         curHead = isNodeRandomHead(curKmer);
         checkNeighbors();
         if (verbose) {
-            LOG.fine("choosing mergeDir: \ncurKmer: " + curKmer + "  curHead: " + curHead
-                    + "\nprevKmer: " + prevKmer + "  prevHead: " + prevHead
-                    + "\nnextKmer: " + nextKmer + "  nextHead: " + nextHead);
+            LOG.fine("choosing mergeDir: \ncurKmer: " + curKmer + "  curHead: " + curHead + "\nprevKmer: " + prevKmer
+                    + "  prevHead: " + prevHead + "\nnextKmer: " + nextKmer + "  nextHead: " + nextHead);
         }
 
         if (!hasNext && !hasPrev) { // TODO check if logic for previous updates is the same as here (just look at internal flags?)
@@ -166,10 +168,10 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
         if (verbose) {
             if ((getVertexValue().getState() & State.MERGE) != 0) {
-                LOG.fine("Mark: Merge from " + getVertexId() + " towards " + (EDGETYPE.fromByte(getVertexValue().getState()))
-                        + "; node is " + getVertexValue());
+                LOG.fine("Mark: Merge from " + getVertexId() + " towards "
+                        + (EDGETYPE.fromByte(getVertexValue().getState())) + "; node is " + getVertexValue());
             } else {
-                LOG.fine("Mark: No Merge for " + getVertexId() +" node is " + getVertexValue());
+                LOG.fine("Mark: No Merge for " + getVertexId() + " node is " + getVertexValue());
             }
         }
     }
@@ -178,7 +180,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
      * for P4
      */
     @Override
-    public void sendMergeMsg(){
+    public void sendMergeMsg() {
         if (verbose) {
             LOG.fine("Checking if I should send a merge message..." + getVertexValue());
         }
@@ -199,7 +201,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         short state = vertex.getState();
         boolean updated = false;
         EDGETYPE senderEdgetype;
-//        int numMerged = 0;
+        //        int numMerged = 0;
         while (msgIterator.hasNext()) {
             PathMergeMessage incomingMsg = msgIterator.next();
             if (verbose) {
@@ -208,7 +210,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
             node.mergeWithNode(senderEdgetype, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
-//            numMerged++;
+            //            numMerged++;
             updated = true;
             if (verbose) {
                 LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
@@ -224,8 +226,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             }
             //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
-        //      updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
-        //      getVertexValue().setCounters(counters);
+        updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
+        vertex.setCounters(counters);
         if (updated) {
             vertex.setState(state);
             if (DIR.enumSetFromByte(state).containsAll(Arrays.asList(DIR.values())))

@@ -7,7 +7,6 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -15,7 +14,6 @@ import edu.uci.ics.genomix.type.VKmer;
 
 /**
  * Graph clean pattern: Remove Bridge
- * 
  */
 public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
@@ -32,7 +30,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
                     GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
         if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
-        StatisticsAggregator.preGlobalCounters.clear();
+        //        StatisticsAggregator.preGlobalCounters.clear();
         //        else
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();

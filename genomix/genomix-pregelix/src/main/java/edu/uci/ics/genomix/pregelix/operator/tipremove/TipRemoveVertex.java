@@ -8,7 +8,6 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -18,10 +17,9 @@ import edu.uci.ics.genomix.type.VKmer;
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
  * Details: Sequencing errors at the ends of the reads form "tips": short, low coverage nodes
- * 			with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
- * 			The algorithm identifies these nodes and prunes them from the graph. This is then followed
- * 			by recompressing the graph.
- * 
+ * with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
+ * The algorithm identifies these nodes and prunes them from the graph. This is then followed
+ * by recompressing the graph.
  */
 public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
@@ -44,7 +42,7 @@ public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         } else {
             outgoingMsg.reset();
         }
-        StatisticsAggregator.preGlobalCounters.clear();
+        //        StatisticsAggregator.preGlobalCounters.clear();
         //        else
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();

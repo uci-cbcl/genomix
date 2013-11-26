@@ -20,7 +20,7 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 public class BasicAggregator<V extends VertexValueWritable> extends
         GlobalAggregator<VKmer, V, NullWritable, MessageWritable, V, V> {
 
-    public static HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
+    public HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
     @SuppressWarnings("unchecked")
     protected V value = (V) new VertexValueWritable();
 

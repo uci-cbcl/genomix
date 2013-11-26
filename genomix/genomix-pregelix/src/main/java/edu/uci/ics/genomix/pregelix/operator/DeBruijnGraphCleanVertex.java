@@ -95,6 +95,17 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
                     && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
         }
     }
+    
+    /**
+     * set statistics counter
+     */
+    public void updateStatisticsCounter(byte counterName){
+        ByteWritable counterNameWritable = new ByteWritable(counterName);
+        if(counters.containsKey(counterNameWritable))
+            counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);
+        else
+            counters.put(counterNameWritable, new VLongWritable(1));
+    }
 
     /**
      * Generate random string from [ACGT]
