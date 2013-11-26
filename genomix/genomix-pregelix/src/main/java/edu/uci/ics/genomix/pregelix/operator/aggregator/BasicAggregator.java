@@ -20,13 +20,16 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
 public class BasicAggregator<V extends VertexValueWritable> extends
         GlobalAggregator<VKmer, V, NullWritable, MessageWritable, V, V> {
 
-    public HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
+//    public HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
     @SuppressWarnings("unchecked")
-    protected V value = (V) new VertexValueWritable();
+    protected V value = (V) new VertexValueWritable(); 
 
     @Override
     public void init() {
-        value.reset();
+        HashMapWritable<ByteWritable, VLongWritable> counters = value.getCounters();
+        for(ByteWritable b : counters.keySet()){
+            counters.get(b).set(0);
+        }
     }
 
     @Override
@@ -59,7 +62,7 @@ public class BasicAggregator<V extends VertexValueWritable> extends
 
     @Override
     public V finishFinal() {
-        updateAggregateState(preGlobalCounters);
+//        updateAggregateState(preGlobalCounters);
         return value;
     }
 

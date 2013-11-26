@@ -68,7 +68,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
 //            StatisticsAggregator.preGlobalCounters = DeBruijnGraphCleanVertex.readStatisticsCounterResult(getContext()
 //                    .getConfiguration());
         counters.clear();
-        getVertexValue().getCounters().clear();
+//        getVertexValue().getCounters().clear();
     }
 
     protected boolean isNodeRandomHead(VKmer nodeKmer) {
@@ -215,6 +215,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             if (verbose) {
                 LOG.fine("after merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             }
+            updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
+            vertex.setCounters(counters);
         }
         if (isTandemRepeat(getVertexValue())) {
             // tandem repeats can't merge anymore; restrict all future merges
@@ -226,8 +228,6 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             }
             //          updateStatisticsCounter(StatisticsCounter.Num_Cycles); 
         }
-        updateStatisticsCounter(StatisticsCounter.Num_MergedNodes);
-        vertex.setCounters(counters);
         if (updated) {
             vertex.setState(state);
             if (DIR.enumSetFromByte(state).containsAll(Arrays.asList(DIR.values())))

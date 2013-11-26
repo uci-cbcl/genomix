@@ -91,7 +91,7 @@ public class PregelixHyracksIntegrationUtil {
         ncConfig2.appNCMainClass = NCApplicationEntryPoint.class.getName();
         ncConfig2.ioDevices = "dev3,dev4";
         nc2 = new NodeControllerService(ncConfig2);
-        nc2.start();
+//        nc2.start();
 
         // hyracks connection
         hcc = new HyracksConnection(CC_HOST, TEST_HYRACKS_CC_CLIENT_PORT);
@@ -115,7 +115,7 @@ public class PregelixHyracksIntegrationUtil {
     }
 
     public static void deinit() throws Exception {
-        nc2.stop();
+//        nc2.stop();
         nc1.stop();
         cc.stop();
     }

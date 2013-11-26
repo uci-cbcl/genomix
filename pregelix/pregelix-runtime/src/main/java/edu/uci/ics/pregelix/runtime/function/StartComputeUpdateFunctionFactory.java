@@ -209,7 +209,7 @@ public class StartComputeUpdateFunctionFactory implements IUpdateFunctionFactory
                  * call the global aggregator
                  */
                 for (int i = 0; i < aggregators.size(); i++) {
-                    aggregators.get(i).step(vertex);
+                    aggregators.get(i).step(vertex); 
                 }
 
             }

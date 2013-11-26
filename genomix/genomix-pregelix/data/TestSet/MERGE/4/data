@@ -1,0 +1,4 @@
+AGA	{FF:null	FR:null	RF:{CTA=[1]}	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
+ATA	{FF:null	FR:{CTA=[1]}	RF:null	RR:{AAT=[1]}	5':null, ~5':null	kmer:null	cov:1.0x}
+CTA	{FF:null	FR:{ATA=[1]}	RF:{AGA=[1]}	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
+AAT	{FF:{ATA=[1]}	FR:null	RF:null	RR:null	5':[1-0_0], ~5':null	kmer:null	cov:1.0x}
