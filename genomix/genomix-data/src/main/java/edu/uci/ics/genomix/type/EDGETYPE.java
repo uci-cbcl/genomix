@@ -7,7 +7,7 @@ import java.util.EnumSet;
 
 import org.apache.hadoop.io.Writable;
 
-public enum EDGETYPE implements Writable{ 
+public enum EDGETYPE implements Writable {
 
     FF((byte) (0b00)),
     FR((byte) (0b01)),
@@ -64,14 +64,14 @@ public enum EDGETYPE implements Writable{
                 throw new RuntimeException("Unrecognized direction in mirrorDirection: " + edgeType);
         }
     }
-    
+
     /**
      * 
      */
-    public static EDGETYPE getEdgeTypeFromDirToDir(DIR dir1, DIR dir2){
-        switch(dir1){
+    public static EDGETYPE getEdgeTypeFromDirToDir(DIR dir1, DIR dir2) {
+        switch (dir1) {
             case FORWARD:
-                switch(dir2){
+                switch (dir2) {
                     case FORWARD:
                         return FF;
                     case REVERSE:
@@ -80,7 +80,7 @@ public enum EDGETYPE implements Writable{
                         throw new IllegalArgumentException("Invalid direction2 given: " + dir2);
                 }
             case REVERSE:
-                switch(dir2){
+                switch (dir2) {
                     case FORWARD:
                         return RF;
                     case REVERSE:
@@ -92,17 +92,34 @@ public enum EDGETYPE implements Writable{
                 throw new IllegalArgumentException("Invalid direction1 given: " + dir2);
         }
     }
-    
+
     public DIR dir() {
         return dir(this);
     }
 
-    public static DIR dir(EDGETYPE edgeType) { // .dir static / non-static
+    public static DIR dir(EDGETYPE edgeType) {
         switch (edgeType) {
             case FF:
             case FR:
                 return DIR.FORWARD;
             case RF:
+            case RR:
+                return DIR.REVERSE;
+            default:
+                throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
+        }
+    }
+
+    public DIR neighborDir() {
+        return neighborDir(this);
+    }
+
+    public static DIR neighborDir(EDGETYPE edgeType) {
+        switch (edgeType) {
+            case FF:
+            case RF:
+                return DIR.FORWARD;
+            case FR:
             case RR:
                 return DIR.REVERSE;
             default:
@@ -230,4 +247,5 @@ public enum EDGETYPE implements Writable{
     public void readFields(DataInput in) throws IOException {
         this.val = in.readByte();
     }
+
 }

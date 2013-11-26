@@ -169,6 +169,7 @@ public class GenomixJobConf extends JobConf {
         BUBBLE_COMPLEX,
         LOW_COVERAGE,
         TIP_REMOVE,
+        TIP_REMOVE_SEARCH,
         SCAFFOLD,
         SPLIT_REPEAT,
         DUMP_FASTA,

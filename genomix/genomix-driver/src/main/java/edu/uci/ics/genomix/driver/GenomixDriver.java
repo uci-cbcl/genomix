@@ -53,6 +53,7 @@ import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverage
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveWithSearchVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
 import edu.uci.ics.genomix.pregelix.testhelper.BFSTraverseVertex;
 import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
@@ -117,6 +118,9 @@ public class GenomixDriver {
                 break;
             case TIP_REMOVE:
                 pregelixJobs.add(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
+                break;
+            case TIP_REMOVE_SEARCH:
+                pregelixJobs.add(TipRemoveWithSearchVertex.getConfiguredJob(conf, TipRemoveWithSearchVertex.class));
                 break;
             case BUBBLE:
                 pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
