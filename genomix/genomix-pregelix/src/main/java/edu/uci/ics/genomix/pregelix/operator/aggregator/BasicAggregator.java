@@ -18,52 +18,50 @@ import edu.uci.ics.pregelix.api.graph.Vertex;
  * @author anbangx
  */
 public class BasicAggregator<V extends VertexValueWritable> extends
-        GlobalAggregator<VKmer, V, NullWritable, MessageWritable, V, V> {
+        GlobalAggregator<VKmer, V, NullWritable, MessageWritable, HashMapWritable<ByteWritable, VLongWritable>, HashMapWritable<ByteWritable, VLongWritable>> {
 
 //    public HashMapWritable<ByteWritable, VLongWritable> preGlobalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
-    @SuppressWarnings("unchecked")
-    protected V value = (V) new VertexValueWritable(); 
-
+//    protected V value = (V) new VertexValueWritable(); 
+    private HashMapWritable<ByteWritable, VLongWritable> globalCounters = new HashMapWritable<ByteWritable, VLongWritable>();
+    
     @Override
     public void init() {
-        HashMapWritable<ByteWritable, VLongWritable> counters = value.getCounters();
-        for(ByteWritable b : counters.keySet()){
-            counters.get(b).set(0);
-        }
+//        for(ByteWritable counterName : globalCounters.keySet()){
+//            globalCounters.get(counterName).set(0);
+//        }
     }
 
     @Override
     public void step(Vertex<VKmer, V, NullWritable, MessageWritable> v) throws HyracksDataException {
-        HashMapWritable<ByteWritable, VLongWritable> counters = v.getVertexValue().getCounters();
-        updateAggregateState(counters);
+        HashMapWritable<ByteWritable, VLongWritable> vertexCounters = v.getVertexValue().getCounters();
+        updateAggregateState(vertexCounters);
     }
 
     @Override
-    public void step(V partialResult) {
-        HashMapWritable<ByteWritable, VLongWritable> counters = partialResult.getCounters();
-        updateAggregateState(counters);
+    public void step(HashMapWritable<ByteWritable, VLongWritable> partialResult) {
+        updateAggregateState(partialResult);
     }
 
     public void updateAggregateState(HashMapWritable<ByteWritable, VLongWritable> counters) {
         for (ByteWritable counterName : counters.keySet()) {
-            if (value.getCounters().containsKey(counterName)) {
-                VLongWritable counterVal = value.getCounters().get(counterName);
-                value.getCounters().get(counterName).set(counterVal.get() + counters.get(counterName).get());
+            if (globalCounters.containsKey(counterName)) {
+                VLongWritable counterVal = globalCounters.get(counterName);
+                globalCounters.get(counterName).set(counterVal.get() + counters.get(counterName).get());
             } else {
-                value.getCounters().put(counterName, counters.get(counterName));
+                globalCounters.put(counterName, counters.get(counterName));
             }
         }
     }
 
     @Override
-    public V finishPartial() {
-        return value;
+    public HashMapWritable<ByteWritable, VLongWritable> finishPartial() {
+        return globalCounters;
     }
 
     @Override
-    public V finishFinal() {
+    public HashMapWritable<ByteWritable, VLongWritable> finishFinal() {
 //        updateAggregateState(preGlobalCounters);
-        return value;
+        return globalCounters;
     }
 
 }
