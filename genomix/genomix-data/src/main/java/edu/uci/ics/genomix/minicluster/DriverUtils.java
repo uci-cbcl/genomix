@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -62,51 +63,41 @@ public class DriverUtils {
     /**
      * set the CC's IP address and port from the cluster.properties and `getip.sh` script
      */
-    public static void updateCCProperties(GenomixJobConf conf) throws FileNotFoundException, IOException,
+    public static void loadClusterProperties(GenomixJobConf conf) throws FileNotFoundException, IOException,
             InterruptedException {
-        Properties CCProperties = new Properties();
-        CCProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
+        Properties clusterProperties = new Properties();
+        clusterProperties.load(new FileInputStream(System.getProperty("app.home", ".") + File.separator + "conf"
                 + File.separator + "cluster.properties"));
-        if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL))) {
-            if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
-                conf.set(GenomixJobConf.IP_ADDRESS, GenomixClusterManager.LOCAL_IP);
-            }
-            if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
-                conf.setInt(GenomixJobConf.PORT, GenomixClusterManager.LOCAL_HYRACKS_CC_PORT);
-            }
-        } else {
-            if (conf.get(GenomixJobConf.IP_ADDRESS) == null) {
-                conf.set(GenomixJobConf.IP_ADDRESS, getIP("localhost"));
-            }
-            if (conf.getInt(GenomixJobConf.PORT, -1) == -1) {
-                conf.set(GenomixJobConf.PORT, CCProperties.getProperty("CC_CLIENTPORT"));
-            }
-        }
 
-        if (conf.get(GenomixJobConf.FRAME_SIZE) == null)
-            conf.set(GenomixJobConf.FRAME_SIZE, CCProperties.getProperty("FRAME_SIZE"));
-        if (conf.get(GenomixJobConf.FRAME_LIMIT) == null)
-            conf.set(GenomixJobConf.FRAME_LIMIT, CCProperties.getProperty("FRAME_LIMIT"));
-        if (conf.get(GenomixJobConf.HYRACKS_IO_DIRS) == null)
-            conf.set(GenomixJobConf.HYRACKS_IO_DIRS, CCProperties.getProperty("IO_DIRS"));
-        if (conf.get(GenomixJobConf.HYRACKS_SLAVES) == null) {
+        for (String prop : clusterProperties.stringPropertyNames()) {
+            conf.set(prop, clusterProperties.getProperty(prop));
+        }
+        if (conf.get(GenomixJobConf.MASTER) == null) {
+            String master = FileUtils.readFileToString(new File(System.getProperty("app.home", ".") + File.separator
+                    + "conf" + File.separator + "master"));
+            conf.set(GenomixJobConf.MASTER, master);
+        }
+        if (conf.get(GenomixJobConf.SLAVES) == null) {
             String slaves = FileUtils.readFileToString(new File(System.getProperty("app.home", ".") + File.separator
                     + "conf" + File.separator + "slaves"));
-            conf.set(GenomixJobConf.HYRACKS_SLAVES, slaves);
+            conf.set(GenomixJobConf.SLAVES, slaves);
         }
     }
 
-    public static void dumpGraph(JobConf conf, String inputGraph, String outputFasta, boolean followingBuild)
-            throws IOException {
+    public static void dumpGraph(JobConf conf, String inputGraph, String outputDir) throws IOException {
         LOG.info("Dumping graph to fasta...");
         GenomixJobConf.tick("dumpGraph");
         FileSystem dfs = FileSystem.get(conf);
+        
+        dfs.delete(new Path(outputDir), true);
+        dfs.mkdirs(new Path(outputDir));
+        String outputFasta = outputDir + File.separator + "genomix-scaffolds.fasta";
 
         // stream in the graph, counting elements as you go... this would be better as a hadoop job which aggregated... maybe into counters?
         SequenceFile.Reader reader = null;
         VKmer key = null;
         Node value = null;
-        BufferedWriter bw = null;
+        FSDataOutputStream fastaOut = null;
         FileStatus[] files = dfs.globStatus(new Path(inputGraph + File.separator + "*"));
         for (FileStatus f : files) {
             if (f.getLen() != 0) {
@@ -115,14 +106,14 @@ public class DriverUtils {
                     reader = new SequenceFile.Reader(dfs, f.getPath(), conf);
                     key = (VKmer) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
                     value = (Node) ReflectionUtils.newInstance(reader.getValueClass(), conf);
-                    if (bw == null)
-                        bw = new BufferedWriter(new FileWriter(outputFasta));
+                    if (fastaOut == null)
+                        fastaOut = dfs.create(new Path(outputFasta));
                     while (reader.next(key, value)) {
                         if (key == null || value == null)
                             break;
-                        bw.write(">node_" + key.toString() + "\n");
-                        bw.write(followingBuild ? key.toString() : value.getInternalKmer().toString());
-                        bw.newLine();
+                        fastaOut.writeBytes(">node_" + key.toString() + "\n");
+                        fastaOut.writeBytes(value.getInternalKmer().getKmerLetterLength() > 0 ? value.getInternalKmer().toString() : key.toString());
+                        fastaOut.writeBytes("\n");
                     }
                 } catch (Exception e) {
                     System.out.println("Encountered an error getting stats for " + f + ":\n" + e);
@@ -132,17 +123,13 @@ public class DriverUtils {
                 }
             }
         }
-        if (bw != null)
-            bw.close();
+        if (fastaOut != null)
+            fastaOut.close();
         LOG.info("Dump graph to fasta took " + GenomixJobConf.tock("dumpGraph") + "ms");
     }
 
-    public static int getNumCoresPerMachine(GenomixJobConf conf) {
-        return conf.get(GenomixJobConf.HYRACKS_IO_DIRS).split(",").length;
-    }
-
     public static String[] getSlaveList(GenomixJobConf conf) {
-        return conf.get(GenomixJobConf.HYRACKS_SLAVES).split("\r?\n|\r"); // split on newlines
+        return conf.get(GenomixJobConf.SLAVES).split("\r?\n|\r"); // split on newlines
     }
 
 }

@@ -6,7 +6,7 @@ import edu.uci.ics.genomix.pregelix.jobrun.BasicGraphCleanTestSuite;
 public class UnrollTandemRepeatTestSuite extends BasicGraphCleanTestSuite {
 
     public static Test suite() throws Exception {
-        String pattern = "UnrollTandemRepeat";
+        String pattern = "UNROLL_TANDEM";
         String testSet[] = { "SelfTandemRepeat" };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();

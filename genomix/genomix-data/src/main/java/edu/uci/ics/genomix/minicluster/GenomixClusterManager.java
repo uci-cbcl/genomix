@@ -19,7 +19,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -49,20 +48,15 @@ import edu.uci.ics.pregelix.runtime.bootstrap.NCApplicationEntryPoint;
  *
  */
 public class GenomixClusterManager {
-
-    public enum ClusterType {
-        HYRACKS,
-        PREGELIX,
-        HADOOP
-    }
-
     private static final Log LOG = LogFactory.getLog(GenomixClusterManager.class);
     public static final String LOCAL_HOSTNAME = "localhost";
     public static final String LOCAL_IP = "127.0.0.1";
     public static final int LOCAL_HYRACKS_CLIENT_PORT = 3099;
     public static final int LOCAL_HYRACKS_CC_PORT = 1099;
+    public static final int LOCAL_HYRACKS_HTTP_PORT = 16001;
     public static final int LOCAL_PREGELIX_CLIENT_PORT = 3097;
     public static final int LOCAL_PREGELIX_CC_PORT = 1097;
+    public static final int LOCAL_PREGELIX_HTTP_PORT = 16002;
 
     private ClusterControllerService localHyracksCC;
     private NodeControllerService localHyracksNC;
@@ -75,9 +69,9 @@ public class GenomixClusterManager {
     private final GenomixJobConf conf;
     private boolean jarsCopiedToHadoop = false;
 
-    private HashMap<ClusterType, Thread> shutdownHooks = new HashMap<ClusterType, Thread>();
-    private int numberDataNodes = 1; // Number of DataNodes in the mini hdfs setting
-    private int numberNC = 1; // Number of NC in local hyracks/pregelix setting.
+    private Thread shutdownHook;
+    private int numberDataNodes = 1; // For testing, the number of DataNodes in the mini hdfs setting
+    private int numberNC = 1; // For testing, the number of NC's in local hyracks/pregelix setting.
 
     public GenomixClusterManager(boolean runLocal, GenomixJobConf conf) {
         this.runLocal = runLocal;
@@ -96,82 +90,99 @@ public class GenomixClusterManager {
      * Start a cluster of the given type. If runLocal is specified, we will
      * create an in-memory version of the cluster.
      */
-    public void startCluster(ClusterType clusterType) throws Exception {
-        addClusterShutdownHook(clusterType);
-        switch (clusterType) {
-            case HYRACKS:
-            case PREGELIX:
-                if (runLocal) {
-                    startLocalCC(clusterType);
-                    for (int i = 0; i < numberNC; i++) {
-                        startLocalNC(clusterType, i);
-                    }
-                } else {
-                    int sleepms = Integer.parseInt(conf.get(GenomixJobConf.CLUSTER_WAIT_TIME));
-                    startCC(sleepms);
-                    startNCs(clusterType, sleepms);
-                }
-                break;
-            case HADOOP:
-                if (runLocal)
-                    startLocalMRCluster();
-                else
-                    deployJarsToHadoop();
-                break;
+    public void startCluster() throws Exception {
+        addClusterShutdownHook();
+        if (runLocal) {
+            startLocalMRCluster();
+            startLocalCC();
+            for (int i = 0; i < numberNC; i++) {
+                startLocalNC(i);
+            }
+        } else {
+            startRemoteCluster();
+            deployJarsToHadoop();
         }
     }
 
-    public void stopCluster(ClusterType clusterType) throws Exception {
-        switch (clusterType) {
-            case HYRACKS:
-                if (runLocal) {
-                    if (localHyracksCC != null) {
-                        localHyracksCC.stop();
-                        localHyracksCC = null;
-                    }
-                    if (localHyracksNC != null) {
-                        localHyracksNC.stop();
-                        localHyracksNC = null;
-                    }
-                } else {
-                    shutdownCC();
-                    shutdownNCs();
-                }
-                break;
-            case PREGELIX:
-                if (runLocal) {
-                    if (localPregelixCC != null) {
-                        localPregelixCC.stop();
-                        localPregelixCC = null;
-                    }
-                    if (localPregelixNC != null) {
-                        localPregelixNC.stop();
-                        localPregelixNC = null;
-
-                    }
-                } else {
-                    shutdownCC();
-                    shutdownNCs();
-                }
-                break;
-            case HADOOP:
-                if (runLocal) {
-                    if (localMRCluster != null) {
-                        localMRCluster.shutdown();
-                        localMRCluster = null;
-                    }
-                    if (localDFSCluster != null) {
-                        localDFSCluster.shutdown();
-                        localDFSCluster = null;
-                    }
-                }
-                break;
+    public void renderLocalClusterProperties() throws IOException, InterruptedException {
+        LOG.info("Creating configuration file for hyracks and pregelix");
+        int threadsPerMachine = Integer.parseInt(conf.get(GenomixJobConf.THREADS_PER_MACHINE));
+        for (String clusterType : new String[] { "HYRACKS", "PREGELIX" }) {
+            String cmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
+                    + "makeClusterConf.sh " + clusterType + " " + threadsPerMachine;
+            Process p = Runtime.getRuntime().exec(cmd);
+            p.waitFor(); // wait for cmd execution
+            if (p.exitValue() != 0) {
+                throw new RuntimeException(
+                        "Failed to create a configuration file for the genomix cluster! Script returned exit code: "
+                                + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                                + IOUtils.toString(p.getErrorStream()));
+            }
         }
-        removeClusterShutdownHook(clusterType);
     }
 
-    private void startLocalCC(ClusterType clusterType) throws Exception {
-        LOG.info("Starting local CC...");
+    private void startRemoteCluster() throws IOException, InterruptedException {
+        LOG.info("Starting hyracks and pregelix clusters");
+        int threadsPerMachine = Integer.parseInt(conf.get(GenomixJobConf.THREADS_PER_MACHINE));
+        String startCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
+                + "startCluster.sh " + threadsPerMachine;
+        Process p = Runtime.getRuntime().exec(startCmd);
+        p.waitFor(); // wait for cmd execution
+        if (p.exitValue() != 0) {
+            throw new RuntimeException("Failed to start the genomix cluster! Script returned exit code: "
+                    + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
+                    + IOUtils.toString(p.getErrorStream()));
+        }
+
+    }
+
+    public void stopCluster() throws Exception {
+        if (runLocal) {
+            // allow multiple calls to stopCluster
+            if (localHyracksCC != null) {
+                localHyracksCC.stop();
+                localHyracksCC = null;
+            }
+            if (localHyracksNC != null) {
+                localHyracksNC.stop();
+                localHyracksNC = null;
+            }
+            if (localPregelixCC != null) {
+                localPregelixCC.stop();
+                localPregelixCC = null;
+            }
+            if (localPregelixNC != null) {
+                localPregelixNC.stop();
+                localPregelixNC = null;
+            }
+            if (localMRCluster != null) {
+                localMRCluster.shutdown();
+                localMRCluster = null;
+            }
+            if (localDFSCluster != null) {
+                localDFSCluster.shutdown();
+                localDFSCluster = null;
+            }
+        } else {
+            stopRemoteCluster();
+        }
+        removeClusterShutdownHook();
+    }
+
+    private void stopRemoteCluster() throws IOException, InterruptedException {
+        LOG.info("Stopping hyracks and pregelix clusters");
+        String stopCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
+                + "stopCluster.sh";
+        Process p = Runtime.getRuntime().exec(stopCmd);
+        p.waitFor(); // wait for cmd execution
+        if (p.exitValue() != 0) {
+            LOG.debug("Failed to stop the genomix cluster! Script returned exit code: " + p.exitValue() + "\nstdout: "
+                    + IOUtils.toString(p.getInputStream()) + "\nstderr: " + IOUtils.toString(p.getErrorStream()));
+        }
+    }
+
+    private void startLocalCC() throws Exception {
+        LOG.info("Starting local CC's...");
         CCConfig ccConfig = new CCConfig();
         ccConfig.clientNetIpAddress = LOCAL_HOSTNAME;
         ccConfig.clusterNetIpAddress = LOCAL_HOSTNAME;
@@ -179,46 +190,39 @@ public class GenomixClusterManager {
         ccConfig.jobHistorySize = 1;
         ccConfig.profileDumpPeriod = -1;
 
-        if (clusterType == ClusterType.HYRACKS) {
-            ccConfig.clusterNetPort = LOCAL_HYRACKS_CC_PORT;
-            ccConfig.clientNetPort = LOCAL_HYRACKS_CLIENT_PORT;
-            localHyracksCC = new ClusterControllerService(ccConfig);
-            localHyracksCC.start();
-        } else if (clusterType == ClusterType.PREGELIX) {
-            ccConfig.clusterNetPort = LOCAL_PREGELIX_CC_PORT;
-            ccConfig.clientNetPort = LOCAL_PREGELIX_CLIENT_PORT;
-            localPregelixCC = new ClusterControllerService(ccConfig);
-            localPregelixCC.start();
-        } else {
-            throw new IllegalArgumentException("Invalid CC type: " + clusterType);
-        }
+        ccConfig.clusterNetPort = LOCAL_HYRACKS_CC_PORT;
+        ccConfig.clientNetPort = LOCAL_HYRACKS_CLIENT_PORT;
+        ccConfig.httpPort = LOCAL_HYRACKS_HTTP_PORT;
+        localHyracksCC = new ClusterControllerService(ccConfig);
+        localHyracksCC.start();
+
+        ccConfig.clusterNetPort = LOCAL_PREGELIX_CC_PORT;
+        ccConfig.clientNetPort = LOCAL_PREGELIX_CLIENT_PORT;
+        ccConfig.httpPort = LOCAL_PREGELIX_HTTP_PORT;
+        localPregelixCC = new ClusterControllerService(ccConfig);
+        localPregelixCC.start();
     }
 
-    private void startLocalNC(ClusterType clusterType, int id) throws Exception {
+    private void startLocalNC(int id) throws Exception {
         LOG.info("Starting local NC...");
-        // ClusterConfig.setClusterPropertiesPath(System.getProperty("app.home")
-        // + "/conf/cluster.properties");
-        // ClusterConfig.setStorePath(...);
         NCConfig ncConfig = new NCConfig();
         ncConfig.ccHost = LOCAL_HOSTNAME;
         ncConfig.clusterNetIPAddress = LOCAL_HOSTNAME;
         ncConfig.dataIPAddress = LOCAL_IP;
         ncConfig.datasetIPAddress = LOCAL_IP;
-        ncConfig.nodeId = "nc-" + clusterType + "-id-" + id;
-        ncConfig.ioDevices = "tmp" + File.separator + "t3" + File.separator + clusterType;
 
-        if (clusterType == ClusterType.HYRACKS) {
-            ncConfig.ccPort = LOCAL_HYRACKS_CC_PORT;
-            localHyracksNC = new NodeControllerService(ncConfig);
-            localHyracksNC.start();
-        } else if (clusterType == ClusterType.PREGELIX) {
-            ncConfig.ccPort = LOCAL_PREGELIX_CC_PORT;
-            ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
-            localPregelixNC = new NodeControllerService(ncConfig);
-            localPregelixNC.start();
-        } else {
-            throw new IllegalArgumentException("Invalid NC type: " + clusterType);
-        }
+        ncConfig.ccPort = LOCAL_HYRACKS_CC_PORT;
+        ncConfig.nodeId = "nc-HYRACKS-id-" + id;
+        ncConfig.ioDevices = "tmp" + File.separator + "HYRACKS" + File.separator + "io_dir-" + id;
+        localHyracksNC = new NodeControllerService(ncConfig);
+        localHyracksNC.start();
+
+        ncConfig.ccPort = LOCAL_PREGELIX_CC_PORT;
+        ncConfig.appNCMainClass = NCApplicationEntryPoint.class.getName();
+        ncConfig.nodeId = "nc-PREGELIX-id-" + id;
+        ncConfig.ioDevices = "tmp" + File.separator + "PREGELIX" + File.separator + "io_dir-" + id;
+        localPregelixNC = new NodeControllerService(ncConfig);
+        localPregelixNC.start();
     }
 
     private void startLocalMRCluster() throws IOException {
@@ -278,81 +282,36 @@ public class GenomixClusterManager {
         }
     }
 
-    private static void startNCs(ClusterType type, int sleepms) throws IOException, InterruptedException {
-        LOG.info("Starting NC's");
-        String startNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
-                + "startAllNCs.sh " + type;
-        Process p = Runtime.getRuntime().exec(startNCCmd);
-        p.waitFor(); // wait for ssh
-        Thread.sleep(sleepms); // wait for NC -> CC registration
-        System.out.println("\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-                + IOUtils.toString(p.getErrorStream()));
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to start the" + type + " NC's! Script returned exit code: "
-                    + p.exitValue() + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-                    + IOUtils.toString(p.getErrorStream()));
-    }
-
-    private static void startCC(int sleepms) throws IOException, InterruptedException {
-        LOG.info("Starting CC");
-        String startCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
-                + "startcc.sh";
-        Process p = Runtime.getRuntime().exec(startCCCmd);
-        p.waitFor(); // wait for cmd execution
-        Thread.sleep(sleepms); // wait for CC registration
-        if (p.exitValue() != 0)
-            throw new RuntimeException("Failed to start the genomix CC! Script returned exit code: " + p.exitValue()
-                    + "\nstdout: " + IOUtils.toString(p.getInputStream()) + "\nstderr: "
-                    + IOUtils.toString(p.getErrorStream()));
-    }
-
-    private static void shutdownCC() throws IOException, InterruptedException {
-        LOG.info("Shutting down any previous CC");
-        String stopCCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator + "stopcc.sh";
-        Process p = Runtime.getRuntime().exec(stopCCCmd);
-        p.waitFor(); // wait for cmd execution
-    }
-
-    private static void shutdownNCs() throws IOException, InterruptedException {
-        LOG.info("Shutting down any previous NC's");
-        String stopNCCmd = System.getProperty("app.home", ".") + File.separator + "bin" + File.separator
-                + "stopAllNCs.sh";
-        Process p = Runtime.getRuntime().exec(stopNCCmd);
-        LOG.info("Waiting for completion");
-        p.waitFor(); // wait for ssh
-        LOG.info("done waiting");
-    }
-
-    private void addClusterShutdownHook(final ClusterType clusterType) {
-        if (shutdownHooks.containsKey(clusterType))
-            throw new IllegalArgumentException("Already specified a hook for shutting down a " + clusterType
-                    + " cluster! (Try removing the existing hook first?)");
-        Thread hook = new Thread() {
+    private void addClusterShutdownHook() {
+        if (shutdownHook != null) {
+            throw new IllegalArgumentException(
+                    "Already specified a hook for shutting down the cluster (Try removing the existing hook first?)");
+        }
+        shutdownHook = new Thread() {
             @Override
             public void run() {
                 LOG.info("Shutting down the cluster...");
                 try {
-                    stopCluster(clusterType);
+                    stopCluster();
                 } catch (Exception e) {
                     System.err.println("Error while shutting the cluster down:");
                     e.printStackTrace();
                 }
             }
         };
-        shutdownHooks.put(clusterType, hook);
-        Runtime.getRuntime().addShutdownHook(hook);
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 
-    private void removeClusterShutdownHook(final ClusterType clusterType) {
-        if (!shutdownHooks.containsKey(clusterType)) {
-            return; // ignore-- we are cleaning up after a previous run
+    private void removeClusterShutdownHook() {
+        if (shutdownHook != null) {
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            } catch (IllegalStateException e) {
+                // ignore: we must already be shutting down
+            } finally {
+                shutdownHook = null;
+            }
         }
-        try {
-            Runtime.getRuntime().removeShutdownHook(shutdownHooks.get(clusterType));
-        } catch (IllegalStateException e) {
-            // ignore: we must already be shutting down
-        }
-        shutdownHooks.remove(clusterType);
     }
 
     public static void copyLocalToHDFS(JobConf conf, String localDir, String destDir) throws IOException {
@@ -387,9 +346,9 @@ public class GenomixClusterManager {
         LOG.info("Copying HDFS directory " + hdfsSrcDir + " to local: " + localDestDir);
         GenomixJobConf.tick("copyBinToLocal");
         FileSystem dfs = FileSystem.get(conf);
-//        FileUtils.deleteQuietly(new File(localDestDir));
 
         // save original binary to output/bin
+        FileUtils.deleteQuietly(new File(localDestDir));
         dfs.copyToLocalFile(new Path(hdfsSrcDir), new Path(localDestDir + File.separator + "bin"));
 
         // convert hdfs sequence files to text as output/data
@@ -413,7 +372,8 @@ public class GenomixClusterManager {
                         bw.newLine();
                     }
                 } catch (Exception e) {
-                    System.err.println("Encountered an error copying " + f + " to local:\n" + e);
+                    System.err.println("Encountered an error copying " + f + " to local:\n");
+                    e.printStackTrace();
                 } finally {
                     if (reader != null)
                         reader.close();

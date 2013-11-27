@@ -27,7 +27,8 @@ public class CopyUpdateUtil {
 
     public static void copyUpdate(SearchKeyTupleReference tempTupleReference, ITupleReference frameTuple,
             UpdateBuffer updateBuffer, ArrayTupleBuilder cloneUpdateTb, IIndexAccessor indexAccessor,
-            IIndexCursor cursor, RangePredicate rangePred, boolean scan) throws HyracksDataException, IndexException {
+            IIndexCursor cursor, RangePredicate rangePred, boolean scan, StorageType type) throws HyracksDataException,
+            IndexException {
         if (cloneUpdateTb.getSize() > 0) {
             if (!updateBuffer.appendTuple(cloneUpdateTb)) {
                 tempTupleReference.reset(frameTuple.getFieldData(0), frameTuple.getFieldStart(0),
@@ -40,7 +41,7 @@ public class CopyUpdateUtil {
                 if (!updateBuffer.appendTuple(cloneUpdateTb)) {
                     throw new HyracksDataException("cannot append tuple builder!");
                 }
-                //search again and recover the cursor
+                //search again and recover the cursor to the exact point as the one before it is closed
                 cursor.reset();
                 rangePred.setLowKey(tempTupleReference, true);
                 if (scan) {

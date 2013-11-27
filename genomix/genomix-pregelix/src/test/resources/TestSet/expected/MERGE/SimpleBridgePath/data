@@ -1,0 +1,4 @@
+CTA	{FF:{}	FR:{}	RF:{AAC=[1]}	RR:{AGG=[2]}	5':[], ~5':[1-4_0,2-4_0]	kmer:CTATT	cov:2.0x}
+AAC	{FF:{}	FR:{AAG=[1]}	RF:{CTA=[1]}	RR:{}	5':[], ~5':[]	kmer:AGAACT	cov:1.0x}
+AAG	{FF:{AGG=[2]}	FR:{AAC=[1]}	RF:{}	RR:{}	5':[], ~5':[]	kmer:AAG	cov:2.0x}
+AGG	{FF:{CTA=[2]}	FR:{}	RF:{}	RR:{AAG=[2]}	5':[], ~5':[]	kmer:AGGGCT	cov:1.0x}

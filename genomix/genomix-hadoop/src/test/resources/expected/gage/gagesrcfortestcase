@@ -1,0 +1,10 @@
+Total units: 5
+Reference: 150
+BasesInFasta: 178
+Min: 28
+Max: 42
+N10: 42 COUNT: 1
+N25: 42 COUNT: 1
+N50: 39 COUNT: 2
+N75: 36 COUNT: 3
+E-size:43.03

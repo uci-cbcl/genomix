@@ -61,9 +61,15 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         NeighborInfo forwardNeighbor = vertex.getSingleNeighbor(DIR.FORWARD);
 
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
-        if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer))
-            throw new IllegalStateException("majorVertexId is equal to minorVertexId, this is not allowed!");
+        if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer)) {
+            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n"
+                    + "forwardKmer is " + forwardNeighbor.kmer + "\n"
+                    + "reverseKmer is " + reverseNeighbor.kmer + "\n"
+                    + "this vertex is " + getVertexId() + ", value: " + getVertexValue());
+            return;
+        }
 
+        outgoingMsg.reset();
         VKmer minorVertexId;
         boolean forwardIsMajor = forwardNeighbor.kmer.compareTo(reverseNeighbor.kmer) >= 0;
         if (forwardIsMajor) {
@@ -81,7 +87,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             LOG.info("Major vertex is: " + outgoingMsg.getMajorVertexId());
         }
         outgoingMsg.setSourceVertexId(getVertexId());
-        outgoingMsg.setNode(getVertexValue().getNode());
+        outgoingMsg.setNode(getVertexValue());
         sendMsg(minorVertexId, outgoingMsg);
     }
 

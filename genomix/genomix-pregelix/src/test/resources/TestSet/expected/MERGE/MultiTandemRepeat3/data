@@ -1,0 +1,3 @@
+CGC	{FF:{ATC=[1], CCG=[1]}	FR:{CGC=[1]}	RF:{CGC=[1]}	RR:{ATC=[1], CCG=[1]}	5':[1-0_0], ~5':[]	kmer:CGC	cov:50.0x}
+ATC	{FF:{CGC=[1]}	FR:{}	RF:{}	RR:{CGC=[1]}	5':[], ~5':[]	kmer:GCATCG	cov:1.0x}
+CCG	{FF:{CGC=[1]}	FR:{}	RF:{}	RR:{CGC=[1]}	5':[], ~5':[]	kmer:GCCG	cov:3.0x}

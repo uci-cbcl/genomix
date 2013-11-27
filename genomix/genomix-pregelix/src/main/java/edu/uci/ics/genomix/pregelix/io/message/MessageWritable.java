@@ -11,11 +11,17 @@ import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {
 
-    private VKmer sourceVertexId; // stores srcNode id
-    private short flag; // stores message type
+    protected static class MESSAGE_FIELDS {
+        public static final byte SOURCE_VERTEX_ID = 1 << 0; // used in superclass: MessageWritable
+    }
+
+    protected VKmer sourceVertexId; // stores srcNode id
+    protected short flag; // stores message type
+
+    protected byte messageFields; // only used during read to keep track of what's in the stream
 
     public MessageWritable() {
-        sourceVertexId = new VKmer();
+        sourceVertexId = null;
         flag = 0;
     }
 
@@ -25,7 +31,7 @@ public class MessageWritable implements Writable, WritableSizable {
     }
 
     public void reset() {
-        sourceVertexId.reset(0);
+        sourceVertexId = null;
         flag = 0;
     }
 
@@ -33,17 +39,20 @@ public class MessageWritable implements Writable, WritableSizable {
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        sbuilder.append(sourceVertexId.toString());
+        sbuilder.append(sourceVertexId == null ? "null" : sourceVertexId.toString());
         sbuilder.append('}');
         return sbuilder.toString();
     }
 
     public VKmer getSourceVertexId() {
+        if (sourceVertexId == null) {
+            sourceVertexId = new VKmer();
+        }
         return sourceVertexId;
     }
 
     public void setSourceVertexId(VKmer sourceVertexId) {
-        this.sourceVertexId.setAsCopy(sourceVertexId);
+        getSourceVertexId().setAsCopy(sourceVertexId);
     }
 
     public short getFlag() {
@@ -57,20 +66,32 @@ public class MessageWritable implements Writable, WritableSizable {
     @Override
     public void readFields(DataInput in) throws IOException {
         reset();
-        sourceVertexId.readFields(in);
+        messageFields = in.readByte();
+        if ((messageFields & MESSAGE_FIELDS.SOURCE_VERTEX_ID) != 0)
+            getSourceVertexId().readFields(in);
         flag = in.readShort();
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-        sourceVertexId.write(out);
+        out.writeByte(getActiveMessageFields());
+        if (sourceVertexId != null) {
+            sourceVertexId.write(out);
+        }
         out.writeShort(flag);
+    }
+    
+    protected byte getActiveMessageFields() {
+        byte messageFields = 0;
+        if (sourceVertexId != null) {
+            messageFields |= MESSAGE_FIELDS.SOURCE_VERTEX_ID;
+        }
+        return messageFields;
     }
 
     @Override
     public int sizeInBytes() {
-        // TODO Auto-generated method stub
-        return 0;
+        return Byte.SIZE / 8 + (sourceVertexId == null ? 0 : sourceVertexId.getLength()) + Short.SIZE / 8;
     }
 
 }

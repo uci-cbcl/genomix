@@ -11,37 +11,61 @@ import edu.uci.ics.genomix.type.VKmer;
 
 public class SplitRepeatMessage extends MessageWritable {
 
+    protected class SPLITREPEAT_MESSAGE_FIELDS extends MESSAGE_FIELDS {
+        public static final byte CREATED_EDGE = 1 << 1; // used in subclass: SplitRepeatMessage
+    }
+
     private Entry<VKmer, ReadIdSet> createdEdge;
 
     public SplitRepeatMessage() {
         super();
-        createdEdge = new SimpleEntry<VKmer, ReadIdSet>(new VKmer(), new ReadIdSet());
+        createdEdge = null;
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        createdEdge = null;
     }
 
     public Entry<VKmer, ReadIdSet> getCreatedEdge() {
+        if (createdEdge == null) {
+            createdEdge = new SimpleEntry<VKmer, ReadIdSet>(new VKmer(), new ReadIdSet());
+        }
         return createdEdge;
     }
 
     public void setCreatedEdge(VKmer createdKmer, ReadIdSet createdReadIds) {
-        this.createdEdge = new SimpleEntry<VKmer, ReadIdSet>(createdKmer, createdReadIds);
+        createdEdge = new SimpleEntry<VKmer, ReadIdSet>(createdKmer, createdReadIds);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        reset();
         super.readFields(in);
-
-        VKmer createdKmer = new VKmer();
-        createdKmer.readFields(in);
-        ReadIdSet createdReadIds = new ReadIdSet();
-        createdReadIds.readFields(in);
-        setCreatedEdge(createdKmer, createdReadIds);
+        if ((messageFields & SPLITREPEAT_MESSAGE_FIELDS.CREATED_EDGE) != 0) {
+            VKmer createdKmer = new VKmer();
+            createdKmer.readFields(in);
+            ReadIdSet createdReadIds = new ReadIdSet();
+            createdReadIds.readFields(in);
+            setCreatedEdge(createdKmer, createdReadIds);
+        }
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        createdEdge.getKey().write(out);
-        createdEdge.getValue().write(out);
+        if (createdEdge != null) {
+            createdEdge.getKey().write(out);
+            createdEdge.getValue().write(out);
+        }
+    }
+
+    @Override
+    protected byte getActiveMessageFields() {
+        byte messageFields = super.getActiveMessageFields();
+        if (createdEdge != null) {
+            messageFields |= SPLITREPEAT_MESSAGE_FIELDS.CREATED_EDGE;
+        }
+        return messageFields;
     }
 }

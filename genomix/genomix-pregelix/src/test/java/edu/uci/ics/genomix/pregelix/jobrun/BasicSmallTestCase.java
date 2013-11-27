@@ -16,6 +16,7 @@
 package edu.uci.ics.genomix.pregelix.jobrun;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -36,6 +37,7 @@ import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
 import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.util.TestUtils;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
@@ -47,12 +49,14 @@ public class BasicSmallTestCase extends TestCase {
     private final String textFileDir;
     private final String graphvizFileDir;
     private final String statisticsFileDir;
+    private final String expectedFileDir;
     private final String jobFile;
     private final Driver driver = new Driver(this.getClass());
     private final FileSystem dfs;
 
     public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs, String hdfsInput,
-            String resultFile, String textFile, String graphvizFile, String statisticsFile) throws Exception {
+            String resultFile, String textFile, String graphvizFile, String statisticsFile, String expectedFile)
+            throws Exception {
         super("test");
         this.jobFile = jobFile;
         this.job = new PregelixJob("test");
@@ -65,6 +69,7 @@ public class BasicSmallTestCase extends TestCase {
         this.textFileDir = textFile;
         this.graphvizFileDir = graphvizFile;
         this.statisticsFileDir = statisticsFile;
+        this.expectedFileDir = expectedFile;
 
         this.dfs = dfs;
     }
@@ -94,8 +99,10 @@ public class BasicSmallTestCase extends TestCase {
         //covert bin to text
         GenerateTextFile.convertGraphCleanOutputToText(binFileDir, textFileDir);
         //covert bin to graphviz
-        GenerateGraphViz.convertBinToGraphViz(binFileDir, graphvizFileDir,
-                GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
+        GenerateGraphViz
+                .writeLocalBinToLocalSvg(binFileDir, graphvizFileDir, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
+        // compare results
+        TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(textFileDir));
         //generate statistic counters
         //        generateStatisticsResult(statisticsFileDir);
     }

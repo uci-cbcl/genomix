@@ -3,22 +3,23 @@ package edu.uci.ics.genomix.pregelix.io.message;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadHeadSet;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class PathMergeMessage extends MessageWritable {
+
+    protected static class PATHMERGE_MESSAGE_FIELDS extends MESSAGE_FIELDS {
+        public static final byte NODE = 1 << 1; // used in subclass: PathMergeMessage
+    }
 
     private Node node;
 
     public PathMergeMessage() {
         super();
-        node = new Node();
+        node = null;
     }
 
     public PathMergeMessage(PathMergeMessage other) {
@@ -28,82 +29,61 @@ public class PathMergeMessage extends MessageWritable {
 
     public void setAsCopy(PathMergeMessage other) {
         super.setAsCopy(other);
-        this.node.setAsCopy(other.getNode());
+        getNode().setAsCopy(other.getNode());
     }
 
+    @Override
     public void reset() {
         super.reset();
-        node.reset();
+        node = null;
     }
 
     public VKmer getInternalKmer() {
-        return node.getInternalKmer();
+        return getNode().getInternalKmer();
     }
 
     public void setInternalKmer(VKmer internalKmer) {
-        this.node.setInternalKmer(internalKmer);
+        getNode().setInternalKmer(internalKmer);
     }
 
     public EdgeMap getEdgeList(EDGETYPE edgeType) {
-        return node.getEdgeMap(edgeType);
-    }
-
-    public Entry<VKmer, ReadIdSet> getNeighborEdge() {
-        for (EDGETYPE e : EDGETYPE.values()) {
-            if (!getEdgeList(e).isEmpty()) {
-                return getEdgeList(e).firstEntry();
-            }
-        }
-        return null;
-    }
-
-    public void setEdgeList(EDGETYPE edgeType, EdgeMap edgeList) {
-        this.node.setEdgeMap(edgeType, edgeList);
-    }
-
-    public ReadHeadSet getStartReads() {
-        return this.node.getUnflippedReadIds();
-    }
-
-    public void setStartReads(ReadHeadSet startReads) {
-        this.node.setUnflippedReadIds(startReads);
-    }
-
-    public ReadHeadSet getEndReads() {
-        return this.node.getFlippedReadIds();
-    }
-
-    public void setEndReads(ReadHeadSet endReads) {
-        this.node.setFlippedReadIds(endReads);
-    }
-
-    public void setAverageCoverage(float coverage) {
-        this.node.setAverageCoverage(coverage);
-    }
-
-    public float getAvgCoverage() {
-        return this.node.getAverageCoverage();
+        return getNode().getEdgeMap(edgeType);
     }
 
     public Node getNode() {
+        if (node == null) {
+            node = new Node();
+        }
         return node;
     }
 
     public void setNode(Node node) {
-        this.node.setAsCopy(node);
+        getNode().setAsCopy(node);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        reset();
         super.readFields(in);
-        node.readFields(in);
+        if ((messageFields & PATHMERGE_MESSAGE_FIELDS.NODE) != 0) {
+            getNode().readFields(in);
+        }
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        node.write(out);
+        if (node != null) {
+            node.write(out);
+        }
+    }
+
+    @Override
+    protected byte getActiveMessageFields() {
+        byte messageFields = super.getActiveMessageFields();
+        if (node != null) {
+            messageFields |= PATHMERGE_MESSAGE_FIELDS.NODE;
+        }
+        return messageFields;
     }
 
     @Override
@@ -111,9 +91,9 @@ public class PathMergeMessage extends MessageWritable {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
         sbuilder.append("src:[");
-        sbuilder.append(getSourceVertexId().toString()).append(']').append("\t");
+        sbuilder.append(sourceVertexId == null ? "null" : getSourceVertexId().toString()).append(']').append("\t");
         sbuilder.append("node:");
-        sbuilder.append(node.toString()).append("\t");
+        sbuilder.append(node == null ? "null" : node.toString()).append("\t");
         sbuilder.append('}');
         return sbuilder.toString();
     }

@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.pathmerge;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -15,6 +16,7 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
@@ -54,7 +56,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
         if (updated) {
             vertex.setState(state);
-            if (DIR.enumSetFromByte(state).containsAll(EnumSet.allOf(DIR.class)))
+            if (DIR.enumSetFromByte(state).containsAll(Arrays.asList(DIR.values())))
                 voteToHalt();
             else
                 activate();
@@ -94,7 +96,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
         if (updated) {
             getVertexValue().setState(restrictedDirs);
-            if (DIR.enumSetFromByte(restrictedDirs).containsAll(EnumSet.allOf(DIR.class)))
+            if (DIR.enumSetFromByte(restrictedDirs).containsAll(Arrays.asList(DIR.values())))
                 voteToHalt();
             else
                 activate();
@@ -125,22 +127,24 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag(outFlag);
             for (EDGETYPE mergeEdge : mergeEdges) {
                 EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);
-                outgoingMsg.getNode().setEdgeMap(newEdgetype, getVertexValue().getEdgeMap(mergeEdge)); // copy into outgoingMsg
-            }
-
-            // send the update to all kmers in this list // TODO perhaps we could skip all this if there are no neighbors here
-            for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
-                if (verbose)
-                    LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
-                            + " to " + dest + ": " + outgoingMsg);
-                sendMsg(dest, outgoingMsg);
+                for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
+                    if (verbose)
+                        LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
+                                + " to " + dest + ": " + outgoingMsg);
+                    Iterator<VKmer> iter = vertex.getEdgeMap(mergeEdge).keySet().iterator();
+                    if (iter.hasNext()) {
+                        EdgeMap edgeMap = new EdgeMap();
+                        edgeMap.put(iter.next(), vertex.getEdgeMap(updateEdge).get(dest));
+                        outgoingMsg.getNode().setEdgeMap(newEdgetype, edgeMap); // copy into outgoingMsg
+                        sendMsg(dest, outgoingMsg);
+                    }
+                }
             }
         }
     }
 
     public void receiveUpdates(Iterator<M> msgIterator) {
         VertexValueWritable vertex = getVertexValue();
-        Node node = vertex.getNode();
         boolean updated = false;
         ArrayList<PathMergeMessage> allSeenMsgs = new ArrayList<PathMergeMessage>();
         while (msgIterator.hasNext()) {
@@ -148,10 +152,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
-            node.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
+            vertex.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
-            for (EDGETYPE edgeType : EnumSet.allOf(EDGETYPE.class)) {
-                node.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
+            for (EDGETYPE edgeType : EDGETYPE.values()) {
+                vertex.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
             }
             updated = true;
             if (verbose) {
@@ -181,7 +185,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
 
             outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
             outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(vertex.getNode());
+            outgoingMsg.setNode(vertex); // TODO reduce amount sent in this Node (only internalKmer and 1/2 of edges)
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);

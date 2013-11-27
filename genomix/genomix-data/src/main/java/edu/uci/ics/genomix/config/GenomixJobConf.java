@@ -15,19 +15,14 @@
 
 package edu.uci.ics.genomix.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.LogManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -38,32 +33,6 @@ import edu.uci.ics.genomix.type.Kmer;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
-
-    static {
-        loadLoggingFile();
-    }
-
-    /**
-     * Utility to catch logging.properties when they aren't set using JVM parameters.
-     * Prefer logging.properties from the following four places (in order):
-     * 1. the passed in system property "java.util.logging.config.file" (if it exists, we won't change anything)
-     * 2. ${app.home}/conf/logging.properties
-     * 3. src/main/resources/conf/logging.properties
-     * 4. src/test/resources/conf/logging.properties
-     */
-    private static void loadLoggingFile() {
-        if (System.getProperty("java.util.logging.config.file") == null) {
-            String logBasePath = new File("src/main/resources/conf/logging.properties").isFile() ? "src/main/resources"
-                    : "src/test/resources";
-            String logProperties = System.getProperty("app.home", logBasePath) + "/conf/logging.properties";
-            try {
-                LogManager.getLogManager().readConfiguration(new FileInputStream(logProperties));
-            } catch (SecurityException | IOException e) {
-                System.err.println("Couldn't read the given log file: " + logProperties + "\n" + e.getStackTrace());
-            }
-        }
-    }
-
     /* The following section ties together command-line options with a global JobConf
      * Each variable has an annotated, command-line Option which is private here but 
      * is accessible through JobConf.get(GenomixConfigOld.VARIABLE).
@@ -101,9 +70,6 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-saveIntermediateResults", usage = "whether or not to save intermediate steps to HDFS (default: true)", required = false)
         private boolean saveIntermediateResults = false;
 
-        @Option(name = "-followsGraphBuild", usage = "whether or not the given input is output from a previous graph-build", required = false)
-        private boolean followsGraphBuild = false;
-
         @Option(name = "-clusterWaitTime", usage = "the amount of time (in ms) to wait between starting/stopping CC/NC", required = false)
         private int clusterWaitTime = -1;
 
@@ -117,8 +83,8 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
         private int graphCleanMaxIterations = -1;
 
-        @Option(name = "-randSeed", usage = "The seed used in the random path-merge or split-repeat algorithm", required = false)
-        private long randSeed = -1;
+        @Option(name = "-randomSeed", usage = "The seed used in the random path-merge or split-repeat algorithm", required = false)
+        private long randomSeed = -1;
 
         @Option(name = "-pathMergeRandom_probBeingRandomHead", usage = "The probability of being selected as a random head in the random path-merge algorithm", required = false)
         private float pathMergeRandom_probBeingRandomHead = -1;
@@ -152,8 +118,9 @@ public class GenomixJobConf extends JobConf {
         private int plotSubgraph_numHops = -1;
 
         @Option(name = "-plotSubgraph_verbosity", usage = "Specify the level of details in output graph: 1. UNDIRECTED_GRAPH_WITHOUT_LABELS,"
-                + " 2. DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE, 3. DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE, 4. DIRECTED_GRAPH_WITH_ALLDETAILS", required = false)
-        private int plotSubgraph_verbosity;
+                + " 2. DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE, 3. DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE, 4. DIRECTED_GRAPH_WITH_ALLDETAILS"
+                + "Default is 1.", required = false)
+        private int plotSubgraph_verbosity = -1;
 
         // Hyracks/Pregelix Setup
         @Option(name = "-profile", usage = "Whether or not to do runtime profifling", required = false)
@@ -162,17 +129,27 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-runLocal", usage = "Run a local instance using the Hadoop MiniCluster.", required = false)
         private boolean runLocal = false;
 
+        @Option(name = "-useExistingCluster", usage = "Don't start or stop a cluster (use one that's already running)", required = false)
+        private boolean useExistingCluster = false;
+
         @Option(name = "-debugKmers", usage = "Log all interactions with the given comma-separated list of kmers at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private String debugKmers = null;
 
         @Option(name = "-logReadIds", usage = "Log all readIds with the selected edges at the FINE log level (check conf/logging.properties to specify an output location)", required = false)
         private boolean logReadIds = false;
 
-        @Option(name = "-gage", usage = "Do metrics evalution after dumpting the intermediate data.", required = false)
-        private boolean gage = false;
+        //Metrics Parameters for Our Mapreduce Gage Job
+        @Option(name = "-stats_expectedGenomeSize", usage = "The expected length for this whole genome data", required = false)
+        private int stats_expectedGenomeSize = -1;
 
-        @Argument
-        private ArrayList<String> arguments = new ArrayList<String>();
+        @Option(name = "-stats_minContigLength", usage = "the minimum contig length included in statistics calculations", required = false)
+        private int stats_minContigLength = -1;
+
+        @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
+        private int threadsPerMachine = 1;
+        
+        @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
+        private String extraConfFiles;
     }
 
     /**
@@ -197,7 +174,11 @@ public class GenomixJobConf extends JobConf {
         DUMP_FASTA,
         CHECK_SYMMETRY,
         PLOT_SUBGRAPH,
-        STATS;
+        STATS,
+        TIP_ADD,
+        BRIDGE_ADD,
+        BUBBLE_ADD,
+        BFS;
 
         /**
          * Get a comma-separated pipeline from the given array of Patterns
@@ -243,54 +224,58 @@ public class GenomixJobConf extends JobConf {
     }
 
     // Global config
-    public static final String KMER_LENGTH = "genomix.kmerlength";
-    public static final String LINES_PERMAP = "genomix.linespermap";
-    public static final String PIPELINE_ORDER = "genomix.pipelineOrder";
-    public static final String INITIAL_INPUT_DIR = "genomix.initial.input.dir";
-    public static final String FINAL_OUTPUT_DIR = "genomix.final.output.dir";
-    public static final String LOCAL_INPUT_DIR = "genomix.initial.local.input.dir";
-    public static final String LOCAL_OUTPUT_DIR = "genomix.final.local.output.dir";
-    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.save.intermediate.results";
-    public static final String FOLLOWS_GRAPH_BUILD = "genomix.follows.graph.build";
-    public static final String CLUSTER_WAIT_TIME = "genomix.cluster.wait.time";
+    public static final String KMER_LENGTH = "genomix.conf.kmerLength";
+    public static final String LINES_PERMAP = "genomix.conf.linesPerMap";
+    public static final String PIPELINE_ORDER = "genomix.conf.pipelineOrder";
+    public static final String INITIAL_HDFS_INPUT_DIR = "genomix.conf.initialHDFSInputDir";
+    public static final String FINAL_HDFS_OUTPUT_DIR = "genomix.conf.finalHDFSOutputDir";
+    public static final String LOCAL_INPUT_DIR = "genomix.conf.initialLocalInputDir";
+    public static final String LOCAL_OUTPUT_DIR = "genomix.conf.finalLocalOutputDir";
+    public static final String SAVE_INTERMEDIATE_RESULTS = "genomix.conf.saveIntermediateResults";
+    public static final String RANDOM_SEED = "genomix.conf.randomSeed";
+    public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
+    public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
-    public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphCleanMaxIterations";
-    public static final String RANDOM_SEED = "genomix.Random.randSeed";
-    public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.PathMergeRandom.probBeingRandomHead";
+    public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
+    public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.pathMerge.probBeingRandomHead";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
     public static final String TIP_REMOVE_MAX_LENGTH = "genomix.tipRemove.maxLength";
-    public static final String MAX_READIDS_PER_EDGE = "genomix.max.readids.per.edge";
-    public static final String P4_RANDOM_SEED = "genomix.p4.random.seed";
-    public static final String SCAFFOLDING_MIN_TRAVERSAL_LENGTH = "scaffolding.min.traveral.length";
-    public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "scaffolding.max.traveral.length";
-    public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "scaffolding.vertex.min.coverage";
-    public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "scaffolding.vertex.min.length";
-    public static final String PLOT_SUBGRAPH_START_SEEDS = "plot.subgraph.startSeeds";
-    public static final String PLOT_SUBGRAPH_NUM_HOPS = "plot.subgraph.num.hops";
-    public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "plot.subgraph.graph.verbosity";
+    public static final String MAX_READIDS_PER_EDGE = "genomix.maxReadidsPerEdge";
+    public static final String SCAFFOLDING_MIN_TRAVERSAL_LENGTH = "genomix.scaffolding.minTraversalLength";
+    public static final String SCAFFOLDING_MAX_TRAVERSAL_LENGTH = "genomix.scaffolding.maxTraversalLength";
+    public static final String SCAFFOLDING_VERTEX_MIN_COVERAGE = "genomix.scaffolding.vertexMinCoverage";
+    public static final String SCAFFOLDING_VERTEX_MIN_LENGTH = "genomix.scaffolding.vertexMinLength";
+    public static final String PLOT_SUBGRAPH_START_SEEDS = "genomix.plotSubgraph.startSeeds";
+    public static final String PLOT_SUBGRAPH_NUM_HOPS = "genomix.plotSubgraph.numHops";
+    public static final String PLOT_SUBGRAPH_GRAPH_VERBOSITY = "genomix.plotSubgraph.graphVerbosity";
 
     // Hyracks/Pregelix Setup
-    public static final String IP_ADDRESS = "genomix.ipAddress";
-    public static final String PORT = "genomix.port";
-    public static final String PROFILE = "genomix.profile";
-    public static final String RUN_LOCAL = "genomix.runLocal";
-    public static final String DEBUG_KMERS = "genomix.debugKmers";
-    public static final String LOG_READIDS = "genomix.logReadIds";
-    public static final String HYRACKS_GROUPBY_TYPE = "genomix.hyracks.groupby";
+    public static final String PROFILE = "genomix.conf.profile";
+    public static final String RUN_LOCAL = "genomix.conf.runLocal";
+    public static final String USE_EXISTING_CLUSTER = "genomix.conf.useExistingCluster";
+    public static final String DEBUG_KMERS = "genomix.conf.debugKmers";
+    public static final String LOG_READIDS = "genomix.conf.logReadIds";
+    public static final String HYRACKS_GROUPBY_TYPE = "genomix.conf.hyracksGroupby";
 
-    //    public static final String FRAME_SIZE = "genomix.framesize";
-    public static final String FRAME_SIZE = "pregelix.framesize";
-    public static final String FRAME_LIMIT = "genomix.framelimit";
+    // specified by cluster.properties... hence the different naming convention :(
+    public static final String HYRACKS_CC_CLIENTPORT = "HYRACKS_CC_CLIENTPORT";
+    public static final String PREGELIX_CC_CLIENTPORT = "PREGELIX_CC_CLIENTPORT";
+    public static final String HYRACKS_CC_CLUSTERPORT = "HYRACKS_CC_CLUSTERPORT";
+    public static final String PREGELIX_CC_CLUSTERPORT = "PREGELIX_CC_CLUSTERPORT";
+    public static final String FRAME_SIZE = "FRAME_SIZE";
+    public static final String FRAME_LIMIT = "FRAME_LIMIT";
 
-    public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
-    public static final String HYRACKS_IO_DIRS = "genomix.hyracks.IO_DIRS";
-    public static final String HYRACKS_SLAVES = "genomix.hyracks.slaves.list";
+    public static final String MASTER = "genomix.conf.masterNode";
+    public static final String SLAVES = "genomix.conf.slavesList";
+    public static final String THREADS_PER_MACHINE = "genomix.threadsPerMachine";
 
+    // GAGE Metrics Evaluation 
+    public static final String STATS_EXPECTED_GENOMESIZE = "genomix.conf.expectedGenomeSize";
+    public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
     // intermediate date evaluation
-    public static final String GAGE = "genomix.evaluation.tool.gage";
 
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
@@ -364,19 +349,9 @@ public class GenomixJobConf extends JobConf {
             throw new IllegalArgumentException("maxReadIDsPerEdge must be non-negative!");
 
         Patterns.verifyPatterns(Patterns.arrayFromString(conf.get(GenomixJobConf.PIPELINE_ORDER)));
-        //        // Hyracks/Pregelix Advanced Setup
-        //        if (conf.get(IP_ADDRESS) == null)
-        //            throw new IllegalArgumentException("ipAddress was not specified!");
     }
 
     private void fillMissingDefaults() {
-        
-        Patterns[] DEFAULT_PIPELINE_ORDER = { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
-            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
-            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE };
-    
-        GRAPH_TYPE DEFAULT_GRAPH_TYPE = GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE;
-        
         // Global config
         int kmerLength = getInt(KMER_LENGTH, -1);
 
@@ -397,7 +372,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, 0.5f);
 
         if (getFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, -1) == -1)
-            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 1.0f);
+            setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, 3.0f);
 
         if (getInt(TIP_REMOVE_MAX_LENGTH, -1) == -1 && kmerLength != -1)
             setInt(TIP_REMOVE_MAX_LENGTH, kmerLength);
@@ -419,10 +394,14 @@ public class GenomixJobConf extends JobConf {
             setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, 1);
 
         if (get(PIPELINE_ORDER) == null) {
-            set(PIPELINE_ORDER, Patterns.stringFromArray(DEFAULT_PIPELINE_ORDER));
+            set(PIPELINE_ORDER,
+                    Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
+                            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
+                            Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE }));
         }
+
         if (get(PLOT_SUBGRAPH_GRAPH_VERBOSITY) == null)
-            setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, DEFAULT_GRAPH_TYPE.get()); 
+            set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE.toString());
 
         if (get(PLOT_SUBGRAPH_START_SEEDS) == null)
             set(PLOT_SUBGRAPH_START_SEEDS, "");
@@ -433,13 +412,13 @@ public class GenomixJobConf extends JobConf {
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
-
+        
+        // default conf setup
+        if (get(EXTRA_CONF_FILES) == null)
+            set(EXTRA_CONF_FILES, "");
+        
         // hyracks-specific
-        if (getInt(CLUSTER_WAIT_TIME, -1) == -1)
-            setInt(CLUSTER_WAIT_TIME, 6000);
 
-        if (getBoolean(GAGE, false) == false)
-            setBoolean(GAGE, false);
         //        if (getBoolean(RUN_LOCAL, false)) {
         //            // override any other settings for HOST and PORT
         //            set(IP_ADDRESS, PregelixHyracksIntegrationUtil.CC_HOST);
@@ -453,28 +432,28 @@ public class GenomixJobConf extends JobConf {
         if (opts.pipelineOrder != null)
             set(PIPELINE_ORDER, opts.pipelineOrder);
 
-        setInt(PLOT_SUBGRAPH_GRAPH_VERBOSITY, opts.plotSubgraph_verbosity);
+        if (opts.plotSubgraph_verbosity != -1)
+            set(PLOT_SUBGRAPH_GRAPH_VERBOSITY, GRAPH_TYPE.getFromInt(opts.plotSubgraph_verbosity).toString());
 
         if (opts.localInput != null && opts.hdfsInput != null)
             throw new IllegalArgumentException("Please set either -localInput or -hdfsInput, but NOT BOTH!");
         if (opts.localInput == null && opts.hdfsInput == null)
             throw new IllegalArgumentException("Please specify an input via -localInput or -hdfsInput!");
         if (opts.hdfsInput != null)
-            set(INITIAL_INPUT_DIR, opts.hdfsInput);
+            set(INITIAL_HDFS_INPUT_DIR, opts.hdfsInput);
         if (opts.localInput != null)
             set(LOCAL_INPUT_DIR, opts.localInput);
         if (opts.hdfsOutput != null)
-            set(FINAL_OUTPUT_DIR, opts.hdfsOutput);
+            set(FINAL_HDFS_OUTPUT_DIR, opts.hdfsOutput);
         if (opts.localOutput != null)
             set(LOCAL_OUTPUT_DIR, opts.localOutput);
         if (opts.hdfsWorkPath != null)
             set(HDFS_WORK_PATH, opts.hdfsWorkPath);
         setBoolean(SAVE_INTERMEDIATE_RESULTS, opts.saveIntermediateResults);
-        setBoolean(FOLLOWS_GRAPH_BUILD, opts.followsGraphBuild);
-        setInt(CLUSTER_WAIT_TIME, opts.clusterWaitTime);
 
         setBoolean(RUN_LOCAL, opts.runLocal);
-        setBoolean(GAGE, opts.gage);
+
+        setBoolean(USE_EXISTING_CLUSTER, opts.useExistingCluster);
         if (opts.debugKmers != null)
             set(DEBUG_KMERS, opts.debugKmers);
         setBoolean(LOG_READIDS, opts.logReadIds);
@@ -486,7 +465,7 @@ public class GenomixJobConf extends JobConf {
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
         setInt(GRAPH_CLEAN_MAX_ITERATIONS, opts.graphCleanMaxIterations);
-        setLong(RANDOM_SEED, opts.randSeed);
+        setLong(RANDOM_SEED, opts.randomSeed);
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
         setFloat(REMOVE_LOW_COVERAGE_MAX_COVERAGE, opts.removeLowCoverage_maxCoverage);
         setInt(TIP_REMOVE_MAX_LENGTH, opts.tipRemove_maxLength);
@@ -494,9 +473,17 @@ public class GenomixJobConf extends JobConf {
         setInt(SCAFFOLDING_MAX_TRAVERSAL_LENGTH, opts.maxScaffoldingTraveralLength);
         setInt(SCAFFOLDING_VERTEX_MIN_COVERAGE, opts.minScaffoldingVertexMinCoverage);
         setInt(SCAFFOLDING_VERTEX_MIN_LENGTH, opts.minScaffoldingVertexMinLength);
+
+        setInt(STATS_EXPECTED_GENOMESIZE, opts.stats_expectedGenomeSize);
+        setInt(STATS_MIN_CONTIGLENGTH, opts.stats_minContigLength);
+        setInt(THREADS_PER_MACHINE, opts.threadsPerMachine);
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
+        
+        // read conf.xml
+        if (opts.extraConfFiles != null)
+            set(EXTRA_CONF_FILES, opts.extraConfFiles);
     }
 
     /**

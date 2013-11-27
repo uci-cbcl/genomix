@@ -55,7 +55,7 @@ public class VertexValueWritable extends Node {
     }
 
     public void setAsCopy(VertexValueWritable other) {
-        setNode(other.getNode());
+        setNode(other);
         state = other.getState();
         isFakeVertex = other.isFakeVertex();
         counters.clear();
@@ -163,7 +163,7 @@ public class VertexValueWritable extends Node {
                 verbose |= findEdge(problemKmer) != null;
             }
             if (verbose) {
-//                LOG.fine("VertexValue.readFields: " + toString());
+                LOG.fine("VertexValue.readFields: " + toString());
             }
         }
     }
@@ -176,16 +176,16 @@ public class VertexValueWritable extends Node {
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
 
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
-                verbose |= this.getInternalKmer().equals(problemKmer);
-                verbose |= findEdge(problemKmer) != null;
-            }
-            if (verbose) {
-//                LOG.fine("VertexValue.write: " + toString());
-            }
-        }
+//        if (DEBUG) {
+//            boolean verbose = false;
+//            for (VKmer problemKmer : problemKmers) {
+//                verbose |= this.getInternalKmer().equals(problemKmer);
+//                verbose |= findEdge(problemKmer) != null;
+//            }
+//            if (verbose) {
+////                LOG.fine("VertexValue.write: " + toString());
+//            }
+//        }
     }
 
     public int getDegree() {
@@ -216,14 +216,14 @@ public class VertexValueWritable extends Node {
 
     public void processFinalUpdates(EDGETYPE deleteDir, EDGETYPE updateDir, Node other) {
         EDGETYPE replaceDir = deleteDir.mirror();
-        this.getNode().updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
+        updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
     }
 
     /**
      * Process any changes to value. This is for merging. nodeToAdd should be only edge
      */
     public void processMerges(EDGETYPE mergeDir, Node node, int kmerSize) {
-        super.getNode().mergeWithNode(mergeDir, node);
+        mergeWithNode(mergeDir, node);
     }
 
     @Override

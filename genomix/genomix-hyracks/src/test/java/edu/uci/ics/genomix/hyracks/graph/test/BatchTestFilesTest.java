@@ -15,10 +15,7 @@
 package edu.uci.ics.genomix.hyracks.graph.test;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -40,9 +37,9 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager.ClusterType;
+import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.util.TestUtils;
 
 @RunWith(value = Parameterized.class)
 public class BatchTestFilesTest {
@@ -124,11 +121,10 @@ public class BatchTestFilesTest {
         manager = new GenomixClusterManager(true, conf);
         manager.setNumberOfNC(numberOfNC);
         manager.setNumberOfDataNodesInLocalMiniHDFS(numberOfNC);
-        manager.startCluster(ClusterType.HYRACKS);
-        manager.startCluster(ClusterType.HADOOP);
+        manager.startCluster();
 
-        driver = new GenomixHyracksDriver(GenomixClusterManager.LOCAL_HOSTNAME, GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT,
-                numPartitionPerMachine);
+        driver = new GenomixHyracksDriver(GenomixClusterManager.LOCAL_HOSTNAME,
+                GenomixClusterManager.LOCAL_HYRACKS_CLIENT_PORT, numPartitionPerMachine);
     }
 
     private void waitawhile() throws InterruptedException {
@@ -165,16 +161,15 @@ public class BatchTestFilesTest {
         Path path = new Path(resultFileName);
         GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH + File.separator + testFile.getName(), path
                 .getParent().toString());
-        GenerateGraphViz.convertBinToGraphViz(path.getParent().toString() + "/bin", path.getParent()
-                .toString() + "/graphviz", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
+        GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent().toString()
+                + "/graphviz", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
         TestUtils.compareFilesBySortingThemLineByLine(new File(resultFileName), new File(expectFileName));
     }
 
     @AfterClass
     public static void tearDown() throws Exception {
         if (manager != null) {
-            manager.stopCluster(ClusterType.HADOOP);
-            manager.stopCluster(ClusterType.HYRACKS);
+            manager.stopCluster();
         }
     }
 

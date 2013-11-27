@@ -1,0 +1,3 @@
+CGA	{FF:{AAC=[1, 2, 3]}	FR:{AAT=[1, 2, 3]}	RF:{CGA=[1, 2, 3]}	RR:{}	5':[], ~5':[]	kmer:CGA	cov:6.0x}
+AAC	{FF:{}	FR:{}	RF:{}	RR:{CGA=[1, 2, 3]}	5':[], ~5':[]	kmer:GAAC	cov:3.0x}
+AAT	{FF:{}	FR:{CGA=[1, 2, 3]}	RF:{}	RR:{}	5':[1-0_0,2-0_0,3-0_0], ~5':[]	kmer:AAATC	cov:3.0x}

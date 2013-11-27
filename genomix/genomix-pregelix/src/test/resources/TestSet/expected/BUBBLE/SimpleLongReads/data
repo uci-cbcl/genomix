@@ -1,0 +1,3 @@
+ACA	{FF:{AAC=[1, 2]}	FR:{}	RF:{}	RR:{AAT=[1, 2]}	5':[], ~5':[]	kmer:TACAA	cov:2.0x}
+AAC	{FF:{}	FR:{}	RF:{}	RR:{ACA=[1, 2]}	5':[], ~5':[]	kmer:AAC	cov:2.0x}
+AAT	{FF:{ACA=[1, 2]}	FR:{}	RF:{}	RR:{}	5':[1-0_0,2-0_0], ~5':[]	kmer:AATA	cov:2.0x}
