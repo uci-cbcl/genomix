@@ -149,7 +149,7 @@ public class BTreeSet implements Serializable {
     }
 
     public void save(IFrameWriter writer) throws HyracksDataException, IndexException {
-        ITreeIndexCursor scanCursor = btreeAccessor.createSearchCursor();
+        ITreeIndexCursor scanCursor = btreeAccessor.createSearchCursor(false);
         btreeAccessor.search(scanCursor, new RangePredicate(null, null, true, true, null, null));
         ByteBuffer outputBuffer = getBTreeManager().allocateFrame();
         FrameTupleAppender outputAppender = new FrameTupleAppender(getBTreeManager().getFrameSize());
@@ -187,7 +187,7 @@ public class BTreeSet implements Serializable {
     }
 
     public ITupleReference contains(RangePredicate searchPred) throws HyracksDataException, IndexException {
-        ITreeIndexCursor cursor = btreeAccessor.createSearchCursor();
+        ITreeIndexCursor cursor = btreeAccessor.createSearchCursor(false);
         btreeAccessor.search(cursor, searchPred);
         if (cursor.hasNext()) {
             cursor.next();
@@ -201,11 +201,11 @@ public class BTreeSet implements Serializable {
             return;
         }
         BTreeAccessor leftAccessor = this.btreeAccessor;
-        ITreeIndexCursor leftCursor = leftAccessor.createSearchCursor();
+        ITreeIndexCursor leftCursor = leftAccessor.createSearchCursor(false);
         leftAccessor.search(leftCursor, new RangePredicate(null, null, true, true, null, null));
 
         BTreeAccessor rightAccessor = rightSet.btreeAccessor;
-        ITreeIndexCursor rightCursor = rightAccessor.createSearchCursor();
+        ITreeIndexCursor rightCursor = rightAccessor.createSearchCursor(false);
         rightAccessor.search(rightCursor, new RangePredicate(null, null, true, true, null, null));
 
         RunFileWriter writer = new RunFileWriter(manager.newFileReference(), manager.getIOManager());
@@ -302,7 +302,7 @@ public class BTreeSet implements Serializable {
         ITreeIndexCursor scanCursor = smallerAccessor.createDiskOrderScanCursor();
         smallerAccessor.diskOrderScan(scanCursor);
 
-        ITreeIndexCursor searchCursor = larggerAccessor.createSearchCursor();
+        ITreeIndexCursor searchCursor = larggerAccessor.createSearchCursor(false);
 
         writer.open();
         long count = 0;
@@ -353,7 +353,7 @@ public class BTreeSet implements Serializable {
     }
 
     public ITreeIndexCursor createSortedOrderCursor() throws HyracksDataException, TreeIndexException {
-        ITreeIndexCursor scanCursor = btreeAccessor.createSearchCursor();
+        ITreeIndexCursor scanCursor = btreeAccessor.createSearchCursor(false);
         btreeAccessor.search(scanCursor, new RangePredicate(null, null, true, true, null, null));
         return scanCursor;
     }
