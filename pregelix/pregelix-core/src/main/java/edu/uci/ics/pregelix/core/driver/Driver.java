@@ -43,6 +43,7 @@ import edu.uci.ics.hyracks.api.job.JobFlag;
 import edu.uci.ics.hyracks.api.job.JobId;
 import edu.uci.ics.hyracks.api.job.JobSpecification;
 import edu.uci.ics.pregelix.api.job.ICheckpointHook;
+import edu.uci.ics.pregelix.api.job.IIterationCompleteReporterHook;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver;
@@ -116,6 +117,7 @@ public class Driver implements IDriver {
                         /** add hadoop configurations */
                         addHadoopConfiguration(currentJob, ipAddress, port, failed);
                         ICheckpointHook ckpHook = BspUtils.createCheckpointHook(currentJob.getConfiguration());
+                        IIterationCompleteReporterHook itCompleteHook = BspUtils.createIterationCompleteHook(currentJob.getConfiguration());
 
                         /** load the data */
                         if ((i == 0 || compatible(lastJob, currentJob)) && !failed) {
@@ -133,7 +135,7 @@ public class Driver implements IDriver {
 
                         /** run loop-body jobs */
                         runLoopBody(deploymentId, currentJob, jobGen, i, lastSnapshotJobIndex, lastSnapshotSuperstep,
-                                ckpHook, failed);
+                                ckpHook, failed, itCompleteHook);
                         runClearState(deploymentId, jobGen);
                         failed = false;
                     }
@@ -265,7 +267,8 @@ public class Driver implements IDriver {
     }
 
     private void runLoopBody(DeploymentId deploymentId, PregelixJob job, JobGen jobGen, int currentJobIndex,
-            IntWritable snapshotJobIndex, IntWritable snapshotSuperstep, ICheckpointHook ckpHook, boolean doRecovery)
+            IntWritable snapshotJobIndex, IntWritable snapshotSuperstep, ICheckpointHook ckpHook, boolean doRecovery, 
+            IIterationCompleteReporterHook itCompleteHook)
             throws Exception {
         if (doRecovery) {
             /** reload the checkpoint */
@@ -294,6 +297,7 @@ public class Driver implements IDriver {
                 snapshotJobIndex.set(currentJobIndex);
                 snapshotSuperstep.set(i);
             }
+            itCompleteHook.completeIteration(i, job);
             i++;
         } while (!terminate);
     }

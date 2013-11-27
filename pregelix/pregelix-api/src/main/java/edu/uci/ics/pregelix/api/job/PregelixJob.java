@@ -80,6 +80,8 @@ public class PregelixJob extends Job {
     public static final String RECOVERY_COUNT = "pregelix.recoveryCount";
     /** the checkpoint interval */
     public static final String CKP_INTERVAL = "pregelix.ckpinterval";
+    /** the iteration complete reporter hook */
+    public static final String ITERATION_COMPLETE_CLASS = "pregelix.iterationCompleteReporter";;
     /** comma */
     public static final String COMMA_STR = ",";
 
@@ -259,6 +261,16 @@ public class PregelixJob extends Job {
      */
     final public void setCheckpointingInterval(int ckpInterval) {
         getConfiguration().setInt(CKP_INTERVAL, ckpInterval);
+    }
+    
+    /**
+     * Users can provide an IIterationCompleteReporterHook implementation to perform actions 
+     * at the end of each iteration  
+     * 
+     * @param reporterClass
+     */
+    final public void setIterationCompleteReporterHook(Class<? extends IIterationCompleteReporterHook> reporterClass) {
+        getConfiguration().setClass(ITERATION_COMPLETE_CLASS, reporterClass, IIterationCompleteReporterHook.class);
     }
 
     @Override
