@@ -96,12 +96,13 @@ public class TipRemoveWithSearchVertex extends
                 stop = false;
                 incomingMsg.visitNode(node);
             }
-            if (stop) {
-                if (incomingMsg.getVisitedLength() < MIN_LENGTH_TO_KEEP) {
+            
+            if (incomingMsg.getVisitedLength() < MIN_LENGTH_TO_KEEP) {
+                if (stop) {
                     deleteVisitedNodes(incomingMsg);
+                } else {
+                    continueSearch(outDir, incomingMsg);
                 }
-            } else {
-                continueSearch(outDir, incomingMsg);
             }
         }
     }
