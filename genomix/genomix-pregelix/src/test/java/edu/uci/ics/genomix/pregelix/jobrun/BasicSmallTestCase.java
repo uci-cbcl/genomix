@@ -25,6 +25,7 @@ import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
@@ -36,9 +37,10 @@ import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
-import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.util.TestUtils;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
 import edu.uci.ics.pregelix.core.driver.Driver;
 import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
@@ -109,9 +111,7 @@ public class BasicSmallTestCase extends TestCase {
 
     public void generateStatisticsResult(String outPutDir) throws IOException {
         //convert Counters to string
-        HashMapWritable<ByteWritable, VLongWritable> counters = DeBruijnGraphCleanVertex
-                .readStatisticsCounterResult(job.getConfiguration());
-        String output = convertCountersToString(counters);
+        Counters counters = BspUtils.getCounters(job);
 
         //output Counters
         Configuration conf = new Configuration();
@@ -119,18 +119,8 @@ public class BasicSmallTestCase extends TestCase {
 
         fileSys.create(new Path(outPutDir));
         BufferedWriter bw = new BufferedWriter(new FileWriter(outPutDir));
-        bw.write(output);
+        bw.write(counters.toString());
         bw.close();
-    }
-
-    public String convertCountersToString(HashMapWritable<ByteWritable, VLongWritable> counters) {
-        String output = "";
-        for (ByteWritable counterName : counters.keySet()) {
-            output += StatisticsCounter.COUNTER_CONTENT.getContent(counterName.get());
-            output += ": ";
-            output += counters.get(counterName).toString() + "\n";
-        }
-        return output;
     }
 
     public String toString() {
