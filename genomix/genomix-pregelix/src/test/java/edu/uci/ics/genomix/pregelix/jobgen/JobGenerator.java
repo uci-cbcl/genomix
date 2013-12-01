@@ -9,6 +9,8 @@ import org.apache.commons.io.FileUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.extractsubgraph.ExtractSubgraphVertex;
+import edu.uci.ics.genomix.pregelix.format.BubbleMergeWithSearchVertexToNodeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToBubbleMergeWithSearchVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
@@ -212,6 +214,8 @@ public class JobGenerator {
     private static void generateBubbleMergeWithSearchGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = BubbleMergeWithSearchVertex.getConfiguredJob(new GenomixJobConf(3),
                 BubbleMergeWithSearchVertex.class);
+        job.setVertexInputFormatClass(NodeToBubbleMergeWithSearchVertexInputFormat.class);
+        job.setVertexOutputFormatClass(BubbleMergeWithSearchVertexToNodeOutputFormat.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

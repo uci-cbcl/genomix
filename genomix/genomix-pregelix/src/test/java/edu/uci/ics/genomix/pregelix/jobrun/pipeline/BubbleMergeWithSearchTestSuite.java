@@ -7,7 +7,7 @@ public class BubbleMergeWithSearchTestSuite extends BasicGraphCleanTestSuite {
 
     public static Test suite() throws Exception {
         String pattern = "BUBBLE_WITH_SEARCH";
-        String testSet[] = { "" };
+        String testSet[] = { "TwoSimilarInTwo" };
         init(pattern, testSet);
         BasicGraphCleanTestSuite testSuite = new BasicGraphCleanTestSuite();
         return makeTestSuite(testSuite);
