@@ -377,7 +377,6 @@ public class BTreeSet implements Serializable {
 
         protected IBufferCache bufferCache;
         protected IFileMapProvider fileMapProvider;
-        protected FileReference file;
         protected IOManager ioManager;
         protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
 
