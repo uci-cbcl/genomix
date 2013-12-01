@@ -15,6 +15,7 @@ import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeWithSearchVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
@@ -208,6 +209,16 @@ public class JobGenerator {
         generateBubbleMergeGraphJob("BubbleMergeGraph", outputBase + "BUBBLE.xml");
     }
 
+    private static void generateBubbleMergeWithSearchGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = BubbleMergeWithSearchVertex.getConfiguredJob(new GenomixJobConf(3),
+                BubbleMergeWithSearchVertex.class);
+        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
+    }
+
+    private static void genBubbleMergeWithSearchGraph() throws IOException {
+        generateBubbleMergeWithSearchGraphJob("BubbleMergeWithSearchGraph", outputBase + "BUBBLEWITHSEARCH.xml");
+    }
+
     private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = SplitRepeatVertex.getConfiguredJob(new GenomixJobConf(3), SplitRepeatVertex.class);
         job.getConfiguration().setLong(GenomixJobConf.RANDOM_SEED, 500);
@@ -240,6 +251,7 @@ public class JobGenerator {
         genBridgeRemoveGraph();
         genBubbleAddGraph();
         genBubbleMergeGraph();
+        genBubbleMergeWithSearchGraph();
         genSplitRepeatGraph();
         getBFSTraverseGraph();
         genScaffoldingGraph();
