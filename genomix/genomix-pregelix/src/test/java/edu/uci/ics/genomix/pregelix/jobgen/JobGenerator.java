@@ -216,7 +216,7 @@ public class JobGenerator {
     }
 
     private static void genBubbleMergeWithSearchGraph() throws IOException {
-        generateBubbleMergeWithSearchGraphJob("BubbleMergeWithSearchGraph", outputBase + "BUBBLEWITHSEARCH.xml");
+        generateBubbleMergeWithSearchGraphJob("BubbleMergeWithSearchGraph", outputBase + "BUBBLE_WITH_SEARCH.xml");
     }
 
     private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
