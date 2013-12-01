@@ -43,7 +43,7 @@ public class BubbleMergeWithSearchVertex extends
     }
 
     public void beginBFS() {
-        BubbleMergeWithSearchVertexValueWritable vertex = new BubbleMergeWithSearchVertexValueWritable();
+        BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
         int internalKmerLength = vertex.getInternalKmer().getKmerLetterLength();
         if (internalKmerLength > MAX_BFS_LENGTH)
             return;
@@ -72,7 +72,7 @@ public class BubbleMergeWithSearchVertex extends
     }
 
     public void continueBFS(Iterator<BubbleMergeWithSearchMessage> msgIterator) {
-        BubbleMergeWithSearchVertexValueWritable vertex = new BubbleMergeWithSearchVertexValueWritable();
+        BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
         while (msgIterator.hasNext()) {
             BubbleMergeWithSearchMessage incomingMsg = msgIterator.next();
 
@@ -212,16 +212,13 @@ public class BubbleMergeWithSearchVertex extends
         initVertex();
         if (getSuperstep() == 1) {
             /** begin BFS in source vertices **/
-            beginBFS();
+            if(getVertexId().toString().equals("AAC"))
+                beginBFS();
         } else if (getSuperstep() >= 2) {
             /** continue BFS **/
             continueBFS(msgIterator);
         }
         voteToHalt();
-    }
-
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, BubbleMergeWithSearchVertex.class));
     }
 
 }

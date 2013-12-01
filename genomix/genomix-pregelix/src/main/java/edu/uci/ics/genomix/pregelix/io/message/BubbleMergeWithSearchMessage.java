@@ -15,7 +15,8 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         public static final byte PRE_KMER_LENGTH = 1 << 1;
         public static final byte INTERNAL_KMER = 1 << 2;
         public static final byte PATH_LIST = 1 << 3;
-        public static final byte NUM_BRANCHES = 1 << 4;
+        public static final byte EDGETYPE_LIST = 1 << 4;
+        public static final byte NUM_BRANCHES = 1 << 5; 
     }
 
     private Long preKmerLength;
@@ -109,6 +110,9 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.PATH_LIST) != 0) {
             pathList.readFields(in);
         }
+        if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.EDGETYPE_LIST) != 0) {
+            edgeTypeList.readFields(in);
+        }
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.NUM_BRANCHES) != 0) {
             numBranches = in.readInt();
         }
@@ -126,6 +130,9 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         if (pathList != null) {
             pathList.write(out);
         }
+        if(edgeTypeList != null){
+            edgeTypeList.write(out);
+        }
         if (numBranches != null) {
             out.writeInt(numBranches);
         }
@@ -142,6 +149,9 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         }
         if (pathList != null) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.PATH_LIST;
+        }
+        if (edgeTypeList != null) {
+            messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.EDGETYPE_LIST;
         }
         if (numBranches != null) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.NUM_BRANCHES;
