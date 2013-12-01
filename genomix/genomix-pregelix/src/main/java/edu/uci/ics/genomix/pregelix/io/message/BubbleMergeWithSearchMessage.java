@@ -4,6 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
+import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
@@ -19,6 +21,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     private Long preKmerLength;
     private VKmer internalKmer;
     private VKmerList pathList;
+    private ArrayListWritable<EDGETYPE> edgeTypeList;
     private Integer numBranches;
 
     public BubbleMergeWithSearchMessage() {
@@ -27,6 +30,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         internalKmer = null;
         pathList = null;
         numBranches = null;
+        edgeTypeList = null;
     }
 
     @Override
@@ -36,6 +40,61 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         internalKmer = null;
         pathList = null;
         numBranches = null;
+        edgeTypeList = null;
+    }
+    
+    public Long getPreKmerLength() {
+        if(preKmerLength == null)
+            preKmerLength = new Long(0);
+        return preKmerLength;
+    }
+
+    public void setPreKmerLength(Long preKmerLength) {
+        this.preKmerLength = new Long(preKmerLength);
+    }
+
+    public VKmer getInternalKmer() {
+        if(internalKmer == null)
+            internalKmer = new VKmer();
+        return internalKmer;
+    }
+
+    public void setInternalKmer(VKmer internalKmer) {
+        getInternalKmer().setAsCopy(internalKmer);
+    }
+
+    public VKmerList getPathList() {
+        if(pathList == null)
+            pathList = new VKmerList();
+        return pathList;
+    }
+
+    public void setPathList(VKmerList pathList) {
+        getPathList().setCopy(pathList);
+    }
+    
+    public ArrayListWritable<EDGETYPE> getEdgeTypeList() {
+        if(edgeTypeList == null)
+            edgeTypeList = new ArrayListWritable<EDGETYPE>();
+        return edgeTypeList;
+    }
+
+    public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList) {
+        if(edgeTypeList != null){
+            for(EDGETYPE et : edgeTypeList){
+                getEdgeTypeList().add(et);
+            }
+        }
+    }
+
+    public Integer getNumBranches() {
+        if(numBranches == null)
+            numBranches = new Integer(0);
+        return numBranches;
+    }
+
+    public void setNumBranches(Integer numBranches) {
+        this.numBranches = new Integer(numBranches);
     }
 
     @Override
