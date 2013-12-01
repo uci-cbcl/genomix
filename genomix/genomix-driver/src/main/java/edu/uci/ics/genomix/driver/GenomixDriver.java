@@ -50,6 +50,7 @@ import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
+import edu.uci.ics.genomix.pregelix.operator.scaffolding.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
@@ -131,6 +132,9 @@ public class GenomixDriver {
                 break;
             case SCAFFOLD:
                 pregelixJobs.add(ScaffoldingVertex.getConfiguredJob(conf, ScaffoldingVertex.class));
+                break;
+            case RAY_SCAFFOLD:
+                pregelixJobs.add(ScaffoldingVertex.getConfiguredJob(conf, RayVertex.class));
                 break;
             case DUMP_FASTA:
                 flushPendingJobs(conf);

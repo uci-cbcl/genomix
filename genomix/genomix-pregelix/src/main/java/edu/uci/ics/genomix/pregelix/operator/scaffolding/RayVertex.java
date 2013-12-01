@@ -2,13 +2,16 @@ package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.BasicBFSTraverseVertex.SEARCH_TYPE;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
@@ -16,23 +19,25 @@ import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, RayScaffoldingMessage>{
-	public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = -1;
+	public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = 50;
 	//public int K = 21;
 	//private ArrayList<VKmer> neighbors;
 	//private boolean startPoint;
 	//private boolean preVisited;
 	// VKmer lastKmerInWalk;
-
+	private static final Logger LOG = Logger.getLogger(TipRemoveVertex.class.getName());
+	
 	public void initVertex(){	
 		///Complete this!
 		if (kmerSize == -1){
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
 		}
 		
+		/*
         if (SCAFFOLDING_VERTEX_MIN_COVERAGE < 0){
             SCAFFOLDING_VERTEX_MIN_COVERAGE = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.SCAFFOLDING_VERTEX_MIN_COVERAGE));
-        }
+        }*/
         
 		if (outgoingMsg == null) {
             outgoingMsg = new RayScaffoldingMessage();
@@ -62,7 +67,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 		}
 		//if there is just one neighbor?
 		for (EDGETYPE et : direction.edgeTypes()){
-			for (VKmer neighbor : getVertexValue().getEdgeMap(et).keySet()) {
+			for (VKmer neighbor : getVertexValue().getEdges(et)) {
 				sendMsgToNeighbor(neighbor, et);	
 				//I'm  not sure if we need to keep this edgetype
 			}
@@ -101,20 +106,25 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 		return offset;
 	}	
 	
-	public boolean checkedDistance(ReadHeadInfo read, VKmer neighbor){
+	public boolean checkedDistance(ReadHeadInfo readHead, VKmer neighbor){
 		//if neighbor exist in read table
 		//How to work with a read?
-		read.getReadId();
-		read.getOffset();
-		int neighborPositionOnRead = getVertexValue().walkSize - getVertexValue().index + read.indexOf(getVertexId().toString()) + 1;
+		int neighborPositionOnRead = getVertexValue().walkSize - getVertexValue().index  + 1;
 		///I know!!
-		if(read.indexOf(neighbor.toString()) == neighborPositionOnread ){
+		if(indexOfKmerOnRead(readHead, neighbor) == neighborPositionOnRead ){
 			return true;
 		}else{
 			return false;
 		}
 	}	
 	
+	public int indexOfKmerOnRead(ReadHeadInfo readHead , VKmer kmer){
+		int index;
+		String read = readHead.getThisReadSequence().toString();
+		String stringKmer = kmer.toString();
+		index = read.toLowerCase().indexOf(stringKmer.toLowerCase());
+		return index;
+	}
 	
 		//compute the rules , add new sentence in each step	
 	public void rules_add(int offset){
@@ -138,7 +148,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
             	getVertexValue().startFlag = incomingMsg.getStartFlag();
             }
             else if (incomingMsg.getRemoveEdgesFlag()){
-            	getVertexValue().getEdgeMap(incomingMsg.getEdgeType().mirror()).remove(incomingMsg.getKmer());
+            	getVertexValue().getEdges(incomingMsg.getEdgeType().mirror()).remove(incomingMsg.getKmer());
             }
         }
 	}
@@ -232,7 +242,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 			if ((m * ruleA < incomingMsg.getRuleA()) && (m * ruleB <  incomingMsg.getRuleB()) && (m * ruleC < incomingMsg.getRuleC())){
 				sendRemoveEdgesMsgToLoser(winner, edge);
 				//Is this the right way?
-				getVertexValue().getEdgeMap(incomingMsg.getEdgeType()).remove(incomingMsg.getKmer());
+				getVertexValue().getEdges(incomingMsg.getEdgeType()).remove(incomingMsg.getKmer());
 				winner = incomingMsg.getKmer();
 				ruleA = incomingMsg.getRuleA();
 				ruleB = incomingMsg.getRuleB();
@@ -272,7 +282,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             if (incomingMsg.getRemoveEdgesFlag()){
-            	getVertexValue().getEdgeMap(incomingMsg.getEdgeType().mirror()).remove(incomingMsg.getKmer());
+            	getVertexValue().getEdges(incomingMsg.getEdgeType().mirror()).remove(incomingMsg.getKmer());
             }	//getVertexValue().processDelete(neighborToDeleteEdgetype, keyToDelete);
         }
 	}
@@ -291,15 +301,18 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	}
 	
 	public void scaffold(Iterator<RayScaffoldingMessage> msgIterator){
-		
+		System.out.print("**test**");
+		LOG.fine("SCAFFOLDING");
 		if (getVertexValue().getAverageCoverage() > SCAFFOLDING_VERTEX_MIN_COVERAGE){
 			initVertex();
+			
 		} else {
 			voteToHalt();
 		}
+		/*
 		if (!getVertexValue().doneFlag){
 			if (getSuperstep() == 1) {
-				sendMsgToBranches(DIR.FORWARD, msgIterator);
+				sendMsgToBranches();
 	        } else if (getSuperstep() == 2){
 	        	//Next Step you are that neighbor
 	    		sendMsgToWalkVertices(msgIterator);
@@ -317,7 +330,7 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	        	//Again you are the neighbor and you need to remove those extra edges
 	    		removeLoserEdges(msgIterator);	
 	        }
-		}
+		}*/
 			
 			
 	}
@@ -326,7 +339,12 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	@Override
 	public void compute(Iterator<RayScaffoldingMessage> msgIterator) throws Exception {
 		// TODO Auto-generated method stub
+		
+		scaffold(msgIterator);
 	}
 	
+	public static void main(String[] args) throws Exception {
+        Client.run(args, getConfiguredJob(null, RayVertex.class));
+    }
 
 }

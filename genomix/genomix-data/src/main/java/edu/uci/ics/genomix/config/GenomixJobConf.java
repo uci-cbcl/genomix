@@ -169,6 +169,7 @@ public class GenomixJobConf extends JobConf {
         LOW_COVERAGE,
         TIP_REMOVE,
         SCAFFOLD,
+        RAY_SCAFFOLD,
         SPLIT_REPEAT,
         DUMP_FASTA,
         CHECK_SYMMETRY,
