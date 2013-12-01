@@ -216,6 +216,7 @@ public class JobGenerator {
                 BubbleMergeWithSearchVertex.class);
         job.setVertexInputFormatClass(NodeToBubbleMergeWithSearchVertexInputFormat.class);
         job.setVertexOutputFormatClass(BubbleMergeWithSearchVertexToNodeOutputFormat.class);
+        job.getConfiguration().setInt(GenomixJobConf.BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, 100);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

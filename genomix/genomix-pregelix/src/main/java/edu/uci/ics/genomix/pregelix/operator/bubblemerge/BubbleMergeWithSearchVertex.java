@@ -31,8 +31,8 @@ public class BubbleMergeWithSearchVertex extends
     public void initVertex() {
         super.initVertex();
         if (MAX_BFS_LENGTH < 0)
-            MAX_BFS_LENGTH = Float.parseFloat(getContext().getConfiguration().get(
-                    GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
+            MAX_BFS_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH));
         if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeWithSearchMessage();
         StatisticsAggregator.preGlobalCounters.clear();
