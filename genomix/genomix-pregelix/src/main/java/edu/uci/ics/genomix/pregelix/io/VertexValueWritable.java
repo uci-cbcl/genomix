@@ -20,17 +20,24 @@ public class VertexValueWritable extends Node {
     private static final long serialVersionUID = 1L;
 
     public static class VertexStateFlag {
-        
+
         // general case, marking it as NORMAL_NODE
-        public static final byte NORMAL_NODE = 0b1 << 6; 
+        public static final byte NORMAL_NODE = 0b1 << 6;
         // ERROR_NODE is used in SymmetryChecker, if the vertex exists error, marking it as ERROR_NODE
-        public static final byte ERROR_NODE = 0b1 << 6; 
+        public static final byte ERROR_NODE = 0b1 << 6;
         // KEEP_NODE is used in ExtractSubgraph, if the vertex is extracted, marking it as KEEP_NODE
-        public static final byte KEEP_NODE = 0b1 << 6; 
+        public static final byte KEEP_NODE = 0b1 << 6;
         // DEAD_NODE is used in RemoveLowcoverage, if the vertex is deleted, marking it as DEAD_NODE
-        public static final byte DEAD_NODE = 0b1 << 6; 
-        
+        public static final byte DEAD_NODE = 0b1 << 6;
+
         public static final byte VERTEX_MASK = 0b1 << 6;
+
+        // UPDATE_PATH_TO_NEXT, END_NOTICE_TO_SRC and UPDATE_BRANCH_TO_SRC are used in BubbleMergeWithSearch
+        public static final byte UPDATE_PATH_IN_NEXT = 0b01 << 4;
+        public static final byte END_NOTICE_IN_SRC = 0b10 << 4;
+        public static final byte UPDATE_BRANCH_IN_SRC = 0b11 << 4;
+        
+        public static final byte BUBBLE_WITH_SEARCH_FLAG_MASK = 0b11 << 4;
     }
 
     public static class State extends VertexStateFlag {
@@ -176,16 +183,16 @@ public class VertexValueWritable extends Node {
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
 
-//        if (DEBUG) {
-//            boolean verbose = false;
-//            for (VKmer problemKmer : problemKmers) {
-//                verbose |= this.getInternalKmer().equals(problemKmer);
-//                verbose |= findEdge(problemKmer) != null;
-//            }
-//            if (verbose) {
-////                LOG.fine("VertexValue.write: " + toString());
-//            }
-//        }
+        //        if (DEBUG) {
+        //            boolean verbose = false;
+        //            for (VKmer problemKmer : problemKmers) {
+        //                verbose |= this.getInternalKmer().equals(problemKmer);
+        //                verbose |= findEdge(problemKmer) != null;
+        //            }
+        //            if (verbose) {
+        ////                LOG.fine("VertexValue.write: " + toString());
+        //            }
+        //        }
     }
 
     public int getDegree() {
