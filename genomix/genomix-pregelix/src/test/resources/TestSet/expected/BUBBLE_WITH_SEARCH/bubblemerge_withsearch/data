@@ -1,0 +1,3 @@
+TAA	{FF:{AAC=[2]}	FR:null	RF:null	RR:null	5':[2-0_0], ~5':null	kmer:TAA	cov:1.0x}
+AAC	{FF:{ACT=[2]}	FR:null	RF:null	RR:{TAA=[2]}	5':[1-0_0], ~5':null	kmer:TAACACCT	cov:2.0x}
+ACT	{FF:null	FR:null	RF:null	RR:{AAC=[2]}	5':null, ~5':null	kmer:ACT	cov:1.0x}
