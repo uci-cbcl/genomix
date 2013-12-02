@@ -17,9 +17,11 @@ import edu.uci.ics.genomix.type.VKmerList;
  * Graph clean pattern: Bubble Merge With Search
  * Ex.      B - C - D - E - F - G  
  *      A - B - H ------------- G
+ * From this example, CDEF and H are formed bubble and B and G are two end points of this bubble.
  * For this operator,
- *     1. it starts BFSearching from start point B, and then it will collect all the valid paths to B
- *     2. compare all the valid paths with its own startHead and pick one path which is enough similar
+ *     1. it starts BFSearching from start point B, and then it will collect all the valid paths(BCDEFG and BHG) to B
+ *     2. compare all the valid paths with its own startHeads and pick one path which is enough similar so that we 
+ *     have confidence to say this path is the correct path and others are noice
  *     3. keep this similar path and merge the path nodes in B
  *     4. delete all path nodes and the corresponding edges with these path nodes 
  */
