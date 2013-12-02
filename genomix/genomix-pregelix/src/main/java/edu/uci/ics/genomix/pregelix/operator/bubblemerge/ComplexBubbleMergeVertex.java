@@ -14,7 +14,6 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -80,8 +79,8 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
             String random = generaterRandomDNAString(kmerSize + 1);
             fakeVertex.setFromStringBytes(kmerSize + 1, random.getBytes(), 0);
         }
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
+        //        if (getSuperstep() == 1)
+        //            StatisticsAggregator.preGlobalCounters.clear();
         //        else
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();

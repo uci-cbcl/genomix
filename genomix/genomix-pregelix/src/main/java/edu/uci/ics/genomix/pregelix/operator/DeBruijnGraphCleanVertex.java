@@ -45,8 +45,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     // validPathsTable: a table representing the set of edge types forming a valid path from
     //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
     //                 the second
-    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
-            { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
+    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF },
+            { EDGETYPE.RF, EDGETYPE.FR }, { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
 
     protected M outgoingMsg = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable();
@@ -91,9 +91,19 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
 
         verbose = false;
         for (VKmer problemKmer : problemKmers) {
-            verbose |= debug
-                    && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+            verbose |= debug && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
         }
+    }
+
+    /**
+     * set statistics counter
+     */
+    public void updateStatisticsCounter(byte counterName) {
+        ByteWritable counterNameWritable = new ByteWritable(counterName);
+        if (counters.containsKey(counterNameWritable))
+            counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);
+        else
+            counters.put(counterNameWritable, new VLongWritable(1));
     }
 
     /**
@@ -149,9 +159,9 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      */
     public static HashMapWritable<ByteWritable, VLongWritable> readStatisticsCounterResult(Configuration conf) {
         try {
-            VertexValueWritable value = (VertexValueWritable) IterationUtils.readGlobalAggregateValue(conf,
+            HashMapWritable<ByteWritable, VLongWritable> counters = (HashMapWritable<ByteWritable, VLongWritable>)IterationUtils.readGlobalAggregateValue(conf,
                     BspUtils.getJobId(conf), StatisticsAggregator.class.getName());
-            return value.getCounters();
+            return counters;
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }

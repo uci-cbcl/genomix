@@ -12,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -47,7 +46,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
         if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeMessage();
-        StatisticsAggregator.preGlobalCounters.clear();
+        //        StatisticsAggregator.preGlobalCounters.clear();
         //        else
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
         counters.clear();
@@ -62,10 +61,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
         if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer)) {
-            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n"
-                    + "forwardKmer is " + forwardNeighbor.kmer + "\n"
-                    + "reverseKmer is " + reverseNeighbor.kmer + "\n"
-                    + "this vertex is " + getVertexId() + ", value: " + getVertexValue());
+            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n" + "forwardKmer is "
+                    + forwardNeighbor.kmer + "\n" + "reverseKmer is " + reverseNeighbor.kmer + "\n" + "this vertex is "
+                    + getVertexId() + ", value: " + getVertexValue());
             return;
         }
 
