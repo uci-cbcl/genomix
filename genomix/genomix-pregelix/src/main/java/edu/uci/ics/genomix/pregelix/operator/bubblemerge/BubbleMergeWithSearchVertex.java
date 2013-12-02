@@ -66,6 +66,9 @@ public class BubbleMergeWithSearchVertex extends
         outgoingMsg.setFlag(State.UPDATE_PATH_IN_NEXT);
         for (EDGETYPE et : EDGETYPE.OUTGOING) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                ArrayListWritable<EDGETYPE> edgeTypeList = new ArrayListWritable<EDGETYPE>();
+                edgeTypeList.add(et);
+                outgoingMsg.setEdgeTypeList(edgeTypeList);
                 sendMsg(dest, outgoingMsg);
             }
         }

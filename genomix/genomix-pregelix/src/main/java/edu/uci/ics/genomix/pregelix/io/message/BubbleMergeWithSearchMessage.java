@@ -82,6 +82,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
 
     public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList) {
         if(edgeTypeList != null){
+            getEdgeTypeList().clear();
             for(EDGETYPE et : edgeTypeList){
                 getEdgeTypeList().add(et);
             }
@@ -102,19 +103,19 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.PRE_KMER_LENGTH) != 0) {
-            preKmerLength = in.readLong();
+            setPreKmerLength(in.readLong());
         }
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.INTERNAL_KMER) != 0) {
-            internalKmer.readFields(in);
+            getInternalKmer().readFields(in);
         }
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.PATH_LIST) != 0) {
-            pathList.readFields(in);
+            getPathList().readFields(in);
         }
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.EDGETYPE_LIST) != 0) {
-            edgeTypeList.readFields(in);
+            getEdgeTypeList().readFields(in);
         }
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.NUM_BRANCHES) != 0) {
-            numBranches = in.readInt();
+            setNumBranches(in.readInt());
         }
     }
 
