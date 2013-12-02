@@ -3,10 +3,10 @@ package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeWithSearchVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
+import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeWithSearchMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
@@ -62,11 +62,14 @@ public class BubbleMergeWithSearchVertex extends
         VKmer internalKmer = new VKmer();
         internalKmer.setAsCopy(vertex.getInternalKmer());
         outgoingMsg.setInternalKmer(internalKmer);
-
+        
+        // update preKmerLength
+        outgoingMsg.setPreKmerLength(internalKmer.getKmerLetterLength());
+        
         outgoingMsg.setFlag(State.UPDATE_PATH_IN_NEXT);
         for (EDGETYPE et : EDGETYPE.OUTGOING) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
-                ArrayListWritable<EDGETYPE> edgeTypeList = new ArrayListWritable<EDGETYPE>();
+                EdgeTypeList edgeTypeList = new EdgeTypeList();
                 edgeTypeList.add(et);
                 outgoingMsg.setEdgeTypeList(edgeTypeList);
                 sendMsg(dest, outgoingMsg);
@@ -80,7 +83,7 @@ public class BubbleMergeWithSearchVertex extends
             BubbleMergeWithSearchMessage incomingMsg = msgIterator.next();
 
             // get msg flag
-            byte flag = (byte) (vertex.getState() & State.BUBBLE_WITH_SEARCH_FLAG_MASK);
+            byte flag = (byte) (incomingMsg.getFlag() & State.BUBBLE_WITH_SEARCH_FLAG_MASK);
 
             if (flag == State.UPDATE_PATH_IN_NEXT) {
                 updatePathInNextNode(incomingMsg);
@@ -102,7 +105,7 @@ public class BubbleMergeWithSearchVertex extends
         BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
         int internalKmerLength = vertex.getInternalKmer().getKmerLetterLength();
         VKmer source = incomingMsg.getPathList().getPosition(0);
-        if (internalKmerLength + incomingMsg.getPreKmerLength() > MAX_BFS_LENGTH) {
+        if (internalKmerLength + incomingMsg.getPreKmerLength() - kmerSize + 1 > MAX_BFS_LENGTH) {
             // send back to source vertex (pathList and internalKmer)
             outgoingMsg.reset();
             outgoingMsg.setPathList(incomingMsg.getPathList());
@@ -141,7 +144,7 @@ public class BubbleMergeWithSearchVertex extends
                     outgoingMsg.setInternalKmer(internalKmer);
 
                     // update edgeTypes
-                    ArrayListWritable<EDGETYPE> edgeTypes = incomingMsg.getEdgeTypeList();
+                    EdgeTypeList edgeTypes = incomingMsg.getEdgeTypeList();
                     edgeTypes.add(et);
                     outgoingMsg.setEdgeTypeList(edgeTypes);
 
@@ -215,7 +218,7 @@ public class BubbleMergeWithSearchVertex extends
         initVertex();
         if (getSuperstep() == 1) {
             /** begin BFS in source vertices **/
-            if(getVertexId().toString().equals("AAC"))
+            if (getVertexId().toString().equals("AAC"))
                 beginBFS();
         } else if (getSuperstep() >= 2) {
             /** continue BFS **/

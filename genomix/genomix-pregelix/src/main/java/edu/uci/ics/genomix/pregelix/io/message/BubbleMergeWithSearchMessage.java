@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
+import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
@@ -19,10 +20,10 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         public static final byte NUM_BRANCHES = 1 << 5; 
     }
 
-    private Long preKmerLength;
+    private Integer preKmerLength;
     private VKmer internalKmer;
     private VKmerList pathList;
-    private ArrayListWritable<EDGETYPE> edgeTypeList;
+    private EdgeTypeList edgeTypeList;
     private Integer numBranches;
 
     public BubbleMergeWithSearchMessage() {
@@ -44,14 +45,14 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         edgeTypeList = null;
     }
     
-    public Long getPreKmerLength() {
+    public Integer getPreKmerLength() {
         if(preKmerLength == null)
-            preKmerLength = new Long(0);
+            preKmerLength = new Integer(0);
         return preKmerLength;
     }
 
-    public void setPreKmerLength(Long preKmerLength) {
-        this.preKmerLength = new Long(preKmerLength);
+    public void setPreKmerLength(Integer preKmerLength) {
+        this.preKmerLength = new Integer(preKmerLength);
     }
 
     public VKmer getInternalKmer() {
@@ -74,13 +75,13 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         getPathList().setCopy(pathList);
     }
     
-    public ArrayListWritable<EDGETYPE> getEdgeTypeList() {
+    public EdgeTypeList getEdgeTypeList() {
         if(edgeTypeList == null)
-            edgeTypeList = new ArrayListWritable<EDGETYPE>();
+            edgeTypeList = new EdgeTypeList();
         return edgeTypeList;
     }
 
-    public void setEdgeTypeList(ArrayListWritable<EDGETYPE> edgeTypeList) {
+    public void setEdgeTypeList(EdgeTypeList edgeTypeList) {
         if(edgeTypeList != null){
             getEdgeTypeList().clear();
             for(EDGETYPE et : edgeTypeList){
@@ -103,7 +104,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.PRE_KMER_LENGTH) != 0) {
-            setPreKmerLength(in.readLong());
+            setPreKmerLength(in.readInt());
         }
         if ((messageFields & BUBBLEMERGE_WITH_SEARCH_FIELDS.INTERNAL_KMER) != 0) {
             getInternalKmer().readFields(in);
@@ -123,7 +124,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     public void write(DataOutput out) throws IOException {
         super.write(out);
         if (preKmerLength != null) {
-            out.writeLong(preKmerLength);
+            out.writeInt(preKmerLength);
         }
         if (internalKmer != null) {
             internalKmer.write(out);
