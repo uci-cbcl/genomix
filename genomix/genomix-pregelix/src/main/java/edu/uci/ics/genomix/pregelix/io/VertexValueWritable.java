@@ -46,7 +46,6 @@ public class VertexValueWritable extends Node {
 
     private short state;
     private boolean isFakeVertex;
-    private HashMapWritable<ByteWritable, VLongWritable> counters;
     
     protected boolean verbose = false;
 
@@ -54,15 +53,12 @@ public class VertexValueWritable extends Node {
         super();
         state = 0;
         isFakeVertex = false;
-        counters = new HashMapWritable<ByteWritable, VLongWritable>();
     }
 
     public void setAsCopy(VertexValueWritable other) {
         setNode(other);
         state = other.getState();
         isFakeVertex = other.isFakeVertex();
-        counters.clear();
-        counters.putAll(other.getCounters());
     }
 
     public boolean isValidScaffoldingSearchNode() {
@@ -134,20 +130,10 @@ public class VertexValueWritable extends Node {
         this.state = state;
     }
 
-    public HashMapWritable<ByteWritable, VLongWritable> getCounters() {
-        return counters;
-    }
-
-    public void setCounters(HashMapWritable<ByteWritable, VLongWritable> counters) {
-        this.counters.clear();
-        this.counters.putAll(counters);
-    }
-
     public void reset() {
         super.reset();
         this.state = 0;
         this.isFakeVertex = false;
-        this.counters.clear();
     }
 
     @Override
