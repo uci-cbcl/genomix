@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
+import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
@@ -19,14 +20,14 @@ public class BubbleMergeWithSearchVertexValueWritable extends VertexValueWritabl
 
     private ArrayListWritable<VKmerList> arrayOfPathList;
     private ArrayListWritable<VKmer> arrayOfInternalKmer;
-    private ArrayListWritable<ArrayListWritable<EDGETYPE>> arrayOfEdgeTypes;
+    private ArrayListWritable<EdgeTypeList> arrayOfEdgeTypes;
     private Integer numBranches;
 
     public BubbleMergeWithSearchVertexValueWritable() {
         super();
         arrayOfPathList = new ArrayListWritable<VKmerList>();
         arrayOfInternalKmer = new ArrayListWritable<VKmer>();
-        arrayOfEdgeTypes = new ArrayListWritable<ArrayListWritable<EDGETYPE>>();
+        arrayOfEdgeTypes = new ArrayListWritable<EdgeTypeList>();
         numBranches = 0;
     }
 
@@ -52,11 +53,11 @@ public class BubbleMergeWithSearchVertexValueWritable extends VertexValueWritabl
         this.arrayOfInternalKmer.addAll(arrayOfInternalKmer);
     }
 
-    public ArrayListWritable<ArrayListWritable<EDGETYPE>> getArrayOfEdgeTypes() {
+    public ArrayListWritable<EdgeTypeList> getArrayOfEdgeTypes() {
         return arrayOfEdgeTypes;
     }
 
-    public void setArrayOfEdgeTypes(ArrayListWritable<ArrayListWritable<EDGETYPE>> arrayOfEdgeType) {
+    public void setArrayOfEdgeTypes(ArrayListWritable<EdgeTypeList> arrayOfEdgeType) {
         this.arrayOfEdgeTypes.clear();
         this.arrayOfEdgeTypes.addAll(arrayOfEdgeType);
     }
