@@ -5,7 +5,6 @@ import java.util.Iterator;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeWithSearchVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeWithSearchMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
@@ -115,25 +114,25 @@ public class BubbleMergeWithSearchVertex extends
             sendMsg(source, outgoingMsg);
         } else {
             outgoingMsg.reset();
-            
+
             // update pathList
             VKmerList pathList = incomingMsg.getPathList();
             pathList.append(getVertexId());
             outgoingMsg.setPathList(pathList);
-            
+
             EdgeTypeList edgeTypes = incomingMsg.getEdgeTypeList();
             int size = edgeTypes.size();
             // update internalKmer
             VKmer internalKmer = incomingMsg.getInternalKmer();
-            internalKmer.mergeWithKmerInDir(edgeTypes.get(size - 1), kmerSize,
-                    vertex.getInternalKmer());
+            internalKmer.mergeWithKmerInDir(edgeTypes.get(size - 1), kmerSize, vertex.getInternalKmer());
             outgoingMsg.setInternalKmer(internalKmer);
 
             // update preKmerLength
             outgoingMsg.setPreKmerLength(newLength);
-            
+
             // if numBranches == 0, send end to source
-            if(vertex.outDegree() == 0){
+            if (vertex.outDegree() == 0) {
+                outgoingMsg.setEdgeTypeList(incomingMsg.getEdgeTypeList());
                 outgoingMsg.setFlag(State.END_NOTICE_IN_SRC);
                 sendMsg(source, outgoingMsg);
                 return;
@@ -155,12 +154,12 @@ public class BubbleMergeWithSearchVertex extends
                     outFlag |= et.mirror().get();
                     outgoingMsg.setFlag(outFlag);
                     outgoingMsg.setSourceVertexId(getVertexId());
-                    
+
                     // update edgeTypes
-                    EdgeTypeList tmp = (EdgeTypeList)edgeTypes.clone();
+                    EdgeTypeList tmp = (EdgeTypeList) edgeTypes.clone();
                     tmp.add(et);
                     outgoingMsg.setEdgeTypeList(tmp);
-                    
+
                     sendMsg(dest, outgoingMsg);
                 }
             }
@@ -175,6 +174,9 @@ public class BubbleMergeWithSearchVertex extends
         // update internalKmer
         vertex.getArrayOfInternalKmer().add(incomingMsg.getInternalKmer());
 
+        // update edgeTypeList
+        vertex.getArrayOfEdgeTypes().add(incomingMsg.getEdgeTypeList());
+
         // update numBranches
         int numBranches = vertex.getNumBranches();
         numBranches--;
@@ -185,38 +187,53 @@ public class BubbleMergeWithSearchVertex extends
             int k = 1; // compare similarity with startHead and get the most possible path, here for test, using 1
             VKmerList pathList = vertex.getArrayOfPathList().get(k);
             VKmer mergeKmer = vertex.getArrayOfInternalKmer().get(k);
-            ArrayListWritable<EDGETYPE> edgeTypes = vertex.getArrayOfEdgeTypes().get(k);
+            EdgeTypeList edgeTypes = vertex.getArrayOfEdgeTypes().get(k);
 
             // step2: replace internalKmer with mergeKmer and clear edges towards path nodes
             vertex.setInternalKmer(mergeKmer);
             vertex.getEdgeMap(vertex.getArrayOfEdgeTypes().get(k).get(0)).remove(pathList.getPosition(1));
 
             // step3: send kill message to path nodes
-            for (int i = 0; i < pathList.size(); i++) {
-                VKmer dest = pathList.getPosition(i);
-                if (dest.equals(getVertexId()))
-                    continue;
+            for (int i = 1; i < pathList.size(); i++) {
+                VKmer dest = new VKmer(pathList.getPosition(i));
+                System.out.println(dest);
+
                 outgoingMsg.reset();
                 outgoingMsg.setFlag(State.KILL_MESSAGE_FROM_SOURCE);
-                outgoingMsg.setSourceVertexId(pathList.getPosition(i - 1));
-                if (i + 1 < pathList.size())
-                    outgoingMsg.setInternalKmer(pathList.getPosition(i + 1)); // use internalKmer field to store next node 
+                
+                // prev stores in pathList(0)
+                VKmerList kmerList = new VKmerList();
+                kmerList.append(pathList.getPosition(i - 1));
+                System.out.println(pathList.getPosition(i - 1));
+
+                if (i + 1 < pathList.size()) {
+                    // next stores in pathList(1)
+                    kmerList.append(pathList.getPosition(i + 1));
+                    System.out.println(pathList.getPosition(i + 1));
+                }
+                outgoingMsg.setPathList(kmerList);
 
                 // store edgeType in msg.ArrayListWritable<EDGETYPE>(0)
-                outgoingMsg.getEdgeTypeList().add(edgeTypes.get(i - 1));
-                outgoingMsg.getEdgeTypeList().add(edgeTypes.get(i));
+                outgoingMsg.getEdgeTypeList().add(edgeTypes.get(i - 1).mirror());
+                if (i < edgeTypes.size())
+                    outgoingMsg.getEdgeTypeList().add(edgeTypes.get(i));
+                sendMsg(dest, outgoingMsg);
             }
         }
     }
 
     public void sendKillMsgToPathNodes(BubbleMergeWithSearchMessage incomingMsg) {
         BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
-
+        System.out.println(incomingMsg.getPathList().getPosition(0));
+        System.out.println(incomingMsg.getPathList().getPosition(1));
+        
         // send msg to delete edges except the path nodes
         for (EDGETYPE et : EDGETYPE.values()) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
-                if ((et == incomingMsg.getEdgeTypeList().get(0) && dest.equals(incomingMsg.getSourceVertexId()))
-                        || (et == incomingMsg.getEdgeTypeList().get(1) && dest.equals(incomingMsg.getInternalKmer())))
+                if ((et == incomingMsg.getEdgeTypeList().get(0) && dest
+                        .equals(incomingMsg.getPathList().getPosition(0)))
+                        || (et == incomingMsg.getEdgeTypeList().get(1) && dest.equals(incomingMsg.getPathList()
+                                .getPosition(1))))
                     continue;
                 outgoingMsg.reset();
                 outFlag |= State.PRUNE_DEAD_EDGE;
