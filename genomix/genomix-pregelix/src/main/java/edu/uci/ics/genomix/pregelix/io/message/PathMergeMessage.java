@@ -5,9 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class PathMergeMessage extends MessageWritable {
 
@@ -46,8 +46,8 @@ public class PathMergeMessage extends MessageWritable {
         getNode().setInternalKmer(internalKmer);
     }
 
-    public EdgeMap getEdgeList(EDGETYPE edgeType) {
-        return getNode().getEdgeMap(edgeType);
+    public VKmerList getEdges(EDGETYPE edgeType) {
+        return getNode().getEdges(edgeType);
     }
 
     public Node getNode() {

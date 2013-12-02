@@ -191,8 +191,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         if (degree == 1) {
             EnumSet<EDGETYPE> edgeTypes = direction.edgeTypes();
             for (EDGETYPE et : edgeTypes) {
-                if (getVertexValue().getEdgeMap(et).size() > 0)
-                    return getVertexValue().getEdgeMap(et).firstKey();
+                if (getVertexValue().getEdges(et).size() > 0)
+                    return getVertexValue().getEdges(et).getPosition(0);
             }
         }
         //degree in this direction == 0
@@ -206,7 +206,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      */
     public boolean isTandemRepeat(VertexValueWritable value) {
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (VKmer kmerToCheck : value.getEdgeMap(et).keySet()) {
+            for (VKmer kmerToCheck : value.getEdges(et)) {
                 if (kmerToCheck.equals(getVertexId())) {
                     repeatEdgetype = et;
                     repeatKmer.setAsCopy(kmerToCheck);
@@ -223,7 +223,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public void broadcastKillself() {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+            for (VKmer dest : vertex.getEdges(et)) {
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
@@ -254,7 +254,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             EDGETYPE meToNeighborEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdgeMap(meToNeighborEdgetype).remove(incomingMsg.getSourceVertexId());
+            getVertexValue().getEdges(meToNeighborEdgetype).remove(incomingMsg.getSourceVertexId());
 
             if (verbose) {
                 LOG.fine("Receive message from dead node!" + incomingMsg.getSourceVertexId() + "\r\n"
@@ -273,7 +273,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public void sendSettledMsgs(DIR direction, VertexValueWritable value) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+            for (VKmer dest : vertex.getEdges(et)) {
                 //                outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();

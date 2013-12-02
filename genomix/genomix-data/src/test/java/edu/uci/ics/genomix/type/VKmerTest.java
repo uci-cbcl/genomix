@@ -18,7 +18,6 @@ package edu.uci.ics.genomix.type;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import junit.framework.Assert;
@@ -611,66 +610,20 @@ public class VKmerTest {
         Assert.assertEquals("Invalid RR merge!!!", "TTCACATACTATCCTGCGTACGC", kmer1.toString());
     }
     
-    private static final char[] symbols = new char[4];
-    static {
-        symbols[0] = 'A';
-        symbols[1] = 'C';
-        symbols[2] = 'G';
-        symbols[3] = 'T';
-    }
-
-    public static String generateString(int length) {
-        Random random = new Random();
-        char[] buf = new char[length];
-        for (int idx = 0; idx < buf.length; idx++) {
-            buf[idx] = symbols[random.nextInt(4)];
-        }
-        return new String(buf);
-    }
-    
     @Test
-    public void TestIndexOfForShortRead(){
+    public void TestContain(){
         VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer2 = new VKmer("TGCGT");
-        Assert.assertEquals(7, kmer1.indexOf(kmer2));
+        Assert.assertEquals(7, kmer1.contain(kmer2));
         VKmer kmer3 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer4 = new VKmer("TGCGA");
-        Assert.assertEquals(-1, kmer3.indexOf(kmer4));
+        Assert.assertEquals(-1, kmer3.contain(kmer4));
         VKmer kmer5 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer6 = new VKmer("ACGC");
-        Assert.assertEquals(12, kmer5.indexOf(kmer6));
+        Assert.assertEquals(12, kmer5.contain(kmer6));
         VKmer kmer7 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer8 = new VKmer("ACTAC");
-        Assert.assertEquals(-1, kmer7.indexOf(kmer8));
+        Assert.assertEquals(-1, kmer7.contain(kmer8));
     }
-    
-    @Test
-    public void TestIndexOfForLongRead(){
-        String testStr1 = generateString(100);
-        VKmer testKmer1 = new VKmer(testStr1);
-        String subStr1 = testStr1.substring(25, 80);
-        VKmer subKmer1 = new VKmer(subStr1);
-        Assert.assertEquals(25, testKmer1.indexOf(subKmer1));
-        
-        String testStr2 = generateString(200);
-        VKmer testKmer2 = new VKmer(testStr2);
-        String subStr2 = testStr2.substring(100, 200);
-        VKmer subKmer2 = new VKmer(subStr2);
-        Assert.assertEquals(100, testKmer2.indexOf(subKmer2));
-        
-        String testStr3 = generateString(300);
-        VKmer testKmer3 = new VKmer(testStr3);
-        VKmer subKmer3 = new VKmer();
-        for(int i = 0; i < 10; i++){
-            String subStr3 = testStr3.substring(40 + i * 3, 40 + i * 3 + 55);
-            subKmer3.setAsCopy(subStr3);
-            Assert.assertEquals(40 + i * 3, testKmer3.indexOf(subKmer3));
-        }
-        
-        String testStr4 = generateString(55);
-        if(!testStr3.contains(testStr4)){
-            VKmer testKmer4 = new VKmer(testStr4);
-            Assert.assertEquals(-1, testKmer3.indexOf(testKmer4));
-        }
-    }
+
 }

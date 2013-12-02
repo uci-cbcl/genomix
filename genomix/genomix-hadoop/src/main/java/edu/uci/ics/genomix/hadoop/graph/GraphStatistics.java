@@ -70,18 +70,18 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         updateStats("unflippedReadIds", value.getUnflippedReadIds().size());
         updateStats("flippedReadIds", value.getFlippedReadIds().size());
         
-        long totalEdgeReads = 0;
+//        long totalEdgeReads = 0;
         long totalSelf = 0;
         for (EDGETYPE et : EDGETYPE.values()) {
-            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
-                totalEdgeReads += e.getValue().size();
-                if (e.getKey().equals(key)) {
+            for (VKmer e : value.getEdges(et)) {
+//                totalEdgeReads += e.getValue().size();
+                if (e.equals(key)) {
                     reporter.incrCounter("totals", "selfEdge-" + et, 1);
                     totalSelf += 1;
                 }
             }
         }
-        updateStats("edgeRead", totalEdgeReads);
+//        updateStats("edgeRead", totalEdgeReads);
 
         if (value.isPathNode())
             reporter.incrCounter("totals", "pathNode", 1);
