@@ -28,7 +28,7 @@ public class TipRemoveWithSearchVertex extends
 
     private static final Logger LOG = Logger.getLogger(TipRemoveWithSearchVertex.class.getName());
 
-    private int MIN_LENGTH_TO_KEEP = -1;
+    private static int MIN_LENGTH_TO_KEEP = -1;
 
     @Override
     public void compute(Iterator<TipRemoveWithSearchMessage> msgIterator) {
@@ -80,11 +80,11 @@ public class TipRemoveWithSearchVertex extends
             outDir = inET.neighborDir(); // way I'd leave this node
             toPrevDir = outDir.mirror(); // direction towards last visited node
             if (node.degree(toPrevDir) > 1) {
-                // reached node which has multiple incoming edges (where B is origin  ...A<__B)
+                // reached node A which has multiple incoming edges (where B is origin  ...A<__B)
                 // stop the search without considering this node
                 stop = true;
             } else if (node.degree(outDir) > 1) {
-                // reached a node with multiple paths leading out of this node  (where B is origin  ...>A----B)
+                // reached node A with multiple paths leading out of this node  (where B is origin  ...>A----B)
                 // this is NOT a tip! must drop this message
                 continue;
             } else if (node.degree(outDir) == 0) {
