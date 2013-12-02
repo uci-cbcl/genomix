@@ -14,7 +14,14 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
 /**
- * Graph clean pattern: Simple Bubble Merge
+ * Graph clean pattern: Bubble Merge With Search
+ * Ex.      B - C - D - E - F - G  
+ *      A - B - H ------------- G
+ * For this operator,
+ *     1. it starts BFSearching from start point B, and then it will collect all the valid paths to B
+ *     2. compare all the valid paths with its own startHead and pick one path which is enough similar
+ *     3. keep this similar path and merge the path nodes in B
+ *     4. delete all path nodes and the corresponding edges with these path nodes 
  */
 public class BubbleMergeWithSearchVertex extends
         DeBruijnGraphCleanVertex<BubbleMergeWithSearchVertexValueWritable, BubbleMergeWithSearchMessage> {
