@@ -9,7 +9,7 @@ import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmerList;
 
 public class TipRemoveWithSearchMessage extends MessageWritable {
-    private int visitedLength = 0;
+    private Integer visitedLength = null;
     private VKmerList visitedNodes = null;
     
     /** Include the given node in incomingMsg's path of vertices
@@ -18,6 +18,9 @@ public class TipRemoveWithSearchMessage extends MessageWritable {
      * @param incomingMsg
      */
     public void visitNode(Node n) {
+        if (visitedLength == null) {
+            setVisitedLength(0);
+        }
         visitedLength += n.getKmerLength() - Kmer.getKmerLength() + 1;
         getVisitedNodes().append(n.getInternalKmer());
     }
@@ -44,15 +47,25 @@ public class TipRemoveWithSearchMessage extends MessageWritable {
             getVisitedNodes().setCopy(visitedNodes);
         }
     }
+    
+    @Override 
+    public void reset() {
+        super.reset();
+        visitedLength = null;
+        visitedNodes = null;
+    }
 
     protected static class TIP_REMOVE_FIELDS extends MESSAGE_FIELDS {
-        public static final byte VISITED_NODES = 1 << 1;
+        public static final byte VISITED_LENGTH = 1 << 1;
+        public static final byte VISITED_NODES = 1 << 2;
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         super.readFields(in);
-        visitedLength = in.readInt();
+        if ((messageFields & TIP_REMOVE_FIELDS.VISITED_LENGTH) != 0) {
+            setVisitedLength(in.readInt());
+        }
         if ((messageFields & TIP_REMOVE_FIELDS.VISITED_NODES) != 0) {
             getVisitedNodes().readFields(in);
         }
@@ -61,7 +74,9 @@ public class TipRemoveWithSearchMessage extends MessageWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        out.writeInt(visitedLength);
+        if (visitedLength != null) {
+            out.writeInt(visitedLength);
+        }
         if (visitedNodes != null && visitedNodes.size() != 0) {
             visitedNodes.write(out);
         }
@@ -70,17 +85,12 @@ public class TipRemoveWithSearchMessage extends MessageWritable {
     @Override
     protected byte getActiveMessageFields() {
         byte messageFields = super.getActiveMessageFields();
+        if (visitedLength != null) {
+            messageFields |= TIP_REMOVE_FIELDS.VISITED_LENGTH;
+        }
         if (visitedNodes != null && visitedNodes.size() != 0) {
             messageFields |= TIP_REMOVE_FIELDS.VISITED_NODES;
         }
         return messageFields;
     }
-    
-    @Override 
-    public void reset() {
-        super.reset();
-        visitedNodes = null;
-        visitedLength = 0;
-    }
-
 }
