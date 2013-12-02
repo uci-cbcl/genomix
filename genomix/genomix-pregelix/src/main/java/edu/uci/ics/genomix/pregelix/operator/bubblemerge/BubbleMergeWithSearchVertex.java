@@ -139,14 +139,14 @@ public class BubbleMergeWithSearchVertex extends
             }
             // if numBranches > 1, update numBranches
             if (vertex.outDegree() > 1) {
-                outgoingMsg.reset();
                 outgoingMsg.setFlag(State.UPDATE_BRANCH_IN_SRC);
                 outgoingMsg.setNumBranches(vertex.outDegree());
                 sendMsg(source, outgoingMsg);
             }
 
             // send to next 
-            for (EDGETYPE et : EDGETYPE.OUTGOING) {
+            EDGETYPE preToMe = incomingMsg.getEdgeTypeList().get(incomingMsg.getEdgeTypeList().size() - 1);
+            for (EDGETYPE et : preToMe.mirror().dir().mirror().edgeTypes()) {
                 for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                     // set flag and source vertex
                     outFlag |= State.UPDATE_PATH_IN_NEXT;
@@ -200,7 +200,7 @@ public class BubbleMergeWithSearchVertex extends
 
                 outgoingMsg.reset();
                 outgoingMsg.setFlag(State.KILL_MESSAGE_FROM_SOURCE);
-                
+
                 // prev stores in pathList(0)
                 VKmerList kmerList = new VKmerList();
                 kmerList.append(pathList.getPosition(i - 1));
@@ -224,24 +224,24 @@ public class BubbleMergeWithSearchVertex extends
 
     public void sendKillMsgToPathNodes(BubbleMergeWithSearchMessage incomingMsg) {
         BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
-        System.out.println(incomingMsg.getPathList().getPosition(0));
-        System.out.println(incomingMsg.getPathList().getPosition(1));
-        
+
         // send msg to delete edges except the path nodes
         for (EDGETYPE et : EDGETYPE.values()) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 if ((et == incomingMsg.getEdgeTypeList().get(0) && dest
                         .equals(incomingMsg.getPathList().getPosition(0)))
-                        || (et == incomingMsg.getEdgeTypeList().get(1) && dest.equals(incomingMsg.getPathList()
-                                .getPosition(1))))
+                        || (incomingMsg.getEdgeTypeList().size() == 2 && et == incomingMsg.getEdgeTypeList().get(1) && dest
+                                .equals(incomingMsg.getPathList().getPosition(1))))
                     continue;
                 outgoingMsg.reset();
                 outFlag |= State.PRUNE_DEAD_EDGE;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
+                sendMsg(dest, outgoingMsg);
             }
         }
+        deleteVertex(getVertexId());
     }
 
     @Override
