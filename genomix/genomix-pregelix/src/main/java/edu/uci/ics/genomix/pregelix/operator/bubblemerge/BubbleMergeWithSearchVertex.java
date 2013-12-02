@@ -83,7 +83,8 @@ public class BubbleMergeWithSearchVertex extends
 
             // get msg flag
             byte flag = (byte) (incomingMsg.getFlag() & State.BUBBLE_WITH_SEARCH_FLAG_MASK);
-
+            
+            // different operators for different message flags
             if (flag == State.UPDATE_PATH_IN_NEXT) {
                 updatePathInNextNode(incomingMsg);
             } else if (flag == State.UPDATE_BRANCH_IN_SRC) {
@@ -106,7 +107,7 @@ public class BubbleMergeWithSearchVertex extends
         VKmer source = incomingMsg.getPathList().getPosition(0);
         int newLength = internalKmerLength + incomingMsg.getPreKmerLength() - kmerSize + 1;
         if (newLength > MAX_BFS_LENGTH) {
-            // send back to source vertex (pathList and internalKmer)
+            // send back to source vertex (pathList, internalKmer and setEdgeTypeList)
             outgoingMsg.reset();
             outgoingMsg.setPathList(incomingMsg.getPathList());
             outgoingMsg.setInternalKmer(incomingMsg.getInternalKmer());
@@ -120,9 +121,9 @@ public class BubbleMergeWithSearchVertex extends
             pathList.append(getVertexId());
             outgoingMsg.setPathList(pathList);
 
+            // update internalKmer
             EdgeTypeList edgeTypes = incomingMsg.getEdgeTypeList();
             int size = edgeTypes.size();
-            // update internalKmer
             VKmer internalKmer = incomingMsg.getInternalKmer();
             internalKmer.mergeWithKmerInDir(edgeTypes.get(size - 1), kmerSize, vertex.getInternalKmer());
             outgoingMsg.setInternalKmer(internalKmer);
@@ -184,7 +185,7 @@ public class BubbleMergeWithSearchVertex extends
         if (numBranches == 0) {
             /* process in src */
             // step1: figure out which path to keep
-            int k = 1; // compare similarity with startHead and get the most possible path, here for test, using 1
+            int k = 1; // FIXME compare similarity with startHead and get the most possible path, here for test, using 1
             VKmerList pathList = vertex.getArrayOfPathList().get(k);
             VKmer mergeKmer = vertex.getArrayOfInternalKmer().get(k);
             EdgeTypeList edgeTypes = vertex.getArrayOfEdgeTypes().get(k);
@@ -196,7 +197,6 @@ public class BubbleMergeWithSearchVertex extends
             // step3: send kill message to path nodes
             for (int i = 1; i < pathList.size(); i++) {
                 VKmer dest = new VKmer(pathList.getPosition(i));
-                System.out.println(dest);
 
                 outgoingMsg.reset();
                 outgoingMsg.setFlag(State.KILL_MESSAGE_FROM_SOURCE);
@@ -204,12 +204,10 @@ public class BubbleMergeWithSearchVertex extends
                 // prev stores in pathList(0)
                 VKmerList kmerList = new VKmerList();
                 kmerList.append(pathList.getPosition(i - 1));
-                System.out.println(pathList.getPosition(i - 1));
 
                 if (i + 1 < pathList.size()) {
                     // next stores in pathList(1)
                     kmerList.append(pathList.getPosition(i + 1));
-                    System.out.println(pathList.getPosition(i + 1));
                 }
                 outgoingMsg.setPathList(kmerList);
 
@@ -248,7 +246,8 @@ public class BubbleMergeWithSearchVertex extends
     public void compute(Iterator<BubbleMergeWithSearchMessage> msgIterator) {
         initVertex();
         if (getSuperstep() == 1) {
-            /** begin BFS in source vertices **/
+            // FIXME need to add statistical method to get top 10% startHeads as begin point
+            /** begin BFS in source vertices here "AAC" for test **/
             if (getVertexId().toString().equals("AAC"))
                 beginBFS();
         } else if (getSuperstep() >= 2) {
