@@ -205,9 +205,7 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                 LOG.fine("before merge: " + getVertexValue() + " restrictions: " + DIR.enumSetFromByte(state));
             }
             senderEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            node.mergeWithNodeWithoutKmer(senderEdgetype, incomingMsg.getNode());
-            // only the non-overlapping portions of the kmer are sent
-            node.getInternalKmer().mergeWithKmerInDir(senderEdgetype, 1, incomingMsg.getNode().getInternalKmer());
+            node.mergeWithNodeUsingTruncatedKmer(senderEdgetype, incomingMsg.getNode());
             state |= (byte) (incomingMsg.getFlag() & DIR.MASK); // update incoming restricted directions
             //            numMerged++;
             updated = true;
@@ -239,6 +237,12 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
     @Override
     public void compute(Iterator<PathMergeMessage> msgIterator) {
         initVertex();
+        if (Float.isInfinite(getVertexValue().getAverageCoverage()) || Float.isNaN(getVertexValue().getAverageCoverage())) {
+            System.out.println("Before: " + getVertexValue());
+        }
+        if (getVertexId().toString().equals("AGCGCAAGG")) {
+            System.out.println();
+        }
         if (verbose)
             LOG.fine("Iteration " + getSuperstep() + " for key " + getVertexId());
         if (getSuperstep() > maxIteration) { // TODO should we make sure the graph is complete or allow interruptions that will cause an asymmetric graph?
@@ -259,6 +263,10 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         } else if (getSuperstep() % 2 == 1) {
             receiveUpdates(msgIterator);
             sendMergeMsg();
+        }
+        if (Float.isInfinite(getVertexValue().getAverageCoverage()) || Float.isNaN(getVertexValue().getAverageCoverage())) {
+            System.out.println("after: " + getVertexValue());
+            throw new RuntimeException(this.toString());
         }
     }
 

@@ -575,6 +575,15 @@ public class Node implements Writable, Serializable {
         mergeUnflippedAndFlippedReadIDs(edgeType, other);
         mergeCoverage(other);
     }
+    
+    public void mergeWithNodeUsingTruncatedKmer(EDGETYPE edgeType, Node other) {
+        mergeEdges(edgeType, other);
+        mergeUnflippedAndFlippedReadIDs(edgeType, other);
+        
+        // only the non-overlapping portions of the kmer were sent-- coverage and kmer merge handled differently as a result
+        mergeCoverage(other, other.internalKmer.getKmerLetterLength() + Kmer.getKmerLength() - 1);
+        getInternalKmer().mergeWithKmerInDir(edgeType, 1, other.getInternalKmer());
+    }
 
     /**
      * merge all metadata from `other` into this, as if `other` were the same node as this.
