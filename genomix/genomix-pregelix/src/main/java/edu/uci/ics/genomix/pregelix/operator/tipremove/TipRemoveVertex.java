@@ -17,16 +17,9 @@ import edu.uci.ics.genomix.type.VKmer;
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
  * Details: Sequencing errors at the ends of the reads form "tips": short, low coverage nodes
-<<<<<<< Updated upstream
- * 			with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
- * 			The algorithm identifies these nodes and prunes them from the graph. This is then followed
- * 			by recompressing the graph.
- * 
-=======
  * with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
  * The algorithm identifies these nodes and prunes them from the graph. This is then followed
  * by recompressing the graph.
->>>>>>> Stashed changes
  */
 public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
