@@ -1,0 +1,178 @@
+package edu.uci.ics.genomix.type;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
+
+import junit.framework.Assert;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.io.WritableComparable;
+import org.junit.Test;
+
+public class ExternalableTreeSetTest implements Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    final int limit = 100;
+
+    public class TestIntWritable implements WritableComparable<TestIntWritable>, Serializable {
+
+        private int iw;
+
+        public TestIntWritable() {
+        }
+
+        public TestIntWritable(int v) {
+            iw = v;
+        }
+
+        public int get() {
+            return iw;
+        }
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void readFields(DataInput in) throws IOException {
+            iw = in.readInt();
+        }
+
+        @Override
+        public void write(DataOutput out) throws IOException {
+            out.writeInt(iw);
+        }
+
+        @Override
+        public int compareTo(TestIntWritable o) {
+            return Integer.compare(iw, o.iw);
+        }
+
+    }
+
+    @Test
+    public void TestInternal() {
+
+        ExternalableTreeSet.setCountLimit(limit);
+
+        ExternalableTreeSet<TestIntWritable> eSet = new ExternalableTreeSet<TestIntWritable>();
+        for (int i = 0; i < limit; i++) {
+            eSet.add(new TestIntWritable(i));
+        }
+
+        ExternalableTreeSet.ReadOnlyIterator<TestIntWritable> it = eSet.iterator();
+        for (int i = 0; i < limit; i++) {
+            Assert.assertEquals(i, it.next().get());
+        }
+    }
+
+    @Test
+    public void TestExternal() {
+        Configuration conf = new Configuration();
+        ExternalableTreeSet.setCountLimit(limit);
+        try {
+            ExternalableTreeSet.setupManager(conf, new Path(System.getProperty("java.io.tmpdir")));
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getLocalizedMessage());
+            return;
+        }
+        testEqual();
+    }
+
+    public void testEqual() {
+        ExternalableTreeSet<TestIntWritable> eSetA = new ExternalableTreeSet<TestIntWritable>();
+        for (int i = 0; i <= limit; i++) {
+            eSetA.add(new TestIntWritable(i));
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream w = new DataOutputStream(baos);
+        try {
+            eSetA.write(w);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        ExternalableTreeSet<TestIntWritable> eSetB = new ExternalableTreeSet<TestIntWritable>();
+        try {
+            eSetB.readFields(new DataInputStream(bais));
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+
+        ExternalableTreeSet.ReadOnlyIterator<TestIntWritable> itA = eSetA.iterator();
+        ExternalableTreeSet.ReadOnlyIterator<TestIntWritable> itB = eSetB.iterator();
+        for (int i = 0; i <= limit; i++) {
+            Assert.assertEquals(itA.next().get(), itB.next().get());
+        }
+
+        try {
+            ExternalableTreeSet.removeAllExternalFiles();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void TestHDFS() {
+        final String PATH_TO_HADOOP_CONF = "src/test/resources/hadoop/conf";
+
+        Configuration conf = new Configuration();
+        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/core-site.xml"));
+        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
+        conf.addResource(new Path(PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
+        MiniDFSCluster localDFSCluster;
+        try {
+            localDFSCluster = new MiniDFSCluster(conf, 2, true, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+            return;
+        }
+
+        ExternalableTreeSet.setCountLimit(limit);
+        Path tmpPath = new Path("/tmp");
+        FileSystem dfs;
+        try {
+            dfs = FileSystem.get(conf);
+        } catch (IOException e2) {
+            e2.printStackTrace();
+            Assert.fail(e2.getLocalizedMessage());
+            return;
+        }
+        try {
+            dfs.create(tmpPath);
+        } catch (IOException e1) {
+            e1.printStackTrace();
+            Assert.fail(e1.getLocalizedMessage());
+        }
+
+        try {
+            ExternalableTreeSet.setupManager(conf, tmpPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getLocalizedMessage());
+            return;
+        }
+
+        testEqual();
+        localDFSCluster.shutdown();
+    }
+}

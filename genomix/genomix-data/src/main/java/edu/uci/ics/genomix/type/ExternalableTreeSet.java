@@ -7,10 +7,12 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -20,15 +22,22 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
-public class ExternalableTreeSet<T extends WritableComparable<T>> implements Writable {
+public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable {
 
     static FileManager manager;
+    static private int countLimit = Integer.MAX_VALUE;
 
-    public static void setupManager(Configuration conf, Path workPath) throws IOException {
-        manager = new FileManager(conf, workPath);
+    public static synchronized void setupManager(Configuration conf, Path workPath) throws IOException {
+        if (manager == null) {
+            manager = new FileManager(conf, workPath);
+        }
     }
 
-    static private int countLimit = Integer.MAX_VALUE;
+    public static synchronized void removeAllExternalFiles() throws IOException {
+        if (manager != null) {
+            manager.deleteAll();
+        }
+    }
 
     public static void setCountLimit(int count) {
         countLimit = count;
@@ -64,9 +73,35 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
         return contains;
     }
 
+    public boolean contains(T obj) {
+        return inMemorySet.contains(obj);
+    }
+
     public SortedSet<T> rangeSearch(T lowKey, T highKey) {
         SortedSet<T> set = inMemorySet.subSet(lowKey, highKey);
         return set;
+    }
+
+    public interface ReadOnlyIterator<T> {
+        public boolean hasNext();
+
+        public T next();
+    }
+
+    public ReadOnlyIterator<T> iterator() {
+        return new ReadOnlyIterator<T>() {
+            private Iterator<T> it = inMemorySet.iterator();
+
+            @Override
+            public boolean hasNext() {
+                return it.hasNext();
+            }
+
+            @Override
+            public T next() {
+                return it.next();
+            }
+        };
     }
 
     /**
@@ -84,9 +119,6 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
     }
 
     protected static TreeSet<?> load(Path path) throws IOException, ClassNotFoundException {
-        if (path == null) {
-            return null;
-        }
         InputStream fis = manager.getInputStream(path);
         ObjectInputStream ois = new ObjectInputStream(fis);
         TreeSet<?> set = (TreeSet<?>) ois.readObject();
@@ -95,9 +127,6 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
     }
 
     protected static void save(Path path, final TreeSet<?> set) throws IOException {
-        if (path == null) {
-            return;
-        }
         OutputStream fos = manager.getOutputStream(path);
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(set);
@@ -109,8 +138,8 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
     public void readFields(DataInput in) throws IOException {
         int size = in.readInt();
         inMemorySet.clear();
+        path = null;
         if (size < countLimit) {
-            path = null;
             for (int i = 0; i < size; ++i) {
                 Class<T> clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
                         .getActualTypeArguments()[0];;
@@ -126,15 +155,14 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
                 inMemorySet.add(t);
             }
         } else {
-            if (path == null) {
-                path = new Path(in.readUTF());
-            }
+            path = new Path(in.readUTF());
             try {
                 inMemorySet = (TreeSet<T>) load(path);
             } catch (ClassNotFoundException e) {
                 throw new IOException(e);
             }
         }
+
         isChanged = false;
     }
 
@@ -145,11 +173,15 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
             for (T t : inMemorySet) {
                 t.write(out);
             }
+            if (path != null) {
+                manager.deleteFile(path);
+                path = null;
+            }
         } else {
             if (path == null) {
                 path = manager.createFile();
-            }
-            if (isChanged) {
+                save(path, inMemorySet);
+            } else if (isChanged) {
                 save(path, inMemorySet);
             }
             out.writeUTF(path.toString());
@@ -172,12 +204,19 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
             allocatedPath = new HashMap<Path, OutputStream>();
         }
 
+        public void deleteAll() throws IOException {
+            for (Path path : allocatedPath.keySet()) {
+                deleteFile(path);
+            }
+
+        }
+
         protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
 
         public synchronized Path createFile() throws IOException {
             Path path;
             do {
-                path = new Path(workPath, simpleDateFormat.format(new Date()));
+                path = new Path(workPath, this.getClass().getName() + simpleDateFormat.format(new Date()));
             } while (fs.exists(path));
             allocatedPath.put(path, fs.create(path, (short) 1));
             return path;
@@ -198,10 +237,11 @@ public class ExternalableTreeSet<T extends WritableComparable<T>> implements Wri
         }
 
         public InputStream getInputStream(Path path) throws IOException {
-            if (!allocatedPath.containsKey(path)) {
-                throw new IOException("File not exist:" + path);
-            }
+            //            if (!allocatedPath.containsKey(path)) {
+            //                throw new IOException("File not exist:" + path);
+            //            }
             return fs.open(path);
         }
     }
+
 }
