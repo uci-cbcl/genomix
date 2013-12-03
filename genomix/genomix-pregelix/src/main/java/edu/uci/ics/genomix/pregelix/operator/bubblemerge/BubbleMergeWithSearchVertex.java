@@ -260,7 +260,7 @@ public class BubbleMergeWithSearchVertex extends
         VKmerList pathList = vertex.getArrayOfPathList().get(k);
         EdgeTypeList edgeTypes = vertex.getArrayOfEdgeTypes().get(k);
 
-        // step2: clear edges except that one towards similar path
+        // step2: clear edges except those towards similar path
         for (EDGETYPE et : SEARCH_DIRECTION) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 if (edgeTypes.get(0) == et && pathList.getPosition(1).equals(dest))
