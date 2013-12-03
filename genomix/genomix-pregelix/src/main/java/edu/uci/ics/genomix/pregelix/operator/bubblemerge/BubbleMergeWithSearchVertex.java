@@ -115,18 +115,20 @@ public class BubbleMergeWithSearchVertex extends
         int internalKmerLength = vertex.getInternalKmer().getKmerLetterLength();
         VKmer source = incomingMsg.getPathList().getPosition(0);
         int newLength = internalKmerLength + incomingMsg.getPreKmerLength() - kmerSize + 1;
+        /* if newLength > MAX_BFS_LENGTH, send back to source vertex with message(pathList, 
+         * internalKmer and setEdgeTypeList) */
         if (newLength > MAX_BFS_LENGTH) {
-            // send back to source vertex with message(pathList, internalKmer and setEdgeTypeList)
             outgoingMsg.reset();
             outgoingMsg.setFlag(BubbleMergeWithSearchState.END_NOTICE_IN_SRC);
             outgoingMsg.setPathList(incomingMsg.getPathList());
             outgoingMsg.setInternalKmer(incomingMsg.getInternalKmer());
             outgoingMsg.setEdgeTypeList(incomingMsg.getEdgeTypeList());
             sendMsg(source, outgoingMsg);
-        } else {
-            /** send message to next **/
+        }
+        /* if newLength <= MAX_BFS_LENGTH, send message to next */
+        else {
             outgoingMsg.reset();
-
+            
             // update pathList
             VKmerList pathList = incomingMsg.getPathList();
             pathList.append(getVertexId());
