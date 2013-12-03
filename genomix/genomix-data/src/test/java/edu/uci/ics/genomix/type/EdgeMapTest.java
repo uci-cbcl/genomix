@@ -151,7 +151,7 @@ public class EdgeMapTest {
         sampleList.add(sample);
         EdgeMap toTest = new EdgeMap(sampleList);
         //begin test
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(toTest.getLengthInBytes());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(toTest.marshalToByteArray().length);
         DataOutputStream out = new DataOutputStream(baos);
         toTest.write(out);
         InputStream inputStream = new ByteArrayInputStream(baos.toByteArray());

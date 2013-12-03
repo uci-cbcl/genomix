@@ -106,7 +106,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
 
-                for (EDGETYPE e : EDGETYPE.values()) {
+                for (EDGETYPE e : EDGETYPE.values) {
                     localUniNode.getEdgeMap(e).unionUpdate((readNode.getEdgeMap(e)));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
@@ -121,7 +121,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 Node localUniNode = (Node) state.state;
 
                 readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
-                for (EDGETYPE e : EDGETYPE.values()) {
+                for (EDGETYPE e : EDGETYPE.values) {
                     localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
@@ -184,11 +184,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
                 try {
-                    fieldOutput.write(localUniNode.marshalToByteArray(), 0, localUniNode.getSerializedLength());
+                    byte[] uniNodeBytes = localUniNode.marshalToByteArray(); 
+                    fieldOutput.write(uniNodeBytes, 0, uniNodeBytes.length);
                     tupleBuilder.addFieldEndOffset();
-                    if (localUniNode.getSerializedLength() > frameSize / 2) {
+                    if (uniNodeBytes.length > frameSize / 2) {
                         LOG.warning("Aggregate Kmer: output data kmerByteSize is too big: "
-                                + localUniNode.getSerializedLength() + "\nNode is:" + localUniNode.toString());
+                                + uniNodeBytes.length + "\nNode is:" + localUniNode.toString());
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");

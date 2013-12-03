@@ -15,17 +15,14 @@
 
 package edu.uci.ics.genomix.type;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -38,8 +35,6 @@ import edu.uci.ics.genomix.util.Marshal;
 public class Node implements Writable, Serializable {
 
     public static final Logger LOG = Logger.getLogger(Node.class.getName());
-    protected static boolean DEBUG = true;
-    public static List<VKmer> problemKmers = new ArrayList<VKmer>();
 
     public enum READHEAD_ORIENTATION {
         UNFLIPPED((byte) 0),
@@ -136,6 +131,7 @@ public class Node implements Writable, Serializable {
     }
 
     private static final long serialVersionUID = 1L;
+    private static final int INITIAL_BYTE_ARRAY_SIZE = 150;
 
     private EdgeMap[] edges;
     private ReadHeadSet unflippedReadIds; // first Kmer in read
@@ -212,7 +208,7 @@ public class Node implements Writable, Serializable {
         if (degree(direction) != 1)
             throw new IllegalArgumentException(
                     "getEdgetypeFromDir is used on the case, in which the vertex has and only has one EDGETYPE!");
-        EnumSet<EDGETYPE> ets = direction.edgeTypes();
+        EDGETYPE[] ets = direction.edgeTypes();
         for (EDGETYPE et : ets) {
             if (edges[et.get()] != null && getEdgeMap(et).size() > 0) {
                 return et;
@@ -258,7 +254,6 @@ public class Node implements Writable, Serializable {
         if (edgeMap == null) {
             edges[edgeType.get()] = null;
         } else {
-            getEdgeMap(edgeType).clear();
             getEdgeMap(edgeType).setAsCopy(edgeMap);
         }
     }
@@ -268,7 +263,7 @@ public class Node implements Writable, Serializable {
     }
 
     public void setEdges(EdgeMap[] edges) {
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             setEdgeMap(et, edges[et.get()]);
         }
     }
@@ -286,14 +281,17 @@ public class Node implements Writable, Serializable {
      * paths.
      */
     public void mergeCoverage(Node other) {
+        mergeCoverage(other, other.internalKmer.getKmerLetterLength());
+    }
+
+    public void mergeCoverage(Node other, int otherOriginalLength) {
         // sequence considered in the average doesn't include anything
         // overlapping with other kmers
-        float adjustedLength = internalKmer.getKmerLetterLength() + other.internalKmer.getKmerLetterLength()
-                - (Kmer.getKmerLength() - 1) * 2;
+        float adjustedLength = internalKmer.getKmerLetterLength() + otherOriginalLength - (Kmer.getKmerLength() - 1)
+                * 2;
 
         float myCount = (internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1) * averageCoverage;
-        float otherCount = (other.internalKmer.getKmerLetterLength() - Kmer.getKmerLength() + 1)
-                * other.averageCoverage;
+        float otherCount = (otherOriginalLength - Kmer.getKmerLength() + 1) * other.averageCoverage;
         averageCoverage = (myCount + otherCount) / adjustedLength;
     }
 
@@ -339,101 +337,89 @@ public class Node implements Writable, Serializable {
     }
 
     /**
-     * Returns the length of the byte-array version of this node
-     */
-    public int getSerializedLength() {
-        int length = Byte.SIZE / 8; // byte header
-        for (EDGETYPE e : EDGETYPE.values()) {
-            if (edges[e.get()] != null && edges[e.get()].size() > 0) {
-                length += edges[e.get()].getLengthInBytes();
-            }
-        }
-        if (unflippedReadIds != null && unflippedReadIds.size() > 0) {
-            length += unflippedReadIds.getLengthInBytes();
-        }
-        if (flippedReadIds != null && flippedReadIds.size() > 0) {
-            length += flippedReadIds.getLengthInBytes();
-        }
-        if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
-            length += internalKmer.getLength();
-        }
-        if (averageCoverage != null) {
-            length += Float.SIZE / 8;
-        }
-        return length;
-    }
-
-    /**
      * Return this Node's representation as a new byte array
      */
     public byte[] marshalToByteArray() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(getSerializedLength());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(INITIAL_BYTE_ARRAY_SIZE);
         DataOutputStream out = new DataOutputStream(baos);
         write(out);
         return baos.toByteArray();
     }
 
-    public void setAsCopy(byte[] data, int offset) {
+    public int setAsCopy(byte[] data, int offset) {
         reset();
         byte activeFields = data[offset];
         offset += 1;
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
-                getEdgeMap(et).setAsCopy(data, offset);
-                offset += edges[et.get()].getLengthInBytes();
+                offset = getEdgeMap(et).setAsCopy(data, offset);
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            getUnflippedReadIds().setAsCopy(data, offset);
-            offset += unflippedReadIds.getLengthInBytes();
+            offset = getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            getFlippedReadIds().setAsCopy(data, offset);
-            offset += flippedReadIds.getLengthInBytes();
+            offset = getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
-            getInternalKmer().setAsCopy(data, offset);
-            offset += internalKmer.getLength();
+            offset = getInternalKmer().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.AVERAGE_COVERAGE) != 0) {
             averageCoverage = Marshal.getFloat(data, offset);
             offset += Float.SIZE / 8;
         }
+        return offset;
     }
 
-    public void setAsReference(byte[] data, int offset) {
+    public int setAsReference(byte[] data, int offset) {
         reset();
         byte activeFields = data[offset];
         offset += 1;
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
-                getEdgeMap(et).setAsReference(data, offset);
-                offset += edges[et.get()].getLengthInBytes();
+                offset = getEdgeMap(et).setAsReference(data, offset);
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            getUnflippedReadIds().setAsCopy(data, offset);
-            offset += unflippedReadIds.getLengthInBytes();
+            offset = getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            getFlippedReadIds().setAsCopy(data, offset);
-            offset += flippedReadIds.getLengthInBytes();
+            offset = getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
-            getInternalKmer().setAsReference(data, offset);
-            offset += internalKmer.getLength();
+            offset = getInternalKmer().setAsReference(data, offset);
         }
         if ((activeFields & NODE_FIELDS.AVERAGE_COVERAGE) != 0) {
             averageCoverage = Marshal.getFloat(data, offset);
             offset += Float.SIZE / 8;
         }
+        return offset;
+    }
+    
+    /**
+     * Make a shallow copy of node.
+     * 
+     * WARNING: future changes in `node`'s averageCoverage won't be reflected in `this.averageCoverage`
+     * @param node
+     */
+    public void setAsReference(Node node) {
+        setAsReference(node.edges, node.unflippedReadIds, node.flippedReadIds, node.internalKmer, node.averageCoverage);
+    }
+
+    public void setAsReference(EdgeMap[] edges, ReadHeadSet unflippedReadIds, ReadHeadSet flippedReadIds, VKmer kmer,
+            Float coverage) {
+        this.edges = edges;
+        this.unflippedReadIds = unflippedReadIds;
+        this.flippedReadIds = flippedReadIds;
+        this.internalKmer = kmer;
+        this.averageCoverage = coverage;
     }
 
     public static void write(Node n, DataOutput out) throws IOException {
         out.writeByte(n.getActiveFields());
-        for (EDGETYPE e : EDGETYPE.values()) {
+        for (EDGETYPE e : EDGETYPE.values) {
             if (n.edges[e.get()] != null && n.edges[e.get()].size() > 0) {
                 n.edges[e.get()].write(out);
             }
@@ -461,7 +447,7 @@ public class Node implements Writable, Serializable {
     public void readFields(DataInput in) throws IOException {
         reset();
         byte activeFields = in.readByte();
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // et.get() is the index of the bit; if non-zero, we this edge is present in the stream
             if ((activeFields & (1 << et.get())) != 0) {
                 getEdgeMap(et).readFields(in);
@@ -492,7 +478,7 @@ public class Node implements Writable, Serializable {
     protected byte getActiveFields() {
         byte fields = 0;
         // bits 0-3 are for presence of edges
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             if (edges[et.get()] != null && edges[et.get()].size() > 0) {
                 fields |= 1 << et.get();
             }
@@ -530,7 +516,7 @@ public class Node implements Writable, Serializable {
             return false;
 
         Node nw = (Node) o;
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             // If I'm null, return false if he's not null; otherwise, do a regular .equals
             if (edges[et.get()] == null ? nw.edges[et.get()] != null : edges[et.get()].equals(nw.edges[et.get()])) {
                 return false;
@@ -550,7 +536,7 @@ public class Node implements Writable, Serializable {
     public String toString() {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append('{');
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             sbuilder.append(et + ":").append(edges[et.get()] == null ? "null" : edges[et.get()].toString())
                     .append('\t');
         }
@@ -588,6 +574,15 @@ public class Node implements Writable, Serializable {
         mergeEdges(edgeType, other);
         mergeUnflippedAndFlippedReadIDs(edgeType, other);
         mergeCoverage(other);
+    }
+    
+    public void mergeWithNodeUsingTruncatedKmer(EDGETYPE edgeType, Node other) {
+        mergeEdges(edgeType, other);
+        mergeUnflippedAndFlippedReadIDs(edgeType, other);
+        
+        // only the non-overlapping portions of the kmer were sent-- coverage and kmer merge handled differently as a result
+        mergeCoverage(other, other.internalKmer.getKmerLetterLength() + Kmer.getKmerLength() - 1);
+        getInternalKmer().mergeWithKmerInDir(edgeType, 1, other.getInternalKmer());
     }
 
     /**
@@ -740,7 +735,7 @@ public class Node implements Writable, Serializable {
 
     protected void addEdges(boolean flip, Node other) {
         if (!flip) {
-            for (EDGETYPE et : EDGETYPE.values()) {
+            for (EDGETYPE et : EDGETYPE.values) {
                 unionUpdateEdgeMap(et, et, other.edges);
             }
         } else {
@@ -848,7 +843,7 @@ public class Node implements Writable, Serializable {
      * Debug helper function to find the edge associated with the given kmer, checking all directions. If the edge doesn't exist in any direction, returns null
      */
     public NeighborInfo findEdge(final VKmer kmer) {
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             if (edges[et.get()] != null && edges[et.get()].containsKey(kmer)) {
                 return new NeighborInfo(et, kmer, edges[et.get()].get(kmer));
             }

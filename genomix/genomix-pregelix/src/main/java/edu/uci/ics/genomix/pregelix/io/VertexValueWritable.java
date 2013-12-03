@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
@@ -45,6 +46,8 @@ public class VertexValueWritable extends Node {
 
     private short state;
     private boolean isFakeVertex;
+    
+    protected boolean verbose = false;
 
     public VertexValueWritable() {
         super();
@@ -142,9 +145,9 @@ public class VertexValueWritable extends Node {
         //        this.counters.readFields(in);
         //        scaffoldingMap.readFields(in);
 
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
+        if (GenomixJobConf.debug) {
+            verbose = false;
+            for (VKmer problemKmer : GenomixJobConf.debugKmers) {
                 verbose |= this.getInternalKmer().equals(problemKmer);
                 verbose |= findEdge(problemKmer) != null;
             }

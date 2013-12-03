@@ -16,7 +16,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int bitsForPosition = 16;
     private static final int readIdShift = bitsForPosition + bitsForMate;
     private static final int positionIdShift = bitsForMate;
-    
+
     private long value;
 
     public ReadHeadInfo(byte mateId, long readId, int offset) {
@@ -93,12 +93,13 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         return this.getReadId() + "-" + this.getOffset() + "_" + (this.getMateId());
     }
 
-    /** sort by readId, then mateId, then offset
+    /**
+     * sort by readId, then mateId, then offset
      */
     @Override
     public int compareTo(ReadHeadInfo o) {
         if (this.getReadId() == o.getReadId()) {
-            if(this.getMateId() == o.getMateId()){
+            if (this.getMateId() == o.getMateId()) {
                 return this.getOffset() - o.getOffset();
             }
             return this.getMateId() - o.getMateId();

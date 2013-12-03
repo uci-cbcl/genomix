@@ -46,14 +46,15 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     }
 
     public int getOffsetFromReadId(long readId) {
-        for(ReadHeadInfo readHeadInfo : this){
-            if(readHeadInfo.getReadId() == readId)
+        for (ReadHeadInfo readHeadInfo : this) {
+            if (readHeadInfo.getReadId() == readId)
                 return readHeadInfo.getOffset();
         }
-        throw new IllegalArgumentException("The input parameter readId " + readId + " should exist in this ReadHeadSet, but not here!");
+        throw new IllegalArgumentException("The input parameter readId " + readId
+                + " should exist in this ReadHeadSet, but not here!");
     }
 
-    public void setAsCopy(byte[] data, int offset) {
+    public int setAsCopy(byte[] data, int offset) {
         clear();
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
@@ -61,6 +62,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
             add(new ReadHeadInfo(Marshal.getLong(data, offset)));
             offset += ReadHeadInfo.ITEM_SIZE;
         }
+        return offset;
     }
 
     @Override
@@ -109,9 +111,5 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         ReadHeadSet intersection = new ReadHeadSet(list1);
         intersection.retainAll(list2);
         return intersection;
-    }
-
-    public int getLengthInBytes() {
-        return HEADER_SIZE + ReadHeadInfo.ITEM_SIZE * size();
     }
 }
