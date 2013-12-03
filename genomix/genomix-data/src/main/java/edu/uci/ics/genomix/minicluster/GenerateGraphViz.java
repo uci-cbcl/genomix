@@ -1,12 +1,9 @@
 package edu.uci.ics.genomix.minicluster;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -64,8 +61,9 @@ public class GenerateGraphViz {
         File out = new File(destDir); //  + File.separator + "graphviz.svg"
         GraphViz.writeGraphToFile(img, out);
     }
-    
-    public static void writeHDFSBinToHDFSSvg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
+
+    public static void writeHDFSBinToHDFSSvg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType)
+            throws Exception {
         byte[] img = convertGraphToImg(conf, srcDir, destDir, graphType, "svg");
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(destDir), true);
@@ -78,8 +76,7 @@ public class GenerateGraphViz {
     /**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
-     * 
-     * outputFormat may be svg, png, pdf, or any other graphviz-accepted format 
+     * outputFormat may be svg, png, pdf, or any other graphviz-accepted format
      */
     public static byte[] convertGraphToImg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType,
             String outputFormat) throws Exception {

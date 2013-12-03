@@ -15,15 +15,15 @@ import edu.uci.ics.genomix.type.VKmerList;
 
 /**
  * Graph clean pattern: Bubble Merge With Search
- * Ex.      B - C - D - E - F - G  
- *      A - B - H ------------- G
+ * Ex. B - C - D - E - F - G
+ * A - B - H ------------- G
  * From this example, CDEF and H are formed bubble and B and G are two end points of this bubble.
  * For this operator,
- *     1. it starts BFSearching from start point B, and then it will collect all the valid paths(BCDEFG and BHG) to B
- *     2. compare all the valid paths with its own startHeads and pick one path which is enough similar so that we 
- *     have confidence to say this path is the correct path
- *     3. keep this similar path and merge the path nodes in B
- *     4. delete all path nodes and the corresponding edges with these path nodes 
+ * 1. it starts BFSearching from start point B, and then it will collect all the valid paths(BCDEFG and BHG) to B
+ * 2. compare all the valid paths with its own startHeads and pick one path which is enough similar so that we
+ * have confidence to say this path is the correct path
+ * 3. keep this similar path and merge the path nodes in B
+ * 4. delete all path nodes and the corresponding edges with these path nodes
  */
 public class BubbleMergeWithSearchVertex extends
         DeBruijnGraphCleanVertex<BubbleMergeWithSearchVertexValueWritable, BubbleMergeWithSearchMessage> {
@@ -92,7 +92,7 @@ public class BubbleMergeWithSearchVertex extends
 
             // get msg flag
             byte flag = (byte) (incomingMsg.getFlag() & BubbleMergeWithSearchState.BUBBLE_WITH_SEARCH_FLAG_MASK);
-            
+
             // different operators for different message flags
             if (flag == BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT) {
                 updatePathInNextNode(incomingMsg);
@@ -161,7 +161,7 @@ public class BubbleMergeWithSearchVertex extends
             for (EDGETYPE et : preToMe.mirror().dir().mirror().edgeTypes()) {
                 for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                     // set flag and source vertex
-                    outgoingMsg.setFlag((byte)(BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT | et.mirror().get()));
+                    outgoingMsg.setFlag((byte) (BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT | et.mirror().get()));
 
                     // update edgeTypes
                     outgoingMsg.setEdgeTypeList(edgeTypes);
@@ -192,19 +192,23 @@ public class BubbleMergeWithSearchVertex extends
             pickBestPath();
         }
     }
-    
-    public void pickBestPath(){
+
+    public void pickBestPath() {
         BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
-        
+
         // step1: figure out which path to keep
         int k = 1; // FIXME compare similarity with startHead and get the most possible path, here for test, using 1
         VKmerList pathList = vertex.getArrayOfPathList().get(k);
-        VKmer mergeKmer = vertex.getArrayOfInternalKmer().get(k);
         EdgeTypeList edgeTypes = vertex.getArrayOfEdgeTypes().get(k);
 
-        // step2: replace internalKmer with mergeKmer and clear edges towards path nodes
-        vertex.setInternalKmer(mergeKmer);
-        vertex.getEdgeMap(vertex.getArrayOfEdgeTypes().get(k).get(0)).remove(pathList.getPosition(1));
+        // step2: clear edges except that one towards similar path
+        for (EDGETYPE et : EDGETYPE.OUTGOING) {
+            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                if (edgeTypes.get(0) == et && pathList.getPosition(1).equals(dest))
+                    continue;
+                vertex.getEdgeMap(et).remove(dest);
+            }
+        }
 
         // step3: send kill message to path nodes
         VKmerList kmerList = new VKmerList();
@@ -238,6 +242,7 @@ public class BubbleMergeWithSearchVertex extends
         // send msg to delete edges except the path nodes
         for (EDGETYPE et : EDGETYPE.values()) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                // the edges connecting similar set don't need to be pruned 
                 if ((et == incomingMsg.getEdgeTypeList().get(0) && dest
                         .equals(incomingMsg.getPathList().getPosition(0)))
                         || (incomingMsg.getEdgeTypeList().size() == 2 && et == incomingMsg.getEdgeTypeList().get(1) && dest
@@ -251,7 +256,6 @@ public class BubbleMergeWithSearchVertex extends
                 sendMsg(dest, outgoingMsg);
             }
         }
-        deleteVertex(getVertexId());
     }
 
     @Override
