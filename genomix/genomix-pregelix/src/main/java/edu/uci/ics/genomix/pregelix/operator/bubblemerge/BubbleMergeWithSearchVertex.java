@@ -268,7 +268,7 @@ public class BubbleMergeWithSearchVertex extends
 
             outgoingMsg.reset();
             // last node should be treated as special case, it doesn't need to prune forward or reverse edges
-            if(i == pathList.size() - 1) 
+            if (i == pathList.size() - 1)
                 outgoingMsg.setFlag(BubbleMergeWithSearchState.SAVE_ONLY_PATH_NODES_LAST_NODE);
             else
                 outgoingMsg.setFlag(BubbleMergeWithSearchState.SAVE_ONLY_PATH_NODES);
@@ -293,14 +293,14 @@ public class BubbleMergeWithSearchVertex extends
 
     public void saveOnlyPathEdges(BubbleMergeWithSearchMessage incomingMsg) {
         BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
-        
+
         /* for last node, only prune SEARCH_DIRECTION.mirror() */
         EDGETYPE[] pruneET;
-        if(incomingMsg.getFlag() == BubbleMergeWithSearchState.SAVE_ONLY_PATH_NODES)
+        if (incomingMsg.getFlag() == BubbleMergeWithSearchState.SAVE_ONLY_PATH_NODES)
             pruneET = EDGETYPE.values();
-        else 
+        else
             pruneET = SEARCH_DIRECTION.mirror().edgeTypes();
-        
+
         // send msg to delete edges except the path nodes
         for (EDGETYPE et : pruneET) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
