@@ -97,7 +97,7 @@ public enum EDGETYPE implements Writable {
         return dir(this);
     }
 
-    public static DIR dir(EDGETYPE edgeType) { // .dir static / non-static
+    public static DIR dir(EDGETYPE edgeType) {
         switch (edgeType) {
             case FF:
             case FR:
@@ -124,6 +124,23 @@ public enum EDGETYPE implements Writable {
                 return DIR.REVERSE;
             default:
                 throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + et);
+        }
+    }
+
+    public DIR neighborDir() {
+        return neighborDir(this);
+    }
+
+    public static DIR neighborDir(EDGETYPE edgeType) {
+        switch (edgeType) {
+            case FF:
+            case RF:
+                return DIR.FORWARD;
+            case FR:
+            case RR:
+                return DIR.REVERSE;
+            default:
+                throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
         }
     }
 
@@ -247,4 +264,5 @@ public enum EDGETYPE implements Writable {
     public void readFields(DataInput in) throws IOException {
         this.val = in.readByte();
     }
+
 }
