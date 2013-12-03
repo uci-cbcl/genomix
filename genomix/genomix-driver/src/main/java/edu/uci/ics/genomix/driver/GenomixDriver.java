@@ -116,10 +116,10 @@ public class GenomixDriver {
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
                 break;
-            case TIP_REMOVE:
+            case TIP_SINGLE_NODE:
                 pregelixJobs.add(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
                 break;
-            case TIP_REMOVE_SEARCH:
+            case TIP:
                 pregelixJobs.add(TipRemoveWithSearchVertex.getConfiguredJob(conf, TipRemoveWithSearchVertex.class));
                 break;
             case BUBBLE:
