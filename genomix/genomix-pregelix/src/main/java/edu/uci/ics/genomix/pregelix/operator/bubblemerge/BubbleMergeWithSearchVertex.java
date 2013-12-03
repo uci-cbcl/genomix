@@ -43,7 +43,7 @@ public class BubbleMergeWithSearchVertex extends
     //    private static final Logger LOG = Logger.getLogger(BubbleMergeWithSearchVertex.class.getName());
 
     private static int MAX_BFS_LENGTH = -1;
-    private static EnumSet<EDGETYPE> SEARCH_DIRECTION = null;
+    private static EDGETYPE[] SEARCH_DIRECTION = null;
     
     /**
      * initiate kmerSize, maxIteration

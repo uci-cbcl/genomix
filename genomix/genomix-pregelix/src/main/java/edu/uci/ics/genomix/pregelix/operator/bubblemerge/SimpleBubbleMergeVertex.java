@@ -215,7 +215,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     deleteVertex(getVertexId());
                     break;
                 case ADD_READIDS:
-                    for (EDGETYPE et : EDGETYPE.values()) {
+                    for (EDGETYPE et : EDGETYPE.values) {
                         EdgeMap edgeMap = incomingMsg.getNode().getEdgeMap(et);
                         if (edgeMap.size() > 0) {
                             getVertexValue().getEdgeMap(et).unionUpdate(edgeMap);

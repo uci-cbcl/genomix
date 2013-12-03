@@ -55,8 +55,10 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
 
+    private static final Pattern genePattern = Pattern.compile("[AGCT]+");
+
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
-            confFactory = new ConfFactory(conf);
+        confFactory = new ConfFactory(conf);
     }
 
     @Override
@@ -131,7 +133,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     geneLine = rawLine[1];
                 }
 
-                Pattern genePattern = Pattern.compile("[AGCT]+");
                 Matcher geneMatcher = genePattern.matcher(geneLine);
                 if (geneMatcher.matches()) {
                     setReadInfo(mateId, readID, 0);
@@ -149,7 +150,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 curNode.reset();
                 curNode.setAverageCoverage(1);
                 curForwardKmer.setFromStringBytes(readLetters, 0);
-                
+
                 curReverseKmer.setReversedFromStringBytes(readLetters, 0);
 
                 DIR curNodeDir = curForwardKmer.compareTo(curReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
@@ -163,7 +164,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 DIR nextNodeDir = DIR.FORWARD;
 
                 /* middle kmer */
-                nextNode.reset();
+                nextNode = new Node();
                 nextNode.setAverageCoverage(1);
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 for (int i = Kmer.getKmerLength(); i < readLetters.length; i++) {
@@ -176,9 +177,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
-                    curNode.setAsCopy(nextNode);
+                    curNode = nextNode;
                     curNodeDir = nextNodeDir;
-                    nextNode.reset();
+                    nextNode = new Node();
                     nextNode.setAverageCoverage(1);
                 }
 
@@ -233,7 +234,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 try {
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-                    tupleBuilder.addField(node.marshalToByteArray(), 0, node.getSerializedLength());
+                    byte[] nodeBytes = node.marshalToByteArray();
+                    tupleBuilder.addField(nodeBytes, 0, nodeBytes.length);
 
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {

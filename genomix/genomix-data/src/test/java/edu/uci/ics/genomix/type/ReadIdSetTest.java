@@ -13,12 +13,13 @@ public class ReadIdSetTest {
 
     /**
      * basic check for adding and reading operation related to ReadIdSet
+     * @throws IOException 
      */
     @Test
-    public void Test1() {
+    public void Test1() throws IOException {
         EdgeMap elist = new EdgeMap();
         Assert.assertEquals(0, elist.size());
-        Assert.assertEquals(4, elist.getLengthInBytes());
+        Assert.assertEquals(4, elist.marshalToByteArray().length);
 
         VKmer kmer1 = new VKmer("ACCGCTTAGATACC");
         ReadIdSet plist1 = new ReadIdSet();

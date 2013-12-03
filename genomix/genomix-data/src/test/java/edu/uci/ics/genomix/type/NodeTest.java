@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class NodeTest {
         ArrayList<SimpleEntry<VKmer, ReadIdSet>> sampleList;
         SimpleEntry<VKmer, ReadIdSet> edgeId;
         EdgeMap edge;
-        for (EDGETYPE e : EDGETYPE.values()) {
+        for (EDGETYPE e : EDGETYPE.values) {
             sampleList = new ArrayList<SimpleEntry<VKmer, ReadIdSet>>();
             for (int i = 0; i < min + (int) (Math.random() * ((max - min) + 1)); i++) {
                 String edgeStr = generateString(orderNum);
@@ -77,7 +78,7 @@ public class NodeTest {
 
     public static void printSrcNodeInfo(Node srcNode) {
         System.out.println("InternalKmer: " + srcNode.getInternalKmer().toString());
-        for (EDGETYPE e : EDGETYPE.values()) {
+        for (EDGETYPE e : EDGETYPE.values) {
             System.out.println(e.toString());
             for (Map.Entry<VKmer, ReadIdSet> iter : srcNode.getEdgeMap(e).entrySet()) {
                 System.out.println("edgeKmer: " + iter.getKey().toString());
@@ -101,7 +102,7 @@ public class NodeTest {
 
     public static void compareTwoNodes(Node et1, Node et2) {
         Assert.assertEquals(et1.getInternalKmer().toString(), et2.getInternalKmer().toString());
-        for (EDGETYPE e : EDGETYPE.values()) {
+        for (EDGETYPE e : EDGETYPE.values) {
             Assert.assertEquals(et1.getEdgeMap(e).size(), et2.getEdgeMap(e).size());
             for (Map.Entry<VKmer, ReadIdSet> iter1 : et1.getEdgeMap(e).entrySet()) {
                 Map.Entry<VKmer, ReadIdSet> iter2 = et2.getEdgeMap(e).pollFirstEntry();
@@ -127,7 +128,7 @@ public class NodeTest {
         int max = 4;
         ArrayList<SimpleEntry<VKmer, ReadIdSet>> sampleList;
         SimpleEntry<VKmer, ReadIdSet> edgeId;
-        for (EDGETYPE e : EDGETYPE.values()) {
+        for (EDGETYPE e : EDGETYPE.values) {
             sampleList = new ArrayList<SimpleEntry<VKmer, ReadIdSet>>();
             for (int i = 0; i < min + (int) (Math.random() * ((max - min) + 1)); i++) {
                 String edgeStr = generateString(orderNum);
@@ -188,9 +189,9 @@ public class NodeTest {
         Assert.assertEquals(0b11 << 2, DIR.fromSet(EnumSet.allOf(DIR.class)));
         Assert.assertEquals(0b00 << 2, DIR.fromSet(EnumSet.noneOf(DIR.class)));
 
-        EnumSet<EDGETYPE> edgeTypes1 = testDir1.edgeTypes();
+        EnumSet<EDGETYPE> edgeTypes1 = EnumSet.copyOf(Arrays.asList(testDir1.edgeTypes()));
         EnumSet<EDGETYPE> edgeExample1 = EnumSet.noneOf(EDGETYPE.class);
-        EnumSet<EDGETYPE> edgeTypes2 = testDir2.edgeTypes();
+        EnumSet<EDGETYPE> edgeTypes2 = EnumSet.copyOf(Arrays.asList(testDir2.edgeTypes()));
         EnumSet<EDGETYPE> edgeExample2 = EnumSet.noneOf(EDGETYPE.class);
         edgeExample1.add(EDGETYPE.FF);
         edgeExample1.add(EDGETYPE.FR);
@@ -200,8 +201,8 @@ public class NodeTest {
         edgeExample2.add(EDGETYPE.RR);
         Assert.assertEquals(edgeExample2, edgeTypes2);
 
-        Assert.assertEquals(edgeExample1, DIR.edgeTypesInDir(testDir1));
-        Assert.assertEquals(edgeExample2, DIR.edgeTypesInDir(testDir2));
+        Assert.assertEquals(edgeExample1, EnumSet.copyOf(Arrays.asList(DIR.edgeTypesInDir(testDir1))));
+        Assert.assertEquals(edgeExample2, EnumSet.copyOf(Arrays.asList(DIR.edgeTypesInDir(testDir2))));
 
         EnumSet<DIR> dirExample = EnumSet.noneOf(DIR.class);
         dirExample.add(DIR.FORWARD);
@@ -385,7 +386,7 @@ public class NodeTest {
 
         for (int i = 10; i < 15; i++) {
             NodeTest.assembleNodeRandomly(dataNodes[i - 10], i);
-            nodeOffset[i - 10] = dataNodes[i - 10].getSerializedLength();
+            nodeOffset[i - 10] = dataNodes[i - 10].marshalToByteArray().length;
             outputStream.write(dataNodes[i - 10].marshalToByteArray());
         }
         byte[] dataArray = outputStream.toByteArray();
@@ -512,7 +513,7 @@ public class NodeTest {
     public void testWriteAndReadFields() throws IOException {
         Node srcNode = new Node();
         NodeTest.assembleNodeRandomly(srcNode, 17);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(srcNode.getSerializedLength());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(srcNode.marshalToByteArray().length);
         DataOutputStream out = new DataOutputStream(baos);
         srcNode.write(out);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
