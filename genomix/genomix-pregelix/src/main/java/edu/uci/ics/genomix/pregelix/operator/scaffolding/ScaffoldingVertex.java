@@ -80,8 +80,8 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
         SearchInfo searchInfo;
         ArrayListWritable<SearchInfo> searchInfoList;
 
-        for (ReadHeadInfo pos : readIds) {
-            LongWritable readId = new LongWritable(pos.getReadId());
+        for (Long longReadId : readIds.getReadIdSet()) {
+            LongWritable readId = new LongWritable(longReadId);
             if (scaffoldingMap.containsKey(readId)) {
                 searchInfoList = scaffoldingMap.get(readId);
             } else {

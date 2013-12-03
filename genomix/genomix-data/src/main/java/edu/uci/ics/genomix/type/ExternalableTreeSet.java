@@ -12,7 +12,6 @@ import java.lang.reflect.ParameterizedType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -22,8 +21,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
-public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable {
+public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     static FileManager manager;
     static private int countLimit = Integer.MAX_VALUE;
 
@@ -43,9 +46,9 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
         countLimit = count;
     }
 
-    private TreeSet<T> inMemorySet;
+    protected TreeSet<T> inMemorySet;
     private Path path;
-    private boolean isChanged;
+    protected boolean isChanged;
 
     public ExternalableTreeSet() {
         this(null);
@@ -77,31 +80,22 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
         return inMemorySet.contains(obj);
     }
 
+    public int size() {
+        return inMemorySet.size();
+    }
+
+    /**
+     * Returns a view of the portion of this set whose elements range from fromElement, inclusive, to
+     * toElement, exclusive. (If fromElement and toElement are equal, the returned set is empty.)
+     * [lowKey, highKey)
+     * 
+     * @param lowKey
+     * @param highKey
+     * @return
+     */
     public SortedSet<T> rangeSearch(T lowKey, T highKey) {
         SortedSet<T> set = inMemorySet.subSet(lowKey, highKey);
         return set;
-    }
-
-    public interface ReadOnlyIterator<T> {
-        public boolean hasNext();
-
-        public T next();
-    }
-
-    public ReadOnlyIterator<T> iterator() {
-        return new ReadOnlyIterator<T>() {
-            private Iterator<T> it = inMemorySet.iterator();
-
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public T next() {
-                return it.next();
-            }
-        };
     }
 
     /**
@@ -116,6 +110,13 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
             isChanged = true;
         }
         return changed;
+    }
+
+    public void setAsCopy(ExternalableTreeSet<T> readSet) {
+        this.inMemorySet.clear();
+        this.inMemorySet.addAll(readSet.inMemorySet);
+        this.path = readSet.path;
+        this.isChanged = readSet.isChanged;
     }
 
     protected static TreeSet<?> load(Path path) throws IOException, ClassNotFoundException {

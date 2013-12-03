@@ -19,6 +19,14 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int readIdShift = bitsForPosition + bitsForMate;
     private static final int positionIdShift = bitsForMate;
 
+    protected static ReadHeadInfo getLowerBoundInfo(long readid) {
+        return new ReadHeadInfo((byte) 0, readid, 0, null, null);
+    }
+
+    protected static ReadHeadInfo getUpperBoundInfo(long readid) {
+        return new ReadHeadInfo((byte) 1, readid, 0xFFFF, null, null);
+    }
+
     private long value;
     private VKmer thisReadSequence;
     private VKmer mateReadSequence;
@@ -41,7 +49,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         set(uuid, thisReadSequence, mateReadSequence);
     }
 
-    public ReadHeadInfo(byte[] data, int offset){
+    public ReadHeadInfo(byte[] data, int offset) {
         byte activeFields = data[offset];
         offset++;
         long uuid = Marshal.getLong(data, offset);
@@ -56,7 +64,7 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
             offset += getMateReadSequence().getLength();
         }
     }
-    
+
     public void set(long uuid, VKmer thisReadSequence, VKmer mateReadSequence) {
         value = uuid;
         if (thisReadSequence == null) {
@@ -121,6 +129,10 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
 
     public int getOffset() {
         return (int) ((value >>> positionIdShift) & 0xffff);
+    }
+
+    public void resetOffset(int pos) {
+        value = makeUUID(getMateId(), getReadId(), pos);
     }
 
     protected static class READHEADINFO_FIELDS {
@@ -205,4 +217,5 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         return Long.compare(this.getReadId(), o.getReadId());
         //TODO do we need to compare the read sequence? I don't think so. Nan.
     }
+
 }

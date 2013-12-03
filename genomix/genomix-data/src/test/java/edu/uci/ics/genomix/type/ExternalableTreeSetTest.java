@@ -8,6 +8,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Iterator;
 
 import junit.framework.Assert;
 
@@ -38,6 +39,10 @@ public class ExternalableTreeSetTest implements Serializable {
 
         public int get() {
             return iw;
+        }
+
+        public void set(int i) {
+            iw = i;
         }
 
         /**
@@ -72,9 +77,27 @@ public class ExternalableTreeSetTest implements Serializable {
             eSet.add(new TestIntWritable(i));
         }
 
-        ExternalableTreeSet.ReadOnlyIterator<TestIntWritable> it = eSet.iterator();
+        int i = 0;
+        for (TestIntWritable it : eSet.inMemorySet) {
+            Assert.assertEquals(i++, it.get());
+        }
+    }
+
+    @Test
+    public void TestIterator() {
+        ExternalableTreeSet.setCountLimit(limit);
+
+        ExternalableTreeSet<TestIntWritable> eSet = new ExternalableTreeSet<TestIntWritable>();
         for (int i = 0; i < limit; i++) {
-            Assert.assertEquals(i, it.next().get());
+            eSet.add(new TestIntWritable(i));
+        }
+
+        for (TestIntWritable it : eSet.inMemorySet) {
+            it.set(42);
+        }
+
+        for (TestIntWritable it : eSet.inMemorySet) {
+            Assert.assertEquals(42, it.get());
         }
     }
 
@@ -116,8 +139,8 @@ public class ExternalableTreeSetTest implements Serializable {
             Assert.fail(e.getMessage());
         }
 
-        ExternalableTreeSet.ReadOnlyIterator<TestIntWritable> itA = eSetA.iterator();
-        ExternalableTreeSet.ReadOnlyIterator<TestIntWritable> itB = eSetB.iterator();
+        Iterator<TestIntWritable> itA = eSetA.inMemorySet.iterator();
+        Iterator<TestIntWritable> itB = eSetB.inMemorySet.iterator();
         for (int i = 0; i <= limit; i++) {
             Assert.assertEquals(itA.next().get(), itB.next().get());
         }
@@ -175,4 +198,5 @@ public class ExternalableTreeSetTest implements Serializable {
         testEqual();
         localDFSCluster.shutdown();
     }
+
 }

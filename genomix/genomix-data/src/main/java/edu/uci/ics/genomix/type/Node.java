@@ -145,14 +145,15 @@ public class Node implements Writable, Serializable {
         setAsCopy(edges, unflippedReadIds, flippedReadIds, kmer, coverage);
     }
 
-    public Node(byte[] data, int offset) {
+    public Node(byte[] data, int offset) throws IOException {
         this();
         setAsReference(data, offset);
     }
 
     public Node getCopyAsNode() {
         Node node = new Node();
-        node.setAsCopy(this.allEdges, this.unflippedReadIds, this.flippedReadIds, this.internalKmer, this.averageCoverage);
+        node.setAsCopy(this.allEdges, this.unflippedReadIds, this.flippedReadIds, this.internalKmer,
+                this.averageCoverage);
         return node;
     }
 
@@ -306,8 +307,7 @@ public class Node implements Writable, Serializable {
         if (unflippedReadIds == null) {
             this.unflippedReadIds = null;
         } else {
-            getUnflippedReadIds().clear();
-            getUnflippedReadIds().addAll(unflippedReadIds);
+            getUnflippedReadIds().setAsCopy(unflippedReadIds);
         }
     }
 
@@ -322,47 +322,21 @@ public class Node implements Writable, Serializable {
         if (flippedReadIds == null) {
             this.flippedReadIds = null;
         } else {
-            getFlippedReadIds().clear();
-            getFlippedReadIds().addAll(flippedReadIds);
+            getFlippedReadIds().setAsCopy(flippedReadIds);
         }
-    }
-
-    /**
-     * Returns the length of the byte-array version of this node
-     */
-    public int getSerializedLength() {
-        int length = Byte.SIZE / 8; // byte header
-        for (EDGETYPE e : EDGETYPE.values()) {
-            if (allEdges[e.get()] != null && allEdges[e.get()].size() > 0) {
-                length += allEdges[e.get()].getLengthInBytes();
-            }
-        }
-        if (unflippedReadIds != null && unflippedReadIds.size() > 0) {
-            length += unflippedReadIds.getLengthInBytes();
-        }
-        if (flippedReadIds != null && flippedReadIds.size() > 0) {
-            length += flippedReadIds.getLengthInBytes();
-        }
-        if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
-            length += internalKmer.getLength();
-        }
-        if (averageCoverage != null) {
-            length += Float.SIZE / 8;
-        }
-        return length;
     }
 
     /**
      * Return this Node's representation as a new byte array
      */
     public byte[] marshalToByteArray() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(getSerializedLength());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(baos);
-        write(out);
+        this.write(out);
         return baos.toByteArray();
     }
 
-    public void setAsCopy(byte[] data, int offset) {
+    public void setAsCopy(byte[] data, int offset) throws IOException {
         reset();
         byte activeFields = data[offset];
         offset += 1;
@@ -374,12 +348,10 @@ public class Node implements Writable, Serializable {
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            getUnflippedReadIds().setAsCopy(data, offset);
-            offset += unflippedReadIds.getLengthInBytes();
+            offset += getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            getFlippedReadIds().setAsCopy(data, offset);
-            offset += flippedReadIds.getLengthInBytes();
+            offset += getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
             getInternalKmer().setAsCopy(data, offset);
@@ -391,7 +363,7 @@ public class Node implements Writable, Serializable {
         }
     }
 
-    public void setAsReference(byte[] data, int offset) {
+    public void setAsReference(byte[] data, int offset) throws IOException {
         reset();
         byte activeFields = data[offset];
         offset += 1;
@@ -403,12 +375,10 @@ public class Node implements Writable, Serializable {
             }
         }
         if ((activeFields & NODE_FIELDS.UNFLIPPED_READ_IDS) != 0) {
-            getUnflippedReadIds().setAsCopy(data, offset);
-            offset += unflippedReadIds.getLengthInBytes();
+            offset += getUnflippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.FLIPPED_READ_IDS) != 0) {
-            getFlippedReadIds().setAsCopy(data, offset);
-            offset += flippedReadIds.getLengthInBytes();
+            offset += getFlippedReadIds().setAsCopy(data, offset);
         }
         if ((activeFields & NODE_FIELDS.INTERNAL_KMER) != 0) {
             getInternalKmer().setAsReference(data, offset);
@@ -521,7 +491,8 @@ public class Node implements Writable, Serializable {
         Node nw = (Node) o;
         for (EDGETYPE et : EDGETYPE.values()) {
             // If I'm null, return false if he's not null; otherwise, do a regular .equals
-            if (allEdges[et.get()] == null ? nw.allEdges[et.get()] != null : allEdges[et.get()].equals(nw.allEdges[et.get()])) {
+            if (allEdges[et.get()] == null ? nw.allEdges[et.get()] != null : allEdges[et.get()].equals(nw.allEdges[et
+                    .get()])) {
                 return false;
             }
         }
@@ -600,40 +571,19 @@ public class Node implements Writable, Serializable {
         float lengthFactor = (float) thisLength / (float) otherLength;
         if (!flip) {
             // stream theirs in, adjusting to the new total length
-
             if (other.unflippedReadIds != null) {
-                for (ReadHeadInfo p : other.unflippedReadIds) {
-                    getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
-                            p.getMateReadSequence());
-                }
+                getUnflippedReadIds().unionUpdate(other.unflippedReadIds, lengthFactor, flip, otherLength);
             }
             if (other.flippedReadIds != null) {
-                for (ReadHeadInfo p : other.flippedReadIds) {
-                    getFlippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((p.getOffset() + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
-                            p.getMateReadSequence());
-                }
+                getFlippedReadIds().unionUpdate(other.flippedReadIds, lengthFactor, flip, otherLength);
             }
         } else {
-            //            int newOtherOffset = (int) ((otherLength - 1) * lengthFactor);
-            // stream theirs in, offset and flipped
-            int newPOffset;
+
             if (other.unflippedReadIds != null) {
-                for (ReadHeadInfo p : other.unflippedReadIds) {
-                    newPOffset = otherLength - 1 - p.getOffset();
-                    getFlippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
-                            p.getMateReadSequence());
-                }
+                getFlippedReadIds().unionUpdate(other.unflippedReadIds, lengthFactor, flip, otherLength);
             }
             if (other.flippedReadIds != null) {
-                for (ReadHeadInfo p : other.flippedReadIds) {
-                    newPOffset = otherLength - 1 - p.getOffset();
-                    getUnflippedReadIds().add(p.getMateId(), p.getReadId(),
-                            (int) ((newPOffset + 1) * lengthFactor - lengthFactor), p.getThisReadSequence(),
-                            p.getMateReadSequence());
-                }
+                getUnflippedReadIds().unionUpdate(other.flippedReadIds, lengthFactor, flip, otherLength);
             }
         }
     }
@@ -760,84 +710,60 @@ public class Node implements Writable, Serializable {
                 newOtherOffset = thisLength - K + 1;
                 // stream theirs in with my offset
                 if (other.unflippedReadIds != null) {
-                    for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(),
-                                p.getThisReadSequence(), p.getMateReadSequence());
-                    }
+                    other.unflippedReadIds.postAppendOffsets(newOtherOffset);
+                    getUnflippedReadIds().unionUpdate(other.unflippedReadIds);
                 }
                 if (other.flippedReadIds != null) {
-                    for (ReadHeadInfo p : other.flippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset + p.getOffset(),
-                                p.getThisReadSequence(), p.getMateReadSequence());
-                    }
+                    other.flippedReadIds.postAppendOffsets(newOtherOffset);
+                    getFlippedReadIds().unionUpdate(other.flippedReadIds);
                 }
                 break;
             case FR:
                 newOtherOffset = thisLength - K + otherLength;
                 // stream theirs in, offset and flipped
                 if (other.unflippedReadIds != null) {
-                    for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
-                                p.getThisReadSequence(), p.getMateReadSequence());
-                    }
+                    other.unflippedReadIds.preAppendOffset(newOtherOffset);
+                    getFlippedReadIds().unionUpdate(other.unflippedReadIds);
                 }
                 if (other.flippedReadIds != null) {
-                    for (ReadHeadInfo p : other.flippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
-                                p.getThisReadSequence(), p.getMateReadSequence());
-                    }
+                    other.flippedReadIds.preAppendOffset(newOtherOffset);
+                    getUnflippedReadIds().unionUpdate(other.flippedReadIds);
                 }
                 break;
             case RF:
                 newThisOffset = otherLength - K + 1;
                 newOtherOffset = otherLength - 1;
                 // shift my offsets (other is prepended)
-
                 if (unflippedReadIds != null) {
-                    for (ReadHeadInfo p : unflippedReadIds) {
-                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
-                    }
+                    unflippedReadIds.postAppendOffsets(newThisOffset);
                 }
                 if (flippedReadIds != null) {
-                    for (ReadHeadInfo p : flippedReadIds) {
-                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
-                    }
+                    flippedReadIds.postAppendOffsets(newThisOffset);
                 }
                 if (other.unflippedReadIds != null) {
-                    for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getFlippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
-                                p.getThisReadSequence(), p.getMateReadSequence());
-                    }
+                    other.unflippedReadIds.preAppendOffset(newOtherOffset);
+                    getFlippedReadIds().unionUpdate(other.unflippedReadIds);
                 }
                 if (other.flippedReadIds != null) {
-                    for (ReadHeadInfo p : other.flippedReadIds) {
-                        getUnflippedReadIds().add(p.getMateId(), p.getReadId(), newOtherOffset - p.getOffset(),
-                                p.getThisReadSequence(), p.getMateReadSequence());
-                    }
+                    other.flippedReadIds.preAppendOffset(newOtherOffset);
+                    getUnflippedReadIds().unionUpdate(other.flippedReadIds);
                 }
                 break;
             case RR:
                 newThisOffset = otherLength - K + 1;
                 // shift my offsets (other is prepended)
                 if (unflippedReadIds != null) {
-                    for (ReadHeadInfo p : unflippedReadIds) {
-                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
-                    }
+                    unflippedReadIds.postAppendOffsets(newThisOffset);
                 }
                 if (flippedReadIds != null) {
-                    for (ReadHeadInfo p : flippedReadIds) {
-                        p.set(p.getMateId(), p.getReadId(), newThisOffset + p.getOffset());
-                    }
+                    flippedReadIds.postAppendOffsets(newThisOffset);
                 }
                 if (other.unflippedReadIds != null) {
-                    for (ReadHeadInfo p : other.unflippedReadIds) {
-                        getUnflippedReadIds().add(p);
-                    }
+                    getUnflippedReadIds().unionUpdate(other.unflippedReadIds);
+
                 }
                 if (other.flippedReadIds != null) {
-                    for (ReadHeadInfo p : other.flippedReadIds) {
-                        getFlippedReadIds().add(p);
-                    }
+                    getFlippedReadIds().unionUpdate(other.flippedReadIds);
                 }
                 break;
         }

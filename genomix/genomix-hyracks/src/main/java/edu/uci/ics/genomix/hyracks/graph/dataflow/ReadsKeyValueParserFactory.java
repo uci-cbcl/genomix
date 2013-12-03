@@ -253,7 +253,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 try {
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-                    tupleBuilder.addField(node.marshalToByteArray(), 0, node.getSerializedLength());
+                    byte[] nodeInByte = node.marshalToByteArray();
+                    tupleBuilder.addField(nodeInByte, 0, nodeInByte.length);
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {
                         FrameUtils.flushFrame(outputBuffer, writer);

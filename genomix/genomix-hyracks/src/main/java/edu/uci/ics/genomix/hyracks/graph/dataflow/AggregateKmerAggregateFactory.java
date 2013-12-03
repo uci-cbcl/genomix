@@ -17,14 +17,12 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -90,7 +88,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 Node localUniNode = (Node) state.state;
 
                 localUniNode.reset();
-                readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                try {
+                    readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    throw new HyracksDataException(e1);
+                }
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.
                 //              if (readKmer.toString().equals("CGAAGTATCTCGACAGCAAGTCCGTCCGTCCCAACCACGTCGACGAGCGTCGTAA")) {
@@ -109,8 +112,8 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 for (EDGETYPE e : EDGETYPE.values()) {
                     localUniNode.getEdges(e).unionUpdate((readNode.getEdges(e)));
                 }
-                localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
-                localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
+                localUniNode.getUnflippedReadIds().unionUpdate(readNode.getUnflippedReadIds());
+                localUniNode.getFlippedReadIds().unionUpdate(readNode.getFlippedReadIds());
                 localUniNode.setAverageCoverage(readNode.getAverageCoverage());
             }
 
@@ -120,12 +123,17 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
                 Node localUniNode = (Node) state.state;
 
-                readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                try {
+                    readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    throw new HyracksDataException(e1);
+                }
                 for (EDGETYPE e : EDGETYPE.values()) {
                     localUniNode.getEdges(e).unionUpdate(readNode.getEdges(e));
                 }
-                localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
-                localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
+                localUniNode.getUnflippedReadIds().unionUpdate(readNode.getUnflippedReadIds());
+                localUniNode.getFlippedReadIds().unionUpdate(readNode.getFlippedReadIds());
                 localUniNode.setAverageCoverage(localUniNode.getAverageCoverage() + readNode.getAverageCoverage());
 
                 //TODO This piece of code is for the debug use. It's better to have a better solution for it.
@@ -184,11 +192,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
                 try {
-                    fieldOutput.write(localUniNode.marshalToByteArray(), 0, localUniNode.getSerializedLength());
+                    byte[] nodeInByte =localUniNode.marshalToByteArray(); 
+                    fieldOutput.write(nodeInByte, 0, nodeInByte.length);
                     tupleBuilder.addFieldEndOffset();
-                    if (localUniNode.getSerializedLength() > frameSize / 2) {
+                    if (nodeInByte.length > frameSize / 2) {
                         LOG.warning("Aggregate Kmer: output data kmerByteSize is too big: "
-                                + localUniNode.getSerializedLength() + "\nNode is:" + localUniNode.toString());
+                                + nodeInByte.length + "\nNode is:" + localUniNode.toString());
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");
