@@ -18,6 +18,12 @@ public class BubbleMergeWithSearchVertexValueWritable extends VertexValueWritabl
     private static final long serialVersionUID = 1L;
 
     public static class BubbleMergeWithSearchState extends State{
+        
+        // mark if BFS passes this vertex in bubbleMergeWithSearch
+        public static final byte SEARCH_THROUGH = 0b1 << 3;
+        
+        public static final byte SEARCH_THROUGH_MASK = 0b1 << 3;
+        
         // UPDATE_PATH_TO_NEXT, END_NOTICE_TO_SRC and UPDATE_BRANCH_TO_SRC are used in BubbleMergeWithSearch
         public static final byte UPDATE_PATH_IN_NEXT = 0b001 << 4;
         public static final byte END_NOTICE_IN_SRC = 0b010 << 4;
@@ -26,6 +32,7 @@ public class BubbleMergeWithSearchVertexValueWritable extends VertexValueWritabl
         public static final byte PRUNE_DEAD_EDGE = 0b101 << 4;
 
         public static final byte BUBBLE_WITH_SEARCH_FLAG_MASK = 0b111 << 4;
+        
     }
 
     private ArrayListWritable<VKmerList> arrayOfPathList;

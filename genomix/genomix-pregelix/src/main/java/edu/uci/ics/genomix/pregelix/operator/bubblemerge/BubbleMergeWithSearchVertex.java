@@ -20,6 +20,12 @@ import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**
  * Graph clean pattern: Bubble Merge With Search
+ * Details: We do a breadth-first search by passing along messages. All paths are explored, 
+ *  accumulating a long kmer that represents the sequence of that path. Each branch searches 
+ *  up to a certain kmer distance away and the source node keeps track of how many active 
+ *  branches there are. When there are no more active branches from this path, we compare the
+ *  branches to detect similar paths and collapse those dubbed both too similar and inferior
+ *  in some way (e.g., too low coverage).
  * Ex. B - C - D - E - F - G
  * A - B - H ------------- G
  * From this example, CDEF and H are formed bubble and B and G are two end points of this bubble.
@@ -61,6 +67,9 @@ public class BubbleMergeWithSearchVertex extends
         if (internalKmerLength > MAX_BFS_LENGTH)
             return;
 
+        // set vertex.state = SEARCH_THROUGH
+        vertex.setState(BubbleMergeWithSearchState.SEARCH_THROUGH);
+        
         outgoingMsg.reset();
 
         // update numBranches
@@ -92,8 +101,18 @@ public class BubbleMergeWithSearchVertex extends
 
     public void continueBFS(Iterator<BubbleMergeWithSearchMessage> msgIterator) {
         BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
+        
         while (msgIterator.hasNext()) {
             BubbleMergeWithSearchMessage incomingMsg = msgIterator.next();
+            
+            // if other path has passed this vertex, end this path(send back to source)
+            if((vertex.getState() & BubbleMergeWithSearchState.SEARCH_THROUGH_MASK) > 0){
+                outgoingMsg.reset();
+                outgoingMsg.setAsCopy(incomingMsg);
+                outgoingMsg.setFlag(BubbleMergeWithSearchState.END_NOTICE_IN_SRC);
+                sendMsg(incomingMsg.getPathList().getPosition(0), outgoingMsg);
+                return;
+            }
 
             // get msg flag
             byte flag = (byte) (incomingMsg.getFlag() & BubbleMergeWithSearchState.BUBBLE_WITH_SEARCH_FLAG_MASK);
@@ -101,6 +120,7 @@ public class BubbleMergeWithSearchVertex extends
             // different operators for different message flags
             if (flag == BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT) {
                 updatePathInNextNode(incomingMsg);
+                vertex.setState(BubbleMergeWithSearchState.SEARCH_THROUGH);
             } else if (flag == BubbleMergeWithSearchState.UPDATE_BRANCH_IN_SRC) {
                 // update numBranches in src
                 vertex.setNumBranches(vertex.getNumBranches() + incomingMsg.getNumBranches() - 1);
