@@ -93,7 +93,7 @@ public class GenomixJobConf extends JobConf {
         private int bubbleMergeWithSearch_maxLength = -1;
         
         @Option(name = "-bubbleMergewithsearch_searchDirection", usage = "Maximum length can be searched", required = false)
-        private int bubbleMergeWithSearch_searchDirection = -1;
+        private String bubbleMergeWithSearch_searchDirection;
         
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
         private int graphCleanMaxIterations = -1;
@@ -381,8 +381,8 @@ public class GenomixJobConf extends JobConf {
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
         
-        if (getInt(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, -1) == -1)
-            setInt(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, 1); // 1 represents FORWARD; 2 represents REVERSE
+        if (get(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION) == null)
+            set(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, "FORWARD"); // the default is to search towards FORWARDS
         
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
@@ -487,7 +487,8 @@ public class GenomixJobConf extends JobConf {
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
         setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, opts.bubbleMergeWithSearch_maxLength);
-        setInt(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, opts.bubbleMergeWithSearch_searchDirection);
+        if (opts.bubbleMergeWithSearch_searchDirection != null)
+            set(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, opts.bubbleMergeWithSearch_searchDirection);
         setInt(GRAPH_CLEAN_MAX_ITERATIONS, opts.graphCleanMaxIterations);
         setLong(RANDOM_SEED, opts.randomSeed);
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);
