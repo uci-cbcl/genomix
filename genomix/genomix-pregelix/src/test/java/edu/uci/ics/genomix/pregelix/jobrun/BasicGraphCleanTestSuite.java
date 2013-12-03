@@ -161,7 +161,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                         String textFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
                                 + File.separator + getTestCaseName(testPathStr) + File.separator + "data";
                         String graphvizFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) + File.separator + "graphviz";
+                                + File.separator + getTestCaseName(testPathStr) + File.separator + "graphviz.svg";
                         String statisticsFileName = ACTUAL_RESULT_DIR + File.separator
                                 + jobExtToResExt(qFile.getName()) + File.separator + getTestCaseName(testPathStr)
                                 + File.separator + "statistics";

@@ -49,7 +49,7 @@ public enum DIR {
     }
 
     public static final EDGETYPE[] edgeTypesInDir(DIR direction) {
-        return direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
+        return direction == DIR.REVERSE ? EDGETYPE.REVERSE : EDGETYPE.FORWARD;
     }
 
     public static EnumSet<DIR> enumSetFromByte(short s) { //TODO change shorts to byte? (anbangx) 

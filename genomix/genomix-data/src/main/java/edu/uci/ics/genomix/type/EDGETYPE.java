@@ -25,9 +25,9 @@ public enum EDGETYPE implements Writable {
         return val;
     }
 
+    public static final EDGETYPE[] REVERSE = {RF, RR};
+    public static final EDGETYPE[] FORWARD = {FF, FR};
     public static final EDGETYPE[] values = { FF, FR, RF, RR };
-    public static final EDGETYPE[] INCOMING = { RF, RR };
-    public static final EDGETYPE[] OUTGOING = { FF, FR };
 
     public static EDGETYPE fromByte(short b) {
         b &= MASK;
@@ -124,23 +124,6 @@ public enum EDGETYPE implements Writable {
                 return DIR.REVERSE;
             default:
                 throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + et);
-        }
-    }
-
-    public DIR neighborDir() {
-        return neighborDir(this);
-    }
-
-    public static DIR neighborDir(EDGETYPE edgeType) {
-        switch (edgeType) {
-            case FF:
-            case RF:
-                return DIR.FORWARD;
-            case FR:
-            case RR:
-                return DIR.REVERSE;
-            default:
-                throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
         }
     }
 

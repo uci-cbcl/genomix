@@ -32,12 +32,7 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
-import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
-import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.util.TestUtils;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -49,7 +44,7 @@ public class BasicSmallTestCase extends TestCase {
     private final PregelixJob job;
     private final String binFileDir;
     private final String textFileDir;
-    private final String graphvizFileDir;
+    private final String graphvizFile;
     private final String statisticsFileDir;
     private final String expectedFileDir;
     private final String jobFile;
@@ -69,7 +64,7 @@ public class BasicSmallTestCase extends TestCase {
         job.setJobName(jobName);
         this.binFileDir = resultFile;
         this.textFileDir = textFile;
-        this.graphvizFileDir = graphvizFile;
+        this.graphvizFile = graphvizFile;
         this.statisticsFileDir = statisticsFile;
         this.expectedFileDir = expectedFile;
 
@@ -101,8 +96,7 @@ public class BasicSmallTestCase extends TestCase {
         //covert bin to text
         GenerateTextFile.convertGraphCleanOutputToText(binFileDir, textFileDir);
         //covert bin to graphviz
-        GenerateGraphViz
-                .writeLocalBinToLocalSvg(binFileDir, graphvizFileDir, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
+        GenerateGraphViz.writeLocalBinToLocalSvg(binFileDir, graphvizFile, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
         // compare results
         TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(textFileDir));
         //generate statistic counters
