@@ -29,9 +29,16 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
+
+    public static boolean debug = false;
+    public static ArrayList<VKmer> debugKmers;
+
+    private static Map<String, Long> tickTimes = new HashMap<String, Long>();
+
     /* The following section ties together command-line options with a global JobConf
      * Each variable has an annotated, command-line Option which is private here but 
      * is accessible through JobConf.get(GenomixConfigOld.VARIABLE).
@@ -146,7 +153,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
-        
+
         @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
         private String extraConfFiles;
     }
@@ -167,7 +174,8 @@ public class GenomixJobConf extends JobConf {
         BUBBLE,
         BUBBLE_COMPLEX,
         LOW_COVERAGE,
-        TIP_REMOVE,
+        TIP_SINGLE_NODE,
+        TIP,
         SCAFFOLD,
         SPLIT_REPEAT,
         DUMP_FASTA,
@@ -274,9 +282,8 @@ public class GenomixJobConf extends JobConf {
     // GAGE Metrics Evaluation 
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.conf.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
-    // intermediate date evaluation
 
-    private static Map<String, Long> tickTimes = new HashMap<String, Long>();
+    // intermediate date evaluation
 
     public GenomixJobConf(int kmerLength) {
         super(new Configuration());
@@ -395,7 +402,7 @@ public class GenomixJobConf extends JobConf {
         if (get(PIPELINE_ORDER) == null) {
             set(PIPELINE_ORDER,
                     Patterns.stringFromArray(new Patterns[] { Patterns.BUILD, Patterns.MERGE, Patterns.LOW_COVERAGE,
-                            Patterns.MERGE, Patterns.TIP_REMOVE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
+                            Patterns.MERGE, Patterns.TIP_SINGLE_NODE, Patterns.MERGE, Patterns.BUBBLE, Patterns.MERGE,
                             Patterns.SPLIT_REPEAT, Patterns.MERGE, Patterns.SCAFFOLD, Patterns.MERGE }));
         }
 
@@ -411,11 +418,11 @@ public class GenomixJobConf extends JobConf {
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
-        
+
         // default conf setup
         if (get(EXTRA_CONF_FILES) == null)
             set(EXTRA_CONF_FILES, "");
-        
+
         // hyracks-specific
 
         //        if (getBoolean(RUN_LOCAL, false)) {
@@ -479,7 +486,7 @@ public class GenomixJobConf extends JobConf {
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
-        
+
         // read conf.xml
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
@@ -511,6 +518,14 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
-
+        debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
+        if (debugKmers == null) {
+            debugKmers = new ArrayList<VKmer>();
+            if (conf.get(GenomixJobConf.DEBUG_KMERS) != null) {
+                for (String kmer : conf.get(GenomixJobConf.DEBUG_KMERS).split(",")) {
+                    debugKmers.add(new VKmer(kmer));
+                }
+            }
+        }
     }
 }

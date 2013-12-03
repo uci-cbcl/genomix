@@ -2,23 +2,25 @@ package edu.uci.ics.genomix.type;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
+
 import junit.framework.Assert;
+
 import org.junit.Test;
-import edu.uci.ics.genomix.type.VKmerList;
-import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.VKmer;
+
 import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadIdSetTest {
 
     /**
      * basic check for adding and reading operation related to ReadIdSet
+     * 
+     * @throws IOException
      */
     @Test
     public void Test1() {
         VKmerList elist = new VKmerList();
         Assert.assertEquals(0, elist.size());
-        Assert.assertEquals(4, elist.getLengthInBytes());
+        Assert.assertEquals(4, elist.getByteArray().length);
 
         VKmer kmer1 = new VKmer("ACCGCTTAGATACC");
         ReadIdSet plist1 = new ReadIdSet();
@@ -93,13 +95,13 @@ public class ReadIdSetTest {
             plist2.add((long) i + 5);
 
         }
-        for (int i = 0; i + 5< 200; i++) {
+        for (int i = 0; i + 5 < 200; i++) {
             benchmark.add((long) i + 5);
         }
         ReadIdSet results = ReadIdSet.getIntersection(plist1, plist2);
         Assert.assertEquals(benchmark, results);
     }
-    
+
     /**
      * check for setAsCopy operation related to ReadIdSet
      */
@@ -110,14 +112,14 @@ public class ReadIdSetTest {
         int HEADER_SIZE = 4;
         int ITEM_SIZE = 8;
         Marshal.putInt(10, data, 0);
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             Marshal.putLong(i, data, HEADER_SIZE + ITEM_SIZE * i);
         }
         ReadIdSet results = new ReadIdSet();
         ReadIdSet benchmark = new ReadIdSet();
         results.setAsCopy(data, 0);
-        for(int i = 0; i < 10; i++) {
-            benchmark.add((long)i);
+        for (int i = 0; i < 10; i++) {
+            benchmark.add((long) i);
         }
         Assert.assertEquals(benchmark, results);
     }

@@ -1,7 +1,5 @@
 package edu.uci.ics.genomix.pregelix.testhelper;
 
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -12,7 +10,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
@@ -118,7 +115,7 @@ public class BubbleAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
     }
 
     public void setupEdgeForInsertedBubble() {
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             edges[et.get()] = new VKmerList();
         }
         edges[newBubbleToMajorEdgetype.get()].append(majorVertexId);

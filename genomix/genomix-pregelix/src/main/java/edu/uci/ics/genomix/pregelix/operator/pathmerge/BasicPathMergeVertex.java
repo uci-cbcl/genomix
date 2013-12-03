@@ -16,6 +16,7 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
@@ -112,10 +113,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
 
         DIR mergeDir = edgeType.dir();
-        EnumSet<EDGETYPE> mergeEdges = mergeDir.edgeTypes();
+        EDGETYPE[] mergeEdges = mergeDir.edgeTypes();
 
         DIR updateDir = mergeDir.mirror();
-        EnumSet<EDGETYPE> updateEdges = updateDir.edgeTypes();
+        EDGETYPE[] updateEdges = updateDir.edgeTypes();
 
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
@@ -153,7 +154,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             // remove the edge to the node that will merge elsewhere
             vertex.getEdges(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
-            for (EDGETYPE edgeType : EDGETYPE.values()) {
+            for (EDGETYPE edgeType : EDGETYPE.values) {
                 vertex.getEdges(edgeType).unionUpdate(incomingMsg.getEdges(edgeType));
             }
             updated = true;
@@ -183,8 +184,29 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     .enumSetFromByte(state));
 
             outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(vertex); // TODO reduce amount sent in this Node (only internalKmer and 1/2 of edges)
+            Node outNode = outgoingMsg.getNode();
+            // set only relevant edges
+            for (EDGETYPE et : mergeEdgetype.mirror().neighborDir().edgeTypes()) {
+                outNode.setEdges(et, vertex.getEdges(et));
+            }
+            outNode.setUnflippedReadIds(vertex.getUnflippedReadIds());
+            outNode.setFlippedReadIds(vertex.getFlippedReadIds());
+            outNode.setAverageCoverage(vertex.getAverageCoverage());
+            // only send non-overlapping letters // TODO do something more efficient than toString?
+            if (mergeEdgetype.mirror().neighborDir() == DIR.FORWARD) {
+                outNode.getInternalKmer().setAsCopy(
+                        vertex.getInternalKmer().toString().substring(Kmer.getKmerLength() - 1));
+            } else {
+                outNode.getInternalKmer()
+                        .setAsCopy(
+                                vertex.getInternalKmer()
+                                        .toString()
+                                        .substring(
+                                                0,
+                                                vertex.getInternalKmer().getKmerLetterLength() - Kmer.getKmerLength()
+                                                        + 1));
+            }
+
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);

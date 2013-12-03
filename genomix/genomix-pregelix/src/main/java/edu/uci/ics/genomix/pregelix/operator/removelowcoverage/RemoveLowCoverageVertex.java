@@ -8,8 +8,7 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.type.EDGETYPE;
 
 /**
@@ -32,12 +31,6 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
                     GenomixJobConf.REMOVE_LOW_COVERAGE_MAX_COVERAGE));
         if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
     }
 
     public void detectLowCoverageVertex() {
@@ -53,9 +46,6 @@ public class RemoveLowCoverageVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     public void cleanupDeadVertex() {
         deleteVertex(getVertexId());
-        //set statistics counter: Num_RemovedLowCoverageNodes
-        incrementCounter(StatisticsCounter.Num_RemovedLowCoverageNodes);
-        getVertexValue().setCounters(counters);
     }
 
     public void responseToDeadVertex(Iterator<MessageWritable> msgIterator) {

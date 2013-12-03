@@ -107,7 +107,8 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
 
             try {
                 builder.reset();
-                builder.addField(node.marshalToByteArray(), 0, node.getSerializedLength());
+                byte[] nodeBytes = node.marshalToByteArray();
+                builder.addField(nodeBytes, 0, nodeBytes.length);
 
                 if (!appender.append(builder.getFieldEndOffsets(), builder.getByteArray(), 0, builder.getSize())) {
                     FrameUtils.flushFrame(writeBuffer, writer);

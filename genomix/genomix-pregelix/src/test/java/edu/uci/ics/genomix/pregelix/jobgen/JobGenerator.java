@@ -13,7 +13,7 @@ import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.DeBruijnVertexCounterAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
@@ -37,7 +37,7 @@ public class JobGenerator {
     public static String outputBase = "src/test/resources/jobs/";
 
     private static void configureJob(PregelixJob job) {
-        job.addGlobalAggregatorClass(StatisticsAggregator.class);
+        job.setCounterAggregatorClass(DeBruijnVertexCounterAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);

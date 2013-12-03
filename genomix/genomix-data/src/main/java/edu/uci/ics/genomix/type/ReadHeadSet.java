@@ -11,7 +11,6 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.type.ReadHeadInfo.READHEADINFO_FIELDS;
 import edu.uci.ics.genomix.util.Marshal;
 
 public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Serializable {
@@ -47,7 +46,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
                 + " should exist in this ReadHeadSet, but not here!");
     }
 
-    public void setAsCopy(byte[] data, int offset) {
+    public int setAsCopy(byte[] data, int offset) {
         clear();
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
@@ -56,6 +55,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
             offset += curInfo.getLengthInBytes();
             add(curInfo);
         }
+        return offset;
     }
 
     @Override
@@ -106,12 +106,5 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         ReadHeadSet intersection = new ReadHeadSet(list1);
         intersection.retainAll(list2);
         return intersection;
-    }
-
-    public int getLengthInBytes() {
-        int totalBytes = HEADER_SIZE;
-        for(ReadHeadInfo iter : this)
-            totalBytes += iter.getLengthInBytes();
-        return totalBytes;
     }
 }
