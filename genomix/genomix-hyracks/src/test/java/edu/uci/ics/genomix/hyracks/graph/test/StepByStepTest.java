@@ -62,7 +62,7 @@ public class StepByStepTest {
     @Test
     public void TestAll() throws Exception {
 //        TestReader();
-        TestGroupby();  
+       TestGroupby();  
     }
 
     public void TestReader() throws Exception {

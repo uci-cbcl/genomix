@@ -576,7 +576,7 @@ public class Node implements Writable, Serializable {
     public void mergeWithNodeWithoutKmer(EDGETYPE edgeType, final Node other) {
         mergeEdges(edgeType, other);
         mergeUnflippedAndFlippedReadIDs(edgeType, other);
-        mergeCoverage(other, other.getKmerLength() + Kmer.getKmerLength() - 1);
+        mergeCoverage(other);
     }
 
     /**
