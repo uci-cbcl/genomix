@@ -19,28 +19,28 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         public static final byte NUM_BRANCHES = 1 << 5;
     }
 
-    private int preKmerLength;
+    private Integer preKmerLength;
     private VKmer internalKmer;
     private VKmerList pathList;
     private EdgeTypeList edgeTypeList;
-    private int numBranches;
+    private Integer numBranches;
 
     public BubbleMergeWithSearchMessage() {
         super();
-        preKmerLength = -1;
+        preKmerLength = null;
         internalKmer = null;
         pathList = null;
-        numBranches = -1;
+        numBranches = null;
         edgeTypeList = null;
     }
 
     @Override
     public void reset() {
         super.reset();
-        preKmerLength = -1;
+        preKmerLength = null;
         internalKmer = null;
         pathList = null;
-        numBranches = -1;
+        numBranches = null;
         edgeTypeList = null;
     }
 
@@ -118,7 +118,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        if (preKmerLength != -1) {
+        if (preKmerLength != null) {
             out.writeInt(preKmerLength);
         }
         if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
@@ -130,7 +130,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         if (edgeTypeList != null && edgeTypeList.size() > 0) {
             edgeTypeList.write(out);
         }
-        if (numBranches != -1) {
+        if (numBranches != null) {
             out.writeInt(numBranches);
         }
     }
@@ -138,7 +138,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     @Override
     protected byte getActiveMessageFields() {
         byte messageFields = super.getActiveMessageFields();
-        if (preKmerLength != -1) {
+        if (preKmerLength != null) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.PRE_KMER_LENGTH;
         }
         if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
@@ -150,7 +150,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         if (edgeTypeList != null && edgeTypeList.size() > 0) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.EDGETYPE_LIST;
         }
-        if (numBranches != -1) {
+        if (numBranches != null) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.NUM_BRANCHES;
         }
         return messageFields;

@@ -1,17 +1,22 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.pregelix.format.BubbleMergeWithSearchVertexToNodeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToBubbleMergeWithSearchVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeWithSearchVertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.BubbleMergeWithSearchVertexValueWritable.BubbleMergeWithSearchState;
+import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeWithSearchMessage;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 /**
  * Graph clean pattern: Bubble Merge With Search
@@ -43,11 +48,11 @@ public class BubbleMergeWithSearchVertex extends
                     GenomixJobConf.BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH));
         if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeWithSearchMessage();
-        StatisticsAggregator.preGlobalCounters.clear();
+        //        StatisticsAggregator.preGlobalCounters.clear();
         //        else
         //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
+        //        counters.clear();
+        //        getVertexValue().getCounters().clear();
     }
 
     public void beginBFS() {
@@ -128,7 +133,7 @@ public class BubbleMergeWithSearchVertex extends
         /* if newLength <= MAX_BFS_LENGTH, send message to next */
         else {
             outgoingMsg.reset();
-            
+
             // update pathList
             VKmerList pathList = incomingMsg.getPathList();
             pathList.append(getVertexId());
@@ -275,4 +280,14 @@ public class BubbleMergeWithSearchVertex extends
         voteToHalt();
     }
 
+    public static PregelixJob getConfiguredJob(
+            GenomixJobConf conf,
+            Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
+            throws IOException {
+        PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
+        job.setVertexInputFormatClass(NodeToBubbleMergeWithSearchVertexInputFormat.class);
+        job.setVertexOutputFormatClass(BubbleMergeWithSearchVertexToNodeOutputFormat.class);
+        //        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
+        return job;
+    }
 }

@@ -214,8 +214,6 @@ public class JobGenerator {
     private static void generateBubbleMergeWithSearchGraphJob(String jobName, String outputPath) throws IOException {
         PregelixJob job = BubbleMergeWithSearchVertex.getConfiguredJob(new GenomixJobConf(3),
                 BubbleMergeWithSearchVertex.class);
-        job.setVertexInputFormatClass(NodeToBubbleMergeWithSearchVertexInputFormat.class);
-        job.setVertexOutputFormatClass(BubbleMergeWithSearchVertexToNodeOutputFormat.class);
         job.getConfiguration().setInt(GenomixJobConf.BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, 100);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
