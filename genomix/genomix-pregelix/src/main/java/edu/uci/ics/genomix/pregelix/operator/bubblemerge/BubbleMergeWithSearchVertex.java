@@ -89,7 +89,7 @@ public class BubbleMergeWithSearchVertex extends
         outgoingMsg.setPreKmerLength(internalKmer.getKmerLetterLength());
 
         outgoingMsg.setFlag(BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT);
-        for (EDGETYPE et : EDGETYPE.OUTGOING) {
+        for (EDGETYPE et : EDGETYPE.FORWARD) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 EdgeTypeList edgeTypeList = new EdgeTypeList();
                 edgeTypeList.add(et);
@@ -229,7 +229,7 @@ public class BubbleMergeWithSearchVertex extends
         EdgeTypeList edgeTypes = vertex.getArrayOfEdgeTypes().get(k);
 
         // step2: clear edges except that one towards similar path
-        for (EDGETYPE et : EDGETYPE.OUTGOING) {
+        for (EDGETYPE et : EDGETYPE.FORWARD) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 if (edgeTypes.get(0) == et && pathList.getPosition(1).equals(dest))
                     continue;

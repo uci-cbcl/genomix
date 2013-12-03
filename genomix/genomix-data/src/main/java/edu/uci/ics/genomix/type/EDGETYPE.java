@@ -26,8 +26,8 @@ public enum EDGETYPE implements Writable{
         return val;
     }
 
-    public static final EnumSet<EDGETYPE> INCOMING = EnumSet.of(RF, RR);
-    public static final EnumSet<EDGETYPE> OUTGOING = EnumSet.of(FF, FR);
+    public static final EnumSet<EDGETYPE> REVERSE = EnumSet.of(RF, RR);
+    public static final EnumSet<EDGETYPE> FORWARD = EnumSet.of(FF, FR);
 
     public static EDGETYPE fromByte(short b) {
         b &= MASK;
