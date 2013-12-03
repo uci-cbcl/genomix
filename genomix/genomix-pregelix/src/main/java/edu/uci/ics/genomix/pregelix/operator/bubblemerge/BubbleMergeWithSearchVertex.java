@@ -327,6 +327,8 @@ public class BubbleMergeWithSearchVertex extends
                 beginBFS();
         } else if (getSuperstep() >= 2) {
             /** continue BFS **/
+            /* For self- and extended-loop, it will stop when the loop node receives message.
+             * Because we mark a search-flag once we search through this node*/
             continueBFS(msgIterator);
         }
         voteToHalt();
