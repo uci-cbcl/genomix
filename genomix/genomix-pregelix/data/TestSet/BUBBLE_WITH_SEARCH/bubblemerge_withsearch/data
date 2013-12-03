@@ -1,8 +1,0 @@
-TAA	{FF:{AAC=[2]}	FR:null	RF:null	RR:null	5':[2-0_0], ~5':null	kmer:null	cov:1.0x}
-ACA	{FF:{CAC=[1]}	FR:null	RF:null	RR:{AAC=[1]}	5':null, ~5':null	kmer:null	cov:1.0x}
-CTA	{FF:null	FR:null	RF:{AGG=[1]}	RR:{ACT=[2]}	5':null, ~5':null	kmer:null	cov:2.0x}
-AAC	{FF:{ACA=[1], ACT=[2]}	FR:null	RF:null	RR:{TAA=[2]}	5':[1-0_0], ~5':null	kmer:null	cov:2.0x}
-CAC	{FF:{ACC=[1]}	FR:null	RF:null	RR:{ACA=[1]}	5':null, ~5':null	kmer:null	cov:1.0x}
-ACC	{FF:null	FR:{AGG=[1]}	RF:null	RR:{CAC=[1]}	5':null, ~5':null	kmer:null	cov:1.0x}
-AGG	{FF:null	FR:{ACC=[1]}	RF:{CTA=[1]}	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
-ACT	{FF:{CTA=[2]}	FR:null	RF:null	RR:{AAC=[2]}	5':null, ~5':null	kmer:null	cov:1.0x}

@@ -242,7 +242,7 @@ public class GenomixJobConf extends JobConf {
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
-    public static final String BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH = "genomix.bubbleMergewithsearch.maxSearchLength";
+    public static final String BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH = "genomix.bubbleMergeWithSearch.maxSearchLength";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
     public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.pathMerge.probBeingRandomHead";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
@@ -367,7 +367,7 @@ public class GenomixJobConf extends JobConf {
             setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .5f);
 
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
-            setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, 100);
+            setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
         
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);

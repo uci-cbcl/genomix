@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
-import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
@@ -17,6 +16,17 @@ public class BubbleMergeWithSearchVertexValueWritable extends VertexValueWritabl
      * 
      */
     private static final long serialVersionUID = 1L;
+
+    public static class BubbleMergeWithSearchState {
+        // UPDATE_PATH_TO_NEXT, END_NOTICE_TO_SRC and UPDATE_BRANCH_TO_SRC are used in BubbleMergeWithSearch
+        public static final byte UPDATE_PATH_IN_NEXT = 0b001 << 4;
+        public static final byte END_NOTICE_IN_SRC = 0b010 << 4;
+        public static final byte UPDATE_BRANCH_IN_SRC = 0b011 << 4;
+        public static final byte KILL_MESSAGE_FROM_SOURCE = 0b100 << 4;
+        public static final byte PRUNE_DEAD_EDGE = 0b101 << 4;
+
+        public static final byte BUBBLE_WITH_SEARCH_FLAG_MASK = 0b111 << 4;
+    }
 
     private ArrayListWritable<VKmerList> arrayOfPathList;
     private ArrayListWritable<VKmer> arrayOfInternalKmer;

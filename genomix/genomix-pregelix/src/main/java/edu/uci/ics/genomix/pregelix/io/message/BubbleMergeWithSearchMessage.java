@@ -4,7 +4,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
@@ -17,46 +16,44 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         public static final byte INTERNAL_KMER = 1 << 2;
         public static final byte PATH_LIST = 1 << 3;
         public static final byte EDGETYPE_LIST = 1 << 4;
-        public static final byte NUM_BRANCHES = 1 << 5; 
+        public static final byte NUM_BRANCHES = 1 << 5;
     }
 
-    private Integer preKmerLength;
+    private int preKmerLength;
     private VKmer internalKmer;
     private VKmerList pathList;
     private EdgeTypeList edgeTypeList;
-    private Integer numBranches;
+    private int numBranches;
 
     public BubbleMergeWithSearchMessage() {
         super();
-        preKmerLength = null;
+        preKmerLength = -1;
         internalKmer = null;
         pathList = null;
-        numBranches = null;
+        numBranches = -1;
         edgeTypeList = null;
     }
 
     @Override
     public void reset() {
         super.reset();
-        preKmerLength = null;
+        preKmerLength = -1;
         internalKmer = null;
         pathList = null;
-        numBranches = null;
+        numBranches = -1;
         edgeTypeList = null;
     }
-    
+
     public Integer getPreKmerLength() {
-        if(preKmerLength == null)
-            preKmerLength = new Integer(0);
         return preKmerLength;
     }
 
-    public void setPreKmerLength(Integer preKmerLength) {
-        this.preKmerLength = new Integer(preKmerLength);
+    public void setPreKmerLength(int preKmerLength) {
+        this.preKmerLength = preKmerLength;
     }
 
     public VKmer getInternalKmer() {
-        if(internalKmer == null)
+        if (internalKmer == null)
             internalKmer = new VKmer();
         return internalKmer;
     }
@@ -66,7 +63,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     }
 
     public VKmerList getPathList() {
-        if(pathList == null)
+        if (pathList == null)
             pathList = new VKmerList();
         return pathList;
     }
@@ -74,30 +71,28 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     public void setPathList(VKmerList pathList) {
         getPathList().setCopy(pathList);
     }
-    
+
     public EdgeTypeList getEdgeTypeList() {
-        if(edgeTypeList == null)
+        if (edgeTypeList == null)
             edgeTypeList = new EdgeTypeList();
         return edgeTypeList;
     }
 
     public void setEdgeTypeList(EdgeTypeList edgeTypeList) {
-        if(edgeTypeList != null){
+        if (edgeTypeList != null) {
             getEdgeTypeList().clear();
-            for(EDGETYPE et : edgeTypeList){
+            for (EDGETYPE et : edgeTypeList) {
                 getEdgeTypeList().add(et);
             }
         }
     }
 
     public Integer getNumBranches() {
-        if(numBranches == null)
-            numBranches = new Integer(0);
         return numBranches;
     }
 
-    public void setNumBranches(Integer numBranches) {
-        this.numBranches = new Integer(numBranches);
+    public void setNumBranches(int numBranches) {
+        this.numBranches = numBranches;
     }
 
     @Override
@@ -123,19 +118,19 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         super.write(out);
-        if (preKmerLength != null) {
+        if (preKmerLength != -1) {
             out.writeInt(preKmerLength);
         }
-        if (internalKmer != null) {
+        if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
             internalKmer.write(out);
         }
-        if (pathList != null) {
+        if (pathList != null && pathList.getLength() > 0) {
             pathList.write(out);
         }
-        if(edgeTypeList != null){
+        if (edgeTypeList != null && edgeTypeList.size() > 0) {
             edgeTypeList.write(out);
         }
-        if (numBranches != null) {
+        if (numBranches != -1) {
             out.writeInt(numBranches);
         }
     }
@@ -143,19 +138,19 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     @Override
     protected byte getActiveMessageFields() {
         byte messageFields = super.getActiveMessageFields();
-        if (preKmerLength != null) {
+        if (preKmerLength != -1) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.PRE_KMER_LENGTH;
         }
-        if (internalKmer != null) {
+        if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.INTERNAL_KMER;
         }
-        if (pathList != null) {
+        if (pathList != null && pathList.getLength() > 0) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.PATH_LIST;
         }
-        if (edgeTypeList != null) {
+        if (edgeTypeList != null && edgeTypeList.size() > 0) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.EDGETYPE_LIST;
         }
-        if (numBranches != null) {
+        if (numBranches != -1) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.NUM_BRANCHES;
         }
         return messageFields;
