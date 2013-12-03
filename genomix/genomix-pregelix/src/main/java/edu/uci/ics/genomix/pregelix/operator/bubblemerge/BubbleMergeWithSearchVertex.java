@@ -217,7 +217,7 @@ public class BubbleMergeWithSearchVertex extends
 
             // send to next 
             EDGETYPE preToMe = incomingMsg.getEdgeTypeList().get(incomingMsg.getEdgeTypeList().size() - 1);
-            for (EDGETYPE et : preToMe.mirror().dir().mirror().edgeTypes()) {
+            for (EDGETYPE et : preToMe.neighborDir().edgeTypes()) {
                 for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                     // set flag and source vertex
                     outgoingMsg.setFlag((byte) (BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT | et.mirror().get()));
