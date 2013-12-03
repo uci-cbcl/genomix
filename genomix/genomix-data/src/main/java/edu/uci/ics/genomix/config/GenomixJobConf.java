@@ -83,6 +83,9 @@ public class GenomixJobConf extends JobConf {
         @Option(name = "-bubbleMergewithsearch_maxLength", usage = "Maximum length can be searched", required = false)
         private int bubbleMergeWithSearch_maxLength = -1;
         
+        @Option(name = "-bubbleMergewithsearch_searchDirection", usage = "Maximum length can be searched", required = false)
+        private int bubbleMergeWithSearch_searchDirection = -1;
+        
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
         private int graphCleanMaxIterations = -1;
 
@@ -243,6 +246,7 @@ public class GenomixJobConf extends JobConf {
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
     public static final String BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH = "genomix.bubbleMergeWithSearch.maxSearchLength";
+    public static final String BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION = "genomix.bubbleMergeWithSearch.searchDirection";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
     public static final String PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD = "genomix.pathMerge.probBeingRandomHead";
     public static final String REMOVE_LOW_COVERAGE_MAX_COVERAGE = "genomix.removeLowCoverage.maxCoverage";
@@ -369,6 +373,9 @@ public class GenomixJobConf extends JobConf {
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
         
+        if (getInt(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, -1) == -1)
+            setInt(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, 1); // 1 represents FORWARD; 2 represents REVERSE
+        
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
 
@@ -472,6 +479,7 @@ public class GenomixJobConf extends JobConf {
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
         setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, opts.bubbleMergeWithSearch_maxLength);
+        setInt(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, opts.bubbleMergeWithSearch_searchDirection);
         setInt(GRAPH_CLEAN_MAX_ITERATIONS, opts.graphCleanMaxIterations);
         setLong(RANDOM_SEED, opts.randomSeed);
         setFloat(PATHMERGE_RANDOM_PROB_BEING_RANDOM_HEAD, opts.pathMergeRandom_probBeingRandomHead);

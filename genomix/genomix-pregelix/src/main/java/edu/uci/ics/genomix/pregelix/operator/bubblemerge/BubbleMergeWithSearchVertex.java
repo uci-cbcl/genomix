@@ -1,6 +1,7 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -42,7 +43,8 @@ public class BubbleMergeWithSearchVertex extends
     //    private static final Logger LOG = Logger.getLogger(BubbleMergeWithSearchVertex.class.getName());
 
     private static int MAX_BFS_LENGTH = -1;
-
+    private static EnumSet<EDGETYPE> SEARCH_DIRECTION = null;
+    
     /**
      * initiate kmerSize, maxIteration
      */
@@ -52,6 +54,19 @@ public class BubbleMergeWithSearchVertex extends
         if (MAX_BFS_LENGTH < 0)
             MAX_BFS_LENGTH = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH));
+        if(SEARCH_DIRECTION == null){
+            switch(Integer.parseInt(getContext().getConfiguration().get(
+                    GenomixJobConf.BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION))){
+                case 1:
+                    SEARCH_DIRECTION = EDGETYPE.FORWARD;
+                    break;
+                case 2:
+                    SEARCH_DIRECTION = EDGETYPE.REVERSE;
+                    break;
+                default:
+                    throw new IllegalArgumentException("SEARCH_DIRECTION should be 1 or 2");
+            }
+        }
         if (outgoingMsg == null)
             outgoingMsg = new BubbleMergeWithSearchMessage();
         //        StatisticsAggregator.preGlobalCounters.clear();
@@ -89,7 +104,7 @@ public class BubbleMergeWithSearchVertex extends
         outgoingMsg.setPreKmerLength(internalKmer.getKmerLetterLength());
 
         outgoingMsg.setFlag(BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT);
-        for (EDGETYPE et : EDGETYPE.FORWARD) {
+        for (EDGETYPE et : SEARCH_DIRECTION) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 EdgeTypeList edgeTypeList = new EdgeTypeList();
                 edgeTypeList.add(et);
@@ -111,7 +126,7 @@ public class BubbleMergeWithSearchVertex extends
                 outgoingMsg.setAsCopy(incomingMsg);
                 outgoingMsg.setFlag(BubbleMergeWithSearchState.END_NOTICE_IN_SRC);
                 sendMsg(incomingMsg.getPathList().getPosition(0), outgoingMsg);
-                return;
+                break;
             }
 
             // get msg flag
@@ -119,15 +134,16 @@ public class BubbleMergeWithSearchVertex extends
 
             // different operators for different message flags
             if (flag == BubbleMergeWithSearchState.UPDATE_PATH_IN_NEXT) {
-                updatePathInNextNode(incomingMsg);
+                // set vertex.state = SEARCH_THROUGH
                 vertex.setState(BubbleMergeWithSearchState.SEARCH_THROUGH);
+                updatePathInNextNode(incomingMsg);
             } else if (flag == BubbleMergeWithSearchState.UPDATE_BRANCH_IN_SRC) {
                 // update numBranches in src
                 vertex.setNumBranches(vertex.getNumBranches() + incomingMsg.getNumBranches() - 1);
             } else if (flag == BubbleMergeWithSearchState.END_NOTICE_IN_SRC) {
                 receiveEndInSource(incomingMsg);
-            } else if (flag == BubbleMergeWithSearchState.KILL_MESSAGE_FROM_SOURCE) {
-                sendKillMsgToPathNodes(incomingMsg);
+            } else if (flag == BubbleMergeWithSearchState.SAVE_ONLY_PATH_NODES) {
+                saveOnlyPathEdges(incomingMsg);
             } else if (flag == BubbleMergeWithSearchState.PRUNE_DEAD_EDGE) {
                 EDGETYPE meToNeighborEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
                 vertex.getEdgeMap(meToNeighborEdgetype).remove(incomingMsg.getSourceVertexId());
@@ -144,9 +160,25 @@ public class BubbleMergeWithSearchVertex extends
          * internalKmer and setEdgeTypeList) */
         if (newLength > MAX_BFS_LENGTH) {
             outgoingMsg.reset();
+            
+            // set flag
             outgoingMsg.setFlag(BubbleMergeWithSearchState.END_NOTICE_IN_SRC);
-            outgoingMsg.setPathList(incomingMsg.getPathList());
-            outgoingMsg.setInternalKmer(incomingMsg.getInternalKmer());
+            
+            // update pathList
+            VKmerList pathList = new VKmerList(incomingMsg.getPathList());
+            pathList.append(getVertexId());
+            outgoingMsg.setPathList(pathList);
+            
+            // update internalKmer up to MAX_BFS_LENGTH
+            EdgeTypeList edgeTypes = incomingMsg.getEdgeTypeList();
+            int size = edgeTypes.size();
+            VKmer internalKmer = new VKmer(incomingMsg.getInternalKmer());
+            int limitedLength = MAX_BFS_LENGTH - incomingMsg.getPreKmerLength() - kmerSize + 1;
+            String newKmer = vertex.getInternalKmer().toString().substring(0, limitedLength);
+            internalKmer.mergeWithKmerInDir(edgeTypes.get(size - 1), kmerSize, new VKmer(newKmer));
+            outgoingMsg.setInternalKmer(internalKmer);
+            
+            // update edgeTypeList
             outgoingMsg.setEdgeTypeList(incomingMsg.getEdgeTypeList());
             sendMsg(source, outgoingMsg);
         }
@@ -155,14 +187,14 @@ public class BubbleMergeWithSearchVertex extends
             outgoingMsg.reset();
 
             // update pathList
-            VKmerList pathList = incomingMsg.getPathList();
+            VKmerList pathList = new VKmerList(incomingMsg.getPathList());
             pathList.append(getVertexId());
             outgoingMsg.setPathList(pathList);
 
             // update internalKmer
             EdgeTypeList edgeTypes = incomingMsg.getEdgeTypeList();
             int size = edgeTypes.size();
-            VKmer internalKmer = incomingMsg.getInternalKmer();
+            VKmer internalKmer = new VKmer(incomingMsg.getInternalKmer());
             internalKmer.mergeWithKmerInDir(edgeTypes.get(size - 1), kmerSize, vertex.getInternalKmer());
             outgoingMsg.setInternalKmer(internalKmer);
 
@@ -229,7 +261,7 @@ public class BubbleMergeWithSearchVertex extends
         EdgeTypeList edgeTypes = vertex.getArrayOfEdgeTypes().get(k);
 
         // step2: clear edges except that one towards similar path
-        for (EDGETYPE et : EDGETYPE.FORWARD) {
+        for (EDGETYPE et : SEARCH_DIRECTION) {
             for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
                 if (edgeTypes.get(0) == et && pathList.getPosition(1).equals(dest))
                     continue;
@@ -243,7 +275,7 @@ public class BubbleMergeWithSearchVertex extends
             VKmer dest = new VKmer(pathList.getPosition(i));
 
             outgoingMsg.reset();
-            outgoingMsg.setFlag(BubbleMergeWithSearchState.KILL_MESSAGE_FROM_SOURCE);
+            outgoingMsg.setFlag(BubbleMergeWithSearchState.SAVE_ONLY_PATH_NODES);
 
             // prev stores in pathList(0)
             kmerList.reset();
@@ -263,7 +295,7 @@ public class BubbleMergeWithSearchVertex extends
         }
     }
 
-    public void sendKillMsgToPathNodes(BubbleMergeWithSearchMessage incomingMsg) {
+    public void saveOnlyPathEdges(BubbleMergeWithSearchMessage incomingMsg) {
         BubbleMergeWithSearchVertexValueWritable vertex = getVertexValue();
 
         // send msg to delete edges except the path nodes
