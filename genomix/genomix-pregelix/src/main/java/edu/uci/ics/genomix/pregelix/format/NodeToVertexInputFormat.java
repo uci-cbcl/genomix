@@ -18,13 +18,13 @@ public class NodeToVertexInputFormat extends NodeToGenericVertexInputFormat<Vert
     @Override
     public VertexReader<VKmer, VertexValueWritable, NullWritable, MessageWritable> createVertexReader(InputSplit split,
             TaskAttemptContext context) throws IOException {
-        return new BinaryDataCleanLoadGraphReaderScaffolding(binaryInputFormat.createRecordReader(split, context));
+        return new BinaryDataCleanLoadGraphReaderVertexValue(binaryInputFormat.createRecordReader(split, context));
     }
 
-    private class BinaryDataCleanLoadGraphReaderScaffolding extends
+    private class BinaryDataCleanLoadGraphReaderVertexValue extends
             NodeToGenericVertexInputFormat.BinaryDataCleanLoadGraphReader<VertexValueWritable> {
 
-        public BinaryDataCleanLoadGraphReaderScaffolding(RecordReader<VKmer, Node> recordReader) {
+        public BinaryDataCleanLoadGraphReaderVertexValue(RecordReader<VKmer, Node> recordReader) {
             super(recordReader);
             vertexValue = new VertexValueWritable();
         }

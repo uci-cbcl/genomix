@@ -53,11 +53,12 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
     }
 
-    public void setAsReference(byte[] data, int offset) {
+    public int setAsReference(byte[] data, int offset) {
         valueCount = Marshal.getInt(data, offset);
         this.storage = data;
         this.offset = offset;
         this.storageMaxSize = getLengthInBytes();
+        return offset + this.storageMaxSize;
     }
 
     public void append(VKmer kmer) {
@@ -171,14 +172,15 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return posOffset;
     }
 
-    public void setAsCopy(VKmerList otherList) {
-        setAsCopy(otherList.storage, otherList.offset);
+    public int setAsCopy(VKmerList otherList) {
+        return setAsCopy(otherList.storage, otherList.offset);
     }
 
     /**
      * read a KmerListWritable from newData, which should include the header
+     * @return 
      */
-    public void setAsCopy(byte[] newData, int newOffset) {
+    public int setAsCopy(byte[] newData, int newOffset) {
         int newValueCount = Marshal.getInt(newData, newOffset);
         int newLength = getLength(newData, newOffset);
         setSize(newLength);
@@ -188,6 +190,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
         valueCount = newValueCount;
         Marshal.putInt(valueCount, storage, this.offset);
+        return newOffset + newLength;
     }
 
     @Override
@@ -233,17 +236,8 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         };
         return it;
     }
-
-    public boolean contains(VKmerList kmer) {
-        Iterator<VKmer> posIterator = this.iterator();
-        while (posIterator.hasNext()) {
-            if (kmer.equals(posIterator.next()))
-                return true;
-        }
-        return false;
-    }
     
-    public boolean containsKey(VKmer kmer) {
+    public boolean contains(VKmer kmer) {
         Iterator<VKmer> posIterator = this.iterator();
         while (posIterator.hasNext()) {
             if (kmer.equals(posIterator.next()))
@@ -352,4 +346,5 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
     public int hashCode() {
         return Marshal.hashBytes(getByteArray(), getStartOffset(), getLengthInBytes());
     }
+
 }

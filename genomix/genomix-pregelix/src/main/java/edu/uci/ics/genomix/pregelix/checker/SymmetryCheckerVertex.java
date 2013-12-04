@@ -10,7 +10,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SymmetryCheckerMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
@@ -25,51 +24,57 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
             outgoingMsg = new SymmetryCheckerMessage();
         else
             outgoingMsg.reset();
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
         outFlag = 0;
     }
 
-    public void sendEdgeMap(DIR direction) {
+    public void sendEdges(DIR direction) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+            for (VKmer dest : vertex.getEdges(et)) {
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
                 outgoingMsg.setFlag(outFlag);
                 outgoingMsg.setSourceVertexId(getVertexId());
-                outgoingMsg.setEdgeMap(vertex.getEdgeMap(et));
+                outgoingMsg.setEdges(vertex.getEdges(et));
                 sendMsg(dest, outgoingMsg);
             }
         }
     }
 
-    public void sendEdgeMapToAllNeighborNodes() {
-        sendEdgeMap(DIR.REVERSE);
-        sendEdgeMap(DIR.FORWARD);
+    public void sendEdgesToAllNeighborNodes() {
+        sendEdges(DIR.REVERSE);
+        sendEdges(DIR.FORWARD);
     }
 
     /**
-     * check symmetry: A -> B, A'edgeMap should have B and B's corresponding edgeMap should have A
+     * check symmetry: A -> B, A'edges should have B and B's corresponding edges should have A
      * otherwise, output error vertices
      */
     public void checkSymmetry(Iterator<SymmetryCheckerMessage> msgIterator) {
         while (msgIterator.hasNext()) {
             SymmetryCheckerMessage incomingMsg = msgIterator.next();
             EDGETYPE neighborToMe = EDGETYPE.fromByte(incomingMsg.getFlag());
-            boolean exist = getVertexValue().getEdgeMap(neighborToMe).containsKey(incomingMsg.getSourceVertexId());
+            boolean exist = getVertexValue().getEdges(neighborToMe).contains(incomingMsg.getSourceVertexId());
             if (!exist) {
                 getVertexValue().setState(State.ERROR_NODE);
                 return;
             }
-            boolean edgeMapIsSame = getVertexValue().getEdgeMap(neighborToMe).get(incomingMsg.getSourceVertexId())
-                    .equals(incomingMsg.getEdgeMap().get(getVertexId()));
-            if (!edgeMapIsSame)
+            
+            boolean edgesAreSame = true;
+            for (VKmer kmer : incomingMsg.getEdges()) {
+                if (!getVertexValue().getEdges(neighborToMe).contains(kmer)) {
+                    edgesAreSame = false;
+                    break;
+                }
+            }
+            for (VKmer kmer : getVertexValue().getEdges(neighborToMe)) {
+                if (!incomingMsg.getEdges().contains(kmer)) {
+                    edgesAreSame = false;
+                    break;
+                }
+            }
+            if (!edgesAreSame)
                 getVertexValue().setState(State.ERROR_NODE);
         }
     }
@@ -78,9 +83,9 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
     public void compute(Iterator<SymmetryCheckerMessage> msgIterator) throws Exception {
         initVertex();
         if (getSuperstep() == 1) {
-            sendEdgeMapToAllNeighborNodes();
+            sendEdgesToAllNeighborNodes();
         } else if (getSuperstep() == 2) {
-            //check if the corresponding edge and edgeMap exists
+            //check if the corresponding edge and edges exist
             checkSymmetry(msgIterator);
         }
         voteToHalt();

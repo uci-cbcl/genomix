@@ -8,20 +8,18 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
  * Details: Sequencing errors at the ends of the reads form "tips": short, low coverage nodes
- * 			with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
- * 			The algorithm identifies these nodes and prunes them from the graph. This is then followed
- * 			by recompressing the graph.
- * 
+ * with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
+ * The algorithm identifies these nodes and prunes them from the graph. This is then followed
+ * by recompressing the graph.
  */
 public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, MessageWritable> {
 
@@ -44,11 +42,6 @@ public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         } else {
             outgoingMsg.reset();
         }
-        StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
     }
 
     /**
@@ -74,10 +67,10 @@ public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
             outgoingMsg.reset();
             outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            EdgeMap edgeList = getVertexValue().getEdgeMap(tipToNeighborEdgetype);
-            if (edgeList.size() != 1)
+            VKmerList edges = getVertexValue().getEdges(tipToNeighborEdgetype);
+            if (edges.size() != 1)
                 throw new IllegalArgumentException("In this edgeType, the size of edges has to be 1!");
-            VKmer destVertexId = edgeList.firstKey();
+            VKmer destVertexId = edges.getPosition(0);
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
 
@@ -86,9 +79,7 @@ public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
                         + getVertexValue() + "\r\n" + "Kill self and broadcast kill self to " + destVertexId + "\r\n"
                         + "The message is: " + outgoingMsg + "\r\n\n");
             }
-            //set statistics counter: Num_RemovedTips 
-            incrementCounter(StatisticsCounter.Num_RemovedTips);
-            getVertexValue().setCounters(counters); // TODO take a long hard look at how we run the logic of counters...
+            getCounters().findCounter(GraphMutations.Num_RemovedTips).increment(1);
         }
     }
 

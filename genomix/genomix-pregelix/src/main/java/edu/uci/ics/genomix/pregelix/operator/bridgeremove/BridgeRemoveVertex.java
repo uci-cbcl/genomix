@@ -7,8 +7,8 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+
+import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
@@ -32,11 +32,6 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
                     GenomixJobConf.BRIDGE_REMOVE_MAX_LENGTH));
         if (outgoingMsg == null)
             outgoingMsg = new MessageWritable();
-        StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
     }
 
     /**
@@ -50,7 +45,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
                 //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
                 if (vertex.degree(d) == 2) {
                     for (EDGETYPE et : d.edgeTypes()) {
-                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                        for (VKmer dest : vertex.getEdges(et)) {
                             sendMsg(dest, outgoingMsg);
                         }
                     }
@@ -80,9 +75,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
                 if (vertex.getKmerLength() < MIN_LENGTH_TO_KEEP) {
                     broadcastKillself();
                     deleteVertex(getVertexId());
-                    //set statistics counter: Num_RemovedBridges
-                    incrementCounter(StatisticsCounter.Num_RemovedBridges);
-                    getVertexValue().setCounters(counters);
+                    getCounters().findCounter(GraphMutations.Num_RemovedBridges).increment(1);
                 }
             }
         }

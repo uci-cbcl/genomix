@@ -16,9 +16,10 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
+import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 /**
  * The super class of different path merge algorithms
@@ -65,7 +66,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         // send a message to each neighbor indicating they can't merge towards me
         for (DIR dir : dirsToRestrict) {
             for (EDGETYPE et : dir.edgeTypes()) {
-                for (VKmer destId : vertex.getEdgeMap(et).keySet()) {
+                for (VKmer destId : vertex.getEdges(et)) {
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(et.mirror().dir().get());
                     if (verbose)
@@ -112,10 +113,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         }
 
         DIR mergeDir = edgeType.dir();
-        EnumSet<EDGETYPE> mergeEdges = mergeDir.edgeTypes();
+        EDGETYPE[] mergeEdges = mergeDir.edgeTypes();
 
         DIR updateDir = mergeDir.mirror();
-        EnumSet<EDGETYPE> updateEdges = updateDir.edgeTypes();
+        EDGETYPE[] updateEdges = updateDir.edgeTypes();
 
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
@@ -127,15 +128,14 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outgoingMsg.setFlag(outFlag);
             for (EDGETYPE mergeEdge : mergeEdges) {
                 EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);
-                for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
+                for (VKmer dest : vertex.getEdges(updateEdge)) {
                     if (verbose)
                         LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
                                 + " to " + dest + ": " + outgoingMsg);
-                    Iterator<VKmer> iter = vertex.getEdgeMap(mergeEdge).keySet().iterator();
-                    if (iter.hasNext()) {
-                        EdgeMap edgeMap = new EdgeMap();
-                        edgeMap.put(iter.next(), vertex.getEdgeMap(updateEdge).get(dest));
-                        outgoingMsg.getNode().setEdgeMap(newEdgetype, edgeMap); // copy into outgoingMsg
+                    for (VKmer kmer : vertex.getEdges(mergeEdge)) {
+                        VKmerList msgList = outgoingMsg.getNode().getEdges(updateEdge);
+                        msgList.clear();
+                        msgList.append(kmer);
                         sendMsg(dest, outgoingMsg);
                     }
                 }
@@ -152,10 +152,10 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
-            vertex.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
+            vertex.getEdges(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
-            for (EDGETYPE edgeType : EDGETYPE.values()) {
-                vertex.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeMap(edgeType));
+            for (EDGETYPE edgeType : EDGETYPE.values) {
+                vertex.getEdges(edgeType).unionUpdate(incomingMsg.getEdges(edgeType));
             }
             updated = true;
             if (verbose) {
@@ -184,12 +184,33 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                     .enumSetFromByte(state));
 
             outgoingMsg.setFlag((short) (mergeEdgetype.mirror().get() | neighborRestrictions));
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outgoingMsg.setNode(vertex); // TODO reduce amount sent in this Node (only internalKmer and 1/2 of edges)
+            Node outNode = outgoingMsg.getNode();
+            // set only relevant edges
+            for (EDGETYPE et : mergeEdgetype.mirror().neighborDir().edgeTypes()) {
+                outNode.setEdges(et, vertex.getEdges(et));
+            }
+            outNode.setUnflippedReadIds(vertex.getUnflippedReadIds());
+            outNode.setFlippedReadIds(vertex.getFlippedReadIds());
+            outNode.setAverageCoverage(vertex.getAverageCoverage());
+            // only send non-overlapping letters // TODO do something more efficient than toString?
+            if (mergeEdgetype.mirror().neighborDir() == DIR.FORWARD) {
+                outNode.getInternalKmer().setAsCopy(
+                        vertex.getInternalKmer().toString().substring(Kmer.getKmerLength() - 1));
+            } else {
+                outNode.getInternalKmer()
+                        .setAsCopy(
+                                vertex.getInternalKmer()
+                                        .toString()
+                                        .substring(
+                                                0,
+                                                vertex.getInternalKmer().getKmerLetterLength() - Kmer.getKmerLength()
+                                                        + 1));
+            }
+
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);
-            VKmer dest = vertex.getEdgeMap(mergeEdgetype).firstKey();
+            VKmer dest = vertex.getEdges(mergeEdgetype).getPosition(0);
             sendMsg(dest, outgoingMsg);
 
             if (verbose) {

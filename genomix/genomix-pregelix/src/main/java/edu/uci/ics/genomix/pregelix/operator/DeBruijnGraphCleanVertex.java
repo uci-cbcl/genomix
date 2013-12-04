@@ -1,25 +1,19 @@
 package edu.uci.ics.genomix.pregelix.operator;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapreduce.Counters;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
-import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.DeBruijnVertexCounterAggregator;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
@@ -27,7 +21,7 @@ import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
-import edu.uci.ics.pregelix.dataflow.util.IterationUtils;
+import edu.uci.ics.pregelix.api.util.HadoopCountersAggregator.ResettableCounters;
 
 public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M extends MessageWritable> extends
         Vertex<VKmer, V, NullWritable, M> {
@@ -45,8 +39,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     // validPathsTable: a table representing the set of edge types forming a valid path from
     //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
     //                 the second
-    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
-            { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
+    public static final EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF },
+            { EDGETYPE.RF, EDGETYPE.FR }, { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
 
     protected M outgoingMsg = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable();
@@ -55,44 +49,39 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     protected short outFlag;
     protected short selfFlag;
 
-    protected List<VKmer> problemKmers = null;
-    protected boolean debug = false;
     protected boolean verbose = false;
     protected boolean logReadIds = false;
 
-    protected HashMapWritable<ByteWritable, VLongWritable> counters = new HashMapWritable<ByteWritable, VLongWritable>();
+    private ResettableCounters counters = new ResettableCounters();
+
+    final protected void resetCounters() {
+        counters.reset();
+    }
+
+    public Counters getCounters() {
+        return counters;
+    }
 
     /**
      * initiate kmerSize, maxIteration
      */
     public void initVertex() {
-        if (kmerSize == -1)
-            kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        if (maxIteration < 0)
-            maxIteration = Integer.parseInt(getContext().getConfiguration().get(
-                    GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
-
-        checkDebug();
-        //TODO fix globalAggregator
-    }
-
-    public void checkDebug() {
-        debug = getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null;
-        if (problemKmers == null) {
-            problemKmers = new ArrayList<VKmer>();
-            if (getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS) != null) {
-                for (String kmer : getContext().getConfiguration().get(GenomixJobConf.DEBUG_KMERS).split(",")) {
-                    problemKmers.add(new VKmer(kmer));
-                }
-                Node.problemKmers = problemKmers;
+        if (getSuperstep() == 1) {
+            if (kmerSize == -1) {
+                kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
             }
+            if (maxIteration < 0) {
+                maxIteration = Integer.parseInt(getContext().getConfiguration().get(
+                        GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
+            }
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         }
 
         verbose = false;
-        for (VKmer problemKmer : problemKmers) {
-            verbose |= debug
-                    && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+        if (GenomixJobConf.debug) {
+            for (VKmer debugKmer : GenomixJobConf.debugKmers) {
+                verbose |= (getVertexValue().findEdge(debugKmer) != null || getVertexId().equals(debugKmer));
+            }
         }
     }
 
@@ -133,30 +122,6 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         }
     }
 
-    /**
-     * increment statistics counter
-     */
-    public void incrementCounter(byte counterName) {
-        ByteWritable counterNameWritable = new ByteWritable(counterName);
-        if (counters.containsKey(counterNameWritable))
-            counters.get(counterNameWritable).set(counters.get(counterNameWritable).get() + 1);
-        else
-            counters.put(counterNameWritable, new VLongWritable(1));
-    }
-
-    /**
-     * read statistics counters
-     */
-    public static HashMapWritable<ByteWritable, VLongWritable> readStatisticsCounterResult(Configuration conf) {
-        try {
-            VertexValueWritable value = (VertexValueWritable) IterationUtils.readGlobalAggregateValue(conf,
-                    BspUtils.getJobId(conf), StatisticsAggregator.class.getName());
-            return value.getCounters();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     //2013.9.21 ------------------------------------------------------------------//
     public static PregelixJob getConfiguredJob(
             GenomixJobConf conf,
@@ -169,7 +134,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         else
             job = new PregelixJob(conf, vertexClass.getSimpleName());
         job.setVertexClass(vertexClass);
-        job.addGlobalAggregatorClass(StatisticsAggregator.class);
+        job.setCounterAggregatorClass(DeBruijnVertexCounterAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setOutputKeyClass(VKmer.class);
@@ -189,10 +154,10 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
                             + getVertexValue().toString());
 
         if (degree == 1) {
-            EnumSet<EDGETYPE> edgeTypes = direction.edgeTypes();
+            EDGETYPE[] edgeTypes = direction.edgeTypes();
             for (EDGETYPE et : edgeTypes) {
-                if (getVertexValue().getEdgeMap(et).size() > 0)
-                    return getVertexValue().getEdgeMap(et).firstKey();
+                if (getVertexValue().getEdges(et).size() > 0)
+                    return getVertexValue().getEdges(et).getPosition(0);
             }
         }
         //degree in this direction == 0
@@ -205,8 +170,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      * check if I am a tandemRepeat
      */
     public boolean isTandemRepeat(VertexValueWritable value) {
-        for (EDGETYPE et : EDGETYPE.values()) {
-            for (VKmer kmerToCheck : value.getEdgeMap(et).keySet()) {
+        for (EDGETYPE et : EDGETYPE.values) {
+            for (VKmer kmerToCheck : value.getEdges(et)) {
                 if (kmerToCheck.equals(getVertexId())) {
                     repeatEdgetype = et;
                     repeatKmer.setAsCopy(kmerToCheck);
@@ -222,8 +187,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
      */
     public void broadcastKillself() {
         VertexValueWritable vertex = getVertexValue();
-        for (EDGETYPE et : EDGETYPE.values()) {
-            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+        for (EDGETYPE et : EDGETYPE.values) {
+            for (VKmer dest : vertex.getEdges(et)) {
                 outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();
@@ -254,7 +219,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         while (msgIterator.hasNext()) {
             incomingMsg = msgIterator.next();
             EDGETYPE meToNeighborEdgetype = EDGETYPE.fromByte(incomingMsg.getFlag());
-            getVertexValue().getEdgeMap(meToNeighborEdgetype).remove(incomingMsg.getSourceVertexId());
+            getVertexValue().getEdges(meToNeighborEdgetype).remove(incomingMsg.getSourceVertexId());
 
             if (verbose) {
                 LOG.fine("Receive message from dead node!" + incomingMsg.getSourceVertexId() + "\r\n"
@@ -273,7 +238,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     public void sendSettledMsgs(DIR direction, VertexValueWritable value) {
         VertexValueWritable vertex = getVertexValue();
         for (EDGETYPE et : direction.edgeTypes()) {
-            for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+            for (VKmer dest : vertex.getEdges(et)) {
                 //                outgoingMsg.reset();
                 outFlag &= EDGETYPE.CLEAR;
                 outFlag |= et.mirror().get();

@@ -5,12 +5,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Comparator;
 
-import edu.uci.ics.genomix.pregelix.io.message.SymmetryCheckerMessage.SYMMERTRYCHECKER_MESSAGE_FIELDS;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class BubbleMergeMessage extends MessageWritable {
 
@@ -66,18 +65,11 @@ public class BubbleMergeMessage extends MessageWritable {
         topCoverageVertexId = null;
     }
 
-    public EdgeMap getMinorToBubbleEdgeMap() {
+    public VKmerList getMinorToBubbleEdges() {
         if (node == null) {
             node = new Node();
         }
-        return node.getEdgeMap(getMinorToBubbleEdgetype().mirror());
-    }
-
-    public void addNewMajorToBubbleEdges(boolean sameOrientation, BubbleMergeMessage msg, VKmer topKmer) {
-        EDGETYPE majorToBubble = msg.getMajorToBubbleEdgetype();
-        ReadIdSet newReadIds = msg.getNode().getEdgeMap(majorToBubble.mirror()).get(msg.getMajorVertexId());
-        getNode().getEdgeMap(sameOrientation ? majorToBubble : majorToBubble.flipNeighbor()).unionAdd(topKmer,
-                newReadIds);
+        return node.getEdges(getMinorToBubbleEdgetype().mirror());
     }
 
     public VKmer getMajorVertexId() {

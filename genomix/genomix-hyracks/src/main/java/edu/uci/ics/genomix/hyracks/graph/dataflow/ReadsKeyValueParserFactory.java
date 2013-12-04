@@ -15,8 +15,6 @@
 
 package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -32,7 +30,6 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -55,6 +52,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private final ConfFactory confFactory;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
+
+    private static final Pattern genePattern = Pattern.compile("[AGCT]+");
 
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
         confFactory = new ConfFactory(conf);
@@ -151,7 +150,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 DIR nextNodeDir = DIR.FORWARD;
 
                 /* middle kmer */
-                nextNode.reset();
+                nextNode = new Node();
                 nextNode.setAverageCoverage(1);
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 for (int i = Kmer.getKmerLength(); i < readLetters.length; i++) {
@@ -159,14 +158,14 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextReverseKmer.setReversedFromStringBytes(readLetters, i - Kmer.getKmerLength() + 1);
                     nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
 
-                    setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode);
+                    setEdgesForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode);
                     writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
 
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
-                    curNode.setAsCopy(nextNode);
+                    curNode = nextNode;
                     curNodeDir = nextNodeDir;
-                    nextNode.reset();
+                    nextNode = new Node();
                     nextNode.setAverageCoverage(1);
                 }
 
@@ -185,28 +184,28 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
             }
 
-            public void setEdgeListForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode) {
+            public void setEdgesForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode) {
                 // TODO simplify this function after Anbang merge the edgeType
                 // detect code
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeMap(EDGETYPE.FF).append(new VKmer(nextForwardKmer));
-                    nextNode.getEdgeMap(EDGETYPE.RR).append(new VKmer(curForwardKmer));
+                    curNode.getEdges(EDGETYPE.FF).append(new VKmer(nextForwardKmer));
+                    nextNode.getEdges(EDGETYPE.RR).append(new VKmer(curForwardKmer));
 
                     return;
                 }
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeMap(EDGETYPE.FR).append(new VKmer(nextReverseKmer));
-                    nextNode.getEdgeMap(EDGETYPE.FR).append(new VKmer(curForwardKmer));
+                    curNode.getEdges(EDGETYPE.FR).append(new VKmer(nextReverseKmer));
+                    nextNode.getEdges(EDGETYPE.FR).append(new VKmer(curForwardKmer));
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeMap(EDGETYPE.RF).append(new VKmer(nextForwardKmer));
-                    nextNode.getEdgeMap(EDGETYPE.RF).append(new VKmer(curReverseKmer));
+                    curNode.getEdges(EDGETYPE.RF).append(new VKmer(nextForwardKmer));
+                    nextNode.getEdges(EDGETYPE.RF).append(new VKmer(curReverseKmer));
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeMap(EDGETYPE.RR).append(new VKmer(nextReverseKmer));
-                    nextNode.getEdgeMap(EDGETYPE.FF).append(new VKmer(curReverseKmer));
+                    curNode.getEdges(EDGETYPE.RR).append(new VKmer(nextReverseKmer));
+                    nextNode.getEdges(EDGETYPE.FF).append(new VKmer(curReverseKmer));
                     return;
                 }
             }
@@ -215,7 +214,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 try {
                     tupleBuilder.reset();
                     tupleBuilder.addField(kmer.getBytes(), kmer.getOffset(), kmer.getLength());
-                    tupleBuilder.addField(node.marshalToByteArray(), 0, node.getSerializedLength());
+                    byte[] nodeBytes = node.marshalToByteArray();
+                    tupleBuilder.addField(nodeBytes, 0, nodeBytes.length);
+
                     if (!outputAppender.append(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray(), 0,
                             tupleBuilder.getSize())) {
                         FrameUtils.flushFrame(outputBuffer, writer);

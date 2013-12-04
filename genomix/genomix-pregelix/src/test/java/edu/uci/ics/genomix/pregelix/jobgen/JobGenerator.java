@@ -9,18 +9,20 @@ import org.apache.commons.io.FileUtils;
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.extractsubgraph.ExtractSubgraphVertex;
+import edu.uci.ics.genomix.pregelix.format.BubbleMergeWithSearchVertexToNodeOutputFormat;
+import edu.uci.ics.genomix.pregelix.format.NodeToBubbleMergeWithSearchVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
+import edu.uci.ics.genomix.pregelix.operator.aggregator.DeBruijnVertexCounterAggregator;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.bubblemerge.BubbleMergeWithSearchVertex;
 import edu.uci.ics.genomix.pregelix.operator.bubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
-import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
 import edu.uci.ics.genomix.pregelix.testhelper.BFSTraverseVertex;
@@ -38,7 +40,7 @@ public class JobGenerator {
     public static String outputBase = "src/test/resources/jobs/";
 
     private static void configureJob(PregelixJob job) {
-        job.addGlobalAggregatorClass(StatisticsAggregator.class);
+        job.setCounterAggregatorClass(DeBruijnVertexCounterAggregator.class);
         job.setVertexInputFormatClass(NodeToVertexInputFormat.class);
         job.setVertexOutputFormatClass(VertexToNodeOutputFormat.class);
         job.setDynamicVertexValueSize(true);
@@ -208,14 +210,15 @@ public class JobGenerator {
         generateBubbleMergeGraphJob("BubbleMergeGraph", outputBase + "BUBBLE.xml");
     }
 
-    private static void generateSplitRepeatGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = SplitRepeatVertex.getConfiguredJob(new GenomixJobConf(3), SplitRepeatVertex.class);
-        job.getConfiguration().setLong(GenomixJobConf.RANDOM_SEED, 500);
+    private static void generateBubbleMergeWithSearchGraphJob(String jobName, String outputPath) throws IOException {
+        PregelixJob job = BubbleMergeWithSearchVertex.getConfiguredJob(new GenomixJobConf(3),
+                BubbleMergeWithSearchVertex.class);
+        job.getConfiguration().setInt(GenomixJobConf.BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, 100);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 
-    private static void genSplitRepeatGraph() throws IOException {
-        generateSplitRepeatGraphJob("SplitRepeatGraph", outputBase + "SPLIT_REPEAT.xml");
+    private static void genBubbleMergeWithSearchGraph() throws IOException {
+        generateBubbleMergeWithSearchGraphJob("BubbleMergeWithSearchGraph", outputBase + "BUBBLE_WITH_SEARCH.xml");
     }
 
     private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
@@ -240,7 +243,7 @@ public class JobGenerator {
         genBridgeRemoveGraph();
         genBubbleAddGraph();
         genBubbleMergeGraph();
-        genSplitRepeatGraph();
+        genBubbleMergeWithSearchGraph();
         getBFSTraverseGraph();
         genScaffoldingGraph();
         genSymmetryCheckerGraph();

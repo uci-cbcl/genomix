@@ -44,12 +44,12 @@ public enum DIR {
         return b;
     }
 
-    public final EnumSet<EDGETYPE> edgeTypes() {
+    public final EDGETYPE[] edgeTypes() {
         return edgeTypesInDir(this);
     }
 
-    public static final EnumSet<EDGETYPE> edgeTypesInDir(DIR direction) {
-        return direction == DIR.REVERSE ? EDGETYPE.INCOMING : EDGETYPE.OUTGOING;
+    public static final EDGETYPE[] edgeTypesInDir(DIR direction) {
+        return direction == DIR.REVERSE ? EDGETYPE.REVERSE : EDGETYPE.FORWARD;
     }
 
     public static EnumSet<DIR> enumSetFromByte(short s) { //TODO change shorts to byte? (anbangx) 

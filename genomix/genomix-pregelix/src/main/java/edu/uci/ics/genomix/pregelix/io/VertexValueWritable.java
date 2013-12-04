@@ -4,32 +4,33 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class VertexValueWritable extends Node {
 
     private static final long serialVersionUID = 1L;
 
     public static class VertexStateFlag {
-        
+
         // general case, marking it as NORMAL_NODE
-        public static final byte NORMAL_NODE = 0b1 << 6; 
+        public static final byte NORMAL_NODE = 0b1 << 6;
         // ERROR_NODE is used in SymmetryChecker, if the vertex exists error, marking it as ERROR_NODE
-        public static final byte ERROR_NODE = 0b1 << 6; 
+        public static final byte ERROR_NODE = 0b1 << 6;
         // KEEP_NODE is used in ExtractSubgraph, if the vertex is extracted, marking it as KEEP_NODE
-        public static final byte KEEP_NODE = 0b1 << 6; 
+        public static final byte KEEP_NODE = 0b1 << 6;
         // DEAD_NODE is used in RemoveLowcoverage, if the vertex is deleted, marking it as DEAD_NODE
-        public static final byte DEAD_NODE = 0b1 << 6; 
-        
+        public static final byte DEAD_NODE = 0b1 << 6;
+
         public static final byte VERTEX_MASK = 0b1 << 6;
     }
 
@@ -45,21 +46,19 @@ public class VertexValueWritable extends Node {
 
     private short state;
     private boolean isFakeVertex;
-    private HashMapWritable<ByteWritable, VLongWritable> counters;
+    
+    protected boolean verbose = false;
 
     public VertexValueWritable() {
         super();
         state = 0;
         isFakeVertex = false;
-        counters = new HashMapWritable<ByteWritable, VLongWritable>();
     }
 
     public void setAsCopy(VertexValueWritable other) {
         setNode(other);
         state = other.getState();
         isFakeVertex = other.isFakeVertex();
-        counters.clear();
-        counters.putAll(other.getCounters());
     }
 
     public boolean isValidScaffoldingSearchNode() {
@@ -70,40 +69,40 @@ public class VertexValueWritable extends Node {
 
     public void setNode(Node node) {
         // TODO invertigate... does this need to be a copy?
-        super.setAsCopy(node.getEdges(), node.getUnflippedReadIds(), node.getFlippedReadIds(), node.getInternalKmer(),
+        super.setAsCopy(node.getAllEdges(), node.getUnflippedReadIds(), node.getFlippedReadIds(), node.getInternalKmer(),
                 node.getAverageCoverage());
     }
 
-    public EdgeMap getFFList() {
-        return getEdgeMap(EDGETYPE.FF);
+    public VKmerList getFFList() {
+        return getEdges(EDGETYPE.FF);
     }
 
-    public EdgeMap getFRList() {
-        return getEdgeMap(EDGETYPE.FR);
+    public VKmerList getFRList() {
+        return getEdges(EDGETYPE.FR);
     }
 
-    public EdgeMap getRFList() {
-        return getEdgeMap(EDGETYPE.RF);
+    public VKmerList getRFList() {
+        return getEdges(EDGETYPE.RF);
     }
 
-    public EdgeMap getRRList() {
-        return getEdgeMap(EDGETYPE.RR);
+    public VKmerList getRRList() {
+        return getEdges(EDGETYPE.RR);
     }
 
-    public void setFFList(EdgeMap forwardForwardList) {
-        setEdgeMap(EDGETYPE.FF, forwardForwardList);
+    public void setFFList(VKmerList forwardForwardList) {
+        setEdges(EDGETYPE.FF, forwardForwardList);
     }
 
-    public void setFRList(EdgeMap forwardReverseList) {
-        setEdgeMap(EDGETYPE.FR, forwardReverseList);
+    public void setFRList(VKmerList forwardReverseList) {
+        setEdges(EDGETYPE.FR, forwardReverseList);
     }
 
-    public void setRFList(EdgeMap reverseForwardList) {
-        setEdgeMap(EDGETYPE.RF, reverseForwardList);
+    public void setRFList(VKmerList reverseForwardList) {
+        setEdges(EDGETYPE.RF, reverseForwardList);
     }
 
-    public void setRRList(EdgeMap reverseReverseList) {
-        setEdgeMap(EDGETYPE.RR, reverseReverseList);
+    public void setRRList(VKmerList reverseReverseList) {
+        setEdges(EDGETYPE.RR, reverseReverseList);
     }
 
     public short getState() {
@@ -131,20 +130,10 @@ public class VertexValueWritable extends Node {
         this.state = state;
     }
 
-    public HashMapWritable<ByteWritable, VLongWritable> getCounters() {
-        return counters;
-    }
-
-    public void setCounters(HashMapWritable<ByteWritable, VLongWritable> counters) {
-        this.counters.clear();
-        this.counters.putAll(counters);
-    }
-
     public void reset() {
         super.reset();
         this.state = 0;
         this.isFakeVertex = false;
-        this.counters.clear();
     }
 
     @Override
@@ -156,9 +145,9 @@ public class VertexValueWritable extends Node {
         //        this.counters.readFields(in);
         //        scaffoldingMap.readFields(in);
 
-        if (DEBUG) {
-            boolean verbose = false;
-            for (VKmer problemKmer : problemKmers) {
+        if (GenomixJobConf.debug) {
+            verbose = false;
+            for (VKmer problemKmer : GenomixJobConf.debugKmers) {
                 verbose |= this.getInternalKmer().equals(problemKmer);
                 verbose |= findEdge(problemKmer) != null;
             }
@@ -176,47 +165,20 @@ public class VertexValueWritable extends Node {
         //        this.counters.write(out);
         //        scaffoldingMap.write(out);
 
-//        if (DEBUG) {
-//            boolean verbose = false;
-//            for (VKmer problemKmer : problemKmers) {
-//                verbose |= this.getInternalKmer().equals(problemKmer);
-//                verbose |= findEdge(problemKmer) != null;
-//            }
-//            if (verbose) {
-////                LOG.fine("VertexValue.write: " + toString());
-//            }
-//        }
+        //        if (DEBUG) {
+        //            boolean verbose = false;
+        //            for (VKmer problemKmer : problemKmers) {
+        //                verbose |= this.getInternalKmer().equals(problemKmer);
+        //                verbose |= findEdge(problemKmer) != null;
+        //            }
+        //            if (verbose) {
+        ////                LOG.fine("VertexValue.write: " + toString());
+        //            }
+        //        }
     }
 
     public int getDegree() {
         return inDegree() + outDegree();
-    }
-
-    /**
-     * check if prev/next destination exists
-     */
-    public boolean hasPrevDest() {
-        return !getRFList().isEmpty() || !getRRList().isEmpty();
-    }
-
-    public boolean hasNextDest() {
-        return !getFFList().isEmpty() || !getFRList().isEmpty();
-    }
-
-    /**
-     * Delete the corresponding edge
-     */
-    public void processDelete(EDGETYPE neighborToDeleteEdgetype, VKmer keyToDelete) {
-        ReadIdSet prevList = this.getEdgeList(neighborToDeleteEdgetype).remove(keyToDelete);
-        if (prevList == null) {
-            throw new IllegalArgumentException("processDelete tried to remove an edge that didn't exist: "
-                    + keyToDelete + " but I am " + this);
-        }
-    }
-
-    public void processFinalUpdates(EDGETYPE deleteDir, EDGETYPE updateDir, Node other) {
-        EDGETYPE replaceDir = deleteDir.mirror();
-        updateEdges(deleteDir, null, updateDir, replaceDir, other, false);
     }
 
     /**

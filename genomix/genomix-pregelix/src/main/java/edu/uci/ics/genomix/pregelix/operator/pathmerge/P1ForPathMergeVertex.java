@@ -11,7 +11,6 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
@@ -39,12 +38,6 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             outgoingMsg.reset();
         if (repeatKmer == null)
             repeatKmer = new VKmer();
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
     }
 
     public void chooseMergeDir() {
@@ -139,7 +132,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                     outFlag = 0;
                     outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
                     for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
-                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                        for (VKmer dest : vertex.getEdges(et)) {
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor()
                                     : meToNeighbor;
@@ -213,11 +206,13 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             EDGETYPE aliveToMe = EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
 
             VKmer deletedKmer = incomingMsg.getSourceVertexId();
-            if (value.getEdgeMap(deleteToMe).containsKey(deletedKmer)) {
-                ReadIdSet deletedReadIds = value.getEdgeMap(deleteToMe).get(deletedKmer);
-                value.getEdgeMap(deleteToMe).remove(deletedKmer);
-
-                value.getEdgeMap(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);
+            if (value.getEdges(deleteToMe).contains(deletedKmer)) {
+                value.getEdges(deleteToMe).remove(deletedKmer);
+                if (!value.getEdges(aliveToMe).contains(incomingMsg.getInternalKmer()))
+                    value.getEdges(aliveToMe).append(incomingMsg.getInternalKmer());
+            } else {
+                throw new IllegalStateException("Couldn't find the requested edge to delete! I am " + value.toString()
+                        + "; incomingMsg was " + incomingMsg.toString());
             }
             voteToHalt();
         }

@@ -51,8 +51,8 @@ import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
-import edu.uci.ics.genomix.pregelix.operator.splitrepeat.SplitRepeatVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveWithSearchVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
 import edu.uci.ics.genomix.pregelix.testhelper.BFSTraverseVertex;
 import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
@@ -115,8 +115,11 @@ public class GenomixDriver {
             case UNROLL_TANDEM:
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
                 break;
-            case TIP_REMOVE:
+            case TIP_SINGLE_NODE:
                 pregelixJobs.add(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
+                break;
+            case TIP:
+                pregelixJobs.add(TipRemoveWithSearchVertex.getConfiguredJob(conf, TipRemoveWithSearchVertex.class));
                 break;
             case BUBBLE:
                 pregelixJobs.add(SimpleBubbleMergeVertex.getConfiguredJob(conf, SimpleBubbleMergeVertex.class));
@@ -129,9 +132,6 @@ public class GenomixDriver {
                 break;
             case BRIDGE:
                 pregelixJobs.add(BridgeRemoveVertex.getConfiguredJob(conf, BridgeRemoveVertex.class));
-                break;
-            case SPLIT_REPEAT:
-                pregelixJobs.add(SplitRepeatVertex.getConfiguredJob(conf, SplitRepeatVertex.class));
                 break;
             case SCAFFOLD:
                 pregelixJobs.add(ScaffoldingVertex.getConfiguredJob(conf, ScaffoldingVertex.class));
@@ -287,7 +287,7 @@ public class GenomixDriver {
         pregelixJobs = new ArrayList<PregelixJob>();
         stepNum = 0;
         runLocal = Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_LOCAL));
-        
+
         // clear anything in our HDFS work path and local output directory
         FileSystem.get(conf).delete(new Path(conf.get(GenomixJobConf.HDFS_WORK_PATH)), true);
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null) {
