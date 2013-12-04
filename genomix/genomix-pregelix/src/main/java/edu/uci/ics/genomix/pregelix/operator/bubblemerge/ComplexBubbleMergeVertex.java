@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
@@ -391,7 +390,4 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
         //            voteToHalt();
     }
 
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, ComplexBubbleMergeVertex.class));
-    }
 }

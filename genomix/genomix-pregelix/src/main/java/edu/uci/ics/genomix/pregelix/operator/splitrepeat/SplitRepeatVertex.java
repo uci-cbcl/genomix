@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 import org.apache.hadoop.io.NullWritable;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SplitRepeatMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
@@ -305,9 +304,6 @@ public class SplitRepeatVertex extends DeBruijnGraphCleanVertex<VertexValueWrita
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, SplitRepeatVertex.class));
-    }
 
     //TODO split repeat should move start/end readids that are present in the intersection readids to the new node
 }

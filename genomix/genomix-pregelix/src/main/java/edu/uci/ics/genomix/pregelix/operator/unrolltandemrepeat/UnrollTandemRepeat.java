@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
@@ -117,8 +116,5 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
             voteToHalt();
         }
     }
-
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, UnrollTandemRepeat.class));
-    }
+    
 }

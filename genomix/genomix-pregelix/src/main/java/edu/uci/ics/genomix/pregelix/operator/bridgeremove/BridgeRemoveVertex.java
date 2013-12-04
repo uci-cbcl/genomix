@@ -3,7 +3,6 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
@@ -92,10 +91,6 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
             pruneDeadEdges(msgIterator);
         }
         voteToHalt();
-    }
-
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, BridgeRemoveVertex.class));
     }
 
 }

@@ -7,7 +7,6 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
@@ -263,7 +262,4 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, P4ForPathMergeVertex.class));
-    }
 }

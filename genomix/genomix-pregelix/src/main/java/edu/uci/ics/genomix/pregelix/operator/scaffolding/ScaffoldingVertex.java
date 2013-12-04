@@ -8,7 +8,6 @@ import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
@@ -260,10 +259,6 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
         } else {
             throw new IllegalStateException("Programmer error!!!");
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, ScaffoldingVertex.class));
     }
 
     public static PregelixJob getConfiguredJob(
