@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.driver.realtests;
+package edu.uci.ics.genomix.driver.pipelinetests;
 
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;

@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.driver.realtests;
+package edu.uci.ics.genomix.driver.pipelinetests;
 
 import java.io.BufferedWriter;
 import java.io.File;

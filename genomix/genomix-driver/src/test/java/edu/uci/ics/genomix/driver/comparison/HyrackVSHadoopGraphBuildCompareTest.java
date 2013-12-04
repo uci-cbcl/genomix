@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.driver.comparation;
+package edu.uci.ics.genomix.driver.comparison;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.test.GraphBuildingTestSetting;
 
 @RunWith(value = Parameterized.class)
-public class HyrackVSHadoopTest {
+public class HyrackVSHadoopGraphBuildCompareTest {
     private final static GraphBuildingTestSetting testsetting = new GraphBuildingTestSetting();
 
     /**
@@ -78,7 +78,7 @@ public class HyrackVSHadoopTest {
     private final String hadoopResultFileName;
     private final int kmerLength;
 
-    public HyrackVSHadoopTest(String subdir, File file, int kmerLength) throws IOException {
+    public HyrackVSHadoopGraphBuildCompareTest(String subdir, File file, int kmerLength) throws IOException {
         this.testDirName = subdir;
         this.testFile = file;
         this.kmerLength = kmerLength;
