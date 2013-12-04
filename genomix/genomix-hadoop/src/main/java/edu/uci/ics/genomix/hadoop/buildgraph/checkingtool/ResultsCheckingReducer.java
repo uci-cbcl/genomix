@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package edu.uci.ics.genomix.hadoop.graphbuilding.checkingtool;
+package edu.uci.ics.genomix.hadoop.buildgraph.checkingtool;
 
 import java.io.IOException;
 import java.util.Iterator;

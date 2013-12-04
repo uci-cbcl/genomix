@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
+package edu.uci.ics.genomix.hadoop.buildgraph;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.util.TestUtils;
+import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
 
 @SuppressWarnings("deprecation")
 public class SingleGraphBuildingTest {

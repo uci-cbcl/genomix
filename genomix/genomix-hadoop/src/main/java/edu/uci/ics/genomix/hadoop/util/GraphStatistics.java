@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.graph;
+package edu.uci.ics.genomix.hadoop.util;
 
 import java.io.File;
 import java.io.IOException;

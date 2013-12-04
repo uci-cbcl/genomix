@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.converttofasta;
+package edu.uci.ics.genomix.hadoop.util;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

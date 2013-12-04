@@ -32,7 +32,7 @@ import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.hadoop.graph.GraphStatistics;
+import edu.uci.ics.genomix.hadoop.util.GraphStatistics;
 
 @SuppressWarnings("deprecation")
 public class GetFastaStatsTest {

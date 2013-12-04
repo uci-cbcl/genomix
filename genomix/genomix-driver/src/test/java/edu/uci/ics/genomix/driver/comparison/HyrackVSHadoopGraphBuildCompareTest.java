@@ -24,7 +24,7 @@ import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.util.GenerateGraphViz;
 import edu.uci.ics.genomix.data.util.TestUtils;
 import edu.uci.ics.genomix.data.util.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.hadoop.contrailgraphbuilding.GenomixHadoopDriver;
+import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.test.GraphBuildingTestSetting;
 

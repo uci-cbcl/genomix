@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.uci.ics.genomix.hadoop.graphbuilding.checkingtool;
+package edu.uci.ics.genomix.hadoop.buildgraph.checkingtool;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -29,6 +29,7 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.hadoop.buildgraph.checkingtool.ResultsCheckingDriver;
 
 /**
  * This test only applied on SequenceInputFormat

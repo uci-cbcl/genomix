@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.hadoop.contrailgraphbuilding;
+package edu.uci.ics.genomix.hadoop.buildgraph;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
