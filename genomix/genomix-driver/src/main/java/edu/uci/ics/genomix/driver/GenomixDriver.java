@@ -61,6 +61,7 @@ import edu.uci.ics.genomix.pregelix.testhelper.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.testhelper.TipAddVertex;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 
 /**
@@ -177,12 +178,19 @@ public class GenomixDriver {
                 stepNum--;
                 break;
             case STATS:
+                PregelixJob lastJob = null;
+                if (pregelixJobs.size() > 0) {
+                    lastJob = pregelixJobs.get(pregelixJobs.size());
+                }
                 flushPendingJobs(conf);
                 curOutput = prevOutput + "-STATS";
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters, conf);
                 GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
+                if (lastJob != null) {
+                    GraphStatistics.saveJobCounters(curOutput, lastJob, conf);
+                }
                 copyToLocalOutputDir(curOutput, conf);
                 curOutput = prevOutput; // use previous job's output
                 stepNum--;
