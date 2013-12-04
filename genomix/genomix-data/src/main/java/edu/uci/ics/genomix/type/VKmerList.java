@@ -245,7 +245,17 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
         return false;
     }
-
+    
+    public int indexOf(VKmer kmer) {
+        Iterator<VKmer> posIterator = this.iterator();
+        int i = 0;
+        while (posIterator.hasNext()) {
+            if (kmer.equals(posIterator.next()))
+                return i;
+            i++;
+        }
+        return -1;
+    }
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.
