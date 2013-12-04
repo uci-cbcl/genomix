@@ -18,6 +18,8 @@ package edu.uci.ics.genomix.driver;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -180,7 +182,7 @@ public class GenomixDriver {
             case STATS:
                 PregelixJob lastJob = null;
                 if (pregelixJobs.size() > 0) {
-                    lastJob = pregelixJobs.get(pregelixJobs.size());
+                    lastJob = pregelixJobs.get(pregelixJobs.size() - 1);
                 }
                 flushPendingJobs(conf);
                 curOutput = prevOutput + "-STATS";
@@ -335,7 +337,17 @@ public class GenomixDriver {
 
         // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
         String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
-        for (Patterns step : Patterns.arrayFromString(pipelineSteps)) {
+        List<Patterns> allPatterns = new ArrayList<>(Arrays.asList(Patterns.arrayFromString(pipelineSteps)));
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_ALL_STATS))) {
+            // insert a STATS step between all jobs that mutate the graph
+            for (int i=0; i < allPatterns.size(); i++) {
+               if (Patterns.mutatingJobs.contains(allPatterns.get(i))) {
+                   allPatterns.add(i + 1, Patterns.STATS);
+                   i++; // skip the STATS job we just added
+               }
+            }
+        }
+        for (Patterns step : allPatterns) {
             stepNum++;
             setOutput(conf, step);
             addStep(conf, step);

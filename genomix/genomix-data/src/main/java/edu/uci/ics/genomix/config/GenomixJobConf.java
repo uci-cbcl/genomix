@@ -36,12 +36,12 @@ import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
-    
+
     public static boolean debug = false;
     public static ArrayList<VKmer> debugKmers;
-    
+
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
-    
+
     /* The following section ties together command-line options with a global JobConf
      * Each variable has an annotated, command-line Option which is private here but 
      * is accessible through JobConf.get(GenomixConfigOld.VARIABLE).
@@ -88,13 +88,13 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-bubbleMerge_maxDissimilarity", usage = "Maximum dissimilarity (1 - % identity) allowed between two kmers while still considering them a \"bubble\", (leading to their collapse into a single node)", required = false)
         private float bubbleMerge_maxDissimilarity = -1;
-        
+
         @Option(name = "-bubbleMergewithsearch_maxLength", usage = "Maximum length can be searched", required = false)
         private int bubbleMergeWithSearch_maxLength = -1;
-        
+
         @Option(name = "-bubbleMergewithsearch_searchDirection", usage = "Maximum length can be searched", required = false)
         private String bubbleMergeWithSearch_searchDirection;
-        
+
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
         private int graphCleanMaxIterations = -1;
 
@@ -162,9 +162,12 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
-        
+
         @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
         private String extraConfFiles;
+
+        @Option(name = "-runAllStats", usage = "Whether or not to run a STATS job after each normal job")
+        private boolean runAllStats = false;
     }
 
     /**
@@ -195,6 +198,11 @@ public class GenomixJobConf extends JobConf {
         BRIDGE_ADD,
         BUBBLE_ADD,
         BFS;
+
+        /** the jobs that actually mutate the graph */
+        public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
+                Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,
+                Patterns.BUBBLE_ADD, Patterns.BFS));
 
         /**
          * Get a comma-separated pipeline from the given array of Patterns
@@ -251,6 +259,7 @@ public class GenomixJobConf extends JobConf {
     public static final String RANDOM_SEED = "genomix.conf.randomSeed";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
+    public static final String RUN_ALL_STATS = "genomix.conf.runAllStats";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -293,6 +302,7 @@ public class GenomixJobConf extends JobConf {
     // GAGE Metrics Evaluation 
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.conf.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
+
     // intermediate date evaluation
 
     public GenomixJobConf(int kmerLength) {
@@ -380,10 +390,10 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
-        
+
         if (get(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION) == null)
             set(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, "FORWARD"); // the default is to search towards FORWARDS
-        
+
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
 
@@ -434,11 +444,11 @@ public class GenomixJobConf extends JobConf {
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
-        
+
         // default conf setup
         if (get(EXTRA_CONF_FILES) == null)
             set(EXTRA_CONF_FILES, "");
-        
+
         // hyracks-specific
 
         //        if (getBoolean(RUN_LOCAL, false)) {
@@ -505,10 +515,11 @@ public class GenomixJobConf extends JobConf {
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
-        
+
         // read conf.xml
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
+        setBoolean(RUN_ALL_STATS, opts.runAllStats);
     }
 
     /**
