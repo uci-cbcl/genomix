@@ -18,9 +18,9 @@ package edu.uci.ics.genomix.type;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.KmerFactory;
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.types.KmerFactory;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.util.GeneCode;
 
 public class KmerFactoryTest {
     static byte[] array = { 'A', 'G', 'C', 'T', 'G', 'A', 'C', 'C', 'G', 'T' };

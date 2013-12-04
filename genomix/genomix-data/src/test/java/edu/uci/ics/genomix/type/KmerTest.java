@@ -22,8 +22,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.Kmer;
+import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.util.GeneCode;
 
 public class KmerTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.pregelix.api.io.WritableSizable;
 
 public class MessageWritable implements Writable, WritableSizable {

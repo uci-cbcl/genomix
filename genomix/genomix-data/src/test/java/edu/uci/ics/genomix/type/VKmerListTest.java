@@ -7,8 +7,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
 
 public class VKmerListTest {
 

@@ -4,10 +4,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
-import edu.uci.ics.genomix.type.VKmerList;
-import edu.uci.ics.genomix.type.VKmer;
 
 public abstract class BasicMapReduceVertex<V extends VertexValueWritable, M extends PathMergeMessage> extends
         BasicPathMergeVertex<V, M> {

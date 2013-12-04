@@ -8,16 +8,15 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
 
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.VKmerList;
 
 /**
  * The super class of different path merge algorithms

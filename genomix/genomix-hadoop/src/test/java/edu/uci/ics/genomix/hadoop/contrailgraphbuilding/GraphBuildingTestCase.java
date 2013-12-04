@@ -6,9 +6,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
-import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.util.GenerateGraphViz;
+import edu.uci.ics.genomix.data.util.GenerateGraphViz.GRAPH_TYPE;
 
 @SuppressWarnings({ "deprecation", "unused" })
 public class GraphBuildingTestCase extends TestCase {

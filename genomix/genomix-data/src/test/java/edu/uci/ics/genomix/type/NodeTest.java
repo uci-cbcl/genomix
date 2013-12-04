@@ -17,8 +17,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.Node.NeighborInfo;
-import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
+import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
+import edu.uci.ics.genomix.data.types.Node.READHEAD_ORIENTATION;
 
 public class NodeTest {
 

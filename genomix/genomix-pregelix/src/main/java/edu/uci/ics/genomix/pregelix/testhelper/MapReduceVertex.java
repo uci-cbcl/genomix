@@ -2,9 +2,9 @@ package edu.uci.ics.genomix.pregelix.testhelper;
 
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicMapReduceVertex;
+import edu.uci.ics.genomix.pregelix.operator.pathmerge.PathMergeMessage;
 
 public class MapReduceVertex extends BasicMapReduceVertex<VertexValueWritable, PathMergeMessage> {
 

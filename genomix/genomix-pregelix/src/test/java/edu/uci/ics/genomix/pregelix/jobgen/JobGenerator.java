@@ -6,33 +6,27 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.aggregator.DeBruijnVertexCounterAggregator;
-import edu.uci.ics.genomix.pregelix.format.BubbleMergeWithSearchVertexToNodeOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.NodeToScaffoldingVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.format.ScaffoldingVertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
-import edu.uci.ics.genomix.pregelix.operator.checker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithSearchVertex;
-import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.NodeToBubbleMergeWithSearchVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P1ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
+import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
+import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
-import edu.uci.ics.genomix.pregelix.testhelper.BFSTraverseVertex;
 import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
 import edu.uci.ics.genomix.pregelix.testhelper.BubbleAddVertex;
 import edu.uci.ics.genomix.pregelix.testhelper.MapReduceVertex;
 import edu.uci.ics.genomix.pregelix.testhelper.TipAddVertex;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class JobGenerator {
@@ -112,22 +106,6 @@ public class JobGenerator {
 
     private static void genMapReduceGraph() throws IOException {
         generateMapReduceGraphJob("MapReduceGraph", outputBase + "MAP_REDUCE.xml");
-    }
-
-    private static void generateBFSTraverseGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = BFSTraverseVertex.getConfiguredJob(new GenomixJobConf(3), BFSTraverseVertex.class);
-        job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
-        job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
-        job.getConfiguration().setInt(BFSTraverseVertex.NUM_STEP_SIMULATION_END_BFS, 10);
-        job.getConfiguration().setInt(BFSTraverseVertex.MAX_TRAVERSAL_LENGTH, 10);
-        job.getConfiguration().set(BFSTraverseVertex.SOURCE, "AAT"); // source and destination are based on input file
-        job.getConfiguration().set(BFSTraverseVertex.DESTINATION, "AGA");
-        job.getConfiguration().setLong(BFSTraverseVertex.COMMOND_READID, 1);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void getBFSTraverseGraph() throws IOException {
-        generateBFSTraverseGraphJob("BFSTraversegGraph", outputBase + "BFS.xml");
     }
 
     private static void generateSymmetryCheckerGraphJob(String jobName, String outputPath) throws IOException {
@@ -221,15 +199,6 @@ public class JobGenerator {
         generateBubbleMergeWithSearchGraphJob("BubbleMergeWithSearchGraph", outputBase + "BUBBLE_WITH_SEARCH.xml");
     }
 
-    private static void generateScaffoldingGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = ScaffoldingVertex.getConfiguredJob(new GenomixJobConf(3), ScaffoldingVertex.class);
-        job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
-    }
-
-    private static void genScaffoldingGraph() throws IOException {
-        generateScaffoldingGraphJob("ScaffoldingGraph", outputBase + "SCAFFOLD.xml");
-    }
-
     public static void main(String[] args) throws IOException {
         FileUtils.forceMkdir(new File(outputBase));
         genUnrollTandemRepeatGraph();
@@ -244,8 +213,6 @@ public class JobGenerator {
         genBubbleAddGraph();
         genBubbleMergeGraph();
         genBubbleMergeWithSearchGraph();
-        getBFSTraverseGraph();
-        genScaffoldingGraph();
         genSymmetryCheckerGraph();
         genExtractSubGraph();
     }

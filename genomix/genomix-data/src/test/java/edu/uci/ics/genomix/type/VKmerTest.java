@@ -25,6 +25,12 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
+import edu.uci.ics.genomix.data.util.GeneCode;
+
 public class VKmerTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
     static int k = 7;

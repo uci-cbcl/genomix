@@ -2,13 +2,13 @@ package edu.uci.ics.genomix.pregelix.operator.removelowcoverage;
 
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.GraphMutations;
-import edu.uci.ics.genomix.type.EDGETYPE;
 
 /**
  * Graph clean pattern: Remove Lowcoverage

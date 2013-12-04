@@ -7,11 +7,10 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.format.NodeToGenericVertexInputFormat;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.BubbleMergeWithSearchVertexValueWritable;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 
 public class NodeToBubbleMergeWithSearchVertexInputFormat extends

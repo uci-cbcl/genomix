@@ -6,8 +6,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
+import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
-import edu.uci.ics.genomix.type.VKmerList;
 
 /**
  * PathAndEdgeTypeList stores all the kmers along the BTS path by VKmerList

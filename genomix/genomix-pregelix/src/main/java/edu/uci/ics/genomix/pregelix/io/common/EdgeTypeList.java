@@ -1,6 +1,6 @@
 package edu.uci.ics.genomix.pregelix.io.common;
 
-import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
 /**
  * ArrayListWritable of EDGETYPE
  * @author anbangx

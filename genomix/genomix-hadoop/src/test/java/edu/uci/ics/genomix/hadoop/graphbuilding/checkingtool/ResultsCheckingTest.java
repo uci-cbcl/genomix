@@ -28,7 +28,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
 
 /**
  * This test only applied on SequenceInputFormat

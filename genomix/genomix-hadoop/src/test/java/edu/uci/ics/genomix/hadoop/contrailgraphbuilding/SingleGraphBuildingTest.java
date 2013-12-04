@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -13,8 +14,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.util.TestUtils;
+import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.util.TestUtils;
 
 @SuppressWarnings("deprecation")
 public class SingleGraphBuildingTest {

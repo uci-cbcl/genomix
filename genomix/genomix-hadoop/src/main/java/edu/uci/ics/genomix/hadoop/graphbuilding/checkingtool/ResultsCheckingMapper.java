@@ -24,8 +24,8 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
 
 @SuppressWarnings("deprecation")
 public class ResultsCheckingMapper extends MapReduceBase implements Mapper<VKmer, Node, Text, Text> {

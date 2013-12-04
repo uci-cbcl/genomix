@@ -1,20 +1,24 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
+import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.ReadHeadSet;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, RayScaffoldingMessage> {
     public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = 50;
@@ -352,6 +356,17 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
         scaffold(msgIterator);
         voteToHalt();
 
+    }
+
+    public static PregelixJob getConfiguredJob(
+            GenomixJobConf conf,
+            Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
+            throws IOException {
+        PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
+        job.setVertexInputFormatClass(NodeToScaffoldingVertexInputFormat.class);
+        job.setVertexOutputFormatClass(ScaffoldingVertexToNodeOutputFormat.class);
+        //        job.setGlobalAggregatorClass(ScaffoldingAggregator.class);
+        return job;
     }
 
 }

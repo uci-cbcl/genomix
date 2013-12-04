@@ -14,14 +14,14 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.NLineInputFormat;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.util.GeneCode;
 
 /**
  * GenomixMapper the 1st step of graph building

@@ -6,8 +6,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.util.Marshal;
+import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.util.Marshal;
 
 public class ReadHeadInfoTest {
 

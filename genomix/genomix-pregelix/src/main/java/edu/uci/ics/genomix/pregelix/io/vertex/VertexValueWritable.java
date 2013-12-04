@@ -4,13 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
 
 public class VertexValueWritable extends Node {
 
@@ -55,12 +54,6 @@ public class VertexValueWritable extends Node {
         setNode(other);
         state = other.getState();
         isFakeVertex = other.isFakeVertex();
-    }
-
-    public boolean isValidScaffoldingSearchNode() {
-        return (this.getUnflippedReadIds().size() > 0 || this.getFlippedReadIds().size() > 0)
-                && (getAverageCoverage() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_COVERAGE && getInternalKmer()
-                        .getLength() >= ScaffoldingVertex.SCAFFOLDING_VERTEX_MIN_LENGTH);
     }
 
     public void setNode(Node node) {

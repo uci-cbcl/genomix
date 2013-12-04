@@ -17,13 +17,13 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadHeadSet;
-import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.EDGETYPE;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.ReadHeadInfo;
+import edu.uci.ics.genomix.data.types.ReadHeadSet;
+import edu.uci.ics.genomix.data.types.ReadIdSet;
+import edu.uci.ics.genomix.data.types.VKmer;
 
 public class EdgesTest {
 
