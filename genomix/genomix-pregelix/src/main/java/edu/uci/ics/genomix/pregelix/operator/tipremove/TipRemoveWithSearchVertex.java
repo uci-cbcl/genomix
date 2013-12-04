@@ -20,8 +20,7 @@ import edu.uci.ics.genomix.type.VKmerList;
  * with in-degree + out-degree = 1 (they either have a single edge in or a single edge out).
  * The algorithm identifies these nodes and prunes them from the graph. This is then followed
  * by recompressing the graph.
- * 
- * This variant of the algorithm can identify tips in an uncompressed graph 
+ * This variant of the algorithm can identify tips in an uncompressed graph
  */
 public class TipRemoveWithSearchVertex extends
         DeBruijnGraphCleanVertex<VertexValueWritable, TipRemoveWithSearchMessage> {
@@ -96,7 +95,7 @@ public class TipRemoveWithSearchVertex extends
                 stop = false;
                 incomingMsg.visitNode(node);
             }
-            
+
             if (incomingMsg.getVisitedLength() < MIN_LENGTH_TO_KEEP) {
                 if (stop) {
                     deleteVisitedNodes(incomingMsg);
@@ -122,7 +121,7 @@ public class TipRemoveWithSearchVertex extends
         VKmer lastVisited = visitedNodes.getPosition(visitedNodes.size() - 1);
         if (!lastVisited.equals(getVertexId())) {
             // I am not in the path but have an edge towards the deleted node
-            node.getEdgeMap(inET.mirror()).remove(lastVisited);
+            node.getEdges(inET.mirror()).remove(lastVisited);
         }
     }
 
@@ -132,7 +131,7 @@ public class TipRemoveWithSearchVertex extends
             throw new IllegalStateException("Should have degree == 1 in " + outDir + ". I am " + node);
         }
         for (EDGETYPE outET : outDir.edgeTypes()) {
-            for (VKmer id : node.getEdgeMap(outET).keySet()) {
+            for (VKmer id : node.getEdges(outET)) {
                 msg.setFlag(outET.get());
                 sendMsg(id, msg);
             }

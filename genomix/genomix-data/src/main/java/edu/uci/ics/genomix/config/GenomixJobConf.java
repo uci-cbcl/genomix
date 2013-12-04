@@ -18,7 +18,6 @@ package edu.uci.ics.genomix.config;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,19 +28,17 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {
-    
+
     public static boolean debug = false;
     public static ArrayList<VKmer> debugKmers;
-    
+
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
-    
+
     /* The following section ties together command-line options with a global JobConf
      * Each variable has an annotated, command-line Option which is private here but 
      * is accessible through JobConf.get(GenomixConfigOld.VARIABLE).
@@ -162,7 +159,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
-        
+
         @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
         private String extraConfFiles;
     }
@@ -293,6 +290,7 @@ public class GenomixJobConf extends JobConf {
     // GAGE Metrics Evaluation 
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.conf.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
+
     // intermediate date evaluation
 
     public GenomixJobConf(int kmerLength) {
@@ -434,11 +432,11 @@ public class GenomixJobConf extends JobConf {
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
-        
+
         // default conf setup
         if (get(EXTRA_CONF_FILES) == null)
             set(EXTRA_CONF_FILES, "");
-        
+
         // hyracks-specific
 
         //        if (getBoolean(RUN_LOCAL, false)) {
@@ -505,7 +503,7 @@ public class GenomixJobConf extends JobConf {
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
-        
+
         // read conf.xml
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
@@ -537,12 +535,13 @@ public class GenomixJobConf extends JobConf {
     public static void setGlobalStaticConstants(Configuration conf) {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
-        EdgeMap.logReadIds = Boolean.parseBoolean(conf.get(GenomixJobConf.LOG_READIDS));
         debug = conf.get(GenomixJobConf.DEBUG_KMERS) != null;
-        debugKmers = new ArrayList<VKmer>();
-        if (conf.get(GenomixJobConf.DEBUG_KMERS) != null) {
-            for (String kmer : conf.get(GenomixJobConf.DEBUG_KMERS).split(",")) {
-                debugKmers.add(new VKmer(kmer));
+        if (debugKmers == null) {
+            debugKmers = new ArrayList<VKmer>();
+            if (conf.get(GenomixJobConf.DEBUG_KMERS) != null) {
+                for (String kmer : conf.get(GenomixJobConf.DEBUG_KMERS).split(",")) {
+                    debugKmers.add(new VKmer(kmer));
+                }
             }
         }
     }

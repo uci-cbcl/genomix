@@ -66,7 +66,7 @@ public class BFSTraverseMessage extends MessageWritable {
     }
 
     public void setPathList(VKmerList pathList) {
-        getPathList().setCopy(pathList); // TODO should be a copy?
+        getPathList().setAsCopy(pathList); // TODO should be a copy?
     }
 
     public EdgeTypeList getEdgeTypeList() {

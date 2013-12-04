@@ -17,10 +17,10 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 /**
  * Graph clean pattern: Bubble Merge
@@ -38,8 +38,8 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     //    private static Set<BubbleMergeMessageWritable> allDeletedSet = Collections.synchronizedSet(new HashSet<BubbleMergeMessageWritable>());
     private static Set<VKmer> allDeletedSet = Collections.synchronizedSet(new HashSet<VKmer>());
 
-    private EdgeMap incomingEdgeList = null;
-    private EdgeMap outgoingEdgeList = null;
+    private VKmerList incomingEdges = null;
+    private VKmerList outgoingEdges = null;
     private EDGETYPE incomingEdgeType;
     private EDGETYPE outgoingEdgeType;
 
@@ -48,11 +48,11 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     //    private VKmerBytesWritable majorVertexId = new VKmerBytesWritable();
     //    private VKmerBytesWritable minorVertexId = new VKmerBytesWritable();
 
-    public void setEdgeListAndEdgeType(int i) {
-        incomingEdgeList.setAsCopy(getVertexValue().getEdgeMap(validPathsTable[i][0]));
+    public void setEdgesAndEdgeType(int i) {
+        incomingEdges.setAsCopy(getVertexValue().getEdges(validPathsTable[i][0]));
         incomingEdgeType = validPathsTable[i][0];
 
-        outgoingEdgeList.setAsCopy(getVertexValue().getEdgeMap(validPathsTable[i][1]));
+        outgoingEdges.setAsCopy(getVertexValue().getEdges(validPathsTable[i][1]));
         outgoingEdgeType = validPathsTable[i][1];
     }
 
@@ -69,10 +69,10 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
             outgoingMsg = new BubbleMergeMessage();
         else
             outgoingMsg.reset();
-        if (incomingEdgeList == null)
-            incomingEdgeList = new EdgeMap();
-        if (outgoingEdgeList == null)
-            outgoingEdgeList = new EdgeMap();
+        if (incomingEdges == null)
+            incomingEdges = new VKmerList();
+        if (outgoingEdges == null)
+            outgoingEdges = new VKmerList();
         outFlag = 0;
         if (fakeVertex == null) {
             fakeVertex = new VKmer();
@@ -84,13 +84,11 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     public void sendBubbleAndMajorVertexMsgToMinorVertex() {
         for (int i = 0; i < 4; i++) {
             // set edgeList and edgeDir based on connectedTable 
-            setEdgeListAndEdgeType(i);
+            setEdgesAndEdgeType(i);
 
-            for (Entry<VKmer, ReadIdSet> incomingEdge : incomingEdgeList.entrySet()) {
-                for (Entry<VKmer, ReadIdSet> outgoingEdge : outgoingEdgeList.entrySet()) {
+            for (VKmer incomingKmer : incomingEdges) {
+                for (VKmer outgoingKmer : outgoingEdges) {
                     // get majorVertex and minorVertex and meToMajorDir and meToMinorDir
-                    VKmer incomingKmer = incomingEdge.getKey();
-                    VKmer outgoingKmer = outgoingEdge.getKey();
                     VKmer majorVertexId = null;
                     EDGETYPE majorToMeEdgetype = null;
                     EDGETYPE minorToMeEdgetype = null;
@@ -172,7 +170,7 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
                 if (fracDissimilar < dissimilarThreshold) { //if similar with top node, delete this node and put it in deletedSet
                     // 1. update my own(minor's) edges
                     EDGETYPE MinorToBubble = curMsg.getMinorToBubbleEdgetype();
-                    getVertexValue().getEdgeMap(MinorToBubble).remove(curMsg.getSourceVertexId());
+                    getVertexValue().getEdges(MinorToBubble).remove(curMsg.getSourceVertexId());
                     activate();
 
                     // 2. add coverage to top node -- for unchangedSet
@@ -246,8 +244,8 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     //        EDGETYPE majorToMeDir = meToMajorDir.mirror();
     //        EDGETYPE meToMinorDir = EDGETYPE.fromByte(incomingMsg.getMeToMinorEdgetype());
     //        EDGETYPE minorToMeDir = meToMinorDir.mirror();
-    //        getVertexValue().getEdgeList(majorToMeDir).remove(incomingMsg.getMajorVertexId());
-    //        getVertexValue().getEdgeList(minorToMeDir).remove(incomingMsg.getSourceVertexId());
+    //        getVertexValue().getEdgeMap(majorToMeDir).remove(incomingMsg.getMajorVertexId());
+    //        getVertexValue().getEdgeMap(minorToMeDir).remove(incomingMsg.getSourceVertexId());
     //    }
 
     public void broadcaseUpdateEdges(BubbleMergeMessage incomingMsg) {
@@ -279,16 +277,15 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
      */
     public void responseToDeadVertexAndUpdateEdges(BubbleMergeMessage incomingMsg) {
         VertexValueWritable vertex = getVertexValue();
-        ReadIdSet readIds;
 
         EDGETYPE meToNeighborDir = EDGETYPE.fromByte(incomingMsg.getFlag());
         EDGETYPE neighborToMeDir = meToNeighborDir.mirror();
 
-        if (vertex.getEdgeMap(neighborToMeDir).containsKey(incomingMsg.getSourceVertexId())) {
-            readIds = vertex.getEdgeMap(neighborToMeDir).get(incomingMsg.getSourceVertexId());
-            vertex.getEdgeMap(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
+        if (vertex.getEdges(neighborToMeDir).contains(incomingMsg.getSourceVertexId())) {
+            vertex.getEdges(neighborToMeDir).remove(incomingMsg.getSourceVertexId());
         } else {
-            readIds = new ReadIdSet();
+            throw new IllegalStateException("Tried to remove an edge that doesn't exist! I am " + vertex
+                    + " incomingMsg is " + incomingMsg);
         }
         //        EDGETYPE updateDir = incomingMsg.isFlip() ? neighborToMeDir.flipNeighbor() : neighborToMeDir;
         //        getVertexValue().getEdgeMap(updateDir).unionAdd(incomingMsg.getTopCoverageVertexId(), readIds);

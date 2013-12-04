@@ -45,7 +45,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
                 //only 1 incoming and 2 outgoing || 2 incoming and 1 outgoing are valid 
                 if (vertex.degree(d) == 2) {
                     for (EDGETYPE et : d.edgeTypes()) {
-                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                        for (VKmer dest : vertex.getEdges(et)) {
                             sendMsg(dest, outgoingMsg);
                         }
                     }

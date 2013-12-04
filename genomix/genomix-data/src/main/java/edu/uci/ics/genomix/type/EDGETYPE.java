@@ -1,12 +1,8 @@
 package edu.uci.ics.genomix.type;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 
-import org.apache.hadoop.io.Writable;
-
-public enum EDGETYPE implements Writable {
+public enum EDGETYPE {
+    //public enum EDGETYPE implements Writable {
 
     FF((byte) (0b00)),
     FR((byte) (0b01)),
@@ -109,11 +105,11 @@ public enum EDGETYPE implements Writable {
                 throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
         }
     }
-    
+
     public DIR neighborDir() {
         return neighborDir(this);
     }
-    
+
     public static DIR neighborDir(EDGETYPE et) {
         switch (et) {
             case FF:
@@ -238,14 +234,13 @@ public enum EDGETYPE implements Writable {
         return sameOrientation(et1, et2);
     }
 
-    @Override
-    public void write(DataOutput out) throws IOException {
-        out.writeByte(this.get());
-    }
-
-    @Override
-    public void readFields(DataInput in) throws IOException {
-        this.val = in.readByte();
-    }
-
+    //    @Override
+    //    public void write(DataOutput out) throws IOException {
+    //        out.writeByte(this.get());
+    //    }
+    //
+    //    @Override
+    //    public void readFields(DataInput in) throws IOException {
+    //        this.val = in.readByte();
+    //    }
 }

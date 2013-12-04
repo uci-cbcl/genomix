@@ -33,16 +33,8 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         super(s);
     }
 
-    public void add(byte mateId, long readId, int offset) {
-        add(new ReadHeadInfo(mateId, readId, offset));
-    }
-
-    public ReadHeadInfo getReadHeadInfoFromReadId(long readId) {
-        ReadHeadInfo info = super.floor(new ReadHeadInfo(readId));
-        if (info != null && info.getReadId() == readId) {
-            return info;
-        }
-        return null;
+    public void add(byte mateId, long readId, int offset, VKmer thisReadSequence, VKmer thatReadSequence) {
+        add(new ReadHeadInfo(mateId, readId, offset, thisReadSequence, thatReadSequence));
     }
 
     public int getOffsetFromReadId(long readId) {
@@ -59,8 +51,9 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         int count = Marshal.getInt(data, offset);
         offset += HEADER_SIZE;
         for (int i = 0; i < count; i++) {
-            add(new ReadHeadInfo(Marshal.getLong(data, offset)));
-            offset += ReadHeadInfo.ITEM_SIZE;
+            ReadHeadInfo curInfo = new ReadHeadInfo(data, offset);
+            offset += curInfo.getLengthInBytes();
+            add(curInfo);
         }
         return offset;
     }
@@ -69,7 +62,7 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
     public void write(DataOutput out) throws IOException {
         out.writeInt(size());
         for (ReadHeadInfo head : this) {
-            out.writeLong(head.asLong());
+            head.write(out);
         }
     }
 
@@ -78,7 +71,9 @@ public class ReadHeadSet extends TreeSet<ReadHeadInfo> implements Writable, Seri
         clear();
         int count = in.readInt();
         for (int i = 0; i < count; i++) {
-            add(new ReadHeadInfo(in.readLong()));
+            ReadHeadInfo temp = new ReadHeadInfo();
+            temp.readFields(in);
+            add(temp);
         }
     }
 

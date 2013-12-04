@@ -15,7 +15,6 @@
 
 package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -31,7 +30,6 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -73,8 +71,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
         return new IKeyValueParser<LongWritable, Text>() {
 
-            private ReadHeadInfo readHeadInfo = new ReadHeadInfo(0);
-            private ReadIdSet readIdSet = new ReadIdSet();
+            private ReadHeadInfo readHeadInfo = new ReadHeadInfo();
             private Node curNode = new Node();
             private Node nextNode = new Node();
 
@@ -83,60 +80,49 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
             private Kmer nextForwardKmer = new Kmer();
             private Kmer nextReverseKmer = new Kmer();
 
+            private VKmer thisReadSequence = new VKmer();
+            private VKmer mateReadSequence = new VKmer();
+
             @Override
-            public void parse(LongWritable key, Text value, IFrameWriter writer, String filename)
-                    throws HyracksDataException {
-
-                String basename = filename.substring(filename.lastIndexOf(File.separator) + 1);
-                String extension = basename.substring(basename.lastIndexOf('.') + 1);
-
-                byte mateId = basename.endsWith("_2" + extension) ? (byte) 1 : (byte) 0;
-                boolean fastqFormat = false;
-                if (extension.contains("fastq") || extension.contains("fq")) {
-                    // TODO make NLineInputFormat works on hyracks HDFS reader
-                    // if (! (job.getInputFormat() instanceof NLineInputFormat))
-                    // {
-                    // throw new
-                    // IllegalStateException("Fastq files require the NLineInputFormat (was "
-                    // + job.getInputFormat() + " ).");
-                    // }
-                    // if (job.getInt("mapred.line.input.format.linespermap",
-                    // -1) % 4 != 0) {
-                    // throw new
-                    // IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was "
-                    // + job.get("mapred.line.input.format.linespermap") +
-                    // ").");
-                    // }
-                    fastqFormat = true;
-                }
-
+            public void parse(LongWritable key, Text value, IFrameWriter writer, String filename) {
                 long readID = 0;
-                String geneLine;
-                if (fastqFormat) {
-                    // FIXME : this is offset == readid only works on the only
-                    // one input file, one solution: put the filename into the
-                    // part of the readid
-                    readID = key.get(); // TODO check: this is actually the
-                                        // offset into the file... will it be
-                                        // the same across all files?? //
-                    geneLine = value.toString().trim();
-                } else {
-                    String[] rawLine = value.toString().split("\\t"); // Read
-                                                                      // the
-                                                                      // Real
-                                                                      // Gene
-                                                                      // Line
-                    if (rawLine.length != 2) {
-                        throw new HyracksDataException("invalid data");
-                    }
+                String mate0GeneLine = null;
+                String mate1GeneLine = null;
+                String[] rawLine = value.toString().split("\\t");
+                if (rawLine.length == 2) {
                     readID = Long.parseLong(rawLine[0]);
-                    geneLine = rawLine[1];
+                    mate0GeneLine = rawLine[1];
+                } else if (rawLine.length == 3) {
+                    readID = Long.parseLong(rawLine[0]);
+                    mate0GeneLine = rawLine[1];
+                    mate1GeneLine = rawLine[2];
+                } else {
+                    throw new IllegalStateException(
+                            "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
                 }
 
-                Matcher geneMatcher = genePattern.matcher(geneLine);
-                if (geneMatcher.matches()) {
-                    setReadInfo(mateId, readID, 0);
-                    SplitReads(readID, geneLine.getBytes(), writer);
+                Pattern genePattern = Pattern.compile("[AGCT]+");
+                if (mate0GeneLine != null) {
+                    Matcher geneMatcher = genePattern.matcher(mate0GeneLine);
+                    if (geneMatcher.matches()) {
+                        thisReadSequence.setAsCopy(mate0GeneLine);
+                        if (mate1GeneLine != null) {
+                            mateReadSequence.setAsCopy(mate1GeneLine);
+                            readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, mateReadSequence);
+                        } else {
+                            readHeadInfo.set((byte) 0, readID, 0, thisReadSequence, null);
+                        }
+                        SplitReads(readID, mate0GeneLine.getBytes(), writer);
+                    }
+                }
+                if (mate1GeneLine != null) {
+                    Matcher geneMatcher = genePattern.matcher(mate1GeneLine);
+                    if (geneMatcher.matches()) {
+                        thisReadSequence.setAsCopy(mate1GeneLine);
+                        mateReadSequence.setAsCopy(mate0GeneLine);
+                        readHeadInfo.set((byte) 1, readID, 0, thisReadSequence, mateReadSequence);
+                        SplitReads(readID, mate1GeneLine.getBytes(), writer);
+                    }
                 }
             }
 
@@ -172,7 +158,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     nextReverseKmer.setReversedFromStringBytes(readLetters, i - Kmer.getKmerLength() + 1);
                     nextNodeDir = nextForwardKmer.compareTo(nextReverseKmer) <= 0 ? DIR.FORWARD : DIR.REVERSE;
 
-                    setEdgeListForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode, readIdSet);
+                    setEdgesForCurAndNext(curNodeDir, curNode, nextNodeDir, nextNode);
                     writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
 
                     curForwardKmer.setAsCopy(nextForwardKmer);
@@ -187,12 +173,6 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 writeToFrame(curForwardKmer, curReverseKmer, curNodeDir, curNode, writer);
             }
 
-            public void setReadInfo(byte mateId, long readId, int posId) {
-                readIdSet.clear();
-                readIdSet.add(readId);
-                readHeadInfo.set(mateId, readId, posId);
-            }
-
             public void writeToFrame(Kmer forwardKmer, Kmer reverseKmer, DIR curNodeDir, Node node, IFrameWriter writer) {
                 switch (curNodeDir) {
                     case FORWARD:
@@ -204,28 +184,28 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 }
             }
 
-            public void setEdgeListForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode,
-                    ReadIdSet readIdList) {
+            public void setEdgesForCurAndNext(DIR curNodeDir, Node curNode, DIR nextNodeDir, Node nextNode) {
                 // TODO simplify this function after Anbang merge the edgeType
                 // detect code
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeMap(EDGETYPE.FF).put(new VKmer(nextForwardKmer), readIdList);
-                    nextNode.getEdgeMap(EDGETYPE.RR).put(new VKmer(curForwardKmer), readIdList);
+                    curNode.getEdges(EDGETYPE.FF).append(new VKmer(nextForwardKmer));
+                    nextNode.getEdges(EDGETYPE.RR).append(new VKmer(curForwardKmer));
+
                     return;
                 }
                 if (curNodeDir == DIR.FORWARD && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeMap(EDGETYPE.FR).put(new VKmer(nextReverseKmer), readIdList);
-                    nextNode.getEdgeMap(EDGETYPE.FR).put(new VKmer(curForwardKmer), readIdList);
+                    curNode.getEdges(EDGETYPE.FR).append(new VKmer(nextReverseKmer));
+                    nextNode.getEdges(EDGETYPE.FR).append(new VKmer(curForwardKmer));
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.FORWARD) {
-                    curNode.getEdgeMap(EDGETYPE.RF).put(new VKmer(nextForwardKmer), readIdList);
-                    nextNode.getEdgeMap(EDGETYPE.RF).put(new VKmer(curReverseKmer), readIdList);
+                    curNode.getEdges(EDGETYPE.RF).append(new VKmer(nextForwardKmer));
+                    nextNode.getEdges(EDGETYPE.RF).append(new VKmer(curReverseKmer));
                     return;
                 }
                 if (curNodeDir == DIR.REVERSE && nextNodeDir == DIR.REVERSE) {
-                    curNode.getEdgeMap(EDGETYPE.RR).put(new VKmer(nextReverseKmer), readIdList);
-                    nextNode.getEdgeMap(EDGETYPE.FF).put(new VKmer(curReverseKmer), readIdList);
+                    curNode.getEdges(EDGETYPE.RR).append(new VKmer(nextReverseKmer));
+                    nextNode.getEdges(EDGETYPE.FF).append(new VKmer(curReverseKmer));
                     return;
                 }
             }
