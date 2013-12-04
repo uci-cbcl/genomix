@@ -4,23 +4,25 @@ import java.util.ArrayList;
 
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class ScaffoldingVertexValueWritable extends VertexValueWritable{
+	//Do you really need all of them?
 	private static final long serialVersionUID = 1L;
-	int rules_a, rulep_a;
-	int rules_b, rulep_b;
-	int rules_c, rulep_c;
+	int rules_a = 0;
+	int rules_b = 0;
+	int rules_c = 0;
 	int walkSize;
 	int index;
+	VKmerList walk;
 	VKmer neighborKmer, lastKmer;
-	ArrayList<VKmer> walk;
 	boolean previsitedFlag;
-	boolean doneFlag;
-	boolean flipFalg;
-	boolean startFlag;
+	boolean doneFlag = false;
+	boolean flipFalg =  false;
+	boolean startFlag = false;
 	public ScaffoldingVertexValueWritable(){
         super();
+        walk = new VKmerList();
+        lastKmer = new VKmer();
     }
-
-	
 }

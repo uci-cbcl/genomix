@@ -1,5 +1,8 @@
 package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -17,54 +20,48 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
 import edu.uci.ics.genomix.type.ReadHeadSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, RayScaffoldingMessage>{
 	public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = 50;
-	//public int K = 21;
-	//private ArrayList<VKmer> neighbors;
-	//private boolean startPoint;
-	//private boolean preVisited;
-	// VKmer lastKmerInWalk;
 	private static final Logger LOG = Logger.getLogger(TipRemoveVertex.class.getName());
+	PrintWriter writer;
+	
+	public void writeOnFile() throws FileNotFoundException, UnsupportedEncodingException{
+		String s = "/home/ubuntu/workspace/Results/"+getVertexValue().toString().split("\t")[5]+".txt";
+		writer = new PrintWriter(s, "UTF-8");
+	}
 	
 	public void initVertex(){	
 		///Complete this!
 		if (kmerSize == -1){
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
 		}
-		
-		/*
-        if (SCAFFOLDING_VERTEX_MIN_COVERAGE < 0){
-            SCAFFOLDING_VERTEX_MIN_COVERAGE = Integer.parseInt(getContext().getConfiguration().get(
-                    GenomixJobConf.SCAFFOLDING_VERTEX_MIN_COVERAGE));
-        }*/
-        
 		if (outgoingMsg == null) {
             outgoingMsg = new RayScaffoldingMessage();
         } else {
             outgoingMsg.reset();
         }
-        
     //=====================>>
         //StatisticsAggregator.preGlobalCounters.clear();   
         //counters.clear();
         //getVertexValue().getCounters().clear();
     //=====================>>	
 	    if (getVertexValue().walk == null) {
-	    	getVertexValue().walk = new ArrayList<VKmer>(); 
-	    } else{
-	    	getVertexValue().walk.clear();
-	    }
+	    	getVertexValue().walk = new VKmerList();
+	    } 
+	    
 	}
 
 	//We're finding the neighbors and send the walk to them
 	public void sendMsgToBranches() {
 		DIR direction;
 		if (getVertexValue().flipFalg){
-			direction = DIR.REVERSE;
+			direction = DIR.REVERSE;	
 		} else {
 			direction = DIR.FORWARD;
 		}
+		getVertexValue().walk.append(getVertexId());
 		//if there is just one neighbor?
 		for (EDGETYPE et : direction.edgeTypes()){
 			for (VKmer neighbor : getVertexValue().getEdges(et)) {
@@ -78,10 +75,11 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	
 	//tell neighbor about the walk
 	public void sendMsgToNeighbor(VKmer neighbor, EDGETYPE et){
+		//This made problem!!!VVV
+		//outgoingMsg.reset();
 		outgoingMsg.setEdgeType(et);
 		outgoingMsg.setWalk(getVertexValue().walk);
 		outgoingMsg.setNeighborFlag();
-		//outgoingMsg.
 		//keep the decision point because we need to come back to it
 		outgoingMsg.setLastVertex(getVertexId());
 		sendMsg(neighbor ,outgoingMsg);
@@ -109,8 +107,8 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	public boolean checkedDistance(ReadHeadInfo readHead, VKmer neighbor){
 		//if neighbor exist in read table
 		//How to work with a read?
-		int neighborPositionOnRead = getVertexValue().walkSize - getVertexValue().index  + 1;
-		///I know!!
+		//int neighborPositionOnRead = getVertexValue().walk.size() - getVertexValue().index  + 1;
+		int neighborPositionOnRead = getVertexValue().walkSize - getVertexValue().index;
 		if(indexOfKmerOnRead(readHead, neighbor) == neighborPositionOnRead ){
 			return true;
 		}else{
@@ -155,16 +153,22 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	
 	public void readWalkInfoAndSendOffsetFromOneKmer(Iterator<RayScaffoldingMessage> msgIterator){
 		RayScaffoldingMessage incomingMsg;
-		outgoingMsg.reset();
+		//outgoingMsg.reset();
 		while(msgIterator.hasNext()){
 			incomingMsg = msgIterator.next();
 			if (incomingMsg.getComputeFlag()){
-				outgoingMsg.reset();
+				if (outgoingMsg == null){
+					outgoingMsg = new RayScaffoldingMessage();
+				} else {
+					outgoingMsg.reset();
+				}
 				outgoingMsg.setComputeRulesFlag();
 				outgoingMsg.setEdgeType(incomingMsg.getEdgeType());
+				outgoingMsg.setWalkSize(incomingMsg.getWalkSize());
+				getVertexValue().walkSize = incomingMsg.getWalkSize();
 				outgoingMsg.setOffset(offset(incomingMsg.getKmer()));
 				outgoingMsg.setIndex(incomingMsg.getIndex());
-				outgoingMsg.setWalkSize(incomingMsg.getWalkSize());			
+					
 				sendMsg(incomingMsg.getKmer(), outgoingMsg);
 			}
 		}
@@ -172,20 +176,21 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	}
 	
 	public void sendMsgToWalkVertices(Iterator<RayScaffoldingMessage> msgIterator){
-		//Don't like it!
-		//And it's RC is not previsited
 		//If previsited it's not sending any message out.
 		if(!getVertexValue().previsitedFlag){
 			RayScaffoldingMessage incomingMsg;
 			while(msgIterator.hasNext()){
-				incomingMsg = msgIterator.next();	
+				incomingMsg = msgIterator.next();
 				if(incomingMsg.getNeighborFlag()){ 
-					outgoingMsg.reset();
-					//Sure?
+					if (outgoingMsg == null){
+						outgoingMsg = new RayScaffoldingMessage();
+					} else {
+						outgoingMsg.reset();
+					}
 					outgoingMsg.setEdgeType(incomingMsg.getEdgeType());
-					outgoingMsg.setKmer(getVertexId()) ;
+					outgoingMsg.setKmer(getVertexId());
 					outgoingMsg.setComputeFlag();
-					outgoingMsg.setWalkSize(incomingMsg.getWalkSize());
+					outgoingMsg.setWalkSize(incomingMsg.getWalk().size());
 					for (VKmer vertexId : incomingMsg.getWalk()){
 						outgoingMsg.setIndex(incomingMsg.getWalk().indexOf(vertexId));
 						sendMsg(vertexId, outgoingMsg);
@@ -300,15 +305,31 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 		return m;
 	}
 	
-	public void scaffold(Iterator<RayScaffoldingMessage> msgIterator){
-		System.out.print("**test**");
-		LOG.fine("SCAFFOLDING");
-		if (getVertexValue().getAverageCoverage() > SCAFFOLDING_VERTEX_MIN_COVERAGE){
+	public void scaffold(Iterator<RayScaffoldingMessage> msgIterator) throws Exception{
+		if (getSuperstep() == 1){
 			initVertex();
-			
-		} else {
+			if ((getVertexValue().getAverageCoverage() > SCAFFOLDING_VERTEX_MIN_COVERAGE)){
+				if (!getVertexValue().doneFlag){	
+					sendMsgToBranches();
+		        } 
+			} else {
 			voteToHalt();
+			}
 		}
+		else if (getSuperstep() == 2){
+			writeOnFile();
+	        //Next Step you are that neighbor
+	    	sendMsgToWalkVertices(msgIterator);
+	    	writer.println(getVertexValue());
+	    	writer.close();
+		}
+		else if (getSuperstep() == 3){
+    	//Now you are one of the vertices in the walk
+		readWalkInfoAndSendOffsetFromOneKmer(msgIterator);		
+		}
+		// I'm uncommenting the next part
+		//This is the main process
+		// I need to change the == to something like %
 		/*
 		if (!getVertexValue().doneFlag){
 			if (getSuperstep() == 1) {
@@ -339,8 +360,10 @@ public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWr
 	@Override
 	public void compute(Iterator<RayScaffoldingMessage> msgIterator) throws Exception {
 		// TODO Auto-generated method stub
-		
+		//writeOnFile();
 		scaffold(msgIterator);
+		voteToHalt();
+		
 	}
 	
 	public static void main(String[] args) throws Exception {
