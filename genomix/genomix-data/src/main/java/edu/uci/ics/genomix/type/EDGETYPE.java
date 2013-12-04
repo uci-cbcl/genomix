@@ -21,9 +21,9 @@ public enum EDGETYPE {
         return val;
     }
 
+    public static final EDGETYPE[] REVERSE = {RF, RR};
+    public static final EDGETYPE[] FORWARD = {FF, FR};
     public static final EDGETYPE[] values = { FF, FR, RF, RR };
-    public static final EDGETYPE[] INCOMING = { RF, RR };
-    public static final EDGETYPE[] OUTGOING = { FF, FR };
 
     public static EDGETYPE fromByte(short b) {
         b &= MASK;

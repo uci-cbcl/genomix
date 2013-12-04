@@ -54,9 +54,9 @@ public class GenerateGraphViz {
         }
     }
 
-    public static void writeLocalBinToLocalSvg(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
-        byte[] img = convertGraphToImg(new JobConf(), srcDir, destDir, graphType, "svg");
-        File out = new File(destDir + File.separator + "graphviz.svg");
+    public static void writeLocalBinToLocalSvg(String srcDir, String destFile, GRAPH_TYPE graphType) throws Exception {
+        byte[] img = convertGraphToImg(new JobConf(), srcDir, destFile, graphType, "svg");
+        File out = new File(destFile); //  + File.separator + "graphviz.svg"
         GraphViz.writeGraphToFile(img, out);
     }
 

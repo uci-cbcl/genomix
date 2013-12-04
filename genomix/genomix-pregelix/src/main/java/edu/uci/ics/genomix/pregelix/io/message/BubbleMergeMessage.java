@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Comparator;
 
-import edu.uci.ics.genomix.pregelix.io.message.SymmetryCheckerMessage.SYMMERTRYCHECKER_MESSAGE_FIELDS;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadIdSet;
