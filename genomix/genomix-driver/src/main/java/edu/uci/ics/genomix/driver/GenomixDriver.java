@@ -327,7 +327,7 @@ public class GenomixDriver {
         flushPendingJobs(conf);
 
         if (conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR) != null)
-            GenomixClusterManager.copyBinToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR)
+            GenomixClusterManager.copyBinAndTextToLocal(conf, curOutput, conf.get(GenomixJobConf.LOCAL_OUTPUT_DIR)
                     + File.separator + "FINAL-" + new File(curOutput).getName());
 
         if (conf.get(GenomixJobConf.FINAL_HDFS_OUTPUT_DIR) != null)

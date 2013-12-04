@@ -68,14 +68,14 @@ public class StepByStepTest {
     public void TestReader() throws Exception {
         cleanUpDirectory();
         driver.runJob(conf, Plan.BUILD_READ_PARSER, true);
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
         TestUtils.compareFilesBySortingThemLineByLine(new File(EXPECTED_READ_PARSER_RESULT), new File(ACTUAL_RESULT));
     }
 
     public void TestGroupby() throws Exception {
         cleanUpDirectory();
         driver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, true);
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
         TestUtils.compareFilesBySortingThemLineByLine(new File(EXPECTED_BRUIJIN_GRAPH_RESULT), new File(ACTUAL_RESULT));
     }
 

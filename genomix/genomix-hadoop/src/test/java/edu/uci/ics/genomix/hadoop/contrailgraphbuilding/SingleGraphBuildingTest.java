@@ -79,6 +79,6 @@ public class SingleGraphBuildingTest {
     }
 
     private void dumpResult() throws IOException {
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_RESULT_PATH, ACTUAL_RESULT_DIR);
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_RESULT_PATH, ACTUAL_RESULT_DIR);
     }
 }

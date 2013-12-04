@@ -159,7 +159,7 @@ public class BatchTestFilesTest {
 
     public void checkResult() throws Exception {
         Path path = new Path(resultFileName);
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH + File.separator + testFile.getName(), path
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_OUTPUT_PATH + File.separator + testFile.getName(), path
                 .getParent().toString());
         GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent().toString()
                 + "/graphviz.svg", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);

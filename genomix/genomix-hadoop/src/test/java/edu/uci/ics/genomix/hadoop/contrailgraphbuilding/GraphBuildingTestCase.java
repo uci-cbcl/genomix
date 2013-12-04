@@ -59,7 +59,7 @@ public class GraphBuildingTestCase extends TestCase {
         //        Path src = new Path(RESULT_PATH);
         //        Path dest = new Path(RESULT_PATH);
         //        dfs.copyToLocalFile(src, dest);
-        GenomixClusterManager.copyBinToLocal(conf, RESULT_PATH, RESULT_PATH);
+        GenomixClusterManager.copyBinAndTextToLocal(conf, RESULT_PATH, RESULT_PATH);
         GenerateGraphViz.writeLocalBinToLocalSvg(RESULT_PATH + "/bin", RESULT_PATH + "/graphviz.svg",
                 GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
     }

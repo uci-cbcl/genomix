@@ -106,6 +106,6 @@ public class ResultsCheckingTest {
         Path src = new Path(RESULT_PATH);
         Path dest = new Path(ACTUAL_RESULT_DIR);
         dfs.copyToLocalFile(src, dest);
-        GenomixClusterManager.copyBinToLocal(conf, RESULT_PATH, ACTUAL_RESULT_DIR);
+        GenomixClusterManager.copyBinAndTextToLocal(conf, RESULT_PATH, ACTUAL_RESULT_DIR);
     }
 }

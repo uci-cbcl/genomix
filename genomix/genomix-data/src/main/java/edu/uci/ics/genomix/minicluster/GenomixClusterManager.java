@@ -342,7 +342,7 @@ public class GenomixClusterManager {
      * @param localDestDir
      * @throws IOException
      */
-    public static void copyBinToLocal(JobConf conf, String hdfsSrcDir, String localDestDir) throws IOException {
+    public static void copyBinAndTextToLocal(JobConf conf, String hdfsSrcDir, String localDestDir) throws IOException {
         LOG.info("Copying HDFS directory " + hdfsSrcDir + " to local: " + localDestDir);
         GenomixJobConf.tick("copyBinToLocal");
         FileSystem dfs = FileSystem.get(conf);

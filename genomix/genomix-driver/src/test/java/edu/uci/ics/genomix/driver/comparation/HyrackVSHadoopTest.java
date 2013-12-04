@@ -150,13 +150,13 @@ public class HyrackVSHadoopTest {
 
     public void checkResult() throws Exception {
         Path path = new Path(hyracksResultFileName);
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HYRACKS + File.separator + testFile.getName(), path
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_OUTPUT_PATH_HYRACKS + File.separator + testFile.getName(), path
                 .getParent().toString());
         GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent()
                 .toString() + "/graphviz.svg", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
 
         path = new Path(hadoopResultFileName);
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH_HADOOP + File.separator + testFile.getName(), path
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_OUTPUT_PATH_HADOOP + File.separator + testFile.getName(), path
                 .getParent().toString());
         GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent()
                 .toString() + "/graphviz.svg", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
