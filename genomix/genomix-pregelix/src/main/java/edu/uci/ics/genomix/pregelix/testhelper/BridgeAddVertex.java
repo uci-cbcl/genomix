@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.testhelper;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -8,9 +7,8 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
@@ -40,7 +38,7 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertBridge(EDGETYPE dirToUp, EdgeMap edgeListToUp, EDGETYPE dirToDown, EdgeMap edgeListToDown,
+    public void insertBridge(EDGETYPE dirToUp, VKmerList edgesToUp, EDGETYPE dirToDown, VKmerList edgesToDown,
             VKmer insertedBridge) {
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
@@ -54,21 +52,22 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         /**
          * set the vertex value
          */
-        vertexValue.setEdgeMap(dirToUp, edgeListToUp);
-        vertexValue.setEdgeMap(dirToDown, edgeListToDown);
+        vertexValue.setEdges(dirToUp, edgesToUp);
+        vertexValue.setEdges(dirToDown, edgesToDown);
         vertex.setVertexValue(vertexValue);
 
         addVertex(insertedBridge, vertex);
     }
 
-    public EdgeMap getEdgeListFromKmer(VKmer kmer) {
-        EdgeMap edgeList = new EdgeMap();
-        edgeList.put(kmer, new ReadIdSet(Arrays.asList(new Long(0))));
-        return edgeList;
+    public VKmerList getEdgesFromKmer(VKmer kmer) {
+        VKmerList edges = new VKmerList();
+        edges.append(kmer);
+        return edges;
     }
 
     public void addEdgeToInsertedBridge(EDGETYPE dir, VKmer insertedBridge) {
-        getVertexValue().getEdgeMap(dir).put(insertedBridge, new ReadIdSet(Arrays.asList(new Long(0))));
+        if (!getVertexValue().getEdges(dir).contains(insertedBridge))
+            getVertexValue().getEdges(dir).append(insertedBridge);
     }
 
     @Override
@@ -81,8 +80,8 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
                 addEdgeToInsertedBridge(upToBridgeDir, insertedBridge);
 
                 /** insert bridge **/
-                insertBridge(bridgeToUpDir, getEdgeListFromKmer(upBridge), bridgeToDownDir,
-                        getEdgeListFromKmer(downBridge), insertedBridge);
+                insertBridge(bridgeToUpDir, getEdgesFromKmer(upBridge), bridgeToDownDir, getEdgesFromKmer(downBridge),
+                        insertedBridge);
             } else if (getVertexId().toString().equals("ACG")) {
                 /** add edge pointing to new bridge **/
                 EDGETYPE downToBridgeDir = bridgeToDownDir.mirror();

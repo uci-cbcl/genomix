@@ -26,13 +26,13 @@ public class PathAndEdgeTypeList implements Writable {
 
     public PathAndEdgeTypeList(VKmerList kmerList, EdgeTypeList edgeTypeList) {
         this();
-        this.kmerList.setCopy(kmerList);
+        this.kmerList.setAsCopy(kmerList);
         this.edgeTypeList.clear();
         this.edgeTypeList.addAll(edgeTypeList);
     }
 
     public void reset() {
-        kmerList.reset();
+        kmerList.clear();
         edgeTypeList.clear();
     }
 
@@ -57,7 +57,7 @@ public class PathAndEdgeTypeList implements Writable {
     }
 
     public void setKmerList(VKmerList kmerList) {
-        this.kmerList.setCopy(kmerList);
+        this.kmerList.setAsCopy(kmerList);
     }
 
     public EdgeTypeList getEdgeTypeList() {

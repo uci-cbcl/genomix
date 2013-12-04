@@ -69,7 +69,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
     }
 
     public void setPathList(VKmerList pathList) {
-        getPathList().setCopy(pathList);
+        getPathList().setAsCopy(pathList);
     }
 
     public EdgeTypeList getEdgeTypeList() {
@@ -124,7 +124,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
             internalKmer.write(out);
         }
-        if (pathList != null && pathList.getLength() > 0) {
+        if (pathList != null && pathList.size() > 0) {
             pathList.write(out);
         }
         if (edgeTypeList != null && edgeTypeList.size() > 0) {
@@ -144,7 +144,7 @@ public class BubbleMergeWithSearchMessage extends MessageWritable {
         if (internalKmer != null && internalKmer.getKmerLetterLength() > 0) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.INTERNAL_KMER;
         }
-        if (pathList != null && pathList.getLength() > 0) {
+        if (pathList != null && pathList.size() > 0) {
             messageFields |= BUBBLEMERGE_WITH_SEARCH_FIELDS.PATH_LIST;
         }
         if (edgeTypeList != null && edgeTypeList.size() > 0) {

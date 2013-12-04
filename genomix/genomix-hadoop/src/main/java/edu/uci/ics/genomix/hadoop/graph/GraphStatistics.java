@@ -18,7 +18,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.Counters.Counter;
@@ -44,7 +43,6 @@ import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
@@ -65,23 +63,24 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         this.reporter = reporter;
         reporter.incrCounter("totals", "nodes", 1);
         updateStats("degree", value.inDegree() + value.outDegree());
-        updateStats("kmerLength", value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength() : value.getKmerLength());
+        updateStats("kmerLength", value.getInternalKmer().getKmerLetterLength() == 0 ? key.getKmerLetterLength()
+                : value.getKmerLength());
         updateStats("coverage", Math.round(value.getAverageCoverage()));
         updateStats("unflippedReadIds", value.getUnflippedReadIds().size());
         updateStats("flippedReadIds", value.getFlippedReadIds().size());
-        
-        long totalEdgeReads = 0;
+
+        //        long totalEdgeReads = 0;
         long totalSelf = 0;
         for (EDGETYPE et : EDGETYPE.values) {
-            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
-                totalEdgeReads += e.getValue().size();
-                if (e.getKey().equals(key)) {
+            for (VKmer e : value.getEdges(et)) {
+                //                totalEdgeReads += e.getValue().size();
+                if (e.equals(key)) {
                     reporter.incrCounter("totals", "selfEdge-" + et, 1);
                     totalSelf += 1;
                 }
             }
         }
-        updateStats("edgeRead", totalEdgeReads);
+        //        updateStats("edgeRead", totalEdgeReads);
 
         if (value.isPathNode())
             reporter.incrCounter("totals", "pathNode", 1);
@@ -219,7 +218,7 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
     }
 
     private static ArrayList<Integer> contigLengthList = new ArrayList<Integer>();
-//    static boolean OLD_STYLE = true;
+    //    static boolean OLD_STYLE = true;
     private static int MIN_CONTIG_LENGTH;
     private static int EXPECTED_GENOME_SIZE;
     private static int maxContig = Integer.MIN_VALUE;

@@ -2,7 +2,6 @@ package edu.uci.ics.genomix.minicluster;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -14,7 +13,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 //TODO by Jianfeng: move this to script
@@ -146,37 +144,37 @@ public class GenerateGraphViz {
     public static String convertEdgeToGraph(String outputNode, Node value, GRAPH_TYPE graphType) {
         String outputEdge = "";
         for (EDGETYPE et : EDGETYPE.values) {
-            for (Entry<VKmer, ReadIdSet> e : value.getEdgeMap(et).entrySet()) {
+            for (VKmer e : value.getEdges(et)) {
                 String destNode = "";
                 switch (graphType) {
                     case UNDIRECTED_GRAPH_WITHOUT_LABELS:
-                        if (map.containsKey(e.getKey().toString()))
-                            destNode += map.get(e.getKey().toString());
+                        if (map.containsKey(e.toString()))
+                            destNode += map.get(e.toString());
                         else {
                             count++;
-                            map.put(e.getKey().toString(), count);
+                            map.put(e.toString(), count);
                             destNode += count;
                         }
                         outputEdge += outputNode + " -> " + destNode + "[dir=none]\n";
                         break;
                     case DIRECTED_GRAPH_WITH_SIMPLELABEL_AND_EDGETYPE:
-                        if (map.containsKey(e.getKey().toString()))
-                            destNode += map.get(e.getKey().toString());
+                        if (map.containsKey(e.toString()))
+                            destNode += map.get(e.toString());
                         else {
                             count++;
-                            map.put(e.getKey().toString(), count);
+                            map.put(e.toString(), count);
                             destNode += count;
                         }
                         outputEdge += outputNode + " -> " + destNode + "[color = \"" + getColor(et) + "\" label =\""
                                 + et + "\"]\n";
                         break;
                     case DIRECTED_GRAPH_WITH_KMERS_AND_EDGETYPE:
-                        outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + getColor(et)
+                        outputEdge += outputNode + " -> " + e.toString() + "[color = \"" + getColor(et)
                                 + "\" label =\"" + et + "\"]\n";
                         break;
                     case DIRECTED_GRAPH_WITH_ALLDETAILS:
-                        outputEdge += outputNode + " -> " + e.getKey().toString() + "[color = \"" + getColor(et)
-                                + "\" label =\"" + et + ": " + e.getValue() + "\"]\n";
+                        outputEdge += outputNode + " -> " + e.toString() + "[color = \"" + getColor(et)
+                                + "\" label =\"" + et + "\"]\n";
                         break;
                     default:
                         throw new IllegalStateException("Invalid input Graph Type!!!");

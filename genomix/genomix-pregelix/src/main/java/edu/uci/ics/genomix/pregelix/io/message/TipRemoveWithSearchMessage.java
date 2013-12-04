@@ -11,10 +11,12 @@ import edu.uci.ics.genomix.type.VKmerList;
 public class TipRemoveWithSearchMessage extends MessageWritable {
     private Integer visitedLength = null;
     private VKmerList visitedNodes = null;
-    
-    /** Include the given node in incomingMsg's path of vertices
+
+    /**
+     * Include the given node in incomingMsg's path of vertices
      * 
-     * @param v   the vertex to add to incomingMsg's path
+     * @param v
+     *            the vertex to add to incomingMsg's path
      * @param incomingMsg
      */
     public void visitNode(Node n) {
@@ -24,7 +26,7 @@ public class TipRemoveWithSearchMessage extends MessageWritable {
         visitedLength += n.getKmerLength() - Kmer.getKmerLength() + 1;
         getVisitedNodes().append(n.getInternalKmer());
     }
-    
+
     public int getVisitedLength() {
         return visitedLength;
     }
@@ -44,11 +46,11 @@ public class TipRemoveWithSearchMessage extends MessageWritable {
         if (visitedNodes == null || visitedNodes.size() == 0) {
             this.visitedNodes = null;
         } else {
-            getVisitedNodes().setCopy(visitedNodes);
+            getVisitedNodes().setAsCopy(visitedNodes);
         }
     }
-    
-    @Override 
+
+    @Override
     public void reset() {
         super.reset();
         visitedLength = null;

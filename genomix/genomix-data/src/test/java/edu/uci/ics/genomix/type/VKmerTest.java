@@ -25,11 +25,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import edu.uci.ics.genomix.type.GeneCode;
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.VKmerList;
-
 public class VKmerTest {
     static byte[] array = { 'A', 'A', 'T', 'A', 'G', 'A', 'A', 'G' };
     static int k = 7;
@@ -575,42 +570,42 @@ public class VKmerTest {
         Assert.assertEquals(kmer1.editDistance(kmer2), kmer2.editDistance(kmer1));
 
     }
-    
+
     @Test
     public void TestLargeKmerMergeFF() {
         VKmer kmer1 = new VKmer("GCGTACGCAGGATAGT");
-        VKmer kmer2 = new VKmer("AGGATAGTATGTGAA");        
+        VKmer kmer2 = new VKmer("AGGATAGTATGTGAA");
         kmer1.mergeWithKmerInDir(EDGETYPE.FF, 9, kmer2);
         Assert.assertEquals("Invalid FF merge!!!", "GCGTACGCAGGATAGTATGTGAA", kmer1.toString());
     }
-    
+
     @Test
     public void TestLargeKmerMergeFR() {
         VKmer kmer1 = new VKmer("GCGTACGCAGGATAGT");
         VKmer kmer2 = new VKmer("TTCACATACTATCCT");
-        
+
         kmer1.mergeWithKmerInDir(EDGETYPE.FR, 9, kmer2);
         Assert.assertEquals("Invalid FR merge!!!", "GCGTACGCAGGATAGTATGTGAA", kmer1.toString());
     }
-    
+
     @Test
     public void TestLargeKmerMergeRF() {
         VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer2 = new VKmer("AGGATAGTATGTGAA");
-        
+
         kmer1.mergeWithKmerInDir(EDGETYPE.RF, 9, kmer2);
         Assert.assertEquals("Invalid RF merge!!!", "TTCACATACTATCCTGCGTACGC", kmer1.toString());
     }
-    
+
     @Test
     public void TestLargeKmerMergeRR() {
         VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer2 = new VKmer("TTCACATACTATCCT");
-        
+
         kmer1.mergeWithKmerInDir(EDGETYPE.RR, 9, kmer2);
         Assert.assertEquals("Invalid RR merge!!!", "TTCACATACTATCCTGCGTACGC", kmer1.toString());
     }
-    
+
     private static final char[] symbols = new char[4];
     static {
         symbols[0] = 'A';
@@ -627,9 +622,9 @@ public class VKmerTest {
         }
         return new String(buf);
     }
-    
+
     @Test
-    public void TestIndexOfForShortRead(){
+    public void TestIndexOfForShortRead() {
         VKmer kmer1 = new VKmer("ACTATCCTGCGTACGC");
         VKmer kmer2 = new VKmer("TGCGT");
         Assert.assertEquals(7, kmer1.indexOf(kmer2));
@@ -643,32 +638,32 @@ public class VKmerTest {
         VKmer kmer8 = new VKmer("ACTAC");
         Assert.assertEquals(-1, kmer7.indexOf(kmer8));
     }
-    
+
     @Test
-    public void TestIndexOfForLongRead(){
+    public void TestIndexOfForLongRead() {
         String testStr1 = generateString(100);
         VKmer testKmer1 = new VKmer(testStr1);
         String subStr1 = testStr1.substring(25, 80);
         VKmer subKmer1 = new VKmer(subStr1);
         Assert.assertEquals(25, testKmer1.indexOf(subKmer1));
-        
+
         String testStr2 = generateString(200);
         VKmer testKmer2 = new VKmer(testStr2);
         String subStr2 = testStr2.substring(100, 200);
         VKmer subKmer2 = new VKmer(subStr2);
         Assert.assertEquals(100, testKmer2.indexOf(subKmer2));
-        
+
         String testStr3 = generateString(300);
         VKmer testKmer3 = new VKmer(testStr3);
         VKmer subKmer3 = new VKmer();
-        for(int i = 0; i < 10; i++){
+        for (int i = 0; i < 10; i++) {
             String subStr3 = testStr3.substring(40 + i * 3, 40 + i * 3 + 55);
             subKmer3.setAsCopy(subStr3);
             Assert.assertEquals(40 + i * 3, testKmer3.indexOf(subKmer3));
         }
-        
+
         String testStr4 = generateString(55);
-        if(!testStr3.contains(testStr4)){
+        if (!testStr3.contains(testStr4)) {
             VKmer testKmer4 = new VKmer(testStr4);
             Assert.assertEquals(-1, testKmer3.indexOf(testKmer4));
         }

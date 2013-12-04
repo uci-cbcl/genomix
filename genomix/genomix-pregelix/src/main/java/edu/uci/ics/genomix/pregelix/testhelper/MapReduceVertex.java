@@ -7,7 +7,7 @@ import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
 import edu.uci.ics.genomix.pregelix.operator.pathmerge.BasicMapReduceVertex;
 
 public class MapReduceVertex extends BasicMapReduceVertex<VertexValueWritable, PathMergeMessage> {
-    
+
     @Override
     public void compute(Iterator<PathMergeMessage> msgIterator) {
         initVertex();

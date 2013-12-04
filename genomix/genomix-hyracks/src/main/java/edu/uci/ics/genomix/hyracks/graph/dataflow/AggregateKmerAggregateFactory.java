@@ -17,14 +17,12 @@ package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.mapred.JobConf;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
@@ -107,7 +105,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                }
 
                 for (EDGETYPE e : EDGETYPE.values) {
-                    localUniNode.getEdgeMap(e).unionUpdate((readNode.getEdgeMap(e)));
+                    localUniNode.getEdges(e).unionUpdate((readNode.getEdges(e)));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
                 localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
@@ -122,7 +120,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
 
                 readNode.setAsCopy(accessor.getBuffer().array(), getOffSet(accessor, tIndex, 1));
                 for (EDGETYPE e : EDGETYPE.values) {
-                    localUniNode.getEdgeMap(e).unionUpdate(readNode.getEdgeMap(e));
+                    localUniNode.getEdges(e).unionUpdate(readNode.getEdges(e));
                 }
                 localUniNode.getUnflippedReadIds().addAll(readNode.getUnflippedReadIds());
                 localUniNode.getFlippedReadIds().addAll(readNode.getFlippedReadIds());
@@ -184,12 +182,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
                 try {
-                    byte[] uniNodeBytes = localUniNode.marshalToByteArray(); 
+                    byte[] uniNodeBytes = localUniNode.marshalToByteArray();
                     fieldOutput.write(uniNodeBytes, 0, uniNodeBytes.length);
                     tupleBuilder.addFieldEndOffset();
                     if (uniNodeBytes.length > frameSize / 2) {
-                        LOG.warning("Aggregate Kmer: output data kmerByteSize is too big: "
-                                + uniNodeBytes.length + "\nNode is:" + localUniNode.toString());
+                        LOG.warning("Aggregate Kmer: output data kmerByteSize is too big: " + uniNodeBytes.length
+                                + "\nNode is:" + localUniNode.toString());
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");

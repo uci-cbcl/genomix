@@ -10,8 +10,8 @@ import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
@@ -66,10 +66,10 @@ public class TipRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
             outgoingMsg.reset();
             outgoingMsg.setFlag(tipToNeighborEdgetype.mirror().get());
             outgoingMsg.setSourceVertexId(getVertexId());
-            EdgeMap edgeList = getVertexValue().getEdgeMap(tipToNeighborEdgetype);
-            if (edgeList.size() != 1)
+            VKmerList edges = getVertexValue().getEdges(tipToNeighborEdgetype);
+            if (edges.size() != 1)
                 throw new IllegalArgumentException("In this edgeType, the size of edges has to be 1!");
-            VKmer destVertexId = edgeList.firstKey();
+            VKmer destVertexId = edges.getPosition(0);
             sendMsg(destVertexId, outgoingMsg);
             deleteVertex(getVertexId());
 

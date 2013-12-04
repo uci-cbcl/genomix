@@ -129,7 +129,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                     outFlag = 0;
                     outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
                     for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
-                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                        for (VKmer dest : vertex.getEdges(et)) {
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor()
                                     : meToNeighbor;
@@ -203,11 +203,13 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             EDGETYPE aliveToMe = EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
 
             VKmer deletedKmer = incomingMsg.getSourceVertexId();
-            if (value.getEdgeMap(deleteToMe).containsKey(deletedKmer)) {
-                ReadIdSet deletedReadIds = value.getEdgeMap(deleteToMe).get(deletedKmer);
-                value.getEdgeMap(deleteToMe).remove(deletedKmer);
-
-                value.getEdgeMap(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);
+            if (value.getEdges(deleteToMe).contains(deletedKmer)) {
+                value.getEdges(deleteToMe).remove(deletedKmer);
+                if (!value.getEdges(aliveToMe).contains(incomingMsg.getInternalKmer()))
+                    value.getEdges(aliveToMe).append(incomingMsg.getInternalKmer());
+            } else {
+                throw new IllegalStateException("Couldn't find the requested edge to delete! I am " + value.toString()
+                        + "; incomingMsg was " + incomingMsg.toString());
             }
             voteToHalt();
         }

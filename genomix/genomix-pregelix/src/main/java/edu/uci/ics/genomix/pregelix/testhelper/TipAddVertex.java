@@ -1,6 +1,5 @@
 package edu.uci.ics.genomix.pregelix.testhelper;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
@@ -8,9 +7,8 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 
@@ -47,7 +45,7 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void insertTip(EDGETYPE dir, EdgeMap edgeList, VKmer insertedTip) {
+    public void insertTip(EDGETYPE dir, VKmerList edges, VKmer insertedTip) {
         Vertex vertex = (Vertex) BspUtils.createVertex(getContext().getConfiguration());
         vertex.getMsgList().clear();
         vertex.getEdges().clear();
@@ -60,20 +58,20 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
         /**
          * set the vertex value
          */
-        vertexValue.setEdgeMap(dir, edgeList);
+        vertexValue.setEdges(dir, edges);
         vertex.setVertexValue(vertexValue);
 
         addVertex(insertedTip, vertex);
     }
 
-    public EdgeMap getEdgeListFromKmer(VKmer kmer) {
-        EdgeMap edgeList = new EdgeMap();
-        edgeList.put(kmer, new ReadIdSet(Arrays.asList(new Long(0))));
-        return edgeList;
+    public VKmerList getEdgesFromKmer(VKmer kmer) {
+        VKmerList edges = new VKmerList();
+        edges.append(kmer);
+        return edges;
     }
 
     public void addEdgeToInsertedTip(EDGETYPE dir, VKmer insertedTip) {
-        getVertexValue().getEdgeMap(dir).put(insertedTip, new ReadIdSet(Arrays.asList(new Long(0))));
+        getVertexValue().getEdges(dir).append(insertedTip);
     }
 
     /**
@@ -88,7 +86,7 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
                 addEdgeToInsertedTip(tipToSplitEdgetype, insertedTip);
                 /** insert tip **/
                 EDGETYPE splitToTipDir = tipToSplitEdgetype.mirror();
-                insertTip(splitToTipDir, getEdgeListFromKmer(splitNode), insertedTip);
+                insertTip(splitToTipDir, getEdgesFromKmer(splitNode), insertedTip);
             }
         }
         voteToHalt();

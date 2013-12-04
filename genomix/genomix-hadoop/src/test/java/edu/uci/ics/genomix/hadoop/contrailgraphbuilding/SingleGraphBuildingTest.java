@@ -14,14 +14,19 @@ import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
+import edu.uci.ics.genomix.util.TestUtils;
 
 @SuppressWarnings("deprecation")
 public class SingleGraphBuildingTest {
 
     private JobConf conf = new JobConf();
     private static final String ACTUAL_RESULT_DIR = "actual";
+    private static final String ACTUAL_RESULT = ACTUAL_RESULT_DIR + "/data";
+    
+    private static final String EXPECTED_RESULT_DIR = "src/test/resources/expected/data";
+    private static final String EXPECTED_BRUIJIN_GRAPH_RESULT = EXPECTED_RESULT_DIR + "/smalltest-graph-result.txt";
     private static final String HADOOP_CONF_PATH = ACTUAL_RESULT_DIR + File.separator + "conf.xml";
-    private static final String DATA_PATH = "data/webmap/RandomWalk_TestSet/SmallGenome/small.test.reads";
+    private static final String DATA_PATH = "data/webmap/lastesttest/SmallTest/SmallTest.txt";
     private static final String HDFS_PATH = "/webmap";
     private static final String HDFS_RESULT_PATH = "/result";
 
@@ -40,6 +45,7 @@ public class SingleGraphBuildingTest {
         startHadoop();
         TestMapKmerToNode();
         cleanupHadoop();
+        TestUtils.compareFilesBySortingThemLineByLine(new File(EXPECTED_BRUIJIN_GRAPH_RESULT), new File(ACTUAL_RESULT));
     }
 
     public void TestMapKmerToNode() throws Exception {
