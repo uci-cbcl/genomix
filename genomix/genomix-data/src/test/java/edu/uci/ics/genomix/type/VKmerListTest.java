@@ -23,7 +23,7 @@ public class VKmerListTest {
         }
         return sb.toString();
     }
-    
+
     @Test
     public void TestInitial() {
         VKmerList kmerList = new VKmerList();
@@ -56,7 +56,8 @@ public class VKmerListTest {
 
         byte[] another = new byte[kmerList.getLengthInBytes() * 2];
         int start = 20;
-        System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start, kmerList.getLengthInBytes());
+        System.arraycopy(kmerList.getByteArray(), kmerList.getStartOffset(), another, start,
+                kmerList.getLengthInBytes());
         VKmerList plist2 = new VKmerList(another, start);
         for (int i = 0; i < plist2.size(); i++) {
             Assert.assertEquals(kmerList.getPosition(i).toString(), plist2.getPosition(i).toString());
@@ -127,9 +128,9 @@ public class VKmerListTest {
         Assert.assertEquals("AAA", edgeList.getPosition(0).toString());
         Assert.assertEquals("CCC", edgeList.getPosition(1).toString());
     }
-    
+
     @Test
-    public void simpleTestUnionUpdate(){
+    public void simpleTestUnionUpdate() {
         VKmerList list1 = new VKmerList();
         VKmer a = new VKmer("AGCTAAATC");
         list1.append(a);
@@ -146,8 +147,40 @@ public class VKmerListTest {
         VKmerList expected = new VKmerList();
         for (VKmer kmer : uniqueElements) {
             expected.append(kmer);
-        }        
+        }
         Assert.assertEquals(expected.toString(), list1.toString());
     }
-    
+
+    @Test
+    public void complicatedTestUnionUpdate() {
+        VKmer kmer;
+        VKmerList kmerList1 = new VKmerList();
+        HashSet<VKmer> uniqueElements = new HashSet<VKmer>();
+        for (int i = 1; i < 20; i++) {
+            kmer = new VKmer(9);
+            String randomString = generaterRandomString(9);
+            byte[] array = randomString.getBytes();
+            kmer.setFromStringBytes(9, array, 0);
+            uniqueElements.add(new VKmer(kmer));
+            kmerList1.append(kmer);
+        }
+        VKmerList kmerList2 = new VKmerList();
+        for (int i = 1; i < 20; i++) {
+            kmer = new VKmer(9);
+            String randomString = generaterRandomString(9);
+            byte[] array = randomString.getBytes();
+            kmer.setFromStringBytes(9, array, 0);
+            uniqueElements.add(new VKmer(kmer));
+            kmerList2.append(kmer);
+        }
+        kmerList1.unionUpdate(kmerList2);
+        VKmerList expected = new VKmerList();
+        for (VKmer iter : uniqueElements) {
+            expected.append(iter);
+        }
+//        System.out.println(expected.size());
+//        System.out.println(kmerList1.size());
+        Assert.assertEquals(expected.toString(), kmerList1.toString());
+    }
+
 }
