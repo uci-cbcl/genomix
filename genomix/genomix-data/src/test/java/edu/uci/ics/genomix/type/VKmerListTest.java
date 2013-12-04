@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.type;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 
@@ -138,7 +139,15 @@ public class VKmerListTest {
         list2.append(b);
         list2.append(c);
         list1.unionUpdate(list2);
-        System.out.println(list1.toString());
+        HashSet<VKmer> uniqueElements = new HashSet<VKmer>();
+        uniqueElements.add(a);
+        uniqueElements.add(b);
+        uniqueElements.add(c);
+        VKmerList expected = new VKmerList();
+        for (VKmer kmer : uniqueElements) {
+            expected.append(kmer);
+        }        
+        Assert.assertEquals(expected.toString(), list1.toString());
     }
     
 }
