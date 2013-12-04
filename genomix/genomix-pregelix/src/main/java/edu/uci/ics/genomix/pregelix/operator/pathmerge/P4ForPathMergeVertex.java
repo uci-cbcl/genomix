@@ -11,9 +11,9 @@ import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.type.HashedSeedRandom;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.types.HashedSeedRandom;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge

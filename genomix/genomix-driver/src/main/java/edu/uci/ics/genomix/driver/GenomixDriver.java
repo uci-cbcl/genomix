@@ -31,15 +31,15 @@ import org.apache.hadoop.mapred.JobConf;
 import org.codehaus.plexus.util.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 
+import edu.uci.ics.genomix.data.cluster.DriverUtils;
+import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.config.GenomixJobConf.Patterns;
-import edu.uci.ics.genomix.data.minicluster.DriverUtils;
-import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.data.util.GenerateGraphViz;
-import edu.uci.ics.genomix.data.util.GenerateGraphViz.GRAPH_TYPE;
+import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
+import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
-import edu.uci.ics.genomix.hadoop.util.ConvertToFasta;
-import edu.uci.ics.genomix.hadoop.util.GraphStatistics;
+import edu.uci.ics.genomix.hadoop.utils.ConvertToFasta;
+import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
@@ -50,12 +50,12 @@ import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverage
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.RayVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
-import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.test.BubbleAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.test.TipAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.SingleNodeTipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveWithSearchVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
-import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
-import edu.uci.ics.genomix.pregelix.testhelper.BubbleAddVertex;
-import edu.uci.ics.genomix.pregelix.testhelper.TipAddVertex;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
@@ -114,7 +114,7 @@ public class GenomixDriver {
                 pregelixJobs.add(UnrollTandemRepeat.getConfiguredJob(conf, UnrollTandemRepeat.class));
                 break;
             case TIP_SINGLE_NODE:
-                pregelixJobs.add(TipRemoveVertex.getConfiguredJob(conf, TipRemoveVertex.class));
+                pregelixJobs.add(SingleNodeTipRemoveVertex.getConfiguredJob(conf, SingleNodeTipRemoveVertex.class));
                 break;
             case TIP:
                 pregelixJobs.add(TipRemoveWithSearchVertex.getConfiguredJob(conf, TipRemoveWithSearchVertex.class));

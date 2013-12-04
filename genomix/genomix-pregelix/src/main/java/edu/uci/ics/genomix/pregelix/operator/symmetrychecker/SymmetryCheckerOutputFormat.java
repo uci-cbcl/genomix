@@ -8,9 +8,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.pregelix.api.io.binary.BinaryVertexOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.base.BinaryVertexOutputFormat;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
 import edu.uci.ics.pregelix.api.graph.Vertex;
 import edu.uci.ics.pregelix.api.io.VertexWriter;
 

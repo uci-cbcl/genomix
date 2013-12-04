@@ -14,8 +14,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.data.util.TestUtils;
+import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.utils.TestUtils;
 import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
 
 @SuppressWarnings("deprecation")

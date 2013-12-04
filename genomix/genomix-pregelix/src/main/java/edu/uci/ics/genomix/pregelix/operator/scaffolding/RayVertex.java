@@ -14,15 +14,15 @@ import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.data.types.ReadHeadSet;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
+import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.SingleNodeTipRemoveVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class RayVertex extends DeBruijnGraphCleanVertex<ScaffoldingVertexValueWritable, RayScaffoldingMessage> {
     public static int SCAFFOLDING_VERTEX_MIN_COVERAGE = 50;
-    private static final Logger LOG = Logger.getLogger(TipRemoveVertex.class.getName());
+    private static final Logger LOG = Logger.getLogger(SingleNodeTipRemoveVertex.class.getName());
     PrintWriter writer;
 
     public void writeOnFile() throws FileNotFoundException, UnsupportedEncodingException {

@@ -28,11 +28,11 @@ import org.apache.hadoop.mapred.Counters;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
-import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.hadoop.util.GraphStatistics;
+import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
 
 @SuppressWarnings("deprecation")
 public class GetFastaStatsTest {

@@ -8,10 +8,9 @@ import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
-import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithSearchVertexValueWritable.BubbleMergeWithSearchState;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 

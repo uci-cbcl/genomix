@@ -11,8 +11,8 @@ import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.pregelix.aggregator.DeBruijnVertexCounterAggregator;
-import edu.uci.ics.genomix.pregelix.format.NodeToVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.format.VertexToNodeOutputFormat;
+import edu.uci.ics.genomix.pregelix.base.NodeToVertexInputFormat;
+import edu.uci.ics.genomix.pregelix.base.VertexToNodeOutputFormat;
 import edu.uci.ics.genomix.pregelix.operator.bridgeremove.BridgeRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithSearchVertex;
 import edu.uci.ics.genomix.pregelix.operator.extractsubgraph.ExtractSubgraphVertex;
@@ -21,12 +21,12 @@ import edu.uci.ics.genomix.pregelix.operator.pathmerge.P4ForPathMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.removelowcoverage.RemoveLowCoverageVertex;
 import edu.uci.ics.genomix.pregelix.operator.simplebubblemerge.SimpleBubbleMergeVertex;
 import edu.uci.ics.genomix.pregelix.operator.symmetrychecker.SymmetryCheckerVertex;
-import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
+import edu.uci.ics.genomix.pregelix.operator.test.BridgeAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.test.BubbleAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.test.MapReduceVertex;
+import edu.uci.ics.genomix.pregelix.operator.test.TipAddVertex;
+import edu.uci.ics.genomix.pregelix.operator.tipremove.SingleNodeTipRemoveVertex;
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
-import edu.uci.ics.genomix.pregelix.testhelper.BridgeAddVertex;
-import edu.uci.ics.genomix.pregelix.testhelper.BubbleAddVertex;
-import edu.uci.ics.genomix.pregelix.testhelper.MapReduceVertex;
-import edu.uci.ics.genomix.pregelix.testhelper.TipAddVertex;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class JobGenerator {
@@ -161,7 +161,7 @@ public class JobGenerator {
     }
 
     private static void generateTipRemoveGraphJob(String jobName, String outputPath) throws IOException {
-        PregelixJob job = TipRemoveVertex.getConfiguredJob(new GenomixJobConf(3), TipRemoveVertex.class);
+        PregelixJob job = SingleNodeTipRemoveVertex.getConfiguredJob(new GenomixJobConf(3), SingleNodeTipRemoveVertex.class);
         job.getConfiguration().writeXml(new FileOutputStream(new File(outputPath)));
     }
 

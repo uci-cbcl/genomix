@@ -7,10 +7,10 @@ import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 
 public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, SymmetryCheckerMessage> {

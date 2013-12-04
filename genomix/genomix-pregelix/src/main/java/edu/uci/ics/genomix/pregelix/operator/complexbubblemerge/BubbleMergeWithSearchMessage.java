@@ -7,8 +7,7 @@ import java.io.IOException;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
-import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 
 public class BubbleMergeWithSearchMessage extends MessageWritable {
 

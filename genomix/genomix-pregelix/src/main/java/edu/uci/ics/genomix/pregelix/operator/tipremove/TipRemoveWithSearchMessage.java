@@ -7,7 +7,7 @@ import java.io.IOException;
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmerList;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
 
 public class TipRemoveWithSearchMessage extends MessageWritable {
     private Integer visitedLength = null;

@@ -9,8 +9,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.pregelix.format.NodeToGenericVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.NodeToGenericVertexInputFormat;
 import edu.uci.ics.pregelix.api.io.VertexReader;
 
 public class NodeToScaffoldingVertexInputFormat extends NodeToGenericVertexInputFormat<ScaffoldingVertexValueWritable> {

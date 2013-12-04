@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.data.util.Marshal;
+import edu.uci.ics.genomix.data.utils.Marshal;
 
 public class Node implements Writable, Serializable {
 

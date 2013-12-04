@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.data.util.Marshal;
+import edu.uci.ics.genomix.data.utils.Marshal;
 
 public class ReadIdSet extends TreeSet<Long> implements Writable, Serializable {
     private static final long serialVersionUID = 1L;

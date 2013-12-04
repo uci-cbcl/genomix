@@ -10,13 +10,12 @@ import java.util.logging.Logger;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
-import edu.uci.ics.genomix.data.types.ReadIdSet;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
 
 public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
-    
+
     private static final Logger LOG = Logger.getLogger(P1ForPathMergeVertex.class.getName());
 
     private HashSet<PathMergeMessage> updateMsgs = new HashSet<PathMergeMessage>();
@@ -133,7 +132,7 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor()
                                     : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
-//                            outFlag &= MessageFlag.MERGE_DIR_CLEAR;
+                            //                            outFlag &= MessageFlag.MERGE_DIR_CLEAR;
                             outFlag |= meToNeighbor.get() | otherToNeighbor.get() << 9;
                             outgoingMsg.setFlag(outFlag);
                             sendMsg(dest, outgoingMsg);

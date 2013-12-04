@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.uci.ics.genomix.data.util.KmerUtil;
-import edu.uci.ics.genomix.data.util.Marshal;
+import edu.uci.ics.genomix.data.utils.KmerUtil;
+import edu.uci.ics.genomix.data.utils.Marshal;
 
 /**
  * A list of fixed-length kmers. The length of this list is stored internally.

@@ -21,7 +21,7 @@ import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.ReadHeadInfo;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.data.util.GeneCode;
+import edu.uci.ics.genomix.data.utils.GeneCode;
 
 /**
  * GenomixMapper the 1st step of graph building

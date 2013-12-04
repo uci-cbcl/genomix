@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.data.util.Marshal;
+import edu.uci.ics.genomix.data.utils.Marshal;
 
 public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializable {
     private static final long serialVersionUID = 1L;

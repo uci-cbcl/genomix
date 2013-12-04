@@ -7,9 +7,7 @@ import java.util.ArrayList;
 
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
-import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
-import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
-import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 
 public class BubbleMergeWithSearchVertexValueWritable extends VertexValueWritable {
 

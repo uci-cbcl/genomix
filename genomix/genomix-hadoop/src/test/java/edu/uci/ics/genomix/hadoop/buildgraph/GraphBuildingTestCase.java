@@ -6,9 +6,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.data.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.data.util.GenerateGraphViz;
-import edu.uci.ics.genomix.data.util.GenerateGraphViz.GRAPH_TYPE;
+import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
+import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.genomix.hadoop.buildgraph.GenomixHadoopDriver;
 
 @SuppressWarnings({ "deprecation", "unused" })

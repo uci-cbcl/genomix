@@ -29,7 +29,7 @@ import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.data.types.Kmer;
 import edu.uci.ics.genomix.data.types.VKmer;
-import edu.uci.ics.genomix.data.util.GenerateGraphViz.GRAPH_TYPE;
+import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 
 @SuppressWarnings("deprecation")
 public class GenomixJobConf extends JobConf {

@@ -25,9 +25,9 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
-import edu.uci.ics.genomix.data.util.GeneCode;
-import edu.uci.ics.genomix.data.util.KmerUtil;
-import edu.uci.ics.genomix.data.util.Marshal;
+import edu.uci.ics.genomix.data.utils.GeneCode;
+import edu.uci.ics.genomix.data.utils.KmerUtil;
+import edu.uci.ics.genomix.data.utils.Marshal;
 
 /**
  * Variable-length kmer which stores its length internally.
