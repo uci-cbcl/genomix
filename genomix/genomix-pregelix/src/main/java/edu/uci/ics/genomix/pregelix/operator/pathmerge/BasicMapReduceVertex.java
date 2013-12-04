@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.type.VKmerList;
 import edu.uci.ics.genomix.type.VKmer;
 

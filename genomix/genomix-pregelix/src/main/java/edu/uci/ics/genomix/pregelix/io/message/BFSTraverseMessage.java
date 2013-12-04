@@ -6,10 +6,10 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.LongWritable;
 
-import edu.uci.ics.genomix.pregelix.io.SearchInfo;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.SearchInfo;
 import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;

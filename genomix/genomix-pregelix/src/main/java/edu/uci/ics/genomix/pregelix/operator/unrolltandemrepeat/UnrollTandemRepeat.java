@@ -2,8 +2,8 @@ package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.type.EDGETYPE;

@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.format.CheckerOutputFormat;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.format.SymmetryCheckerOutputFormat;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SymmetryCheckerMessage;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
@@ -96,7 +96,7 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
             Class<? extends DeBruijnGraphCleanVertex<? extends VertexValueWritable, ? extends MessageWritable>> vertexClass)
             throws IOException {
         PregelixJob job = DeBruijnGraphCleanVertex.getConfiguredJob(conf, vertexClass);
-        job.setVertexOutputFormatClass(CheckerOutputFormat.class);
+        job.setVertexOutputFormatClass(SymmetryCheckerOutputFormat.class);
         return job;
     }
 

@@ -1,17 +1,16 @@
-package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
+package edu.uci.ics.genomix.pregelix.operator.complexbubblemerge;
 
 import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
 import edu.uci.ics.genomix.pregelix.format.BubbleMergeWithSearchVertexToNodeOutputFormat;
-import edu.uci.ics.genomix.pregelix.format.NodeToBubbleMergeWithSearchVertexInputFormat;
-import edu.uci.ics.genomix.pregelix.io.BubbleMergeWithSearchVertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.BubbleMergeWithSearchVertexValueWritable.BubbleMergeWithSearchState;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.message.BubbleMergeWithSearchMessage;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.BubbleMergeWithSearchVertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.BubbleMergeWithSearchVertexValueWritable.BubbleMergeWithSearchState;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;

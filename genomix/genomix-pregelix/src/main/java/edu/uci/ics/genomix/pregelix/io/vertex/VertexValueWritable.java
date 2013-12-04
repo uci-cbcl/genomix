@@ -1,18 +1,14 @@
-package edu.uci.ics.genomix.pregelix.io;
+package edu.uci.ics.genomix.pregelix.io.vertex;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.io.common.ByteWritable;
-import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
-import edu.uci.ics.genomix.pregelix.io.common.VLongWritable;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.ScaffoldingVertex;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 
@@ -46,7 +42,7 @@ public class VertexValueWritable extends Node {
 
     private short state;
     private boolean isFakeVertex;
-    
+
     protected boolean verbose = false;
 
     public VertexValueWritable() {
@@ -69,8 +65,8 @@ public class VertexValueWritable extends Node {
 
     public void setNode(Node node) {
         // TODO invertigate... does this need to be a copy?
-        super.setAsCopy(node.getAllEdges(), node.getUnflippedReadIds(), node.getFlippedReadIds(), node.getInternalKmer(),
-                node.getAverageCoverage());
+        super.setAsCopy(node.getAllEdges(), node.getUnflippedReadIds(), node.getFlippedReadIds(),
+                node.getInternalKmer(), node.getAverageCoverage());
     }
 
     public VKmerList getFFList() {

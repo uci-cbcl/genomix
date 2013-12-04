@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.TipRemoveWithSearchMessage;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;

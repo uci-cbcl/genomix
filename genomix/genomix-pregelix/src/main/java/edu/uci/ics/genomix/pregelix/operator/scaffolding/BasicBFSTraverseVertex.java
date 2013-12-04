@@ -5,14 +5,14 @@ import java.util.Iterator;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.LongWritable;
 
-import edu.uci.ics.genomix.pregelix.io.PathAndEdgeTypeList;
-import edu.uci.ics.genomix.pregelix.io.ScaffoldingVertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.SearchInfo;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.common.ArrayListWritable;
 import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
+import edu.uci.ics.genomix.pregelix.io.vertex.PathAndEdgeTypeList;
+import edu.uci.ics.genomix.pregelix.io.vertex.ScaffoldingVertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.SearchInfo;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.type.DIR;

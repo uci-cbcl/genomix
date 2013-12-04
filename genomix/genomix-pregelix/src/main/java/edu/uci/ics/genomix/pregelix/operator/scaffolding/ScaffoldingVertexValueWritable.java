@@ -2,7 +2,7 @@ package edu.uci.ics.genomix.pregelix.operator.scaffolding;
 
 import java.util.ArrayList;
 
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.genomix.type.VKmerList;
 

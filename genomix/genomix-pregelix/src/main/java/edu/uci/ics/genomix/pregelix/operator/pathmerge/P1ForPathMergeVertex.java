@@ -7,9 +7,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.io.vertex.VertexValueWritable.State;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;

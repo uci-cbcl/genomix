@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.io;
+package edu.uci.ics.genomix.pregelix.io.vertex;
 
 import java.io.DataInput;
 import java.io.DataOutput;
