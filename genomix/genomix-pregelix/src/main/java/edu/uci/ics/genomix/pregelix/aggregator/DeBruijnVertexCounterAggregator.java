@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.operator.aggregator;
+package edu.uci.ics.genomix.pregelix.aggregator;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Counters;

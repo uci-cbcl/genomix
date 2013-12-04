@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.extractsubgraph;
+package edu.uci.ics.genomix.pregelix.operator.extractsubgraph;
 
 import java.io.IOException;
 import java.util.HashSet;

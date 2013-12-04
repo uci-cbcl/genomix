@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
-import edu.uci.ics.genomix.pregelix.log.LogUtil;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
 import edu.uci.ics.genomix.type.DIR;
@@ -195,11 +194,18 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             outNode.setAverageCoverage(vertex.getAverageCoverage());
             // only send non-overlapping letters // TODO do something more efficient than toString?
             if (mergeEdgetype.mirror().neighborDir() == DIR.FORWARD) {
-                outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer().toString().substring(Kmer.getKmerLength() - 1));
+                outNode.getInternalKmer().setAsCopy(
+                        vertex.getInternalKmer().toString().substring(Kmer.getKmerLength() - 1));
             } else {
-                outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer().toString().substring(0, vertex.getInternalKmer().getKmerLetterLength() - Kmer.getKmerLength() + 1));
+                outNode.getInternalKmer()
+                        .setAsCopy(
+                                vertex.getInternalKmer()
+                                        .toString()
+                                        .substring(
+                                                0,
+                                                vertex.getInternalKmer().getKmerLetterLength() - Kmer.getKmerLength()
+                                                        + 1));
             }
-
 
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
@@ -214,23 +220,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                         + DIR.enumSetFromByte(outgoingMsg.getFlag()));
             }
         }
-    }
-
-    //-----LOG----------------------------------------------------------------------------------------------------//
-    /**
-     * Logging the vertexId and vertexValue
-     */
-    public void loggingNode(byte loggingType) {
-        String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
-        LOG.fine(logMessage);
-    }
-
-    /**
-     * Logging message
-     */
-    public void loggingMessage(byte loggingType, PathMergeMessage msg, VKmer dest) {
-        String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
-        LOG.fine(logMessage);
     }
 
 }

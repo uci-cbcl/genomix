@@ -1,4 +1,4 @@
-package edu.uci.ics.genomix.pregelix.checker;
+package edu.uci.ics.genomix.pregelix.operator.checker;
 
 import java.io.IOException;
 import java.util.Iterator;
