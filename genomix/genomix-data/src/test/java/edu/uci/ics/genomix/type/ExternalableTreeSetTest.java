@@ -19,6 +19,8 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.WritableComparable;
 import org.junit.Test;
 
+import edu.uci.ics.genomix.config.GenomixJobConf;
+
 public class ExternalableTreeSetTest implements Serializable {
     /**
      * 
@@ -101,20 +103,6 @@ public class ExternalableTreeSetTest implements Serializable {
         }
     }
 
-    @Test
-    public void TestExternal() {
-        Configuration conf = new Configuration();
-        ExternalableTreeSet.setCountLimit(limit);
-        try {
-            ExternalableTreeSet.setupManager(conf, new Path(System.getProperty("java.io.tmpdir")));
-        } catch (IOException e) {
-            e.printStackTrace();
-            Assert.fail(e.getLocalizedMessage());
-            return;
-        }
-        testEqual();
-    }
-
     public void testEqual() {
         ExternalableTreeSet<TestIntWritable> eSetA = new ExternalableTreeSet<TestIntWritable>();
         for (int i = 0; i <= limit; i++) {
@@ -171,7 +159,7 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         ExternalableTreeSet.setCountLimit(limit);
-        Path tmpPath = new Path("/tmp");
+        Path tmpPath = new Path(conf.get("hadoop.tmp.dir", "/tmp"));
         FileSystem dfs;
         try {
             dfs = FileSystem.get(conf);
@@ -181,7 +169,7 @@ public class ExternalableTreeSetTest implements Serializable {
             return;
         }
         try {
-            dfs.create(tmpPath);
+            dfs.mkdirs(tmpPath);
         } catch (IOException e1) {
             e1.printStackTrace();
             Assert.fail(e1.getLocalizedMessage());

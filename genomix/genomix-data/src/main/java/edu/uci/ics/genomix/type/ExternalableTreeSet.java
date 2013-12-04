@@ -8,7 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,6 +19,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+
+import edu.uci.ics.genomix.config.GenomixJobConf;
 
 public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable, Serializable {
 
@@ -142,8 +143,14 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
         path = null;
         if (size < countLimit) {
             for (int i = 0; i < size; ++i) {
-                Class<T> clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass())
-                        .getActualTypeArguments()[0];;
+                // Temporary solution here, the                 
+                //      getcontext().getConfiguration().getClass(SETTING_FROM_CLIENT, defaultClass);
+                //  like: 
+                //      (Class<I>) conf.getClass(PregelixJob.VERTEX_INDEX_CLASS, WritableComparable.class);
+                //      Class<I> vertexClass = getVertexIndexClass(conf);
+                //      return vertexClass.newInstance();
+                Class<T> clazz = (Class<T>) manager.getConfiguration().getClass(GenomixJobConf.EXTERNAL_KEY_CLASS,
+                        ReadHeadInfo.class);
                 T t;
                 try {
                     t = clazz.newInstance();
@@ -197,12 +204,14 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
     protected static class FileManager {
         private FileSystem fs;
         private Path workPath;
+        private Configuration conf;
         private HashMap<Path, OutputStream> allocatedPath;
 
         public FileManager(Configuration conf, Path workingPath) throws IOException {
             fs = FileSystem.get(conf);
             workPath = workingPath;
             allocatedPath = new HashMap<Path, OutputStream>();
+            this.conf = conf;
         }
 
         public void deleteAll() throws IOException {
@@ -210,6 +219,10 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
                 deleteFile(path);
             }
 
+        }
+
+        public Configuration getConfiguration() {
+            return conf;
         }
 
         protected final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");

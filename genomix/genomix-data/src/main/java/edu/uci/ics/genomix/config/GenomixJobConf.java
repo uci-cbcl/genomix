@@ -146,7 +146,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-threadsPerMachine", usage = "The number of threads to use per slave machine. Default is 1.", required = false)
         private int threadsPerMachine = 1;
-        
+
         @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
         private String extraConfFiles;
     }
@@ -275,6 +275,9 @@ public class GenomixJobConf extends JobConf {
     public static final String STATS_EXPECTED_GENOMESIZE = "genomix.conf.expectedGenomeSize";
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
     // intermediate date evaluation
+
+    // Some Runtime setting for jar
+    public static final String EXTERNAL_KEY_CLASS = "genomix.externalset.class";
 
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
@@ -411,11 +414,11 @@ public class GenomixJobConf extends JobConf {
         // hdfs setup
         if (get(HDFS_WORK_PATH) == null)
             set(HDFS_WORK_PATH, "genomix_out"); // should be in the user's home directory? 
-        
+
         // default conf setup
         if (get(EXTRA_CONF_FILES) == null)
             set(EXTRA_CONF_FILES, "");
-        
+
         // hyracks-specific
 
         //        if (getBoolean(RUN_LOCAL, false)) {
@@ -479,7 +482,7 @@ public class GenomixJobConf extends JobConf {
         if (opts.plotSubgraph_startSeed != null)
             set(PLOT_SUBGRAPH_START_SEEDS, opts.plotSubgraph_startSeed);
         setInt(PLOT_SUBGRAPH_NUM_HOPS, opts.plotSubgraph_numHops);
-        
+
         // read conf.xml
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
