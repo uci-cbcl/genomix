@@ -126,6 +126,19 @@ public class VKmerListTest {
         Assert.assertEquals("AAA", edgeList.getPosition(0).toString());
         Assert.assertEquals("CCC", edgeList.getPosition(1).toString());
     }
-
+    
+    @Test
+    public void simpleTestUnionUpdate(){
+        VKmerList list1 = new VKmerList();
+        VKmer a = new VKmer("AGCTAAATC");
+        list1.append(a);
+        VKmerList list2 = new VKmerList();
+        VKmer b = new VKmer("AGCTAAATG");
+        VKmer c = new VKmer("AGCTAAATC");
+        list2.append(b);
+        list2.append(c);
+        list1.unionUpdate(list2);
+        System.out.println(list1.toString());
+    }
     
 }
