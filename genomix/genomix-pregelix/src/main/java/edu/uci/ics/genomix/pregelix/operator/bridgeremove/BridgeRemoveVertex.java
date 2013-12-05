@@ -2,16 +2,14 @@ package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-
-import edu.uci.ics.genomix.pregelix.type.GraphMutations;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.types.GraphMutations;
 
 /**
  * Graph clean pattern: Remove Bridge
@@ -92,10 +90,6 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
             pruneDeadEdges(msgIterator);
         }
         voteToHalt();
-    }
-
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, BridgeRemoveVertex.class));
     }
 
 }
