@@ -85,6 +85,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-bubbleMerge_maxDissimilarity", usage = "Maximum dissimilarity (1 - % identity) allowed between two kmers while still considering them a \"bubble\", (leading to their collapse into a single node)", required = false)
         private float bubbleMerge_maxDissimilarity = -1;
+        
+        @Option(name = "-bubbleMerge_maxLength", usage = "The maximum length an internal node may be and still be considered a bubble", required = false)
+        private int bubbleMerge_maxLength;
 
         @Option(name = "-bubbleMergewithsearch_maxLength", usage = "Maximum length can be searched", required = false)
         private int bubbleMergeWithSearch_maxLength = -1;
@@ -165,6 +168,7 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-runAllStats", usage = "Whether or not to run a STATS job after each normal job")
         private boolean runAllStats = false;
+
     }
 
     /**
@@ -262,6 +266,7 @@ public class GenomixJobConf extends JobConf {
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
     public static final String BUBBLE_MERGE_MAX_DISSIMILARITY = "genomix.bubbleMerge.maxDissimilarity";
+    public static final String BUBBLE_MERGE_MAX_LENGTH = "genomix.bubbleMerge.maxLength";
     public static final String BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH = "genomix.bubbleMergeWithSearch.maxSearchLength";
     public static final String BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION = "genomix.bubbleMergeWithSearch.searchDirection";
     public static final String GRAPH_CLEAN_MAX_ITERATIONS = "genomix.graphClean.maxIterations";
@@ -385,6 +390,9 @@ public class GenomixJobConf extends JobConf {
 
         if (getFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, -1) == -1)
             setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .05f);
+        
+        if (getInt(BUBBLE_MERGE_MAX_LENGTH, -1) == -1)
+            setInt(BUBBLE_MERGE_MAX_LENGTH, kmerLength * 5);
 
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
@@ -494,6 +502,7 @@ public class GenomixJobConf extends JobConf {
         // Graph cleaning
         setInt(BRIDGE_REMOVE_MAX_LENGTH, opts.bridgeRemove_maxLength);
         setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, opts.bubbleMerge_maxDissimilarity);
+        setInt(BUBBLE_MERGE_MAX_LENGTH, opts.bubbleMerge_maxLength);
         setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, opts.bubbleMergeWithSearch_maxLength);
         if (opts.bubbleMergeWithSearch_searchDirection != null)
             set(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, opts.bubbleMergeWithSearch_searchDirection);
