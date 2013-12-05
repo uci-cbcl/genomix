@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import junit.framework.Assert;
 
@@ -163,7 +164,12 @@ public class BatchTestFilesTest {
                 .getParent().toString());
         GenerateGraphViz.writeLocalBinToLocalSvg(path.getParent().toString() + "/bin", path.getParent().toString()
                 + "/graphviz.svg", GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
-        TestUtils.compareFilesBySortingThemLineByLine(new File(resultFileName), new File(expectFileName));
+        HashSet<Integer> set = new HashSet<Integer>();
+        set.add(1);
+        set.add(2);
+        set.add(3);
+        set.add(4);
+        TestUtils.compareFilesWithUnOrderedFields(new File(resultFileName), new File(expectFileName), true, set);
     }
 
     @AfterClass
