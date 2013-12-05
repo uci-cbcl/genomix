@@ -115,7 +115,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
             uniqueElements.add(new VKmer(kmer));
         }
         for (VKmer kmer : otherList) {
-            uniqueElements.add(kmer); // references okay
+            uniqueElements.add(new VKmer(kmer)); // references okay
         }
         setSize(getLengthInBytes() + otherList.getLengthInBytes()); // upper bound on memory usage
         valueCount = 0;
