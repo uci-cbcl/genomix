@@ -82,7 +82,8 @@ public class GenomixMapper extends MapReduceBase implements Mapper<LongWritable,
             mate1GeneLine = rawLine[2];
         } else {
             throw new IllegalStateException(
-                    "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
+                    "input format is incorrect! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq' but saw"
+                    + value.toString() + "which has " + value.toString().split("\\t").length + " elements");
         }
 
         Pattern genePattern = Pattern.compile("[AGCT]+");
