@@ -15,6 +15,7 @@
 
 package edu.uci.ics.genomix.config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -22,12 +23,14 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
+import edu.uci.ics.genomix.type.ExternalableTreeSet;
 import edu.uci.ics.genomix.type.Kmer;
 
 @SuppressWarnings("deprecation")
@@ -276,9 +279,6 @@ public class GenomixJobConf extends JobConf {
     public static final String STATS_MIN_CONTIGLENGTH = "genomix.conf.minContigLength";
     // intermediate date evaluation
 
-    // Some Runtime setting for jar
-    public static final String EXTERNAL_KEY_CLASS = "genomix.externalset.class";
-
     private static Map<String, Long> tickTimes = new HashMap<String, Long>();
 
     public GenomixJobConf(int kmerLength) {
@@ -511,8 +511,9 @@ public class GenomixJobConf extends JobConf {
             return System.currentTimeMillis() - time;
     }
 
-    public static void setGlobalStaticConstants(Configuration conf) {
+    public static void setGlobalStaticConstants(Configuration conf) throws IOException {
         Kmer.setGlobalKmerLength(Integer.parseInt(conf.get(GenomixJobConf.KMER_LENGTH)));
+        ExternalableTreeSet.setupManager(conf, new Path(conf.get("hadoop.tmp.dir", "/tmp")));
         //        EdgeWritable.MAX_READ_IDS_PER_EDGE = Integer.parseInt(conf.get(GenomixJobConf.MAX_READIDS_PER_EDGE));
 
     }

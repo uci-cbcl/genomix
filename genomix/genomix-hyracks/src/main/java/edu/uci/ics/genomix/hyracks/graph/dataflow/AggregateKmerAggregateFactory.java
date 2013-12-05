@@ -55,7 +55,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
             RecordDescriptor outRecordDescriptor, int[] keyFields, int[] keyFieldsInPartialResults, IFrameWriter writer)
             throws HyracksDataException {
         final int frameSize = ctx.getFrameSize();
-        GenomixJobConf.setGlobalStaticConstants(confFactory.getConf());
+        try {
+            GenomixJobConf.setGlobalStaticConstants(confFactory.getConf());
+        } catch (IOException e2) {
+            e2.printStackTrace();
+            throw new HyracksDataException(e2);
+        }
 
         return new IAggregatorDescriptor() {
 
@@ -192,12 +197,12 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
                 try {
-                    byte[] nodeInByte =localUniNode.marshalToByteArray(); 
+                    byte[] nodeInByte = localUniNode.marshalToByteArray();
                     fieldOutput.write(nodeInByte, 0, nodeInByte.length);
                     tupleBuilder.addFieldEndOffset();
                     if (nodeInByte.length > frameSize / 2) {
-                        LOG.warning("Aggregate Kmer: output data kmerByteSize is too big: "
-                                + nodeInByte.length + "\nNode is:" + localUniNode.toString());
+                        LOG.warning("Aggregate Kmer: output data kmerByteSize is too big: " + nodeInByte.length
+                                + "\nNode is:" + localUniNode.toString());
                     }
                 } catch (IOException e) {
                     throw new HyracksDataException("I/O exception when writing aggregation to the output buffer.");

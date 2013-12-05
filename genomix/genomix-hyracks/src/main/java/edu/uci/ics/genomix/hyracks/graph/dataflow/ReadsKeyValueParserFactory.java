@@ -68,7 +68,12 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
         final FrameTupleAppender outputAppender = new FrameTupleAppender(ctx.getFrameSize());
         outputAppender.reset(outputBuffer, true);
 
-        GenomixJobConf.setGlobalStaticConstants(confFactory.getConf());
+        try {
+            GenomixJobConf.setGlobalStaticConstants(confFactory.getConf());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+            throw new HyracksDataException(e1);
+        }
 
         return new IKeyValueParser<LongWritable, Text>() {
 

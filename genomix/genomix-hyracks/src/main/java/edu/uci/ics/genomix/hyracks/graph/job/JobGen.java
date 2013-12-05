@@ -92,7 +92,12 @@ public abstract class JobGen implements Serializable {
 
     protected void initGenomixConfiguration() throws HyracksDataException {
         GenomixJobConf conf = new GenomixJobConf(hadoopJobConfFactory.getConf());
-        GenomixJobConf.setGlobalStaticConstants(conf);
+        try {
+            GenomixJobConf.setGlobalStaticConstants(conf);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new HyracksDataException(e);
+        }
         frameLimits = Integer.parseInt(conf.get(GenomixJobConf.FRAME_LIMIT));
         frameSize = Integer.parseInt(conf.get(GenomixJobConf.FRAME_SIZE));
     }

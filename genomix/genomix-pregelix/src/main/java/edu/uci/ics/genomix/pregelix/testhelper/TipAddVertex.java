@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.testhelper;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -37,7 +38,12 @@ public class TipAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritable, 
     public void initVertex() {
         if (kmerSize == -1)
             kmerSize = Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        try {
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         if (splitNode == null) {
             splitNode = new VKmer(getContext().getConfiguration().get(SPLIT_NODE)); 
         }

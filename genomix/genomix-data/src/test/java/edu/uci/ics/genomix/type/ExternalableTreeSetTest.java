@@ -19,8 +19,6 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.WritableComparable;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-
 public class ExternalableTreeSetTest implements Serializable {
     /**
      * 
@@ -69,12 +67,33 @@ public class ExternalableTreeSetTest implements Serializable {
 
     }
 
+    public class TestExternalableTreeSet extends ExternalableTreeSet<TestIntWritable>{
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public TestIntWritable readEachElementFromDataStream(DataInput in) throws IOException {
+            TestIntWritable iw = new TestIntWritable();
+            iw.readFields(in);
+            return iw;
+        }
+
+        @Override
+        public void writeEachElementToDataStream(DataOutput out, TestIntWritable t) throws IOException {
+            t.write(out);
+        }
+
+    }
+
     @Test
     public void TestInternal() {
 
         ExternalableTreeSet.setCountLimit(limit);
 
-        ExternalableTreeSet<TestIntWritable> eSet = new ExternalableTreeSet<TestIntWritable>();
+        ExternalableTreeSet<TestIntWritable> eSet = new TestExternalableTreeSet();
         for (int i = 0; i < limit; i++) {
             eSet.add(new TestIntWritable(i));
         }
@@ -89,7 +108,7 @@ public class ExternalableTreeSetTest implements Serializable {
     public void TestIterator() {
         ExternalableTreeSet.setCountLimit(limit);
 
-        ExternalableTreeSet<TestIntWritable> eSet = new ExternalableTreeSet<TestIntWritable>();
+        ExternalableTreeSet<TestIntWritable> eSet = new TestExternalableTreeSet();
         for (int i = 0; i < limit; i++) {
             eSet.add(new TestIntWritable(i));
         }
@@ -104,7 +123,7 @@ public class ExternalableTreeSetTest implements Serializable {
     }
 
     public void testEqual() {
-        ExternalableTreeSet<TestIntWritable> eSetA = new ExternalableTreeSet<TestIntWritable>();
+        ExternalableTreeSet<TestIntWritable> eSetA = new TestExternalableTreeSet();
         for (int i = 0; i <= limit; i++) {
             eSetA.add(new TestIntWritable(i));
         }
@@ -119,7 +138,7 @@ public class ExternalableTreeSetTest implements Serializable {
         }
 
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        ExternalableTreeSet<TestIntWritable> eSetB = new ExternalableTreeSet<TestIntWritable>();
+        ExternalableTreeSet<TestIntWritable> eSetB = new TestExternalableTreeSet();
         try {
             eSetB.readFields(new DataInputStream(bais));
         } catch (IOException e) {

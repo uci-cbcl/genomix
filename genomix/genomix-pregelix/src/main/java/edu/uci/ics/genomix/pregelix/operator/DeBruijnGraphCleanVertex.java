@@ -45,8 +45,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     // validPathsTable: a table representing the set of edge types forming a valid path from
     //                 A--et1-->B--et2-->C with et1 being the first dimension and et2 being 
     //                 the second
-    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF }, { EDGETYPE.RF, EDGETYPE.FR },
-            { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
+    public EDGETYPE[][] validPathsTable = new EDGETYPE[][] { { EDGETYPE.RF, EDGETYPE.FF },
+            { EDGETYPE.RF, EDGETYPE.FR }, { EDGETYPE.RR, EDGETYPE.FF }, { EDGETYPE.RR, EDGETYPE.FR } };
 
     protected M outgoingMsg = null;
     protected VertexValueWritable tmpValue = new VertexValueWritable();
@@ -64,6 +64,8 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
 
     /**
      * initiate kmerSize, maxIteration
+     * 
+     * @throws IOException
      */
     public void initVertex() {
         if (kmerSize == -1)
@@ -71,7 +73,12 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         if (maxIteration < 0)
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        try {
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         checkDebug();
         //TODO fix globalAggregator
@@ -91,8 +98,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
 
         verbose = false;
         for (VKmer problemKmer : problemKmers) {
-            verbose |= debug
-                    && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
+            verbose |= debug && (getVertexValue().findEdge(problemKmer) != null || getVertexId().equals(problemKmer));
         }
     }
 

@@ -51,7 +51,12 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
         if (maxIteration < 0)
             maxIteration = Integer.parseInt(getContext().getConfiguration().get(
                     GenomixJobConf.GRAPH_CLEAN_MAX_ITERATIONS));
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        try {
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         if (outgoingMsg == null)
             outgoingMsg = new BFSTraverseMessage();
         else

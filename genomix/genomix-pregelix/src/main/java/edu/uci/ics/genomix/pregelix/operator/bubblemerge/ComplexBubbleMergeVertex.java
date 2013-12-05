@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.bubblemerge;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -299,7 +300,7 @@ public class ComplexBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexVal
     }
 
     @Override
-    public void compute(Iterator<BubbleMergeMessage> msgIterator) {
+    public void compute(Iterator<BubbleMergeMessage> msgIterator) throws IOException {
         initVertex();
         if (getSuperstep() == 1) {
             if (VertexUtil.isBubbleVertex(getVertexValue())) {

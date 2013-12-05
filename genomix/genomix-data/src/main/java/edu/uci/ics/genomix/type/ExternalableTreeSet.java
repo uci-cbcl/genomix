@@ -20,9 +20,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-
-public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable, Serializable {
+public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Serializable> implements Writable,
+        Serializable {
 
     /**
      * 
@@ -135,6 +134,10 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
         oos.close();
     }
 
+    public abstract T readEachElementFromDataStream(DataInput in) throws IOException;
+
+    public abstract void writeEachElementToDataStream(DataOutput out, T t) throws IOException;
+
     @SuppressWarnings("unchecked")
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -143,24 +146,7 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
         path = null;
         if (size < countLimit) {
             for (int i = 0; i < size; ++i) {
-                // Temporary solution here, the                 
-                //      getcontext().getConfiguration().getClass(SETTING_FROM_CLIENT, defaultClass);
-                //  like: 
-                //      (Class<I>) conf.getClass(PregelixJob.VERTEX_INDEX_CLASS, WritableComparable.class);
-                //      Class<I> vertexClass = getVertexIndexClass(conf);
-                //      return vertexClass.newInstance();
-                Class<T> clazz = (Class<T>) manager.getConfiguration().getClass(GenomixJobConf.EXTERNAL_KEY_CLASS,
-                        ReadHeadInfo.class);
-                T t;
-                try {
-                    t = clazz.newInstance();
-                } catch (InstantiationException e) {
-                    throw new IOException(e);
-                } catch (IllegalAccessException e) {
-                    throw new IOException(e);
-                }
-                t.readFields(in);
-                inMemorySet.add(t);
+                inMemorySet.add(readEachElementFromDataStream(in));
             }
         } else {
             path = new Path(in.readUTF());
@@ -179,7 +165,7 @@ public class ExternalableTreeSet<T extends WritableComparable<T> & Serializable>
         out.writeInt(inMemorySet.size());
         if (inMemorySet.size() < countLimit) {
             for (T t : inMemorySet) {
-                t.write(out);
+                writeEachElementToDataStream(out, t);
             }
             if (path != null) {
                 manager.deleteFile(path);
