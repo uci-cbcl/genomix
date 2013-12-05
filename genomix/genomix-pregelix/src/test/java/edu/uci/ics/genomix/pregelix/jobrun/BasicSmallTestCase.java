@@ -93,7 +93,8 @@ public class BasicSmallTestCase extends TestCase {
 
     private void compareResults() throws Exception {
         //copy bin and text to local
-        GenomixClusterManager.copyBinAndTextToLocal(new JobConf(), FileOutputFormat.getOutputPath(job).toString(),
+        System.out.println();
+        GenomixClusterManager.copyBinAndTextToLocal((JobConf)job.getConfiguration(), FileOutputFormat.getOutputPath(job).toString(),
                 resultFileDir);
         //covert bin to graphviz
         GenerateGraphViz
