@@ -1,0 +1,4 @@
+AAA	{FF:null	FR:null	RF:null	RR:[AAC,AGA]	5':null, ~5':null	kmer:null	cov:2.0x}
+TAA	{FF:[AAC,AGA]	FR:null	RF:null	RR:null	5':[1-0_0 readSeq: TAACAAA mateReadSeq: null,2-0_0 readSeq: TAAGAAA mateReadSeq: null], ~5':null	kmer:null	cov:2.0x}
+AGA	{FF:[AAA]	FR:null	RF:null	RR:[TAA]	5':null, ~5':null	kmer:AAGAA	cov:1.0x}
+AAC	{FF:[AAA]	FR:null	RF:null	RR:[TAA]	5':null, ~5':null	kmer:AACAA	cov:1.0x}
