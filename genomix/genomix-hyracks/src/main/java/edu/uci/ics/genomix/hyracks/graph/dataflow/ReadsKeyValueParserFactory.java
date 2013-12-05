@@ -15,7 +15,6 @@
 
 package edu.uci.ics.genomix.hyracks.graph.dataflow;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
@@ -32,7 +31,6 @@ import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Kmer;
 import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.genomix.type.ReadHeadInfo;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -55,6 +53,8 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
     private final ConfFactory confFactory;
 
     public static final RecordDescriptor readKmerOutputRec = new RecordDescriptor(new ISerializerDeserializer[2]);
+
+    private static final Pattern genePattern = Pattern.compile("[AGCT]+");
 
     public ReadsKeyValueParserFactory(JobConf conf) throws HyracksDataException {
         confFactory = new ConfFactory(conf);
@@ -91,60 +91,22 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
             @Override
             public void parse(LongWritable key, Text value, IFrameWriter writer, String filename) {
-
-                String basename = filename.substring(filename.lastIndexOf(File.separator) + 1);
-                String extension = basename.substring(basename.lastIndexOf('.') + 1);
-
-                //                byte mateId = basename.endsWith("_2" + extension) ? (byte) 1 : (byte) 0;
-                boolean fastqFormat = false;
-                if (extension.contains("fastq") || extension.contains("fq")) {
-                    // TODO make NLineInputFormat works on hyracks HDFS reader
-                    // if (! (job.getInputFormat() instanceof NLineInputFormat))
-                    // {
-                    // throw new
-                    // IllegalStateException("Fastq files require the NLineInputFormat (was "
-                    // + job.getInputFormat() + " ).");
-                    // }
-                    // if (job.getInt("mapred.line.input.format.linespermap",
-                    // -1) % 4 != 0) {
-                    // throw new
-                    // IllegalStateException("Fastq files require the `mapred.line.input.format.linespermap` option to be divisible by 4 (was "
-                    // + job.get("mapred.line.input.format.linespermap") +
-                    // ").");
-                    // }
-                    fastqFormat = true;
-                }
-
                 long readID = 0;
                 String mate0GeneLine = null;
                 String mate1GeneLine = null;
-                if (fastqFormat) {
-                    // FIXME : this is offset == readid only works on the only
-                    // one input file, one solution: put the filename into the
-                    // part of the readid
-                    readID = key.get(); // TODO check: this is actually the
-                                        // offset into the file... will it be
-                                        // the same across all files?? //
-                                        //                    geneLine = value.toString().trim();
+                String[] rawLine = value.toString().split("\\t");
+                if (rawLine.length == 2) {
+                    readID = Long.parseLong(rawLine[0]);
+                    mate0GeneLine = rawLine[1];
+                } else if (rawLine.length == 3) {
+                    readID = Long.parseLong(rawLine[0]);
+                    mate0GeneLine = rawLine[1];
+                    mate1GeneLine = rawLine[2];
                 } else {
-                    String[] rawLine = value.toString().split("\\t"); // Read
-                                                                      // the
-                                                                      // Real
-                                                                      // Gene
-                                                                      // Line
-                    if (rawLine.length == 2) {
-                        readID = Long.parseLong(rawLine[0]);
-                        mate0GeneLine = rawLine[1];
-                    } else if (rawLine.length == 3) {
-                        readID = Long.parseLong(rawLine[0]);
-                        mate0GeneLine = rawLine[1];
-                        mate1GeneLine = rawLine[2];
-                    } else {
-                        throw new IllegalStateException(
-                                "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
-                    }
-
+                    throw new IllegalStateException(
+                            "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
                 }
+
                 Pattern genePattern = Pattern.compile("[AGCT]+");
                 if (mate0GeneLine != null) {
                     Matcher geneMatcher = genePattern.matcher(mate0GeneLine);
@@ -194,7 +156,7 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                 DIR nextNodeDir = DIR.FORWARD;
 
                 /* middle kmer */
-                nextNode.reset();
+                nextNode = new Node();
                 nextNode.setAverageCoverage(1);
                 nextForwardKmer.setAsCopy(curForwardKmer);
                 for (int i = Kmer.getKmerLength(); i < readLetters.length; i++) {
@@ -207,9 +169,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
 
                     curForwardKmer.setAsCopy(nextForwardKmer);
                     curReverseKmer.setAsCopy(nextReverseKmer);
-                    curNode.setAsCopy(nextNode);
+                    curNode = nextNode;
                     curNodeDir = nextNodeDir;
-                    nextNode.reset();
+                    nextNode = new Node();
                     nextNode.setAverageCoverage(1);
                 }
 

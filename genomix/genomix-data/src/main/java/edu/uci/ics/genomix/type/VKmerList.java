@@ -53,11 +53,12 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
     }
 
-    public void setAsReference(byte[] data, int offset) {
+    public int setAsReference(byte[] data, int offset) {
         valueCount = Marshal.getInt(data, offset);
         this.storage = data;
         this.offset = offset;
         this.storageMaxSize = getLengthInBytes();
+        return offset + this.storageMaxSize;
     }
 
     public void append(VKmer kmer) {
@@ -114,7 +115,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
             uniqueElements.add(new VKmer(kmer));
         }
         for (VKmer kmer : otherList) {
-            uniqueElements.add(kmer); // references okay
+            uniqueElements.add(new VKmer(kmer)); // references okay
         }
         setSize(getLengthInBytes() + otherList.getLengthInBytes()); // upper bound on memory usage
         valueCount = 0;
@@ -171,14 +172,15 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         return posOffset;
     }
 
-    public void setAsCopy(VKmerList otherList) {
-        setAsCopy(otherList.storage, otherList.offset);
+    public int setAsCopy(VKmerList otherList) {
+        return setAsCopy(otherList.storage, otherList.offset);
     }
 
     /**
      * read a KmerListWritable from newData, which should include the header
+     * @return 
      */
-    public void setAsCopy(byte[] newData, int newOffset) {
+    public int setAsCopy(byte[] newData, int newOffset) {
         int newValueCount = Marshal.getInt(newData, newOffset);
         int newLength = getLength(newData, newOffset);
         setSize(newLength);
@@ -188,6 +190,7 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
         valueCount = newValueCount;
         Marshal.putInt(valueCount, storage, this.offset);
+        return newOffset + newLength;
     }
 
     @Override
@@ -242,7 +245,17 @@ public class VKmerList implements Writable, Iterable<VKmer>, Serializable {
         }
         return false;
     }
-
+    
+    public int indexOf(VKmer kmer) {
+        Iterator<VKmer> posIterator = this.iterator();
+        int i = 0;
+        while (posIterator.hasNext()) {
+            if (kmer.equals(posIterator.next()))
+                return i;
+            i++;
+        }
+        return -1;
+    }
     /*
      * remove the first instance of `toRemove`. Uses a linear scan. Throws an
      * exception if not in this list.

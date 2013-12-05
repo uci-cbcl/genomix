@@ -1,8 +1,8 @@
 package edu.uci.ics.genomix.type;
 
-import java.util.EnumSet;
 
 public enum EDGETYPE {
+    //public enum EDGETYPE implements Writable {
 
     FF((byte) (0b00)),
     FR((byte) (0b01)),
@@ -21,8 +21,9 @@ public enum EDGETYPE {
         return val;
     }
 
-    public static final EnumSet<EDGETYPE> INCOMING = EnumSet.of(RF, RR);
-    public static final EnumSet<EDGETYPE> OUTGOING = EnumSet.of(FF, FR);
+    public static final EDGETYPE[] REVERSE = {RF, RR};
+    public static final EDGETYPE[] FORWARD = {FF, FR};
+    public static final EDGETYPE[] values = { FF, FR, RF, RR };
 
     public static EDGETYPE fromByte(short b) {
         b &= MASK;
@@ -92,7 +93,7 @@ public enum EDGETYPE {
         return dir(this);
     }
 
-    public static DIR dir(EDGETYPE edgeType) { // .dir static / non-static
+    public static DIR dir(EDGETYPE edgeType) {
         switch (edgeType) {
             case FF:
             case FR:
@@ -102,6 +103,23 @@ public enum EDGETYPE {
                 return DIR.REVERSE;
             default:
                 throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + edgeType);
+        }
+    }
+
+    public DIR neighborDir() {
+        return neighborDir(this);
+    }
+
+    public static DIR neighborDir(EDGETYPE et) {
+        switch (et) {
+            case FF:
+            case RF:
+                return DIR.FORWARD;
+            case FR:
+            case RR:
+                return DIR.REVERSE;
+            default:
+                throw new RuntimeException("Unrecognized direction in dirFromEdgeType: " + et);
         }
     }
 
@@ -215,4 +233,14 @@ public enum EDGETYPE {
         EDGETYPE et2 = EDGETYPE.fromByte(b2);
         return sameOrientation(et1, et2);
     }
+
+    //    @Override
+    //    public void write(DataOutput out) throws IOException {
+    //        out.writeByte(this.get());
+    //    }
+    //
+    //    @Override
+    //    public void readFields(DataInput in) throws IOException {
+    //        this.val = in.readByte();
+    //    }
 }

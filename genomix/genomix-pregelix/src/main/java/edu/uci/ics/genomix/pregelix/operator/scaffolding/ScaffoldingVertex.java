@@ -75,8 +75,6 @@ public class ScaffoldingVertex extends BasicBFSTraverseVertex {
                     GenomixJobConf.SCAFFOLDING_VERTEX_MIN_LENGTH));
         if (NUM_STEP_END_BFS < 0)
             NUM_STEP_END_BFS = SCAFFOLDING_MAX_TRAVERSAL_LENGTH - kmerSize + 3;
-        counters.clear();
-        getVertexValue().getCounters().clear();
     }
 
     public void addReadsToScaffoldingMap(HashMapWritable<LongWritable, ArrayListWritable<SearchInfo>> scaffoldingMap,

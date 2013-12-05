@@ -114,7 +114,7 @@ public class AggregateKmerAggregateFactory implements IAggregatorDescriptorFacto
                 //                    }
                 //                }
 
-                for (EDGETYPE e : EDGETYPE.values()) {
+                for (EDGETYPE e : EDGETYPE.values) {
                     localUniNode.getEdges(e).unionUpdate((readNode.getEdges(e)));
                 }
                 localUniNode.getUnflippedReadIds().unionUpdate(readNode.getUnflippedReadIds());

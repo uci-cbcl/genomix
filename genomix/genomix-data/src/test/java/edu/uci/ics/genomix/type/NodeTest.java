@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -944,5 +945,4 @@ public class NodeTest {
 //            node.getEdgeMap(EDGETYPE.RF).pollFirstEntry();
 //        Assert.assertEquals(true, node.isSimpleOrTerminalPath());
 //    }
-
-    }
+}

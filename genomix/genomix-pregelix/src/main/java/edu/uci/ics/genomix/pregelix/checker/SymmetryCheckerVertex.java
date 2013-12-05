@@ -10,7 +10,6 @@ import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.io.message.SymmetryCheckerMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.VKmer;
@@ -25,12 +24,6 @@ public class SymmetryCheckerVertex extends DeBruijnGraphCleanVertex<VertexValueW
             outgoingMsg = new SymmetryCheckerMessage();
         else
             outgoingMsg.reset();
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
         outFlag = 0;
     }
 

@@ -45,12 +45,13 @@ public abstract class NodeToGenericVertexInputFormat<V extends VertexValueWritab
                 /**
                  * set the src vertex id
                  */
-                vertexId.setAsCopy(getRecordReader().getCurrentKey());
+                // okay to use setAsReference here since the caller will immediately write the values
+                vertexId.setAsReference(getRecordReader().getCurrentKey());
                 vertex.setVertexId(vertexId);
                 /**
                  * set the vertex value
                  */
-                vertexValue.setAsCopy(getRecordReader().getCurrentValue());
+                vertexValue.setAsReference(getRecordReader().getCurrentValue());
                 if (vertexValue.getInternalKmer().getKmerLetterLength() == 0) // initial input directly from graph building
                     vertexValue.setInternalKmer(vertexId);
                 vertex.setVertexValue(vertexValue);

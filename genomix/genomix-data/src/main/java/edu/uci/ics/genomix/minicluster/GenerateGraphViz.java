@@ -1,12 +1,8 @@
 package edu.uci.ics.genomix.minicluster;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -17,7 +13,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 //TODO by Jianfeng: move this to script
@@ -59,13 +54,14 @@ public class GenerateGraphViz {
         }
     }
 
-    public static void writeLocalBinToLocalSvg(String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
-        byte[] img = convertGraphToImg(new JobConf(), srcDir, destDir, graphType, "svg");
-        File out = new File(destDir + File.separator + "graphviz.svg");
+    public static void writeLocalBinToLocalSvg(String srcDir, String destFile, GRAPH_TYPE graphType) throws Exception {
+        byte[] img = convertGraphToImg(new JobConf(), srcDir, destFile, graphType, "svg");
+        File out = new File(destFile); //  + File.separator + "graphviz.svg"
         GraphViz.writeGraphToFile(img, out);
     }
-    
-    public static void writeHDFSBinToHDFSSvg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType) throws Exception {
+
+    public static void writeHDFSBinToHDFSSvg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType)
+            throws Exception {
         byte[] img = convertGraphToImg(conf, srcDir, destDir, graphType, "svg");
         FileSystem dfs = FileSystem.get(conf);
         dfs.delete(new Path(destDir), true);
@@ -78,8 +74,7 @@ public class GenerateGraphViz {
     /**
      * Construct a DOT graph in memory, convert it
      * to image and store the image in the file system.
-     * 
-     * outputFormat may be svg, png, pdf, or any other graphviz-accepted format 
+     * outputFormat may be svg, png, pdf, or any other graphviz-accepted format
      */
     public static byte[] convertGraphToImg(JobConf conf, String srcDir, String destDir, GRAPH_TYPE graphType,
             String outputFormat) throws Exception {
@@ -148,7 +143,7 @@ public class GenerateGraphViz {
 
     public static String convertEdgeToGraph(String outputNode, Node value, GRAPH_TYPE graphType) {
         String outputEdge = "";
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             for (VKmer e : value.getEdges(et)) {
                 String destNode = "";
                 switch (graphType) {

@@ -25,7 +25,6 @@ import org.apache.hadoop.io.BinaryComparable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
-import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.util.KmerUtil;
 import edu.uci.ics.genomix.util.Marshal;
 
@@ -148,10 +147,11 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      *            : byte array to copy (should have a header)
      * @param offset
      */
-    public void setAsCopy(byte[] newData, int offset) {
+    public int setAsCopy(byte[] newData, int offset) {
         int k = Marshal.getInt(newData, offset);
         reset(k);
         System.arraycopy(newData, offset + HEADER_SIZE, bytes, this.kmerStartOffset, bytesUsed);
+        return offset + HEADER_SIZE + bytesUsed;
     }
 
     /**
@@ -162,7 +162,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
      *            : byte array to copy (should have a header)
      * @param blockOffset
      */
-    public void setAsReference(byte[] newData, int blockOffset) {
+    public int setAsReference(byte[] newData, int blockOffset) {
         bytes = newData;
         kmerStartOffset = blockOffset + HEADER_SIZE;
         int kRequested = Marshal.getInt(newData, blockOffset);
@@ -173,6 +173,20 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         storageMaxSize = bytesRequested; // since we are a reference, store our max capacity
         setKmerLength(kRequested);
+        return blockOffset + bytesRequested;
+    }
+
+    /**
+     * Shallow copy of the given kmer (s.t. we are backed by the same bytes)
+     * WARNING: Changes in the kmerLength after using setAsReference may not always
+     * be reflected in either `other` or `this`!
+     */
+    public void setAsReference(VKmer other) {
+        this.bytes = other.bytes;
+        this.bytesUsed = other.bytesUsed;
+        this.kmerStartOffset = other.kmerStartOffset;
+        this.lettersInKmer = other.lettersInKmer;
+        this.storageMaxSize = other.storageMaxSize;
     }
 
     /**
@@ -727,21 +741,22 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         return editDistance(this, other);
     }
 
-    public int contain(VKmer pattern){
-        return findSubVkmer(this, pattern);
+    public int indexOf(VKmer pattern) {
+        return indexOf(this, pattern);
     }
-    
+
     /**
-     * use KMP to fast detect whether master Vkmer contain pattern; if true return index, otherwise return -1;
+     * use KMP to fast detect whether master Vkmer contain pattern (only detect the first position which pattern match);
+     * if true return index, otherwise return -1;
+     * 
      * @param master
      * @param pattern
      * @return
      */
-    public static int findSubVkmer(VKmer master, VKmer pattern){
+    public static int indexOf(VKmer master, VKmer pattern) {
         int patternSize = pattern.getKmerLetterLength();
         int strSize = master.getKmerLetterLength();
-        int[] failureSet = new int[patternSize];
-        failureSet = computeFailureSet(failureSet, pattern);
+        int[] failureSet = computeFailureSet(pattern, patternSize);
         int p = 0;
         int m = 0;
         while (p < patternSize && m < strSize) {
@@ -760,14 +775,16 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
             return m - patternSize;
         }
     }
-    
+
     /**
      * compute the failure function of KMP algorithm
+     * 
      * @param failureSet
      * @param pattern
      * @return
      */
-    protected static int[] computeFailureSet(int[] failureSet, VKmer pattern){
+    protected static int[] computeFailureSet(VKmer pattern, int patternSize) {
+        int[] failureSet = new int[patternSize];
         int i = 0;
         failureSet[0] = -1;
         for (int j = 1; j < pattern.getKmerLetterLength(); j++) {
@@ -782,6 +799,7 @@ public class VKmer extends BinaryComparable implements Serializable, WritableCom
         }
         return failureSet;
     }
+
     /**
      * return the fractional difference between the given kmers. This is the edit distance divided by the smaller length.
      * Note: the fraction may be larger than 1 (when the edit distance is larger than the kmer)

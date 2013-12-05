@@ -6,10 +6,11 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.SortedSet;
 
-public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
+public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements Iterable<ReadHeadInfo> {
     private static final long serialVersionUID = 1L;
 
     public ReadHeadSet() {
@@ -130,6 +131,16 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> {
     @Override
     public void writeEachElementToDataStream(DataOutput out, ReadHeadInfo t) throws IOException {
         t.write(out);
+    }
+
+    /**
+     * It supposed to be an read-only iterator.
+     * This is a temporary solution to make code compilable.
+     * We will hide this interface when the scaffolding code became stable.
+     */
+    @Override
+    public Iterator<ReadHeadInfo> iterator() {
+        return super.inMemorySet.iterator();
     }
 
 }

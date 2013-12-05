@@ -1,17 +1,14 @@
 package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 
 import java.util.Iterator;
-import java.util.Map.Entry;
 
 import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
-import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.pregelix.util.VertexUtil;
 import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.ReadIdSet;
 import edu.uci.ics.genomix.type.VKmer;
 
 /**
@@ -31,12 +28,6 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
             outgoingMsg.reset();
         if (repeatKmer == null)
             repeatKmer = new VKmer();
-        if (getSuperstep() == 1)
-            StatisticsAggregator.preGlobalCounters.clear();
-        //        else
-        //            StatisticsAggregator.preGlobalCounters = BasicGraphCleanVertex.readStatisticsCounterResult(getContext().getConfiguration());
-        counters.clear();
-        getVertexValue().getCounters().clear();
     }
 
     /**
@@ -47,7 +38,7 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         tmpValue.getEdges(repeatEdgetype).remove(repeatKmer);
         boolean hasFlip = false;
         // pick one edge and flip 
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             for (VKmer edge : tmpValue.getEdges(et)) {
                 EDGETYPE flipEt = et.flipNeighbor();
                 if (!tmpValue.getEdges(flipEt).contains(edge))
@@ -76,7 +67,7 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         getVertexValue().getEdges(repeatEdgetype).remove(getVertexId());
         boolean hasFlip = false;
         /** pick one edge and flip **/
-        for (EDGETYPE et : EDGETYPE.values()) {
+        for (EDGETYPE et : EDGETYPE.values) {
             for (VKmer edge : getVertexValue().getEdges(et)) {
                 EDGETYPE flipDir = et.flipNeighbor();
                 if (!getVertexValue().getEdges(flipDir).contains(edge))
@@ -114,9 +105,7 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         if (getSuperstep() == 1) {
             if (isTandemRepeat(getVertexValue())) { // && repeatCanBeMerged()
                 mergeTandemRepeat();
-                //set statistics counter: Num_TandemRepeats
-                incrementCounter(StatisticsCounter.Num_TandemRepeats);
-                getVertexValue().setCounters(counters);
+                getCounters().findCounter(GraphMutations.Num_TandemRepeats).increment(1);
             }
             voteToHalt();
         } else if (getSuperstep() == 2) {

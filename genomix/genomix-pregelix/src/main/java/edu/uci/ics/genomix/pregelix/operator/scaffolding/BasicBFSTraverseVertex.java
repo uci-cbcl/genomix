@@ -14,7 +14,7 @@ import edu.uci.ics.genomix.pregelix.io.common.EdgeTypeList;
 import edu.uci.ics.genomix.pregelix.io.common.HashMapWritable;
 import edu.uci.ics.genomix.pregelix.io.message.BFSTraverseMessage;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.StatisticsCounter;
+import edu.uci.ics.genomix.pregelix.type.GraphMutations;
 import edu.uci.ics.genomix.type.DIR;
 import edu.uci.ics.genomix.type.EDGETYPE;
 import edu.uci.ics.genomix.type.Node.READHEAD_ORIENTATION;
@@ -146,9 +146,7 @@ public class BasicBFSTraverseVertex extends
         ScaffoldingVertexValueWritable vertex = getVertexValue();
         // send message to all the path nodes to add this common readId
         sendMsgToPathNodeToAddCommondReadId(vertex.getPathMap());
-        // set statistics counter: Num_Scaffodings
-        incrementCounter(StatisticsCounter.Num_Scaffodings);
-        vertex.setCounters(counters);
+        getCounters().findCounter(GraphMutations.Num_Scaffolds).increment(1);
     }
 
     /**
