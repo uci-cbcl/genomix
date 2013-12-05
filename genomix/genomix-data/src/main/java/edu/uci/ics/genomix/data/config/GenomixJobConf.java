@@ -384,7 +384,7 @@ public class GenomixJobConf extends JobConf {
             setInt(BRIDGE_REMOVE_MAX_LENGTH, kmerLength + 1);
 
         if (getFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, -1) == -1)
-            setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .5f);
+            setFloat(BUBBLE_MERGE_MAX_DISSIMILARITY, .05f);
 
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
