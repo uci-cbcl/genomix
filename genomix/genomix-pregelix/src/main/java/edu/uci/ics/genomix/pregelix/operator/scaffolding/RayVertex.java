@@ -12,7 +12,6 @@ import edu.uci.ics.genomix.pregelix.client.Client;
 import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
 import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
 import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.operator.aggregator.StatisticsAggregator;
 import edu.uci.ics.genomix.pregelix.operator.scaffolding.BasicBFSTraverseVertex.SEARCH_TYPE;
 import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveVertex;
 import edu.uci.ics.genomix.type.DIR;
