@@ -8,6 +8,7 @@ import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.VKmerList;
 import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.operator.complexbubblemerge.BubbleMergeWithSearchVertexValueWritable.EdgeTypeList;
 
 public class BubbleMergeWithSearchMessage extends MessageWritable {
 
