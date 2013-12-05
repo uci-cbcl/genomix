@@ -126,66 +126,6 @@ public class BasicSmallTestCase extends TestCase {
         GraphStatistics.drawStatistics(resultFileDir + "stats", oldC, null, true);
     }
 
-    public void generateStatisticsResult(String outPutDir) throws IOException {
-        //convert Counters to string
-        Counters counters = BspUtils.getCounters(job);
-
-        //output Counters
-        Configuration conf = new Configuration();
-        FileSystem fileSys = FileSystem.getLocal(conf);
-
-        fileSys.create(new Path(outPutDir));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(outPutDir));
-        bw.write(counters.toString());
-        bw.close();
-    }
-
-    public void drawStatistics(String outputDir) throws IOException {
-        Counters counters = BspUtils.getCounters(job);
-
-        HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
-        TreeMap<Integer, Long> curCounts;
-
-        // build up allHists to be {coverage : {1: 50, 2: 20, 3:5}, kmerLength : {55: 100}, ...}
-        for (CounterGroup g : counters) {
-            if (g.getName().endsWith("-bins")) {
-                String baseName = g.getName().replace("-bins", "");
-                if (allHists.containsKey(baseName)) {
-                    curCounts = allHists.get(baseName);
-                } else {
-                    curCounts = new TreeMap<Integer, Long>();
-                    allHists.put(baseName, curCounts);
-                }
-                for (org.apache.hadoop.mapreduce.Counter c : g) { // counter name is the X value of the histogram; its count is the Y value
-                    Integer X = Integer.parseInt(c.getName());
-                    if (curCounts.get(X) != null) {
-                        curCounts.put(X, curCounts.get(X) + c.getValue());
-                    } else {
-                        curCounts.put(X, c.getValue());
-                    }
-                }
-            }
-        }
-
-        for (String graphType : allHists.keySet()) {
-            curCounts = allHists.get(graphType);
-            XYSeries series = new XYSeries(graphType);
-            for (Entry<Integer, Long> pair : curCounts.entrySet()) {
-                series.add(pair.getKey().floatValue(), pair.getValue().longValue());
-            }
-            XYSeriesCollection xyDataset = new XYSeriesCollection(series);
-            JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
-                    PlotOrientation.VERTICAL, true, true, false);
-            // Write the data to the output stream:
-            Configuration conf = new Configuration();
-            FileSystem dfs = FileSystem.getLocal(conf);
-            FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + graphType + "-hist.png"),
-                    true);
-            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
-            outstream.close();
-        }
-    }
-
     public String toString() {
         return jobFile;
     }
