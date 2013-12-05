@@ -1,5 +1,7 @@
 package edu.uci.ics.genomix.type;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
@@ -156,31 +158,43 @@ public class VKmerListTest {
         VKmer kmer;
         VKmerList kmerList1 = new VKmerList();
         HashSet<VKmer> uniqueElements = new HashSet<VKmer>();
-        for (int i = 1; i < 20; i++) {
-            kmer = new VKmer(9);
-            String randomString = generaterRandomString(9);
+        for (int i = 1; i < 1000; i++) {
+            kmer = new VKmer(5);
+            String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
-            kmer.setFromStringBytes(9, array, 0);
+            kmer.setFromStringBytes(5, array, 0);
             uniqueElements.add(new VKmer(kmer));
             kmerList1.append(kmer);
         }
         VKmerList kmerList2 = new VKmerList();
-        for (int i = 1; i < 20; i++) {
-            kmer = new VKmer(9);
-            String randomString = generaterRandomString(9);
+        for (int i = 1; i < 1000; i++) {
+            kmer = new VKmer(5);
+            String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
-            kmer.setFromStringBytes(9, array, 0);
+            kmer.setFromStringBytes(5, array, 0);
             uniqueElements.add(new VKmer(kmer));
             kmerList2.append(kmer);
         }
         kmerList1.unionUpdate(kmerList2);
+        ArrayList<String> list1 = new ArrayList<String>();
+        for (int i = 0; i < kmerList1.size(); i++) {
+            list1.add(kmerList1.getPosition(i).toString());
+        }
+        Collections.sort(list1);
+
         VKmerList expected = new VKmerList();
         for (VKmer iter : uniqueElements) {
             expected.append(iter);
         }
-//        System.out.println(expected.size());
-//        System.out.println(kmerList1.size());
-        Assert.assertEquals(expected.toString(), kmerList1.toString());
+        ArrayList<String> list2 = new ArrayList<String>();
+        for (int i = 0; i < expected.size(); i++) {
+            list2.add(expected.getPosition(i).toString());
+        }
+        Collections.sort(list2);
+        Assert.assertEquals(list1.size(), list2.size());
+        for (int i = 0; i < list1.size(); i++) {
+            Assert.assertEquals(list1.get(i), list2.get(i));
+        }
     }
 
 }
