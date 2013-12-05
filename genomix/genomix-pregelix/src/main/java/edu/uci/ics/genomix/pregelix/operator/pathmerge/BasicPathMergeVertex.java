@@ -121,21 +121,17 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
         for (EDGETYPE updateEdge : updateEdges) {
-            outgoingMsg.reset();
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outFlag = 0;
-            outFlag |= MESSAGETYPE.UPDATE.get() | updateEdge.mirror().get(); // neighbor's edge to me (so he can remove me)
-            outgoingMsg.setFlag(outFlag);
-            for (EDGETYPE mergeEdge : mergeEdges) {
-                EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);
-                for (VKmer dest : vertex.getEdges(updateEdge)) {
-                    if (verbose)
-                        LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
-                                + " to " + dest + ": " + outgoingMsg);
+            outFlag = (byte) (MESSAGETYPE.UPDATE.get() | updateEdge.mirror().get()); // neighbor's edge to me (so he can remove me)
+            for (VKmer dest : vertex.getEdges(updateEdge)) {
+                for (EDGETYPE mergeEdge : mergeEdges) {
                     for (VKmer kmer : vertex.getEdges(mergeEdge)) {
-                        VKmerList msgList = outgoingMsg.getNode().getEdges(updateEdge);
-                        msgList.clear();
-                        msgList.append(kmer);
+                        outgoingMsg.reset();
+                        outgoingMsg.setSourceVertexId(getVertexId());
+                        outgoingMsg.setFlag(outFlag);
+                        outgoingMsg.getNode().getEdges(EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge)).append(kmer);
+                        if (verbose)
+                            LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
+                                    + " to " + dest + ": " + outgoingMsg);
                         sendMsg(dest, outgoingMsg);
                     }
                 }
@@ -152,6 +148,9 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
+            if (incomingMsg.getSourceVertexId().toString().equals("AGCTAAATG")) {
+                System.out.println();
+            }
             vertex.getEdges(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
             for (EDGETYPE edgeType : EDGETYPE.values) {
