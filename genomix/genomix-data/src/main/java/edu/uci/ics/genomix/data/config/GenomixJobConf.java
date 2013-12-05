@@ -85,13 +85,13 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-bubbleMerge_maxDissimilarity", usage = "Maximum dissimilarity (1 - % identity) allowed between two kmers while still considering them a \"bubble\", (leading to their collapse into a single node)", required = false)
         private float bubbleMerge_maxDissimilarity = -1;
-        
+
         @Option(name = "-bubbleMergewithsearch_maxLength", usage = "Maximum length can be searched", required = false)
         private int bubbleMergeWithSearch_maxLength = -1;
-        
+
         @Option(name = "-bubbleMergewithsearch_searchDirection", usage = "Maximum length can be searched", required = false)
         private String bubbleMergeWithSearch_searchDirection;
-        
+
         @Option(name = "-graphCleanMaxIterations", usage = "The maximum number of iterations any graph cleaning job is allowed to run for", required = false)
         private int graphCleanMaxIterations = -1;
 
@@ -162,6 +162,9 @@ public class GenomixJobConf extends JobConf {
 
         @Option(name = "-extraConfFiles", usage = "Read all the job confs from the given comma-separated list of multiple conf files", required = false)
         private String extraConfFiles;
+
+        @Option(name = "-runAllStats", usage = "Whether or not to run a STATS job after each normal job")
+        private boolean runAllStats = false;
     }
 
     /**
@@ -193,6 +196,11 @@ public class GenomixJobConf extends JobConf {
         BRIDGE_ADD,
         BUBBLE_ADD,
         BFS;
+
+        /** the jobs that actually mutate the graph */
+        public static final EnumSet<Patterns> mutatingJobs = EnumSet.complementOf(EnumSet.of(Patterns.DUMP_FASTA,
+                Patterns.CHECK_SYMMETRY, Patterns.PLOT_SUBGRAPH, Patterns.STATS, Patterns.TIP_ADD, Patterns.BRIDGE_ADD,
+                Patterns.BUBBLE_ADD, Patterns.BFS));
 
         /**
          * Get a comma-separated pipeline from the given array of Patterns
@@ -249,6 +257,7 @@ public class GenomixJobConf extends JobConf {
     public static final String RANDOM_SEED = "genomix.conf.randomSeed";
     public static final String HDFS_WORK_PATH = "genomix.hdfs.work.path";
     public static final String EXTRA_CONF_FILES = "genomix.conf.extraConfFiles";
+    public static final String RUN_ALL_STATS = "genomix.conf.runAllStats";
 
     // Graph cleaning   
     public static final String BRIDGE_REMOVE_MAX_LENGTH = "genomix.bridgeRemove.maxLength";
@@ -379,10 +388,10 @@ public class GenomixJobConf extends JobConf {
 
         if (getInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, -1) == -1)
             setInt(BUBBLE_MERGE_WITH_SEARCH_MAX_LENGTH, kmerLength * 2);
-        
+
         if (get(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION) == null)
             set(BUBBLE_MERGE_WITH_SEARCH_SEARCH_DIRECTION, "FORWARD"); // the default is to search towards FORWARDS
-        
+
         if (getInt(GRAPH_CLEAN_MAX_ITERATIONS, -1) == -1)
             setInt(GRAPH_CLEAN_MAX_ITERATIONS, 10000000);
 
@@ -508,6 +517,7 @@ public class GenomixJobConf extends JobConf {
         // read conf.xml
         if (opts.extraConfFiles != null)
             set(EXTRA_CONF_FILES, opts.extraConfFiles);
+        setBoolean(RUN_ALL_STATS, opts.runAllStats);
     }
 
     /**
