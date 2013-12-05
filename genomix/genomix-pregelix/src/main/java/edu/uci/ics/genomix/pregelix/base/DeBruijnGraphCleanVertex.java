@@ -290,4 +290,11 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
         sendSettledMsgs(DIR.REVERSE, value);
         sendSettledMsgs(DIR.FORWARD, value);
     }
+    
+    /**
+     * update statistics for distribution
+     */
+    private void updateStats(String valueName, long value) {
+        getCounters().findCounter(valueName + "-bins", Long.toString(value)).increment(1);
+    }
 }
