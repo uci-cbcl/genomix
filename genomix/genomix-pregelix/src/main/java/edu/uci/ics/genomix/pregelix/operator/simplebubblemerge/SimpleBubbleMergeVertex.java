@@ -15,6 +15,7 @@ import edu.uci.ics.genomix.data.types.VKmer;
 import edu.uci.ics.genomix.data.types.Node.NeighborInfo;
 import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
 import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.types.GraphMutations;
 
 /**
  * Graph clean pattern: Simple Bubble Merge
@@ -110,7 +111,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             // add 'editDistance' and 'pathLength' to statistics distribution
             for(int i = 0; i < receivedMsgList.size(); i ++){
                 for(int j = i + 1; j < receivedMsgList.size(); j ++){
-                    float editDistance = receivedMsgList.get(i).computeDissimilar(receivedMsgList.get(j));
+                    float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
                     updateStats("editDistance", Math.round(editDistance));
                 }
                 updateStats("pathLength", receivedMsgList.get(i).getNode().getKmerLength());
@@ -187,6 +188,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
                 // process similarSet, keep the unchanged set and deleted set & add coverage to unchange node 
                 processSimilarSet();
+                
+                getCounters().findCounter(GraphMutations.Num_RemovedBubbles).increment(1);
             }
         }
     }

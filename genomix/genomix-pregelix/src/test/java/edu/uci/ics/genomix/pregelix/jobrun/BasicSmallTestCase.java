@@ -19,23 +19,32 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import junit.framework.TestCase;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.CounterGroup;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.junit.Test;
 
 import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
-import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.data.utils.TestUtils;
 import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
@@ -55,8 +64,7 @@ public class BasicSmallTestCase extends TestCase {
     private final FileSystem dfs;
 
     public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs, String hdfsInput,
-            String resultFile, String graphvizFile, String statisticsFile, String expectedFile)
-            throws Exception {
+            String resultFile, String graphvizFile, String statisticsFile, String expectedFile) throws Exception {
         super("test");
         this.jobFile = jobFile;
         this.job = new PregelixJob("test");
@@ -96,18 +104,26 @@ public class BasicSmallTestCase extends TestCase {
     private void compareResults() throws Exception {
         //copy bin and text to local
         System.out.println();
-        GenomixClusterManager.copyBinAndTextToLocal((JobConf)job.getConfiguration(), FileOutputFormat.getOutputPath(job).toString(),
-                resultFileDir);
+        GenomixClusterManager.copyBinAndTextToLocal((JobConf) job.getConfiguration(),
+                FileOutputFormat.getOutputPath(job).toString(), resultFileDir);
         //covert bin to graphviz
         GenerateGraphViz
                 .writeLocalBinToLocalSvg(resultFileDir, graphvizFile, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
         // compare results
-//        TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(resultFileDir
-//                + File.separator + "data")); 
+        //        TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(resultFileDir
+        //                + File.separator + "data")); 
         //generate statistic counters
-        generateStatisticsResult(resultFileDir + File.separator + "stats.txt");
-//        GraphStatistics.saveGraphStats(resultFileDir, (Counters)BspUtils.getCounters(job), new GenomixJobConf());
-//        GraphStatistics.drawStatistics(resultFileDir, (Counters)BspUtils.getCounters(job), new GenomixJobConf());
+        //        generateStatisticsResult(resultFileDir + File.separator + "stats.txt");
+        //        drawStatistics(resultFileDir + File.separator + "stats");
+        Counters newC = BspUtils.getCounters(job);
+        org.apache.hadoop.mapred.Counters oldC = new org.apache.hadoop.mapred.Counters();
+        for (String g : newC.getGroupNames()) {
+            for (org.apache.hadoop.mapreduce.Counter c : newC.getGroup(g)) {
+                oldC.findCounter(g, c.getName()).increment(c.getValue());
+            }
+        }
+        GraphStatistics.saveGraphStats(resultFileDir + "stats", oldC, null, true);
+        GraphStatistics.drawStatistics(resultFileDir + "stats", oldC, null, true);
     }
 
     public void generateStatisticsResult(String outPutDir) throws IOException {
@@ -122,6 +138,52 @@ public class BasicSmallTestCase extends TestCase {
         BufferedWriter bw = new BufferedWriter(new FileWriter(outPutDir));
         bw.write(counters.toString());
         bw.close();
+    }
+
+    public void drawStatistics(String outputDir) throws IOException {
+        Counters counters = BspUtils.getCounters(job);
+
+        HashMap<String, TreeMap<Integer, Long>> allHists = new HashMap<String, TreeMap<Integer, Long>>();
+        TreeMap<Integer, Long> curCounts;
+
+        // build up allHists to be {coverage : {1: 50, 2: 20, 3:5}, kmerLength : {55: 100}, ...}
+        for (CounterGroup g : counters) {
+            if (g.getName().endsWith("-bins")) {
+                String baseName = g.getName().replace("-bins", "");
+                if (allHists.containsKey(baseName)) {
+                    curCounts = allHists.get(baseName);
+                } else {
+                    curCounts = new TreeMap<Integer, Long>();
+                    allHists.put(baseName, curCounts);
+                }
+                for (org.apache.hadoop.mapreduce.Counter c : g) { // counter name is the X value of the histogram; its count is the Y value
+                    Integer X = Integer.parseInt(c.getName());
+                    if (curCounts.get(X) != null) {
+                        curCounts.put(X, curCounts.get(X) + c.getValue());
+                    } else {
+                        curCounts.put(X, c.getValue());
+                    }
+                }
+            }
+        }
+
+        for (String graphType : allHists.keySet()) {
+            curCounts = allHists.get(graphType);
+            XYSeries series = new XYSeries(graphType);
+            for (Entry<Integer, Long> pair : curCounts.entrySet()) {
+                series.add(pair.getKey().floatValue(), pair.getValue().longValue());
+            }
+            XYSeriesCollection xyDataset = new XYSeriesCollection(series);
+            JFreeChart chart = ChartFactory.createXYBarChart(graphType, graphType, false, "Count", xyDataset,
+                    PlotOrientation.VERTICAL, true, true, false);
+            // Write the data to the output stream:
+            Configuration conf = new Configuration();
+            FileSystem dfs = FileSystem.getLocal(conf);
+            FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + graphType + "-hist.png"),
+                    true);
+            ChartUtilities.writeChartAsPNG(outstream, chart, 800, 600);
+            outstream.close();
+        }
     }
 
     public String toString() {
