@@ -31,11 +31,11 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 //import org.apache.hadoop.mapred.lib.NLineInputFormat;
 import org.jfree.util.Log;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.cluster.DriverUtils;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGen;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenBuildBrujinGraph;
 import edu.uci.ics.genomix.hyracks.graph.job.JobGenReadLetterParser;
-import edu.uci.ics.genomix.minicluster.DriverUtils;
 import edu.uci.ics.hyracks.api.client.HyracksConnection;
 import edu.uci.ics.hyracks.api.client.IHyracksClientConnection;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;

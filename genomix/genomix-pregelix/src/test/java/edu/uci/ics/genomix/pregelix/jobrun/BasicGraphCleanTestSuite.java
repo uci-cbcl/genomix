@@ -157,9 +157,9 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                 } else {
                     for (String testPathStr : TestDir) {
                         String resultFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) + File.separator + "bin";
-                        String textFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
-                                + File.separator + getTestCaseName(testPathStr) + File.separator + "data";
+                                + File.separator + getTestCaseName(testPathStr); // + File.separator + "bin";
+//                        String textFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
+//                                + File.separator + getTestCaseName(testPathStr) + File.separator + "data";
                         String graphvizFileName = ACTUAL_RESULT_DIR + File.separator + jobExtToResExt(qFile.getName())
                                 + File.separator + getTestCaseName(testPathStr) + File.separator + "graphviz.svg";
                         String statisticsFileName = ACTUAL_RESULT_DIR + File.separator
@@ -170,7 +170,7 @@ public class BasicGraphCleanTestSuite extends TestSuite {
                                 + File.separator + "data"; // + jobExtToResExt(qFile.getName()) + File.separator
                         testSuite.addTest(new BasicSmallTestCase(HADOOP_CONF_PATH, qFile.getName(), qFile
                                 .getAbsolutePath().toString(), dfs, HDFS_INPUTPATH + File.separator
-                                + getTestCaseName(testPathStr), resultFileName, textFileName, graphvizFileName,
+                                + getTestCaseName(testPathStr), resultFileName, graphvizFileName,
                                 statisticsFileName, expectedFileName));
                     }
                 }

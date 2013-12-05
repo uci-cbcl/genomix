@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.message.TipRemoveWithSearchMessage;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.type.VKmerList;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
+import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
 
 /**
  * Remove tip or single node when kmerLength < MIN_LENGTH_TO_KEEP
