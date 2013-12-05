@@ -147,10 +147,27 @@ public class VKmerListTest {
         uniqueElements.add(b);
         uniqueElements.add(c);
         VKmerList expected = new VKmerList();
+        
+        ArrayList<String> arraylist1 = new ArrayList<String>();
+        for (int i = 0; i < list1.size(); i++) {
+            arraylist1.add(list1.getPosition(i).toString());
+        }
+        Collections.sort(arraylist1);
+        
         for (VKmer kmer : uniqueElements) {
             expected.append(kmer);
         }
-        Assert.assertEquals(expected.toString(), list1.toString());
+        ArrayList<String> arraylist2 = new ArrayList<String>();
+        for (int i = 0; i < expected.size(); i++) {
+            arraylist2.add(expected.getPosition(i).toString());
+        }
+        Collections.sort(arraylist2);
+        
+        Assert.assertEquals(arraylist1.size(), arraylist2.size());
+        
+        for (int i = 0; i < list1.size(); i++) {
+            Assert.assertEquals(arraylist1.get(i), arraylist2.get(i));
+        }
     }
 
     @Test
@@ -158,7 +175,7 @@ public class VKmerListTest {
         VKmer kmer;
         VKmerList kmerList1 = new VKmerList();
         HashSet<VKmer> uniqueElements = new HashSet<VKmer>();
-        for (int i = 1; i < 1000; i++) {
+        for (int i = 1; i < 5000; i++) {
             kmer = new VKmer(5);
             String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
@@ -167,7 +184,7 @@ public class VKmerListTest {
             kmerList1.append(kmer);
         }
         VKmerList kmerList2 = new VKmerList();
-        for (int i = 1; i < 1000; i++) {
+        for (int i = 1; i < 5000; i++) {
             kmer = new VKmer(5);
             String randomString = generaterRandomString(5);
             byte[] array = randomString.getBytes();
