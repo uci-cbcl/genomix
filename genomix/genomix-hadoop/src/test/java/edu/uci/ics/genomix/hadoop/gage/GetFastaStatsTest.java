@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapred.Counters;
+import org.apache.wicket.util.file.Files;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,16 +37,16 @@ import edu.uci.ics.genomix.type.VKmer;
 
 @SuppressWarnings("deprecation")
 public class GetFastaStatsTest {
-    
+
     private static final String ACTUAL_RESULT_DIR = "actual";
-    private static final String BINSOURCE_PATH = "src/test/resources/gagedata/GAGETest.fasta";
+    private static final String BINSOURCE_PATH = ACTUAL_RESULT_DIR + File.separator + "GAGETest.fasta";
     private static final String HDFS_PATH = "/gage";
     private static final String RESULT_PATH = "/gageresult";
     private static final String GAGESOURCE = "src/test/resources/expected/gage/gagesrcfortestcase";
     private FileSystem dfs;
     private static GenomixClusterManager manager;
     private static GenomixJobConf conf = new GenomixJobConf(3);
-    
+
     public void writeTestCaseToFile() throws IOException {
         dfs = FileSystem.getLocal(conf);
         Path targetPath = new Path(BINSOURCE_PATH);
@@ -62,6 +63,7 @@ public class GetFastaStatsTest {
             outputKey.setAsCopy(keyList[i]);
             tempInternalKmer.setAsCopy(valueList[i]);
             outputValue.setInternalKmer(tempInternalKmer);
+            outputValue.setAverageCoverage(0);
             writer.append(outputKey, outputValue);
         }
         writer.close();
@@ -69,8 +71,8 @@ public class GetFastaStatsTest {
 
     @Test
     public void Test() throws Exception {
-        writeTestCaseToFile();
         startHadoop();
+        writeTestCaseToFile();
         prepareData();
         GenomixJobConf.setGlobalStaticConstants(conf);
         Counters counters = GraphStatistics.run(HDFS_PATH, RESULT_PATH, conf);
@@ -120,7 +122,7 @@ public class GetFastaStatsTest {
         }
         GenomixClusterManager.copyLocalToHDFS(conf, BINSOURCE_PATH, HDFS_PATH);
     }
-    
+
     public void cleanupHadoop() throws Exception {
         manager.stopCluster();
     }
