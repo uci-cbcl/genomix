@@ -44,6 +44,9 @@ import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
 import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 
 /**
  * Generate graph statistics, storing them in the reporter's counters
@@ -363,5 +366,22 @@ public class GraphStatistics extends MapReduceBase implements Mapper<VKmer, Node
         writer.println(outputStr.toString());
         writer.close();
 
+    }
+
+    public static void saveJobCounters(String outputDir, PregelixJob lastJob, Configuration conf) throws IOException {
+        org.apache.hadoop.mapreduce.Counters lastJobCounters;
+        try {
+            lastJobCounters = BspUtils.getCounters(lastJob);
+        } catch (HyracksDataException e) {
+            e.printStackTrace();
+            LOG.info("No counters available for job" + lastJob);
+            return;
+        }
+        FileSystem dfs = FileSystem.get(conf);
+        dfs.mkdirs(new Path(outputDir));
+        FSDataOutputStream outstream = dfs.create(new Path(outputDir + File.separator + "counters.txt"), true);
+        PrintWriter writer = new PrintWriter(outstream);
+        writer.print(lastJobCounters.toString());
+        writer.close();
     }
 }

@@ -18,6 +18,8 @@ package edu.uci.ics.genomix.driver;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -58,6 +60,7 @@ import edu.uci.ics.genomix.pregelix.operator.tipremove.TipRemoveWithSearchVertex
 import edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat.UnrollTandemRepeat;
 import edu.uci.ics.hyracks.api.exceptions.HyracksException;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
+import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.jobgen.clusterconfig.ClusterConfig;
 
 /**
@@ -168,12 +171,19 @@ public class GenomixDriver {
                 stepNum--;
                 break;
             case STATS:
+                PregelixJob lastJob = null;
+                if (pregelixJobs.size() > 0) {
+                    lastJob = pregelixJobs.get(pregelixJobs.size() - 1);
+                }
                 flushPendingJobs(conf);
                 curOutput = prevOutput + "-STATS";
                 Counters counters = GraphStatistics.run(prevOutput, curOutput, conf);
                 GraphStatistics.saveGraphStats(curOutput, counters, conf);
                 GraphStatistics.drawStatistics(curOutput, counters, conf);
                 GraphStatistics.getFastaStatsForGage(curOutput, counters, conf);
+                if (lastJob != null) {
+                    GraphStatistics.saveJobCounters(curOutput, lastJob, conf);
+                }
                 copyToLocalOutputDir(curOutput, conf);
                 curOutput = prevOutput; // use previous job's output
                 stepNum--;
@@ -315,7 +325,17 @@ public class GenomixDriver {
 
         // currently, we just iterate over the jobs set in conf[PIPELINE_ORDER].  In the future, we may want more logic to iterate multiple times, etc
         String pipelineSteps = conf.get(GenomixJobConf.PIPELINE_ORDER);
-        for (Patterns step : Patterns.arrayFromString(pipelineSteps)) {
+        List<Patterns> allPatterns = new ArrayList<>(Arrays.asList(Patterns.arrayFromString(pipelineSteps)));
+        if (Boolean.parseBoolean(conf.get(GenomixJobConf.RUN_ALL_STATS))) {
+            // insert a STATS step between all jobs that mutate the graph
+            for (int i=0; i < allPatterns.size(); i++) {
+               if (Patterns.mutatingJobs.contains(allPatterns.get(i))) {
+                   allPatterns.add(i + 1, Patterns.STATS);
+                   i++; // skip the STATS job we just added
+               }
+            }
+        }
+        for (Patterns step : allPatterns) {
             stepNum++;
             setOutput(conf, step);
             addStep(conf, step);
