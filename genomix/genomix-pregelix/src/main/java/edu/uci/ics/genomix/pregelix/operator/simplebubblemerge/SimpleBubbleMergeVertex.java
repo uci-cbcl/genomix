@@ -165,6 +165,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         for (VKmer majorVertexId : receivedMsgMap.keySet()) {
             receivedMsgList = receivedMsgMap.get(majorVertexId);
             if (receivedMsgList.size() > 1) { // filter simple paths
+                // add to 'numOfPaths' statistics distribution
+                updateStats("numOfPaths", (long)receivedMsgList.size());
+                
                 // for each majorVertex, sort the node by decreasing order of coverage
                 Collections.sort(receivedMsgList, new SimpleBubbleMergeMessage.SortByCoverage());
 

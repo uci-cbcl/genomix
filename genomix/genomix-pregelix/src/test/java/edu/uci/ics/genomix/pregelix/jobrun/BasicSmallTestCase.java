@@ -33,8 +33,9 @@ import org.junit.Test;
 
 import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
-import edu.uci.ics.genomix.data.utils.TestUtils;
 import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
+import edu.uci.ics.genomix.data.utils.TestUtils;
+import edu.uci.ics.genomix.hadoop.utils.GraphStatistics;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
@@ -101,9 +102,9 @@ public class BasicSmallTestCase extends TestCase {
                 .writeLocalBinToLocalSvg(resultFileDir, graphvizFile, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
         // compare results
         TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(resultFileDir
-                + File.separator + "data"));
+                + File.separator + "data")); 
         //generate statistic counters
-        //        generateStatisticsResult(statisticsFileDir);
+        generateStatisticsResult(resultFileDir + File.separator + "stats.txt");
     }
 
     public void generateStatisticsResult(String outPutDir) throws IOException {

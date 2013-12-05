@@ -294,7 +294,7 @@ public abstract class DeBruijnGraphCleanVertex<V extends VertexValueWritable, M 
     /**
      * update statistics for distribution
      */
-    private void updateStats(String valueName, long value) {
+    protected void updateStats(String valueName, long value) {
         getCounters().findCounter(valueName + "-bins", Long.toString(value)).increment(1);
     }
 }
