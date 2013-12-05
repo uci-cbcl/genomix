@@ -7,17 +7,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.ReadIdSet;
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
 
 public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritable, PathMergeMessage> {
 
@@ -132,12 +127,12 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
                     outFlag = 0;
                     outFlag |= MESSAGETYPE.TO_NEIGHBOR.get();
                     for (EDGETYPE et : EnumSet.allOf(EDGETYPE.class)) {
-                        for (VKmer dest : vertex.getEdgeMap(et).keySet()) {
+                        for (VKmer dest : vertex.getEdges(et)) {
                             EDGETYPE meToNeighbor = et.mirror();
                             EDGETYPE otherToNeighbor = senderEdgetype.causesFlip() ? meToNeighbor.flipNeighbor()
                                     : meToNeighbor;
                             outFlag &= EDGETYPE.CLEAR;
-                            outFlag &= MessageFlag.MERGE_DIR_CLEAR;
+                            //                            outFlag &= MessageFlag.MERGE_DIR_CLEAR;
                             outFlag |= meToNeighbor.get() | otherToNeighbor.get() << 9;
                             outgoingMsg.setFlag(outFlag);
                             sendMsg(dest, outgoingMsg);
@@ -206,11 +201,13 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             EDGETYPE aliveToMe = EDGETYPE.fromByte((short) (incomingMsg.getFlag() >> 9));
 
             VKmer deletedKmer = incomingMsg.getSourceVertexId();
-            if (value.getEdgeMap(deleteToMe).containsKey(deletedKmer)) {
-                ReadIdSet deletedReadIds = value.getEdgeMap(deleteToMe).get(deletedKmer);
-                value.getEdgeMap(deleteToMe).remove(deletedKmer);
-
-                value.getEdgeMap(aliveToMe).unionAdd(incomingMsg.getInternalKmer(), deletedReadIds);
+            if (value.getEdges(deleteToMe).contains(deletedKmer)) {
+                value.getEdges(deleteToMe).remove(deletedKmer);
+                if (!value.getEdges(aliveToMe).contains(incomingMsg.getInternalKmer()))
+                    value.getEdges(aliveToMe).append(incomingMsg.getInternalKmer());
+            } else {
+                throw new IllegalStateException("Couldn't find the requested edge to delete! I am " + value.toString()
+                        + "; incomingMsg was " + incomingMsg.toString());
             }
             voteToHalt();
         }
@@ -260,7 +257,4 @@ public class P1ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, P1ForPathMergeVertex.class));
-    }
 }

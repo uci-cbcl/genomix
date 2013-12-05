@@ -6,16 +6,14 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.util.HashedSeedRandom;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.types.HashedSeedRandom;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge
@@ -93,8 +91,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             hasNext = false;
         } else {
             hasNext = true;
-            nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdgeList(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
-            nextKmer = vertex.getEdgeMap(nextEdgetype).firstKey();
+            nextEdgetype = vertex.getNeighborEdgeType(DIR.FORWARD); //getEdges(EDGETYPE.FF).getCountOfPosition() > 0 ? EDGETYPE.FF : EDGETYPE.FR; 
+            nextKmer = vertex.getEdges(nextEdgetype).getPosition(0);
             nextHead = isNodeRandomHead(nextKmer);
         }
 
@@ -103,8 +101,8 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
             hasPrev = false;
         } else {
             hasPrev = true;
-            prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdgeList(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
-            prevKmer = vertex.getEdgeMap(prevEdgetype).firstKey();
+            prevEdgetype = vertex.getNeighborEdgeType(DIR.REVERSE); //vertex.getEdges(EDGETYPE.RF).getCountOfPosition() > 0 ? EDGETYPE.RF : EDGETYPE.RR; 
+            prevKmer = vertex.getEdges(prevEdgetype).getPosition(0);
             prevHead = isNodeRandomHead(prevKmer);
         }
     }
@@ -263,7 +261,4 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, P4ForPathMergeVertex.class));
-    }
 }

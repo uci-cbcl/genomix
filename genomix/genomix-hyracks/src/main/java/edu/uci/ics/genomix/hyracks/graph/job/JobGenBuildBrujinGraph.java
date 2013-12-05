@@ -19,7 +19,7 @@ import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerNormarlizedComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPartitionComputerFactory;
 import edu.uci.ics.genomix.hyracks.data.primitive.KmerPointable;

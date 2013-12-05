@@ -27,11 +27,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.utils.TestUtils;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver;
 import edu.uci.ics.genomix.hyracks.graph.driver.GenomixHyracksDriver.Plan;
-import edu.uci.ics.genomix.minicluster.GenomixClusterManager;
-import edu.uci.ics.genomix.util.TestUtils;
 
 /**
  * this StepByStepTestCase only applied on OutputTextFormt
@@ -61,21 +61,21 @@ public class StepByStepTest {
 
     @Test
     public void TestAll() throws Exception {
-        TestReader();
-        TestGroupby();
+//        TestReader();
+       TestGroupby();  
     }
 
     public void TestReader() throws Exception {
         cleanUpDirectory();
         driver.runJob(conf, Plan.BUILD_READ_PARSER, true);
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
         TestUtils.compareFilesBySortingThemLineByLine(new File(EXPECTED_READ_PARSER_RESULT), new File(ACTUAL_RESULT));
     }
 
     public void TestGroupby() throws Exception {
         cleanUpDirectory();
         driver.runJob(conf, Plan.BUILD_DEBRUIJN_GRAPH, true);
-        GenomixClusterManager.copyBinToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
+        GenomixClusterManager.copyBinAndTextToLocal(conf, HDFS_OUTPUT_PATH, ACTUAL_RESULT_DIR);
         TestUtils.compareFilesBySortingThemLineByLine(new File(EXPECTED_BRUIJIN_GRAPH_RESULT), new File(ACTUAL_RESULT));
     }
 

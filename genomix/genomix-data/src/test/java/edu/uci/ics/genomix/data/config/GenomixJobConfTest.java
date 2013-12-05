@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.Assert;
 import org.kohsuke.args4j.CmdLineException;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
 
 public class GenomixJobConfTest {
     

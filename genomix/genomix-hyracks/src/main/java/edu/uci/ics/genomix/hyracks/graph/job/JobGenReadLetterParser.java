@@ -25,10 +25,10 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapred.InputSplit;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
 import edu.uci.ics.genomix.hyracks.graph.dataflow.ReadsKeyValueParserFactory;
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.Node;
 import edu.uci.ics.hyracks.api.client.NodeControllerInfo;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
@@ -125,6 +125,7 @@ public class JobGenReadLetterParser extends JobGen {
                                             tuple.getFieldData(ReadsKeyValueParserFactory.OutputNodeField),
                                             tuple.getFieldStart(ReadsKeyValueParserFactory.OutputNodeField));
                                     writer.append(outputKmer, outputNode);
+                                    
                                 } catch (IOException e) {
                                     throw new HyracksDataException(e);
                                 }

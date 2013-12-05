@@ -8,18 +8,15 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
 
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
-import edu.uci.ics.genomix.pregelix.log.LogUtil;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.MessageFlag.MESSAGETYPE;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.EdgeMap;
-import edu.uci.ics.genomix.type.Kmer;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Kmer;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.data.types.VKmerList;
+import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
 
 /**
  * The super class of different path merge algorithms
@@ -66,7 +63,7 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         // send a message to each neighbor indicating they can't merge towards me
         for (DIR dir : dirsToRestrict) {
             for (EDGETYPE et : dir.edgeTypes()) {
-                for (VKmer destId : vertex.getEdgeMap(et).keySet()) {
+                for (VKmer destId : vertex.getEdges(et)) {
                     outgoingMsg.reset();
                     outgoingMsg.setFlag(et.mirror().dir().get());
                     if (verbose)
@@ -121,22 +118,17 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
         // prepare the update message s.t. the receiver can do a simple unionupdate
         // that means we figure out any hops and place our merge-dir edges in the appropriate list of the outgoing msg
         for (EDGETYPE updateEdge : updateEdges) {
-            outgoingMsg.reset();
-            outgoingMsg.setSourceVertexId(getVertexId());
-            outFlag = 0;
-            outFlag |= MESSAGETYPE.UPDATE.get() | updateEdge.mirror().get(); // neighbor's edge to me (so he can remove me)
-            outgoingMsg.setFlag(outFlag);
-            for (EDGETYPE mergeEdge : mergeEdges) {
-                EDGETYPE newEdgetype = EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge);
-                for (VKmer dest : vertex.getEdgeMap(updateEdge).keySet()) {
-                    if (verbose)
-                        LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
-                                + " to " + dest + ": " + outgoingMsg);
-                    Iterator<VKmer> iter = vertex.getEdgeMap(mergeEdge).keySet().iterator();
-                    if (iter.hasNext()) {
-                        EdgeMap edgeMap = new EdgeMap();
-                        edgeMap.put(iter.next(), vertex.getEdgeMap(updateEdge).get(dest));
-                        outgoingMsg.getNode().setEdgeMap(newEdgetype, edgeMap); // copy into outgoingMsg
+            outFlag = (byte) (MESSAGETYPE.UPDATE.get() | updateEdge.mirror().get()); // neighbor's edge to me (so he can remove me)
+            for (VKmer dest : vertex.getEdges(updateEdge)) {
+                for (EDGETYPE mergeEdge : mergeEdges) {
+                    for (VKmer kmer : vertex.getEdges(mergeEdge)) {
+                        outgoingMsg.reset();
+                        outgoingMsg.setSourceVertexId(getVertexId());
+                        outgoingMsg.setFlag(outFlag);
+                        outgoingMsg.getNode().getEdges(EDGETYPE.resolveEdgeThroughPath(updateEdge, mergeEdge)).append(kmer);
+                        if (verbose)
+                            LOG.fine("Iteration " + getSuperstep() + "\r\n" + "send update message from " + getVertexId()
+                                    + " to " + dest + ": " + outgoingMsg);
                         sendMsg(dest, outgoingMsg);
                     }
                 }
@@ -153,10 +145,13 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             if (verbose)
                 LOG.fine("Iteration " + getSuperstep() + "\r\n" + "before update from neighbor: " + getVertexValue());
             // remove the edge to the node that will merge elsewhere
-            vertex.getEdgeMap(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
+            if (incomingMsg.getSourceVertexId().toString().equals("AGCTAAATG")) {
+                System.out.println();
+            }
+            vertex.getEdges(EDGETYPE.fromByte(incomingMsg.getFlag())).remove(incomingMsg.getSourceVertexId());
             // add the node this neighbor will merge into
             for (EDGETYPE edgeType : EDGETYPE.values) {
-                vertex.getEdgeMap(edgeType).unionUpdate(incomingMsg.getEdgeList(edgeType));
+                vertex.getEdges(edgeType).unionUpdate(incomingMsg.getEdges(edgeType));
             }
             updated = true;
             if (verbose) {
@@ -188,23 +183,30 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
             Node outNode = outgoingMsg.getNode();
             // set only relevant edges
             for (EDGETYPE et : mergeEdgetype.mirror().neighborDir().edgeTypes()) {
-                outNode.setEdgeMap(et, vertex.getEdgeMap(et));
+                outNode.setEdges(et, vertex.getEdges(et));
             }
             outNode.setUnflippedReadIds(vertex.getUnflippedReadIds());
             outNode.setFlippedReadIds(vertex.getFlippedReadIds());
             outNode.setAverageCoverage(vertex.getAverageCoverage());
             // only send non-overlapping letters // TODO do something more efficient than toString?
             if (mergeEdgetype.mirror().neighborDir() == DIR.FORWARD) {
-                outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer().toString().substring(Kmer.getKmerLength() - 1));
+                outNode.getInternalKmer().setAsCopy(
+                        vertex.getInternalKmer().toString().substring(Kmer.getKmerLength() - 1));
             } else {
-                outNode.getInternalKmer().setAsCopy(vertex.getInternalKmer().toString().substring(0, vertex.getInternalKmer().getKmerLetterLength() - Kmer.getKmerLength() + 1));
+                outNode.getInternalKmer()
+                        .setAsCopy(
+                                vertex.getInternalKmer()
+                                        .toString()
+                                        .substring(
+                                                0,
+                                                vertex.getInternalKmer().getKmerLetterLength() - Kmer.getKmerLength()
+                                                        + 1));
             }
-
 
             if (vertex.degree(mergeEdgetype.dir()) != 1)
                 throw new IllegalStateException("Merge attempted in node with degree in " + mergeEdgetype
                         + " direction != 1!\n" + vertex);
-            VKmer dest = vertex.getEdgeMap(mergeEdgetype).firstKey();
+            VKmer dest = vertex.getEdges(mergeEdgetype).getPosition(0);
             sendMsg(dest, outgoingMsg);
 
             if (verbose) {
@@ -214,23 +216,6 @@ public abstract class BasicPathMergeVertex<V extends VertexValueWritable, M exte
                         + DIR.enumSetFromByte(outgoingMsg.getFlag()));
             }
         }
-    }
-
-    //-----LOG----------------------------------------------------------------------------------------------------//
-    /**
-     * Logging the vertexId and vertexValue
-     */
-    public void loggingNode(byte loggingType) {
-        String logMessage = LogUtil.getVertexLog(loggingType, getSuperstep(), getVertexId(), getVertexValue());
-        LOG.fine(logMessage);
-    }
-
-    /**
-     * Logging message
-     */
-    public void loggingMessage(byte loggingType, PathMergeMessage msg, VKmer dest) {
-        String logMessage = LogUtil.getMessageLog(loggingType, getSuperstep(), getVertexId(), msg, dest);
-        LOG.fine(logMessage);
     }
 
 }

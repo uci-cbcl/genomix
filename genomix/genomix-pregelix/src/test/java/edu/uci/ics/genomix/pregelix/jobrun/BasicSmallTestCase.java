@@ -25,15 +25,16 @@ import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.junit.Test;
 
-import edu.uci.ics.genomix.minicluster.GenerateGraphViz;
-import edu.uci.ics.genomix.minicluster.GenerateGraphViz.GRAPH_TYPE;
-import edu.uci.ics.genomix.pregelix.sequencefile.GenerateTextFile;
-import edu.uci.ics.genomix.util.TestUtils;
+import edu.uci.ics.genomix.data.cluster.GenomixClusterManager;
+import edu.uci.ics.genomix.data.utils.GenerateGraphViz;
+import edu.uci.ics.genomix.data.utils.TestUtils;
+import edu.uci.ics.genomix.data.utils.GenerateGraphViz.GRAPH_TYPE;
 import edu.uci.ics.pregelix.api.job.PregelixJob;
 import edu.uci.ics.pregelix.api.util.BspUtils;
 import edu.uci.ics.pregelix.core.base.IDriver.Plan;
@@ -42,8 +43,8 @@ import edu.uci.ics.pregelix.core.util.PregelixHyracksIntegrationUtil;
 
 public class BasicSmallTestCase extends TestCase {
     private final PregelixJob job;
-    private final String binFileDir;
-    private final String textFileDir;
+    private final String resultFileDir;
+    //    private final String textFileDir;
     private final String graphvizFile;
     private final String statisticsFileDir;
     private final String expectedFileDir;
@@ -52,7 +53,7 @@ public class BasicSmallTestCase extends TestCase {
     private final FileSystem dfs;
 
     public BasicSmallTestCase(String hadoopConfPath, String jobName, String jobFile, FileSystem dfs, String hdfsInput,
-            String resultFile, String textFile, String graphvizFile, String statisticsFile, String expectedFile)
+            String resultFile, String graphvizFile, String statisticsFile, String expectedFile)
             throws Exception {
         super("test");
         this.jobFile = jobFile;
@@ -62,8 +63,8 @@ public class BasicSmallTestCase extends TestCase {
         FileInputFormat.setInputPaths(job, hdfsInput);
         FileOutputFormat.setOutputPath(job, new Path(hdfsInput + "_result"));
         job.setJobName(jobName);
-        this.binFileDir = resultFile;
-        this.textFileDir = textFile;
+        this.resultFileDir = resultFile;
+        //        this.textFileDir = textFile;
         this.graphvizFile = graphvizFile;
         this.statisticsFileDir = statisticsFile;
         this.expectedFileDir = expectedFile;
@@ -91,14 +92,15 @@ public class BasicSmallTestCase extends TestCase {
     }
 
     private void compareResults() throws Exception {
-        //copy bin to local
-        dfs.copyToLocalFile(FileOutputFormat.getOutputPath(job), new Path(binFileDir));
-        //covert bin to text
-        GenerateTextFile.convertGraphCleanOutputToText(binFileDir, textFileDir);
+        //copy bin and text to local
+        GenomixClusterManager.copyBinAndTextToLocal(new JobConf(), FileOutputFormat.getOutputPath(job).toString(),
+                resultFileDir);
         //covert bin to graphviz
-        GenerateGraphViz.writeLocalBinToLocalSvg(binFileDir, graphvizFile, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
+        GenerateGraphViz
+                .writeLocalBinToLocalSvg(resultFileDir, graphvizFile, GRAPH_TYPE.DIRECTED_GRAPH_WITH_ALLDETAILS);
         // compare results
-        TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(textFileDir));
+        TestUtils.compareFilesBySortingThemLineByLine(new File(expectedFileDir), new File(resultFileDir
+                + File.separator + "data"));
         //generate statistic counters
         //        generateStatisticsResult(statisticsFileDir);
     }
