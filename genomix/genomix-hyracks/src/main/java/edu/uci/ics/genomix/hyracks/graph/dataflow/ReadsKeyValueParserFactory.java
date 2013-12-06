@@ -104,7 +104,9 @@ public class ReadsKeyValueParserFactory implements IKeyValueParserFactory<LongWr
                     mate1GeneLine = rawLine[2];
                 } else {
                     throw new IllegalStateException(
-                            "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq'");
+                            "input format is not true! only support id'\t'readSeq'\t'mateReadSeq or id'\t'readSeq' but saw"
+                                    + value.toString() + "which has " + value.toString().split("\\t").length
+                                    + " elements");
                 }
 
                 Pattern genePattern = Pattern.compile("[AGCT]+");
