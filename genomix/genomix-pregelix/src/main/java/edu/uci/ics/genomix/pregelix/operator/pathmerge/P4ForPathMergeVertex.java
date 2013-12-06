@@ -6,16 +6,14 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import edu.uci.ics.genomix.config.GenomixJobConf;
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable.State;
-import edu.uci.ics.genomix.pregelix.io.message.PathMergeMessage;
-import edu.uci.ics.genomix.type.DIR;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.Node;
-import edu.uci.ics.genomix.type.VKmer;
-import edu.uci.ics.genomix.util.HashedSeedRandom;
+import edu.uci.ics.genomix.data.config.GenomixJobConf;
+import edu.uci.ics.genomix.data.types.DIR;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.Node;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable.State;
+import edu.uci.ics.genomix.pregelix.types.HashedSeedRandom;
 
 /**
  * Graph clean pattern: P4(Smart-algorithm) for path merge
@@ -263,7 +261,4 @@ public class P4ForPathMergeVertex extends BasicPathMergeVertex<VertexValueWritab
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, P4ForPathMergeVertex.class));
-    }
 }
