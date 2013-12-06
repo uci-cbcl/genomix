@@ -2,14 +2,12 @@ package edu.uci.ics.genomix.pregelix.operator.unrolltandemrepeat;
 
 import java.util.Iterator;
 
-import edu.uci.ics.genomix.pregelix.client.Client;
-import edu.uci.ics.genomix.pregelix.io.VertexValueWritable;
-import edu.uci.ics.genomix.pregelix.io.message.MessageWritable;
-import edu.uci.ics.genomix.pregelix.operator.DeBruijnGraphCleanVertex;
-import edu.uci.ics.genomix.pregelix.type.GraphMutations;
-import edu.uci.ics.genomix.pregelix.util.VertexUtil;
-import edu.uci.ics.genomix.type.EDGETYPE;
-import edu.uci.ics.genomix.type.VKmer;
+import edu.uci.ics.genomix.data.types.EDGETYPE;
+import edu.uci.ics.genomix.data.types.VKmer;
+import edu.uci.ics.genomix.pregelix.base.DeBruijnGraphCleanVertex;
+import edu.uci.ics.genomix.pregelix.base.MessageWritable;
+import edu.uci.ics.genomix.pregelix.base.VertexValueWritable;
+import edu.uci.ics.genomix.pregelix.types.GraphMutations;
 
 /**
  * Graph clean pattern: Unroll TandemRepeat
@@ -52,8 +50,8 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
                 break;
         }
 
-        if (VertexUtil.isPathVertex(tmpValue) || VertexUtil.isTipVertex(tmpValue)
-                || VertexUtil.isSingleVertex(tmpValue))
+        if ((tmpValue.inDegree() == 0 || tmpValue.inDegree() == 1)
+                && (tmpValue.outDegree() == 0 && tmpValue.outDegree() == 1))
             return true;
         else
             return false;
@@ -118,7 +116,4 @@ public class UnrollTandemRepeat extends DeBruijnGraphCleanVertex<VertexValueWrit
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Client.run(args, getConfiguredJob(null, UnrollTandemRepeat.class));
-    }
 }
