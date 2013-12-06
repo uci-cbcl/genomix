@@ -124,7 +124,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     logInfo += "\t\t Dissimilar: ";
                 }
 
-                for (int j = i + 1; j < receivedMsgList.size(); j++) {
+                for (int j = 0; j < receivedMsgList.size(); j++) {
+                    if(i == j)
+                        continue;
                     // add 'editDistance' to statistics distribution
                     float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
                     updateStats("editDistance", Math.round(editDistance));
@@ -141,10 +143,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 }
             }
 
-            if (logBubbleInfo) {
-                logInfo += "Remove bubble: ";
-                LOG.info("Remove bubble: ");
-            }
+            String logInfo_remove = "";
             int removedNum = 0;
             Iterator<SimpleBubbleMergeMessage> it = receivedMsgList.iterator();
             topMsg = it.next();
@@ -172,7 +171,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                     sendMsg(curMsg.getSourceVertexId(), outgoingMsg);
                     // log bubble info
                     if (logBubbleInfo) {
-                        logInfo += curMsg.getNode().getInternalKmer().toString() + ";  ";
+                        logInfo_remove += curMsg.getNode().getInternalKmer().toString() + ";  ";
                     }
                     it.remove();
                     removedNum++;
@@ -183,7 +182,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
             // log bubble info
             if (logBubbleInfo) {
-                logInfo += "\n///////////////////////////////////////////////////////////////////////////////////////// \n";
+                logInfo += "Remove " + removedNum + " bubbles: ";
+                logInfo += logInfo_remove;
+                logInfo += "\n/////////////////////////////////////////////////////////////////////////////////////////////////////////////// \n";
             }
             // process topNode -- send message to topVertex to update their coverage
             if (topChanged) {
@@ -224,7 +225,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 
                 logInfo = "";
                 if (logBubbleInfo) {
-                    logInfo += "Major: " + majorVertexId + "  Minor: " + getVertexId() + "\n";
+                    logInfo += "\nMajor: " + majorVertexId + "  Minor: " + getVertexId() + "\n";
                     logInfo += "NumOfPaths: " + receivedMsgList.size() + "\n";
                 }
 
