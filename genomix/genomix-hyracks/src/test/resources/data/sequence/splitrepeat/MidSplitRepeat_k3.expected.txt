@@ -1,6 +1,6 @@
-CCA	{FF:null	FR:null	RF:null	RR:{GCC=[1]}	5':null, ~5':null	kmer:null	cov:1.0x}
-CGC	{FF:{GCC=[2]}	FR:null	RF:null	RR:null	5':[2-0_0], ~5':null	kmer:null	cov:1.0x}
-CCG	{FF:null	FR:{CCG=[3]}	RF:null	RR:{GCC=[3]}	5':null, ~5':null	kmer:null	cov:2.0x}
-GCC	{FF:{CCA=[1], CCG=[3]}	FR:{AGG=[2]}	RF:null	RR:{AGC=[1], CGC=[2]}	5':[3-0_0], ~5':null	kmer:null	cov:3.0x}
-AGC	{FF:{GCC=[1]}	FR:null	RF:null	RR:null	5':[1-0_0], ~5':null	kmer:null	cov:1.0x}
-AGG	{FF:null	FR:{GCC=[2]}	RF:null	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}
+CCA	{FF:null	FR:null	RF:null	RR:[GCC]	5':null, ~5':null	kmer:null	cov:1.0x}
+CGC	{FF:[GCC]	FR:null	RF:null	RR:null	5':[2-0_0 readSeq: CGCCT mateReadSeq: null], ~5':null	kmer:null	cov:1.0x}
+CCG	{FF:null	FR:[CCG]	RF:null	RR:[GCC]	5':null, ~5':null	kmer:null	cov:2.0x}
+GCC	{FF:[CCG,CCA]	FR:[AGG]	RF:null	RR:[AGC,CGC]	5':[3-0_0 readSeq: GCCGG mateReadSeq: null], ~5':null	kmer:null	cov:3.0x}
+AGC	{FF:[GCC]	FR:null	RF:null	RR:null	5':[1-0_0 readSeq: AGCCA mateReadSeq: null], ~5':null	kmer:null	cov:1.0x}
+AGG	{FF:null	FR:[GCC]	RF:null	RR:null	5':null, ~5':null	kmer:null	cov:1.0x}

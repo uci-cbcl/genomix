@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.test;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
@@ -34,7 +35,12 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         if (kmerSize == -1) {
             kmerSize = 3; // Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         }
-        GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        try {
+            GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

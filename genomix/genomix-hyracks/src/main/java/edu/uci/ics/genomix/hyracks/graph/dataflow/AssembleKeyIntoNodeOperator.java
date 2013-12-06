@@ -97,8 +97,13 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
             ByteBuffer buffer = accessor.getBuffer();
             readKmer.setAsReference(buffer.array(),
                     offsetPoslist + accessor.getFieldStartOffset(tIndex, InputKmerField));
-            readNode.setAsReference(buffer.array(),
-                    offsetPoslist + accessor.getFieldStartOffset(tIndex, InputTempNodeField));
+            try {
+                readNode.setAsReference(buffer.array(),
+                        offsetPoslist + accessor.getFieldStartOffset(tIndex, InputTempNodeField));
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new HyracksDataException(e);
+            }
             readNode.getInternalKmer().setAsCopy(readKmer);
             outputNode(readNode);
         }
@@ -107,8 +112,8 @@ public class AssembleKeyIntoNodeOperator extends AbstractSingleActivityOperatorD
 
             try {
                 builder.reset();
-                byte[] nodeBytes = node.marshalToByteArray();
-                builder.addField(nodeBytes, 0, nodeBytes.length);
+                byte[] nodeInByte = node.marshalToByteArray();
+                builder.addField(nodeInByte, 0, nodeInByte.length);
 
                 if (!appender.append(builder.getFieldEndOffsets(), builder.getByteArray(), 0, builder.getSize())) {
                     FrameUtils.flushFrame(writeBuffer, writer);

@@ -1,5 +1,6 @@
 package edu.uci.ics.genomix.pregelix.operator.bridgeremove;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
@@ -80,7 +81,7 @@ public class BridgeRemoveVertex extends DeBruijnGraphCleanVertex<VertexValueWrit
     }
 
     @Override
-    public void compute(Iterator<MessageWritable> msgIterator) {
+    public void compute(Iterator<MessageWritable> msgIterator) throws IOException {
         initVertex();
         if (getSuperstep() == 1) {
             detectBridgeNeighbor();

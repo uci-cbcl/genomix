@@ -19,6 +19,14 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
     private static final int readIdShift = bitsForPosition + bitsForMate;
     private static final int positionIdShift = bitsForMate;
 
+    protected static ReadHeadInfo getLowerBoundInfo(long readid) {
+        return new ReadHeadInfo((byte) 0, readid, 0, null, null);
+    }
+
+    protected static ReadHeadInfo getUpperBoundInfo(long readid) {
+        return new ReadHeadInfo((byte) 1, readid, 0xFFFF, null, null);
+    }
+
     private long value;
     private VKmer thisReadSequence;
     private VKmer mateReadSequence;
@@ -124,6 +132,10 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         return (int) ((value >>> positionIdShift) & 0xffff);
     }
 
+    public void resetOffset(int pos) {
+        value = makeUUID(getMateId(), getReadId(), pos);
+    }
+
     protected static class READHEADINFO_FIELDS {
         // thisReadSequence and thatReadSequence
         public static final int MATE_READSEQUENCE = 1 << 0;
@@ -197,4 +209,5 @@ public class ReadHeadInfo implements WritableComparable<ReadHeadInfo>, Serializa
         }
         return Long.compare(this.getReadId(), o.getReadId());
     }
+
 }

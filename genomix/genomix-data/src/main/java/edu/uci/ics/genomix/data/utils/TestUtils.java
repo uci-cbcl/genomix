@@ -118,7 +118,7 @@ public class TestUtils {
                                 + lineExpected);
                     }
                 } else {
-                    if (!compareStringByFields(lineExpected, actualLine, unorderedField)) {
+                    if (!compareGeneLettersByFields(lineExpected, actualLine, unorderedField)) {
                         throw new Exception("Comparing " + expectedFile + " and " + actualFile + ":  Result for changed at line " + num + ":\n< " + lineExpected + "\n> "
                                 + actualLine);
                     }
@@ -133,7 +133,7 @@ public class TestUtils {
         }
     }
 
-    private static boolean compareStringByFields(String lineExpected, String actualLine,
+    private static boolean compareGeneLettersByFields(String lineExpected, String actualLine,
             final Set<Integer> unorderedField) {
         if (lineExpected.equals(actualLine)) {
             return true;
@@ -161,16 +161,16 @@ public class TestUtils {
 
         for (int i = 0; i < unorderedFieldsAct.size(); i++) {
             ArrayList<String> subfieldsAct = new ArrayList<String>(Arrays.asList(unorderedFieldsAct.get(i)
-                    .split("\\s+")));
+                    .split("[^ATCG]+")));
             ArrayList<String> subfieldsExp = new ArrayList<String>(Arrays.asList(unorderedFieldsExp.get(i)
-                    .split("\\s+")));
+                    .split("[^ATCG]+")));
 
             Collections.sort(subfieldsAct);
             Collections.sort(subfieldsExp);
 
             //Compare the unordered fields
-            for (int j = 0; j < unorderedFieldsExp.size(); j++) {
-                if (!unorderedFieldsExp.get(j).equals(unorderedFieldsAct.get(j))) {
+            for (int j = 0; j < subfieldsAct.size(); j++) {
+                if (!subfieldsAct.get(j).equals(subfieldsExp.get(j))) {
                     return false;
                 }
             }
