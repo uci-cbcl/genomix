@@ -134,9 +134,9 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         oos.close();
     }
 
-    public abstract T readEachElementFromDataStream(DataInput in) throws IOException;
+    public abstract T readEachNonGenericElement(DataInput in) throws IOException;
 
-    public abstract void writeEachElementToDataStream(DataOutput out, T t) throws IOException;
+    public abstract void writeEachNonGenericElement(DataOutput out, T t) throws IOException;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -146,7 +146,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         path = null;
         if (size < countLimit) {
             for (int i = 0; i < size; ++i) {
-                inMemorySet.add(readEachElementFromDataStream(in));
+                inMemorySet.add(readEachNonGenericElement(in));
             }
         } else {
             path = new Path(in.readUTF());
@@ -165,7 +165,7 @@ public abstract class ExternalableTreeSet<T extends WritableComparable<T> & Seri
         out.writeInt(inMemorySet.size());
         if (inMemorySet.size() < countLimit) {
             for (T t : inMemorySet) {
-                writeEachElementToDataStream(out, t);
+                writeEachNonGenericElement(out, t);
             }
             if (path != null) {
                 manager.deleteFile(path);

@@ -116,14 +116,14 @@ public class ReadHeadSet extends ExternalableTreeSet<ReadHeadInfo> implements It
     }
 
     @Override
-    public ReadHeadInfo readEachElementFromDataStream(DataInput in) throws IOException {
+    public ReadHeadInfo readEachNonGenericElement(DataInput in) throws IOException {
         ReadHeadInfo info = new ReadHeadInfo();
         info.readFields(in);
         return info;
     }
 
     @Override
-    public void writeEachElementToDataStream(DataOutput out, ReadHeadInfo t) throws IOException {
+    public void writeEachNonGenericElement(DataOutput out, ReadHeadInfo t) throws IOException {
         t.write(out);
     }
 

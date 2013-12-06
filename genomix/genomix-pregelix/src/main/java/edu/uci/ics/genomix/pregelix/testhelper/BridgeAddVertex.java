@@ -42,6 +42,7 @@ public class BridgeAddVertex extends DeBruijnGraphCleanVertex<VertexValueWritabl
         if (kmerSize == -1) {
             kmerSize = 3; // Integer.parseInt(getContext().getConfiguration().get(GenomixJobConf.KMER_LENGTH));
         }
+        //TODO: throw some other exceptions later.
         try {
             GenomixJobConf.setGlobalStaticConstants(getContext().getConfiguration());
         } catch (IOException e) {
