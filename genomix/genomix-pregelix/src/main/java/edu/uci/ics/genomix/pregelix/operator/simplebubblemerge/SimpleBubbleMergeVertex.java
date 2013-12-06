@@ -24,7 +24,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
 
-    private float DISSIMILAR_THRESHOLD = -1;
+    private static float DISSIMILAR_THRESHOLD = -1;
 
     private Map<VKmer, ArrayList<SimpleBubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<SimpleBubbleMergeMessage>>();
     private ArrayList<SimpleBubbleMergeMessage> receivedMsgList = new ArrayList<SimpleBubbleMergeMessage>();
@@ -220,8 +220,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     @Override
     public void compute(Iterator<SimpleBubbleMergeMessage> msgIterator) {
-        initVertex();
         if (getSuperstep() == 1) {
+            initVertex();
             detectBubble();
         } else if (getSuperstep() == 2) {
             processBubblesInMinorVertex(msgIterator);
