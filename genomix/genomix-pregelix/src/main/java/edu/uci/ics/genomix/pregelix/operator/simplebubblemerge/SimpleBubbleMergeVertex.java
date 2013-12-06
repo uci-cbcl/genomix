@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.jfree.util.Log;
-
 import edu.uci.ics.genomix.data.config.GenomixJobConf;
 import edu.uci.ics.genomix.data.types.DIR;
 import edu.uci.ics.genomix.data.types.EDGETYPE;
@@ -27,8 +25,8 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
     private static final Logger LOG = Logger.getLogger(SimpleBubbleMergeVertex.class.getName());
 
     private static float DISSIMILAR_THRESHOLD = -1;
-    private static boolean logBubbleInfo = true;
-    private String logInfo = ""; 
+    private static boolean logBubbleInfo = false;
+    private String logInfo = "";
 
     private Map<VKmer, ArrayList<SimpleBubbleMergeMessage>> receivedMsgMap = new HashMap<VKmer, ArrayList<SimpleBubbleMergeMessage>>();
     private ArrayList<SimpleBubbleMergeMessage> receivedMsgList = new ArrayList<SimpleBubbleMergeMessage>();
@@ -44,6 +42,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
         if (DISSIMILAR_THRESHOLD < 0)
             DISSIMILAR_THRESHOLD = Float.parseFloat(getContext().getConfiguration().get(
                     GenomixJobConf.BUBBLE_MERGE_MAX_DISSIMILARITY));
+        if (logBubbleInfo == false)
+            logBubbleInfo = Boolean.parseBoolean(getContext().getConfiguration().get(
+                    GenomixJobConf.BUBBLE_MERGE_LOG_BUBBLE_INFO));
         if (outgoingMsg == null)
             outgoingMsg = new SimpleBubbleMergeMessage();
     }
@@ -56,9 +57,9 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
         // get majorVertex and minorVertex and meToMajorEdgeType and meToMinorEdgeType
         if (forwardNeighbor.kmer.equals(reverseNeighbor.kmer)) {
-//            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n" + "forwardKmer is "
-//                    + forwardNeighbor.kmer + "\n" + "reverseKmer is " + reverseNeighbor.kmer + "\n" + "this vertex is "
-//                    + getVertexId() + ", value: " + getVertexValue());
+            //            LOG.fine("majorVertexId is equal to minorVertexId, this is not allowed!\n" + "forwardKmer is "
+            //                    + forwardNeighbor.kmer + "\n" + "reverseKmer is " + reverseNeighbor.kmer + "\n" + "this vertex is "
+            //                    + getVertexId() + ", value: " + getVertexValue());
             return;
         }
 
@@ -112,8 +113,19 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
 
     public void processSimilarSet() {
         while (!receivedMsgList.isEmpty()) {
+            /* log and update stats */
+            boolean[] sameOrientationWithFirstBubble = new boolean[receivedMsgList.size()];
+            sameOrientationWithFirstBubble[0] = true;
+            for (int i = 1; i < receivedMsgList.size(); i++) 
+                sameOrientationWithFirstBubble[i] = receivedMsgList.get(i).sameOrientation(receivedMsgList.get(0));
             for (int i = 0; i < receivedMsgList.size(); i++) {
-                VKmer bubble = receivedMsgList.get(i).getNode().getInternalKmer();
+                // print the same orientation
+                VKmer bubble;
+                if(sameOrientationWithFirstBubble[i])
+                    bubble = receivedMsgList.get(i).getNode().getInternalKmer();
+                else
+                    bubble = receivedMsgList.get(i).getNode().getInternalKmer().reverse();
+                
                 // add 'pathLength' to statistics distribution
                 updateStats("pathLength", bubble.getKmerLetterLength());
 
@@ -125,7 +137,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
                 }
 
                 for (int j = 0; j < receivedMsgList.size(); j++) {
-                    if(i == j)
+                    if (i == j)
                         continue;
                     // add 'editDistance' to statistics distribution
                     float editDistance = receivedMsgList.get(i).editDistance(receivedMsgList.get(j));
@@ -184,7 +196,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             if (logBubbleInfo) {
                 logInfo += "Remove " + removedNum + " bubbles: ";
                 logInfo += logInfo_remove;
-                logInfo += "\n/////////////////////////////////////////////////////////////////////////////////////////////////////////////// \n";
+                logInfo += "\n/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// \n";
             }
             // process topNode -- send message to topVertex to update their coverage
             if (topChanged) {
@@ -222,7 +234,7 @@ public class SimpleBubbleMergeVertex extends DeBruijnGraphCleanVertex<VertexValu
             if (receivedMsgList.size() > 1) { // filter simple paths
                 // add to 'totalPaths' statistics distribution
                 updateStats("totalPaths", receivedMsgList.size());
-                
+
                 logInfo = "";
                 if (logBubbleInfo) {
                     logInfo += "\nMajor: " + majorVertexId + "  Minor: " + getVertexId() + "\n";
